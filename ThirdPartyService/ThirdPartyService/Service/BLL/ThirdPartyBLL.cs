@@ -72,6 +72,11 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.ErrorCode = ErrorCode.InvalidParameter;
                 return apiResult;
             }
+            else if (tpTransfer.Amount == 0)
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                return apiResult;
+            }
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
 
