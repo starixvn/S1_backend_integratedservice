@@ -12,14 +12,14 @@ namespace ThirdPartyService.Service.DAL
     public class WalletService
     {
         private readonly IConfiguration configuration;
-
+        private const int typePosition = 2000;
         public WalletService(IConfiguration configuration)
         {
             this.configuration = configuration;
         }
-
-        public int SetBalance(int custId, int siteId, string userName, decimal Amount, int type, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
+        public int SetBalance(int custId, int siteId, string userName, decimal Amount, int tpId, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
         {
+            int type = typePosition + tpId;
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = Memo, RefTransId = RefTransId, IsDepositOrWithdraw = false });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);

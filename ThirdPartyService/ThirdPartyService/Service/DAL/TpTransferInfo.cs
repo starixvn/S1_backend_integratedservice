@@ -44,7 +44,7 @@ namespace ThirdPartyService.Service.DAL
                     using (var trans = conn.BeginTransaction())
                     {
                         decimal afterAmount = -1;
-                        var rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount * -1, 1000 + tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
+                        var rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount * -1, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
 
                         if (rwalletServiceResult != 0)
                         {
@@ -90,7 +90,7 @@ namespace ThirdPartyService.Service.DAL
                         int rwalletServiceResult = 0;
                         if (tpTransfer.direction == Direction.ToMain && isSuccess)
                         {
-                            rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, 1000 + tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
+                            rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
                         }
 
                         if (rwalletServiceResult == 0)
@@ -122,7 +122,7 @@ namespace ThirdPartyService.Service.DAL
                         if (tpTransfer.direction == Direction.ToTp && isSuccess)
                         {
                             Memo = $"\r\nreturn amount. Cause: {transferResult.RawMessage}";
-                            rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, 1000 + tpTransfer.TpId, Memo, transId, out afterAmount, conn, trans);
+                            rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, Memo, transId, out afterAmount, conn, trans);
                         }
 
                         trans.Commit();
