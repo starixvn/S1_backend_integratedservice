@@ -66,18 +66,24 @@ namespace ThirdPartyService.Service.BLL
         public ApiResult<TransferResult> Transfer(TpTransfer tpTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
+
+            if (tpTransfer.direction != Direction.ToMain && tpTransfer.direction != Direction.ToTp)
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                return apiResult;
+            }
+
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
 
             if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production")
             {
                 apiResult.ErrorCode = ErrorCode.NoAuthority;
-                apiResult.Message = "This Account is for Testing.";
+                apiResult.RawMessage = "This Account is for Testing.";
                 return apiResult;
             }
             else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.Message = tpCustInfoResult.Message;
                 apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
                 apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
                 return apiResult;
@@ -127,7 +133,6 @@ namespace ThirdPartyService.Service.BLL
             else
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.Message = tpCustInfoResult.Message;
             }
 
             return apiResult;
