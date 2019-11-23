@@ -1,0 +1,277 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading.Tasks;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+
+namespace ThirdPartyCore
+{
+    public delegate void InsertLogEventHandler(string url, string input, string output);
+    public interface IThirdPartyHelper
+    {
+        ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
+        ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
+        ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
+        TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        event InsertLogEventHandler InsertLog;
+        bool isHeathly { set; get; }
+    }
+    public abstract class ThirdPartyHelperBase : IThirdPartyHelper
+    {
+        private bool _isHeathly;
+
+        public event InsertLogEventHandler InsertLog;
+
+        public bool isHeathly
+        {
+            set
+            {
+                if (!value)
+                {
+                    CheckTime = CheckTime = DateTime.Now;
+                }
+                _isHeathly = value;
+            }
+
+            get
+            {
+                return _isHeathly;
+            }
+        }
+
+        public bool isUnderMaintenance { set; get; }
+        public DateTime CheckTime { set; get; }
+        public ThirdPartyHelperBase()
+        {
+            isHeathly = true;
+        }
+        public bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) { return true; }
+        protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+
+            if (InsertLog != null)
+            {
+                InsertLog(url, parameters, "1");
+            }
+
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                System.Net.ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+            }
+
+            WebRequest request = WebRequest.Create(url);
+            request.Method = "POST";
+            byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+            if (headers != null)
+            {
+                foreach (var item in headers)
+                {
+                    request.Headers.Add(item.Key, item.Value);
+                }
+            }
+            using (Stream RequestStream = request.GetRequestStream())
+            {
+                RequestStream.Write(byteArray, 0, byteArray.Length);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            using (WebResponse response = request.GetResponse())
+            using (Stream ResponseStream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    sb.Append(line);
+                }
+            }
+
+            if (InsertLog != null)
+            {
+                InsertLog(url, parameters, sb.ToString());
+            }
+
+            return sb.ToString();
+        }
+        protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+            if (InsertLog != null)
+            {
+                InsertLog(url, parameters, "1");
+            }
+            WebRequest request = WebRequest.Create($"{url}?{parameters}");
+            request.Method = "GET";
+            request.ContentType = contentType;
+            if (headers != null)
+            {
+                foreach (var item in headers)
+                {
+                    request.Headers.Add(item.Key, item.Value);
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            using (WebResponse response = request.GetResponse())
+            using (Stream dataStream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(dataStream))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    sb.Append(line);
+                }
+            }
+            if (InsertLog != null)
+            {
+                InsertLog(url, parameters, sb.ToString());
+            }
+            return sb.ToString();
+        }
+        protected string ToMD5(string encodeStr)
+        {
+            using (var cryptoMD5 = System.Security.Cryptography.MD5.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(encodeStr);
+                var hash = cryptoMD5.ComputeHash(bytes);
+                var md5 = BitConverter.ToString(hash)
+                  .Replace("-", String.Empty);
+
+                return md5;
+            }
+        }
+        protected string GetRandomString(int length)
+        {
+            var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            var next = new Random();
+            var builder = new StringBuilder();
+            for (var i = 0; i < length; i++)
+            {
+                builder.Append(str[next.Next(0, str.Length)]);
+            }
+            return builder.ToString();
+        }
+        protected int GetTimestemp()
+        {
+            return Convert.ToInt32((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
+        }
+
+        protected long GetTimestemp1()
+        {
+            return Convert.ToInt64((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds);
+        }
+
+        protected T FromJson<T>(string jsonString)
+        {
+            if (!string.IsNullOrEmpty(jsonString))
+            {
+                return JsonConvert.DeserializeObject<T>(jsonString);
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+        protected string ToJson(object t)
+        {
+            return JsonConvert.SerializeObject(t, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+        }
+
+        protected bool IsJSON(string jsonString)
+        {
+            var value = jsonString.Trim();
+
+            return (value.StartsWith("{") && value.EndsWith("}")) || (value.StartsWith("[") && value.EndsWith("]"));
+        }
+        protected bool IsXML(string xmlString)
+        {
+            var value = xmlString.Trim();
+
+            return (value.StartsWith("<") && value.EndsWith(">"));
+        }
+        public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            Byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+
+            System.Security.Cryptography.RijndaelManaged rm = new System.Security.Cryptography.RijndaelManaged
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = System.Security.Cryptography.CipherMode.ECB,
+                Padding = System.Security.Cryptography.PaddingMode.PKCS7
+            };
+
+            System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateEncryptor();
+            Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+            var base64Str = Convert.ToBase64String(resultArray, 0, resultArray.Length);
+
+            return isEncodeUrl ? System.Web.HttpUtility.UrlEncode(base64Str) : base64Str;
+        }
+        public string AesDecrypt(string str, string key, bool isDecodeUrl = true)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            if (isDecodeUrl)
+                str = System.Web.HttpUtility.UrlDecode(str);
+
+            Byte[] toEncryptArray = Convert.FromBase64String(str);
+
+            System.Security.Cryptography.RijndaelManaged rm = new System.Security.Cryptography.RijndaelManaged
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = System.Security.Cryptography.CipherMode.ECB,
+                Padding = System.Security.Cryptography.PaddingMode.PKCS7
+            };
+
+            System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateDecryptor();
+            Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+            return Encoding.UTF8.GetString(resultArray);
+        }
+        public string SHA1(string dataToSign)
+        {
+            SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
+            byte[] source = Encoding.Default.GetBytes(dataToSign);//將字串轉為Byte[]
+            byte[] crypto = sha1.ComputeHash(source);//進行SHA1加密
+            string result = Convert.ToBase64String(crypto);//把加密後的字串從Byte[]轉為字串
+            return result;
+        }
+
+        public void Info(string InfoContent, string PrefixName)
+        {
+            var LogFolder = $"{System.IO.Directory.GetCurrentDirectory()}\\Logs";
+
+            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now.ToString("yyyyMMdd")}.log";
+            Task.Run(() =>
+            {
+                Directory.CreateDirectory(LogFolder);
+                using (StreamWriter writer = new StreamWriter(filePath, append: true))
+                {
+                    writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  {InfoContent}");
+                }
+            });
+        }
+
+        public abstract ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        public abstract ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
+        public abstract ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
+        public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
+        public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
+
+}
