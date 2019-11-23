@@ -20,7 +20,7 @@ namespace ThirdPartyService.Service.DAL
         public int SetBalance(int custId, int siteId, string userName, decimal Amount, int tpId, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
         {
             int type = typePosition + tpId;
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = Memo, RefTransId = RefTransId, IsDepositOrWithdraw = false });
+            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = Memo, RefTransId = RefTransId });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             conn.Execute("Wallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
