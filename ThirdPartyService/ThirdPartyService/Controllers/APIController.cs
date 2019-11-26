@@ -58,7 +58,6 @@ namespace ThirdPartyService.Controllers
             catch (Exception ex)
             {
                 apiResult.ErrorCode = ErrorCode.SystemError;
-                apiResult.Message = ex.Message;
                 apiResult.RawMessage = ex.Message;
             }
 
@@ -79,7 +78,6 @@ namespace ThirdPartyService.Controllers
             catch (Exception ex)
             {
                 apiResult.ErrorCode = ErrorCode.SystemError;
-                apiResult.Message = ex.Message;
                 apiResult.RawMessage = ex.Message;
             }
 
@@ -98,7 +96,7 @@ namespace ThirdPartyService.Controllers
             catch (Exception ex)
             {
                 apiResult.ErrorCode = ErrorCode.SystemError;
-                apiResult.Message = ex.Message;
+                apiResult.RawMessage = ex.Message;
                 return apiResult;
             }
 
