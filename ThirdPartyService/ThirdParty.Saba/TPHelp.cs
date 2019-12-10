@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -149,7 +148,7 @@ namespace ThirdParty.Saba
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
-            ApiUrl = $"{ApiUrl}/CreateMember";        
+            ApiUrl = $"{ApiUrl}/CreateMember";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
             ApiResult oApiResult = new ApiResult();
@@ -190,7 +189,7 @@ namespace ThirdParty.Saba
             ApiUrl = $"{ApiUrl}/CheckUserBalance";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
-            ApiResult< UserBalance> oApiResult = new ApiResult<UserBalance>();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<GetBalanceResult>(result);
@@ -231,18 +230,19 @@ namespace ThirdParty.Saba
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string langid, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             CreateMemberReq input = new CreateMemberReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
 
             string url;
-            if (appType.ToString() == "Desktop")
-                url = inputs.ContainsKey("FrontUrl") && !String.IsNullOrEmpty(inputs["FrontUrl"]) ? inputs["FrontUrl"] : throw new Exception();
-            else if (appType.ToString() == "Mobile")
-                url = inputs.ContainsKey("MobileUrl") && !String.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception();
-            else 
-                url = inputs.ContainsKey("MobileUrl") && !String.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception();
+            string urlKey = "";
+            if (appType == AppType.Native)
+                urlKey = "MobileUrl";
+            else
+                urlKey = $"{appType}Url";
+
+            url = inputs.ContainsKey(urlKey) && !string.IsNullOrEmpty(inputs[urlKey]) ? inputs[urlKey] : throw new Exception();
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";

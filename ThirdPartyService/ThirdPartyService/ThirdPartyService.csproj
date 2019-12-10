@@ -1,18 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
+    <!--<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
+    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>-->
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
     <PackageReference Include="MySql.Data" Version="8.0.18" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
-    <ProjectReference Include="..\ThirdPartyCore\ThirdPartyCore.csproj" />
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="http://json.schemastore.org/azure-iot-edge-deployment-template-2.0" /></VisualStudio></ProjectExtensions>
 </Project>
