@@ -10,6 +10,11 @@ namespace ThirdParty.Saba
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        Dictionary<string, string> sportTypeDic = new Dictionary<string, string>() {
+            {"1","soccer" },{"2","basketball" },{"5","tennis" }
+            ,{"43","esports" },{"8","baseball" },{"161","numbergame" },{"180","virtualsports" }
+        };
+
         private class Result
         {
             public int error_code { get; set; }
@@ -258,6 +263,27 @@ namespace ThirdParty.Saba
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Message = $"{url}?token={json.Data}&lang={langid}";
+
+                    string SportType = null;
+                    inputs.TryGetValue("gameId", out SportType);
+
+                    if (appType == AppType.Native || appType == AppType.Mobile)
+                    {
+                        string types = $"{SportType},0,l";
+                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}";
+                    }
+                    else
+                    {
+                        string act = null;
+                        string gameId = null;
+
+                        if (inputs.TryGetValue("gameId", out gameId))
+                        {
+                            sportTypeDic.TryGetValue(gameId, out act);
+                        }
+
+                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                    }
                 }
                 else
                 {
