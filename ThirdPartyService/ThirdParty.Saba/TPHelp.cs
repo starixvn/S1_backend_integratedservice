@@ -44,6 +44,7 @@ namespace ThirdParty.Saba
 
         private class GetBalanceReg : Req
         {
+            public string vendor_member_ids { set; get; }
             public int wallet_id { set; get; }
         }
 
@@ -55,9 +56,9 @@ namespace ThirdParty.Saba
         public class Datum
         {
             public string vendor_member_id { get; set; }
-            public int balance { get; set; }
-            public int bonus_balance { get; set; }
-            public int outstanding { get; set; }
+            public decimal balance { get; set; }
+            public decimal bonus_balance { get; set; }
+            public decimal outstanding { get; set; }
             public int currency { get; set; }
             public int error_code { get; set; }
         }
@@ -182,10 +183,10 @@ namespace ThirdParty.Saba
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             GetBalanceReg input = new GetBalanceReg();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_member_ids = tpCustInfo.TpUserName;
             input.wallet_id = 1;
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
@@ -193,7 +194,6 @@ namespace ThirdParty.Saba
 
             ApiUrl = $"{ApiUrl}/CheckUserBalance";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
-
             ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
             if (IsJSON(result))
             {
