@@ -56,10 +56,10 @@ namespace ThirdParty.Saba
         public class Datum
         {
             public string vendor_member_id { get; set; }
-            public decimal balance { get; set; }
-            public decimal bonus_balance { get; set; }
-            public decimal outstanding { get; set; }
-            public int currency { get; set; }
+            public decimal? balance { get; set; }
+            public decimal? bonus_balance { get; set; }
+            public decimal? outstanding { get; set; }
+            public int? currency { get; set; }
             public int error_code { get; set; }
         }
 
@@ -201,10 +201,10 @@ namespace ThirdParty.Saba
                 if (json.error_code == 0)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data.balance = json.Data[0].balance;
-                    oApiResult.Data.outstanding = json.Data[0].outstanding;
+                    oApiResult.Data.balance = json.Data[0].balance ?? 0;
+                    oApiResult.Data.outstanding = json.Data[0].outstanding ?? 0;
                 }
-                else if (json.error_code == 2)
+                else if (json.error_code == 2 || json.error_code == 6)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Data.balance = 0;
