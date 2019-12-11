@@ -40,9 +40,11 @@ namespace ThirdPartyService
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<WalletService>();
             services.AddSingleton<TpTransferInfo>();
+            services.AddSingleton<ServerInfoService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
+            services.AddSingleton<ServerInfoBLL>();
 
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();

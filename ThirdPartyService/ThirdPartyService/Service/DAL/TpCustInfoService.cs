@@ -13,6 +13,7 @@ using ThirdPartyCore;
 using ThirdPartyService.Service.Library;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
+using ThirdPartyService.Service.BLL;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -24,8 +25,9 @@ namespace ThirdPartyService.Service.DAL
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly Common common;
         private readonly IMemoryCache cache;
+        private readonly ServerInfoBLL serverInfoBLL;
 
-        public TpCustInfoService(IWebHostEnvironment environment, IConfiguration configuration, IMemoryCache cache, Tools tools, ThirdPartyHelper thirdPartyHelper, Common common)
+        public TpCustInfoService(IWebHostEnvironment environment, IConfiguration configuration, IMemoryCache cache, Tools tools, ThirdPartyHelper thirdPartyHelper, Common common, ServerInfoBLL serverInfoBLL)
         {
             this.configuration = configuration;
             this.environment = environment;
@@ -33,6 +35,7 @@ namespace ThirdPartyService.Service.DAL
             this.thirdPartyHelper = thirdPartyHelper;
             this.common = common;
             this.cache = cache;
+            this.serverInfoBLL = serverInfoBLL;
         }
         public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId)
         {
@@ -64,13 +67,20 @@ namespace ThirdPartyService.Service.DAL
                         }
 
                         IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpId);
+                        var serverInfo = serverInfoBLL.GetServerInfo(customer.SiteId);
 
                         var regTpCustInfo = new TpCustInfo();
                         regTpCustInfo.TpId = tpId;
                         regTpCustInfo.CustId = customer.CustId;
                         regTpCustInfo.UserName = customer.UserName;
                         regTpCustInfo.SiteId = customer.SiteId;
-                        regTpCustInfo.TpUserName = $"{common.GetEnv()}{customer.SiteId}_{customer.CustId}";
+                        regTpCustInfo.TpUserName = $"{serverInfo.SiteName}_{customer.CustId}";
+
+                        if (environment.EnvironmentName != "Production")
+                        {
+                            regTpCustInfo.TpUserName = $"{common.GetEnv()}{serverInfo.SiteName}_{customer.CustId}";
+                        }
+
                         regTpCustInfo.TpPwd = tools.GetRandomString(7);
                         regTpCustInfo.IsTest = customer.IsTest;
                         regTpCustInfo.ActStatus = customer.ActStatus;
