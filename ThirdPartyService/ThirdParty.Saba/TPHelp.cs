@@ -19,7 +19,9 @@ namespace ThirdParty.Saba
             {"8","baseball" } ,
             {"43","esports" },
             {"161","numbergame" },
-            {"180","virtualsports" }
+            {"180","virtualsports" },
+            {"202","keno" },
+            {"208","virtualsports" }
         };
 
         private class Result
@@ -277,7 +279,11 @@ namespace ThirdParty.Saba
                     if (appType == AppType.Native || appType == AppType.Mobile)
                     {
                         string types = $"{SportType},0,l";
-                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}";
+
+                        if (types == "casino")
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types=CL}";
+                        else
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}";
                     }
                     else
                     {
@@ -288,8 +294,10 @@ namespace ThirdParty.Saba
                         {
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
-
-                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                        if (act=="keno")
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
+                        else
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
                     }
                 }
                 else
