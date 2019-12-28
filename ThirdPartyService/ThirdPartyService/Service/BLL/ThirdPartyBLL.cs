@@ -51,6 +51,11 @@ namespace ThirdPartyService.Service.BLL
                     }
                 }
                 apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
+                /*Use Async to Record Log*/
+                Task.Run(() =>
+                {
+                    tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId);
+                });
             }
             else
             {
@@ -116,9 +121,24 @@ namespace ThirdPartyService.Service.BLL
                 return tpTransferReqResult;
             }
 
-            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, tpTransfer.Amount, tpTransfer.direction, transId, thirdId);
+            decimal amount = tpTransfer.Amount;
+
+            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+            {
+                amount = tpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, tpTransfer.direction, transId, thirdId);
 
             tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, transId);
+            /*Use Async to Record Log*/
+            if (apiResult.ErrorCode == ErrorCode.Success)
+            {
+                Task.Run(() =>
+                {
+                    tpCustInfoService.SetTpLastTradingTime(tpTransfer.CustId, tpTransfer.TpId);
+                });
+            }
             return apiResult;
         }
 
@@ -134,6 +154,12 @@ namespace ThirdPartyService.Service.BLL
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
                 apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+
+                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                {
+                    apiResult.Data.balance = apiResult.Data.balance * tpCustInfoResult.Data.ExchangeRate;
+                    apiResult.Data.outstanding = apiResult.Data.outstanding * tpCustInfoResult.Data.ExchangeRate;
+                }
             }
             else
             {
@@ -156,7 +182,13 @@ namespace ThirdPartyService.Service.BLL
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
 
-                var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, tpTransferInfoModel.Amount, (Direction)tpTransferInfoModel.Direction, tpTransferInfoModel.TransId, tpTransferInfoModel.ThirdId);
+                decimal amount = tpTransferInfoModel.Amount;
+                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                {
+                    amount = tpTransferInfoModel.Amount / tpCustInfoResult.Data.ExchangeRate;
+                }
+
+                var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount, (Direction)tpTransferInfoModel.Direction, tpTransferInfoModel.TransId, tpTransferInfoModel.ThirdId);
                 TpTransfer tpTransfer = new TpTransfer();
                 tpTransfer.direction = (Direction)tpTransferInfoModel.Direction;
                 tpTransfer.Amount = tpTransferInfoModel.Amount;

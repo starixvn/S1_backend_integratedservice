@@ -45,6 +45,7 @@ namespace ThirdPartyService
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<ServerInfoBLL>();
+            services.AddSingleton<TpCustInfoBLL>();
 
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();

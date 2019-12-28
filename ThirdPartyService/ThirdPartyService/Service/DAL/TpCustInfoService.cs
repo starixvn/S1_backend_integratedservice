@@ -14,6 +14,7 @@ using ThirdPartyService.Service.Library;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
 using ThirdPartyService.Service.BLL;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -90,15 +91,16 @@ namespace ThirdPartyService.Service.DAL
                             regTpCustInfo.TpUserName = $"{regTpCustInfo.TpUserName}_test";
                         }
 
-                        var tpCurrencyId = conn.QueryFirstOrDefault<string>("TpCurrency_Get", new { TpId = tpId, CurrencyId = customer.CurrencyId }, commandType: CommandType.StoredProcedure);
+                        var tpCurrency = conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId }, commandType: CommandType.StoredProcedure);
 
-                        if (string.IsNullOrEmpty(tpCurrencyId))
+                        if (tpCurrency == null)
                         {
                             apiResult.ErrorCode = ErrorCode.InvalidCurrency;
                             return apiResult;
                         }
 
-                        regTpCustInfo.TpCurrencyId = tpCurrencyId;
+                        regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
+                        regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
                         Dictionary<string, string> inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyModel(tpId).Setting);
 
                         if (inputs == null)
@@ -149,6 +151,16 @@ namespace ThirdPartyService.Service.DAL
             }
 
             return apiResult;
+        }
+        public void SetTpLastLoginTime(int custId, int tpId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Execute("TpLastLoginTime_Set", new { TpId = tpId, CustId = custId }, commandType: CommandType.StoredProcedure);
+        }
+        public void SetTpLastTradingTime(int custId, int tpId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Execute("TpLastTradingTime_Set", new { TpId = tpId, CustId = custId }, commandType: CommandType.StoredProcedure);
         }
     }
 }
