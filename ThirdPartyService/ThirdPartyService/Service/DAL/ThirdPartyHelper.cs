@@ -11,6 +11,7 @@ using ThirdPartyService.Service.Model;
 using Dapper;
 using System.Reflection;
 using System.Data;
+using Microsoft.Extensions.Logging;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -20,11 +21,13 @@ namespace ThirdPartyService.Service.DAL
         private static ConcurrentDictionary<int, ThirdPartyModel> ThirdPartyModelContainer = new ConcurrentDictionary<int, ThirdPartyModel>();
         private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
+        private readonly ILogger<ThirdPartyHelper> logger;
 
-        public ThirdPartyHelper(IWebHostEnvironment environment, IConfiguration configuration)
+        public ThirdPartyHelper(ILogger<ThirdPartyHelper> logger,IWebHostEnvironment environment, IConfiguration configuration)
         {
             this.environment = environment;
             this.configuration = configuration;
+            this.logger = logger;
         }
 
         public ThirdPartyModel GetThirdPartyModel(int tpId)
@@ -51,13 +54,18 @@ namespace ThirdPartyService.Service.DAL
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
                 //var oThirdPartyHelper = new Lazy<IThirdPartyHelper>(() => (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
                 //if (oThirdPartyHelper.IsValueCreated)
-                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
-                //ThirdPartyHelperContainer[apiType].InsertLog += InsertLog;
+                string proxyHost = configuration.GetValue<string>("ProxyHost");
+                int proxyPort = configuration.GetValue<int>("ProxyPort");
+                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType, proxyHost, proxyPort));
+                ThirdPartyHelperContainer[tpId].InsertLog += InsertLog;
                 //oThirdPartyModel.ApiName
             }
             return ThirdPartyHelperContainer[tpId];
         }
-
+        public void InsertLog(string url, string input, string output)
+        {
+            logger.LogInformation($"Url={url}, Input={input}, Output={output}");
+        }
         public string GetTpLanId(int tpId, string langId)
         {
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))

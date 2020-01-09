@@ -27,10 +27,15 @@ namespace ThirdPartyCore
     }
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper
     {
+        private readonly string proxyHost;
+        private readonly int proxyPort;
+        public ThirdPartyHelperBase(string proxyHost = null, int proxyPort = 0)
+        {
+            this.proxyHost = proxyHost;
+            this.proxyPort = proxyPort;
+        }
         private bool _isHeathly;
-
         public event InsertLogEventHandler InsertLog;
-
         public bool isHeathly
         {
             set
@@ -58,18 +63,20 @@ namespace ThirdPartyCore
         protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
 
-            if (InsertLog != null)
-            {
-                InsertLog(url, parameters, "1");
-            }
+            InsertLog?.Invoke(url, parameters, "1");
 
             if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
             {
-                System.Net.ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
                 ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
             }
 
             WebRequest request = WebRequest.Create(url);
+            if (string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
             request.Method = "POST";
             byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
             request.ContentType = contentType;
@@ -98,19 +105,13 @@ namespace ThirdPartyCore
                 }
             }
 
-            if (InsertLog != null)
-            {
-                InsertLog(url, parameters, sb.ToString());
-            }
+            InsertLog?.Invoke(url, parameters, sb.ToString());
 
             return sb.ToString();
         }
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
-            if (InsertLog != null)
-            {
-                InsertLog(url, parameters, "1");
-            }
+            InsertLog?.Invoke(url, parameters, "1");
             WebRequest request = WebRequest.Create($"{url}?{parameters}");
             request.Method = "GET";
             request.ContentType = contentType;
@@ -133,15 +134,12 @@ namespace ThirdPartyCore
                     sb.Append(line);
                 }
             }
-            if (InsertLog != null)
-            {
-                InsertLog(url, parameters, sb.ToString());
-            }
+            InsertLog?.Invoke(url, parameters, sb.ToString());
             return sb.ToString();
         }
         protected string ToMD5(string encodeStr)
         {
-            using (var cryptoMD5 = System.Security.Cryptography.MD5.Create())
+            using (var cryptoMD5 = MD5.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(encodeStr);
                 var hash = cryptoMD5.ComputeHash(bytes);
@@ -208,14 +206,14 @@ namespace ThirdPartyCore
             if (string.IsNullOrEmpty(str)) return null;
             Byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
 
-            System.Security.Cryptography.RijndaelManaged rm = new System.Security.Cryptography.RijndaelManaged
+            RijndaelManaged rm = new RijndaelManaged
             {
                 Key = Encoding.UTF8.GetBytes(key),
-                Mode = System.Security.Cryptography.CipherMode.ECB,
-                Padding = System.Security.Cryptography.PaddingMode.PKCS7
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
             };
 
-            System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateEncryptor();
+            ICryptoTransform cTransform = rm.CreateEncryptor();
             Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
 
             var base64Str = Convert.ToBase64String(resultArray, 0, resultArray.Length);
@@ -230,14 +228,14 @@ namespace ThirdPartyCore
 
             Byte[] toEncryptArray = Convert.FromBase64String(str);
 
-            System.Security.Cryptography.RijndaelManaged rm = new System.Security.Cryptography.RijndaelManaged
+            RijndaelManaged rm = new RijndaelManaged
             {
                 Key = Encoding.UTF8.GetBytes(key),
-                Mode = System.Security.Cryptography.CipherMode.ECB,
-                Padding = System.Security.Cryptography.PaddingMode.PKCS7
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
             };
 
-            System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateDecryptor();
+            ICryptoTransform cTransform = rm.CreateDecryptor();
             Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
 
             return Encoding.UTF8.GetString(resultArray);
@@ -253,7 +251,7 @@ namespace ThirdPartyCore
 
         public void Info(string InfoContent, string PrefixName)
         {
-            var LogFolder = $"{System.IO.Directory.GetCurrentDirectory()}\\Logs";
+            var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";
 
             var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now.ToString("yyyyMMdd")}.log";
             Task.Run(() =>
