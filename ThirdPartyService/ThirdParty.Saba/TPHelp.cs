@@ -10,6 +10,11 @@ namespace ThirdParty.Saba
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        public TpHelper(string proxyHost = null, int proxyPort = 0) : base(proxyHost, proxyPort)
+        {
+
+        }
+
         Dictionary<string, string> sportTypeDic = new Dictionary<string, string>() {
             {"1","soccer" },
             {"2","basketball" },
@@ -288,7 +293,7 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        
+
                         oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}";
                     }
                     else
