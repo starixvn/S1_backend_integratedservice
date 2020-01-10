@@ -72,7 +72,7 @@ namespace ThirdPartyCore
             }
 
             WebRequest request = WebRequest.Create(url);
-            if (string.IsNullOrEmpty(proxyHost))
+            if (!string.IsNullOrEmpty(proxyHost))
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
             }
@@ -81,6 +81,7 @@ namespace ThirdPartyCore
             byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
             request.ContentType = contentType;
             request.ContentLength = byteArray.Length;
+
             if (headers != null)
             {
                 foreach (var item in headers)
@@ -106,7 +107,6 @@ namespace ThirdPartyCore
             }
 
             InsertLog?.Invoke(url, parameters, sb.ToString());
-
             return sb.ToString();
         }
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
