@@ -47,6 +47,9 @@ namespace ThirdPartyService
             services.AddSingleton<ServerInfoBLL>();
             services.AddSingleton<TpCustInfoBLL>();
 
+            ThirdPartyCore.ThirdPartyHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
+            ThirdPartyCore.ThirdPartyHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
+
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();
         }

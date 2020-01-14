@@ -54,9 +54,7 @@ namespace ThirdPartyService.Service.DAL
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
                 //var oThirdPartyHelper = new Lazy<IThirdPartyHelper>(() => (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
                 //if (oThirdPartyHelper.IsValueCreated)
-                string proxyHost = configuration.GetValue<string>("ProxyHost");
-                int proxyPort = configuration.GetValue<int>("ProxyPort");
-                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType, proxyHost, proxyPort));
+                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
                 ThirdPartyHelperContainer[tpId].InsertLog += InsertLog;
                 //oThirdPartyModel.ApiName
             }

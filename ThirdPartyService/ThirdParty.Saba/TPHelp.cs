@@ -10,11 +10,6 @@ namespace ThirdParty.Saba
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        public TpHelper(string proxyHost = null, int proxyPort = 0) : base(proxyHost, proxyPort)
-        {
-
-        }
-
         Dictionary<string, string> sportTypeDic = new Dictionary<string, string>() {
             {"1","soccer" },
             {"2","basketball" },

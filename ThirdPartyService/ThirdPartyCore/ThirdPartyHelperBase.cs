@@ -27,13 +27,8 @@ namespace ThirdPartyCore
     }
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper
     {
-        private readonly string proxyHost;
-        private readonly int proxyPort;
-        public ThirdPartyHelperBase(string proxyHost = null, int proxyPort = 0)
-        {
-            this.proxyHost = proxyHost;
-            this.proxyPort = proxyPort;
-        }
+        public static string proxyHost;
+        public static int proxyPort;
         private bool _isHeathly;
         public event InsertLogEventHandler InsertLog;
         public bool isHeathly
