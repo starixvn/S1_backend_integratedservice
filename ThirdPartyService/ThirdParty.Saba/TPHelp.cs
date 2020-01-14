@@ -120,13 +120,13 @@ namespace ThirdParty.Saba
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<TransResult>(result);
-                if (json.error_code == 0)
+                if (json.error_code == 0 && json.Data.status == 0)
                 {
                     apiResult.ErrorCode = ErrorCode.Success;
                     apiResult.Data.Status = TransferStatus.Success;
                     apiResult.Data.ThirdId = json.Data.trans_id.ToString();
                 }
-                else if (json.error_code == 1 || json.error_code == 2)
+                else if (json.error_code == 0 && json.Data.status == 1)
                 {
                     apiResult.RawMessage = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
@@ -356,13 +356,20 @@ namespace ThirdParty.Saba
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<TransResult>(result);
-                if (json.error_code == 0)
+                if (json.error_code == 0 && json.Data.status == 0)
                 {
                     apiResult.ErrorCode = ErrorCode.Success;
                     apiResult.Data.Status = TransferStatus.Success;
                     apiResult.Data.ThirdId = json.Data.trans_id.ToString();
                 }
-                else if (json.error_code == 1)
+                else if (json.error_code == 0 && json.Data.status == 1)
+                {
+                    apiResult.RawMessage = json.message;
+                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Data.Status = TransferStatus.Fail;
+                }
+                else if (json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
                 {
                     apiResult.RawMessage = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
