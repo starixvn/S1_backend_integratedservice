@@ -161,7 +161,10 @@ namespace ThirdParty.Saba
             input.operatorid = null;
             input.userName = input.vendor_member_id;
             input.oddsType = "1";
-            input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
+            if (tpCustInfo.IsTest)
+                input.currency = 20;
+            else
+                input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
             input.maxtransfer = int.MaxValue;
             input.mintransfer = 1;
 
@@ -336,7 +339,10 @@ namespace ThirdParty.Saba
             input.vendor_member_id = tpCustInfo.TpUserName;
             input.vendor_trans_id = TransID;
             input.amount = Amount;
-            input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
+            if (tpCustInfo.IsTest)
+                input.currency = 20;
+            else
+                input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
             input.direction = direction == Direction.ToTp ? 1 : 0;
             input.wallet_id = 1;
 
