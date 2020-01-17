@@ -292,7 +292,7 @@ namespace ThirdParty.Saba
                             types = "CL";
                         }
 
-                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}";
+                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
                     }
                     else
                     {
