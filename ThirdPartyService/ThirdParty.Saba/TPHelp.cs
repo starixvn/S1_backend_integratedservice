@@ -285,7 +285,8 @@ namespace ThirdParty.Saba
 
                         if (SportType == "202")
                         {
-                            sportTypeDic.TryGetValue(SportType, out types);
+                            //sportTypeDic.TryGetValue(SportType, out types);
+                            types = "Keno";
                         }
                         else if (SportType == "208")
                         {
