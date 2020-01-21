@@ -247,24 +247,26 @@ namespace ThirdParty.Saba
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string langid, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl Error");
             CreateMemberReq input = new CreateMemberReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception("vendor_id Error");
             input.vendor_member_id = tpCustInfo.TpUserName;
 
             string url;
             string urlKey = "";
-            if (appType == AppType.Native)
-                urlKey = "MobileUrl";
-            else
-                urlKey = $"{appType}Url";
 
-            url = inputs.ContainsKey(urlKey) && !string.IsNullOrEmpty(inputs[urlKey]) ? inputs[urlKey] : throw new Exception();
+            urlKey = $"{appType}Url";
+
+            url = inputs.ContainsKey(urlKey) && !string.IsNullOrEmpty(inputs[urlKey]) ? inputs[urlKey] : throw new Exception("url Error");
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
             ApiUrl = $"{ApiUrl}/Login";
+            if (appType == AppType.Native)
+            {
+                ApiUrl = $"{inputs["ApiUrl"]}/AppLogIn";
+            }
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
             ApiResult oApiResult = new ApiResult();
@@ -279,7 +281,11 @@ namespace ThirdParty.Saba
                     string SportType = null;
                     inputs.TryGetValue("gameId", out SportType);
 
-                    if (appType == AppType.Native || appType == AppType.Mobile)
+                    if (appType == AppType.Native)
+                    {
+                        oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
+                    }
+                    else if (appType == AppType.Mobile)
                     {
                         string types = $"{SportType},0,l";
 
