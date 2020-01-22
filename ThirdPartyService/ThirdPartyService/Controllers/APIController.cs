@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -24,14 +25,16 @@ namespace ThirdPartyService.Controllers
         private readonly Common common;
         private readonly TpCustInfoService tpCustInfoService;
         private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly ILogger<APIController> logger;
 
-        public APIController(IWebHostEnvironment env, IConfiguration configuration, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL)
+        public APIController(IWebHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL)
         {
             this.env = env;
             this.configuration = configuration;
             this.common = common;
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyBLL = thirdPartyBLL;
+            this.logger = logger;
         }
 
         [HttpGet]
@@ -57,6 +60,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -77,6 +81,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -95,6 +100,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
+                logger.LogError(ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
