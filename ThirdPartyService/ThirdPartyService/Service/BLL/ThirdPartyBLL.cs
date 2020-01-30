@@ -170,6 +170,28 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
+        public ApiResult Logout(TpInfo tpInfo)
+        {
+            var apiResult = new ApiResult();
+            apiResult.ErrorCode = ErrorCode.SystemError;
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            {
+                var tpHelper = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId);
+                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyModel(tpInfo.TpId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+                apiResult = tpHelper.Logout(tpCustInfoResult.Data, inputs);
+
+                return apiResult;
+            }
+            else
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+            }
+
+            return apiResult;
+        }
 
         public void CheckTransfer(TpTransferInfoModel tpTransferInfoModel)
         {

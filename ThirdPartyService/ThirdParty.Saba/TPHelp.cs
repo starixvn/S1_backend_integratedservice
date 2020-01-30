@@ -8,7 +8,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.Saba
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
         Dictionary<string, string> sportTypeDic = new Dictionary<string, string>() {
             {"1","soccer" },
@@ -392,6 +392,42 @@ namespace ThirdParty.Saba
                 apiResult.RawErrorCode = "1";
                 apiResult.ErrorCode = ErrorCode.TransferPending;
                 apiResult.Data.Status = TransferStatus.Pending;
+            }
+
+            return apiResult;
+        }
+
+        public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            Req input = new Req();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_member_id = tpCustInfo.TpUserName;
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
+            string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+
+            ApiUrl = $"{ApiUrl}/KickUser";
+            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
+
+            ApiResult apiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<Result>(result);
+                if (json.error_code == 0)
+                {
+                    apiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    apiResult.RawMessage = json.message;
+                    apiResult.RawErrorCode = json.error_code.ToString();
+                }
+            }
+            else
+            {
+                apiResult.RawMessage = "No Result";
+                apiResult.RawErrorCode = "1";
             }
 
             return apiResult;

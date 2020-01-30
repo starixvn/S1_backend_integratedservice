@@ -108,5 +108,25 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+        [HttpPost]
+        public ActionResult<ApiResult> Logout([FromBody]TpInfo tpInfo)
+        {
+            var apiResult = new ApiResult();
+            apiResult.ErrorCode = ErrorCode.SystemError;
+
+            try
+            {
+                apiResult = thirdPartyBLL.Logout(tpInfo);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+                return apiResult;
+            }
+
+            return apiResult;
+        }
     }
 }

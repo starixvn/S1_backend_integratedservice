@@ -25,6 +25,11 @@ namespace ThirdPartyCore
         event InsertLogEventHandler InsertLog;
         bool isHeathly { set; get; }
     }
+
+    public interface IThirdPartyParticular
+    {
+        ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper
     {
         public static string proxyHost;
