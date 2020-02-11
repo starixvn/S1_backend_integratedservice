@@ -218,64 +218,72 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             }
                             else
                             {
-                                if ((betDetial.sport_type ?? 0) > 200 || (betDetial.sport_type ?? 0) == 165)
+                                if (((betDetial.sport_type ?? 0) > 200 || (betDetial.sport_type ?? 0) == 165) && (betDetial.sport_type ?? 0) != 202 && (betDetial.sport_type ?? 0) != 220)
                                 {
-                                    betRecordInfo.GameType = GameType.Saba_Casino;
+                                    betRecordInfo.GameType = GameType.Saba_RNG;
                                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                                 }
-                                else if (betDetial.odds_type == 1)
+                                else
                                 {
-                                    if (betDetial.odds > 0 && betDetial.odds < 0.5m)
+                                    if ((betDetial.sport_type ?? 0) != 202 || (betDetial.sport_type ?? 0) != 220)
                                     {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        betRecordInfo.GameType = GameType.Saba_Lottery;
                                     }
-                                    else
+
+                                    if (betDetial.odds_type == 1)
                                     {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        if (betDetial.odds > 0 && betDetial.odds < 0.5m)
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        }
+                                        else
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        }
                                     }
-                                }
-                                else if (betDetial.odds_type == 2)
-                                {
-                                    if (betDetial.odds < 0.5m)
+                                    else if (betDetial.odds_type == 2)
                                     {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        if (betDetial.odds < 0.5m)
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        }
+                                        else
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        }
                                     }
-                                    else
+                                    else if (betDetial.odds_type == 3)
                                     {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        if (betDetial.odds < 1.5m)
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        }
+                                        else
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        }
                                     }
-                                }
-                                else if (betDetial.odds_type == 3)
-                                {
-                                    if (betDetial.odds < 1.5m)
+                                    else if (betDetial.odds_type == 4)
                                     {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        if (betDetial.odds < -2m)
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        }
+                                        else
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        }
                                     }
-                                    else
+                                    else if (betDetial.odds_type == 5)
                                     {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 4)
-                                {
-                                    if (betDetial.odds < -2m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 5)
-                                {
-                                    if (betDetial.odds < -200m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        if (betDetial.odds < -200m)
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                        }
+                                        else
+                                        {
+                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                        }
                                     }
                                 }
                             }

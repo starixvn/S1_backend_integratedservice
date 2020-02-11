@@ -81,12 +81,28 @@ namespace ThirdPartyBetHistory.Service.DAL
                 {
                     if (betRecord.SettlementType == SettlementType.SettledForValid)
                     {
-                        SetTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.Stake, betRecord.TicketStatus == TicketStatus.Win ? betRecord.WinlostAmount : 0, "", betRecord.TransId, conn, trans);
+                        SetTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.Stake, betRecord.TicketStatus == TicketStatus.Win ? betRecord.WinlostAmount : 0, "Settled", betRecord.TransId, conn, trans);
                     }
                 }
                 else
                 {
-
+                    if (RefBetRecord.SettlementType == SettlementType.UnSettled && betRecord.SettlementType == SettlementType.SettledForValid)
+                    {
+                        SetTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.Stake, betRecord.TicketStatus == TicketStatus.Win ? betRecord.WinlostAmount : 0, "Settled", betRecord.TransId, conn, trans);
+                    }
+                    else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.UnSettled)
+                    {
+                        SetTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.Stake * -1, RefBetRecord.TicketStatus == TicketStatus.Win ? RefBetRecord.WinlostAmount * -1 : 0, $"UnSettled", RefBetRecord.TransId, conn, trans);
+                    }
+                    else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType != SettlementType.SettledForValid)
+                    {
+                        SetTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.Stake * -1, RefBetRecord.TicketStatus == TicketStatus.Win ? RefBetRecord.WinlostAmount * -1 : 0, $"Re-Settled", RefBetRecord.TransId, conn, trans);
+                    }
+                    else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && (RefBetRecord.Stake != betRecord.Stake || RefBetRecord.WinlostAmount != betRecord.WinlostAmount))
+                    {
+                        SetTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.Stake * -1, RefBetRecord.TicketStatus == TicketStatus.Win ? RefBetRecord.WinlostAmount * -1 : 0, $"Re-Settled", RefBetRecord.TransId, conn, trans);
+                        SetTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.Stake, betRecord.TicketStatus == TicketStatus.Win ? betRecord.WinlostAmount : 0, "Re-Settled", betRecord.TransId, conn, trans);
+                    }
                 }
 
                 var result = SetTpBetRecord(betRecord, tpCustInfo, conn, trans);

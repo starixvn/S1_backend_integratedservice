@@ -26,6 +26,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba_Sports = 1,
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
-        Saba_Casino = 4
+        Saba_RNG = 4,
+        Saba_Lottery = 5
     }
 }
