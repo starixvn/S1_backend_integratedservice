@@ -83,7 +83,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string ticket_status { get; set; }
             public string betfrom { get; set; }
             public string islive { get; set; }
-            public int last_ball_no { get; set; }
+            public int? last_ball_no { get; set; }
             public string bet_team { get; set; }
             public DateTime winlost_datetime { get; set; }
             public int bet_type { get; set; }
