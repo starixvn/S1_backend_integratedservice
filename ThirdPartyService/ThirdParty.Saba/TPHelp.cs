@@ -22,7 +22,8 @@ namespace ThirdParty.Saba
             {"161","numbergame" },
             {"180","virtualsports" },
             {"202","keno" },
-            {"208","casino" }
+            {"208","casino" },
+            {"211","allbet" }
         };
 
         private class Result
@@ -299,8 +300,17 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
+                        else if (SportType == "211")
+                        {
+                            types = "Allbet";
+                        }
 
-                        oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
+                        if (SportType == "211")
+                        { 
+                            oApiResult.Message = $"{url}?types=AllBet&token={json.Data}&LoginUrl={inputs["LoginUrl"]}";
+                        }
+                        else
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
                     }
                     else
                     {
