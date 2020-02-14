@@ -295,6 +295,18 @@ namespace ThirdParty.Saba
                     string SportType = null;
                     inputs.TryGetValue("gameId", out SportType);
 
+                    if (SportType == "211")
+                    {
+                        if (AllbetlangTypeDic.ContainsKey(langid))
+                        {
+                            langid = AllbetlangTypeDic[langid];
+                        }
+                        else
+                        {
+                            langid = "en";
+                        }
+                    }
+
                     if (appType == AppType.Native)
                     {
                         oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
@@ -305,25 +317,21 @@ namespace ThirdParty.Saba
 
                         if (SportType == "202")
                         {
-                            //sportTypeDic.TryGetValue(SportType, out types);
                             types = "Keno";
                         }
                         else if (SportType == "208")
                         {
                             types = "CL";
                         }
-                        else if (SportType == "211")
-                        {
-                            types = "Allbet";
-                            langid= AllbetlangTypeDic[langid];
-                        }
 
                         if (SportType == "211")
                         {
-                            oApiResult.Message = $"{url}?types=AllBet&token={json.Data}&LoginUrl={inputs["LoginUrl"]}&lang={langid}";
+                            oApiResult.Message = $"{url}?types=AllBet&token={json.Data}&lang={langid}";
                         }
                         else
+                        {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
+                        }
                     }
                     else
                     {
