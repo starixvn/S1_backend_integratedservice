@@ -26,6 +26,18 @@ namespace ThirdParty.Saba
             {"211","allbet" }
         };
 
+        Dictionary<string, string> AllbetlangTypeDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+            {"cs","zh_CN" },
+            {"ch","zh_TW" },
+            {"vn","vi" },
+            {"en","en" },
+            {"jp","ja" },
+            {"es","es" },
+            {"ru","ru" },
+            {"id","id" },
+            {"ko","ko" }
+        };
+
         private class Result
         {
             public int error_code { get; set; }
@@ -303,11 +315,12 @@ namespace ThirdParty.Saba
                         else if (SportType == "211")
                         {
                             types = "Allbet";
+                            langid= AllbetlangTypeDic[langid];
                         }
 
                         if (SportType == "211")
-                        { 
-                            oApiResult.Message = $"{url}?types=AllBet&token={json.Data}&LoginUrl={inputs["LoginUrl"]}";
+                        {
+                            oApiResult.Message = $"{url}?types=AllBet&token={json.Data}&LoginUrl={inputs["LoginUrl"]}&lang={langid}";
                         }
                         else
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
