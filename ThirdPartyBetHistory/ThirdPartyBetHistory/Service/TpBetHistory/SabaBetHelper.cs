@@ -292,11 +292,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                             }
-                            else if (betDetial.ticket_status.Equals("won", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Win;
                             }
-                            else if (betDetial.ticket_status.Equals("lose", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Lost;
                             }
@@ -397,11 +397,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                             }
-                            else if (betDetial.ticket_status.Equals("won", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Win;
                             }
-                            else if (betDetial.ticket_status.Equals("lose", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Lost;
                             }
@@ -505,11 +505,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                             }
-                            else if (betDetial.ticket_status.Equals("won", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Win;
                             }
-                            else if (betDetial.ticket_status.Equals("lose", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Lost;
                             }
