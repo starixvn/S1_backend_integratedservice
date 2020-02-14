@@ -201,6 +201,20 @@ namespace ThirdPartyCore
 
             return (value.StartsWith("<") && value.EndsWith(">"));
         }
+        public string DESEncrypt(string inString, string secretkey)
+        {
+            var EncryptKey = Encoding.ASCII.GetBytes(secretkey);
+            using var ms = new MemoryStream();
+            using var cs = new CryptoStream(ms, new
+            DESCryptoServiceProvider().CreateEncryptor(EncryptKey, EncryptKey),
+            CryptoStreamMode.Write);
+            using var sw = new StreamWriter(cs);
+            sw.Write(inString);
+            sw.Flush();
+            cs.FlushFinalBlock();
+            sw.Flush();
+            return Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
+        }
         public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;
