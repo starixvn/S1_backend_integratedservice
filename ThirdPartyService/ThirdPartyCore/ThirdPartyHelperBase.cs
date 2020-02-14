@@ -201,7 +201,7 @@ namespace ThirdPartyCore
 
             return (value.StartsWith("<") && value.EndsWith(">"));
         }
-        public string DESEncrypt(string inString, string secretkey)
+        protected string DESEncrypt(string inString, string secretkey)
         {
             var EncryptKey = Encoding.ASCII.GetBytes(secretkey);
             using var ms = new MemoryStream();
