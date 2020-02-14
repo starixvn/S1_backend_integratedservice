@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
@@ -201,6 +202,16 @@ namespace ThirdPartyCore
 
             return (value.StartsWith("<") && value.EndsWith(">"));
         }
+        protected T XMLDeserialize<T>(string xmlString) where T : class
+        {
+            XmlSerializer deserializer = new XmlSerializer(typeof(T));
+            using (TextReader reader = new StringReader(xmlString))
+            {
+                object deserializationObj = deserializer.Deserialize(reader);
+                return deserializationObj as T;
+            };
+        }
+
         protected string DESEncrypt(string inString, string secretkey)
         {
             var EncryptKey = Encoding.ASCII.GetBytes(secretkey);

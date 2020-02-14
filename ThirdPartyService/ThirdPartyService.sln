@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartyService", "ThirdP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Saba", "ThirdParty.Saba\ThirdParty.Saba.csproj", "{C703CCC4-143D-4387-9784-DE0752186597}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartyCore", "ThirdPartyCore\ThirdPartyCore.csproj", "{41FCC388-9A32-4922-BBA3-1251AC928560}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartyCore", "ThirdPartyCore\ThirdPartyCore.csproj", "{41FCC388-9A32-4922-BBA3-1251AC928560}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.SA", "ThirdParty.SA\ThirdParty.SA.csproj", "{346CF86E-A9C6-457D-8192-F26CA63C810B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{41FCC388-9A32-4922-BBA3-1251AC928560}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41FCC388-9A32-4922-BBA3-1251AC928560}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41FCC388-9A32-4922-BBA3-1251AC928560}.Release|Any CPU.Build.0 = Release|Any CPU
+		{346CF86E-A9C6-457D-8192-F26CA63C810B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{346CF86E-A9C6-457D-8192-F26CA63C810B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{346CF86E-A9C6-457D-8192-F26CA63C810B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{346CF86E-A9C6-457D-8192-F26CA63C810B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
