@@ -32,10 +32,10 @@ namespace ThirdParty.Saba
             {"vn","vi" },
             {"en","en" },
             {"jp","ja" },
-            {"es","es" },
             {"ru","ru" },
             {"id","id" },
-            {"ko","ko" }
+            {"ko","ko" },
+            {"th","th" }
         };
 
         private class Result
