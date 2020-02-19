@@ -111,8 +111,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                 {
                     SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.Stake, "Settled", betRecord.TransId, conn, trans);
                 }
-                else if ((RefBetRecord != null
-                    && RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
+                else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
                     && (betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.UnSettled))
                 {
                     SetWithdrawalLimitTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.Stake * -1, betRecord.TicketStatus == TicketStatus.UnSettled ? "UnSettled" : "Re-Settled", RefBetRecord.TransId, conn, trans);
@@ -131,8 +130,9 @@ namespace ThirdPartyBetHistory.Service.DAL
                     && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                 {
                     SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
+                    AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                 }
-                else if ((RefBetRecord != null || RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
+                else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
                     && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                 {
                     decimal RefWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
@@ -141,6 +141,21 @@ namespace ThirdPartyBetHistory.Service.DAL
                     if (RefWinnings != Winnings || RefLosses != Losses)
                     {
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", betRecord.TransId, conn, trans);
+                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
+                    }
+                }
+
+                if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund)
+                    && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                {
+                    SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, betRecord.Stake, conn, trans);
+                }
+                else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
+                    && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                {
+                    if (RefBetRecord.Stake != betRecord.Stake)
+                    {
+                        SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, betRecord.Stake - RefBetRecord.Stake, conn, trans);
                     }
                 }
 
@@ -176,6 +191,14 @@ namespace ThirdPartyBetHistory.Service.DAL
         public int SetWinLostAmount(int TpId, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.Execute("Common_WinLostAmount_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
+        }
+        public int SetEffectiveBetSum(int CustId, int SiteId, decimal Stake, MySqlConnection conn, MySqlTransaction trans)
+        {
+            return conn.Execute("Service_EffectiveBetSum_Set", new { CustId = CustId, SiteId = SiteId, Stake = Stake }, transaction: trans, commandType: CommandType.StoredProcedure);
+        }
+        public int AutoCancelBonus(int CustId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetTicketKey(int TpId, long TicketKey)
         {
