@@ -220,14 +220,20 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 if (((betDetial.sport_type ?? 0) > 200 || (betDetial.sport_type ?? 0) == 165) && (betDetial.sport_type ?? 0) != 202 && (betDetial.sport_type ?? 0) != 220)
                                 {
-                                    betRecordInfo.GameType = GameType.Saba_RNG;
+                                    betRecordInfo.GameType = betDetial.sport_type switch
+                                    {
+                                        211 => GameType.Allbet,
+                                        248 => GameType.PP,
+                                        _ => GameType.Saba_RNG
+                                    };
+
                                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                                 }
                                 else
                                 {
                                     if ((betDetial.sport_type ?? 0) != 202 || (betDetial.sport_type ?? 0) != 220)
                                     {
-                                        betRecordInfo.GameType = GameType.Saba_Lottery;
+                                        betRecordInfo.GameType = GameType.Keno_Lottery;
                                     }
 
                                     if (betDetial.odds_type == 1)
