@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,8 +34,21 @@ namespace ThirdPartyBetHistory.Service
         protected async Task<string> HttpPostAsync(string url, string parameters, string contentType)
         {
             var data = new StringContent(parameters, Encoding.UTF8, contentType);
+            HttpClientHandler handler = null;
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler = new HttpClientHandler()
+                {
+                    Proxy = new WebProxy(proxyHost, proxyPort),
+                    UseProxy = true,
+                };
+            }
+            else
+            {
+                handler = new HttpClientHandler();
+            }
 
-            using var client = new HttpClient();
+            using var client = new HttpClient(handler);
 
             var response = await client.PostAsync(url, data);
 
