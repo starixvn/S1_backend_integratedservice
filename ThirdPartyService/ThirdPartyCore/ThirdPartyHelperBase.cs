@@ -114,6 +114,10 @@ namespace ThirdPartyCore
         {
             InsertLog?.Invoke(url, parameters, "1");
             WebRequest request = WebRequest.Create($"{url}?{parameters}");
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
             request.Method = "GET";
             request.ContentType = contentType;
             if (headers != null)
