@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.Library;
 
 namespace ThirdPartySeamlessWallet
 {
@@ -27,8 +29,15 @@ namespace ThirdPartySeamlessWallet
         {
             services.AddMemoryCache();
             services.AddMvc().AddXmlSerializerFormatters();
+            /*Library*/
+            services.AddSingleton<Tools>();
 
+            /*DAL*/
+            services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
+
+            /*BLL*/
+            services.AddSingleton<TpCustInfoBLL>();
 
             services.AddControllers();
         }

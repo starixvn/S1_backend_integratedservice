@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -29,10 +30,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 0 : -1;
         }
-        public decimal GetBalance(int custId)
+        public TpCustBalance GetBalance(int tpId, string tpUserName)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<TpCustBalance>("Service_TpCustBalance_Get", new { TpId = tpId, TpUserName = tpUserName }, commandType: CommandType.StoredProcedure);
         }
     }
 }

@@ -124,6 +124,7 @@ namespace ThirdPartyService.Service.DAL
                         {
                             apiResult.ErrorCode = createMemberResult.ErrorCode;
                             apiResult.RawMessage = createMemberResult.RawMessage;
+                            apiResult.RawErrorCode = createMemberResult.RawErrorCode;
                             return apiResult;
                         }
                     }

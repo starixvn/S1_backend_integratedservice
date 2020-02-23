@@ -14,13 +14,19 @@ namespace ThirdParty.SA
 {
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
-        private class Result
+        [XmlRoot("APIResponse")]
+        public class Result
         {
-            public Byte ErrorMsgId { get; set; }
+            public int ErrorMsgId { get; set; }
             public string ErrorMsg { get; set; }
         }
-
-        private class LoginResult : Result
+        [XmlRoot("RegUserInfoResponse")]
+        public class RegUserInfoResponse : Result
+        {
+            public string Username { get; set; }
+        }
+        [XmlRoot("LoginRequestResponse")]
+        public class LoginResult : Result
         {
             public string Token { set; get; }
             public string DisplayName { set; get; }
@@ -63,38 +69,49 @@ namespace ThirdParty.SA
             throw new NotImplementedException();
         }
 
-       
+
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             CreateMemberReq input = new CreateMemberReq();
             input.method = "RegUserInfo";
+
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x");
+
             input.username = tpCustInfo.TpUserName;
             input.currencyType = tpCustInfo.TpCurrencyId;
             var time = new DateTimeOffset(DateTime.Now);
             string _time = time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss");
             input.time = _time;
 
-            string secretKey = inputs.ContainsKey("SecretKey") && !String.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
-            string encrypKey = inputs.ContainsKey("EncrypKey") && !String.IsNullOrEmpty(inputs["EncrypKey"]) ? inputs["EncrypKey"] : throw new Exception();
-            string md5Key = inputs.ContainsKey("MD5Key") && !String.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
-            
+            string secretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
+            string encrypKey = inputs.ContainsKey("EncrypKey") && !string.IsNullOrEmpty(inputs["EncrypKey"]) ? inputs["EncrypKey"] : throw new Exception();
+            string md5Key = inputs.ContainsKey("MD5Key") && !string.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
+
             string qs = $"method={input.method}&Key={secretKey}&Time={_time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
             string q = HttpUtility.UrlEncode(DESEncryptSA(qs, encrypKey));
-            string q1 = HttpUtility.UrlEncode(DESEncrypt(qs, encrypKey));
-            string s = ToMD5(qs + md5Key + time.ToString() + secretKey);
+            string s = ToMD5(qs + md5Key + _time + secretKey).ToLower();
             input.key = s;
 
             //var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             //string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
-            string postdata = "q=" + q + "&s=" + s ;
+            string postdata = "q=" + q + "&s=" + s;
 
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
             ApiResult oApiResult = new ApiResult();
             if (IsXML(result))
             {
-                var xml = XMLDeserialize<Result>(result);
+
+                Result xml = null;
+                try
+                {
+                    xml = XMLDeserialize<RegUserInfoResponse>(result);
+                }
+                catch (Exception)
+                {
+                    xml = XMLDeserialize<Result>(result);
+                }
 
                 if (xml.ErrorMsgId == 0)
                 {
@@ -126,53 +143,70 @@ namespace ThirdParty.SA
             throw new NotImplementedException();
         }
 
-       
+
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string langid, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
 
-            string urlKey = $"{appType}Url";
+            string urlKey = "GameUrl";
             string url = inputs.ContainsKey(urlKey) && !string.IsNullOrEmpty(inputs[urlKey]) ? inputs[urlKey] : throw new Exception("url Error");
 
             var time = new DateTimeOffset(DateTime.Now);
-            time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss");
+            var _time = time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss");
 
-            string secretKey = inputs.ContainsKey("SecretKey") && !String.IsNullOrEmpty(inputs["SecretKey "]) ? inputs["SecretKey"] : throw new Exception();
-            string encrypKey = inputs.ContainsKey("EncrypKey") && !String.IsNullOrEmpty(inputs["EncrypKey "]) ? inputs["EncrypKey"] : throw new Exception();
+            string secretKey = inputs.ContainsKey("SecretKey") && !String.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
+            string encrypKey = inputs.ContainsKey("EncrypKey") && !String.IsNullOrEmpty(inputs["EncrypKey"]) ? inputs["EncrypKey"] : throw new Exception();
             string md5Key = inputs.ContainsKey("MD5Key") && !String.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
-            string QS = $"method=LoginRequest&Key={secretKey}&Time={time.ToString()}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
-            string q = HttpUtility.UrlEncode(DESEncrypt(QS, secretKey));
-            string s = ToMD5(QS + md5Key + time.ToString() + secretKey);
+            string QS = $"method=LoginRequest&Key={secretKey}&Time={_time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
+            string q = HttpUtility.UrlEncode(DESEncryptSA(QS, encrypKey));
+            string s = ToMD5(QS + md5Key + _time + secretKey).ToLower();
             string postdata = "q=" + q + "&s=" + s;
 
-            ApiUrl = $"{ApiUrl}/api/api.aspx";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
             ApiResult oApiResult = new ApiResult();
             if (IsXML(result))
             {
-                var xml = XMLDeserialize<LoginResult>(result);
+                Result xml = null;
+
+                try
+                {
+                    xml = XMLDeserialize<LoginResult>(result);
+                }
+                catch (Exception)
+                {
+                    xml = XMLDeserialize<Result>(result);
+                }
 
                 if (xml.ErrorMsgId == 0)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{url}?token={xml.Token}&lang={langid}";
 
-                    string SportType = null;
-                    inputs.TryGetValue("gameId", out SportType);
+                    string token = ((LoginResult)xml).Token;
+                    string homeUrl = "";
+                    string lobby = "A999";
 
+                    if (inputs.ContainsKey("Lobby"))
+                    {
+                        lobby = inputs["Lobby"];
+                    }
+
+                    if (inputs.ContainsKey("homeUrl"))
+                    {
+                        homeUrl = inputs["homeUrl"];
+                    }
 
                     if (appType == AppType.Native)
                     {
-                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={xml.Token}&lobby={inputs["Lobby"]}&lang={langid}&returnurl={inputs["homeUrl"]}";
+                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&mobile=true";
                     }
                     else if (appType == AppType.Mobile)
                     {
-                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={xml.Token}&lobby={inputs["Lobby"]}&lang={langid}&returnurl={inputs["homeUrl"]}";
+                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&mobile=true";
                     }
                     else
                     {
-                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={xml.Token}&lobby={inputs["Lobby"]}&lang={langid}&returnurl={inputs["homeUrl"]}";
+                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&h5web=true";
                     }
                 }
                 else

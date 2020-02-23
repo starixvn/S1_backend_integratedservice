@@ -211,8 +211,8 @@ namespace ThirdPartyCore
             XmlSerializer deserializer = new XmlSerializer(typeof(T));
             using (TextReader reader = new StringReader(xmlString))
             {
-                object deserializationObj = deserializer.Deserialize(reader);
-                return deserializationObj as T;
+                var deserializationObj = (T)deserializer.Deserialize(reader);
+                return deserializationObj;
             };
         }
 
@@ -236,8 +236,8 @@ namespace ThirdPartyCore
             DESCryptoServiceProvider des = new DESCryptoServiceProvider();
             byte[] inputByteArray = Encoding.GetEncoding("UTF-8").GetBytes(pToEncrypt);
 
-            des.Key = ASCIIEncoding.ASCII.GetBytes(DES_Key);
-            des.IV = ASCIIEncoding.ASCII.GetBytes(DES_Key);
+            des.Key = Encoding.ASCII.GetBytes(DES_Key);
+            des.IV = Encoding.ASCII.GetBytes(DES_Key);
 
             StringBuilder ret = new StringBuilder();
             using (MemoryStream ms = new MemoryStream())

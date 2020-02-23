@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,14 +16,20 @@ namespace ThirdPartySeamlessWallet
     [ApiController]
     public class SAController : ControllerBase
     {
-        private readonly CustBLL custBLL;
+        private readonly TpCustInfoBLL tpCustInfoBLL;
+        private readonly ILogger<SAController> logger;
 
-        public SAController(CustBLL custBLL)
+        public SAController(ILogger<SAController> logger, TpCustInfoBLL tpCustInfoBLL)
         {
-            this.custBLL = custBLL;
+            this.tpCustInfoBLL = tpCustInfoBLL;
+            this.logger = logger;
         }
         public class requestReturn
         {
+            public requestReturn()
+            {
+                error = (int)Error.SystemError;
+            }
             public string username { get; set; }
             public string currency { get; set; }
             public decimal amount { get; set; }
@@ -30,15 +38,46 @@ namespace ThirdPartySeamlessWallet
 
         [HttpPost]
         [Produces("application/xml")]
-        public requestReturn GetUserBalance([FromForm]string username, string currency)
+        public requestReturn GetUserBalance([FromBody]string Content)
         {
+            var content = HttpUtility.UrlDecode(Content);
+
+
 
             var resp = new requestReturn();
-            resp.username = username;
-            resp.currency = currency;
+            /*resp.username = username;
+            resp.currency = currency;*/
+            try
+            {
+                var tpCheck = tpCustInfoBLL.ThirdPartyCheckWithCache((int)Tp.SA, username);
+                if (tpCheck == null)
+                {
+                    resp.error = (int)Error.SessionExpird;
+                    return resp;
+                }
+                else if (tpCheck.Locked)
+                {
+                    resp.error = (int)Error.CustLocked;
+                    return resp;
+                }
 
-            //resp.amount = custBLL.GetBalance;
-            resp.error = 0;
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, username);
+                if (tpCustBalance.TpCurrencyId != currency)
+                {
+                    resp.error = (int)Error.CurrencyInvaild;
+                    return resp;
+                }
+
+                resp.username = username;
+                resp.currency = tpCustBalance.TpCurrencyId;
+                resp.amount = tpCustBalance.Balance;
+                resp.error = 0;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+
             return resp;
         }
 
@@ -69,5 +108,19 @@ namespace ThirdPartySeamlessWallet
         {
             throw new NotImplementedException();
         }
+    }
+
+    public enum Error
+    {
+        Success = 0,
+        CustNotExists = 1000,
+        CurrencyInvaild = 1001,
+        AmountInvaild = 1002,
+        CustLocked = 1003,
+        BalanceNotEnough = 1004,
+        Error = 1005,
+        DecryptInvaild = 1006,
+        SessionExpird = 1007,
+        SystemError = 9999
     }
 }

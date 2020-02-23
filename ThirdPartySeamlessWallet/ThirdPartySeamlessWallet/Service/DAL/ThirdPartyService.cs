@@ -1,0 +1,27 @@
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model;
+
+namespace ThirdPartySeamlessWallet.Service.DAL
+{
+    public class ThirdPartyService
+    {
+        private readonly IConfiguration configuration;
+
+        public ThirdPartyService(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+        public TpCheck ThirdPartyCheck(int tpId, string tpUserName)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<TpCheck>("Service_TpCheck_Get", new { TpId = tpId, TpUserName = tpUserName }, commandType: CommandType.StoredProcedure);
+        }
+    }
+}
