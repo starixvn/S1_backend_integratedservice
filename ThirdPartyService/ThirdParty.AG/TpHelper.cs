@@ -4,22 +4,23 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Xml;
-using MySqlX.XDevAPI.Common;
 
 namespace ThirdParty.AG
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
-        const string _cur = "CNY";
         const string _oddtype = "A";
 
         public class result
         {
             public string info { get; set; }
             public string msg { get; set; }
-            public string ResponseCode { get; set; }
         }
 
+        public class aa
+            {
+            public string ResponseCode { get; set; }
+    }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -32,12 +33,9 @@ namespace ThirdParty.AG
             string cagent = inputs.ContainsKey("cagent") && !string.IsNullOrEmpty(inputs["cagent"]) ? inputs["cagent"] : throw new Exception();
             string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception();
-            string cur = _cur;
             string oddtype = _oddtype;
-            
-            //tpCustInfo.TpUserName = $"{cagent}{tpCustInfo.CustId}";
 
-            string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={cur}";
+            string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
             string eParams = DESEncrypt(sParams, inputs["Deskey"]);
             string oMD5 = $"{eParams}{Md5key}";
             string postParams = $"params={eParams}&key={ ToMD5(oMD5).ToLower() }";
@@ -121,8 +119,6 @@ namespace ThirdParty.AG
             string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception();
             string SessionUrl = inputs.ContainsKey("SessionUrl") && !string.IsNullOrEmpty(inputs["SessionUrl"]) ? inputs["SessionUrl"] : throw new Exception();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-
-            string cur = _cur; 
             string oddtype = _oddtype;
 
             string postParams = $"productid={data_cagent}&username={tpCustInfo.TpUserName}&session_token=12345&credit=0.00";
@@ -135,20 +131,14 @@ namespace ThirdParty.AG
             {
                 if (IsXML(sResponse))
                 {
-                    var oSessionResp = FromXml<result>(sResponse);
-                    switch (oSessionResp.ResponseCode.ToString())
+                    var ResponseCode = FromXmlNode(sResponse);
+                    switch (ResponseCode.ToString())
                     {
                         case "OK":
-                            oApiResult.ErrorCode = ErrorCode.Success;
-                            oApiResult.Message = oSessionResp.msg;
                             break;
-                        case "1000":
-                        case "1016":
-                        case "2002":
-                        case "2003":
-                        case "9999":
+                        default:
                             oApiResult.ErrorCode = ErrorCode.ServerResponseError;
-                            oApiResult.RawMessage = oSessionResp.msg;
+                            oApiResult.RawMessage = ResponseCode;
                             return oApiResult;
                     }
                 }
@@ -160,7 +150,7 @@ namespace ThirdParty.AG
                 }
             }
 
- 
+
             long sTimestemp = GetTimestemp1();
 
             string dm = "www.nova88.net";
@@ -168,8 +158,8 @@ namespace ThirdParty.AG
             {
                 dm = inputs["host"];
             }
-            
-            string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/password={tpCustInfo.TpPwd}/\\\\/actype={actype}/\\\\/oddtype={oddtype}/\\\\/cur={cur}/\\\\/dm={dm}/\\\\/sid={cagent}{sTimestemp}/\\\\/lang=1";
+
+            string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/password={tpCustInfo.TpPwd}/\\\\/actype={actype}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}/\\\\/dm={dm}/\\\\/sid={cagent}{sTimestemp}/\\\\/lang=1";
 
             if (inputs.ContainsKey("gameType") && !string.IsNullOrEmpty(inputs["gameType"]))
             {
@@ -212,6 +202,21 @@ namespace ThirdParty.AG
 
             }
             return data;
+        }
+
+        protected string FromXmlNode(string xml)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(xml);
+            XmlElement root = doc.DocumentElement;
+            XmlAttributeCollection nodeList = root.Attributes;
+            XmlNodeList nodes = doc.DocumentElement.SelectNodes("/PlayerTicketResponse");
+            return nodes[0].SelectSingleNode("ResponseCode").InnerText;;
+        }
+
+        ApiResult IThirdPartyParticular.Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
     }
 }
