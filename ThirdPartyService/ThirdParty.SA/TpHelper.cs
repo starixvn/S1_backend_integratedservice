@@ -12,7 +12,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.SA
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
         private class Result
         {
@@ -26,14 +26,14 @@ namespace ThirdParty.SA
             public string DisplayName { set; get; }
         }
 
-        //private class CreateMemberReq
-        //{
-        //    public string method { set; get; }
-        //    public string Key { set; get; }
-        //    public string Time { set; get; }
-        //    public string Username { set; get; }
-        //    public string CurrencyType { set; get; }
-        //}
+        private class CreateMemberReq
+        {
+            public string method { set; get; }
+            public string key { set; get; }
+            public string time { set; get; }
+            public string username { set; get; }
+            public string currencyType { set; get; }
+        }
 
         //private class TransResult : Result
         //{
@@ -63,31 +63,33 @@ namespace ThirdParty.SA
             throw new NotImplementedException();
         }
 
+       
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            //CreateMemberReq input = new CreateMemberReq();
-            //input.method = "RegUserInfo";
-            
-            //input.Username = tpCustInfo.TpUserName;
-            //input.CurrencyType = tpCustInfo.TpCurrencyId;
+            CreateMemberReq input = new CreateMemberReq();
+            input.method = "RegUserInfo";
+            input.username = tpCustInfo.TpUserName;
+            input.currencyType = tpCustInfo.TpCurrencyId;
             var time = new DateTimeOffset(DateTime.Now);
-            time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss");
-            //input.Time = time.ToString();
+            string _time = time.ToOffset(TimeSpan.FromHours(8)).ToString("yyyyMMddHHmmss");
+            input.time = _time;
 
-            string secretKey = inputs.ContainsKey("SecretKey") && !String.IsNullOrEmpty(inputs["SecretKey "]) ? inputs["SecretKey"] : throw new Exception();
-            string encrypKey = inputs.ContainsKey("EncrypKey") && !String.IsNullOrEmpty(inputs["EncrypKey "]) ? inputs["EncrypKey"] : throw new Exception();
+            string secretKey = inputs.ContainsKey("SecretKey") && !String.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
+            string encrypKey = inputs.ContainsKey("EncrypKey") && !String.IsNullOrEmpty(inputs["EncrypKey"]) ? inputs["EncrypKey"] : throw new Exception();
             string md5Key = inputs.ContainsKey("MD5Key") && !String.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
-            string QS = $"method=RegUserInfo&Key={secretKey}&Time={time.ToString()}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
-            string q = HttpUtility.UrlEncode(DESEncrypt(QS, secretKey));
-            string s = ToMD5(QS + md5Key + time.ToString() + secretKey);
-            //input.Key = s;
+            
+            string qs = $"method={input.method}&Key={secretKey}&Time={_time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
+            string q = HttpUtility.UrlEncode(DESEncryptSA(qs, encrypKey));
+            string q1 = HttpUtility.UrlEncode(DESEncrypt(qs, encrypKey));
+            string s = ToMD5(qs + md5Key + time.ToString() + secretKey);
+            input.key = s;
 
             //var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             //string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
             string postdata = "q=" + q + "&s=" + s ;
 
-            ApiUrl = $"{ApiUrl}/api/api.aspx";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
             ApiResult oApiResult = new ApiResult();
             if (IsXML(result))
@@ -190,6 +192,11 @@ namespace ThirdParty.SA
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        ApiResult IThirdPartyParticular.Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }

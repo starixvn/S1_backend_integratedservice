@@ -11,7 +11,9 @@
     <PackageReference Include="MySql.Data" Version="8.0.19" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
+    <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="http://json.schemastore.org/azure-iot-edge-deployment-template-2.0" /></VisualStudio></ProjectExtensions>
 </Project>

@@ -216,7 +216,7 @@ namespace ThirdPartyCore
             };
         }
 
-        protected string DESEncrypt(string inString, string secretkey)
+        protected string DESEncryptSA(string inString, string secretkey)
         {
             var EncryptKey = Encoding.ASCII.GetBytes(secretkey);
             using var ms = new MemoryStream();
@@ -230,6 +230,30 @@ namespace ThirdPartyCore
             sw.Flush();
             return Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
         }
+
+        protected string DESEncrypt(string pToEncrypt, string DES_Key)
+        {
+            DESCryptoServiceProvider des = new DESCryptoServiceProvider();
+            byte[] inputByteArray = Encoding.GetEncoding("UTF-8").GetBytes(pToEncrypt);
+
+            des.Key = ASCIIEncoding.ASCII.GetBytes(DES_Key);
+            des.IV = ASCIIEncoding.ASCII.GetBytes(DES_Key);
+
+            StringBuilder ret = new StringBuilder();
+            using (MemoryStream ms = new MemoryStream())
+            using (CryptoStream cs = new CryptoStream(ms, des.CreateEncryptor(), CryptoStreamMode.Write))
+            {
+                cs.Write(inputByteArray, 0, inputByteArray.Length);
+                cs.FlushFinalBlock();
+                foreach (byte b in ms.ToArray())
+                {
+                    ret.AppendFormat("{0:X2}", b);
+                }
+            }
+
+            return ret.ToString();
+        }
+
         public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;
