@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ThirdParySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.DAL;
 
-namespace ThirdParySeamlessWallet
+namespace ThirdPartySeamlessWallet
 {
     public class Startup
     {
@@ -25,6 +25,7 @@ namespace ThirdParySeamlessWallet
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMemoryCache();
             services.AddMvc().AddXmlSerializerFormatters();
 
             services.AddSingleton<WalletService>();

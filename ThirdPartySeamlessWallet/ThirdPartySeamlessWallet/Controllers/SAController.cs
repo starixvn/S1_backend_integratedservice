@@ -4,15 +4,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using ThirdPartySeamlessWallet.Service.BLL;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace ThirdParySeamlessWallet
+namespace ThirdPartySeamlessWallet
 {
     [Route("[controller]/[action]")]
     [ApiController]
     public class SAController : ControllerBase
     {
+        private readonly CustBLL custBLL;
+
+        public SAController(CustBLL custBLL)
+        {
+            this.custBLL = custBLL;
+        }
         public class requestReturn
         {
             public string username { get; set; }
@@ -29,7 +36,8 @@ namespace ThirdParySeamlessWallet
             var resp = new requestReturn();
             resp.username = username;
             resp.currency = currency;
-            resp.amount = mainWalletType == 1 ? walletBLL.GetBalance(authData.CustId) : await Get3rdBalanceAsync(1, authData.CustId);
+
+            //resp.amount = custBLL.GetBalance;
             resp.error = 0;
             return resp;
         }
