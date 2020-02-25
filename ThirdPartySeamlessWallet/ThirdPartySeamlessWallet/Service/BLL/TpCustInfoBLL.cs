@@ -15,13 +15,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly ThirdPartyService thirdPartyService;
         private readonly IMemoryCache cache;
         private readonly Tools tools;
+        private readonly TpCustInfoService tpCustInfoService;
 
-        public TpCustInfoBLL(IMemoryCache cache, WalletService walletService, ThirdPartyService thirdPartyService, Tools tools)
+        public TpCustInfoBLL(IMemoryCache cache, WalletService walletService, ThirdPartyService thirdPartyService, TpCustInfoService tpCustInfoService, Tools tools)
         {
             this.walletService = walletService;
             this.thirdPartyService = thirdPartyService;
             this.cache = cache;
             this.tools = tools;
+            this.tpCustInfoService = tpCustInfoService;
         }
         public TpCustBalance GetBalance(int tpId, string tpUserName)
         {
@@ -37,23 +39,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return tpCustBalance;
         }
-        public TpCheck ThirdPartyCheckWithCache(int tpId, string tpUserName)
+        public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
         {
-            string key = $"TpCheck_{tpId}_{tpUserName}";
-            var tpCheck = cache.Get<TpCheck>(key);
-            if (tpCheck == null)
+            string key = $"TpCustInfo_{tpId}_{tpUserName}";
+            var tpCustInfo = cache.Get<TpCustInfo>(key);
+            if (tpCustInfo == null)
             {
-
-                tpCheck = ThirdPartyCheck(tpId, tpUserName);
-                cache.Set(key, tpCheck, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(40)));
+                tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
+                if (tpCustInfo != null)
+                {
+                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
+                }
             }
 
-            return tpCheck;
-        }
-        public TpCheck ThirdPartyCheck(int tpId, string tpUserName)
-        {
-            var tpCheck = thirdPartyService.ThirdPartyCheck(tpId, tpUserName);
-            return tpCheck;
+            return tpCustInfo;
         }
     }
 }

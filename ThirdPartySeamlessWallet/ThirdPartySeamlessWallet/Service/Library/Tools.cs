@@ -39,5 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
             return "";
         }
+        public long ConvertLocTime(DateTime time, int OffsetsHours) =>
+            new DateTimeOffset(time, new TimeSpan(OffsetsHours, 0, 0)).ToUnixTimeSeconds();
     }
 }

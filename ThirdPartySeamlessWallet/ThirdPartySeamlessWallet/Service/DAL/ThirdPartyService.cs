@@ -37,5 +37,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return ThirdPartySettingContainer.ContainsKey(tpId) ? ThirdPartySettingContainer[tpId] : null;
         }
+        public TpCurrency GetTpCurrency(int tpId, int currencyId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

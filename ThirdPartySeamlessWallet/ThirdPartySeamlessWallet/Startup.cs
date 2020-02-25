@@ -35,10 +35,15 @@ namespace ThirdPartySeamlessWallet
             /*DAL*/
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
+            services.AddSingleton<BettingService>();
+            services.AddSingleton<TpCustInfoService>();
+            services.AddSingleton<SettledService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
             services.AddSingleton<ThirdPartyBLL>();
+            services.AddSingleton<BettingBLL>();
+            services.AddSingleton<SettledBLL>();
 
             services.AddControllers();
         }

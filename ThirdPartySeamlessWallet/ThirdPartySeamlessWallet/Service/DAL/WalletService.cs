@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Execute("Wallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
             afterAmount = p.Get<decimal>("AfterAmount");
-            return afterAmount >= 0 ? 0 : -1;
+            return afterAmount >= 0 ? 1 : 0;
         }
         public TpCustBalance GetBalance(int tpId, string tpUserName)
         {

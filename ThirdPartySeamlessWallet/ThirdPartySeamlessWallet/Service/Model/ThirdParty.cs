@@ -14,4 +14,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public Dictionary<string, string> TpSetting => JsonConvert.DeserializeObject<Dictionary<string, string>>(Setting);
         public int Status { set; get; }
     }
+    public class TpCurrency
+    {
+        public string TpCurrencyId { set; get; }
+        public decimal ExchangeRate { set; get; }
+    }
 }

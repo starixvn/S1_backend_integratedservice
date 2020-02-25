@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
@@ -19,15 +20,17 @@ namespace ThirdPartyBetHistory.Service.DAL
         private static ConcurrentDictionary<int, IThirdPartyBetHelper> ThirdPartyHelperContainer = new ConcurrentDictionary<int, IThirdPartyBetHelper>();
         private static ConcurrentDictionary<int, ThirdPartyModel> ThirdPartyModelContainer = new ConcurrentDictionary<int, ThirdPartyModel>();
         private ConcurrentDictionary<string, TpCurrency> TpCurrencyList;
+        private readonly IMemoryCache cache;
         private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyService> logger;
-        public ThirdPartyService(ILogger<ThirdPartyService> logger, IWebHostEnvironment environment, IConfiguration configuration)
+        public ThirdPartyService(IMemoryCache cache, ILogger<ThirdPartyService> logger, IWebHostEnvironment environment, IConfiguration configuration)
         {
             this.environment = environment;
             this.configuration = configuration;
             this.logger = logger;
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
+            this.cache = cache;
         }
         public ThirdPartyModel GetThirdPartyModel(int tpId)
         {
@@ -59,7 +62,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                var tpCustInfo = GetTpCustInfo(betRecord.TpId, betRecord.TpUserName);
+                var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
                 if (tpCustInfo == null)
                 {
                     continue;
@@ -165,6 +168,22 @@ namespace ThirdPartyBetHistory.Service.DAL
                     trans.Commit();
                 }
             }
+        }
+
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+        {
+            string key = $"TpCustInfo_{tpId}_{tpUserName}";
+            var tpCustInfo = cache.Get<TpCustInfo>(key);
+            if (tpCustInfo == null)
+            {
+                tpCustInfo = GetTpCustInfo(tpId, tpUserName);
+                if (tpCustInfo != null)
+                {
+                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return tpCustInfo;
         }
         public TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
         {
