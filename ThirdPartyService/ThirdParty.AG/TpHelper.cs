@@ -18,9 +18,9 @@ namespace ThirdParty.AG
         }
 
         public class aa
-            {
+        {
             public string ResponseCode { get; set; }
-    }
+        }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -120,9 +120,11 @@ namespace ThirdParty.AG
             string SessionUrl = inputs.ContainsKey("SessionUrl") && !string.IsNullOrEmpty(inputs["SessionUrl"]) ? inputs["SessionUrl"] : throw new Exception();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
             string oddtype = _oddtype;
-
-            string postParams = $"productid={data_cagent}&username={tpCustInfo.TpUserName}&session_token=12345&credit=0.00";
-
+            string balance = "";
+            string token = "";
+            inputs.TryGetValue("Balance", out balance);
+            inputs.TryGetValue("Token", out token);
+            string postParams = $"productid={data_cagent}&username={tpCustInfo.TpUserName}&session_token={token}&credit={balance}";
             Dictionary<string, string> header = new Dictionary<string, string>();
             header["User-Agent"] = $"WEB_LIB_GI_{cagent}";
 
@@ -211,7 +213,7 @@ namespace ThirdParty.AG
             XmlElement root = doc.DocumentElement;
             XmlAttributeCollection nodeList = root.Attributes;
             XmlNodeList nodes = doc.DocumentElement.SelectNodes("/PlayerTicketResponse");
-            return nodes[0].SelectSingleNode("ResponseCode").InnerText;;
+            return nodes[0].SelectSingleNode("ResponseCode").InnerText; ;
         }
 
         ApiResult IThirdPartyParticular.Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
