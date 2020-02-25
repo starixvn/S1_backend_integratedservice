@@ -198,15 +198,15 @@ namespace ThirdParty.SA
 
                     if (appType == AppType.Native)
                     {
-                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&mobile=true";
+                        oApiResult.Message = $"{url}?username={tpCustInfo.TpUserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&mobile=true";
                     }
                     else if (appType == AppType.Mobile)
                     {
-                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&mobile=true";
+                        oApiResult.Message = $"{url}?username={tpCustInfo.TpUserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&mobile=true";
                     }
                     else
                     {
-                        oApiResult.Message = $"{url}?username={tpCustInfo.UserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&h5web=true";
+                        oApiResult.Message = $"{url}?username={tpCustInfo.TpUserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&h5web=true";
                     }
                 }
                 else
