@@ -38,6 +38,7 @@ namespace ThirdPartySeamlessWallet
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
+            services.AddSingleton<ThirdPartyBLL>();
 
             services.AddControllers();
         }
