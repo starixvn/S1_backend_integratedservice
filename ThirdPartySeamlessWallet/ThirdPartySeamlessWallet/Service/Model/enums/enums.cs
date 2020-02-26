@@ -42,6 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
 
     public enum Tp
     {
+        None = 0,
         Saba = 1,
         SA = 2,
         AG = 3

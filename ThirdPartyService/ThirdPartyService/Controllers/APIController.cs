@@ -57,6 +57,7 @@ namespace ThirdPartyService.Controllers
             try
             {
                 apiResult = thirdPartyBLL.GotoGame(tpInfo);
+                logger.LogInformation(apiResult.Message);
             }
             catch (Exception ex)
             {

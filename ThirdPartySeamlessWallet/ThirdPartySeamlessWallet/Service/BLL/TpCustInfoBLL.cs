@@ -12,18 +12,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     public class TpCustInfoBLL
     {
         private readonly WalletService walletService;
-        private readonly ThirdPartyService thirdPartyService;
+        private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
         private readonly Tools tools;
-        private readonly TpCustInfoService tpCustInfoService;
 
-        public TpCustInfoBLL(IMemoryCache cache, WalletService walletService, ThirdPartyService thirdPartyService, TpCustInfoService tpCustInfoService, Tools tools)
+        public TpCustInfoBLL(IMemoryCache cache, WalletService walletService, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL, Tools tools)
         {
             this.walletService = walletService;
-            this.thirdPartyService = thirdPartyService;
+            this.thirdPartyBLL = thirdPartyBLL;
+            this.tpCustInfoService = tpCustInfoService;
             this.cache = cache;
             this.tools = tools;
-            this.tpCustInfoService = tpCustInfoService;
         }
         public TpCustBalance GetBalance(int tpId, string tpUserName)
         {
@@ -31,9 +31,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustBalance = cache.Get<TpCustBalance>(key);
             if (tpCustBalance == null)
             {
-
-                tpCustBalance = walletService.GetBalance(tpId, tpUserName);
+                tpCustBalance = new TpCustBalance();
+                var tpCustInfo = GetTpCustInfo(tpId, tpUserName);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+                var balance = walletService.GetBalance(tpCustInfo.CustId);
+                tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;
                 tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 2);
+                tpCustBalance.ExchangeRate = tpCurrency.ExchangeRate;
+                tpCustBalance.TpCurrencyId = tpCurrency.TpCurrencyId;
                 cache.Set(key, tpCustBalance, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(0.5)));
             }
 

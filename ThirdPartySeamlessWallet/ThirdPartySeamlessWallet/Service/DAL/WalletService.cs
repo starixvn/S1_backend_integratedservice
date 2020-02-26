@@ -21,8 +21,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int SetBalance(int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
         {
+            Tp tp = Tp.None;
             int type = typePosition + ((int)transType * 1000) + tpId;
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = Memo, RefTransId = RefTransId });
+            Enum.TryParse(tpId.ToString(), out tp);
+            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             conn.Execute("Wallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -30,10 +32,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 1 : 0;
         }
-        public TpCustBalance GetBalance(int tpId, string tpUserName)
+        public decimal GetBalance(int custId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCustBalance>("Service_TpCustBalance_Get", new { TpId = tpId, TpUserName = tpUserName }, commandType: CommandType.StoredProcedure);
+            return conn.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
         }
     }
 }
