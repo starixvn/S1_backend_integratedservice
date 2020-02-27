@@ -21,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             this.thirdPartyBLL = thirdPartyBLL;
         }
 
-        public int Refund(int tpId, string TransId, string tpUserName, decimal tpStake, long SettledTime, GameType gameType, out decimal tpAfterAmount)
+        public int Refund(int tpId, string TransId, string tpUserName, decimal backAmount, long SettledTime, GameType gameType, out decimal tpAfterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(tpId, tpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
@@ -29,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             BetRecordInfo betRecordInfo = new BetRecordInfo();
             if (tpCurrency.ExchangeRate > 0)
             {
-                tpStake *= tpCurrency.ExchangeRate;
+                backAmount *= tpCurrency.ExchangeRate;
             }
             betRecordInfo.TpId = tpId;
             betRecordInfo.TransId = TransId;
@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             betRecordInfo.SettledTime = SettledTime;
             betRecordInfo.TicketStatus = TicketStatus.Refund;
 
-            var result = settledService.SettleTicket(tpCustInfo, betRecordInfo, tpStake, out tpAfterAmount);
+            var result = settledService.SettleTicket(tpCustInfo, betRecordInfo, backAmount, out tpAfterAmount);
             if (result > 0 && tpAfterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 tpAfterAmount /= tpCurrency.ExchangeRate;
@@ -92,6 +92,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && tpAfterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 tpAfterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int SettledLC_AG(PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
+        {
+            string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AG, username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoutDataLC_AG.NetAmount *= tpCurrency.ExchangeRate;
+                payoutDataLC_AG.NetAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SettledLC_AG(tpCustInfo, payoutDataLC_AG, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
             }
 
             return result;

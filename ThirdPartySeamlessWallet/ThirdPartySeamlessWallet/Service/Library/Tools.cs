@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Library
 {
@@ -41,5 +42,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
         public long ConvertLocTime(DateTime time, int OffsetsHours) =>
             new DateTimeOffset(time, new TimeSpan(OffsetsHours, 0, 0)).ToUnixTimeSeconds();
+        public T XMLDeserialize<T>(string xmlString) where T : class
+        {
+            XmlSerializer deserializer = new XmlSerializer(typeof(T));
+            using (TextReader reader = new StringReader(xmlString))
+            {
+                var deserializationObj = (T)deserializer.Deserialize(reader);
+                return deserializationObj;
+            };
+        }
     }
 }

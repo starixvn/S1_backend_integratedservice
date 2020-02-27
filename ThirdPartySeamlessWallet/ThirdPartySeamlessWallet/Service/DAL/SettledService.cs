@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -15,11 +16,44 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
+        private readonly Tools tools;
 
-        public SettledService(IConfiguration configuration, WalletService walletService)
+        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools)
         {
             this.configuration = configuration;
             this.walletService = walletService;
+            this.tools = tools;
+        }
+        public int SettledLC_AG(TpCustInfo tpCustInfo, PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
+            var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, 8), OriginalState = payoutDataLC_AG.TicketStatus, Memo = (string)null, TicketStatus = payoutDataLC_AG.TicketStatus.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
+            p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BettransLC_AG_Ins", p, commandType: CommandType.StoredProcedure);
+            decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
+            decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
+
+            decimal backAmount = OutValidBetAmount + OutNetAmount;
+
+            BetRecordInfo betRecordInfo = new BetRecordInfo();
+            betRecordInfo.TpId = (int)Tp.AG;
+            betRecordInfo.Stake = OutValidBetAmount;
+            betRecordInfo.WinlostAmount = backAmount;
+            betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
+            betRecordInfo.GameType = GameType.AG_LiveCasino;
+            betRecordInfo.TpUserName = username;
+            if (backAmount == 0)
+            {
+                betRecordInfo.TicketStatus = TicketStatus.UnSettled;
+            }
+
+            result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount);
+
+            return result;
         }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
@@ -30,12 +64,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
-
+            Tp tp = Tp.None;
+            Enum.TryParse(betRecord.TpId.ToString(), out tp);
             if (RefBetRecord == null)
             {
                 return -1;
             }
-            if (RefBetRecord.TicketStatus != TicketStatus.UnSettled)
+            else if (RefBetRecord.TicketStatus != TicketStatus.UnSettled)
+            {
+                return -1;
+            }
+            else if (tp == Tp.AG && RefBetRecord.Stake != betRecord.Stake)
             {
                 return -1;
             }
