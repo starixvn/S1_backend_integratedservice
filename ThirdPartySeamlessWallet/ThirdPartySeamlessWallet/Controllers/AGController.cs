@@ -277,15 +277,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            resp.Balance = tpCustBalance.Balance;
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
+                                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                        resp.Balance = tpCustBalance.Balance;
                     }
                 }
                 else if (dataLC_AG.TransactionType.Equals("LOSE", StringComparison.OrdinalIgnoreCase) || dataLC_AG.TransactionType.Equals("WIN", StringComparison.OrdinalIgnoreCase))
@@ -330,15 +336,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            resp.Balance = tpCustBalance.Balance;
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                        resp.Balance = tpCustBalance.Balance;
                     }
                 }
 
