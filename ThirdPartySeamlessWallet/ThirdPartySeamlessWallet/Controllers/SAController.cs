@@ -173,15 +173,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
                     }
                     else
                     {
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
                     }
                 }
                 else
                 {
+                    tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.AmountInvaild;
                 }
             }
@@ -229,15 +235,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
                     }
                     else
                     {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
                     }
                 }
                 else
                 {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.AmountInvaild;
                 }
             }
@@ -282,10 +294,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (tpAffterAmount < 0)
                 {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.BalanceNotEnough;
                 }
                 else
                 {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.Error;
                 }
             }
@@ -336,10 +352,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
                     }
                     else
                     {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
                     }
                 }
