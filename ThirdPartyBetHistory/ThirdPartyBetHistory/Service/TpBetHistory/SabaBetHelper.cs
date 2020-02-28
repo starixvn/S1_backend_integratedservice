@@ -212,7 +212,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.SettlementType = SettlementType.UnSettled;
                             }
-                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("draw", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
@@ -306,6 +306,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Lost;
                             }
+                            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Draw;
+                            }
                             else
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Refund;
@@ -336,7 +340,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.SettlementType = SettlementType.UnSettled;
                             }
-                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("draw", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
@@ -410,6 +414,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Lost;
+                            }
+                            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Draw;
                             }
                             else
                             {
@@ -444,7 +452,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.SettlementType = SettlementType.UnSettled;
                             }
-                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("draw", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
+                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
@@ -518,6 +526,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Lost;
+                            }
+                            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Draw;
                             }
                             else
                             {

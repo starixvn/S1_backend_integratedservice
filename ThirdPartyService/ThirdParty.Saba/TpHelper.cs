@@ -403,7 +403,7 @@ namespace ThirdParty.Saba
                     apiResult.ErrorCode = ErrorCode.Fail;
                     apiResult.Data.Status = TransferStatus.Fail;
                 }
-                else if (json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
+                else if (json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 5 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
                 {
                     apiResult.RawMessage = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
