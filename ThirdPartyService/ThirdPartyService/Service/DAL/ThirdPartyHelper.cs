@@ -18,7 +18,7 @@ namespace ThirdPartyService.Service.DAL
     public class ThirdPartyHelper
     {
         private static ConcurrentDictionary<int, IThirdPartyHelper> ThirdPartyHelperContainer = new ConcurrentDictionary<int, IThirdPartyHelper>();
-        private static ConcurrentDictionary<int, ThirdPartyModel> ThirdPartyModelContainer = new ConcurrentDictionary<int, ThirdPartyModel>();
+        private static ConcurrentDictionary<string, ThirdPartyModel> ThirdPartyModelContainer = new ConcurrentDictionary<string, ThirdPartyModel>();
         private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyHelper> logger;
@@ -30,26 +30,31 @@ namespace ThirdPartyService.Service.DAL
             this.logger = logger;
         }
 
-        public ThirdPartyModel GetThirdPartyModel(int tpId)
+        public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
         {
-            if (!ThirdPartyModelContainer.ContainsKey(tpId))
+            string sKet = $"{tpId}_{siteId}";
+            if (!ThirdPartyModelContainer.ContainsKey(sKet))
             {
-                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-                {
-                    var thirdPartyModel = conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
-                    if (thirdPartyModel != null)
-                        ThirdPartyModelContainer.TryAdd(tpId, thirdPartyModel);
-                }
+                using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                var thirdPartyModel = conn.QueryFirstOrDefault<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId }, commandType: CommandType.StoredProcedure);
+                if (thirdPartyModel != null)
+                    ThirdPartyModelContainer.TryAdd(sKet, thirdPartyModel);
             }
 
-            return ThirdPartyModelContainer.ContainsKey(tpId) ? ThirdPartyModelContainer[tpId] : null;
+            return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
+        }
+
+        public ThirdPartyModel GetThirdPartySetting(int tpId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
 
         public IThirdPartyHelper GetThirdPartyHelper(int tpId)
         {
             if (!ThirdPartyHelperContainer.ContainsKey(tpId))
             {
-                var oThirdPartyModel = GetThirdPartyModel(tpId);
+                var oThirdPartyModel = GetThirdPartySetting(tpId);
                 var assembly = Assembly.Load($"ThirdParty.{oThirdPartyModel.TpName}");
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
                 //var oThirdPartyHelper = new Lazy<IThirdPartyHelper>(() => (IThirdPartyHelper)Activator.CreateInstance(assemblyType));

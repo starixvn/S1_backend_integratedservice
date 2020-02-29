@@ -101,7 +101,7 @@ namespace ThirdPartyService.Service.DAL
 
                         regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
                         regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
-                        Dictionary<string, string> inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyModel(tpId).Setting);
+                        Dictionary<string, string> inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, customer.SiteId).Setting);
 
                         if (inputs == null)
                         {

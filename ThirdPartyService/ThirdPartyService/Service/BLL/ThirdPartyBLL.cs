@@ -41,8 +41,9 @@ namespace ThirdPartyService.Service.BLL
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
             {
+                var tpCustInfo = tpCustInfoResult.Data;
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId);
-                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyModel(tpInfo.TpId).Setting);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfo.SiteId).Setting);
                 if (tpInfo.inputs != null)
                 {
                     foreach (var infoI in tpInfo.inputs)
@@ -102,7 +103,7 @@ namespace ThirdPartyService.Service.BLL
             }
 
             IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransfer.TpId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyModel(tpTransfer.TpId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
@@ -152,7 +153,7 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
             {
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId);
-                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyModel(tpInfo.TpId);
+                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
                 apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
@@ -178,7 +179,7 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
             {
                 var tpHelper = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId);
-                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyModel(tpInfo.TpId);
+                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
                 apiResult = tpHelper.Logout(tpCustInfoResult.Data, inputs);
@@ -201,10 +202,11 @@ namespace ThirdPartyService.Service.BLL
             }
             else
             {
-                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransferInfoModel.TpId);
-                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyModel(tpTransferInfoModel.TpId);
-                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+                //tpTransferInfoModel.CustId
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
+                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransferInfoModel.TpId);
+                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
                 decimal amount = tpTransferInfoModel.Amount;
                 if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
