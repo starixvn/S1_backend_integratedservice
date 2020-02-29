@@ -14,6 +14,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly ThirdPartyService thirdPartyService;
         private readonly IMemoryCache cache;
         private ConcurrentDictionary<string, TpCurrency> TpCurrencyList;
+        private static ConcurrentDictionary<int, ThirdPartySetting> ThirdPartySettingContainer = new ConcurrentDictionary<int, ThirdPartySetting>();
         public ThirdPartyBLL(IMemoryCache cache, ThirdPartyService thirdPartyService)
         {
             this.thirdPartyService = thirdPartyService;
@@ -22,7 +23,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
-            return thirdPartyService.GetThirdPartySetting(tpId);
+            if (!ThirdPartySettingContainer.ContainsKey(tpId))
+            {
+                var thirdPartyModel = thirdPartyService.GetThirdPartySetting(tpId);
+                if (thirdPartyModel != null)
+                    ThirdPartySettingContainer.TryAdd(tpId, thirdPartyModel);
+            }
+
+            return ThirdPartySettingContainer.ContainsKey(tpId) ? ThirdPartySettingContainer[tpId] : null;
         }
         public TpCheck ThirdPartyCheckWithCache(int tpId, string tpUserName)
         {

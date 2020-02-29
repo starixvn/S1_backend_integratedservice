@@ -14,7 +14,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     public class ThirdPartyService
     {
         private readonly IConfiguration configuration;
-        private static ConcurrentDictionary<int, ThirdPartySetting> ThirdPartySettingContainer = new ConcurrentDictionary<int, ThirdPartySetting>();
         public ThirdPartyService(IConfiguration configuration)
         {
             this.configuration = configuration;
@@ -27,15 +26,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
-            if (!ThirdPartySettingContainer.ContainsKey(tpId))
-            {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                var thirdPartyModel = conn.QueryFirstOrDefault<ThirdPartySetting>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
-                if (thirdPartyModel != null)
-                    ThirdPartySettingContainer.TryAdd(tpId, thirdPartyModel);
-            }
-
-            return ThirdPartySettingContainer.ContainsKey(tpId) ? ThirdPartySettingContainer[tpId] : null;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<ThirdPartySetting>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {

@@ -17,7 +17,17 @@ namespace ThirdPartyBetHistory.Service.BLL
         }
         public IEnumerable<ThirdPartyModel> GetTpList()
         {
-            return thirdPartyService.GetTpList();
+            var tpList = thirdPartyService.GetTpList().ToList();
+            var siteTpList = thirdPartyService.GetSiteTpList();
+            if (siteTpList != null)
+            {
+                foreach (var siteTp in siteTpList)
+                {
+                    tpList.Add(siteTp);
+                }
+            }
+
+            return tpList;
         }
         public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
         {
@@ -26,6 +36,10 @@ namespace ThirdPartyBetHistory.Service.BLL
         public int SetTicketKey(int TpId, long TicketKey)
         {
             return thirdPartyService.SetTicketKey(TpId, TicketKey);
+        }
+        public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
+        {
+            return thirdPartyService.SiteTpTicketKey(TpId, SiteId, TicketKey);
         }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {

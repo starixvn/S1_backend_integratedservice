@@ -48,7 +48,17 @@ namespace ThirdPartyBetHistory.Service.DAL
         public IEnumerable<ThirdPartyModel> GetTpList()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<ThirdPartyModel>("Common_TpList_Get", commandType: CommandType.StoredProcedure);
+            var tpList = conn.Query<ThirdPartyModel>("Common_TpList_Get", commandType: CommandType.StoredProcedure);
+
+            return tpList;
+        }
+
+        public IEnumerable<ThirdPartyModel> GetSiteTpList()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var siteTpList = conn.Query<ThirdPartyModel>("Common_SiteTpList_Get", commandType: CommandType.StoredProcedure);
+
+            return siteTpList;
         }
         public void InsertLog(string url, string input, string output)
         {
@@ -223,6 +233,11 @@ namespace ThirdPartyBetHistory.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("Service_TpTicketKey_Set", new { TpId = TpId, TicketKey = TicketKey }, commandType: CommandType.StoredProcedure);
+        }
+        public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_SiteTpTicketKey_Set", new { TpId = TpId, SiteId = SiteId, TicketKey = TicketKey }, commandType: CommandType.StoredProcedure);
         }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {

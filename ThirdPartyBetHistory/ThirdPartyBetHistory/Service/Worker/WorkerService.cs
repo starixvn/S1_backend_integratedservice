@@ -17,14 +17,14 @@ namespace ThirdPartyBetHistory.Service.Worker
         private readonly ILogger<WorkerService> logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private IEnumerable<ThirdPartyModel> tpList;
-        private ConcurrentDictionary<int, IThirdPartyBetHelper> WorkerList;
+        private List<IThirdPartyBetHelper> WorkerList;
         private ConcurrentDictionary<int, SyncParams> syncParamsList;
         public WorkerService(ILogger<WorkerService> logger, IHostEnvironment environment, ThirdPartyBLL thirdPartyBLL)
         {
             this.environment = environment;
             this.logger = logger;
             this.thirdPartyBLL = thirdPartyBLL;
-            WorkerList = new ConcurrentDictionary<int, IThirdPartyBetHelper>();
+            WorkerList = new List<IThirdPartyBetHelper>();
             syncParamsList = new ConcurrentDictionary<int, SyncParams>();
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +37,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                     var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.{tp.TpName}BetHelper"));
                     TpBetHelper.thirdPartyModel = tp;
                     TpBetHelper.syncParams = TpBetHelper.InitialSyncParams();
-                    WorkerList.TryAdd(tp.Id, TpBetHelper);
+                    WorkerList.Add(TpBetHelper);
                 }
                 catch (Exception ex)
                 {
@@ -51,7 +51,7 @@ namespace ThirdPartyBetHistory.Service.Worker
 
                 foreach (var betHelp in WorkerList)
                 {
-                    var tpBetHelp = betHelp.Value;
+                    var tpBetHelp = betHelp;
                     if (tpBetHelp.syncParams.DoneTime.AddSeconds(tpBetHelp.syncParams.timeOfFrequency) < DateTime.Now && !tpBetHelp.IsRunning)
                     {
                         tpBetHelp.IsRunning = true;
@@ -71,7 +71,16 @@ namespace ThirdPartyBetHistory.Service.Worker
                                       if (betRecordInfos.Count() > 50)
                                           tpBetHelp.syncParams.DoneTime = DateTime.Now.AddSeconds(-tpBetHelp.syncParams.timeOfFrequency);
                                   });
-                                  thirdPartyBLL.SetTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.syncParams.key);
+
+                                  if (tpBetHelp.thirdPartyModel.SiteId == 0)
+                                  {
+                                      thirdPartyBLL.SetTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.syncParams.key);
+                                  }
+                                  else
+                                  {
+                                      thirdPartyBLL.SiteTpTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.thirdPartyModel.SiteId, tpBetHelp.syncParams.key);
+                                  }
+
                                   tpBetHelp.syncParams.DoneTime = DateTime.Now;
                                   logger.LogInformation($"Name: {tpBetHelp.thirdPartyModel.TpName}, key: {tpBetHelp.syncParams.key}");
                               }
