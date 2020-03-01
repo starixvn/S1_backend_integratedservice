@@ -78,56 +78,50 @@ namespace ThirdPartyService.Service.DAL
 
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
-                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+                using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                int forStatus = 0;
+                forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
+
+                bool isSuccess = conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, transferResult.Data.ThirdId, Memo = transferResult.RawMessage, ForStatus = forStatus, Status = (int)TransferStatus.Success }, trans, commandType: CommandType.StoredProcedure) > 0;
+                int rwalletServiceResult = 0;
+                if (tpTransfer.direction == Direction.ToMain && isSuccess)
                 {
-                    conn.Open();
-                    using (var trans = conn.BeginTransaction())
-                    {
-                        int forStatus = 0;
-                        forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
-
-                        bool isSuccess = conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, transferResult.Data.ThirdId, Memo = transferResult.RawMessage, ForStatus = forStatus, Status = (int)TransferStatus.Success }, trans, commandType: CommandType.StoredProcedure) > 0;
-                        int rwalletServiceResult = 0;
-                        if (tpTransfer.direction == Direction.ToMain && isSuccess)
-                        {
-                            rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
-                        }
-
-                        if (rwalletServiceResult == 0)
-                            trans.Commit();
-                    }
+                    rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
                 }
+
+                if (rwalletServiceResult == 0)
+                    trans.Commit();
             }
             else if (transferResult.Data.Status == TransferStatus.Fail)
             {
-                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+                using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                int forStatus = 0;
+                forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
+                string Memo = null;
+                if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
                 {
-                    conn.Open();
-                    using (var trans = conn.BeginTransaction())
-                    {
-                        int forStatus = 0;
-                        forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
-                        string Memo = null;
-                        if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
-                        {
-                            Memo = "3RD wallet amount isn't enough";
-                        }
-                        else if (!string.IsNullOrEmpty(transferResult.RawMessage))
-                        {
-                            Memo = transferResult.RawMessage;
-                        }
-
-                        bool isSuccess = conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, transferResult.Data.ThirdId, Memo = transferResult.RawMessage, ForStatus = forStatus, Status = (int)TransferStatus.Fail }, trans, commandType: CommandType.StoredProcedure) > 0;
-                        int rwalletServiceResult = 0;
-                        if (tpTransfer.direction == Direction.ToTp && isSuccess)
-                        {
-                            Memo = $"\r\nreturn amount. Cause: {transferResult.RawMessage}";
-                            rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, Memo, transId, out afterAmount, conn, trans);
-                        }
-
-                        trans.Commit();
-                    }
+                    Memo = "3RD wallet amount isn't enough";
                 }
+                else if (!string.IsNullOrEmpty(transferResult.RawMessage))
+                {
+                    Memo = transferResult.RawMessage;
+                }
+
+                var p = new DynamicParameters(new { TransferId = transferId, transferResult.Data.ThirdId, ForStatus = forStatus, Status = (int)TransferStatus.Fail });
+                p.Add("Memo", Memo, dbType: DbType.String, direction: ParameterDirection.Input, size: 100);
+                bool isSuccess = conn.Execute("TpTransferInfo_Set", p, trans, commandType: CommandType.StoredProcedure) > 0;
+                int rwalletServiceResult = 0;
+                if (tpTransfer.direction == Direction.ToTp && isSuccess)
+                {
+                    Memo = $"\r\nreturn amount. Cause: {transferResult.RawMessage}";
+                    rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, Memo, transId, out afterAmount, conn, trans);
+                }
+
+                trans.Commit();
             }
         }
 
