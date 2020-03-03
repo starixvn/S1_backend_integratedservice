@@ -87,14 +87,13 @@ namespace ThirdPartyService.Service.BLL
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
 
             // Test account create 3rd party only for saba
-            //if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production")
-            //{
-            //    apiResult.ErrorCode = ErrorCode.NoAuthority;
-            //    apiResult.RawMessage = "This Account is for Testing.";
-            //    return apiResult;
-            //}
-            //else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
-            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
+            {
+                apiResult.ErrorCode = ErrorCode.NoAuthority;
+                apiResult.RawMessage = "This Account is for Testing.";
+                return apiResult;
+            }
+            else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
                 apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/

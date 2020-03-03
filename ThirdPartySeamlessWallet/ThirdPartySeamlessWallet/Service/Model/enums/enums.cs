@@ -24,7 +24,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         UnSettled = 0,/*Running, Waiting*/
         Win = 1,
         Lost = 2,
-        Refund = 3/*Reject, Refund, Void, Draw*/
+        Refund = 3,/*Reject, Refund, Void, Draw*/
+        Draw = 4
     }
 
     public enum GameType
