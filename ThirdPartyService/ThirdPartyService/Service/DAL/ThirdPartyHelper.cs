@@ -50,11 +50,11 @@ namespace ThirdPartyService.Service.DAL
             return conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
 
-        public IThirdPartyHelper GetThirdPartyHelper(int tpId)
+        public IThirdPartyHelper GetThirdPartyHelper(int tpId, int siteId)
         {
             if (!ThirdPartyHelperContainer.ContainsKey(tpId))
             {
-                var oThirdPartyModel = GetThirdPartySetting(tpId);
+                var oThirdPartyModel = GetThirdPartyBySite(tpId, siteId);
                 var assembly = Assembly.Load($"ThirdParty.{oThirdPartyModel.TpName}");
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
                 //var oThirdPartyHelper = new Lazy<IThirdPartyHelper>(() => (IThirdPartyHelper)Activator.CreateInstance(assemblyType));

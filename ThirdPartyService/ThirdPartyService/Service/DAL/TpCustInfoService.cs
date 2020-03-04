@@ -67,7 +67,7 @@ namespace ThirdPartyService.Service.DAL
                             return apiResult;
                         }
 
-                        IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpId);
+                        IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
                         var serverInfo = serverInfoBLL.GetServerInfo(customer.SiteId);
 
                         var regTpCustInfo = new TpCustInfo();
