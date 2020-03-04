@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SA", "ThirdParty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.AG", "ThirdParty.AG\ThirdParty.AG.csproj", "{03B24436-53F7-46FB-9E31-48D0286C6EA5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.DG", "ThirdParty.DG\ThirdParty.DG.csproj", "{637612DA-C134-4C0A-84C4-14841C140780}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{03B24436-53F7-46FB-9E31-48D0286C6EA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03B24436-53F7-46FB-9E31-48D0286C6EA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03B24436-53F7-46FB-9E31-48D0286C6EA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{637612DA-C134-4C0A-84C4-14841C140780}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{637612DA-C134-4C0A-84C4-14841C140780}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{637612DA-C134-4C0A-84C4-14841C140780}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{637612DA-C134-4C0A-84C4-14841C140780}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
