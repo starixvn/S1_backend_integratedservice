@@ -111,7 +111,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public int? home_id { get; set; }
             public int? away_id { get; set; }
             public string match_datetime { get; set; }
-            public int sport_type { get; set; }
+            public int? sport_type { get; set; }
             public int bet_type { get; set; }
             public long? parlay_ref_no { get; set; }
             public decimal odds { get; set; }
