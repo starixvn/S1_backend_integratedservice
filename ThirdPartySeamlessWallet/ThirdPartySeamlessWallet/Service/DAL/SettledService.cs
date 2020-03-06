@@ -76,7 +76,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else if (tp == Tp.AG && RefBetRecord.Stake != betRecord.Stake)
             {
-                return -1;
+                return -2;
             }
             else
             {
