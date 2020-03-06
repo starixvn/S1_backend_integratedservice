@@ -49,7 +49,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public decimal after_amount { get; set; }
             public int currency { get; set; }
             public DateTime winlost_datetime { get; set; }
-            public int odds_type { get; set; }
+            public int? odds_type { get; set; }
             public string bet_team { get; set; }
             public string isLucky { get; set; }
             public decimal home_hdp { get; set; }
@@ -236,7 +236,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                         betRecordInfo.GameType = GameType.Keno_Lottery;
                                     }
 
-                                    if (betDetial.odds_type == 1)
+                                    if ((betDetial.sport_type ?? 0) == 468 || (betDetial.sport_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                    }
+                                    else if ((betDetial.odds_type ?? 0) == 1)
                                     {
                                         if (betDetial.odds > 0 && betDetial.odds < 0.5m)
                                         {
@@ -247,7 +251,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                         }
                                     }
-                                    else if (betDetial.odds_type == 2)
+                                    else if ((betDetial.odds_type ?? 0) == 2)
                                     {
                                         if (betDetial.odds < 0.5m)
                                         {
@@ -258,7 +262,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                         }
                                     }
-                                    else if (betDetial.odds_type == 3)
+                                    else if ((betDetial.odds_type ?? 0) == 3)
                                     {
                                         if (betDetial.odds < 1.5m)
                                         {
@@ -269,7 +273,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                         }
                                     }
-                                    else if (betDetial.odds_type == 4)
+                                    else if ((betDetial.odds_type ?? 0) == 4)
                                     {
                                         if (betDetial.odds < -2m)
                                         {
@@ -280,7 +284,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                         }
                                     }
-                                    else if (betDetial.odds_type == 5)
+                                    else if ((betDetial.odds_type ?? 0) == 5)
                                     {
                                         if (betDetial.odds < -200m)
                                         {
