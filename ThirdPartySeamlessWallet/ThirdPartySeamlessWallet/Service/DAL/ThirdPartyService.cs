@@ -29,6 +29,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<ThirdPartySetting>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
+        public ThirdPartySetting GetThirdPartyBySite(int tpId, int siteId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<ThirdPartySetting>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId }, commandType: CommandType.StoredProcedure);
+        }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

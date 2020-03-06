@@ -106,7 +106,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 payoutDataLC_AG.NetAmount *= tpCurrency.ExchangeRate;
-                payoutDataLC_AG.NetAmount *= tpCurrency.ExchangeRate;
+                payoutDataLC_AG.ValidBetAmount *= tpCurrency.ExchangeRate;
             }
 
             var result = settledService.SettledLC_AG(tpCustInfo, payoutDataLC_AG, out afterAmount);
