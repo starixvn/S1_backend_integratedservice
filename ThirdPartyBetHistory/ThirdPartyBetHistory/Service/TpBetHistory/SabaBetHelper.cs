@@ -88,7 +88,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public DateTime winlost_datetime { get; set; }
             public int bet_type { get; set; }
             public int currency { get; set; }
-            public int odds_type { get; set; }
+            public int? odds_type { get; set; }
             public int sport_type { get; set; }
             public decimal winlost_amount { get; set; }
             public decimal after_amount { get; set; }
@@ -236,7 +236,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                         betRecordInfo.GameType = GameType.Keno_Lottery;
                                     }
 
-                                    if ((betDetial.sport_type ?? 0) == 468 || (betDetial.sport_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
+                                    if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
                                     {
                                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                     }
@@ -294,6 +294,14 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                         {
                                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                         }
+                                    }
+                                    else if ((betDetial.odds_type ?? 0) == 29)
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                                    }
+                                    else
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                     }
                                 }
                             }
