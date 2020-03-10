@@ -73,7 +73,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
-                if (tpCustInfo == null || betRecord.TicketStatus == TicketStatus.UnSettled)
+                if (tpCustInfo == null/* || betRecord.TicketStatus == TicketStatus.UnSettled*/)
                 {
                     continue;
                 }
