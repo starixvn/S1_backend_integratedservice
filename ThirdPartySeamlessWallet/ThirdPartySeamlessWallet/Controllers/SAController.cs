@@ -133,12 +133,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 //Content = "MDQGx7yYdmalkSSksfvs8qF40umY7PzTZM9E%2bVnXPPH%2b7nFrESN26si7ZCj%2flQZySPPQnneskcnOJRoWF9FKpBwi2cPnExkRydkpDFsLX7FNVcTqbEB%2bVF0bel5OlnZDhc9ENCSYH8kU5%2fycrhMah1xJ31ru2oqpVh99nkEaXdZeSiSrLQlL9LARk16BDN4mXScj%2bSX9RXgjRIcW4dNRY3cp9Pt2w%2fZd";
-                //logger.LogInformation(Content);
+                logger.LogInformation("PlaceBet");
+                logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.SA);
                 var uriQuery = tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
-
+                logger.LogInformation(JsonConvert.SerializeObject(p));
                 var bettingDataLC_SA = JsonConvert.DeserializeObject<BettingDataLC_SA>(JsonConvert.SerializeObject(p));
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.SA, bettingDataLC_SA.username);
                 if (tpCheck == null)
@@ -210,6 +211,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
+                logger.LogInformation("PlayerWin");
                 logger.LogInformation(Content);
                 //Content = "MDQGx7yYdmalkSSksfvs8qF40umY7PzTZM9E%2bVnXPPH%2b7nFrESN26hkTglOqQkLkjUBl8D9dP4z7La4%2fjyq5KkoKfNdAfQlBUMZjEinFXaUSdsCtQKuZ%2b%2ff%2fcnVlyj45nY1YNVSHVB0n9NlO3wju7SDFfeGZ6%2b25JJuLpXQppdvWu1PHq3f0aDsfG4ETIgXIVXwObhedPr%2fnKLfOXuemzdW04Y0Hvmt5uZQSev0oU9k%3d";
                 var content = HttpUtility.UrlDecode(Content);
@@ -271,6 +273,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
+                logger.LogInformation("PlayerLost");
                 logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.SA);
@@ -323,6 +326,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
+                logger.LogInformation("PlaceBetCancel");
                 logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.SA);
