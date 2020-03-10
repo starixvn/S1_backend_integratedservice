@@ -190,6 +190,20 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         {
                             BetRecordInfo betRecordInfo = new BetRecordInfo();
                             betRecordInfo.GameType = GameType.Saba_Sports;
+                            if ((betDetial.sport_type ?? 0) == 202 || (betDetial.sport_type ?? 0) == 220)
+                            {
+                                betRecordInfo.GameType = GameType.Keno_Lottery;
+                            }
+                            else if (((betDetial.sport_type ?? 0) > 200 || (betDetial.sport_type ?? 0) == 165))
+                            {
+                                betRecordInfo.GameType = betDetial.sport_type switch
+                                {
+                                    211 => GameType.Allbet,
+                                    248 => GameType.PP,
+                                    _ => GameType.Saba_RNG
+                                };
+                            }
+
                             betRecordInfo.TransId = betDetial.trans_id.ToString();
                             betRecordInfo.TransTime = ConvertLocTime(betDetial.transaction_time);
                             if (betDetial.settlement_time != null)
@@ -218,24 +232,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             }
                             else
                             {
-                                if (((betDetial.sport_type ?? 0) > 200 || (betDetial.sport_type ?? 0) == 165) && (betDetial.sport_type ?? 0) != 202 && (betDetial.sport_type ?? 0) != 220)
+                                if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG)
                                 {
-                                    betRecordInfo.GameType = betDetial.sport_type switch
-                                    {
-                                        211 => GameType.Allbet,
-                                        248 => GameType.PP,
-                                        _ => GameType.Saba_RNG
-                                    };
-
                                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                                 }
                                 else
                                 {
-                                    if ((betDetial.sport_type ?? 0) != 202 || (betDetial.sport_type ?? 0) != 220)
-                                    {
-                                        betRecordInfo.GameType = GameType.Keno_Lottery;
-                                    }
-
                                     if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
                                     {
                                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
