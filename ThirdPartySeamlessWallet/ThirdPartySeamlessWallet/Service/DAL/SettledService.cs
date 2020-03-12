@@ -46,6 +46,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
             betRecordInfo.GameType = GameType.AG_LiveCasino;
             betRecordInfo.TpUserName = username;
+            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
             if (backAmount == 0)
             {
                 betRecordInfo.TicketStatus = TicketStatus.UnSettled;
