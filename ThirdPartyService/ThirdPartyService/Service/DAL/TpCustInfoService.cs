@@ -86,10 +86,10 @@ namespace ThirdPartyService.Service.DAL
                         regTpCustInfo.IsTest = customer.IsTest;
                         regTpCustInfo.ActStatus = customer.ActStatus;
 
-                        if (customer.IsTest)
-                        {
-                            regTpCustInfo.TpUserName = $"{regTpCustInfo.TpUserName}_test";
-                        }
+                        //if (customer.IsTest)
+                        //{
+                        //    regTpCustInfo.TpUserName = $"{regTpCustInfo.TpUserName}_test";
+                        //}
 
                         var tpCurrency = conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId }, commandType: CommandType.StoredProcedure);
 
