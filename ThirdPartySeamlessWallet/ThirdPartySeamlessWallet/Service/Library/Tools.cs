@@ -45,11 +45,21 @@ namespace ThirdPartySeamlessWallet.Service.Library
         public T XMLDeserialize<T>(string xmlString) where T : class
         {
             XmlSerializer deserializer = new XmlSerializer(typeof(T));
-            using (TextReader reader = new StringReader(xmlString))
+            using (StringReader reader = new StringReader(xmlString))
             {
                 var deserializationObj = (T)deserializer.Deserialize(reader);
                 return deserializationObj;
             };
+        }
+        public string ToMD5(string encodeStr)
+        {
+            using var cryptoMD5 = MD5.Create();
+            var bytes = Encoding.UTF8.GetBytes(encodeStr);
+            var hash = cryptoMD5.ComputeHash(bytes);
+            var md5 = BitConverter.ToString(hash)
+              .Replace("-", string.Empty);
+
+            return md5;
         }
     }
 }

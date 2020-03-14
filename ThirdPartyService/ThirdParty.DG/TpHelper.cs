@@ -58,14 +58,15 @@ namespace ThirdParty.DG
             {403,"Clients limited sources"},
             {404,"Resource requested does not exist"},
             {405,"Too frequent requests"},
-            {406,"Request timed out"},
+            {406,"Can't get balance by wallet API"},
             {407,"Can not find game address"},
             {500,"Null pointer exception"},
             {501,"System Error"},
             {502,"The system is busy"},
             {503,"Data operation error"}
         };
-
+        private decimal dWinLimit = 1000m;
+        private string limitGroupNo = "A";
         public class Member
         {
             public string username { get; set; }
@@ -81,7 +82,7 @@ namespace ThirdParty.DG
             public string data { get; set; }
             public SignupMember member { get; set; }
         }
-        public class LoginReq: CommReq
+        public class LoginReq : CommReq
         {
             public string lang { get; set; }
             public string domains { get; set; }
@@ -103,7 +104,7 @@ namespace ThirdParty.DG
         {
             public int codeId { get; set; }
             public string domains { get; set; }
-            public List<string> list { get; set; }
+            public string[] list { get; set; }
         }
 
 
@@ -115,10 +116,9 @@ namespace ThirdParty.DG
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             //throw new NotImplementedException();
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string AgentName = inputs.ContainsKey("AgentAccount") && !String.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
-            string APIkey = inputs.ContainsKey("APIkey") && !String.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
-            //https://api.dg99web.com/user/signup/DGTE0101DS
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string AgentName = inputs.ContainsKey("AgentAccount") && !string.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
+            string APIkey = inputs.ContainsKey("APIkey") && !string.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
             ApiUrl = $"{ApiUrl}/user/signup/{AgentName}";
 
             SignupReq SignUp = new SignupReq();
@@ -130,12 +130,12 @@ namespace ThirdParty.DG
             MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             SignUp.token = MD5Key;
             SignUp.random = Random;
-            SignUp.data = "A";
+            SignUp.data = limitGroupNo;
 
             SignUp.member.username = tpCustInfo.TpUserName;
             SignUp.member.password = tpCustInfo.TpPwd;
             SignUp.member.currencyName = tpCustInfo.TpCurrencyId;
-            SignUp.member.winLimit = 1000;
+            SignUp.member.winLimit = dWinLimit;
 
             string InputJson = JsonConvert.SerializeObject(SignUp);
 
@@ -159,8 +159,9 @@ namespace ThirdParty.DG
             {
                 oApiResult.RawMessage = "No Result";
                 oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.TransferPending;
+                oApiResult.ErrorCode = ErrorCode.Fail;
             }
+
             return oApiResult;
         }
 
@@ -176,10 +177,9 @@ namespace ThirdParty.DG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string AgentName = inputs.ContainsKey("AgentAccount") && !String.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
-            string APIkey = inputs.ContainsKey("APIkey") && !String.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
-            //https://api.dg99web.com/user/signup/DGTE0101DS
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string AgentName = inputs.ContainsKey("AgentAccount") && !string.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
+            string APIkey = inputs.ContainsKey("APIkey") && !string.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
             ApiUrl = $"{ApiUrl}/user/login/{AgentName}";
 
             LoginReq Login = new LoginReq();
@@ -192,7 +192,7 @@ namespace ThirdParty.DG
             Login.token = MD5Key;
             Login.random = Random;
             Login.lang = TpLangId;
-            Login.domains = "1";
+            Login.domains = "";
 
             Login.member.username = tpCustInfo.TpUserName;
             Login.member.password = tpCustInfo.TpPwd;
@@ -206,6 +206,14 @@ namespace ThirdParty.DG
                 var json = JsonConvert.DeserializeObject<LoginResult>(result);
                 if (json.codeId == 0)
                 {
+                    if (appType == AppType.Desktop)
+                    {
+                        oApiResult.Message = $"{json.list[0]}{json.token}&language={TpLangId}";
+                    }
+                    else
+                    {
+                        oApiResult.Message = $"{json.list[1]}{json.token}&language={TpLangId}";
+                    }
                     oApiResult.ErrorCode = ErrorCode.Success;
                 }
                 else
@@ -217,9 +225,9 @@ namespace ThirdParty.DG
             }
             else
             {
+                oApiResult.ErrorCode = ErrorCode.Fail;
                 oApiResult.RawMessage = "No Result";
                 oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.TransferPending;
             }
 
             return oApiResult;
