@@ -125,5 +125,65 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int PlaceBetLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            result = conn.Execute("Service_BettransLC_DG_Ins", new { data = bettingDataLC_DG.data, TransId = bettingDataLC_DG.TransId, Username = bettingDataLC_DG.Username, Amount = bettingDataLC_DG.Amount, Memo = (string)null }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                BetRecordInfo betRecordInfo = new BetRecordInfo();
+                betRecordInfo.TpId = (int)Tp.DG;
+                betRecordInfo.Stake = bettingDataLC_DG.Amount;
+                betRecordInfo.TransId = bettingDataLC_DG.TransId;
+                betRecordInfo.GameType = GameType.DG_LiveCasino;
+                betRecordInfo.TpUserName = bettingDataLC_DG.Username;
+
+                result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
+        public int CancelBetLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var refBettransLC = conn.QueryFirstOrDefault<BettingDataLC_DG>("Service_BettransLC_DG_Get", new { data = bettingDataLC_DG.data }, transaction: trans, commandType: CommandType.StoredProcedure);
+            if (refBettransLC == null || refBettransLC.TicketStatus == TicketStatus.Refund)
+            {
+                return -1;
+            }
+            else if (refBettransLC.TicketStatus == TicketStatus.UnSettled)
+            {
+                BetRecordInfo betRecordInfo = new BetRecordInfo();
+                betRecordInfo.TpId = (int)Tp.DG;
+                betRecordInfo.Stake = bettingDataLC_DG.Amount;
+                betRecordInfo.TransId = bettingDataLC_DG.TransId;
+                betRecordInfo.GameType = GameType.SA_LiveCasino;
+                betRecordInfo.TpUserName = bettingDataLC_DG.Username;
+
+                result = CancelBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
+                result = conn.Execute("Service_BettransLC_DG_Set", new { data = bettingDataLC_DG.data, Memo = "Cancel Bet", TicketStatus = (int)TicketStatus.Refund }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
     }
 }

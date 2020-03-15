@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -18,24 +19,27 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class DGController : ControllerBase
     {
-        private readonly ILogger<SAController> logger;
+        private readonly ILogger<DGController> logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly Tools tools;
         private readonly TpCustInfoBLL tpCustInfoBLL;
+        private readonly BettingBLL bettingBLL;
+        private readonly SettledBLL settledBLL;
 
-        public DGController(ILogger<SAController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools)
+        public DGController(ILogger<DGController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL)
         {
             this.logger = logger;
             this.thirdPartyBLL = thirdPartyBLL;
             this.tools = tools;
             this.tpCustInfoBLL = tpCustInfoBLL;
+            this.bettingBLL = bettingBLL;
+            this.settledBLL = settledBLL;
         }
-
         public class Member
         {
             public string username { get; set; }
         }
-        public class WalletReq
+        public class GetBalanceReq
         {
             public string token { get; set; }
             public Member member { get; set; }
@@ -46,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal balance { get; set; }
         }
 
-        public class GetBalance
+        public class GetBalanceRep
         {
             public int codeId { get; set; }
             public string token { get; set; }
@@ -55,44 +59,260 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/user/getBalance/{agentName}")]
         [HttpPost]
-        public async Task<GetBalance> getBalanceAsync(string agentName, [FromBody] WalletReq walletReq)
+        public GetBalanceRep getBalance(string agentName, [FromBody] GetBalanceReq getBalanceReq)
         {
-            logger.LogInformation(JsonConvert.SerializeObject(walletReq));
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var Content = await reader.ReadToEndAsync();
-            logger.LogInformation(Content);
+            logger.LogInformation(JsonConvert.SerializeObject(getBalanceReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
-            GetBalance getBalance = new GetBalance();
-            getBalance.member = new MemberBalance();
-            getBalance.member.username = walletReq.member.username;
-            getBalance.token = token;
-            getBalance.codeId = (int)Error.SystemError;
+            GetBalanceRep getBalanceRep = new GetBalanceRep();
+            getBalanceRep.member = new MemberBalance();
+            getBalanceRep.member.username = getBalanceReq.member.username;
+            getBalanceRep.token = token;
+            getBalanceRep.codeId = (int)Error.SystemError;
 
-            if (walletReq.token != token)
+            if (getBalanceReq.token != token)
             {
-                getBalance.codeId = (int)Error.TokenVerificationFailed;
-                return getBalance;
+                getBalanceRep.codeId = (int)Error.TokenVerificationFailed;
+                return getBalanceRep;
             }
 
-            string username = walletReq.member.username;
+            string username = getBalanceReq.member.username;
 
             var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.DG, username);
             if (tpCheck == null)
             {
-                getBalance.codeId = (int)Error.Accountislocked;
-                return getBalance;
+                getBalanceRep.codeId = (int)Error.Thisaccounthasbeensignedout;
+                return getBalanceRep;
             }
             else if (tpCheck.Locked)
             {
-                getBalance.codeId = (int)Error.Accountislocked;
-                return getBalance;
+                getBalanceRep.codeId = (int)Error.Accountislocked;
+                return getBalanceRep;
             }
 
             var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
-            getBalance.member.balance = tpCustBalance.Balance;
-            getBalance.codeId = (int)Error.OperationSuccessful;
-            return getBalance;
+            getBalanceRep.member.balance = tpCustBalance.Balance;
+            getBalanceRep.codeId = (int)Error.OperationSuccessful;
+            return getBalanceRep;
+        }
+
+        public class MemberTransfer : Member
+        {
+            public decimal amount { get; set; }
+        }
+        public class TransferReq
+        {
+            public string token { get; set; }
+            public long ticketId { get; set; }
+            public MemberTransfer member { get; set; }
+            public string data { get; set; }
+        }
+        public class MemberTransfer2 : MemberTransfer
+        {
+            public decimal balance { get; set; }
+        }
+
+        public class TransferRep
+        {
+            public int codeId { get; set; }
+            public string token { get; set; }
+            public string data { get; set; }
+            public MemberTransfer2 member { get; set; }
+        }
+
+        [Route("[controller]/account/transfer/{agentName}")]
+        [HttpPost]
+        public TransferRep transfer(string agentName, [FromBody] TransferReq transferReq)
+        {
+            logger.LogInformation(JsonConvert.SerializeObject(transferReq));
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
+            TransferRep transferRep = new TransferRep();
+            transferRep.member = new MemberTransfer2();
+            transferRep.member.username = transferReq.member.username;
+            transferRep.member.amount = transferReq.member.amount;
+            transferRep.token = token;
+            transferRep.codeId = (int)Error.SystemError;
+            try
+            {
+                if (transferReq.token != token)
+                {
+                    transferRep.codeId = (int)Error.TokenVerificationFailed;
+                    return transferRep;
+                }
+
+                string username = transferReq.member.username;
+                if (transferReq.member.amount < 0)
+                {
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.DG, username);
+                    if (tpCheck == null)
+                    {
+                        transferRep.codeId = (int)Error.Thisaccounthasbeensignedout;
+                        return transferRep;
+                    }
+                    else if (tpCheck.Locked)
+                    {
+                        transferRep.codeId = (int)Error.Accountislocked;
+                        return transferRep;
+                    }
+                }
+
+                if (transferReq.member.amount < 0)
+                {
+                    decimal tpAffterAmount = 0;
+                    BettingDataLC_DG bettingDataLC_DG = new BettingDataLC_DG();
+                    bettingDataLC_DG.Username = transferReq.member.username;
+                    bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
+                    bettingDataLC_DG.data = transferReq.data;
+                    bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
+                    if (bettingBLL.PlaceBetLC_DG(bettingDataLC_DG, out tpAffterAmount) > 0)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+                        transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        //var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+                        transferRep.codeId = (int)Error.Insufficientbalance;
+                    }
+                    else
+                    {
+                        //var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+                        transferRep.codeId = (int)Error.Transferfailed;
+                    }
+                }
+                else if (transferReq.member.amount > 0)
+                {
+                    decimal tpAffterAmount = 0;
+                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+
+                    if (result > 0)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+                        transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                    }
+                    else
+                    {
+                        transferRep.codeId = (int)Error.SystemError;
+                    }
+                }
+                else
+                {
+                    decimal tpAffterAmount = 0;
+                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+                    if (result > 0)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                    }
+                    else
+                    {
+                        transferRep.codeId = (int)Error.SystemError;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+
+            return transferRep;
+        }
+
+        [Route("[controller]/account/inform/{agentName}")]
+        [HttpPost]
+        public TransferRep informAsync(string agentName, [FromBody] TransferReq transferReq)
+        {
+            logger.LogInformation(JsonConvert.SerializeObject(transferReq));
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
+            TransferRep transferRep = new TransferRep();
+            transferRep.member = new MemberTransfer2();
+            transferRep.member.username = transferReq.member.username;
+            transferRep.member.amount = transferReq.member.amount;
+            transferRep.token = token;
+            transferRep.codeId = (int)Error.SystemError;
+            try
+            {
+                if (transferReq.token != token)
+                {
+                    transferRep.codeId = (int)Error.TokenVerificationFailed;
+                    return transferRep;
+                }
+
+                if (transferReq.member.amount < 0)
+                {
+                    decimal tpAffterAmount = 0;
+                    BettingDataLC_DG bettingDataLC_DG = new BettingDataLC_DG();
+                    bettingDataLC_DG.Username = transferReq.member.username;
+                    bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
+                    bettingDataLC_DG.data = transferReq.data;
+                    bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
+                    var result = bettingBLL.CancelBetLC_DG(bettingDataLC_DG, out tpAffterAmount);
+                    if (result > 0)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+                        transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                    }
+                    else if (result == -1)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                    }
+                    else
+                    {
+                        //var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+                        transferRep.codeId = (int)Error.Transferfailed;
+                    }
+                }
+                else if (transferReq.member.amount > 0)
+                {
+                    decimal tpAffterAmount = 0;
+                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+
+                    if (result > 0)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+                        transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                    }
+                    else
+                    {
+                        transferRep.codeId = (int)Error.SystemError;
+                    }
+                }
+                else
+                {
+                    decimal tpAffterAmount = 0;
+                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+                    if (result > 0)
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                    }
+                    else
+                    {
+                        transferRep.codeId = (int)Error.SystemError;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+
+            return transferRep;
         }
         public enum Error
         {
