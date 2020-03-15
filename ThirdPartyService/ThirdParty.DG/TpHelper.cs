@@ -65,7 +65,17 @@ namespace ThirdParty.DG
             {502,"The system is busy"},
             {503,"Data operation error"}
         };
-        private decimal dWinLimit = 1000m;
+
+        Dictionary<string, string> limitGroupNoMapping = new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
+        {
+            {"MYR","C"},
+            {"THB","G"},
+            {"CNY","E"},
+            {"IDR2","F"},
+            {"VND2","G"},
+        };
+
+        private decimal dWinLimit = 0m;
         private string limitGroupNo = "A";
         public class Member
         {
@@ -130,7 +140,14 @@ namespace ThirdParty.DG
             MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             SignUp.token = MD5Key;
             SignUp.random = Random;
-            SignUp.data = limitGroupNo;
+            if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
+            {
+                SignUp.data = limitGroupNoMapping[tpCustInfo.TpCurrencyId];
+            }
+            else
+            {
+                SignUp.data = limitGroupNo;
+            }
 
             SignUp.member.username = tpCustInfo.TpUserName;
             SignUp.member.password = tpCustInfo.TpPwd;
