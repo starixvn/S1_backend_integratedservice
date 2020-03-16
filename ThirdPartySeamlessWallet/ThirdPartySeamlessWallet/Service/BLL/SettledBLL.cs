@@ -31,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 backAmount *= tpCurrency.ExchangeRate;
             }
+            betRecordInfo.Stake = backAmount;
             betRecordInfo.TpId = tpId;
             betRecordInfo.TransId = TransId;
             betRecordInfo.GameType = gameType;
