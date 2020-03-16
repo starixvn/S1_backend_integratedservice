@@ -88,7 +88,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, username);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, username);
                 if (tpCustBalance.TpCurrencyId != currency)
                 {
                     resp.error = (int)Error.CurrencyInvaild;
@@ -152,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                 if (tpCustBalance.TpCurrencyId != bettingDataLC_SA.currency)
                 {
                     resp.error = (int)Error.CurrencyInvaild;
@@ -173,20 +173,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
                     }
                     else
                     {
-                        tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
                     }
                 }
                 else
                 {
-                    tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                     resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.AmountInvaild;
                 }
@@ -235,20 +235,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
                     }
                 }
                 else
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                     resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.AmountInvaild;
                 }
@@ -288,19 +288,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.error = (int)Error.Success;
                     resp.currency = bettingDataLC_SA.currency;
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                     resp.amount = tpCustBalance.Balance;
                     resp.username = bettingDataLC_SA.username;
                 }
                 else if (tpAffterAmount < 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                     resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.BalanceNotEnough;
                 }
                 else
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                     resp.amount = tpCustBalance.Balance;
                     resp.error = (int)Error.Error;
                 }
@@ -346,19 +346,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         resp.error = (int)Error.Success;
                         resp.currency = bettingDataLC_SA.currency;
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.username = bettingDataLC_SA.username;
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.SA, bettingDataLC_SA.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.SA, bettingDataLC_SA.username);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
                     }

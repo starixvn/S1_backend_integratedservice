@@ -25,7 +25,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Win = 1,
         Lost = 2,
         Refund = 3,/*Reject, Refund, Void, Draw*/
-        Draw = 4
+        Draw = 4,
+        Related = 5
     }
 
     public enum GameType

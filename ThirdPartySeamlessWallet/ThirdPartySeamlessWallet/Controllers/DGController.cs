@@ -90,7 +90,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBalanceRep;
             }
 
-            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, username);
             getBalanceRep.member.balance = tpCustBalance.Balance;
             getBalanceRep.codeId = (int)Error.OperationSuccessful;
             return getBalanceRep;
@@ -207,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
                         transferRep.member.balance = tpCustBalance.Balance;
                     }
                     else
@@ -264,7 +264,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
                         transferRep.member.balance = tpCustBalance.Balance;
                     }
                     else
@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
                         transferRep.member.balance = tpCustBalance.Balance;
                     }
                     else

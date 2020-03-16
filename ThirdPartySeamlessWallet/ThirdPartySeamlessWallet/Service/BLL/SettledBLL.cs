@@ -119,5 +119,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
+        {
+            int result = settledService.SettledLC_AG_Merger(payoutDataLC_AG, relTransId);
+            return result;
+        }
     }
 }

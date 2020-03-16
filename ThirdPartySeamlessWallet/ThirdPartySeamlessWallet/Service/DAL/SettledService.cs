@@ -24,13 +24,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.walletService = walletService;
             this.tools = tools;
         }
+
+        public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            int result = conn.Execute("Service_TpSettleBet_AG_Set", new { TpId = (int)Tp.AG, TransId = payoutDataLC_AG.TransactionID, RelTransId = relTransId, GameType = (int)GameType.AG_LiveCasino, SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4) }, trans, commandType: CommandType.StoredProcedure);
+            trans.Commit();
+            return result;
+        }
         public int SettledLC_AG(TpCustInfo tpCustInfo, PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
         {
             afterAmount = 0;
             var result = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
-            var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, 8), OriginalState = payoutDataLC_AG.TicketStatus, Memo = (string)null, TicketStatus = payoutDataLC_AG.TicketStatus.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
+            var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = (string)null, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
             p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransLC_AG_Ins", p, commandType: CommandType.StoredProcedure);
@@ -46,7 +56,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
             betRecordInfo.GameType = GameType.AG_LiveCasino;
             betRecordInfo.TpUserName = username;
+            betRecordInfo.SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4);
             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
             if (backAmount == 0)
             {
                 betRecordInfo.TicketStatus = TicketStatus.UnSettled;

@@ -111,20 +111,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                             resp.Balance = tpCustBalance.Balance;
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                             resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                         resp.Balance = tpCustBalance.Balance;
                     }
                 }
@@ -132,9 +132,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var xmlPayout = tools.XMLDeserialize<PayoutData>(Content);
                     var payoutDataLC_AG = JsonConvert.DeserializeObject<PayoutDataLC_AG>(JsonConvert.SerializeObject(xmlPayout.Record));
+                    int reslut = 0;
+                    payoutDataLC_AG.TransactionID = xmlPayout.Record.TransactionIDs[0];
+                    if (xmlPayout.Record.TransactionIDs.Count > 1)
+                    {
+                        payoutDataLC_AG.Memo = string.Join(",", xmlPayout.Record.TransactionIDs);
+                        reslut = settledBLL.SettledLC_AG_Merger(payoutDataLC_AG, JsonConvert.SerializeObject(xmlPayout.Record.TransactionIDs.Where(x => x != payoutDataLC_AG.TransactionID)));
+                    }
+
                     logger.LogInformation(JsonConvert.SerializeObject(payoutDataLC_AG));
                     decimal tpAffterAmount = 0;
-                    var reslut = settledBLL.SettledLC_AG(payoutDataLC_AG, out tpAffterAmount);
+                    reslut = settledBLL.SettledLC_AG(payoutDataLC_AG, out tpAffterAmount);
 
                     if (reslut > 0)
                     {
@@ -145,7 +153,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (reslut == -1)
                     {
                         resp.ResponseCode = Error.OK.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                         resp.Balance = tpCustBalance.Balance;
                     }
                     else
@@ -170,20 +178,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                             resp.Balance = tpCustBalance.Balance;
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                             resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                         resp.Balance = tpCustBalance.Balance;
                     }
                 }
@@ -201,6 +209,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 resp.ResponseCode = Error.ERROR.ToString();
                 Response.StatusCode = (int)Error.ERROR;
             }
+
+            //logger.LogCritical(JsonConvert.SerializeObject(resp));
             return resp;
         }
 

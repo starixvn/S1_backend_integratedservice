@@ -36,7 +36,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string BillNo { get; set; }
         public string TicketStatus { get; set; }
         public string GameResult { get; set; }
-        public bool Finish { get; set; }
+        public string Finish { get; set; }
+        public string Memo { get; set; }
     }
     public class BettingDataLC_AG_Refund : BettingDataLC_AG
     {

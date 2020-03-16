@@ -102,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [XmlElement(ElementName = "billNo")]
         public string BillNo { get; set; }
         [XmlElement(ElementName = "transactionID")]
-        public string TransactionID { get; set; }
+        public List<string> TransactionIDs { get; set; }
         [XmlElement(ElementName = "gametype")]
         public string Gametype { get; set; }
         [XmlElement(ElementName = "gameCode")]
