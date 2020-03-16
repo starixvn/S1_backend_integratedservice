@@ -170,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class RefundData
     {
         [XmlElement(ElementName = "Record")]
-        public Record Record { get; set; }
+        public RefundRecord Record { get; set; }
     }
 
     [XmlRoot(ElementName = "row")]
