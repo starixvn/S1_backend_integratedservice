@@ -42,11 +42,13 @@ namespace ThirdPartyService
             services.AddSingleton<WalletService>();
             services.AddSingleton<TpTransferInfo>();
             services.AddSingleton<ServerInfoService>();
+            services.AddSingleton<AuthService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<ServerInfoBLL>();
             services.AddSingleton<TpCustInfoBLL>();
+            services.AddSingleton<AuthBLL>();
 
             ThirdPartyCore.ThirdPartyHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
             ThirdPartyCore.ThirdPartyHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");

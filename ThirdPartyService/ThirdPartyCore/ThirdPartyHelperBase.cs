@@ -37,6 +37,7 @@ namespace ThirdPartyCore
         public static int proxyPort;
         private bool _isHeathly;
         public event InsertLogEventHandler InsertLog;
+        public static IAuthProvider AuthProvider { set; get; }
         public bool isHeathly
         {
             set
@@ -144,15 +145,13 @@ namespace ThirdPartyCore
         }
         protected string ToMD5(string encodeStr)
         {
-            using (var cryptoMD5 = MD5.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(encodeStr);
-                var hash = cryptoMD5.ComputeHash(bytes);
-                var md5 = BitConverter.ToString(hash)
-                  .Replace("-", String.Empty);
+            using var cryptoMD5 = MD5.Create();
+            var bytes = Encoding.UTF8.GetBytes(encodeStr);
+            var hash = cryptoMD5.ComputeHash(bytes);
+            var md5 = BitConverter.ToString(hash)
+              .Replace("-", string.Empty);
 
-                return md5;
-            }
+            return md5;
         }
         protected string GetRandomString(int length)
         {
@@ -267,7 +266,7 @@ namespace ThirdPartyCore
             };
 
             ICryptoTransform cTransform = rm.CreateEncryptor();
-            Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
 
             var base64Str = Convert.ToBase64String(resultArray, 0, resultArray.Length);
 
@@ -279,7 +278,7 @@ namespace ThirdPartyCore
             if (isDecodeUrl)
                 str = System.Web.HttpUtility.UrlDecode(str);
 
-            Byte[] toEncryptArray = Convert.FromBase64String(str);
+            byte[] toEncryptArray = Convert.FromBase64String(str);
 
             RijndaelManaged rm = new RijndaelManaged
             {
@@ -289,7 +288,7 @@ namespace ThirdPartyCore
             };
 
             ICryptoTransform cTransform = rm.CreateDecryptor();
-            Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
 
             return Encoding.UTF8.GetString(resultArray);
         }
@@ -310,13 +309,46 @@ namespace ThirdPartyCore
             Task.Run(() =>
             {
                 Directory.CreateDirectory(LogFolder);
-                using (StreamWriter writer = new StreamWriter(filePath, append: true))
-                {
-                    writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  {InfoContent}");
-                }
+                using StreamWriter writer = new StreamWriter(filePath, append: true);
+                writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  {InfoContent}");
             });
         }
+        public string ApplyToken<T>(T t)
+        {
+            if (AuthProvider != null)
+            {
+                Guid g = Guid.NewGuid();
+                string GuidString = Convert.ToBase64String(g.ToByteArray());
+                GuidString = GuidString.Replace("=", "");
+                GuidString = GuidString.Replace("+", "");
+                if (AuthProvider.ApplyToken(GuidString, ToJson(t), 1))
+                {
+                    return GuidString;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+        public bool Authenticate<T>(string sToken, out T t)
+        {
+            string sPermissionData = "";
+            t = default;
+            sPermissionData = AuthProvider.Authenticate(sToken);
 
+            if (!string.IsNullOrEmpty(sPermissionData))
+            {
+                t = FromJson<T>(sPermissionData);
+                return true;
+            }
+
+            return false;
+        }
         public abstract ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
         public abstract ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
         public abstract ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);

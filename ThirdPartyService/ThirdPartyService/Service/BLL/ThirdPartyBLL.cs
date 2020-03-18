@@ -18,12 +18,13 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpTransferInfo tpTransferInfo;
         private readonly IWebHostEnvironment env;
 
-        public ThirdPartyBLL(IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo)
+        public ThirdPartyBLL(IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, AuthBLL authBLL)
         {
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyHelper = thirdPartyHelper;
             this.tpTransferInfo = tpTransferInfo;
             this.env = env;
+            ThirdPartyHelperBase.AuthProvider = authBLL;
         }
         public ApiResult GotoGame(TpInfo tpInfo)
         {
