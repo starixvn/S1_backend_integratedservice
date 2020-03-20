@@ -23,7 +23,6 @@ namespace ThirdPartyService.Service.DAL
         }
         public string Authenticate(string Key)
         {
-            string permissionData = null;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { Token = Key });
             p.Add("PermissionData", dbType: DbType.String, direction: ParameterDirection.Output);
@@ -32,7 +31,7 @@ namespace ThirdPartyService.Service.DAL
             using var trans = conn.BeginTransaction();
             result = conn.Execute("Common_AuthToken_Sel", p, trans, commandType: CommandType.StoredProcedure);
             trans.Commit();
-            permissionData = p.Get<string>("PermissionData");
+            string permissionData = p.Get<string>("PermissionData");
             return permissionData;
         }
     }

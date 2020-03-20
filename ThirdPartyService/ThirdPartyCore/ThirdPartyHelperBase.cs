@@ -321,6 +321,10 @@ namespace ThirdPartyCore
                 string GuidString = Convert.ToBase64String(g.ToByteArray());
                 GuidString = GuidString.Replace("=", "");
                 GuidString = GuidString.Replace("+", "");
+                GuidString = GuidString.Replace("/", "");
+                GuidString = GuidString.Replace("_", "");
+                GuidString = GuidString.Replace("@", "");
+
                 if (AuthProvider.ApplyToken(GuidString, ToJson(t), 1))
                 {
                     return GuidString;
