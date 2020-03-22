@@ -31,6 +31,7 @@ namespace ThirdPartySeamlessWallet
             services.AddMvc().AddXmlSerializerFormatters();
             /*Library*/
             services.AddSingleton<Tools>();
+            services.AddSingleton<Log2File>();
 
             /*DAL*/
             services.AddSingleton<ThirdPartyService>();
