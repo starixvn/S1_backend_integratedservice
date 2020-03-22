@@ -64,7 +64,53 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betRecordInfo.TicketStatus = TicketStatus.UnSettled;
             }
 
-            result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount);
+            result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
+
+            return result;
+        }
+
+        public int SettledRNG_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
+        {
+            afterAmount = 0;
+            TransId = null;
+            int TicketStatus = 0;
+            var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var p = new DynamicParameters(settledDataRNG_GPI);
+            p.Add("TransId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("TicketStatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            result = conn.Execute("Service_BettransRNG_GPI_Set", p, trans, commandType: CommandType.StoredProcedure);
+            TicketStatus = p.Get<int>("TicketStatus");
+
+            if (result > 0)
+            {
+                TransId = p.Get<int>("TransId").ToString();
+                decimal Stake = p.Get<decimal>("Stake");
+
+                BetRecordInfo betRecordInfo = new BetRecordInfo();
+                betRecordInfo.TpId = (int)Tp.GPI;
+                betRecordInfo.Stake = Stake;
+                betRecordInfo.WinlostAmount = settledDataRNG_GPI.amount - Stake;
+                betRecordInfo.TransId = TransId;
+                betRecordInfo.GameType = GameType.GPI_RNG;
+                betRecordInfo.TpUserName = settledDataRNG_GPI.cust_id;
+                betRecordInfo.SettledTime = 0;
+                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
+                result = SettleTicket(tpCustInfo, betRecordInfo, settledDataRNG_GPI.amount, out afterAmount);
+
+                if (result > 0 || result == -1)
+                {
+                    trans.Commit();
+                }
+            }
+            else if (TicketStatus == 0 && settledDataRNG_GPI.amount > 0)
+            {
+                trans.Rollback();
+            }
 
             return result;
         }
@@ -108,6 +154,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (betRecord.WinlostAmount > 0)
                     {
                         betRecord.TicketStatus = TicketStatus.Win;
+                    }
+                    else if (betRecord.WinlostAmount == 0)
+                    {
+                        betRecord.TicketStatus = TicketStatus.Draw;
                     }
                     else
                     {

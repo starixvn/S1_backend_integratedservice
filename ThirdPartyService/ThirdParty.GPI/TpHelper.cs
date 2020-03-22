@@ -68,7 +68,6 @@ namespace ThirdParty.GPI
             string P2PUrl = inputs.ContainsKey("P2PUrl") && !string.IsNullOrEmpty(inputs["P2PUrl"]) ? inputs["P2PUrl"] : throw new Exception();
             string OperatorId = inputs.ContainsKey("OperatorId") && !string.IsNullOrEmpty(inputs["OperatorId"]) ? inputs["OperatorId"] : throw new Exception();
 
-
             ApiResult oApiResult = new ApiResult();
             var applyTokenInputs = FromJson<Dictionary<string, string>>(ToJson(tpCustInfo));
             applyTokenInputs.Add("TpLangId", TpLangId);
@@ -83,7 +82,7 @@ namespace ThirdParty.GPI
             switch (gametype.ToLower())
             {
                 case "slots":
-                    oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}";
+                    oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&hidelobby=1";
                     break;
                 case "livecasino":
                     if (appType == AppType.Native)

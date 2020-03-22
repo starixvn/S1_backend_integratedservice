@@ -38,12 +38,14 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();
+            services.AddSingleton<AuthService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<BettingBLL>();
             services.AddSingleton<SettledBLL>();
+            services.AddSingleton<AuthBLL>();
 
             services.AddControllers();
         }

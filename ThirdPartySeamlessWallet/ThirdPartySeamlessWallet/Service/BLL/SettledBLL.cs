@@ -124,5 +124,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             int result = settledService.SettledLC_AG_Merger(payoutDataLC_AG, relTransId);
             return result;
         }
+        public int SettledRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, settledDataRNG_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                settledDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SettledRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
     }
 }
