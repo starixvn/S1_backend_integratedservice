@@ -193,7 +193,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     decimal tpAffterAmount = 0;
                     var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
 
-                    if (result > 0)
+                    if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     decimal tpAffterAmount = 0;
                     var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
-                    if (result > 0)
+                    if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
@@ -288,7 +288,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     decimal tpAffterAmount = 0;
                     var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
 
-                    if (result > 0)
+                    if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
@@ -303,7 +303,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     decimal tpAffterAmount = 0;
                     var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
-                    if (result > 0)
+                    if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
