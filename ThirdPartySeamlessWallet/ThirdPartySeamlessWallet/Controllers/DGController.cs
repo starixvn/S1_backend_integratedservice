@@ -129,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
-            log2File.Info(bodyText, "transfer");
+            log2File.Info(bodyText, "DG_transfer");
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
@@ -237,7 +237,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
-            log2File.Info(bodyText, "inform");
+            log2File.Info(bodyText, "DG_inform");
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
