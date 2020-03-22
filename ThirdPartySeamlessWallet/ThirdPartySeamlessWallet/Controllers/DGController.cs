@@ -25,8 +25,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
+        private readonly Log2File log2File;
 
-        public DGController(ILogger<DGController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL)
+        public DGController(ILogger<DGController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
             this.logger = logger;
             this.thirdPartyBLL = thirdPartyBLL;
@@ -34,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
+            this.log2File = log2File;
         }
         public class Member
         {
@@ -122,8 +124,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/account/transfer/{agentName}")]
         [HttpPost]
-        public TransferRep transfer(string agentName, [FromBody] TransferReq transferReq)
+        public async Task<TransferRep> transferAsync(string agentName)
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string bodyText = await reader.ReadToEndAsync();
+            TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
+            log2File.Info(bodyText, "transfer");
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
@@ -226,8 +232,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/account/inform/{agentName}")]
         [HttpPost]
-        public TransferRep informAsync(string agentName, [FromBody] TransferReq transferReq)
+        public async Task<TransferRep> informAsync(string agentName)
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string bodyText = await reader.ReadToEndAsync();
+            TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
+            log2File.Info(bodyText, "inform");
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
