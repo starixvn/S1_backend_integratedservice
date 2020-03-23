@@ -23,7 +23,8 @@ namespace ThirdParty.Saba
             {"180","virtualsports" },
             {"202","keno" },
             {"208","casino" },
-            {"211","allbet" }
+            {"211","allbet" },
+            {"245","virtualgame" }
         };
 
         Dictionary<string, string> AllbetlangTypeDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
@@ -113,9 +114,9 @@ namespace ThirdParty.Saba
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             TransferReg input = new TransferReg();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_trans_id = TransID;
             input.wallet_id = 1;
 
@@ -163,9 +164,9 @@ namespace ThirdParty.Saba
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             CreateMemberReq input = new CreateMemberReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
             input.operatorid = null;
             input.userName = input.vendor_member_id;
@@ -322,6 +323,10 @@ namespace ThirdParty.Saba
                         else if (SportType == "208")
                         {
                             types = "CL";
+                        }
+                        else if (SportType == "245")
+                        {
+                            types = "vgame";
                         }
 
                         if (SportType == "211")
