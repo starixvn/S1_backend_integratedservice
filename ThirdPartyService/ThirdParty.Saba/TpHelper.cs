@@ -326,7 +326,7 @@ namespace ThirdParty.Saba
                         }
                         else if (SportType == "245")
                         {
-                            types = "vgame";
+                            types = "virtualgame";
                         }
 
                         if (SportType == "211")
