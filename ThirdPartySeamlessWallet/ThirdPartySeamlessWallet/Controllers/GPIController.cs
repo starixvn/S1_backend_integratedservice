@@ -75,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             ValidateTicketResp validateTicketResp = new ValidateTicketResp();
             TpCustInfoAuth tpCustInfoAuth = null;
-            if(authBLL.Authenticate(ticket, out tpCustInfoAuth))
+            if (authBLL.Authenticate(ticket, out tpCustInfoAuth))
             {
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, tpCustInfoAuth.TpUserName);
                 if (tpCheck == null)
@@ -155,7 +155,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return getbalanceResp;
         }
-        public class DebitReq: BettingDataRNG_GPI
+        public class DebitReq : BettingDataRNG_GPI
         {
             public string merch_id { get; set; }
             public string merch_pwd { get; set; }
@@ -185,6 +185,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logger.LogCritical(JsonConvert.SerializeObject(debitReq));
 
             DebitResp debitResp = new DebitResp();
+            debitResp.Error_code = -1;
 
             var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, debitReq.cust_id);
             if (tpCheck == null)
@@ -259,11 +260,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/credit")]
         [HttpPost]
         [Produces("application/xml")]
-        public CreditResp credit([FromForm]CreditReq creditReq)
+        public CreditResp credit(/*[FromForm]CreditReq creditReq*/)
         {
             CreditResp creditResp = new CreditResp();
             creditResp.Exchange_rate = 1;
+            creditResp.Error_code = -1;
+            CreditReq creditReq = JsonConvert.DeserializeObject<CreditReq>(@"{""merch_id"":""NVCASH"",""merch_pwd"":""D9988E76-BFC9-42D8-91AC-26DD98B624C9"",""cust_id"":""DNova88_9"",""currency"":""VND"",""amount"":2.0,""trx_id"":""412d459f-c314-4abf-a931-cc2261ffb6b4"",""Operator"":null,""game_id"":""200018"",""round_id"":""114165222"",""bundle_id"":null,""jackpot_win"":0.0,""platform"":""1"",""rake"":null,""rakedhands"":null}");
             logger.LogCritical(JsonConvert.SerializeObject(creditReq));
+
             decimal tpAffterAmount = 0;
             string TransId = null;
             int result = 0;
@@ -289,12 +293,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (result == -1)
             {
-
+                creditResp.Error_code = 0;
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, creditReq.cust_id);
+                creditResp.After = tpCustBalance.Balance;
+                creditResp.Before = tpCustBalance.Balance;
+                creditResp.Error_code = 0;
             }
-            else
-            {
 
-            }
+            logger.LogCritical(JsonConvert.SerializeObject(creditResp));
             return creditResp;
         }
         public class EndgameReq : EndgameRNG_GPI

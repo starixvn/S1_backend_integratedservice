@@ -21,18 +21,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.configuration = configuration;
             this.walletService = walletService;
         }
+
+        /*Single Bet for Settled*/
         public int PlaceBet(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betRecordInfo.Stake * -1, betRecordInfo.TpId, TransType.Wagers, $"Stake: {betRecordInfo.Stake}", betRecordInfo.TransId, out afterAmount, conn, trans);
 
-            if (result > 0)
-            {
-                result = conn.Execute("Service_TpInsertBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, Stake = betRecordInfo.Stake }, transaction: trans, commandType: CommandType.StoredProcedure);
-            }
+            var result = PlaceBet(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
 
             if (result > 0)
             {
@@ -41,6 +39,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public int PlaceBet(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
+        {
+            afterAmount = 0;
+
+            var result = 0;
+            if (betRecordInfo.Stake != 0)
+            {
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betRecordInfo.Stake * -1, betRecordInfo.TpId, TransType.Wagers, $"Stake: {betRecordInfo.Stake}", betRecordInfo.TransId, out afterAmount, conn, trans);
+            }
+            else
+            {
+                /*Free Bet*/
+                result = 1;
+            }
+
+            if (result > 0)
+            {
+                result = conn.Execute("Service_TpInsertBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, Stake = betRecordInfo.Stake }, transaction: trans, commandType: CommandType.StoredProcedure);
+            }
+
+            return result;
+        }
+
+        /*Will Merge Bet for Settled, Most for Live Casino*/
         private int PlaceBetByCall(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
         {
             afterAmount = 0;
@@ -208,7 +230,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betRecordInfo.GameType = GameType.GPI_RNG;
                 betRecordInfo.TpUserName = bettingDataRNG_GPI.cust_id;
 
-                result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
+                result = PlaceBet(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
             }
 
             if (result > 0)

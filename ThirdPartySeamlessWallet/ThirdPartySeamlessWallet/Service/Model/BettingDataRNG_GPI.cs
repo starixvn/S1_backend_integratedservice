@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -34,7 +35,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal? rake { get; set; }
         public decimal? rakedhands { get; set; }
     }
-
+    public class SettledDataRNG_GPIforGet : SettledDataRNG_GPI
+    {
+        public string TransId { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+    }
     public class EndgameRNG_GPI
     {
         public string cust_id { get; set; }
