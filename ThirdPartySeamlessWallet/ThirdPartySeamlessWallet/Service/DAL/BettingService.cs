@@ -210,27 +210,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int PlaceBetRNG_GPI(TpCustInfo tpCustInfo, BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string Transid)
         {
             afterAmount = 0;
-            Transid = null;
+            Transid = bettingDataRNG_GPI.trx_id;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-
+            bettingDataRNG_GPI.amount *= -1;
             var p = new DynamicParameters(bettingDataRNG_GPI);
-            p.Add("TransId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("jackpot_win", 0);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                Transid = p.Get<int>("TransId").ToString();
-                BetRecordInfo betRecordInfo = new BetRecordInfo();
-                betRecordInfo.TpId = (int)Tp.GPI;
-                betRecordInfo.Stake = bettingDataRNG_GPI.amount;
-                betRecordInfo.TransId = Transid;
-                betRecordInfo.GameType = GameType.GPI_RNG;
-                betRecordInfo.TpUserName = bettingDataRNG_GPI.cust_id;
-
-                result = PlaceBet(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_GPI.amount, (int)Tp.GPI, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_GPI.amount).ToString("#,##0.##")}", bettingDataRNG_GPI.trx_id, out afterAmount, conn, trans);
             }
 
             if (result > 0)

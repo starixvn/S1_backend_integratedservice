@@ -260,18 +260,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/credit")]
         [HttpPost]
         [Produces("application/xml")]
-        public CreditResp credit(/*[FromForm]CreditReq creditReq*/)
+        public CreditResp credit([FromForm]CreditReq creditReq)
         {
             CreditResp creditResp = new CreditResp();
             creditResp.Exchange_rate = 1;
             creditResp.Error_code = -1;
-            CreditReq creditReq = JsonConvert.DeserializeObject<CreditReq>(@"{""merch_id"":""NVCASH"",""merch_pwd"":""D9988E76-BFC9-42D8-91AC-26DD98B624C9"",""cust_id"":""DNova88_9"",""currency"":""VND"",""amount"":2.0,""trx_id"":""412d459f-c314-4abf-a931-cc2261ffb6b4"",""Operator"":null,""game_id"":""200018"",""round_id"":""114165222"",""bundle_id"":null,""jackpot_win"":0.0,""platform"":""1"",""rake"":null,""rakedhands"":null}");
+            //CreditReq creditReq = JsonConvert.DeserializeObject<CreditReq>(@" {""merch_id"":""NVCASH"",""merch_pwd"":""D9988E76-BFC9-42D8-91AC-26DD98B624C9"",""cust_id"":""DNova88_9"",""currency"":""VND"",""amount"":0.0,""trx_id"":""5392eb41-2f83-4395-aea8-2fa85e93e0ae"",""Operator"":null,""game_id"":""200018"",""round_id"":""114165222"",""bundle_id"":null,""jackpot_win"":0.0,""platform"":""1"",""rake"":null,""rakedhands"":null}");
             logger.LogCritical(JsonConvert.SerializeObject(creditReq));
-
-            decimal tpAffterAmount = 0;
-            string TransId = null;
-            int result = 0;
-            result = settledBLL.SettledRNG_GPI(creditReq, out tpAffterAmount, out TransId);
+            int result = settledBLL.SettledRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
 
             if (result > 0)
             {
