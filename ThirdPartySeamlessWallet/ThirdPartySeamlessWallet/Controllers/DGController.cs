@@ -124,7 +124,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/account/transfer/{agentName}")]
         [HttpPost]
-        public async Task<TransferRep> transferAsync(string agentName)
+        public async Task<TransferRep> TransferAsync(string agentName)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
@@ -190,8 +190,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (transferReq.member.amount > 0)
                 {
-                    decimal tpAffterAmount = 0;
-                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+                    if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                        return transferRep;
+                    }
+
+                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
@@ -206,11 +215,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    decimal tpAffterAmount = 0;
 
-                    int.TryParse(transferReq.data, out int tempData);
-
-                    if (tempData < 0)/*avoid DG Wrong Settled*/
+                    if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
@@ -220,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return transferRep;
                     }
 
-                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
@@ -245,7 +251,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/account/inform/{agentName}")]
         [HttpPost]
-        public async Task<TransferRep> informAsync(string agentName)
+        public async Task<TransferRep> InformAsync(string agentName)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
@@ -298,8 +304,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (transferReq.member.amount > 0)
                 {
-                    decimal tpAffterAmount = 0;
-                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+                    if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                        return transferRep;
+                    }
+
+                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
@@ -314,8 +329,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    decimal tpAffterAmount = 0;
-                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
+                    if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                        return transferRep;
+                    }
+
+                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
