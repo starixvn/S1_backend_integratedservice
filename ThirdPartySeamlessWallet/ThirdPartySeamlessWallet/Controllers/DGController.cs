@@ -207,6 +207,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     decimal tpAffterAmount = 0;
+
+                    int.TryParse(transferReq.data, out int tempData);
+
+                    if (tempData < 0)/*avoid DG Wrong Settled*/
+                    {
+                        transferRep.codeId = (int)Error.OperationSuccessful;
+                        transferRep.token = token;
+
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        transferRep.member.balance = tpCustBalance.Balance;
+                        return transferRep;
+                    }
+
                     var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out tpAffterAmount);
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
