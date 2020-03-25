@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using Newtonsoft.Json;
-using System.Linq;
 
 namespace ThirdParty.GPI
 {
@@ -67,6 +65,9 @@ namespace ThirdParty.GPI
             string LotteryUrl = inputs.ContainsKey("LotteryUrl") && !string.IsNullOrEmpty(inputs["LotteryUrl"]) ? inputs["LotteryUrl"] : throw new Exception();
             string P2PUrl = inputs.ContainsKey("P2PUrl") && !string.IsNullOrEmpty(inputs["P2PUrl"]) ? inputs["P2PUrl"] : throw new Exception();
             string OperatorId = inputs.ContainsKey("OperatorId") && !string.IsNullOrEmpty(inputs["OperatorId"]) ? inputs["OperatorId"] : throw new Exception();
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+            string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
+            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
 
             ApiResult oApiResult = new ApiResult();
             var applyTokenInputs = FromJson<Dictionary<string, string>>(ToJson(tpCustInfo));
@@ -82,7 +83,7 @@ namespace ThirdParty.GPI
             switch (gametype.ToLower())
             {
                 case "slots":
-                    oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&hidelobby=1";
+                    oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&fundsURL={cashierUrl}&homeURL={homeUrl}&lobbyURL={lobbyUrl}";//&hidelobby=1
                     break;
                 case "livecasino":
                     if (appType == AppType.Native)
