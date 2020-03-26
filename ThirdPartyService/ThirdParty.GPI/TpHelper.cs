@@ -76,11 +76,11 @@ namespace ThirdParty.GPI
 
             string token = ApplyToken(applyTokenInputs);
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-            string gametype = inputs.ContainsKey("gametype") && !string.IsNullOrEmpty(inputs["gametype"]) ? inputs["gametype"] : "";
+            string gameType = inputs.ContainsKey("gameType") && !string.IsNullOrEmpty(inputs["gameType"]) ? inputs["gameType"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
             oApiResult.ErrorCode = ErrorCode.Success;
-            switch (gametype.ToLower())
+            switch (gameType.ToLower())
             {
                 case "slots":
                     oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&fundsURL={cashierUrl}&homeURL={homeUrl}&lobbyURL={lobbyUrl}";//&hidelobby=1

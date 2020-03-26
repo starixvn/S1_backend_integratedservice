@@ -200,34 +200,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, debitReq.cust_id);
-                if (debitReq.currency != tpCustBalance.TpCurrencyId)
+                if (bettingBLL.PlaceBetRNG_GPI(debitReq, out decimal tpAffterAmount, out string TransId) > 0)
                 {
-                    debitResp.Error_code = -29;
-                    debitResp.Error_msg = "Currency mismatch";
+                    debitResp.Error_code = 0;
+                    debitResp.After = tpAffterAmount;
+                    debitResp.Before = tpAffterAmount + debitReq.amount;
+                    debitResp.Exchange_rate = 1;
+                    debitResp.Trx_id = TransId;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    debitResp.Error_code = -4;
+                    debitResp.Error_msg = "Insufficient balance";
                 }
                 else
                 {
-                    decimal tpAffterAmount = 0;
-                    string TransId = null;
-                    if (bettingBLL.PlaceBetRNG_GPI(debitReq, out tpAffterAmount, out TransId) > 0)
-                    {
-                        debitResp.Error_code = 0;
-                        debitResp.After = tpAffterAmount;
-                        debitResp.Before = tpAffterAmount + debitReq.amount;
-                        debitResp.Exchange_rate = 1;
-                        debitResp.Trx_id = TransId;
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        debitResp.Error_code = -4;
-                        debitResp.Error_msg = "Insufficient balance";
-                    }
-                    else
-                    {
-                        debitResp.Error_code = 1;
-                        debitResp.Error_msg = "Transaction already exists";
-                    }
+                    debitResp.Error_code = 1;
+                    debitResp.Error_msg = "Transaction already exists";
                 }
             }
 
@@ -281,7 +270,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (creditReq.amount == 0)
                 {
                     creditResp.Error_code = 0;
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, creditReq.cust_id);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
                     creditResp.After = tpCustBalance.Balance;
                     creditResp.Before = tpCustBalance.Balance;
                     creditResp.Error_code = 0;
@@ -290,7 +279,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (result == -1)
             {
                 creditResp.Error_code = 0;
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, creditReq.cust_id);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
                 creditResp.After = tpCustBalance.Balance;
                 creditResp.Before = tpCustBalance.Balance;
                 creditResp.Error_code = 0;
