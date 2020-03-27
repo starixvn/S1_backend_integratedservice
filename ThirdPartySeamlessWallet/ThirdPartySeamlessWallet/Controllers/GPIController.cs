@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -30,8 +31,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
+        private readonly Log2File log2File;
 
-        public GPIController(ILogger<GPIController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
+        public GPIController(ILogger<GPIController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
             this.authBLL = authBLL;
             this.logger = logger;
@@ -39,6 +41,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
+            this.log2File = log2File;
         }
 
         [XmlRoot(ElementName = "resp")]
@@ -220,6 +223,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
             }
 
+            string debitLog = $"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}";
+            log2File.Info(debitLog, "GPI_debit");
             return debitResp;
         }
 
@@ -285,7 +290,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 creditResp.Error_code = 0;
             }
 
-            logger.LogCritical(JsonConvert.SerializeObject(creditResp));
+            string creditLog = $"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}";
+            log2File.Info(creditLog, "GPI_debit");
             return creditResp;
         }
         public class EndgameReq : EndgameRNG_GPI
@@ -294,13 +300,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string merch_pwd { get; set; }
         }
 
+        [XmlRoot(ElementName = "resp")]
+        public class EndgameResp
+        {
+            [XmlElement(ElementName = "error_code")]
+            public string Error_code { get; set; }
+            [XmlElement(ElementName = "error_msg")]
+            public string Error_msg { get; set; }
+        }
+
         [Route("[controller]/ms/endgame")]
         [HttpPost]
         [Produces("application/xml")]
-        public GetbalanceResp endgame([FromForm]EndgameReq endgameReq)
+        public EndgameResp endgame([FromForm]EndgameReq endgameReq)
         {
+            EndgameResp endgameResp = new EndgameResp();
+            endgameResp.Error_code = "0";
+            endgameResp.Error_msg = "No errors";
             logger.LogCritical(JsonConvert.SerializeObject(endgameReq));
-            return null;
+            return endgameResp;
         }
     }
 }

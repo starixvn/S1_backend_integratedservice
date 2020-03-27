@@ -30,9 +30,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string key { get; set; }
             public string message { get; set; }
         }
-        public class GetBalanceResp
+        public class Resp
         {
             public string status { get; set; }
+            public string msg { get; set; }
             public string balance { get; set; }
         }
 
@@ -44,43 +45,96 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/[action]")]
         [HttpPost]
-        public GetBalanceResp GetBalance([FromForm]Req req)
+        public Resp GetBalance([FromForm]Req req)
         {
             logger.LogCritical(JsonConvert.SerializeObject(req));
             GetBalanceReq getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(req.message);
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
-            GetBalanceResp getBalanceResp = new GetBalanceResp();
+            Resp resp = new Resp();
 
             if (req.key != thirdPartySetting.TpSetting["cert"])
             {
-                getBalanceResp.status = "500";
-                return getBalanceResp;
+                resp.status = "500";
+                resp.msg = "system busy";
+                return resp;
             }
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, getBalanceReq.userId);
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.YL, getBalanceReq.userId);
             if (tpCheck == null)
             {
-                getBalanceResp.status = "500";
-                return getBalanceResp;
+                resp.status = "500";
+                resp.msg = "system busy";
+                return resp;
             }
             else if (tpCheck.Locked)
             {
-                getBalanceResp.status = "500";
-                return getBalanceResp;
+                resp.status = "500";
+                resp.msg = "system busy";
+                return resp;
             }
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, getBalanceReq.userId);
 
             if (tpCustBalance != null)
             {
-                getBalanceResp.balance = tpCustBalance.Balance.ToString("0.##");
-                getBalanceResp.status = "200";
+                resp.balance = tpCustBalance.Balance.ToString("0.##");
+                resp.status = "200";
             }
             else
             {
-                getBalanceResp.status = "500";
-                return getBalanceResp;
+                resp.status = "500";
+                resp.msg = "system busy";
             }
 
-            return getBalanceResp;
+            return resp;
+        }
+
+        public class BetReq
+        {
+            public string acton { get; set; }
+            public string userId { get; set; }
+            public string extension1 { get; set; }
+            public string gameNumier { get; set; }
+            public int gameId { get; set; }
+            public int chair { get; set; }
+            public string currency { get; set; }
+            public string txId { get; set; }
+            public string roomId { get; set; }
+            public int room { get; set; }
+            public string ietTransTime { get; set; }
+            public decimal ietAmount { get; set; }
+        }
+
+        [Route("[controller]/[action]")]
+        [HttpPost]
+        public Resp Bet([FromForm]Req req)
+        {
+            logger.LogCritical(JsonConvert.SerializeObject(req));
+            BetReq betReq = JsonConvert.DeserializeObject<BetReq>(req.message);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
+            Resp resp = new Resp();
+
+            if (req.key != thirdPartySetting.TpSetting["cert"])
+            {
+                resp.status = "500";
+                resp.msg = "system busy";
+                return resp;
+            }
+
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.YL, betReq.userId);
+            if (tpCheck == null)
+            {
+                resp.status = "500";
+                resp.msg = "code:9003";
+                return resp;
+            }
+            else if (tpCheck.Locked)
+            {
+                resp.status = "500";
+                resp.msg = "code:9003";
+                return resp;
+            }
+
+            logger.LogCritical(JsonConvert.SerializeObject(resp));
+            return resp;
         }
     }
 }
