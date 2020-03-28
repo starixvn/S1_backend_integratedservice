@@ -207,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     debitResp.Error_code = 0;
                     debitResp.After = tpAffterAmount;
-                    debitResp.Before = tpAffterAmount + debitReq.amount;
+                    debitResp.Before = tpAffterAmount - debitReq.amount;
                     debitResp.Exchange_rate = 1;
                     debitResp.Trx_id = TransId;
                 }
