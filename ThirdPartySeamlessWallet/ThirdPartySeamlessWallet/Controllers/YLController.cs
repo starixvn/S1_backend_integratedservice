@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -17,14 +18,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ILogger<YLController> logger;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly Log2File log2File;
 
-        public YLController(ILogger<YLController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL)
+        public YLController(ILogger<YLController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Log2File log2File)
         {
             this.logger = logger;
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.thirdPartyBLL = thirdPartyBLL;
+            this.log2File = log2File;
         }
-
         public class Req
         {
             public string key { get; set; }
@@ -134,6 +136,80 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             logger.LogCritical(JsonConvert.SerializeObject(resp));
+            return resp;
+        }
+
+        public class SettleFishBetReq
+        {
+            public string acton { get; set; }
+            public string userId { get; set; }
+            public string extension1 { get; set; }
+            public string gameNumber { get; set; }
+            public int gameId { get; set; }
+            public int chair { get; set; }
+            public string roomId { get; set; }
+            public int roomLevel { get; set; }
+            public string txId { get; set; }
+            public string currency { get; set; }
+            public string transTime { get; set; }
+            public decimal betAmount { get; set; }
+            public decimal payAmount { get; set; }
+            public decimal commission { get; set; }
+            public decimal profit { get; set; }
+            public decimal validbet { get; set; }
+        }
+
+        [Route("[controller]/[action]")]
+        [HttpPost]
+        public Resp SettleFishBet([FromForm]Req req)
+        {
+            //logger.LogCritical(JsonConvert.SerializeObject(req));
+            SettleFishBetReq settleFishBetReq = JsonConvert.DeserializeObject<SettleFishBetReq>(req.message);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
+            Resp resp = new Resp();
+            log2File.Info(JsonConvert.SerializeObject(req), "YL_SettleFishBet");
+
+            if (req.key != thirdPartySetting.TpSetting["cert"])
+            {
+                resp.status = "500";
+                resp.msg = "system busy";
+                return resp;
+            }
+
+            string settleFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
+            log2File.Info(settleFishBetLog, "YL_SettleFishBet");
+            //logger.LogCritical(JsonConvert.SerializeObject(resp));
+            return resp;
+        }
+        public class VoidFishBetReq
+        {
+            public string acton { get; set; }
+            public string userId { get; set; }
+            public string gameId { get; set; }
+            public string txId { get; set; }
+            public string gameNumier { get; set; }
+            public string updateTime { get; set; }
+        }
+        [Route("[controller]/[action]")]
+        [HttpPost]
+        public Resp VoidFishBet([FromForm]Req req)
+        {
+            //logger.LogCritical(JsonConvert.SerializeObject(req));
+            VoidFishBetReq voidFishBetReq = JsonConvert.DeserializeObject<VoidFishBetReq>(req.message);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
+            Resp resp = new Resp();
+            log2File.Info(JsonConvert.SerializeObject(req), "YL_VoidFishBet");
+
+            if (req.key != thirdPartySetting.TpSetting["cert"])
+            {
+                resp.status = "500";
+                resp.msg = "system busy";
+                return resp;
+            }
+
+            string voidFishBetReqLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
+            log2File.Info(voidFishBetReqLog, "YL_SettleFishBet");
+            //logger.LogCritical(JsonConvert.SerializeObject(resp));
             return resp;
         }
     }
