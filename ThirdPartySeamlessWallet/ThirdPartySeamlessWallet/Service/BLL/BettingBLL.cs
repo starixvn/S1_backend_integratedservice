@@ -115,5 +115,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int PlaceBetRNG_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string TransId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_GPI(tpCustInfo, bettingDataRNG_GPI, out afterAmount, out TransId);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
     }
 }

@@ -12,6 +12,23 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string UserName { set; get; }
         public int SiteId { set; get; }
     }
+    public class TpCustInfoAuth
+    {
+        public int TpId { get; set; }
+        public string TpPwd { get; set; }
+        public string TpLangId { get; set; }
+        public string ClientIP { get; set; }
+        public int CustId { get; set; }
+        public bool IsTest { get; set; }
+        public int SiteId { get; set; }
+        public int Status { get; set; }
+        public int CStatus { get; set; }
+        public string UserName { get; set; }
+        public int ActStatus { get; set; }
+        public string TpUserName { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public string TpCurrencyId { get; set; }
+    }
     public class TpCustBalance
     {
         public decimal Balance { get; set; }

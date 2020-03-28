@@ -26,7 +26,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Lost = 2,
         Refund = 3,/*Reject, Refund, Void, Draw*/
         Draw = 4,
-        Related = 5
+        Related = 5,
+        FreeBetWin = 6
     }
 
     public enum GameType
@@ -40,15 +41,17 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PP_RNG = 7,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
-        DG_LiveCasino = 10
+        DG_LiveCasino = 10,
+        GPI_RNG = 11
     }
-
     public enum Tp
     {
         None = 0,
         Saba = 1,
         SA = 2,
         AG = 3,
-        DG = 4
+        DG = 4,
+        GPI = 6,
+        YL = 7
     }
 }
