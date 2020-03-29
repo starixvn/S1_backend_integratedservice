@@ -55,7 +55,7 @@ namespace ThirdParty.YL
             public string extension1 { get; set; }
             public int currency { get; set; }
         }
-        public class LoginReq 
+        public class LoginReq
         {
             public string key { get; set; }
             public string language { get; set; }
@@ -63,6 +63,7 @@ namespace ThirdParty.YL
             public string user { get; set; }
             public string userName { get; set; }
             public string extension1 { get; set; }
+            public string returnURL { get; set; }
         }
 
         public class UserResult
@@ -79,7 +80,7 @@ namespace ThirdParty.YL
         {
             //throw new NotImplementedException();
             ApiResult oApiResult = new ApiResult();
-            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "").ToLower();
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
             oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
         }
@@ -99,9 +100,9 @@ namespace ThirdParty.YL
             //throw new NotImplementedException();
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string cert = inputs.ContainsKey("cert") && !string.IsNullOrEmpty(inputs["cert"]) ? inputs["cert"] : throw new Exception();
-            
+            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
-            string getKeyUrl= $"{ApiUrl}getKey";
+            string getKeyUrl = $"{ApiUrl}getKey";
 
             UserReq userReq = new UserReq();
             userReq.user = tpCustInfo.TpUserName;
@@ -126,7 +127,6 @@ namespace ThirdParty.YL
                 var userResult = FromJson<UserResult>(result);
                 if (userResult.status == 1)
                 {
-
                     oApiResult.ErrorCode = ErrorCode.Success;
                     LoginReq Login = new LoginReq();
                     Login.key = userResult.key;
@@ -135,6 +135,9 @@ namespace ThirdParty.YL
                     Login.userName = userReq.userName;
                     Login.extension1 = userReq.extension1;
                     Login.language = TpLangId;
+                    int.TryParse(gameId, out int iGameId);
+                    Login.gameId = iGameId;
+                    Login.returnURL = lobbyUrl;
 
                     dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
                     sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={System.Web.HttpUtility.UrlEncode(kp.Value)}").ToArray());

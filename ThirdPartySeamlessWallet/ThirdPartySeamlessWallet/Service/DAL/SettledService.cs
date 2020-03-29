@@ -124,6 +124,53 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int SettledFish_YL(TpCustInfo tpCustInfo, BettingDataFish_YL bettingDataFish_YL, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            long transTime = 0;
+            DateTime.TryParse(bettingDataFish_YL.transTime, out DateTime dtTransTime);
+            transTime = tools.ConvertLocTime(dtTransTime, 8);
+
+            int result = conn.Execute("Service_BettransFish_YL_Ins", new { bettingDataFish_YL.txId, bettingDataFish_YL.userId, gameNumier = bettingDataFish_YL.gameNumber, bettingDataFish_YL.gameId, bettingDataFish_YL.chair, bettingDataFish_YL.roomId, bettingDataFish_YL.roomLevel, bettingDataFish_YL.currency, transTime, bettingDataFish_YL.betAmount, bettingDataFish_YL.payAmount, bettingDataFish_YL.commission, bettingDataFish_YL.profit, bettingDataFish_YL.validBet }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                if (bettingDataFish_YL.profit != 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit, (int)Tp.YL, TransType.Settled, $"Settled: {Math.Abs(bettingDataFish_YL.profit).ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    BetRecordInfo betRecordInfo = new BetRecordInfo();
+                    betRecordInfo.TpId = (int)Tp.YL;
+                    betRecordInfo.Stake = bettingDataFish_YL.validBet;
+                    betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
+                    betRecordInfo.TransId = bettingDataFish_YL.txId;
+                    betRecordInfo.GameType = GameType.YL_Fish;
+                    betRecordInfo.TpUserName = bettingDataFish_YL.userId;
+                    betRecordInfo.SettledTime = 0;
+                    betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                result = -1;
+            }
+
+            return result;
+        }
+
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
