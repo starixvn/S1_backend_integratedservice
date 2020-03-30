@@ -18,7 +18,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly WalletService walletService;
         private readonly Tools tools;
         private readonly BettingService bettingService;
-
         public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, BettingService bettingService)
         {
             this.configuration = configuration;
@@ -191,14 +190,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = conn.Execute("Service_BettransFish_YL_Set", new { refundDataFish_YL.txId, updateTime = dtUpdateTime }, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = conn.Execute("Service_BettransFish_YL_Set", new { refundDataFish_YL.txId, updateTime = updateTime }, transaction: trans, commandType: CommandType.StoredProcedure);
 
                     if (result > 0)
                     {
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
                         betRecordInfo.TpId = (int)Tp.YL;
                         betRecordInfo.Stake = bettingDataFish_YL.validBet;
-                        betRecordInfo.WinlostAmount = 0;
+                        betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
                         betRecordInfo.TransId = bettingDataFish_YL.txId;
                         betRecordInfo.GameType = GameType.YL_Fish;
                         betRecordInfo.TpUserName = bettingDataFish_YL.userId;
@@ -398,6 +397,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
                         AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
+                    else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
+                        && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund))
+                    {
+                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings * -1, Losses * -1, "Settled To Refund", betRecord.TransId, conn, trans);
+                    }
                     else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
                         && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
                     {
@@ -428,6 +432,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Draw))
                 {
                     SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, betRecord.Stake, conn, trans);
+                }
+                if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw)
+                && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund))
+                {
+                    SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, betRecord.Stake * -1, conn, trans);
                 }
                 else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw)
                     && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Draw))

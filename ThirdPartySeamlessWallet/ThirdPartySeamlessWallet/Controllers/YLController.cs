@@ -96,9 +96,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     resp.status = "500";
                     resp.msg = "system busy";
                 }
-
-                string getBalanceLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-                log2File.Info(getBalanceLog, "YL_GetBalanceLog");
             }
             else if (string.Equals(reqAction.action, "settleFishBet", StringComparison.OrdinalIgnoreCase))
             {
@@ -148,7 +145,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
                     resp.balance = tpCustBalance.Balance.ToString("0.00");
                     resp.status = "500";
-                    resp.msg = "code:9001";
+                    resp.msg = "system busy";
                 }
 
                 string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
