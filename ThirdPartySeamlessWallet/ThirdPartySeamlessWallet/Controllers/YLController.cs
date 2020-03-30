@@ -127,27 +127,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string settleFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
                 log2File.Info(settleFishBetLog, "YL_SettleFishBet");
             }
-
-            logger.LogCritical(JsonConvert.SerializeObject(resp));
-            return resp;
-        }
-
-        [Route("[controller]/[action]")]
-        [HttpPost]
-        public Resp GetBalance([FromForm]Req req)
-        {
-            logger.LogCritical(JsonConvert.SerializeObject(req));
-            GetBalanceReq getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(req.message);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
-            Resp resp = new Resp();
-
-            if (req.key != thirdPartySetting.TpSetting["cert"])
+            else if (string.Equals(reqAction.action, "voidFishBet", StringComparison.OrdinalIgnoreCase))
             {
-                resp.status = "500";
-                resp.msg = "system busy";
-                return resp;
+                VoidFishBetReq voidFishBetReq = JsonConvert.DeserializeObject<VoidFishBetReq>(req.message);
+                int result = settledBLL.RefundFish_YL(voidFishBetReq, out decimal tpAffterAmount);
+
+                if (result > 0)
+                {
+                    resp.balance = tpAffterAmount.ToString("0.00");
+                    resp.status = "200";
+                }
+                else if (result == -1)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
+                    resp.balance = tpCustBalance.Balance.ToString("0.00");
+                    resp.status = "200";
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
+                    resp.balance = tpCustBalance.Balance.ToString("0.00");
+                    resp.status = "500";
+                    resp.msg = "code:9001";
+                }
+
+                string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
+                log2File.Info(voidFishBetLog, "YL_VoidFishBet");
             }
 
+            logger.LogCritical(JsonConvert.SerializeObject(resp));
             return resp;
         }
 
@@ -205,56 +213,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string extension1 { get; set; }
         }
 
-        [Route("[controller]/[action]")]
-        [HttpPost]
-        public Resp SettleFishBet([FromForm]Req req)
+        public class VoidFishBetReq : RefundDataFish_YL
         {
-            //logger.LogCritical(JsonConvert.SerializeObject(req));
-            SettleFishBetReq settleFishBetReq = JsonConvert.DeserializeObject<SettleFishBetReq>(req.message);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
-            Resp resp = new Resp();
-            log2File.Info(JsonConvert.SerializeObject(req), "YL_SettleFishBet");
 
-            if (req.key != thirdPartySetting.TpSetting["cert"])
-            {
-                resp.status = "500";
-                resp.msg = "system busy";
-                return resp;
-            }
-
-            int result = settledBLL.SettledFish_YL(settleFishBetReq, out decimal tpAffterAmount);
-
-            if (result > 0)
-            {
-                resp.balance = tpAffterAmount.ToString("0.00");
-                resp.status = "200";
-            }
-            else if (result == -1)
-            {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                resp.balance = tpCustBalance.Balance.ToString("0.00");
-                resp.status = "200";
-            }
-            else if (tpAffterAmount < 0)
-            {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                resp.balance = tpCustBalance.Balance.ToString("0.00");
-                resp.status = "500";
-                resp.msg = "code:9001";
-            }
-
-            string settleFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-            log2File.Info(settleFishBetLog, "YL_SettleFishBet");
-            //logger.LogCritical(JsonConvert.SerializeObject(resp));
-            return resp;
-        }
-        public class VoidFishBetReq
-        {
-            public string userId { get; set; }
-            public string gameId { get; set; }
-            public string txId { get; set; }
-            public string gameNumier { get; set; }
-            public string updateTime { get; set; }
         }
         [Route("[controller]/[action]")]
         [HttpPost]

@@ -22,5 +22,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal commission { get; set; }
         public decimal profit { get; set; }
         public decimal validBet { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+    }
+
+    public class RefundDataFish_YL
+    {
+        public string userId { get; set; }
+        public string gameId { get; set; }
+        public string txId { get; set; }
+        public string gameNumier { get; set; }
+        public string updateTime { get; set; }
     }
 }

@@ -174,5 +174,26 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int RefundFish_YL(RefundDataFish_YL refundDataFish_YL, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.YL, refundDataFish_YL.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YL, tpCustInfo.CurrencyId);
+
+            var result = settledService.RefundFish_YL(tpCustInfo, refundDataFish_YL, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                //settledDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
+            }
+            else
+            {
+                result = -1;
+            }
+
+            return result;
+        }
     }
 }
