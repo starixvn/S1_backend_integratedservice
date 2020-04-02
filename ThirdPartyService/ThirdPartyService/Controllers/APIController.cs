@@ -137,18 +137,7 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                var apiBalanceResult = thirdPartyBLL.GetBalance(tpInfo);
-                if (apiBalanceResult.Data.balance < 0)
-                {
-                    TpTransfer tpTransfer = new TpTransfer
-                    {
-                        TpId = tpInfo.TpId,
-                        CustId = tpInfo.CustId,
-                        Amount = Math.Abs(apiBalanceResult.Data.balance),
-                        direction = Direction.ToTp
-                    };
-                    apiResult = thirdPartyBLL.Transfer(tpTransfer);
-                }
+                apiResult = thirdPartyBLL.FixNegative(tpInfo);
             }
             catch (Exception ex)
             {
