@@ -223,5 +223,31 @@ namespace ThirdPartyService.Service.BLL
                 tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, tpTransferInfoModel.TransId);
             }
         }
+
+        public ApiResult FixNegative(TpInfo tpInfo)
+        {
+            var apiResult = new ApiResult();
+
+            apiResult.ErrorCode = ErrorCode.SystemError;
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            {
+                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+                var balanceResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+                if (balanceResult.Data.balance < 0)
+                {
+                    apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, Math.Abs(balanceResult.Data.balance), Direction.ToTp, Guid.NewGuid().ToString("N"), null);
+                }
+                else
+                {
+                    apiResult.ErrorCode = ErrorCode.TransferFail;
+                    apiResult.Message = $"{tpCustInfoResult.Data.TpUserName}'s balance is {balanceResult.Data.balance.ToString("#,##0.##")}, It's not Negative.";
+                }
+            }
+
+            return apiResult;
+        }
     }
 }
