@@ -53,6 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         AG = 3,
         DG = 4,
         GPI = 6,
-        YL = 7
+        YL = 7,
+        Joker = 9
     }
 }
