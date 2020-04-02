@@ -129,5 +129,36 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+        [HttpPost]
+        public ActionResult<ApiResult> FixNegative([FromBody]TpInfo tpInfo)
+        {
+            var apiResult = new ApiResult();
+            apiResult.ErrorCode = ErrorCode.SystemError;
+
+            try
+            {
+                var apiBalanceResult = thirdPartyBLL.GetBalance(tpInfo);
+                if (apiBalanceResult.Data.balance < 0)
+                {
+                    TpTransfer tpTransfer = new TpTransfer
+                    {
+                        TpId = tpInfo.TpId,
+                        CustId = tpInfo.CustId,
+                        Amount = Math.Abs(apiBalanceResult.Data.balance),
+                        direction = Direction.ToTp
+                    };
+                    apiResult = thirdPartyBLL.Transfer(tpTransfer);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+                return apiResult;
+            }
+
+            return apiResult;
+        }
     }
 }
