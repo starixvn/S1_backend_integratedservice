@@ -226,6 +226,109 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int SettledRNG_Joker(TpCustInfo tpCustInfo, BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            bettingDataRNG_Joker.TicketStatus = bettingDataRNG_Joker.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+            var p = new DynamicParameters(bettingDataRNG_Joker);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BettransRng_Joker_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                if (bettingDataRNG_Joker.amount > 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_Joker.amount, (int)Tp.Joker, TransType.Settled, $"Payout: {Math.Abs(bettingDataRNG_Joker.amount).ToString("#,##0.##")}", bettingDataRNG_Joker.id, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    decimal Stake = p.Get<decimal>("Stake");
+                    decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.Joker,
+                        Stake = Stake,
+                        WinlostAmount = WinLostAmount,
+                        TransId = bettingDataRNG_Joker.roundid,
+                        GameType = GameType.Joker_RNG,
+                        TpUserName = bettingDataRNG_Joker.username,
+                        SettledTime = bettingDataRNG_Joker.timestamp / 1000,
+                        SettlementType = SettlementType.SettledForValidNotRollover
+                    };
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, bettingDataRNG_Joker.amount, out _, conn, trans, false/*Don't need Payout*/);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                result = -1;
+            }
+
+            return result;
+        }
+        public int CancelBetRNG_Joker(TpCustInfo tpCustInfo, CancelBetDataRNG_Joker cancelBetDataRNG_Joker, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(cancelBetDataRNG_Joker.betid);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_CancelBetRng_Joker_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal Stake = p.Get<decimal>("Stake");
+                decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                if (WinLostAmount != 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, WinLostAmount * -1, (int)Tp.Joker, TransType.Refunds, $"Refund: {(WinLostAmount * -1).ToString("#,##0.##")}", cancelBetDataRNG_Joker.betid, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.Joker,
+                        Stake = Stake,
+                        WinlostAmount = WinLostAmount,
+                        TransId = cancelBetDataRNG_Joker.roundid,
+                        GameType = GameType.Joker_RNG,
+                        TpUserName = cancelBetDataRNG_Joker.username,
+                        SettledTime = cancelBetDataRNG_Joker.timestamp / 1000,
+                        SettlementType = SettlementType.SettledForInvalid,
+                        TicketStatus = TicketStatus.Refund
+                    };
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
