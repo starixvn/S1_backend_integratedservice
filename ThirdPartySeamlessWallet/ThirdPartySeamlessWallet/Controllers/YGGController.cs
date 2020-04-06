@@ -213,7 +213,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 wagerRep.code = 1000;
             }
-
             log2File.Info(JsonConvert.SerializeObject(wagerRep), "YGG_Wager");
             return wagerRep;
         }
@@ -264,77 +263,62 @@ namespace ThirdPartySeamlessWallet.Controllers
                     wagerData.balance = tpCustBalance.Balance;
                     wagerRep.code = 0;
                 }
+
+                log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Endwager");
             }
             catch(Exception ex)
             {
                 log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Endwager");
             }
-            log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Endwager");
+
             return wagerRep;
         }
 
         [Route("[controller]/cancelwager.json")]
         public WagerRep Cancelwager([FromForm]Dictionary<string, string> cancelwagerReqq)
         {
-            if (environment.IsDevelopment())
-            {
-                //var s = @"{""org"":""nova88"",""sessiontoken"":""WyJ3b2pXd0pSTFcwYXQ3Q2o0V0FEczd3IiwieXVxT0JIMmxVeXNDTldnVk9KVlhRIl0="",""playerid"":""DNova88_156"",""amount"":""5.00"",""currency"":""THB"",""service"":""Mir"",""reference"":""2004051357040100001"",""subreference"":""w2004051357040100000"",""description"":""Start Game"",""cat1"":""Casino"",""cat2"":""Slot"",""cat3"":""5reel"",""cat4"":""Jokerizer"",""cat5"":""7301"",""tag1"":""GameName.Jokerizer"",""tag2"":""Model.M1"",""tag3"":""Channel.pc"",""lang"":""zh_hant"",""version"":""4""}";
-                //endwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
-            }
-
-            log2File.Info(JsonConvert.SerializeObject(cancelwagerReqq), "YGG_Cancelwager");
-
             WagerRep wagerRep = new WagerRep();
             wagerRep.code = 1;
-
-            if (cancelwagerReqq.TryGetValue("sessiontoken", out string sessiontoken))
+            if (environment.IsDevelopment())
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(sessiontoken));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                string sessionToken = sessionKeyArr[1];/* Long Time*/
-                WagerReq wagerReq = JsonConvert.DeserializeObject<WagerReq>(JsonConvert.SerializeObject(cancelwagerReqq));
+                /*var s = @"{""org"":""nova88"",""playerid"":""DNova88_156"",""reference"":""2004061422520100001"",""subreference"":""w2004061422520100000"",""version"":""4""}";
+                cancelwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);*/
+            }
+            log2File.Info(JsonConvert.SerializeObject(cancelwagerReqq), "YGG_Cancelwager");
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, wagerReq.playerid);
-                if (tpCheck == null)
-                {
-                    wagerRep.code = 1008;
-                }
-                if (tpCheck.Token != sessionToken)
-                {
-                    wagerRep.code = 1008;
-                }
-                else if (tpCheck.Locked)
-                {
-                    wagerRep.code = 1007;
-                }
-                else
-                {
-                    //WagerData wagerData = new WagerData();
-                    //wagerRep.data = wagerData;
-                    ////wagerData.balance = tpCustBalance.Balance;
-                    //wagerData.playerId = wagerReq.playerid;
-                    //wagerData.organization = wagerReq.org;
-                    //wagerData.currency = wagerReq.currency;
-                    //wagerData.homeCurrency = wagerData.currency;
-                    //wagerData.applicableBonus = 0;
-                    ////wagerRep.code = 0;
+            WagerReq wagerReq = JsonConvert.DeserializeObject<WagerReq>(JsonConvert.SerializeObject(cancelwagerReqq));
+            int result = settledBLL.CancelBetRNG_YGG(wagerReq, out decimal tpAffterAmount);
 
-                    //if (bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAffterAmount) > 0)
-                    //{
-                    //    wagerData.balance = tpAffterAmount;
-                    //    wagerRep.code = 0;
-                    //}
-                    //else if (tpAffterAmount < 0)
-                    //{
-                    //    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, wagerReq.playerid);
-                    //    wagerData.balance = tpCustBalance.Balance;
-                    //    wagerRep.code = 1006;
-                    //}
+            if (result > 0)
+            {
+                WagerData wagerData = new WagerData();
+                wagerRep.data = wagerData;
+                wagerData.playerId = wagerReq.playerid;
+                wagerData.organization = cancelwagerReqq["org"];
+                wagerData.currency = wagerReq.currency;
+                wagerData.homeCurrency = wagerData.currency;
+                wagerData.applicableBonus = 0;
+                wagerRep.data.balance = tpAffterAmount;
+                wagerRep.code = 0;
+
+                if (tpAffterAmount == 0)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid);
+                    wagerRep.data.balance = tpCustBalance.Balance;
                 }
             }
-            else
+            else if (result == -1)
             {
-                wagerRep.code = 1000;
+                WagerData wagerData = new WagerData();
+                wagerRep.data = wagerData;
+                wagerData.playerId = wagerReq.playerid;
+                wagerData.organization = cancelwagerReqq["org"];
+                wagerData.currency = wagerReq.currency;
+                wagerData.homeCurrency = wagerData.currency;
+                wagerData.applicableBonus = 0;
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid);
+                wagerRep.data.balance = tpCustBalance.Balance;
+                wagerRep.code = 0;
             }
 
             log2File.Info(JsonConvert.SerializeObject(wagerRep), "YGG_Cancelwager");

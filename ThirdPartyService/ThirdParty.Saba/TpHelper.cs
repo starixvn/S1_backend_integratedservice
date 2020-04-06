@@ -349,7 +349,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (act == "keno" || gameId == "43" || gameId == "220")
+                        if (act == "keno" || SportType == "43" || SportType == "220")
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
                         else
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
