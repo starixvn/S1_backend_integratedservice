@@ -262,5 +262,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public int PlaceBetRNG_YGG(TpCustInfo tpCustInfo, BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            bettingDataRNG_YGG.amount *= -1;
+            bettingDataRNG_YGG.TicketStatus = (int)TicketStatus.UnSettled;
+            var p = new DynamicParameters(bettingDataRNG_YGG);
+            p.Add("tickets", (int?)null);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_YGG.amount, (int)Tp.YGG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_YGG.amount).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
     }
 }

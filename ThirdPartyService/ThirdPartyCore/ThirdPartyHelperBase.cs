@@ -256,7 +256,7 @@ namespace ThirdPartyCore
         public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;
-            Byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+            byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
 
             RijndaelManaged rm = new RijndaelManaged
             {

@@ -44,7 +44,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         DG_LiveCasino = 10,
         GPI_RNG = 11,
         YL_Fish = 12,
-        Joker_RNG = 13
+        Joker_RNG = 13,
+        YGG_RNG = 14
     }
     public enum Tp
     {
@@ -55,6 +56,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         DG = 4,
         GPI = 6,
         YL = 7,
+        YGG = 8,
         Joker = 9
     }
 }
