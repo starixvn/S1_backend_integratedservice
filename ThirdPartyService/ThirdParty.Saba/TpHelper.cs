@@ -24,6 +24,7 @@ namespace ThirdParty.Saba
             {"202","keno" },
             {"208","casino" },
             {"211","allbet" },
+            {"220","kenolottery" },
             {"245","virtualgame" }
         };
 
@@ -324,9 +325,9 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        else if (SportType == "245")
+                        else if (SportType == "245" || SportType == "43" || SportType == "220")
                         {
-                            types = "virtualgame";
+                            sportTypeDic.TryGetValue(SportType, out types);
                         }
 
                         if (SportType == "211")
@@ -348,7 +349,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (act == "keno")
+                        if (act == "keno" || gameId == "43" || gameId == "220")
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
                         else
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
