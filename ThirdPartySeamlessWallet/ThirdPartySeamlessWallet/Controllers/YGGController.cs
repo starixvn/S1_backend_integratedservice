@@ -71,43 +71,51 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (PlayerInfoReq.TryGetValue("sessiontoken", out string sessiontoken))
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(sessiontoken));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                string authToken = sessionKeyArr[0]; /* 1 Time*/
-                string sessionToken = sessionKeyArr[1];/* Long Time*/
-                if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                try
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null)
+                    string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(sessiontoken));
+                    var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                    string authToken = sessionKeyArr[0]; /* 1 Time*/
+                    string sessionToken = sessionKeyArr[1];/* Long Time*/
+                    if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     {
-                        playerInfoRep.code = 1000;
-                    }
-                    else if (tpCheck.Token != sessionToken)
-                    {
-                        playerInfoRep.code = 1000;
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        playerInfoRep.code = 1007;
+                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                        if (tpCheck == null)
+                        {
+                            playerInfoRep.code = 1000;
+                        }
+                        else if (tpCheck.Token != sessionToken)
+                        {
+                            playerInfoRep.code = 1000;
+                        }
+                        else if (tpCheck.Locked)
+                        {
+                            playerInfoRep.code = 1007;
+                        }
+                        else
+                        {
+                            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                            PlayerInfoData playerInfoData = new PlayerInfoData();
+                            playerInfoRep.data = playerInfoData;
+                            playerInfoData.balance = tpCustBalance.Balance;
+                            playerInfoData.playerId = tpCustInfoAuth.TpUserName;
+                            playerInfoData.organization = thirdPartySetting.TpSetting["org"];
+                            playerInfoData.currency = tpCustInfoAuth.TpCurrencyId;
+                            playerInfoData.homeCurrency = playerInfoData.currency;
+                            playerInfoData.applicableBonus = 0;
+                            playerInfoRep.code = 0;
+                        }
                     }
                     else
                     {
-                        var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                        PlayerInfoData playerInfoData = new PlayerInfoData();
-                        playerInfoRep.data = playerInfoData;
-                        playerInfoData.balance = tpCustBalance.Balance;
-                        playerInfoData.playerId = tpCustInfoAuth.TpUserName;
-                        playerInfoData.organization = thirdPartySetting.TpSetting["org"];
-                        playerInfoData.currency = tpCustInfoAuth.TpCurrencyId;
-                        playerInfoData.homeCurrency = playerInfoData.currency;
-                        playerInfoData.applicableBonus = 0;
-                        playerInfoRep.code = 0;
+                        playerInfoRep.code = 1000;
                     }
                 }
-                else
+                catch(Exception ex)
                 {
                     playerInfoRep.code = 1000;
+                    log2File.Info($"{JsonConvert.SerializeObject(PlayerInfoReq)}\r\n{JsonConvert.SerializeObject(playerInfoRep)}\r\n{ex}", "YGG_playerinfo");
                 }
             }
             else
@@ -203,9 +211,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, wagerReq.playerid);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
                         wagerData.balance = tpCustBalance.Balance;
                         wagerRep.code = 1006;
+                    }
+                    else
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                        wagerData.balance = tpCustBalance.Balance;
+                        wagerRep.code = 0;
                     }
                 }
             }
