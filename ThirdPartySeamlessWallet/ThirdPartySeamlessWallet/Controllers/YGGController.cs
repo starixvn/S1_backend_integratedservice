@@ -226,6 +226,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 //endwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
             }
 
+            log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}", "YGG_Endwager_Req");
+
             WagerRep wagerRep = new WagerRep();
             wagerRep.code = 1;
             try
@@ -268,7 +270,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch(Exception ex)
             {
-                log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Endwager");
+                log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex.Message}", "YGG_Endwager");
             }
 
             return wagerRep;
@@ -342,65 +344,55 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             if (environment.IsDevelopment())
             {
-                //var s = @"{""org"":""nova88"",""sessiontoken"":""WyJ3b2pXd0pSTFcwYXQ3Q2o0V0FEczd3IiwieXVxT0JIMmxVeXNDTldnVk9KVlhRIl0="",""playerid"":""DNova88_156"",""amount"":""5.00"",""currency"":""THB"",""service"":""Mir"",""reference"":""2004051357040100001"",""subreference"":""w2004051357040100000"",""description"":""Start Game"",""cat1"":""Casino"",""cat2"":""Slot"",""cat3"":""5reel"",""cat4"":""Jokerizer"",""cat5"":""7301"",""tag1"":""GameName.Jokerizer"",""tag2"":""Model.M1"",""tag3"":""Channel.pc"",""lang"":""zh_hant"",""version"":""4""}";
-                //endwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
+                /*var s = @"{""org"":""nova88"",""playerid"":""DNova88_156"",""amount"":""7136.45"",""bonusprize"":""0.00"",""currency"":""THB"",""tickets"":""0"",""service"":""Mir"",""reference"":""2004061617230100001"",""subreference"":""2004061617230100000.2004061617240100000"",""description"":""Jackpot"",""isJackpotWin"":""true"",""cat1"":""Casino"",""cat2"":""Slot"",""cat3"":""ShardsJ"",""cat4"":""Holmes and the Stolen Stones"",""cat5"":""7317"",""tag1"":""GameName.Holmes and the Stolen Stones"",""tag2"":""Model.M1"",""tag3"":""Channel.pc"",""lang"":""zh_hant"",""version"":""4""}";
+                appendwagerresultReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);*/
             }
             log2File.Info(JsonConvert.SerializeObject(appendwagerresultReqq), "YGG_Appendwagerresult");
 
             WagerRep wagerRep = new WagerRep();
             wagerRep.code = 1;
 
-            if (appendwagerresultReqq.TryGetValue("sessiontoken", out string sessiontoken))
+            try
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(sessiontoken));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                string sessionToken = sessionKeyArr[1];/* Long Time*/
-                WagerReq wagerReq = JsonConvert.DeserializeObject<WagerReq>(JsonConvert.SerializeObject(appendwagerresultReqq));
+                SettledDataRNG_YGG settledDataRNG_YGG = JsonConvert.DeserializeObject<SettledDataRNG_YGG>(JsonConvert.SerializeObject(appendwagerresultReqq));
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, wagerReq.playerid);
-                if (tpCheck == null)
-                {
-                    wagerRep.code = 1008;
-                }
-                if (tpCheck.Token != sessionToken)
-                {
-                    wagerRep.code = 1008;
-                }
-                else if (tpCheck.Locked)
-                {
-                    wagerRep.code = 1007;
-                }
-                else
-                {
-                    //WagerData wagerData = new WagerData();
-                    //wagerRep.data = wagerData;
-                    ////wagerData.balance = tpCustBalance.Balance;
-                    //wagerData.playerId = wagerReq.playerid;
-                    //wagerData.organization = wagerReq.org;
-                    //wagerData.currency = wagerReq.currency;
-                    //wagerData.homeCurrency = wagerData.currency;
-                    //wagerData.applicableBonus = 0;
-                    ////wagerRep.code = 0;
+                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount);
 
-                    //if (bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAffterAmount) > 0)
-                    //{
-                    //    wagerData.balance = tpAffterAmount;
-                    //    wagerRep.code = 0;
-                    //}
-                    //else if (tpAffterAmount < 0)
-                    //{
-                    //    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, wagerReq.playerid);
-                    //    wagerData.balance = tpCustBalance.Balance;
-                    //    wagerRep.code = 1006;
-                    //}
+                WagerData wagerData = new WagerData();
+                wagerRep.data = wagerData;
+                wagerData.playerId = settledDataRNG_YGG.playerid;
+                wagerData.organization = appendwagerresultReqq["org"];
+                wagerData.currency = settledDataRNG_YGG.currency;
+                wagerData.homeCurrency = wagerData.currency;
+                wagerData.applicableBonus = 0;
+
+                if (result > 0)
+                {
+                    if (settledDataRNG_YGG.amount > 0)
+                    {
+                        wagerData.balance = tpAffterAmount;
+                        wagerRep.code = 0;
+                    }
+                    else if (settledDataRNG_YGG.amount == 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid);
+                        wagerData.balance = tpCustBalance.Balance;
+                        wagerRep.code = 0;
+                    }
                 }
+                else if (result == -1)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid);
+                    wagerData.balance = tpCustBalance.Balance;
+                    wagerRep.code = 0;
+                }
+
+                log2File.Info($"{JsonConvert.SerializeObject(appendwagerresultReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Appendwagerresult");
             }
-            else
+            catch (Exception ex)
             {
-                wagerRep.code = 1000;
+                log2File.Info($"{JsonConvert.SerializeObject(appendwagerresultReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex.Message}", "YGG_Appendwagerresult");
             }
-
-            log2File.Info(JsonConvert.SerializeObject(wagerRep), "YGG_Appendwagerresult");
             return wagerRep;
         }
 
