@@ -117,6 +117,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                         authenticateTokenRep.Username = tpCustInfoAuth.TpUserName;
                     }
                 }
+                else
+                {
+                    authenticateTokenRep.Status = 3;
+                    authenticateTokenRep.Message = "Invalid token";
+                }
             }
             else
             {
@@ -169,6 +174,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Status = 0;
                 rep.Message = "Success";
                 rep.Balance = tpCustBalance.Balance;
+            }
+            else
+            {
+                rep.Status = 5;
+                rep.Message = "Invalid signature";
             }
 
             log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_Balance");
@@ -227,7 +237,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         rep.Status = 0;
                         rep.Message = "Success";
-                        rep.Balance = tpAffterAmount;
+                        if (betReq.amount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                            rep.Balance = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            rep.Balance = tpAffterAmount;
+                        }
                     }
                     else if (tpAffterAmount < 0)
                     {
@@ -242,6 +260,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                         rep.Message = "Other";
                     }
                 }
+            }
+            else
+            {
+                rep.Status = 5;
+                rep.Message = "Invalid signature";
             }
 
             log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_Bet");

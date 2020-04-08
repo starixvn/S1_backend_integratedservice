@@ -203,10 +203,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                     wagerData.homeCurrency = wagerData.currency;
                     wagerData.applicableBonus = 0;
                     //wagerRep.code = 0;
-
                     if (bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAffterAmount) > 0)
                     {
-                        wagerData.balance = tpAffterAmount;
+                        if (wagerReq.amount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                            wagerData.balance = tpCustBalance.Balance;
+                        }
+                        else
+                        {
+                            wagerData.balance = tpAffterAmount;
+                        }
                         wagerRep.code = 0;
                     }
                     else if (tpAffterAmount < 0)

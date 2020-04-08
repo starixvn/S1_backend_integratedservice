@@ -206,8 +206,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (bettingBLL.PlaceBetRNG_GPI(debitReq, out decimal tpAffterAmount, out string TransId) > 0)
                 {
                     debitResp.Error_code = 0;
-                    debitResp.After = tpAffterAmount;
-                    debitResp.Before = tpAffterAmount - debitReq.amount;
+                    if (debitReq.amount == 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, debitReq.cust_id);
+                        debitResp.After = tpCustBalance.Balance;
+                        debitResp.Before = debitResp.After;
+                    }
+                    else
+                    {
+                        debitResp.After = tpAffterAmount;
+                        debitResp.Before = tpAffterAmount - debitReq.amount;
+                    }
                     debitResp.Exchange_rate = 1;
                     debitResp.Trx_id = TransId;
                 }

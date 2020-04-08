@@ -222,7 +222,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+            if (result > 0 && bettingDataRNG_GPI.amount != 0)
             {
                 result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_GPI.amount, (int)Tp.GPI, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_GPI.amount).ToString("#,##0.##")}", bettingDataRNG_GPI.trx_id, out afterAmount, conn, trans);
             }
@@ -250,7 +250,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransRng_Joker_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+            if (result > 0 && bettingDataRNG_Joker.amount != 0)
             {
                 result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_Joker.amount, (int)Tp.Joker, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_Joker.amount).ToString("#,##0.##")}", bettingDataRNG_Joker.id, out afterAmount, conn, trans);
             }
@@ -277,7 +277,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+            if (result > 0 && bettingDataRNG_YGG.amount != 0)
             {
                 result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_YGG.amount, (int)Tp.YGG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_YGG.amount).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
             }
