@@ -55,7 +55,15 @@ namespace ThirdParty.YGG
 
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={(appType == AppType.Desktop ? "pc" : "mobile")}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.Message = $"{GameUrl}?currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={(appType == AppType.Desktop ? "pc" : "mobile")}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+            }
+            else
+            {
+                oApiResult.Message = $"{GameUrl}?key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={(appType == AppType.Desktop ? "pc" : "mobile")}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+            }
+
             return oApiResult;
         }
 
