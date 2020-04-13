@@ -285,41 +285,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            var p = new DynamicParameters(new { cancelBetDataRNG_Joker.betid });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            var p = new DynamicParameters(cancelBetDataRNG_Joker);
+            p.Add("CancelStatus", dbType: DbType.Int16, direction: ParameterDirection.Output);
+            p.Add("CancelStake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("HasSettled", dbType: DbType.Int16, direction: ParameterDirection.Output);
             result = conn.Execute("Service_CancelBetRng_Joker_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                decimal Stake = p.Get<decimal>("Stake");
-                decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                if (WinLostAmount != 0)
+                decimal CancelStake = p.Get<decimal>("CancelStake");
+                short CancelStatus = p.Get<short>("CancelStatus");
+
+                if (CancelStatus == 1 && CancelStake != 0)
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, WinLostAmount * -1, (int)Tp.Joker, TransType.Refunds, $"Refund: {(WinLostAmount * -1).ToString("#,##0.##")}", cancelBetDataRNG_Joker.betid, out afterAmount, conn, trans);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, CancelStake, (int)Tp.Joker, TransType.Refunds, $"Refund: {CancelStake.ToString("#,##0.##")}", cancelBetDataRNG_Joker.betid, out afterAmount, conn, trans);
                 }
 
                 if (result > 0)
                 {
-                    BetRecordInfo betRecordInfo = new BetRecordInfo
-                    {
-                        TpId = (int)Tp.Joker,
-                        Stake = Stake,
-                        WinlostAmount = WinLostAmount,
-                        TransId = cancelBetDataRNG_Joker.roundid,
-                        GameType = GameType.Joker_RNG,
-                        TpUserName = cancelBetDataRNG_Joker.username,
-                        SettledTime = cancelBetDataRNG_Joker.timestamp / 1000,
-                        SettlementType = SettlementType.SettledForInvalid,
-                        TicketStatus = TicketStatus.Refund
-                    };
-
-                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
+                    trans.Commit();
+                }
+                short hasSettled = p.Get<short>("HasSettled");
+                if (hasSettled == 1)
+                {
+                    return -2;
                 }
             }
             else

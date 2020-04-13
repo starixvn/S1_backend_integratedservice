@@ -28,8 +28,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
         private readonly IHostEnvironment environment;
+        private readonly Tools tools;
 
-        public JokerController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
+        public JokerController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools)
         {
             this.authBLL = authBLL;
             this.logger = logger;
@@ -39,6 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.settledBLL = settledBLL;
             this.log2File = log2File;
             this.environment = environment;
+            this.tools = tools;
         }
         private string GetMD5Signature(string rawData)
         {
@@ -217,6 +219,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
             }
 
+            if (betReq.amount < 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                rep.Balance = tpCustBalance.Balance;
+                rep.Status = 4;
+                rep.Message = "InvalidParameters";
+                return rep;
+            }
+
+            betReq.amount = tools.Floor(betReq.amount, 2);
+            dicP["amount"] = betReq.amount.ToString("#.00");
+
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == betReq.hash)
             {
@@ -256,8 +270,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        rep.Status = 1000;
-                        rep.Message = "Other";
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                        rep.Balance = tpCustBalance.Balance;
+                        rep.Status = 0;
+                        rep.Message = "The Bet already existed";
                     }
                 }
             }
@@ -267,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Message = "Invalid signature";
             }
 
-            log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_Bet");
+            log2File.Info($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(rep)}", "Joker_Bet");
             return rep;
         }
 
@@ -303,6 +319,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
             }
 
+            if (settleBetReq.amount < 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                rep.Balance = tpCustBalance.Balance;
+                rep.Status = 4;
+                rep.Message = "InvalidParameters";
+                return rep;
+            }
+
+            settleBetReq.amount = tools.Floor(settleBetReq.amount, 2);
+            dicP["amount"] = settleBetReq.amount.ToString("#.00");
+
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == settleBetReq.hash)
             {
@@ -330,7 +358,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
-                    rep.Message = "Success";
+                    rep.Message = "Transaction can not be found";
                 }
             }
             else
@@ -339,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Message = "Invalid signature";
             }
 
-            log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_SettleBet");
+            log2File.Info(JsonConvert.SerializeObject(rep), "Joker_SettleBet");
             return rep;
         }
 
@@ -386,6 +414,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         rep.Balance = tpCustBalance.Balance;
                     }
                 }
+                else if (result == -2)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username);
+                    rep.Balance = tpCustBalance.Balance;
+                    rep.Status = 1000;
+                    rep.Message = "Bet was settled";
+                }
                 else if (result == -1)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username);
@@ -400,7 +435,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Message = "Invalid signature";
             }
 
-            log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_CancelBet");
+            log2File.Info(JsonConvert.SerializeObject(rep), "Joker_CancelBet");
             return rep;
         }
 
@@ -424,6 +459,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     break;
                 }
             }
+
+            if (settleBetReq.amount < 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                rep.Balance = tpCustBalance.Balance;
+                rep.Status = 4;
+                rep.Message = "InvalidParameters";
+                return rep;
+            }
+
+            settleBetReq.amount = tools.Floor(settleBetReq.amount, 2);
+            dicP["amount"] = settleBetReq.amount.ToString("#.00");
 
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == settleBetReq.hash)
@@ -460,7 +507,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Message = "Invalid signature";
             }
 
-            log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_Bonus");
+            log2File.Info(JsonConvert.SerializeObject(rep), "Joker_Bonus");
             return rep;
         }
 
@@ -484,6 +531,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     break;
                 }
             }
+
+            if (settleBetReq.amount < 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                rep.Balance = tpCustBalance.Balance;
+                rep.Status = 4;
+                rep.Message = "InvalidParameters";
+                return rep;
+            }
+
+            settleBetReq.amount = tools.Floor(settleBetReq.amount, 2);
+            dicP["amount"] = settleBetReq.amount.ToString("#.00");
 
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == settleBetReq.hash)
@@ -520,7 +579,43 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Message = "Invalid signature";
             }
 
-            log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(rep), "Joker_Jackpot");
+            log2File.Info(JsonConvert.SerializeObject(rep), "Joker_Jackpot");
+            return rep;
+        }
+
+        [Route("[controller]/transaction")]
+        public Rep Transaction([FromForm]Dictionary<string, string> transactionReqq)
+        {
+            log2File.Info(JsonConvert.SerializeObject(transactionReqq), "Joker_Transaction");
+
+            Rep rep = new Rep();
+            rep.Status = 1000;
+            rep.Message = "Other";
+
+            return rep;
+        }
+
+        [Route("[controller]/withdraw")]
+        public Rep Withdraw([FromForm]Dictionary<string, string> withdrawReqq)
+        {
+            log2File.Info(JsonConvert.SerializeObject(withdrawReqq), "Joker_Withdraw");
+
+            Rep rep = new Rep();
+            rep.Status = 1000;
+            rep.Message = "Other";
+
+            return rep;
+        }
+
+        [Route("[controller]/deposit")]
+        public Rep Deposit([FromForm]Dictionary<string, string> depositReqq)
+        {
+            log2File.Info(JsonConvert.SerializeObject(depositReqq), "Joker_Deposit");
+
+            Rep rep = new Rep();
+            rep.Status = 1000;
+            rep.Message = "Other";
+
             return rep;
         }
     }
