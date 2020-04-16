@@ -264,5 +264,39 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public int SettledRNG_SG(BettingDataRNG_SG bettingDataRNG_SG, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SG, bettingDataRNG_SG.acctId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_SG.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SettledRNG_SG(tpCustInfo, bettingDataRNG_SG, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataRNG_SG.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+        public int CancelBetRNG_SG(BettingDataRNG_SG bettingDataRNG_SG, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SG, bettingDataRNG_SG.acctId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SG, tpCustInfo.CurrencyId);
+
+            var result = settledService.CancelBetRNG_SG(tpCustInfo, bettingDataRNG_SG, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
     }
 }

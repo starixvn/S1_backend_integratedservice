@@ -45,7 +45,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         GPI_RNG = 11,
         YL_Fish = 12,
         Joker_RNG = 13,
-        YGG_RNG = 14
+        YGG_RNG = 14,
+        SG_RNG = 15
     }
     public enum Tp
     {
@@ -57,6 +58,14 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         GPI = 6,
         YL = 7,
         YGG = 8,
-        Joker = 9
+        Joker = 9,
+        SG = 10
+    }
+    public enum TransferType : int
+    {
+        PlaceBet = 1,
+        CancelBet = 2,
+        Payout = 4,
+        Bonus = 7,
     }
 }
