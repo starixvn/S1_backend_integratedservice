@@ -46,7 +46,7 @@ namespace ThirdParty.SG
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
-            string Param = $"acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={sessionKey}&game={gameId}";
+            string Param = $"acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off";
             Param = (appType == AppType.Mobile) ? $"{Param}&mobile=true" : $"{Param}&mobile=false";
             Param = (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? $"{Param}&fun=true" : $"{Param}";
 

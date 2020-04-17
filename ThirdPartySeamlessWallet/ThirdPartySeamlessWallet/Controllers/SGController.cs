@@ -98,12 +98,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                         if (tpCheck == null)
                         {
                             authorizeResp.code = 50104;
-                            authorizeResp.msg = "Token Validation Failed";
+                            authorizeResp.msg = "Token Validation Failed.";
                         }
                         else if (tpCheck.Token != sessionToken)
                         {
                             authorizeResp.code = 50104;
-                            authorizeResp.msg = "Token Validation Failed";
+                            authorizeResp.msg = $"Token Validation Failed.";
                         }
                         else if (tpCheck.Locked)
                         {
@@ -130,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else
                     {
                         authorizeResp.code = 50104;
-                        authorizeResp.msg = "Token Validation Failed";
+                        authorizeResp.msg = "Token Validation Failed.";
                     }
                 }
                 catch (Exception ex)
