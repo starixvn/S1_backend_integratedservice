@@ -21,7 +21,6 @@ namespace CommonService.Service.BLL
         {
             public int status { get; set; }
             public string message { get; set; }
-            public string data { get; set; }
         }
 
         public SendXBLL(IOptions<SendXConfig> sendXConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL)
