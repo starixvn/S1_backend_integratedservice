@@ -172,8 +172,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (wagerReqq.TryGetValue("sessiontoken", out string sessiontoken))
             {
-                log2File.Info(JsonConvert.SerializeObject(wagerReqq), "YGG_Wager");
-
                 string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(sessiontoken));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string sessionToken = sessionKeyArr[1];/* Long Time*/
@@ -234,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 wagerRep.code = 1000;
             }
-            log2File.Info(JsonConvert.SerializeObject(wagerRep), "YGG_Wager");
+            log2File.Info($"{JsonConvert.SerializeObject(wagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Wager");
             return wagerRep;
         }
 
@@ -246,8 +244,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 //var s = @"{""org"":""nova88"",""playerid"":""DNova88_156"",""amount"":""0.00"",""bonusprize"":""0.00"",""currency"":""THB"",""tickets"":""1"",""service"":""Mir"",""reference"":""2004051539230100001"",""subreference"":""2004051539230100001"",""description"":""Start Game"",""cat1"":""Casino"",""cat2"":""Slot"",""cat3"":""5reel"",""cat4"":""Jokerizer"",""cat5"":""7301"",""tag1"":""GameName.Jokerizer"",""tag2"":""Model.M1"",""tag3"":""Channel.pc"",""lang"":""zh_hant"",""version"":""4""}";
                 //endwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
             }
-
-            log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}", "YGG_Endwager_Req");
 
             WagerRep wagerRep = new WagerRep();
             wagerRep.code = 1;
@@ -291,7 +287,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch(Exception ex)
             {
-                log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex.Message}", "YGG_Endwager");
+                log2File.Error($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex.Message}", "YGG_Endwager");
             }
 
             return wagerRep;
@@ -321,7 +317,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 /*var s = @"{""org"":""nova88"",""playerid"":""DNova88_156"",""reference"":""2004061422520100001"",""subreference"":""w2004061422520100000"",""version"":""4""}";
                 cancelwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);*/
             }
-            log2File.Info(JsonConvert.SerializeObject(cancelwagerReqq), "YGG_Cancelwager");
 
             WagerReq wagerReq = JsonConvert.DeserializeObject<WagerReq>(JsonConvert.SerializeObject(cancelwagerReqq));
             int result = settledBLL.CancelBetRNG_YGG(wagerReq, out decimal tpAffterAmount);
@@ -356,7 +351,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 cancelwagerRep.code = 0;
             }
 
-            log2File.Info(JsonConvert.SerializeObject(cancelwagerRep), "YGG_Cancelwager");
+            log2File.Info($"{JsonConvert.SerializeObject(cancelwagerReqq)}\r\n{JsonConvert.SerializeObject(cancelwagerRep)}", "YGG_Cancelwager");
             return cancelwagerRep;
         }
 
@@ -426,7 +421,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 //endwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
             }
 
-            log2File.Info(JsonConvert.SerializeObject(campaignpayoutReqq), "YGG_Campaignpayout");
             WagerRep wagerRep = new WagerRep();
             wagerRep.code = 1;
 
@@ -480,7 +474,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 wagerRep.code = 1000;
             }
 
-            log2File.Info(JsonConvert.SerializeObject(wagerRep), "YGG_Campaignpayout");
+            log2File.Info($"{JsonConvert.SerializeObject(campaignpayoutReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Campaignpayout");
             return wagerRep;
         }
 
@@ -517,7 +511,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (getbalanceReqq.TryGetValue("sessiontoken", out string sessiontoken))
             {
-                log2File.Info(JsonConvert.SerializeObject(getbalanceReqq), "YGG_getbalance");
                 string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(sessiontoken));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string sessionToken = sessionKeyArr[1];/* Long Time*/
@@ -557,7 +550,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getbalanceRep.code = 1000;
             }
 
-            log2File.Info(JsonConvert.SerializeObject(getbalanceRep), "YGG_getbalance");
+            log2File.Info($"{JsonConvert.SerializeObject(getbalanceReqq)}\r\n{JsonConvert.SerializeObject(getbalanceRep)}", "YGG_getbalance");
             return getbalanceRep;
         }
     }

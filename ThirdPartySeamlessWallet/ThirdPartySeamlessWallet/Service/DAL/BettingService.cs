@@ -274,6 +274,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_YGG.TicketStatus = (int)TicketStatus.UnSettled;
             var p = new DynamicParameters(bettingDataRNG_YGG);
             p.Add("tickets", (int?)null);
+            p.Add("bonusprize", (decimal?)null);
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
