@@ -52,7 +52,17 @@ namespace ThirdPartyService.Service.BLL
                         inputs.Add(infoI.Key, infoI.Value);
                     }
                 }
-                apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
+
+                // Test account only allow login for saba
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpInfo.TpId != 1)
+                {
+                    apiResult.ErrorCode = ErrorCode.NoAuthority;
+                    apiResult.RawMessage = "This Account not allow for access.";
+                }
+                else
+                { 
+                    apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
+                }
                 /*Use Async to Record Log*/
                 Task.Run(() =>
                 {
