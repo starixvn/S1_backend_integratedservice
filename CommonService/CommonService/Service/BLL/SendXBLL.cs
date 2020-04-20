@@ -80,7 +80,7 @@ namespace CommonService.Service.BLL
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<string> removeTags { get; set; }
         }
-        public async Task<ApiResult> trackAsync(CustInfoProfile custInfo)
+        public async Task<ApiResult> WelcomeMailAsync(CustInfoProfile custInfo)
         {
             ApiResult apiResult = new ApiResult();
 
