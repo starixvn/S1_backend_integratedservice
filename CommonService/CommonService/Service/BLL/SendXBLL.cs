@@ -21,7 +21,6 @@ namespace CommonService.Service.BLL
         {
             public int status { get; set; }
             public string message { get; set; }
-            public string data { get; set; }
         }
 
         public SendXBLL(IOptions<SendXConfig> sendXConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL)
@@ -81,7 +80,7 @@ namespace CommonService.Service.BLL
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<string> removeTags { get; set; }
         }
-        public async Task<ApiResult> trackAsync(CustInfoProfile custInfo)
+        public async Task<ApiResult> WelcomeMailAsync(CustInfoProfile custInfo)
         {
             ApiResult apiResult = new ApiResult();
 

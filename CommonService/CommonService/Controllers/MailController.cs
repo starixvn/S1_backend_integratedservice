@@ -38,6 +38,14 @@ namespace CommonService.Controllers
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
+
+                //if (apiResult.ErrorCode == 0)
+                //{
+                //    resultResp = await sendXBLL.WelcomeMailAsync(custInfo);
+                //    apiResult.ErrorCode = resultResp.ErrorCode;
+                //    apiResult.Message = resultResp.Message;
+                //    apiResult.RawMessage = resultResp.RawMessage;
+                //}
             }
 
             return apiResult;
