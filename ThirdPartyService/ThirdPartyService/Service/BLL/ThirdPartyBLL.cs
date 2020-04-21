@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,13 +18,15 @@ namespace ThirdPartyService.Service.BLL
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpTransferInfo tpTransferInfo;
         private readonly IWebHostEnvironment env;
+        private readonly IConfiguration configuration;
 
-        public ThirdPartyBLL(IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, AuthBLL authBLL)
+        public ThirdPartyBLL(IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, AuthBLL authBLL, IConfiguration configuration)
         {
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyHelper = thirdPartyHelper;
             this.tpTransferInfo = tpTransferInfo;
             this.env = env;
+            this.configuration = configuration;
             ThirdPartyHelperBase.AuthProvider = authBLL;
         }
         public ApiResult GotoGame(TpInfo tpInfo)
@@ -53,11 +56,13 @@ namespace ThirdPartyService.Service.BLL
                     }
                 }
 
+                var configEnv = configuration.GetValue<string>("Environment");
+
                 // Test account only allow login for saba
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpInfo.TpId != 1)
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null && tpInfo.TpId != 1)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
-                    apiResult.RawMessage = "This Account not allow for access.";
+                    apiResult.RawMessage = "This Account not allow for access";
                 }
                 else
                 { 
