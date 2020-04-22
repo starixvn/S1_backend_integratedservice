@@ -115,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 catch(Exception ex)
                 {
                     playerInfoRep.code = 1000;
-                    log2File.Info($"{JsonConvert.SerializeObject(PlayerInfoReq)}\r\n{JsonConvert.SerializeObject(playerInfoRep)}\r\n{ex}", "YGG_playerinfo");
+                    log2File.Error($"{JsonConvert.SerializeObject(PlayerInfoReq)}\r\n{JsonConvert.SerializeObject(playerInfoRep)}\r\n{ex}", "YGG_playerinfo");
                 }
             }
             else

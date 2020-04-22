@@ -15,6 +15,7 @@
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
+    <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
     <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.SG\ThirdParty.SG.csproj" />

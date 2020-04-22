@@ -55,6 +55,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SA = 2,
         AG = 3,
         DG = 4,
+        PP = 5,
         GPI = 6,
         YL = 7,
         YGG = 8,
@@ -66,6 +67,14 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PlaceBet = 1,
         CancelBet = 2,
         Payout = 4,
+        Bonus = 7
+    }
+    public enum BettransType : int
+    {
+        Bet = 1,
+        CancelBet = 2,
+        Payout = 4,
         Bonus = 7,
+        Jackpot = 8
     }
 }

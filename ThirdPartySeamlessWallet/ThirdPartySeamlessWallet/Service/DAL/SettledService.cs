@@ -533,6 +533,162 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_SG bettingDataRNG_SG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            bettingDataRNG_SG.TicketStatus = bettingDataRNG_SG.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+            var p = new DynamicParameters(new { transferId = bettingDataRNG_SG.transferId, acctId = bettingDataRNG_SG.acctId, currency = bettingDataRNG_SG.currency, amount = bettingDataRNG_SG.amount, type = bettingDataRNG_SG.type, channel = bettingDataRNG_SG.channel, playerIp = bettingDataRNG_SG.playerIp, transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(), gameCode = bettingDataRNG_SG.gameCode, ticketId = bettingDataRNG_SG.ticketId, referenceId = bettingDataRNG_SG.referenceId, specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame), refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds), TicketStatus = bettingDataRNG_SG.TicketStatus });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            int result = conn.Execute("Service_BettransRng_SG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                if (bettingDataRNG_SG.amount > 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_SG.amount, (int)Tp.SG, TransType.Settled, $"{bettingDataRNG_SG.type}: {Math.Abs(bettingDataRNG_SG.amount).ToString("#,##0.##")}", bettingDataRNG_SG.transferId, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    decimal Stake = p.Get<decimal>("Stake");
+                    decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.SG,
+                        Stake = Stake,
+                        WinlostAmount = WinLostAmount,
+                        TransId = bettingDataRNG_SG.referenceId,
+                        GameType = GameType.SG_RNG,
+                        TpUserName = bettingDataRNG_SG.acctId,
+                        SettledTime = 0,
+                        SettlementType = SettlementType.SettledForValidNotRollover
+                    };
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                result = -1;
+            }
+
+            return result;
+        }
+        public int CancelBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { bettingDataRNG_PP.reference });
+            p.Add("CancelStake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_CancelBetRng_PP_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal cancelStake = p.Get<decimal>("CancelStake");
+
+                if (cancelStake != bettingDataRNG_PP.amount)
+                {
+                    throw new Exception($"Cancel amount {bettingDataRNG_PP.amount.ToString("#,##0.##")} it not equal {cancelStake.ToString("#,##0.##")}");
+                }
+
+                if (cancelStake != 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, cancelStake, (int)Tp.PP, TransType.Refunds, $"Refund: {cancelStake.ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.PP,
+                        Stake = cancelStake,
+                        WinlostAmount = 0,
+                        TransId = bettingDataRNG_PP.roundId.ToString(),
+                        GameType = GameType.PP_RNG,
+                        TpUserName = bettingDataRNG_PP.userId,
+                        SettledTime = bettingDataRNG_PP.timestamp / 1000,
+                        SettlementType = SettlementType.SettledForInvalid,
+                        TicketStatus = TicketStatus.Refund
+                    };
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
+        public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { bettingDataRNG_PP.roundId });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_SettledRng_PP_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal stake = p.Get<decimal>("Stake");
+                decimal winLostAmount = p.Get<decimal>("WinLostAmount");
+
+                if (result > 0)
+                {
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.PP,
+                        Stake = stake,
+                        WinlostAmount = winLostAmount,
+                        TransId = bettingDataRNG_PP.roundId.ToString(),
+                        GameType = GameType.PP_RNG,
+                        TpUserName = bettingDataRNG_PP.userId,
+                        SettledTime = bettingDataRNG_PP.timestamp / 1000,
+                        SettlementType = SettlementType.SettledForValidNotRollover,
+                        TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                    };
+
+                    if (betRecordInfo.WinlostAmount == 0)
+                        betRecordInfo.TicketStatus = TicketStatus.Draw;
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
