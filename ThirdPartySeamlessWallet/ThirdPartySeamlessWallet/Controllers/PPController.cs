@@ -446,9 +446,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/JackpotWin")]
-        public PayoutResp JackpotWin([FromForm]Dictionary<string, string> JackpotWinReqq)
+        public PayoutResp JackpotWin([FromForm]Dictionary<string, string> jackpotWinReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(JackpotWinReqq), $"{thisTp}_JackpotWin");
+            log2File.Info(JsonConvert.SerializeObject(jackpotWinReqq), $"{thisTp}_JackpotWin");
             PayoutResp payoutResp = new PayoutResp();
             payoutResp.error = 100;
             payoutResp.description = "Internal server error.";
@@ -458,9 +458,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
-                if (hashCheck(JackpotWinReqq, secureKey))
+                if (hashCheck(jackpotWinReqq, secureKey))
                 {
-                    BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(JackpotWinReqq));
+                    BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(jackpotWinReqq));
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Jackpot;
                     if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
@@ -509,10 +509,86 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(JackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_JackpotWin");
+                log2File.Error($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_JackpotWin");
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(JackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_JackpotWin");
+            log2File.Info($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_JackpotWin");
+            return payoutResp;
+        }
+
+        public partial class PromoWinReq : PromoBonus
+        {
+
+        }
+
+        [Route("[controller]/promoWin")]
+        public PayoutResp PromoWin([FromForm]Dictionary<string, string> promoWinReqq)
+        {
+            log2File.Info(JsonConvert.SerializeObject(promoWinReqq), $"{thisTp}_PromoWin");
+            PayoutResp payoutResp = new PayoutResp();
+            payoutResp.error = 100;
+            payoutResp.description = "Internal server error.";
+
+            try
+            {
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
+
+                if (hashCheck(promoWinReqq, secureKey))
+                {
+                    PromoWinReq promoWinReq = JsonConvert.DeserializeObject<PromoWinReq>(JsonConvert.SerializeObject(promoWinReqq));
+                    payoutResp.transactionId = promoWinReq.Reference;
+
+                    if (settledBLL.PromoBonus_PP(promoWinReq, out decimal tpAffterAmount) > 0)
+                    {
+                        if (promoWinReq.Amount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId);
+                            payoutResp.cash = tpCustBalance.Balance;
+                            payoutResp.currency = tpCustBalance.TpCurrencyId;
+                        }
+                        else
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, promoWinReq.UserId);
+                            payoutResp.cash = tpAffterAmount;
+                            payoutResp.currency = tpCustBalance.TpCurrencyId;
+                        }
+                        payoutResp.bonus = 0;
+                        payoutResp.error = 0;
+                        payoutResp.description = "Success.";
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId);
+                        payoutResp.cash = tpCustBalance.Balance;
+                        payoutResp.currency = tpCustBalance.TpCurrencyId;
+                        payoutResp.bonus = 0;
+                        payoutResp.error = 1;
+                        payoutResp.description = "Insufficient balance.";
+                    }
+                    else
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId);
+                        payoutResp.cash = tpCustBalance.Balance;
+                        payoutResp.currency = tpCustBalance.TpCurrencyId;
+                        payoutResp.bonus = 0;
+                        payoutResp.error = 0;
+                        payoutResp.description = "Success.";
+                    }
+                }
+                else
+                {
+                    payoutResp.error = 5;
+                    payoutResp.description = "Invalid hash code.";
+                }
+            }
+            catch (Exception ex)
+            {
+                payoutResp.error = 100;
+                log2File.Error($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_PromoWin");
+            }
+
+            log2File.Info($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_PromoWin");
             return payoutResp;
         }
 

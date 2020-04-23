@@ -533,41 +533,40 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-
-        public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_SG bettingDataRNG_SG, out decimal afterAmount)
+        public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            bettingDataRNG_SG.TicketStatus = bettingDataRNG_SG.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-            var p = new DynamicParameters(new { transferId = bettingDataRNG_SG.transferId, acctId = bettingDataRNG_SG.acctId, currency = bettingDataRNG_SG.currency, amount = bettingDataRNG_SG.amount, type = bettingDataRNG_SG.type, channel = bettingDataRNG_SG.channel, playerIp = bettingDataRNG_SG.playerIp, transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(), gameCode = bettingDataRNG_SG.gameCode, ticketId = bettingDataRNG_SG.ticketId, referenceId = bettingDataRNG_SG.referenceId, specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame), refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds), TicketStatus = bettingDataRNG_SG.TicketStatus });
+            var result = 0;
+            var p = new DynamicParameters(new { bettingDataRNG_PP.roundId });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            int result = conn.Execute("Service_BettransRng_SG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = conn.Execute("Service_SettledRng_PP_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                if (bettingDataRNG_SG.amount > 0)
-                {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_SG.amount, (int)Tp.SG, TransType.Settled, $"{bettingDataRNG_SG.type}: {Math.Abs(bettingDataRNG_SG.amount).ToString("#,##0.##")}", bettingDataRNG_SG.transferId, out afterAmount, conn, trans);
-                }
+                decimal stake = p.Get<decimal>("Stake");
+                decimal winLostAmount = p.Get<decimal>("WinLostAmount");
 
                 if (result > 0)
                 {
-                    decimal Stake = p.Get<decimal>("Stake");
-                    decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
                     BetRecordInfo betRecordInfo = new BetRecordInfo
                     {
-                        TpId = (int)Tp.SG,
-                        Stake = Stake,
-                        WinlostAmount = WinLostAmount,
-                        TransId = bettingDataRNG_SG.referenceId,
-                        GameType = GameType.SG_RNG,
-                        TpUserName = bettingDataRNG_SG.acctId,
-                        SettledTime = 0,
-                        SettlementType = SettlementType.SettledForValidNotRollover
+                        TpId = (int)Tp.PP,
+                        Stake = stake,
+                        WinlostAmount = winLostAmount,
+                        TransId = bettingDataRNG_PP.roundId.ToString(),
+                        GameType = GameType.PP_RNG,
+                        TpUserName = bettingDataRNG_PP.userId,
+                        SettledTime = bettingDataRNG_PP.timestamp / 1000,
+                        SettlementType = SettlementType.SettledForValidNotRollover,
+                        TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                     };
+
+                    if (betRecordInfo.WinlostAmount == 0)
+                        betRecordInfo.TicketStatus = TicketStatus.Draw;
 
                     result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
@@ -579,7 +578,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                result = -1;
+                return -1;
             }
 
             return result;
@@ -639,40 +638,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
+        public int PromoBonus_PP(TpCustInfo tpCustInfo, PromoBonus promoBonus, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var result = 0;
-            var p = new DynamicParameters(new { bettingDataRNG_PP.roundId });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_SettledRng_PP_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            int result = conn.Execute("Service_PromoBonus_PP_Ins", promoBonus, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                decimal stake = p.Get<decimal>("Stake");
-                decimal winLostAmount = p.Get<decimal>("WinLostAmount");
+                if (promoBonus.Amount > 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, promoBonus.Amount, (int)Tp.PP, TransType.Settled, $"PromoWin: {Math.Abs(promoBonus.Amount).ToString("#,##0.##")}", promoBonus.Reference, out afterAmount, conn, trans);
+                }
 
                 if (result > 0)
                 {
                     BetRecordInfo betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp.PP,
-                        Stake = stake,
-                        WinlostAmount = winLostAmount,
-                        TransId = bettingDataRNG_PP.roundId.ToString(),
+                        Stake = 0,
+                        WinlostAmount = promoBonus.Amount,
+                        TransId = promoBonus.Reference,
                         GameType = GameType.PP_RNG,
-                        TpUserName = bettingDataRNG_PP.userId,
-                        SettledTime = bettingDataRNG_PP.timestamp / 1000,
-                        SettlementType = SettlementType.SettledForValidNotRollover,
-                        TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                        TpUserName = promoBonus.UserId,
+                        SettledTime = promoBonus.Timestamp / 1000,
+                        SettlementType = SettlementType.SettledForValidNotRollover
                     };
-
-                    if (betRecordInfo.WinlostAmount == 0)
-                        betRecordInfo.TicketStatus = TicketStatus.Draw;
 
                     result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
@@ -684,7 +677,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                return -1;
+                result = -1;
             }
 
             return result;

@@ -325,5 +325,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int PromoBonus_PP(PromoBonus promoBonus, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.PP, promoBonus.UserId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                promoBonus.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PromoBonus_PP(tpCustInfo, promoBonus, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                promoBonus.Amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
     }
 }

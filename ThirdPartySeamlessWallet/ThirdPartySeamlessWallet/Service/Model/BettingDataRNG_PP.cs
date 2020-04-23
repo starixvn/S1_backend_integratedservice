@@ -28,4 +28,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public BettransType type { get; set; }
     }
+    public class PromoBonus
+    {
+        public string Reference { get; set; }
+        public decimal Amount { get; set; }
+        public string CampaignType { get; set; }
+        public long CampaignId { get; set; }
+        public string UserId { get; set; }
+        public long Timestamp { get; set; }
+    }
 }
