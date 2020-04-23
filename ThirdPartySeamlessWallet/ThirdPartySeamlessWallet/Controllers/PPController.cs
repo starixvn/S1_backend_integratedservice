@@ -268,6 +268,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
                             betResp.cash = tpCustBalance.Balance;
+                            betResp.currency = tpCustBalance.TpCurrencyId;
                             betResp.bonus = 0;
                             betResp.error = 0;
                             betResp.description = "Success.";
@@ -350,6 +351,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
                         resultResp.cash = tpCustBalance.Balance;
+                        resultResp.currency = tpCustBalance.TpCurrencyId;
                         resultResp.bonus = 0;
                         resultResp.error = 0;
                         resultResp.description = "Success.";
@@ -421,6 +423,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
                         payoutResp.cash = tpCustBalance.Balance;
+                        payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
                         payoutResp.error = 0;
                         payoutResp.description = "Success.";
@@ -491,6 +494,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
                         payoutResp.cash = tpCustBalance.Balance;
+                        payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
                         payoutResp.error = 0;
                         payoutResp.description = "Success.";
@@ -587,7 +591,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     //string Content = @"{""amount"":""9.0"",""gameId"":""vs7776aztec"",""hash"":""672028d15e2191c3050000f0f8a6b62a"",""ipAddress"":""218.211.34.185"",""language"":""zh"",""platform"":""WEB"",""providerId"":""PragmaticPlay"",""reference"":""5e9ed802005c8e0008a65f62"",""roundDetails"":""spin"",""roundId"":""2360710356"",""timestamp"":""1587468290666"",""userId"":""DNova88_157""}";
                     RefundReq refundReq = JsonConvert.DeserializeObject<RefundReq>(JsonConvert.SerializeObject(refundReqq));
-                    refundResp.transactionId = refundReq.reference;
+                    refundResp.transactionId = $"{refundReq.reference}_refund";
                     //BetReq betReq = JsonConvert.DeserializeObject<BetReq>(Content);
                     if (settledBLL.CancelBetRNG_PP(refundReq, out decimal tpAffterAmount) > 0)
                     {
