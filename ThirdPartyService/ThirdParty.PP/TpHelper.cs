@@ -86,15 +86,16 @@ namespace ThirdParty.PP
             string ProviderId = inputs.ContainsKey("ProviderId") && !string.IsNullOrEmpty(inputs["ProviderId"]) ? inputs["ProviderId"] : throw new Exception();
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
             string SecureLogin = inputs.ContainsKey("SecureLogin") && !string.IsNullOrEmpty(inputs["SecureLogin"]) ? inputs["SecureLogin"] : throw new Exception();
-
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
+            string funGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : "";
 
             string sParam = "";
             LoginReq loginReq = new LoginReq();
 
             //gameId = "vs10bookoftut";
-            loginReq.token = ApplyToken(tpCustInfo); 
+            loginReq.token = ApplyToken(tpCustInfo);
             loginReq.symbol = gameId;
             loginReq.technology = "H5";
             //loginReq.technology
@@ -113,6 +114,12 @@ namespace ThirdParty.PP
                 ErrorCode = ErrorCode.Success,
                 Message = $"{GameUrl}?key={sParam}"
             };
+
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.Message = $"{funGameUrl}?lang={TpLangId}&cur={tpCustInfo.TpCurrencyId}&gameSymbol={System.Web.HttpUtility.UrlEncode(gameId)}&lobbyURL={System.Web.HttpUtility.UrlEncode(lobbyUrl)}&stylename={SecureLogin}";
+            }
+
             return oApiResult;
         }
 
