@@ -106,7 +106,7 @@ namespace ThirdParty.PP
             //loginReq.operatorGameHistoryUrl = "";
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
-            sParam = string.Join(System.Web.HttpUtility.UrlEncode("&"), dicP.Select(kp => $"{kp.Key}{System.Web.HttpUtility.UrlEncode("=")}{kp.Value}").ToArray());
+            sParam = System.Web.HttpUtility.UrlEncode(string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()));
             sParam = $"{sParam}&stylename={SecureLogin}";
 
             ApiResult oApiResult = new ApiResult
