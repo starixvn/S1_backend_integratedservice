@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/balance")]
         public BalanceResp Balance([FromForm]Dictionary<string, string> balanceReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(balanceReqq), $"{thisTp}_Balance");
+            //log2File.Info(JsonConvert.SerializeObject(balanceReqq), $"{thisTp}_Balance");
             BalanceResp balanceResp = new BalanceResp();
             balanceResp.error = 100;
             balanceResp.description = "Internal server error.";
@@ -207,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bet")]
         public BetResp Bet([FromForm]Dictionary<string, string> betReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(betReqq), $"{thisTp}_Bet");
+            //log2File.Info(JsonConvert.SerializeObject(betReqq), $"{thisTp}_Bet");
             BetResp betResp = new BetResp();
             betResp.error = 100;
             betResp.description = "Internal server error.";
@@ -304,7 +304,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/result")]
         public PayoutResp Result([FromForm]Dictionary<string, string> resultReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(resultReqq), $"{thisTp}_Result");
+            //log2File.Info(JsonConvert.SerializeObject(resultReqq), $"{thisTp}_Result");
             PayoutResp resultResp = new PayoutResp();
             resultResp.error = 100;
             resultResp.description = "Internal server error.";
@@ -376,7 +376,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bonusWin")]
         public PayoutResp BonusWin([FromForm]Dictionary<string, string> bonusWinReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(bonusWinReqq), $"{thisTp}_BonusWin");
+            //log2File.Info(JsonConvert.SerializeObject(bonusWinReqq), $"{thisTp}_BonusWin");
             PayoutResp payoutResp = new PayoutResp();
             payoutResp.error = 100;
             payoutResp.description = "Internal server error.";
@@ -448,7 +448,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/JackpotWin")]
         public PayoutResp JackpotWin([FromForm]Dictionary<string, string> jackpotWinReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(jackpotWinReqq), $"{thisTp}_JackpotWin");
+            //log2File.Info(JsonConvert.SerializeObject(jackpotWinReqq), $"{thisTp}_JackpotWin");
             PayoutResp payoutResp = new PayoutResp();
             payoutResp.error = 100;
             payoutResp.description = "Internal server error.";
@@ -524,7 +524,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/promoWin")]
         public PayoutResp PromoWin([FromForm]Dictionary<string, string> promoWinReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(promoWinReqq), $"{thisTp}_PromoWin");
+            //log2File.Info(JsonConvert.SerializeObject(promoWinReqq), $"{thisTp}_PromoWin");
             PayoutResp payoutResp = new PayoutResp();
             payoutResp.error = 100;
             payoutResp.description = "Internal server error.";
@@ -603,7 +603,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/endRound")]
         public EndRoundResp EndRound([FromForm]Dictionary<string, string> endRoundReqq)
         {
-            log2File.Info(JsonConvert.SerializeObject(endRoundReqq), $"{thisTp}_EndRound");
+            //log2File.Info(JsonConvert.SerializeObject(endRoundReqq), $"{thisTp}_EndRound");
             EndRoundResp endRoundResp = new EndRoundResp();
             endRoundResp.error = 100;
             endRoundResp.description = "Internal server error.";
@@ -701,7 +701,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var dicP = req.Where(x => x.Key != "hash").OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secureKey}";
 
-            log2File.Info($"{p}\r\n{hashKey}\r\n{tools.ToMD5(p)}", $"{thisTp}_hashCheck");
+            //log2File.Info($"{p}\r\n{hashKey}\r\n{tools.ToMD5(p)}", $"{thisTp}_hashCheck");
 
             return hashKey.Equals(tools.ToMD5(p), StringComparison.OrdinalIgnoreCase);
         }
