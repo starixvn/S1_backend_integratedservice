@@ -218,6 +218,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataRNG_PP.amount *= tpCurrency.ExchangeRate;
+                bettingDataRNG_PP.promoWinAmount *= tpCurrency.ExchangeRate;
             }
 
             var result = bettingService.PayoutRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);

@@ -3,10 +3,7 @@ using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -552,13 +549,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    GameType gameType = GameType.PP_RNG;
+
+                    if (bettingDataRNG_PP.gameId.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
+                    {
+                        gameType = GameType.PP_LiveCasino;
+                    }
+
                     BetRecordInfo betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp.PP,
                         Stake = stake,
                         WinlostAmount = winLostAmount,
                         TransId = bettingDataRNG_PP.roundId.ToString(),
-                        GameType = GameType.PP_RNG,
+                        GameType = gameType,
                         TpUserName = bettingDataRNG_PP.userId,
                         SettledTime = bettingDataRNG_PP.timestamp / 1000,
                         SettlementType = SettlementType.SettledForValidNotRollover,
@@ -610,13 +614,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    GameType gameType = GameType.PP_RNG;
+
+                    if (bettingDataRNG_PP.gameId.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
+                    {
+                        gameType = GameType.PP_LiveCasino;
+                    }
+
                     BetRecordInfo betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp.PP,
                         Stake = cancelStake,
                         WinlostAmount = 0,
                         TransId = bettingDataRNG_PP.roundId.ToString(),
-                        GameType = GameType.PP_RNG,
+                        GameType = gameType,
                         TpUserName = bettingDataRNG_PP.userId,
                         SettledTime = bettingDataRNG_PP.timestamp / 1000,
                         SettlementType = SettlementType.SettledForInvalid,

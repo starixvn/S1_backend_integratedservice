@@ -238,6 +238,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate > 0)
             {
+                settledDataRNG_YGG.bonusprize *= tpCurrency.ExchangeRate;
                 settledDataRNG_YGG.amount *= tpCurrency.ExchangeRate;
             }
 
@@ -290,7 +291,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SG, bettingDataRNG_SG.acctId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SG, tpCustInfo.CurrencyId);
 
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_SG.amount *= tpCurrency.ExchangeRate;
+            }
+
             var result = settledService.CancelBetRNG_SG(tpCustInfo, bettingDataRNG_SG, out afterAmount);
+
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -303,6 +310,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.PP, bettingDataRNG_PP.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_PP.amount *= tpCurrency.ExchangeRate;
+            }
 
             var result = settledService.CancelBetRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
