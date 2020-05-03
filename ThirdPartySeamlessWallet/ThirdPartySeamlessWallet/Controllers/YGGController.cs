@@ -112,7 +112,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         playerInfoRep.code = 1000;
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     playerInfoRep.code = 1000;
                     log2File.Error($"{JsonConvert.SerializeObject(PlayerInfoReq)}\r\n{JsonConvert.SerializeObject(playerInfoRep)}\r\n{ex}", "YGG_playerinfo");
@@ -201,30 +201,38 @@ namespace ThirdPartySeamlessWallet.Controllers
                     wagerData.homeCurrency = wagerData.currency;
                     wagerData.applicableBonus = 0;
                     //wagerRep.code = 0;
-                    if (bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAffterAmount) > 0)
+                    try
                     {
-                        if (wagerReq.amount == 0)
+                        if (bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAffterAmount) > 0)
+                        {
+                            if (wagerReq.amount == 0)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                                wagerData.balance = tpCustBalance.Balance;
+                            }
+                            else
+                            {
+                                wagerData.balance = tpAffterAmount;
+                            }
+                            wagerRep.code = 0;
+                        }
+                        else if (tpAffterAmount < 0)
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
                             wagerData.balance = tpCustBalance.Balance;
+                            wagerRep.code = 1006;
                         }
                         else
                         {
-                            wagerData.balance = tpAffterAmount;
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                            wagerData.balance = tpCustBalance.Balance;
+                            wagerRep.code = 0;
                         }
-                        wagerRep.code = 0;
                     }
-                    else if (tpAffterAmount < 0)
+                    catch (Exception ex)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
-                        wagerData.balance = tpCustBalance.Balance;
-                        wagerRep.code = 1006;
-                    }
-                    else
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
-                        wagerData.balance = tpCustBalance.Balance;
-                        wagerRep.code = 0;
+                        wagerRep.code = 1;
+                        log2File.Error($"{JsonConvert.SerializeObject(wagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Wager");
                     }
                 }
             }
@@ -285,9 +293,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 log2File.Info($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Endwager");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex.Message}", "YGG_Endwager");
+                wagerRep.code = 1;
+                log2File.Error($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Endwager");
             }
 
             return wagerRep;
@@ -407,7 +416,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Info($"{JsonConvert.SerializeObject(appendwagerresultReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex.Message}", "YGG_Appendwagerresult");
+                wagerRep.code = 1;
+                log2File.Error($"{JsonConvert.SerializeObject(appendwagerresultReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Appendwagerresult");
             }
             return wagerRep;
         }

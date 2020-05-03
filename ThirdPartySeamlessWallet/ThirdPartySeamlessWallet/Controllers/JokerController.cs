@@ -245,33 +245,42 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    if (bettingBLL.PlaceBetRNG_Joker(betReq, out decimal tpAffterAmount) > 0)
+                    try
                     {
-                        rep.Status = 0;
-                        rep.Message = "Success";
-                        if (betReq.amount == 0)
+                        if (bettingBLL.PlaceBetRNG_Joker(betReq, out decimal tpAffterAmount) > 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                            rep.Status = 0;
+                            rep.Message = "Success";
+                            if (betReq.amount == 0)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                                rep.Balance = tpCustBalance.Balance;
+                            }
+                            else
+                            {
+                                rep.Balance = tpAffterAmount;
+                            }
+                        }
+                        else if (tpAffterAmount < 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, betReq.username);
+                            rep.Status = 100;
                             rep.Balance = tpCustBalance.Balance;
+                            rep.Message = "Insufficient fund";
                         }
                         else
                         {
-                            rep.Balance = tpAffterAmount;
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                            rep.Balance = tpCustBalance.Balance;
+                            rep.Status = 0;
+                            rep.Message = "The Bet already existed";
                         }
                     }
-                    else if (tpAffterAmount < 0)
+                    catch (Exception ex)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, betReq.username);
-                        rep.Status = 100;
-                        rep.Balance = tpCustBalance.Balance;
-                        rep.Message = "Insufficient fund";
-                    }
-                    else
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
-                        rep.Balance = tpCustBalance.Balance;
-                        rep.Status = 0;
-                        rep.Message = "The Bet already existed";
+                        rep.Status = 1000;
+                        rep.Message = "Other";
+                        log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(rep)}\r\n{ex}", "Joker_Bet");
                     }
                 }
             }
@@ -281,7 +290,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Message = "Invalid signature";
             }
 
-            log2File.Info($"secret={secret}\r\n{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(rep)}", "Joker_Bet");
+            log2File.Info($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(rep)}", "Joker_Bet");
             return rep;
         }
 
@@ -331,31 +340,40 @@ namespace ThirdPartySeamlessWallet.Controllers
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == settleBetReq.hash)
             {
-                settleBetReq.type = "settled";
-                int result = settledBLL.SettledRNG_Joker(settleBetReq, out decimal tpAffterAmount);
-
-                if (result > 0)
+                try
                 {
-                    if (settleBetReq.amount > 0)
+                    settleBetReq.type = "settled";
+                    int result = settledBLL.SettledRNG_Joker(settleBetReq, out decimal tpAffterAmount);
+
+                    if (result > 0)
                     {
-                        rep.Status = 0;
-                        rep.Message = "Success";
-                        rep.Balance = tpAffterAmount;
+                        if (settleBetReq.amount > 0)
+                        {
+                            rep.Status = 0;
+                            rep.Message = "Success";
+                            rep.Balance = tpAffterAmount;
+                        }
+                        else if (settleBetReq.amount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                            rep.Balance = tpCustBalance.Balance;
+                            rep.Status = 0;
+                            rep.Message = "Success";
+                        }
                     }
-                    else if (settleBetReq.amount == 0)
+                    else if (result == -1)
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
                         rep.Balance = tpCustBalance.Balance;
                         rep.Status = 0;
-                        rep.Message = "Success";
+                        rep.Message = "Transaction can not be found";
                     }
                 }
-                else if (result == -1)
+                catch (Exception ex)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
-                    rep.Balance = tpCustBalance.Balance;
-                    rep.Status = 0;
-                    rep.Message = "Transaction can not be found";
+                    rep.Status = 1000;
+                    rep.Message = "Other";
+                    log2File.Error($"{JsonConvert.SerializeObject(settleBetReqq)}\r\n{JsonConvert.SerializeObject(rep)}\r\n{ex}", "Joker_SettleBet");
                 }
             }
             else
@@ -363,7 +381,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 rep.Status = 5;
                 rep.Message = "Invalid signature";
             }
-            log2File.Info($"secret={secret}\r\n{JsonConvert.SerializeObject(settleBetReqq)}\r\n{JsonConvert.SerializeObject(rep)}", "Joker_SettleBet");
+            log2File.Info($"{JsonConvert.SerializeObject(settleBetReqq)}\r\n{JsonConvert.SerializeObject(rep)}", "Joker_SettleBet");
             return rep;
         }
 

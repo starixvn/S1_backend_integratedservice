@@ -133,6 +133,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 settledDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+                if ((settledDataRNG_GPI.jackpot_win ?? 0m) != 0m)
+                {
+                    settledDataRNG_GPI.jackpot_win *= tpCurrency.ExchangeRate;
+                }
             }
 
             var result = settledService.SettledRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);

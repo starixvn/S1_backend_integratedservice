@@ -129,7 +129,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
-            log2File.Info(bodyText, "DG_transfer");
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
@@ -240,10 +239,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.SystemError;
                     }
                 }
+
+                log2File.Info($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}", "DG_transfer");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                //logger.LogError(ex.Message);
+                transferRep.codeId = (int)Error.SystemError;
+                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}\r\n{ex}", "DG_transfer");
             }
 
             return transferRep;
@@ -256,7 +259,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
-            log2File.Info(bodyText, "DG_inform");
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
@@ -353,10 +355,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.SystemError;
                     }
                 }
+
+                log2File.Info($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}", "DG_inform");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                //logger.LogError(ex.Message);
+                transferRep.codeId = (int)Error.SystemError;
+                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}\r\n{ex}", "DG_inform");
             }
 
             return transferRep;
