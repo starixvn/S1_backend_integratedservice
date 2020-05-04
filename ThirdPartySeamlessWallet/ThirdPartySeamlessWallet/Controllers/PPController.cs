@@ -320,8 +320,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (hashCheck(resultReqq, secureKey))
                 {
-                    //string Content = @"{""amount"":""9.0"",""gameId"":""vs7776aztec"",""hash"":""672028d15e2191c3050000f0f8a6b62a"",""ipAddress"":""218.211.34.185"",""language"":""zh"",""platform"":""WEB"",""providerId"":""PragmaticPlay"",""reference"":""5e9ed802005c8e0008a65f62"",""roundDetails"":""spin"",""roundId"":""2360710356"",""timestamp"":""1587468290666"",""userId"":""DNova88_157""}";
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(resultReqq));
+
+                    //if (environment.IsDevelopment())
+                    //{
+                    //    string Content = @"{""amount"":""32.2"",""gameId"":""vs25vegas"",""hash"":""a9e24484698072525090d72b354da64c"",""platform"":""WEB"",""providerId"":""PragmaticPlay"",""reference"":""5eaf966624aa9a0008024348"",""roundDetails"":""spin"",""roundId"":""2360806877"",""timestamp"":""1588565606805"",""userId"":""DNova88_196""}";
+                    //    betReq = JsonConvert.DeserializeObject<BetReq>(Content);
+                    //}
+
                     resultResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Payout;
                     if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
