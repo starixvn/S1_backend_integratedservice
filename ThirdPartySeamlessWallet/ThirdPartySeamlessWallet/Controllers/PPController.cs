@@ -219,10 +219,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (hashCheck(betReqq, secureKey))
                 {
-                    //string Content = @"{""amount"":""9.0"",""gameId"":""vs7776aztec"",""hash"":""672028d15e2191c3050000f0f8a6b62a"",""ipAddress"":""218.211.34.185"",""language"":""zh"",""platform"":""WEB"",""providerId"":""PragmaticPlay"",""reference"":""5e9ed802005c8e0008a65f62"",""roundDetails"":""spin"",""roundId"":""2360710356"",""timestamp"":""1587468290666"",""userId"":""DNova88_157""}";
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(betReqq));
                     betResp.transactionId = betReq.reference;
-                    //BetReq betReq = JsonConvert.DeserializeObject<BetReq>(Content);
+
+                    //if (environment.IsDevelopment())
+                    //{
+                    //    string Content = @"{""amount"":""2.7"",""gameId"":""vs10firestrike"",""hash"":""519262f598f0dda6f877fdbc1450450e"",""ipAddress"":""182.1.200.141"",""platform"":""MOBILE"",""providerId"":""PragmaticPlay"",""reference"":""5eafadcc005c8e0008993879"",""roundDetails"":""spin"",""roundId"":""6020844666402"",""timestamp"":""1588571596318"",""userId"":""DNova88_7""}";
+                    //    betReq = JsonConvert.DeserializeObject<BetReq>(Content);
+                    //}
 
                     var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, betReq.userId);
                     if (tpCheck == null)
@@ -270,8 +274,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                             betResp.cash = tpCustBalance.Balance;
                             betResp.currency = tpCustBalance.TpCurrencyId;
                             betResp.bonus = 0;
-                            betResp.error = 0;
-                            betResp.description = "Success.";
+                            betResp.error = 100;
+                            betResp.description = "Internal server error.";
                         }
                     }
                 }
