@@ -368,6 +368,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         rep.Status = 0;
                         rep.Message = "Transaction can not be found";
                     }
+                    else if (result == -2)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                        rep.Balance = tpCustBalance.Balance;
+                        rep.Status = 0;
+                        rep.Message = "Success";
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -511,6 +518,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (result == -1)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    rep.Balance = tpCustBalance.Balance;
+                    rep.Status = 0;
+                    rep.Message = "Success";
+                }
+                else if (result == -2)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";
                 }
@@ -583,6 +598,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (result == -1)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    rep.Balance = tpCustBalance.Balance;
+                    rep.Status = 0;
+                    rep.Message = "Success";
+                }
+                else if (result == -2)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";
                 }
