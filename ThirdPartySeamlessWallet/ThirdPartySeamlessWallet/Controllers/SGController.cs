@@ -264,12 +264,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                             transferResp.code = 50110;
                             transferResp.msg = "Insufficient Balance";
                         }
-                        else
+                        else/*Can't Insert Bet*/
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
                             transferResp.balance = tpCustBalance.Balance;
-                            transferResp.code = 0;
-                            transferResp.msg = "Success";
+                            transferResp.code = 1;
+                            transferResp.msg = "System Error";
                         }
                     }
                     catch(Exception ex)
