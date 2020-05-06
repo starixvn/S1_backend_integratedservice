@@ -195,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betRecordInfo.TpId = (int)Tp.DG;
                 betRecordInfo.Stake = bettingDataLC_DG.Amount;
                 betRecordInfo.TransId = bettingDataLC_DG.TransId;
-                betRecordInfo.GameType = GameType.SA_LiveCasino;
+                betRecordInfo.GameType = GameType.DG_LiveCasino;
                 betRecordInfo.TpUserName = bettingDataLC_DG.Username;
 
                 result = CancelBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
