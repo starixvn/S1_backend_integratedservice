@@ -132,15 +132,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string org { get; set; }
             public string sessiontoken { get; set; }
             public string service { get; set; }
-            public string description { get; set; }
-            public string cat1 { get; set; }
-            public string cat2 { get; set; }
-            public string cat3 { get; set; }
-            public string cat4 { get; set; }
-            public string cat5 { get; set; }
-            public string tag1 { get; set; }
-            public string tag2 { get; set; }
-            public string tag3 { get; set; }
             public string lang { get; set; }
             public int version { get; set; }
         }

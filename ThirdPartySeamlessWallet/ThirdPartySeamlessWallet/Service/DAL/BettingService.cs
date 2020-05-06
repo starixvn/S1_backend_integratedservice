@@ -275,18 +275,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(bettingDataRNG_YGG);
             p.Add("tickets", (int?)null);
             p.Add("bonusprize", (decimal?)null);
+            p.Add("type", (int)BettransType.Bet);
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0 && bettingDataRNG_YGG.amount != 0)
+            try
             {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_YGG.amount, (int)Tp.YGG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_YGG.amount).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
+                result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && bettingDataRNG_YGG.amount < 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_YGG.amount, (int)Tp.YGG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_YGG.amount).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
             }
-
-            if (result > 0)
+            catch (MySqlException mySqlEx)
             {
-                trans.Commit();
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
             }
 
             return result;

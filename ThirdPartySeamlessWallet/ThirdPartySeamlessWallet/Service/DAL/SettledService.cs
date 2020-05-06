@@ -341,49 +341,64 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             settledDataRNG_YGG.TicketStatus = settledDataRNG_YGG.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
             var p = new DynamicParameters(settledDataRNG_YGG);
+            p.Add("type", (int)BettransType.Payout);
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
+            try
             {
-                if (settledDataRNG_YGG.amount > 0)
-                {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_YGG.amount, (int)Tp.YGG, TransType.Settled, $"Payout: {Math.Abs(settledDataRNG_YGG.amount).ToString("#,##0.##")}", settledDataRNG_YGG.subreference, out afterAmount, conn, trans);
-                }
-
-                if (settledDataRNG_YGG.bonusprize > 0)
-                {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_YGG.bonusprize, (int)Tp.YGG, TransType.Settled, $"Bonus: {Math.Abs(settledDataRNG_YGG.bonusprize).ToString("#,##0.##")}", settledDataRNG_YGG.subreference, out afterAmount, conn, trans);
-                }
+                result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
-                    decimal Stake = p.Get<decimal>("Stake");
-                    decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    if (settledDataRNG_YGG.amount > 0)
                     {
-                        TpId = (int)Tp.YGG,
-                        Stake = Stake,
-                        WinlostAmount = WinLostAmount,
-                        TransId = settledDataRNG_YGG.reference,
-                        GameType = GameType.YGG_RNG,
-                        TpUserName = settledDataRNG_YGG.playerid,
-                        SettledTime = 0,
-                        SettlementType = SettlementType.SettledForValidNotRollover
-                    };
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_YGG.amount, (int)Tp.YGG, TransType.Settled, $"Payout: {Math.Abs(settledDataRNG_YGG.amount).ToString("#,##0.##")}", settledDataRNG_YGG.subreference, out afterAmount, conn, trans);
+                    }
 
-                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                    if (settledDataRNG_YGG.bonusprize > 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_YGG.bonusprize, (int)Tp.YGG, TransType.Settled, $"Bonus: {Math.Abs(settledDataRNG_YGG.bonusprize).ToString("#,##0.##")}", settledDataRNG_YGG.subreference, out afterAmount, conn, trans);
+                    }
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        decimal Stake = p.Get<decimal>("Stake");
+                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                        BetRecordInfo betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp.YGG,
+                            Stake = Stake,
+                            WinlostAmount = WinLostAmount,
+                            TransId = settledDataRNG_YGG.reference,
+                            GameType = GameType.YGG_RNG,
+                            TpUserName = settledDataRNG_YGG.playerid,
+                            SettledTime = 0,
+                            SettlementType = SettlementType.SettledForValidNotRollover
+                        };
+
+                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                 }
+                else
+                {
+                    result = -1;
+                }
             }
-            else
+            catch (MySqlException mySqlEx)
             {
-                result = -1;
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
             }
 
             return result;
