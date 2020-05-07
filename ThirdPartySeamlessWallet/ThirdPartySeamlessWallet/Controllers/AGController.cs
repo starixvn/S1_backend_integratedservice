@@ -26,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tools tools;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
+        private readonly Log2File log2File;
         private readonly Dictionary<string, string> BetTransactionCode = new Dictionary<string, string>()
         {
             {"SWB", null},
@@ -41,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         };
 
 
-        public AGController(ILogger<SAController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL)
+        public AGController(ILogger<SAController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.logger = logger;
@@ -49,6 +50,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.tools = tools;
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
+            this.log2File = log2File;
         }
 
         public class TransferResponse
@@ -202,12 +204,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Enum.TryParse(resp.ResponseCode, out error);
                     Response.StatusCode = (int)error;
                 }
+
+                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", "AG_PostTransfer");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                //logger.LogError(ex.Message);
                 resp.ResponseCode = Error.ERROR.ToString();
                 Response.StatusCode = (int)Error.ERROR;
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "AG_PostTransfer");
             }
 
             //logger.LogCritical(JsonConvert.SerializeObject(resp));
