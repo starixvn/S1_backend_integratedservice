@@ -189,6 +189,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             DebitResp debitResp = new DebitResp();
             debitResp.Error_code = -1;
+            debitResp.Error_msg = "Unknown error";
 
             var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, debitReq.cust_id);
             if (tpCheck == null)
@@ -203,32 +204,42 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                if (bettingBLL.PlaceBetRNG_GPI(debitReq, out decimal tpAffterAmount, out string TransId) > 0)
+                try
                 {
-                    debitResp.Error_code = 0;
-                    if (debitReq.amount == 0)
+                    if (bettingBLL.PlaceBetRNG_GPI(debitReq, out decimal tpAffterAmount, out string TransId) > 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, debitReq.cust_id);
-                        debitResp.After = tpCustBalance.Balance;
-                        debitResp.Before = debitResp.After;
+                        debitResp.Error_code = 0;
+                        debitResp.Error_msg = "No errors";
+                        if (debitReq.amount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, debitReq.cust_id);
+                            debitResp.After = tpCustBalance.Balance;
+                            debitResp.Before = debitResp.After;
+                        }
+                        else
+                        {
+                            debitResp.After = tpAffterAmount;
+                            debitResp.Before = tpAffterAmount - debitReq.amount;
+                        }
+                        debitResp.Exchange_rate = 1;
+                        debitResp.Trx_id = TransId;
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        debitResp.Error_code = -4;
+                        debitResp.Error_msg = "Insufficient balance";
                     }
                     else
                     {
-                        debitResp.After = tpAffterAmount;
-                        debitResp.Before = tpAffterAmount - debitReq.amount;
+                        debitResp.Error_code = 1;
+                        debitResp.Error_msg = "Transaction already exists";
                     }
-                    debitResp.Exchange_rate = 1;
-                    debitResp.Trx_id = TransId;
                 }
-                else if (tpAffterAmount < 0)
+                catch(Exception ex)
                 {
-                    debitResp.Error_code = -4;
-                    debitResp.Error_msg = "Insufficient balance";
-                }
-                else
-                {
-                    debitResp.Error_code = 1;
-                    debitResp.Error_msg = "Transaction already exists";
+                    debitResp.Error_code = -1;
+                    debitResp.Error_msg = "Unknown error";
+                    log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}\r\n{ex}", "GPI_debit");
                 }
             }
 
@@ -269,38 +280,47 @@ namespace ThirdPartySeamlessWallet.Controllers
             creditResp.Exchange_rate = 1;
             creditResp.Error_code = -1;
             //CreditReq creditReq = JsonConvert.DeserializeObject<CreditReq>(@" {""merch_id"":""NVCASH"",""merch_pwd"":""D9988E76-BFC9-42D8-91AC-26DD98B624C9"",""cust_id"":""DNova88_9"",""currency"":""VND"",""amount"":0.0,""trx_id"":""5392eb41-2f83-4395-aea8-2fa85e93e0ae"",""Operator"":null,""game_id"":""200018"",""round_id"":""114165222"",""bundle_id"":null,""jackpot_win"":0.0,""platform"":""1"",""rake"":null,""rakedhands"":null}");
-            logger.LogCritical(JsonConvert.SerializeObject(creditReq));
-            int result = settledBLL.SettledRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
-
-            if (result > 0)
+            //logger.LogCritical(JsonConvert.SerializeObject(creditReq));
+            try
             {
-                creditResp.Trx_id = TransId;
-                if (creditReq.amount > 0)
+                int result = settledBLL.SettledRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
+
+                if (result > 0)
                 {
-                    creditResp.After = tpAffterAmount;
-                    creditResp.Before = tpAffterAmount - creditReq.amount;
-                    creditResp.Error_code = 0;
+                    creditResp.Trx_id = TransId;
+                    if (creditReq.amount > 0)
+                    {
+                        creditResp.After = tpAffterAmount;
+                        creditResp.Before = tpAffterAmount - creditReq.amount;
+                        creditResp.Error_code = 0;
+                        creditResp.Error_msg = "No errors";
+                    }
+                    else if (creditReq.amount == 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
+                        creditResp.After = tpCustBalance.Balance;
+                        creditResp.Before = tpCustBalance.Balance;
+                        creditResp.Error_code = 0;
+                        creditResp.Error_msg = "No errors";
+                    }
                 }
-                else if (creditReq.amount == 0)
+                else if (result == -1)
                 {
-                    creditResp.Error_code = 0;
                     var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
                     creditResp.After = tpCustBalance.Balance;
                     creditResp.Before = tpCustBalance.Balance;
                     creditResp.Error_code = 0;
+                    creditResp.Error_msg = "No errors";
                 }
             }
-            else if (result == -1)
+            catch (Exception ex)
             {
-                creditResp.Error_code = 0;
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
-                creditResp.After = tpCustBalance.Balance;
-                creditResp.Before = tpCustBalance.Balance;
-                creditResp.Error_code = 0;
+                creditResp.Error_code = -1;
+                creditResp.Error_msg = "Unknown error";
+                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", "GPI_credit");
             }
-
             string creditLog = $"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}";
-            log2File.Info(creditLog, "GPI_debit");
+            log2File.Info(creditLog, "GPI_credit");
             return creditResp;
         }
         public class EndgameReq : EndgameRNG_GPI
@@ -326,7 +346,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             EndgameResp endgameResp = new EndgameResp();
             endgameResp.Error_code = "0";
             endgameResp.Error_msg = "No errors";
-            logger.LogCritical(JsonConvert.SerializeObject(endgameReq));
+
+            string endgameLog = $"{JsonConvert.SerializeObject(endgameReq)}\r\n{JsonConvert.SerializeObject(endgameResp)}";
+            log2File.Info(endgameLog, "GPI_endgame");
             return endgameResp;
         }
     }

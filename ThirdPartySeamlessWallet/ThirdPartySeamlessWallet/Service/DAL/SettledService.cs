@@ -80,42 +80,62 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var p = new DynamicParameters(settledDataRNG_GPI);
             p.Add("jackpot_contribution", 0);
+            p.Add("type", (int)BettransType.Payout);
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
+            try
             {
-                if (settledDataRNG_GPI.amount > 0)
-                {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_GPI.amount, (int)Tp.GPI, TransType.Settled, $"Payout: {Math.Abs(settledDataRNG_GPI.amount).ToString("#,##0.##")}", settledDataRNG_GPI.trx_id, out afterAmount, conn, trans);
-                }
+                result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
-                    decimal Stake = p.Get<decimal>("Stake");
-                    decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                    BetRecordInfo betRecordInfo = new BetRecordInfo();
-                    betRecordInfo.TpId = (int)Tp.GPI;
-                    betRecordInfo.Stake = Stake;
-                    betRecordInfo.WinlostAmount = WinLostAmount;
-                    betRecordInfo.TransId = settledDataRNG_GPI.round_id;
-                    betRecordInfo.GameType = GameType.GPI_RNG;
-                    betRecordInfo.TpUserName = settledDataRNG_GPI.cust_id;
-                    betRecordInfo.SettledTime = 0;
-                    betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                    if (settledDataRNG_GPI.amount > 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_GPI.amount, (int)Tp.GPI, TransType.Settled, $"Payout: {Math.Abs(settledDataRNG_GPI.amount).ToString("#,##0.##")}", settledDataRNG_GPI.trx_id, out afterAmount, conn, trans);
+                    }
 
-                    result = SettleTicket(tpCustInfo, betRecordInfo, settledDataRNG_GPI.amount, out _, conn, trans, false/*Don't need Payout*/);
+                    if ((settledDataRNG_GPI.jackpot_win ?? 0m) > 0m)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_GPI.jackpot_win ?? 0, (int)Tp.GPI, TransType.Settled, $"Jackpot: {Math.Abs(settledDataRNG_GPI.jackpot_win ?? 0).ToString("#,##0.##")}", settledDataRNG_GPI.trx_id, out afterAmount, conn, trans);
+                    }
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        decimal Stake = p.Get<decimal>("Stake");
+                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                        BetRecordInfo betRecordInfo = new BetRecordInfo();
+                        betRecordInfo.TpId = (int)Tp.GPI;
+                        betRecordInfo.Stake = Stake;
+                        betRecordInfo.WinlostAmount = WinLostAmount;
+                        betRecordInfo.TransId = settledDataRNG_GPI.round_id;
+                        betRecordInfo.GameType = GameType.GPI_RNG;
+                        betRecordInfo.TpUserName = settledDataRNG_GPI.cust_id;
+                        betRecordInfo.SettledTime = 0;
+                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
+                        result = SettleTicket(tpCustInfo, betRecordInfo, settledDataRNG_GPI.amount, out _, conn, trans, false/*Don't need Payout*/);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                 }
+                else
+                {
+                    result = -1;
+                }
             }
-            else
+            catch (MySqlException mySqlEx)
             {
-                result = -1;
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
             }
 
             return result;

@@ -219,6 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_GPI.amount *= -1;
             var p = new DynamicParameters(bettingDataRNG_GPI);
             p.Add("jackpot_win", 0);
+            p.Add("type", (int)BettransType.Bet);
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
