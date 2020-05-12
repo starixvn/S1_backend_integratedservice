@@ -100,56 +100,74 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (string.Equals(reqAction.action, "settleFishBet", StringComparison.OrdinalIgnoreCase))
             {
                 SettleFishBetReq settleFishBetReq = JsonConvert.DeserializeObject<SettleFishBetReq>(req.message);
-                int result = settledBLL.SettledFish_YL(settleFishBetReq, out decimal tpAffterAmount);
+                try
+                {
+                    int result = settledBLL.SettledFish_YL(settleFishBetReq, out decimal tpAffterAmount);
 
-                if (result > 0)
-                {
-                    resp.balance = tpAffterAmount.ToString("0.00");
-                    resp.status = "200";
+                    if (result > 0)
+                    {
+                        resp.balance = tpAffterAmount.ToString("0.00");
+                        resp.status = "200";
+                    }
+                    else if (result == -1)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        resp.status = "200";
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        resp.status = "500";
+                        resp.msg = "code:9001";
+                    }
+
+                    string settleFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
+                    log2File.Info(settleFishBetLog, "YL_SettleFishBet");
                 }
-                else if (result == -1)
+                catch (Exception ex)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                    resp.balance = tpCustBalance.Balance.ToString("0.00");
-                    resp.status = "200";
-                }
-                else if (tpAffterAmount < 0)
-                {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                    resp.balance = tpCustBalance.Balance.ToString("0.00");
                     resp.status = "500";
-                    resp.msg = "code:9001";
+                    resp.msg = "system busy";
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "YL_SettleFishBet");
                 }
-
-                string settleFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-                log2File.Info(settleFishBetLog, "YL_SettleFishBet");
             }
             else if (string.Equals(reqAction.action, "voidFishBet", StringComparison.OrdinalIgnoreCase))
             {
                 VoidFishBetReq voidFishBetReq = JsonConvert.DeserializeObject<VoidFishBetReq>(req.message);
-                int result = settledBLL.RefundFish_YL(voidFishBetReq, out decimal tpAffterAmount);
+                try
+                {
+                    int result = settledBLL.RefundFish_YL(voidFishBetReq, out decimal tpAffterAmount);
 
-                if (result > 0)
-                {
-                    resp.balance = tpAffterAmount.ToString("0.00");
-                    resp.status = "200";
+                    if (result > 0)
+                    {
+                        resp.balance = tpAffterAmount.ToString("0.00");
+                        resp.status = "200";
+                    }
+                    else if (result == -1)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        resp.status = "200";
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        resp.status = "500";
+                        resp.msg = "system busy";
+                    }
+
+                    string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
+                    log2File.Info(voidFishBetLog, "YL_VoidFishBet");
                 }
-                else if (result == -1)
+                catch (Exception ex)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                    resp.balance = tpCustBalance.Balance.ToString("0.00");
-                    resp.status = "200";
-                }
-                else if (tpAffterAmount < 0)
-                {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                    resp.balance = tpCustBalance.Balance.ToString("0.00");
                     resp.status = "500";
                     resp.msg = "system busy";
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "YL_VoidFishBet");
                 }
-
-                string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-                log2File.Info(voidFishBetLog, "YL_VoidFishBet");
             }
 
             logger.LogCritical(JsonConvert.SerializeObject(resp));
