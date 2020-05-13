@@ -38,6 +38,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             var result = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
             var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
             p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
@@ -45,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_AG_Ins", p, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_AG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
                 decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
 
@@ -66,7 +68,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                 }
 
-                result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
+                result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
             }
             catch (MySqlException mySqlEx)
             {
