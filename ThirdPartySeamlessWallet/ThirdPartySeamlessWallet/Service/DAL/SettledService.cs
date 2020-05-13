@@ -42,28 +42,43 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
             p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransLC_AG_Ins", p, commandType: CommandType.StoredProcedure);
-            decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
-            decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
 
-            decimal backAmount = OutValidBetAmount + OutNetAmount;
-
-            BetRecordInfo betRecordInfo = new BetRecordInfo();
-            betRecordInfo.TpId = (int)Tp.AG;
-            betRecordInfo.Stake = OutValidBetAmount;
-            betRecordInfo.WinlostAmount = backAmount;
-            betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
-            betRecordInfo.GameType = GameType.AG_LiveCasino;
-            betRecordInfo.TpUserName = username;
-            betRecordInfo.SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4);
-            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-
-            if (backAmount == 0)
+            try
             {
-                betRecordInfo.TicketStatus = TicketStatus.UnSettled;
-            }
+                result = conn.Execute("Service_BettransLC_AG_Ins", p, commandType: CommandType.StoredProcedure);
+                decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
+                decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
 
-            result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
+                decimal backAmount = OutValidBetAmount + OutNetAmount;
+
+                BetRecordInfo betRecordInfo = new BetRecordInfo();
+                betRecordInfo.TpId = (int)Tp.AG;
+                betRecordInfo.Stake = OutValidBetAmount;
+                betRecordInfo.WinlostAmount = backAmount;
+                betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
+                betRecordInfo.GameType = GameType.AG_LiveCasino;
+                betRecordInfo.TpUserName = username;
+                betRecordInfo.SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4);
+                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
+                if (backAmount == 0)
+                {
+                    betRecordInfo.TicketStatus = TicketStatus.UnSettled;
+                }
+
+                result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
 
             return result;
         }
