@@ -21,6 +21,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
 
+        public enum TransferType
+        {
+            Bet = 10,
+            Cancel = 11,
+            Settle = 20,
+            ReSettle = 21,
+        }
+
         public AllbetController(ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, Log2File log2File)
         {
             this.log2File = log2File;
@@ -38,7 +46,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public class TransferReq
         {
             [JsonProperty("amount")]
-            public long Amount { get; set; }
+            public decimal Amount { get; set; }
 
             [JsonProperty("client")]
             public string Client { get; set; }
@@ -47,22 +55,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string Currency { get; set; }
 
             [JsonProperty("details")]
-            public List<Detail> Details { get; set; }
+            public IEnumerable<Detail> Details { get; set; }
 
             [JsonProperty("originalTranId")]
-            public double OriginalTranId { get; set; }
+            public long OriginalTranId { get; set; }
 
             [JsonProperty("tranId")]
-            public double TranId { get; set; }
+            public long TranId { get; set; }
 
             [JsonProperty("transferType")]
-            public long TransferType { get; set; }
+            public int TransferType { get; set; }
         }
 
         public class Detail
         {
             [JsonProperty("amount")]
-            public long Amount { get; set; }
+            public decimal Amount { get; set; }
 
             [JsonProperty("betNum")]
             public long BetNum { get; set; }
@@ -80,6 +88,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             resp.message = "server error";
 
             var transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
+
+            if (transferReq.TransferType == (int)TransferType.Bet)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferReq.Client);
+                resp.balance = tpCustBalance.Balance;
+                resp.error_code = "0";
+                resp.message = "success";
+            }
 
             log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Transfer");
             return resp;

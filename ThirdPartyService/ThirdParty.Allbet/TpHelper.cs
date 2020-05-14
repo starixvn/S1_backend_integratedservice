@@ -44,7 +44,8 @@ namespace ThirdParty.Allbet
         {
             //throw new NotImplementedException();
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception();
+            string agentKey = $"{tpCustInfo.TpCurrencyId}Agent";
+            string Agent = inputs.ContainsKey(agentKey) && !string.IsNullOrEmpty(inputs[agentKey]) ? inputs[agentKey] : throw new Exception("Can't get agent.");
             string PropertyId = inputs.ContainsKey("PropertyId") && !string.IsNullOrEmpty(inputs["PropertyId"]) ? inputs["PropertyId"] : throw new Exception();
             string DesKey = inputs.ContainsKey("DesKey") && !string.IsNullOrEmpty(inputs["DesKey"]) ? inputs["DesKey"] : throw new Exception();
             string MD5Key = inputs.ContainsKey("MD5Key") && !string.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
