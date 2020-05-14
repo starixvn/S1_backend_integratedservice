@@ -61,7 +61,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         YL = 7,
         YGG = 8,
         Joker = 9,
-        SG = 10
+        SG = 10,
+        Allbet = 12
     }
     public enum TransferType : int
     {
