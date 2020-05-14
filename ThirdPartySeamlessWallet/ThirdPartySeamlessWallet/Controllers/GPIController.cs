@@ -235,7 +235,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         debitResp.Error_msg = "Transaction already exists";
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     debitResp.Error_code = -1;
                     debitResp.Error_msg = "Unknown error";
@@ -281,30 +281,20 @@ namespace ThirdPartySeamlessWallet.Controllers
             creditResp.Error_code = -1;
             //CreditReq creditReq = JsonConvert.DeserializeObject<CreditReq>(@" {""merch_id"":""NVCASH"",""merch_pwd"":""D9988E76-BFC9-42D8-91AC-26DD98B624C9"",""cust_id"":""DNova88_9"",""currency"":""VND"",""amount"":0.0,""trx_id"":""5392eb41-2f83-4395-aea8-2fa85e93e0ae"",""Operator"":null,""game_id"":""200018"",""round_id"":""114165222"",""bundle_id"":null,""jackpot_win"":0.0,""platform"":""1"",""rake"":null,""rakedhands"":null}");
             //logger.LogCritical(JsonConvert.SerializeObject(creditReq));
-            try
-            {
-                int result = settledBLL.SettledRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
 
-                if (result > 0)
+            int result = settledBLL.SettledRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
+
+            if (result > 0)
+            {
+                creditResp.Trx_id = TransId;
+                if (creditReq.amount > 0)
                 {
-                    creditResp.Trx_id = TransId;
-                    if (creditReq.amount > 0)
-                    {
-                        creditResp.After = tpAffterAmount;
-                        creditResp.Before = tpAffterAmount - creditReq.amount;
-                        creditResp.Error_code = 0;
-                        creditResp.Error_msg = "No errors";
-                    }
-                    else if (creditReq.amount == 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
-                        creditResp.After = tpCustBalance.Balance;
-                        creditResp.Before = tpCustBalance.Balance;
-                        creditResp.Error_code = 0;
-                        creditResp.Error_msg = "No errors";
-                    }
+                    creditResp.After = tpAffterAmount;
+                    creditResp.Before = tpAffterAmount - creditReq.amount;
+                    creditResp.Error_code = 0;
+                    creditResp.Error_msg = "No errors";
                 }
-                else if (result == -1)
+                else if (creditReq.amount == 0)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
                     creditResp.After = tpCustBalance.Balance;
@@ -313,12 +303,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                     creditResp.Error_msg = "No errors";
                 }
             }
-            catch (Exception ex)
+            else if (result == -1)
             {
-                creditResp.Error_code = -1;
-                creditResp.Error_msg = "Unknown error";
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", "GPI_credit");
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
+                creditResp.After = tpCustBalance.Balance;
+                creditResp.Before = tpCustBalance.Balance;
+                creditResp.Error_code = 0;
+                creditResp.Error_msg = "No errors";
             }
+
+
             string creditLog = $"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}";
             log2File.Info(creditLog, "GPI_credit");
             return creditResp;
