@@ -235,7 +235,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         debitResp.Error_msg = "Transaction already exists";
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     debitResp.Error_code = -1;
                     debitResp.Error_msg = "Unknown error";
@@ -318,7 +318,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 creditResp.Error_code = -1;
                 creditResp.Error_msg = "Unknown error";
                 log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", "GPI_credit");
+                throw ex;
             }
+
             string creditLog = $"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}";
             log2File.Info(creditLog, "GPI_credit");
             return creditResp;
