@@ -795,6 +795,156 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public int SettledLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            try
+            {
+                result = conn.Execute("Service_BettransLC_Allbet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal Stake = p.Get<decimal>("Stake");
+
+                    if (bettingDataLC_Allbet.Amount >= 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_Allbet.Amount + Stake, (int)Tp.Allbet, TransType.Settled, $"Settle: {Math.Abs(bettingDataLC_Allbet.Amount + Stake).ToString("#,##0.##")}", bettingDataLC_Allbet.TranId.ToString(), out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        BetRecordInfo betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp.Allbet,
+                            Stake = Stake,
+                            WinlostAmount = bettingDataLC_Allbet.Amount,
+                            TransId = bettingDataLC_Allbet.Details[0].BetNum.ToString(),
+                            GameType = GameType.Allbet_LiveCasino,
+                            TpUserName = bettingDataLC_Allbet.Client,
+                            SettledTime = 0,
+                            SettlementType = SettlementType.SettledForValidNotRollover
+                        };
+
+                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int ReSettledLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            try
+            {
+                result = conn.Execute("Service_BettransLC_Allbet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal Stake = p.Get<decimal>("Stake");
+                    decimal? WinLostAmount = p.Get<decimal?>("WinLostAmount");
+
+                    if (WinLostAmount == null || bettingDataLC_Allbet.Amount != WinLostAmount)
+                    {
+                        decimal backAmount = 0;
+                        if (WinLostAmount == null)
+                        {
+                            backAmount = bettingDataLC_Allbet.Amount + Stake;
+                        }
+                        else
+                        {
+                            backAmount = bettingDataLC_Allbet.Amount - (WinLostAmount ?? 0);
+                        }
+
+                        if (backAmount != 0)
+                        {
+                            result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, backAmount, (int)Tp.Allbet, TransType.Settled, $"ReSettle: {backAmount.ToString("#,##0.##")}", bettingDataLC_Allbet.TranId.ToString(), out afterAmount, conn, trans);
+                        }
+
+                        if (result > 0)
+                        {
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = (int)Tp.Allbet,
+                                Stake = Stake,
+                                WinlostAmount = bettingDataLC_Allbet.Amount,
+                                TransId = bettingDataLC_Allbet.Details[0].BetNum.ToString(),
+                                GameType = GameType.Allbet_LiveCasino,
+                                TpUserName = bettingDataLC_Allbet.Client,
+                                SettledTime = 0,
+                                SettlementType = SettlementType.SettledForValidNotRollover
+                            };
+
+                            result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                            if (result > 0)
+                            {
+                                trans.Commit();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        trans.Commit();
+                        result = -1;
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

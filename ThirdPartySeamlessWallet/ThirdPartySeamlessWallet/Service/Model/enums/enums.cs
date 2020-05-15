@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Saba_VirtualSport = 3,
         Saba_RNG = 4,
         Keno_Lottery = 5,
-        Allbet = 6,
+        Allbet_LiveCasino = 6,
         PP_RNG = 7,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
