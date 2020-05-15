@@ -69,11 +69,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
-
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
+                trans.Commit();
             }
             catch (MySqlException mySqlEx)
             {
