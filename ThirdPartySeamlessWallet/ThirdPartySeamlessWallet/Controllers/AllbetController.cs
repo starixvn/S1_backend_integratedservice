@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -66,43 +67,327 @@ namespace ThirdPartySeamlessWallet.Controllers
             resp.error_code = "50000";
             resp.message = "server error";
 
-            var transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
+            TransferReq transferReq = null;
+            try
+            {
+                transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
+            }
+            catch (Exception ex)
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer");
+                return resp;
+            }
             TransferType transferType = TransferType.Bet;
             Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
+
+            Request.Headers.TryGetValue("Authorization", out var authorization);
+            Request.Headers.TryGetValue("Accept", out var accept);
+            Request.Headers.TryGetValue("Content-MD5", out var md5);
+            Request.Headers.TryGetValue("Content-Type", out var cType);
+            Request.Headers.TryGetValue("Date", out var dtDate);
+            //var absoluteUri = $"{Request.Scheme}://{Request.Host.ToUriComponent()}{Request.PathBase.ToUriComponent()}{Request.Path.ToUriComponent()}{Request.QueryString.ToUriComponent()}";
+            string propertyId = "";
+            string sign = "";
+            string sAuthorization = authorization.ToString();
+            if (!string.IsNullOrEmpty(sAuthorization))
+            {
+                propertyId = sAuthorization.Substring(3, sAuthorization.IndexOf(":") - 3);
+                sign = sAuthorization.Substring(sAuthorization.IndexOf(":") + 1);
+            }
+
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+
+            if (propertyId != thirdPartySetting.TpSetting["PropertyId"])
+            {
+                resp.error_code = "10000";
+                resp.message = "invalid propertyId";
+                log2File.Error($"{propertyId} != {thirdPartySetting.TpSetting["PropertyId"]}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
+
+            string signString = $"POST\n{md5}\n{cType}\n{dtDate}\n/transfer";
+
+            //log2File.Info($"{Sign(signString, thirdPartySetting.TpSetting["SHA1key"])}\r\n{signString}\r\n{authorization}", $"{thisTp}_transfer_Sign");
+
+            if (Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) != sign)
+            {
+                resp.error_code = "10001";
+                resp.message = "invalid signature";
+                log2File.Error($"{sign} != {Sign(signString, thirdPartySetting.TpSetting["SHA1key"])}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
+
+            if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null || transferReq.Details.Any(bet => bet.BetNum <= 0))
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, transferReq.Client);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)thisTp, tpCustInfo.CurrencyId);
+
+            if (!(tpCurrency.TpCurrencyId.Equals(transferReq.Currency, StringComparison.OrdinalIgnoreCase) || (environment.IsDevelopment() && transferReq.Currency.Equals("CNY", StringComparison.OrdinalIgnoreCase))))
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
 
             try
             {
                 if (transferType == TransferType.Bet)
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferReq.Client);
-                    if (tpCheck == null)
+                    decimal amountSum = 0;
+                    bool valid = true;
+
+                    if (transferReq.Amount <= 0)
                     {
-                        resp.error_code = "10005";
-                        resp.message = "User is disable logons";
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        resp.error_code = "10005";
-                        resp.message = "User is disable logons";
+                        valid = false;
                     }
                     else
                     {
-                        if (bettingBLL.PlaceBetLC_Allbet(transferReq, out decimal tpAffterAmount) > 0)
+                        foreach (var betAmt in transferReq.Details)
                         {
-                            if (transferReq.Amount == 0)
+                            if (betAmt.Amount <= 0)
+                            {
+                                valid = false;
+                                break;
+                            }
+
+                            amountSum += betAmt.Amount;
+                        }
+
+                        if (amountSum != transferReq.Amount)
+                        {
+                            valid = false;
+                        }
+                    }
+
+                    if (valid)
+                    {
+                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferReq.Client);
+
+                        if (tpCheck == null)
+                        {
+                            resp.error_code = "10005";
+                            resp.message = "User is disable logons";
+                        }
+                        else if (tpCheck.Locked)
+                        {
+                            resp.error_code = "10005";
+                            resp.message = "User is disable logons";
+                        }
+                        else
+                        {
+                            int result = bettingBLL.PlaceBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                resp.balance = tpAffterAmount;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                            else if (tpAffterAmount < 0)
                             {
                                 var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
                                 resp.balance = tpCustBalance.Balance;
+                                resp.error_code = "10101";
+                                resp.message = "Credit is not enough.";
+                            }
+                            else if (result == -1)
+                            {
+                                resp.error_code = "10007";
+                                resp.message = "invalid status: transaction had already been cancelled/settled";
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferReq.Client);
-                                resp.balance = tpAffterAmount;
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                resp.balance = tpCustBalance.Balance;
+                                resp.error_code = "50000";
+                                resp.message = "server error";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        resp.error_code = "40000";
+                        resp.message = "invalid request parameter";
+                    }
+                }
+                else if (transferType == TransferType.Settle)
+                {
+                    decimal amountSum = 0;
+                    bool valid = true;
 
+                    if (transferReq.Details.Count > 1)
+                    {
+                        valid = false;
+                    }
+                    else
+                    {
+                        foreach (var betAmt in transferReq.Details)
+                        {
+                            amountSum += betAmt.Amount;
+                        }
+
+                        if (amountSum != transferReq.Amount)
+                        {
+                            valid = false;
+                        }
+                    }
+
+                    if (valid)
+                    {
+                        int result = settledBLL.SettledLC_Allbet(transferReq, out decimal tpAffterAmount);
+
+                        if (result > 0)
+                        {
+                            if (transferReq.Amount > 0)
+                            {
+                                resp.balance = tpAffterAmount;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                            else
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                resp.balance = tpCustBalance.Balance;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                        }
+                        else if (result == 0)
+                        {
+                            resp.error_code = "10006";
+                            resp.message = "transaction not existed";
+                        }
+                        else if (result == -1)
+                        {
+                            resp.error_code = "10007";
+                            resp.message = "invalid status: transaction had already been cancelled/settled";
+                        }
+                    }
+                    else
+                    {
+                        resp.error_code = "40000";
+                        resp.message = "invalid request parameter";
+                    }
+                }
+                else if (transferType == TransferType.Cancel)
+                {
+                    decimal amountSum = 0;
+                    bool valid = true;
+                    if (transferReq.OriginalTranId <= 0)
+                    {
+                        valid = false;
+                    }
+                    else if (transferReq.Amount <= 0)
+                    {
+                        valid = false;
+                    }
+                    else
+                    {
+                        foreach (var betAmt in transferReq.Details)
+                        {
+                            if (betAmt.Amount <= 0)
+                            {
+                                valid = false;
+                                break;
                             }
 
+                            amountSum += betAmt.Amount;
+                        }
+
+                        if (amountSum != transferReq.Amount)
+                        {
+                            valid = false;
+                        }
+                    }
+
+                    if (valid)
+                    {
+                        int result = bettingBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+
+                        if (result > 0)
+                        {
+                            if (transferReq.Amount > 0)
+                            {
+                                resp.balance = tpAffterAmount;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                            else
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                resp.balance = tpCustBalance.Balance;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                        }
+                        else if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                            resp.balance = tpCustBalance.Balance;
                             resp.error_code = "0";
                             resp.message = "success";
+                        }
+                        else if (result == -3)
+                        {
+                            resp.error_code = "10006";
+                            resp.message = "transaction not existed";
+                        }
+                    }
+                    else
+                    {
+                        resp.error_code = "40000";
+                        resp.message = "invalid request parameter";
+                    }
+                }
+                else if (transferType == TransferType.ReSettle)
+                {
+                    decimal amountSum = 0;
+                    bool valid = true;
+
+                    if (transferReq.Details.Count > 1)
+                    {
+                        valid = false;
+                    }
+                    else
+                    {
+                        foreach (var betAmt in transferReq.Details)
+                        {
+                            amountSum += betAmt.Amount;
+                        }
+
+                        if (amountSum != transferReq.Amount)
+                        {
+                            valid = false;
+                        }
+                    }
+
+                    if (valid)
+                    {
+                        int result = settledBLL.ReSettledLC_Allbet(transferReq, out decimal tpAffterAmount);
+
+                        if (result > 0)
+                        {
+                            if (transferReq.Amount > 0)
+                            {
+                                resp.balance = tpAffterAmount;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                            else
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                resp.balance = tpCustBalance.Balance;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
                         }
                         else if (tpAffterAmount < 0)
                         {
@@ -111,56 +396,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                             resp.error_code = "10101";
                             resp.message = "Credit is not enough.";
                         }
-                        else
+                        else if (result == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                            resp.balance = tpCustBalance.Balance;
-                            resp.error_code = "50000";
-                            resp.message = "server error";
+                            resp.error_code = "10006";
+                            resp.message = "transaction not existed";
                         }
-                    }
-                }
-                else if (transferType == TransferType.Settle)
-                {
-                    int result = settledBLL.SettledLC_Allbet(transferReq, out decimal tpAffterAmount);
-
-                    if (result > 0)
-                    {
-                        if (transferReq.Amount > 0)
+                        else if (result == -1)
                         {
-                            resp.balance = tpAffterAmount;
-                            resp.error_code = "0";
-                            resp.message = "success";
+                            resp.error_code = "10007";
+                            resp.message = "invalid status: transaction had already been cancelled/settled";
                         }
-                        else
-                        {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                            resp.balance = tpCustBalance.Balance;
-                            resp.error_code = "0";
-                            resp.message = "success";
-                        }
-                    }
-                    else if (result == -1)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                        resp.balance = tpCustBalance.Balance;
-                        resp.error_code = "0";
-                        resp.message = "success";
-                    }
-                }
-                else if (transferType == TransferType.Cancel)
-                {
-                    int result = bettingBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
-
-                    if (result > 0)
-                    {
-                        if (transferReq.Amount > 0)
-                        {
-                            resp.balance = tpAffterAmount;
-                            resp.error_code = "0";
-                            resp.message = "success";
-                        }
-                        else
+                        else if (result == -2)
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
                             resp.balance = tpCustBalance.Balance;
@@ -170,45 +416,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                        resp.balance = tpCustBalance.Balance;
-                        resp.error_code = "0";
-                        resp.message = "success";
-                    }
-                }
-                else if (transferType == TransferType.ReSettle)
-                {
-                    int result = settledBLL.ReSettledLC_Allbet(transferReq, out decimal tpAffterAmount);
-
-                    if (result > 0)
-                    {
-                        if (transferReq.Amount > 0)
-                        {
-                            resp.balance = tpAffterAmount;
-                            resp.error_code = "0";
-                            resp.message = "success";
-                        }
-                        else
-                        {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                            resp.balance = tpCustBalance.Balance;
-                            resp.error_code = "0";
-                            resp.message = "success";
-                        }
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                        resp.balance = tpCustBalance.Balance;
-                        resp.error_code = "10101";
-                        resp.message = "Credit is not enough.";
-                    }
-                    else if (result == -1)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
-                        resp.balance = tpCustBalance.Balance;
-                        resp.error_code = "0";
-                        resp.message = "success";
+                        resp.error_code = "40000";
+                        resp.message = "invalid request parameter";
                     }
                 }
             }
@@ -232,6 +441,40 @@ namespace ThirdPartySeamlessWallet.Controllers
             resp.error_code = "50000";
             resp.message = "server error";
 
+            Request.Headers.TryGetValue("Authorization", out var authorization);
+            Request.Headers.TryGetValue("Accept", out var accept);
+            Request.Headers.TryGetValue("Date", out var dtDate);
+
+            string propertyId = "";
+            string sign = "";
+            string sAuthorization = authorization.ToString();
+            if (!string.IsNullOrEmpty(sAuthorization))
+            {
+                propertyId = sAuthorization.Substring(3, sAuthorization.IndexOf(":") - 3);
+                sign = sAuthorization.Substring(sAuthorization.IndexOf(":") + 1);
+            }
+
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+
+            if (propertyId != thirdPartySetting.TpSetting["PropertyId"])
+            {
+                resp.error_code = "10000";
+                resp.message = "invalid propertyId";
+                log2File.Error($"{propertyId} != {thirdPartySetting.TpSetting["PropertyId"]}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Balance");
+                return resp;
+            }
+
+            string signString = $"GET\n\n\n{dtDate}\n/get_balance/{client}";
+            //log2File.Info($"{Sign(signString, thirdPartySetting.TpSetting["SHA1key"])}\r\n{signString}\r\n{authorization}", $"{thisTp}_get_balance_Sign");
+
+            if (Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) != sign)
+            {
+                resp.error_code = "10001";
+                resp.message = "invalid signature";
+                log2File.Error($"{sign} != {Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) }\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Balance");
+                return resp;
+            }
+
             try
             {
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, client);
@@ -247,7 +490,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client);
+                    //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client);
+                    TpCustBalance tpCustBalance = null;
+                    if (environment.IsDevelopment())
+                    {
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, client);
+                    }
+                    else
+                    {
+                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client);
+                    }
+
                     resp.balance = tpCustBalance.Balance;
                     resp.error_code = "0";
                     resp.message = "success";
@@ -263,6 +516,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             //log2File.Info($"{JsonConvert.SerializeObject(client)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Balance");
             return resp;
+        }
+        private string Sign(string EncryptText, string EncryptKey)
+        {
+            using HMACSHA1 myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
+            byte[] RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
+
+            return Convert.ToBase64String(RstRes);
         }
     }
 }

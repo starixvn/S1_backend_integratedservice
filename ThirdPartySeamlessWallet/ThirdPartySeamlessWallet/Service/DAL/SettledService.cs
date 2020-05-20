@@ -798,7 +798,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
+            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, amount = bettingDataLC_Allbet.Amount, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
@@ -806,13 +806,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = conn.Execute("Service_BettransLC_Allbet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
+                if (p.Get<decimal?>("Stake") == null)
+                {
+                    result = 0;
+                }
+
                 if (result > 0)
                 {
                     decimal Stake = p.Get<decimal>("Stake");
 
-                    if (bettingDataLC_Allbet.Amount >= 0)
+                    if ((bettingDataLC_Allbet.Amount + Stake) != 0)
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_Allbet.Amount + Stake, (int)Tp.Allbet, TransType.Settled, $"Settle: {Math.Abs(bettingDataLC_Allbet.Amount + Stake).ToString("#,##0.##")}", bettingDataLC_Allbet.TranId.ToString(), out afterAmount, conn, trans);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_Allbet.Amount + Stake, (int)Tp.Allbet, TransType.Settled, $"Settle: {(bettingDataLC_Allbet.Amount + Stake).ToString("#,##0.##")}", bettingDataLC_Allbet.TranId.ToString(), out afterAmount, conn, trans);
                     }
 
                     if (result > 0)
@@ -837,10 +842,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         }
                     }
                 }
-                else
-                {
-                    result = -1;
-                }
             }
             catch (MySqlException mySqlEx)
             {
@@ -864,13 +865,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
+            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, amount = bettingDataLC_Allbet.Amount, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
             try
             {
                 result = conn.Execute("Service_BettransLC_Allbet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (p.Get<decimal?>("Stake") == null)
+                {
+                    result = 0;
+                }
 
                 if (result > 0)
                 {
@@ -919,12 +925,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     else
                     {
                         trans.Commit();
-                        result = -1;
+                        result = -2;
                     }
-                }
-                else
-                {
-                    result = -1;
                 }
             }
             catch (MySqlException mySqlEx)
