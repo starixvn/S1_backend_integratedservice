@@ -22,6 +22,12 @@ namespace ThirdParty.Allbet
             public int orHallRebate { get; set; }
         }
 
+        public class LoginReq : UserReq
+        {
+            public string language { get; set; }
+            public string returnUrl { get; set; }
+        }
+
         public class Result
         {
             public string error_code { get; set; }
@@ -109,17 +115,20 @@ namespace ThirdParty.Allbet
             string PropertyId = inputs.ContainsKey("PropertyId") && !string.IsNullOrEmpty(inputs["PropertyId"]) ? inputs["PropertyId"] : throw new Exception();
             string DesKey = inputs.ContainsKey("DesKey") && !string.IsNullOrEmpty(inputs["DesKey"]) ? inputs["DesKey"] : throw new Exception();
             string MD5Key = inputs.ContainsKey("MD5Key") && !string.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             string sParam = "";
-            UserReq userReq = new UserReq();
+            LoginReq loginReq = new LoginReq();
 
-            userReq.random = random();
-            userReq.agent = Agent;
-            userReq.client = tpCustInfo.TpUserName;
-            userReq.password = tpCustInfo.TpPwd;
-            userReq.orHallRebate = 0;
+            loginReq.random = random();
+            loginReq.agent = Agent;
+            loginReq.client = tpCustInfo.TpUserName;
+            loginReq.password = tpCustInfo.TpPwd;
+            loginReq.orHallRebate = 0;
+            loginReq.language = TpLangId;
+            loginReq.returnUrl = homeUrl;
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(userReq));
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
             sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             string data = encrypt(sParam, DesKey, null);
