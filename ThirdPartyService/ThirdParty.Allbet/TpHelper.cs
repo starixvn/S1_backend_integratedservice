@@ -13,16 +13,22 @@ namespace ThirdParty.Allbet
     public class TpHelper : ThirdPartyHelperBase
     {
         private static byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
-        public class UserReq
+        public class Req
         {
             public string random { get; set; }
-            public string agent { get; set; }
             public string client { get; set; }
             public string password { get; set; }
-            public int orHallRebate { get; set; }
         }
 
-        public class LoginReq : UserReq
+        public class UserReq : Req
+        {
+            public string agent { get; set; }
+            public int orHallRebate { get; set; }
+            public string orHandicapNames { get; set; }
+            public string vipHandicapNames { get; set; }
+        }
+
+        public class LoginReq : Req
         {
             public string language { get; set; }
             public string returnUrl { get; set; }
@@ -66,7 +72,7 @@ namespace ThirdParty.Allbet
             userReq.orHallRebate = 0;
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(userReq));
-            sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             string data = encrypt(sParam, DesKey, null);
             string sign = base64edMd5($"{data}{MD5Key}");
@@ -111,8 +117,6 @@ namespace ThirdParty.Allbet
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string agentKey = $"{tpCustInfo.TpCurrencyId}Agent";
-            string Agent = inputs.ContainsKey(agentKey) && !string.IsNullOrEmpty(inputs[agentKey]) ? inputs[agentKey] : throw new Exception("Can't get agent.");
             string PropertyId = inputs.ContainsKey("PropertyId") && !string.IsNullOrEmpty(inputs["PropertyId"]) ? inputs["PropertyId"] : throw new Exception();
             string DesKey = inputs.ContainsKey("DesKey") && !string.IsNullOrEmpty(inputs["DesKey"]) ? inputs["DesKey"] : throw new Exception();
             string MD5Key = inputs.ContainsKey("MD5Key") && !string.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
@@ -122,15 +126,13 @@ namespace ThirdParty.Allbet
             LoginReq loginReq = new LoginReq();
 
             loginReq.random = random();
-            loginReq.agent = Agent;
             loginReq.client = tpCustInfo.TpUserName;
             loginReq.password = tpCustInfo.TpPwd;
-            loginReq.orHallRebate = 0;
             loginReq.language = TpLangId;
             loginReq.returnUrl = homeUrl;
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
-            sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             string data = encrypt(sParam, DesKey, null);
             string sign = base64edMd5($"{data}{MD5Key}");
