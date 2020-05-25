@@ -194,7 +194,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.GameType = GameType.Keno_Lottery;
                             }
-                            else if (((betDetial.sport_type ?? 0) > 200 || (betDetial.sport_type ?? 0) == 165))
+                            else if (((betDetial.sport_type ?? 0) >= 200 || (betDetial.sport_type ?? 0) == 165))
                             {
                                 betRecordInfo.GameType = betDetial.sport_type switch
                                 {
@@ -323,6 +323,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
+                                if (betRecordInfo.GameType == GameType.Saba_Sports)
+                                    betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
                             else
                             {
@@ -544,6 +546,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
                             else
                             {
