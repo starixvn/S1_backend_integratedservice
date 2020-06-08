@@ -943,6 +943,77 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int SettledRNG_PG(TpCustInfo tpCustInfo, BettingDataRNG_PG bettingDataRNG_PG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            bettingDataRNG_PG.UpdatedTime /= 1000;
+            bettingDataRNG_PG.CreateTime /= 1000;
+            var p = new DynamicParameters(bettingDataRNG_PG);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            try
+            {
+                result = conn.Execute("Service_BettransRng_PG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataRNG_PG.TransferAmount > 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, TransType.Settled, $"{bettingDataRNG_PG.type}: {Math.Abs(bettingDataRNG_PG.TransferAmount).ToString("#,##0.##")}", bettingDataRNG_PG.TransactionId, out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        if (bettingDataRNG_PG.IsEndRound)
+                        {
+                            decimal Stake = p.Get<decimal>("Stake");
+                            decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = (int)Tp.PG,
+                                Stake = Stake,
+                                WinlostAmount = WinLostAmount,
+                                TransId = bettingDataRNG_PG.ParentBetId,
+                                GameType = GameType.PG_RNG,
+                                TpUserName = bettingDataRNG_PG.PlayerName,
+                                SettledTime = bettingDataRNG_PG.UpdatedTime / 1000,
+                                SettlementType = SettlementType.SettledForValidNotRollover
+                            };
+
+                            result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

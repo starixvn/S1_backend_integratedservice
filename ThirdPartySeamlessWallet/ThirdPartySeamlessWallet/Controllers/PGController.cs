@@ -23,14 +23,18 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly AuthBLL authBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
+        private readonly BettingBLL bettingBLL;
+        private readonly SettledBLL settledBLL;
 
-        public PGController(Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL)
+        public PGController(Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
         {
             this.log2File = log2File;
             thisTp = Tp.PG;
             this.thirdPartyBLL = thirdPartyBLL;
             this.authBLL = authBLL;
             this.tpCustInfoBLL = tpCustInfoBLL;
+            this.bettingBLL = bettingBLL;
+            this.settledBLL = settledBLL;
         }
 
         public class VerifySessionReq
@@ -229,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
-        public class TransferOutReqq
+        public class TransferOutReqq : BettingDataRNG_PG
         {
             [JsonProperty("operator_token")]
             public string OperatorToken { get; set; }
@@ -240,35 +244,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             [JsonProperty("operator_player_session")]
             public string OperatorPlayerSession { get; set; }
 
-            [JsonProperty("game_id")]
-            public int GameId { get; set; }
-
-            [JsonProperty("parent_bet_id")]
-            public string ParentBetId { get; set; }
-
-            [JsonProperty("bet_id")]
-            public string BetId { get; set; }
-
-            [JsonProperty("player_name")]
-            public string PlayerName { get; set; }
-
-            [JsonProperty("currency_code")]
-            public string CurrencyCode { get; set; }
-
-            [JsonProperty("transfer_amount")]
-            public decimal TransferAmount { get; set; }
-
             [JsonProperty("wallet_type")]
             public string WalletType { get; set; }
 
             [JsonProperty("bet_type")]
             public int BetType { get; set; }
-
-            [JsonProperty("transaction_id")]
-            public string TransactionId { get; set; }
-
-            [JsonProperty("updated_time")]
-            public long UpdatedTime { get; set; }
 
             [JsonProperty("is_feature")]
             public bool IsFeature { get; set; }
@@ -281,9 +261,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             [JsonProperty("platform")]
             public int Platform { get; set; }
-
-            [JsonProperty("create_time")]
-            public long CreateTime { get; set; }
 
             [JsonProperty("is_parent_zero_stake")]
             public bool IsParentZeroStake { get; set; }
@@ -322,31 +299,71 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string authToken = sessionKeyArr[0]; /* 1 Time*/
                 string sessionToken = sessionKeyArr[1];/* Long Time*/
+                try
+                {
+                    if (transferOutReqq.IsWager)
+                    {
+                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferOutReqq.PlayerName);
+                        if (tpCheck == null)
+                        {
+                            resp.error = 1308;
+                            return resp;
+                        }
+                        else if (tpCheck.Token != sessionToken)
+                        {
+                            resp.error = 1308;
+                            return resp;
+                        }
+                        else if (tpCheck.Locked)
+                        {
+                            resp.error = 1309;
+                            return resp;
+                        }
+                    }
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferOutReqq.PlayerName);
-                if (tpCheck == null)
-                {
-                    resp.error = 1308;
-                }
-                else if (tpCheck.Token != sessionToken)
-                {
-                    resp.error = 1308;
-                }
-                else if (tpCheck.Locked)
-                {
-                    resp.error = 1309;
-                }
-                else
-                {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName);
-
+                    transferOutReqq.type = TransferType.PlaceBet;
+                    transferOutReqq.BetTransactionId = transferOutReqq.BetTransactionId ?? transferOutReqq.TransactionId;
+                    int result = bettingBLL.PlaceBetRNG_PG(transferOutReqq, out decimal tpAffterAmount);
                     BalanceData respData = new BalanceData();
                     resp.data = respData;
-
-                    respData.currency_code = tpCustBalance.TpCurrencyId;
-                    respData.balance_amount = tpCustBalance.Balance;
                     respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    resp.error = null;
+
+                    if (result > 0)
+                    {
+                        if (transferOutReqq.TransferAmount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpCustBalance.Balance;
+                            resp.error = null;
+                        }
+                        else
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName);
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpAffterAmount;
+                            resp.error = null;
+                        }
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
+                        respData.currency_code = tpCustBalance.TpCurrencyId;
+                        respData.balance_amount = tpAffterAmount;
+                        resp.error = 3202;
+                    }
+                    else/*Can't Insert Bet*/
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
+                        respData.currency_code = tpCustBalance.TpCurrencyId;
+                        respData.balance_amount = tpAffterAmount;
+                        resp.error = 1034;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferOutReqq)}\r\n{ex}", $"{thisTp}_TransferOut");
+                    throw ex;
                 }
             }
             else
@@ -359,7 +376,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
-        public class TransferInReqq
+        public class TransferInReqq : BettingDataRNG_PG
         {
             [JsonProperty("operator_token")]
             public string OperatorToken { get; set; }
@@ -370,41 +387,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             [JsonProperty("operator_player_session")]
             public string OperatorPlayerSession { get; set; }
 
-            [JsonProperty("game_id")]
-            public int GameId { get; set; }
-
-            [JsonProperty("parent_bet_id")]
-            public string ParentBetId { get; set; }
-
-            [JsonProperty("bet_id")]
-            public string BetId { get; set; }
-
-            [JsonProperty("player_name")]
-            public string PlayerName { get; set; }
-
-            [JsonProperty("currency_code")]
-            public string CurrencyCode { get; set; }
-
-            [JsonProperty("transfer_amount")]
-            public decimal TransferAmount { get; set; }
-
-            [JsonProperty("transaction_id")]
-            public string TransactionId { get; set; }
-
-            [JsonProperty("bet_transaction_id")]
-            public string BetTransactionId { get; set; }
-
             [JsonProperty("wallet_type")]
             public string WalletType { get; set; }
 
             [JsonProperty("bet_type")]
             public int BetType { get; set; }
-
-            [JsonProperty("updated_time")]
-            public long UpdatedTime { get; set; }
-
-            [JsonProperty("is_end_round")]
-            public bool IsEndRound { get; set; }
 
             [JsonProperty("is_feature")]
             public bool IsFeature { get; set; }
@@ -417,9 +404,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             [JsonProperty("platform")]
             public int Platform { get; set; }
-
-            [JsonProperty("create_time")]
-            public long CreateTime { get; set; }
 
             [JsonProperty("is_parent_zero_stake")]
             public bool IsParentZeroStake { get; set; }
@@ -461,24 +445,86 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(transferInReqq.OperatorPlayerSession)));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0]; /* 1 Time*/
-            string sessionToken = sessionKeyArr[1];/* Long Time*/
+            if (!string.IsNullOrEmpty(transferInReqq.OperatorPlayerSession))
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(transferInReqq.OperatorPlayerSession)));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName);
+                BalanceData respData = new BalanceData();
+                resp.data = respData;
+                respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                resp.error = null;
 
-            BalanceData respData = new BalanceData();
-            resp.data = respData;
+                try
+                {
+                    transferInReqq.type = GetType(transferInReqq.TransactionId);
+                    int result = settledBLL.SettledRNG_PG(transferInReqq, out decimal tpAffterAmount);
 
-            respData.currency_code = tpCustBalance.TpCurrencyId;
-            respData.balance_amount = tpCustBalance.Balance;
-            respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            resp.error = null;
+                    if (result > 0)
+                    {
 
+                        if (transferInReqq.TransferAmount > 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName);
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpAffterAmount;
+                            resp.error = null;
+                        }
+                        else if (transferInReqq.TransferAmount == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName);
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpCustBalance.Balance;
+                            resp.error = null;
+                        }
+                    }
+                    else if (result == -1)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName);
+                        respData.currency_code = tpCustBalance.TpCurrencyId;
+                        respData.balance_amount = tpCustBalance.Balance;
+                        resp.error = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferInReqq)}\r\n{ex}", $"{thisTp}_TransferIn");
+                    throw ex;
+                }
+            }
+            else
+            {
+                resp.error = 1300;
+            }
             log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_TransferIn");
 
             return resp;
+        }
+
+        private TransferType GetType(string TransactionId)
+        {
+            string transactionType = TransactionId.Split("-")[2];
+
+            if (transactionType == "101")
+            {
+                return TransferType.Payout;
+            }
+            else if (transactionType == "201")
+            {
+                return TransferType.PlaceBet;
+            }
+            else if (transactionType == "400")
+            {
+                return TransferType.Bonus;
+            }
+            else if (transactionType == "403")
+            {
+                return TransferType.PlaceBet;
+            }
+            else
+            {
+                return TransferType.PlaceBet;
+            }
         }
     }
 }
