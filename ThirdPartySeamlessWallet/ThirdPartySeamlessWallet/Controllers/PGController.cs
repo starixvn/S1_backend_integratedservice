@@ -287,7 +287,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
             string operator_token = thirdPartySetting.TpSetting["operator_token"];
 
-            if (!transferOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
+            if (!transferOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferOutReqq.TransferAmount < 0)
             {
                 resp.error = 1034;
                 return resp;
@@ -349,14 +349,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
-                        respData.balance_amount = tpAffterAmount;
+                        respData.balance_amount = tpCustBalance.Balance;
                         resp.error = 3202;
                     }
                     else/*Can't Insert Bet*/
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
-                        respData.balance_amount = tpAffterAmount;
+                        respData.balance_amount = tpCustBalance.Balance;
                         resp.error = 1034;
                     }
                 }
@@ -439,7 +439,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
             string operator_token = thirdPartySetting.TpSetting["operator_token"];
 
-            if (!transferInReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
+            if (!transferInReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferInReqq.TransferAmount < 0)
             {
                 resp.error = 1034;
                 return resp;
