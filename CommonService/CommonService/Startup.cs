@@ -29,6 +29,7 @@ namespace CommonService
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<SendXConfig>(Configuration.GetSection("SendXConfig"));
+            services.Configure<SendGridConfig>(Configuration.GetSection("SendGridConfig"));
             services.AddMemoryCache();
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
@@ -39,6 +40,7 @@ namespace CommonService
 
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<SendXBLL>();
+            services.AddSingleton<SendGridBLL>();
 
             services.AddControllers();
 

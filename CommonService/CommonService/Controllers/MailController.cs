@@ -15,11 +15,13 @@ namespace CommonService.Controllers
     {
         private readonly CustInfoBLL custInfoBLL;
         private readonly SendXBLL sendXBLL;
+        private readonly SendGridBLL sendGridBLL;
 
-        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL)
+        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL)
         {
             this.custInfoBLL = custInfoBLL;
             this.sendXBLL = sendXBLL;
+            this.sendGridBLL = sendGridBLL;
         }
         public class Req
         {
@@ -34,6 +36,39 @@ namespace CommonService.Controllers
             if (custInfo != null)
             {
                 var resultResp = await sendXBLL.IdentifyAsync(custInfo);
+
+                apiResult.ErrorCode = resultResp.ErrorCode;
+                apiResult.Message = resultResp.Message;
+                apiResult.RawMessage = resultResp.RawMessage;
+
+                //if (apiResult.ErrorCode == 0)
+                //{
+                //    resultResp = await sendXBLL.WelcomeMailAsync(custInfo);
+                //    apiResult.ErrorCode = resultResp.ErrorCode;
+                //    apiResult.Message = resultResp.Message;
+                //    apiResult.RawMessage = resultResp.RawMessage;
+                //}
+            }
+
+            return apiResult;
+        }
+
+        public class Req1
+        {
+            public int custId { get; set; }
+            public string subject { get; set; }
+            public string content { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<ApiResult> SendMailAsync(Req1 req)
+        {
+            ApiResult apiResult = new ApiResult();
+            var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
+
+            if (custInfo != null)
+            {
+                var resultResp = await sendGridBLL.SendMailAsync(custInfo, req.subject, req.content);
 
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
