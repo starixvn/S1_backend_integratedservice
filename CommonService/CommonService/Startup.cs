@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace CommonService
 {
@@ -41,6 +35,7 @@ namespace CommonService
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<SendXBLL>();
             services.AddSingleton<SendGridBLL>();
+            services.AddSingleton<SendGridTempBLL>();
 
             services.AddControllers();
 

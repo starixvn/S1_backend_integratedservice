@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using CommonService.Service.BLL;
+﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -16,12 +12,14 @@ namespace CommonService.Controllers
         private readonly CustInfoBLL custInfoBLL;
         private readonly SendXBLL sendXBLL;
         private readonly SendGridBLL sendGridBLL;
+        private readonly SendGridTempBLL sendGridTempBLL;
 
-        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL)
+        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, SendGridTempBLL sendGridTempBLL)
         {
             this.custInfoBLL = custInfoBLL;
             this.sendXBLL = sendXBLL;
             this.sendGridBLL = sendGridBLL;
+            this.sendGridTempBLL = sendGridTempBLL;
         }
         public class Req
         {
@@ -83,6 +81,27 @@ namespace CommonService.Controllers
                 //}
             }
 
+            return apiResult;
+        }
+
+        public class TempReq
+        {
+            public int custId { get; set; }
+            public string template_id { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<ApiResult> SendTempMailAsync(TempReq tempReq)
+        {
+            ApiResult apiResult = new ApiResult();
+            var custInfo = custInfoBLL.GetCustInfoProfile(tempReq.custId);
+            if (custInfo != null)
+            {
+                var resultResp = await sendGridTempBLL.SendMailAsync(custInfo, tempReq.template_id);
+                apiResult.ErrorCode = resultResp.ErrorCode;
+                apiResult.Message = resultResp.Message;
+                apiResult.RawMessage = resultResp.RawMessage;
+            }
             return apiResult;
         }
     }
