@@ -12,19 +12,17 @@ namespace CommonService.Service.BLL
 {
     public class SendGridBLL
     {
-        private readonly SendGridConfig sendGridConfig;
+        private readonly IOptions<Dictionary<string, SendGridConfig>> sendGridConfig;
         private readonly HttpHelper httpHelper;
         private readonly CustInfoBLL custInfoBLL;
-        private readonly Dictionary<string, string> headerParams;
+        private readonly AuthBLL authBLL;
 
-        public SendGridBLL(IOptions<SendGridConfig> sendGridConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL)
+        public SendGridBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL, AuthBLL authBLL)
         {
-            this.sendGridConfig = sendGridConfig.Value;
+            this.sendGridConfig = sendGridConfig;
             this.httpHelper = httpHelper;
             this.custInfoBLL = custInfoBLL;
-            headerParams = new Dictionary<string, string> {
-                { "Authorization", $"Bearer {sendGridConfig.Value.ApiKey}"}
-            };
+            this.authBLL = authBLL;
         }
 
         public class Result
@@ -67,13 +65,18 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string subject, string content)
         {
             ApiResult apiResult = new ApiResult();
+            var config = sendGridConfig.Value[custInfo.SiteName];
 
-            string url = sendGridConfig.ApiUrl;
+            Dictionary<string, string> headerParams = new Dictionary<string, string> {
+                { "Authorization", $"Bearer {config.ApiKey}"}
+            };
+
+            string url = config.ApiUrl;
             SendMailBody sendMailBody = new SendMailBody();
             sendMailBody.from = new From()
             {
-                name = sendGridConfig.mailFrom.name,
-                email = sendGridConfig.mailFrom.email
+                name = config.mailFrom.name,
+                email = config.mailFrom.email
             };
 
             sendMailBody.personalizations = new List<Personalization>();
@@ -89,7 +92,10 @@ namespace CommonService.Service.BLL
             Content content1 = new Content();
             sendMailBody.content.Add(content1);
             content1.type = "text/html";
-            content1.value = content;
+
+            var key = authBLL.ApplyToken(custInfo);
+
+            content1.value = $"key={key}";
 
             var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendMailBody), "application/json");
             if (result.StatusCode == System.Net.HttpStatusCode.Accepted)

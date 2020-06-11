@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Collections.Generic;
 
 namespace CommonService
 {
@@ -23,7 +24,7 @@ namespace CommonService
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<SendXConfig>(Configuration.GetSection("SendXConfig"));
-            services.Configure<SendGridConfig>(Configuration.GetSection("SendGridConfig"));
+            services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
             services.AddMemoryCache();
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
