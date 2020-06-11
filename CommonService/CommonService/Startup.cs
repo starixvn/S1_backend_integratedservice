@@ -32,11 +32,13 @@ namespace CommonService
             services.AddSingleton<HttpHelper>();
 
             services.AddSingleton<CustInfoService>();
+            services.AddSingleton<AuthService>();
 
             services.AddSingleton<CustInfoBLL>();
+            services.AddSingleton<AuthBLL>();
             services.AddSingleton<SendXBLL>();
             services.AddSingleton<SendGridBLL>();
-            services.AddSingleton<SendGridTempBLL>();
+            services.AddSingleton<RestPasswordBLL>();
 
             services.AddControllers();
 
