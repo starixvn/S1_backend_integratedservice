@@ -56,7 +56,7 @@ namespace CommonService.Service.BLL
             dynamicTemplateData.resetpwdurl = $"{config.ResetPasswordUrl}/key ={key}";
             resetPasswordPersonalization.dynamic_template_data = dynamicTemplateData;
 
-            sendGridResetPasswordBody.template_id = config.ResetPasswordTemplateId;
+            sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[custInfo.UserLang];
 
             var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == System.Net.HttpStatusCode.Accepted)

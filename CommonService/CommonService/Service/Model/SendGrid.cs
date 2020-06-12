@@ -8,7 +8,7 @@ namespace CommonService.Service.Model
         public string ApiUrl { get; set; }
         public string ApiKey { get; set; }
         public NameEmail mailFrom { get; set; }
-        public string ResetPasswordTemplateId { get; set; }
+        public Dictionary<string, string> ResetPasswordTemplate { get; set; }
         public string ResetPasswordUrl { get; set; }
     }
     public class NameEmail
