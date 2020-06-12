@@ -46,15 +46,14 @@ namespace CommonService.Service.BLL
             sendGridResetPasswordBody.personalizations.Add(resetPasswordPersonalization);
 
             resetPasswordPersonalization.to = new List<NameEmail>();
-            NameEmail from = new NameEmail();
-            from.email = custInfo.Email;
-            from.name = custInfo.UserName;
-            resetPasswordPersonalization.to.Add(from);
+            NameEmail to = new NameEmail();
+            to.email = custInfo.Email;
+            to.name = custInfo.UserName;
+            resetPasswordPersonalization.to.Add(to);
 
             var key = authBLL.ApplyToken(custInfo);
             DynamicTemplateData dynamicTemplateData = new DynamicTemplateData();
-            dynamicTemplateData.subject = "變動標題";
-            dynamicTemplateData.resetpwdurl = $"{config.ResetPasswordUrl}key ={key}";
+            dynamicTemplateData.resetpwdurl = $"{config.ResetPasswordUrl}/key ={key}";
             resetPasswordPersonalization.dynamic_template_data = dynamicTemplateData;
 
             sendGridResetPasswordBody.template_id = config.ResetPasswordTemplateId;

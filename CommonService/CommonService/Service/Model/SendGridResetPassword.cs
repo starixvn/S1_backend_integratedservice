@@ -16,7 +16,6 @@ namespace CommonService.Service.Model
         }
         public class DynamicTemplateData
         {
-            public string subject { get; set; }
             public string resetpwdurl { get; set; }
 
         }
