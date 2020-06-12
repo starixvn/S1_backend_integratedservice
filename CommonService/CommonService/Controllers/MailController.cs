@@ -84,12 +84,6 @@ namespace CommonService.Controllers
             return apiResult;
         }
 
-        public class TempReq
-        {
-            public int custId { get; set; }
-            public string template_id { get; set; }
-        }
-
         [HttpPost]
         public async Task<ApiResult> RestPasswordAsync(Req req)
         {
