@@ -259,6 +259,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             [JsonProperty("is_wager")]
             public bool IsWager { get; set; }
 
+            [JsonProperty("is_adjustment")]
+            public bool IsAdjustment { get; set; }
+            [JsonProperty("is_validate_bet")]
+            public bool IsValidateBet { get; set; }
+
             [JsonProperty("platform")]
             public int Platform { get; set; }
 
@@ -293,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            if (!string.IsNullOrEmpty(transferOutReqq.OperatorPlayerSession))
+            if (!string.IsNullOrEmpty(transferOutReqq.OperatorPlayerSession) || transferOutReqq.IsAdjustment || transferOutReqq.IsValidateBet)
             {
                 string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(transferOutReqq.OperatorPlayerSession)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
@@ -301,7 +306,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string sessionToken = sessionKeyArr[1];/* Long Time*/
                 try
                 {
-                    if (transferOutReqq.IsWager)
+                    if (!transferOutReqq.IsAdjustment && !transferOutReqq.IsValidateBet)
                     {
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferOutReqq.PlayerName);
                         if (tpCheck == null)
@@ -419,6 +424,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             [JsonProperty("jackpot_type")]
             public long JackpotType { get; set; }
+            [JsonProperty("is_adjustment")]
+            public bool IsAdjustment { get; set; }
 
             [JsonProperty("is_validate_bet")]
             public bool IsValidateBet { get; set; }
@@ -445,7 +452,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            if (!string.IsNullOrEmpty(transferInReqq.OperatorPlayerSession))
+            if (!string.IsNullOrEmpty(transferInReqq.OperatorPlayerSession) || transferInReqq.IsAdjustment || transferInReqq.IsValidateBet)
             {
                 string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(transferInReqq.OperatorPlayerSession)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
