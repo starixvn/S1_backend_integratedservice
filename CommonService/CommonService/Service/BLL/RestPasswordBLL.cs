@@ -50,10 +50,9 @@ namespace CommonService.Service.BLL
             to.email = custInfo.Email;
             to.name = custInfo.UserName;
             resetPasswordPersonalization.to.Add(to);
-
             var key = authBLL.ApplyToken(custInfo);
             DynamicTemplateData dynamicTemplateData = new DynamicTemplateData();
-            dynamicTemplateData.resetpwdurl = $"{config.ResetPasswordUrl}/key ={key}";
+            dynamicTemplateData.resetpwdurl = $"{config.ResetPasswordUrl}?key={key}";
             resetPasswordPersonalization.dynamic_template_data = dynamicTemplateData;
 
             sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[custInfo.UserLang];
