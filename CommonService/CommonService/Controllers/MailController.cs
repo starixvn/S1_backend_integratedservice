@@ -12,14 +12,14 @@ namespace CommonService.Controllers
         private readonly CustInfoBLL custInfoBLL;
         private readonly SendXBLL sendXBLL;
         private readonly SendGridBLL sendGridBLL;
-        private readonly SendGridTempBLL sendGridTempBLL;
+        private readonly RestPasswordBLL restPasswordBLL;
 
-        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, SendGridTempBLL sendGridTempBLL)
+        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, RestPasswordBLL restPasswordBLL)
         {
             this.custInfoBLL = custInfoBLL;
             this.sendXBLL = sendXBLL;
             this.sendGridBLL = sendGridBLL;
-            this.sendGridTempBLL = sendGridTempBLL;
+            this.restPasswordBLL = restPasswordBLL;
         }
         public class Req
         {
@@ -91,13 +91,13 @@ namespace CommonService.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResult> SendTempMailAsync(TempReq tempReq)
+        public async Task<ApiResult> RestPasswordAsync(Req req)
         {
             ApiResult apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(tempReq.custId);
+            var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
             if (custInfo != null)
             {
-                var resultResp = await sendGridTempBLL.SendMailAsync(custInfo, tempReq.template_id);
+                var resultResp = await restPasswordBLL.SendMailAsync(custInfo);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
