@@ -496,16 +496,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(bettingDataRNG_PG);
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransRng_PG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
+            try
             {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PG.TransferAmount).ToString("#,##0.##")}", bettingDataRNG_PG.TransactionId, out afterAmount, conn, trans);
+                result = conn.Execute("Service_BettransRng_PG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PG.TransferAmount).ToString("#,##0.##")}", bettingDataRNG_PG.TransactionId, out afterAmount, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
             }
-
-            if (result > 0)
+            catch (MySqlException mySqlEx)
             {
-                trans.Commit();
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
             }
 
             return result;
