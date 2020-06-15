@@ -104,62 +104,71 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (!string.IsNullOrEmpty(verifySessionReq.OperatorPlayerSession))
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(verifySessionReq.OperatorPlayerSession)));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                string authToken = sessionKeyArr[0]; /* 1 Time*/
-                string sessionToken = sessionKeyArr[1];/* Long Time*/
-                if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                try
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null)
+                    string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(verifySessionReq.OperatorPlayerSession)));
+                    var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                    string authToken = sessionKeyArr[0]; /* 1 Time*/
+                    string sessionToken = sessionKeyArr[1];/* Long Time*/
+                    if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     {
-                        resp.error = new Error
+                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                        if (tpCheck == null)
                         {
-                            code = "1308",
-                            message = "Player session is expired"
-                        };
+                            resp.error = new Error
+                            {
+                                code = "1308",
+                                message = "Player session is expired"
+                            };
 
-                        return resp;
-                    }
-                    else if (tpCheck.Token != sessionToken)
-                    {
-                        resp.error = new Error
+                            return resp;
+                        }
+                        else if (tpCheck.Token != sessionToken)
                         {
-                            code = "1308",
-                            message = "Player session is expired"
-                        };
+                            resp.error = new Error
+                            {
+                                code = "1308",
+                                message = "Player session is expired"
+                            };
 
-                        return resp;
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        resp.error = new Error
+                            return resp;
+                        }
+                        else if (tpCheck.Locked)
                         {
-                            code = "1309",
-                            message = "Player is inactive"
-                        };
+                            resp.error = new Error
+                            {
+                                code = "1309",
+                                message = "Player is inactive"
+                            };
 
-                        return resp;
+                            return resp;
+                        }
+                        else
+                        {
+                            VerifySessionRespData respData = new VerifySessionRespData(); ;
+                            resp.data = respData;
+
+                            respData.currency = tpCustInfoAuth.TpCurrencyId;
+                            respData.nickname = tpCustInfoAuth.TpUserName;
+                            respData.player_name = tpCustInfoAuth.TpUserName;
+                            respData.reminder_time = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
+                            resp.error = null;
+                        }
+
+
                     }
                     else
                     {
-                        VerifySessionRespData respData = new VerifySessionRespData(); ;
-                        resp.data = respData;
-
-                        respData.currency = tpCustInfoAuth.TpCurrencyId;
-                        respData.nickname = tpCustInfoAuth.TpUserName;
-                        respData.player_name = tpCustInfoAuth.TpUserName;
-                        respData.reminder_time = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
-                        resp.error = null;
+                        resp.error = new Error
+                        {
+                            code = "1300",
+                            message = "Invalid player session"
+                        };
                     }
                 }
-                else
+                catch (FormatException fEx)
                 {
-                    resp.error = new Error
-                    {
-                        code = "1300",
-                        message = "Invalid player session"
-                    };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{fEx}", $"{thisTp}_VerifySession");
                 }
             }
             else
@@ -376,7 +385,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName);
 
-            if (!tpCustBalance.TpCurrencyId.Equals(transferOutReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+            if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferOutReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
                 resp.error = new Error
                 {
@@ -433,10 +442,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     transferOutReqq.type = TransferType.PlaceBet;
                     transferOutReqq.BetTransactionId = transferOutReqq.BetTransactionId ?? transferOutReqq.TransactionId;
-                    int result = bettingBLL.PlaceBetRNG_PG(transferOutReqq, out decimal tpAffterAmount);
                     BalanceData respData = new BalanceData();
                     resp.data = respData;
                     respData.updated_time = transferOutReqq.UpdatedTime;
+                    int result = bettingBLL.PlaceBetRNG_PG(transferOutReqq, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
@@ -578,7 +587,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName);
 
-            if (!tpCustBalance.TpCurrencyId.Equals(transferInReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+            if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferInReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
                 resp.error = new Error
                 {
