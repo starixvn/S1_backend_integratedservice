@@ -31,14 +31,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustBalance = cache.Get<TpCustBalance>(key);
             if (tpCustBalance == null)
             {
-                tpCustBalance = new TpCustBalance();
                 var tpCustInfo = GetTpCustInfo(tpId, tpUserName);
-                var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
-                var balance = walletService.GetBalance(tpCustInfo.CustId);
-                tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;
-                tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 2);
-                tpCustBalance.ExchangeRate = tpCurrency.ExchangeRate;
-                tpCustBalance.TpCurrencyId = tpCurrency.TpCurrencyId;
+                if (tpCustInfo != null)
+                {
+                    tpCustBalance = new TpCustBalance();
+                    var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+                    var balance = walletService.GetBalance(tpCustInfo.CustId);
+                    tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;
+                    tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 2);
+                    tpCustBalance.ExchangeRate = tpCurrency.ExchangeRate;
+                    tpCustBalance.TpCurrencyId = tpCurrency.TpCurrencyId;
+                }
+
                 cache.Set(key, tpCustBalance, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(0.5)));
             }
 

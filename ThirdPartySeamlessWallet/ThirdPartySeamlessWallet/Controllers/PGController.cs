@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -25,8 +26,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
+        private readonly IHostEnvironment environment;
 
-        public PGController(Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
+        public PGController(IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
         {
             this.log2File = log2File;
             thisTp = Tp.PG;
@@ -35,6 +37,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
+            this.environment = environment;
         }
 
         public class Error
@@ -284,9 +287,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.PlayerName);
+                    TpCustBalance tpCustBalance = null;
+                    if (environment.IsDevelopment())
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBalanceReq.PlayerName);
+                    else
+                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.PlayerName);
 
-                    BalanceData respData = new BalanceData(); ;
+                    BalanceData respData = new BalanceData();
                     resp.data = respData;
 
                     respData.currency_code = tpCustBalance.TpCurrencyId;
@@ -373,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
             string operator_token = thirdPartySetting.TpSetting["operator_token"];
 
-            if (!transferOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferOutReqq.TransferAmount < 0)
+            if (string.IsNullOrEmpty(transferOutReqq.PlayerName) || !transferOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferOutReqq.TransferAmount < 0)
             {
                 resp.error = new Error
                 {
@@ -383,7 +390,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 return resp;
             }
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName);
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName);
 
             if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferOutReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
@@ -441,7 +448,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
 
                     transferOutReqq.type = TransferType.PlaceBet;
-                    transferOutReqq.BetTransactionId = transferOutReqq.BetTransactionId ?? transferOutReqq.TransactionId;
+                    //transferOutReqq.BetTransactionId = transferOutReqq.BetTransactionId ?? transferOutReqq.TransactionId;
                     BalanceData respData = new BalanceData();
                     resp.data = respData;
                     respData.updated_time = transferOutReqq.UpdatedTime;
@@ -465,6 +472,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (result == -1)
                     {
+                        if (environment.IsDevelopment())
+                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpCustBalance.Balance;
                         resp.error = null;
@@ -575,7 +584,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
             string operator_token = thirdPartySetting.TpSetting["operator_token"];
 
-            if (!transferInReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferInReqq.TransferAmount < 0)
+            if (string.IsNullOrEmpty(transferInReqq.PlayerName) || !transferInReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferInReqq.TransferAmount < 0)
             {
                 resp.error = new Error
                 {
@@ -585,7 +594,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName);
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName);
 
             if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferInReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
