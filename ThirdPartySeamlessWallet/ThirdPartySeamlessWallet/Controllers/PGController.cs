@@ -86,8 +86,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 message = "Invalid request."
             };
 
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}", $"{thisTp}_VerifySession_1");
-
             var verifySessionReq = JsonConvert.DeserializeObject<VerifySessionReq>(JsonConvert.SerializeObject(reqq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
 
@@ -219,8 +217,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 code = "1034",
                 message = "Invalid request."
             };
-
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}", $"{thisTp}_GetBalance_1");
 
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(JsonConvert.SerializeObject(reqq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -359,9 +355,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 message = "Invalid request."
             };
 
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}", $"{thisTp}_TransferOut_1");
-
             var transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(JsonConvert.SerializeObject(reqq));
+
+            //transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(@"{""operator_token"":""5884cec7905af23c1586a6819ae0b1e1"",""secret_key"":""645b1f5db5c7c6e3d0fb087f11f62e50"",""operator_player_session"":""WyJldW9WN1BqNDFVQ2dTaUhnSzVmQWxRIiwiS2VSbDRhbm5qVXl0eTdFSlBZRmZ3Il0%3D"",""game_id"":""1"",""parent_bet_id"":""6669305"",""bet_id"":""6669305"",""player_name"":""DNova88_156"",""currency_code"":""THB"",""transfer_amount"":""30.00"",""wallet_type"":""C"",""bet_type"":""1"",""transaction_id"":""6669305-6669305-201-0"",""updated_time"":""1592192524927"",""is_feature"":""False"",""is_minus_count"":""False"",""is_wager"":""True"",""platform"":""1"",""create_time"":""1592192524927"",""is_parent_zero_stake"":""False"",""jackpot_rtp_contribution_amount"":""0"",""jackpot_win_amount"":""0""}");
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
 
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
@@ -457,10 +454,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                             resp.error = null;
                         }
                     }
-                    if (result == -1)
+                    else if (result == -1)
                     {
                         respData.currency_code = tpCustBalance.TpCurrencyId;
-                        respData.balance_amount = tpAffterAmount;
+                        respData.balance_amount = tpCustBalance.Balance;
                         resp.error = null;
                     }
                     else if (tpAffterAmount < 0)
@@ -478,7 +475,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.error = new Error
                         {
                             code = "1034",
-                            message = "Invalid request."
+                            message = $"Invalid request."
                         };
                     }
                 }
@@ -562,8 +559,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 code = "1034",
                 message = "Invalid request."
             };
-
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}", $"{thisTp}_TransferIn_1");
 
             var transferInReqq = JsonConvert.DeserializeObject<TransferInReqq>(JsonConvert.SerializeObject(reqq));
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
