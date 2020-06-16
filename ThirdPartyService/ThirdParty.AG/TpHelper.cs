@@ -10,11 +10,16 @@ namespace ThirdParty.AG
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
-            {"MYR","A" },
-            {"CNY","C" },
-            {"THB","A" },
-            {"IDR","C" },
-            {"VND ","C" }
+            //{"MYR","A" },
+            //{"CNY","C" },
+            //{"THB","A" },
+            //{"IDR","C" },
+            //{"VND ","C" }
+            {"MYR","" },
+            {"CNY","" },
+            {"THB","" },
+            {"IDR","" },
+            {"VND ","" }
         };
 
         public class result
