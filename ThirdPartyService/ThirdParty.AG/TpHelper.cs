@@ -10,16 +10,11 @@ namespace ThirdParty.AG
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
-            //{"MYR","A" },
-            //{"CNY","C" },
-            //{"THB","A" },
-            //{"IDR","C" },
-            //{"VND ","C" }
-            {"MYR","" },
-            {"CNY","" },
-            {"THB","" },
-            {"IDR","" },
-            {"VND ","" }
+            {"MYR","A" },
+            {"CNY","C" },
+            {"THB","A" },
+            {"IDR","C" },
+            {"VND ","C" }
         };
 
         public class result
@@ -134,10 +129,11 @@ namespace ThirdParty.AG
             string SessionUrl = inputs.ContainsKey("SessionUrl") && !string.IsNullOrEmpty(inputs["SessionUrl"]) ? inputs["SessionUrl"] : throw new Exception();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
 
-            string _oddtype = null;
-            oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
-            string oddtype = _oddtype;
+            //string _oddtype = null;
+            //oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
+            //string oddtype = _oddtype;
 
+            string oddtype = "";
             string balance = "";
             string token = "";
             inputs.TryGetValue("Balance", out balance);
