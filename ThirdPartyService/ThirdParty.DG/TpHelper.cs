@@ -97,6 +97,7 @@ namespace ThirdParty.DG
             public string lang { get; set; }
             public string domains { get; set; }
             public Member member { get; set; }
+            public string data { get; set; }
         }
         public class SignupMember : Member
         {
@@ -214,6 +215,14 @@ namespace ThirdParty.DG
             Login.member.username = tpCustInfo.TpUserName;
             Login.member.password = tpCustInfo.TpPwd;
 
+            if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
+            {
+                Login.data = limitGroupNoMapping[tpCustInfo.TpCurrencyId];
+            }
+            else
+            {
+                Login.data = limitGroupNo;
+            }
             string InputJson = JsonConvert.SerializeObject(Login);
 
             var result = HttpPost(ApiUrl, InputJson, "application/json");
