@@ -26,6 +26,12 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo)
         {
             ApiResult apiResult = new ApiResult();
+
+            if (!sendGridConfig.Value.ContainsKey(custInfo.SiteName))
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+            }
+
             var config = sendGridConfig.Value[custInfo.SiteName];
 
             Dictionary<string, string> headerParams = new Dictionary<string, string> {
