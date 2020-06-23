@@ -114,6 +114,7 @@ namespace ThirdParty.Sexy
             GetKeyReq getKeyReq = new GetKeyReq();
 
             string betLimitIdKey = $"BetLimitId{tpCustInfo.TpCurrencyId}";
+            string agentIdKey = $"AgentId{tpCustInfo.TpCurrencyId}";
             getKeyReq.cert = cert;
             getKeyReq.currency = currencyIdMapping[tpCustInfo.TpCurrencyId];
             getKeyReq.user = tpCustInfo.TpUserName;
@@ -135,7 +136,7 @@ namespace ThirdParty.Sexy
                     loginReq.key = getKeyResp.Key;
                     loginReq.user = getKeyReq.user;
                     loginReq.userName = getKeyReq.user;
-                    loginReq.extension1 = getKeyReq.betLimitIds;
+                    loginReq.extension1 = inputs[agentIdKey];
                     loginReq.language = TpLangId;
                     loginReq.lobbyURL = lobbyUrl;
                     loginReq.mb = appType == AppType.Desktop ? null : "1";
