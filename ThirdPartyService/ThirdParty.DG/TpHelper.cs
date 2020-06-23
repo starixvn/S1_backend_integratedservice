@@ -212,7 +212,7 @@ namespace ThirdParty.DG
             Login.lang = TpLangId;
             Login.domains = "";
 
-            Login.member.username = tpCustInfo.TpUserName;
+            Login.member.username = tpCustInfo.TpUserName.ToUpper();
             Login.member.password = tpCustInfo.TpPwd;
 
             if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
