@@ -25,6 +25,7 @@ namespace CommonService.Controllers
         {
             public int custId { get; set; }
         }
+
         [HttpPost]
         public async Task<ApiResult> SendWelcomeMailAsync(Req req)
         {
@@ -84,14 +85,20 @@ namespace CommonService.Controllers
             return apiResult;
         }
 
+        public class Req2
+        {
+            public int custId { get; set; }
+            public string resetPasswordUrl { get; set; }
+        }
+
         [HttpPost]
-        public async Task<ApiResult> RestPasswordAsync(Req req)
+        public async Task<ApiResult> RestPasswordAsync(Req2 req2)
         {
             ApiResult apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
+            var custInfo = custInfoBLL.GetCustInfoProfile(req2.custId);
             if (custInfo != null)
             {
-                var resultResp = await restPasswordBLL.SendMailAsync(custInfo);
+                var resultResp = await restPasswordBLL.SendMailAsync(custInfo, req2.resetPasswordUrl);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;

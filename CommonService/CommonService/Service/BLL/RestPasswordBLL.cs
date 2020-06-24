@@ -23,7 +23,7 @@ namespace CommonService.Service.BLL
             this.custInfoBLL = custInfoBLL;
             this.authBLL = authBLL;
         }
-        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo)
+        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
         {
             ApiResult apiResult = new ApiResult();
 
@@ -58,7 +58,8 @@ namespace CommonService.Service.BLL
             resetPasswordPersonalization.to.Add(to);
             var key = authBLL.ApplyToken(custInfo);
             DynamicTemplateData dynamicTemplateData = new DynamicTemplateData();
-            dynamicTemplateData.resetpwdurl = $"{config.ResetPasswordUrl}?key={key}";
+            resetPasswordUrl ??= config.ResetPasswordUrl;
+            dynamicTemplateData.resetpwdurl = $"{resetPasswordUrl}?key={key}";
             resetPasswordPersonalization.dynamic_template_data = dynamicTemplateData;
 
             sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[custInfo.UserLang];
