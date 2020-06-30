@@ -260,7 +260,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             }
                             else
                             {
-                                if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG)
+                                if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG ||
+                                    betRecordInfo.GameType == GameType.Saba_CardClub || betRecordInfo.GameType == GameType.Saba_Indo4D || betRecordInfo.GameType == GameType.Saba_Keno ||
+                                    betRecordInfo.GameType == GameType.Saba_Lottery || betRecordInfo.GameType == GameType.Saba_MacauGame || betRecordInfo.GameType == GameType.Saba_SabaClub ||
+                                    betRecordInfo.GameType == GameType.Saba_VirtualGames)
                                 {
                                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                                 }
