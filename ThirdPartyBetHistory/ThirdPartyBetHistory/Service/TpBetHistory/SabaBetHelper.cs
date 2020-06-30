@@ -190,11 +190,39 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         {
                             BetRecordInfo betRecordInfo = new BetRecordInfo();
                             betRecordInfo.GameType = GameType.Saba_Sports;
-                            if ((betDetial.sport_type ?? 0) == 202 || (betDetial.sport_type ?? 0) == 220)
+                            if ((betDetial.sport_type ?? 0) == 165)
                             {
-                                betRecordInfo.GameType = GameType.Keno_Lottery;
+                                betRecordInfo.GameType = GameType.Saba_CardClub;
                             }
-                            else if (((betDetial.sport_type ?? 0) >= 200 || (betDetial.sport_type ?? 0) == 165))
+                            else if ((betDetial.sport_type ?? 0) == 200)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_SabaClub;
+                            }
+                            else if ((betDetial.sport_type ?? 0) == 202)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_Keno;
+                            }
+                            else if ((betDetial.sport_type ?? 0) == 212)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_MacauGame;
+                            }
+                            else if ((betDetial.sport_type ?? 0) == 220)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_Lottery;
+                            }
+                            else if ((betDetial.sport_type ?? 0) == 222)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_TableGame;
+                            }
+                            else if ((betDetial.sport_type ?? 0) == 223)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_Indo4D;
+                            }
+                            else if ((betDetial.sport_type ?? 0) == 245)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_VirtualGames;
+                            }
+                            else if ((betDetial.sport_type ?? 0) > 200)
                             {
                                 betRecordInfo.GameType = betDetial.sport_type switch
                                 {
@@ -448,7 +476,14 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         foreach (var betDetial in getBetDetail.Data?.BetVirtualSportDetails)
                         {
                             BetRecordInfo betRecordInfo = new BetRecordInfo();
-                            betRecordInfo.GameType = GameType.Saba_VirtualSport;
+                            if (betDetial.sport_type >= 180 || betDetial.sport_type <= 189)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_VirtualSport;
+                            }
+                            else
+                            {
+                                betRecordInfo.GameType = GameType.Saba_VirtualSports2;
+                            }
                             betRecordInfo.TransId = betDetial.trans_id.ToString();
                             betRecordInfo.TransTime = ConvertLocTime(betDetial.transaction_time);
 

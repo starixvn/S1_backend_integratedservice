@@ -28,8 +28,16 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
         Saba_RNG = 4,
-        Keno_Lottery = 5,
+        Saba_Keno = 5,
         Allbet = 6,
-        PP = 7
+        PP = 7,
+        Saba_Lottery = 19,
+        Saba_Indo4D = 20,
+        Saba_CardClub = 21,
+        Saba_VirtualGames = 22,
+        Saba_TableGame = 23,
+        Saba_VirtualSports2 = 24,
+        Saba_SabaClub = 25,
+        Saba_MacauGame = 26
     }
 }
