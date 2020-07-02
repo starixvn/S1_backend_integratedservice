@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -51,133 +52,24 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string userId { get; set; }
         }
 
-        public class Bet
+        public class Bet : BettingDataLC_Sexy_Bet
         {
             [JsonProperty("action")]
             public string Action { get; set; }
-
-            [JsonProperty("userId")]
-            public string UserId { get; set; }
-
-            [JsonProperty("IP")]
-            public string Ip { get; set; }
-
-            [JsonProperty("currency")]
-            public string Currency { get; set; }
 
             [JsonProperty("dealerDomain")]
             public string DealerDomain { get; set; }
 
             [JsonProperty("tableId")]
             public long TableId { get; set; }
-
-            [JsonProperty("roundId")]
-            public string RoundId { get; set; }
-
-            [JsonProperty("roundStartTime")]
-            public string RoundStartTime { get; set; }
-
-            [JsonProperty("txns")]
-            public List<BetTxn> Txns { get; set; }
-
-            [JsonProperty("requestId")]
-            public string RequestId { get; set; }
-
-            [JsonProperty("validBetTime")]
-            public long ValidBetTime { get; set; }
         }
-
-        public class BetTxn
-        {
-            [JsonProperty("txId")]
-            public string TxId { get; set; }
-
-            [JsonProperty("gameType")]
-            public string GameType { get; set; }
-
-            [JsonProperty("betAmount")]
-            public decimal BetAmount { get; set; }
-
-            [JsonProperty("betTime")]
-            public string BetTime { get; set; }
-
-            [JsonProperty("updateTime")]
-            public string UpdateTime { get; set; }
-
-            [JsonProperty("category")]
-            public string Category { get; set; }
-        }
-
-        public class Settle
+        public class Settle : BettingDataLC_Sexy_Settle
         {
             [JsonProperty("action")]
             public string Action { get; set; }
 
             [JsonProperty("requestId")]
             public string RequestId { get; set; }
-
-            [JsonProperty("validBetTime")]
-            public long ValidBetTime { get; set; }
-
-            [JsonProperty("dealerDomain")]
-            public string DealerDomain { get; set; }
-
-            [JsonProperty("tableId")]
-            public long TableId { get; set; }
-
-            [JsonProperty("roundId")]
-            public string RoundId { get; set; }
-
-            [JsonProperty("roundStartTime")]
-            public string RoundStartTime { get; set; }
-
-            [JsonProperty("result")]
-            public string Result { get; set; }
-
-            [JsonProperty("winner")]
-            public string Winner { get; set; }
-
-            [JsonProperty("txns")]
-            public List<SettleTxn> Txns { get; set; }
-        }
-
-        public class SettleTxn
-        {
-            [JsonProperty("txId")]
-            public string TxId { get; set; }
-
-            [JsonProperty("gameType")]
-            public string GameType { get; set; }
-
-            [JsonProperty("betAmount")]
-            public decimal BetAmount { get; set; }
-
-            [JsonProperty("updateTime")]
-            public string UpdateTime { get; set; }
-
-            [JsonProperty("betTime")]
-            public string BetTime { get; set; }
-
-            [JsonProperty("userId")]
-            public string UserId { get; set; }
-
-            [JsonProperty("category")]
-            public string Category { get; set; }
-
-            [JsonProperty("winLoss")]
-            public decimal WinLoss { get; set; }
-
-            [JsonProperty("odds")]
-            public decimal Odds { get; set; }
-
-            [JsonProperty("settleWinLoss")]
-            public decimal SettleWinLoss { get; set; }
-
-            [JsonProperty("validBet")]
-            public decimal ValidBet { get; set; }
-
-            [JsonProperty("status")]
-            public string Status { get; set; }
         }
 
         [Route("[controller]")]

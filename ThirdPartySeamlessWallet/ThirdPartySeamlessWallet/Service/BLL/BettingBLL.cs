@@ -298,17 +298,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
-        public int PlaceBetRNG_Sexy(BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
+        public int PlaceBetRNG_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.PP, bettingDataRNG_PP.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, bettingDataLC_Sexy_Bet.UserId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                bettingDataRNG_PP.amount *= tpCurrency.ExchangeRate;
+                foreach (var txn in bettingDataLC_Sexy_Bet.Txns)
+                {
+                    txn.BetAmount *= tpCurrency.ExchangeRate;
+                }
             }
 
-            var result = bettingService.PlaceBetRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
+            var result = bettingService.PlaceBetRNG_PP(tpCustInfo, null, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
