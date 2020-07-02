@@ -638,12 +638,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new { bettingDataRNG_PP.roundId });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("Timestamp", dbType: DbType.Int64, direction: ParameterDirection.Output);
             result = conn.Execute("Service_SettledRng_PP_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
                 decimal stake = p.Get<decimal>("Stake");
                 decimal winLostAmount = p.Get<decimal>("WinLostAmount");
+                long timestamp = p.Get<long>("Timestamp");
 
                 if (result > 0)
                 {
@@ -662,7 +664,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TransId = bettingDataRNG_PP.roundId.ToString(),
                         GameType = gameType,
                         TpUserName = bettingDataRNG_PP.userId,
-                        SettledTime = bettingDataRNG_PP.timestamp / 1000,
+                        SettledTime = timestamp / 1000,
                         SettlementType = SettlementType.SettledForValidNotRollover,
                         TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                     };
