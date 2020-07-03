@@ -984,7 +984,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 TransId = bettingDataRNG_PG.ParentBetId,
                                 GameType = GameType.PG_RNG,
                                 TpUserName = bettingDataRNG_PG.PlayerName,
-                                SettledTime = bettingDataRNG_PG.UpdatedTime / 1000,
+                                SettledTime = bettingDataRNG_PG.UpdatedTime,
                                 SettlementType = SettlementType.SettledForValidNotRollover
                             };
 
