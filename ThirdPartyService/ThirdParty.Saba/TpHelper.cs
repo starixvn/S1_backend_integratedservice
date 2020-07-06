@@ -24,7 +24,7 @@ namespace ThirdParty.Saba
             {"202","keno" },
             {"208","casino" },
             {"211","allbet" },
-            {"220","kenolottery" },
+            {"220","KenoLottery" },
             {"223","indo4d" },
             {"245","virtualgame" }
         };
