@@ -14,13 +14,14 @@ namespace ThirdPartyService.Service.BLL
 {
     public class ThirdPartyBLL
     {
+        private readonly IWebHostEnvironment env;
+        private readonly IConfiguration configuration;
         private readonly TpCustInfoService tpCustInfoService;
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpTransferInfo tpTransferInfo;
-        private readonly IWebHostEnvironment env;
-        private readonly IConfiguration configuration;
+        private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
 
-        public ThirdPartyBLL(IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, AuthBLL authBLL, IConfiguration configuration)
+        public ThirdPartyBLL(IConfiguration configuration, IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, TpTransferBonusInfoService tpTransferBonusInfoService, AuthBLL authBLL)
         {
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyHelper = thirdPartyHelper;
@@ -28,6 +29,7 @@ namespace ThirdPartyService.Service.BLL
             this.env = env;
             this.configuration = configuration;
             ThirdPartyHelperBase.AuthProvider = authBLL;
+            this.tpTransferBonusInfoService = tpTransferBonusInfoService;
         }
         public ApiResult GotoGame(TpInfo tpInfo)
         {
@@ -65,7 +67,7 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.RawMessage = "This Account not allow for access";
                 }
                 else
-                { 
+                {
                     apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
                 }
                 /*Use Async to Record Log*/
@@ -262,6 +264,60 @@ namespace ThirdPartyService.Service.BLL
                 }
             }
 
+            return apiResult;
+        }
+        public ApiResult BonusTransfer(TpBonusTransfer tpBonusTransfer)
+        {
+            var apiResult = new ApiResult<TransferResult>();
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
+
+            // Test account create 3rd party only for saba
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
+                return apiResult;
+            }
+
+            IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var tpHelperParticular = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+            if (balanceApiResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;/*3RD Error Code*/
+                apiResult.RawMessage = balanceApiResult.RawMessage;/*3RD Error Message*/
+                return apiResult;
+            }
+
+            string transId = null;
+            var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
+            string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
+            var tpTransferReqResult = tpTransferBonusInfoService.TpTransferBonusReq(tpBonusTransfer, tpCustInfoResult.Data, thirdId, out transId);
+            if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
+            {
+                return tpTransferReqResult;
+            }
+
+            decimal bonus = tpBonusTransfer.Bonus;
+            decimal lockedAmount = tpBonusTransfer.LockedAmount;
+            decimal rolloverAmount = tpBonusTransfer.RolloverAmount;
+
+            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+            {
+                bonus /= tpCustInfoResult.Data.ExchangeRate;
+                lockedAmount /= tpCustInfoResult.Data.ExchangeRate;
+                rolloverAmount /= tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            apiResult = tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonus, lockedAmount, rolloverAmount, tpBonusTransfer.ExpiryTime, transId, thirdId);
+
+            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId);
             return apiResult;
         }
     }

@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace ThirdParty.AG
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
+    public class TpHelper : ThirdPartyHelperBase
     {
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
             {"MYR","A" },
@@ -228,11 +228,6 @@ namespace ThirdParty.AG
             XmlAttributeCollection nodeList = root.Attributes;
             XmlNodeList nodes = doc.DocumentElement.SelectNodes("/PlayerTicketResponse");
             return nodes[0].SelectSingleNode("ResponseCode").InnerText; ;
-        }
-
-        ApiResult IThirdPartyParticular.Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
         }
     }
 }

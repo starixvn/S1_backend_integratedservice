@@ -12,7 +12,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.SA
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
+    public class TpHelper : ThirdPartyHelperBase
     {
         [XmlRoot("APIResponse")]
         public class Result
@@ -224,11 +224,6 @@ namespace ThirdParty.SA
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
-        {
-            throw new NotImplementedException();
-        }
-
-        ApiResult IThirdPartyParticular.Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }

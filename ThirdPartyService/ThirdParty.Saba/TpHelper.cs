@@ -374,9 +374,9 @@ namespace ThirdParty.Saba
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             TransferReg input = new TransferReg();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
             input.vendor_trans_id = TransID;
             input.amount = Amount;
@@ -438,9 +438,9 @@ namespace ThirdParty.Saba
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             Req input = new Req();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !String.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
@@ -467,6 +467,88 @@ namespace ThirdParty.Saba
             {
                 apiResult.RawMessage = "No Result";
                 apiResult.RawErrorCode = "1";
+            }
+
+            return apiResult;
+        }
+        private class BonusTransferReg : Req
+        {
+            public string vendor_trans_id { set; get; }
+            public int direction
+            {
+                get
+                {
+                    return 1;
+                }
+            }
+            public decimal amount { set; get; }
+            public int currency { set; get; }
+            public decimal locked_amount { set; get; }
+            public decimal rollover_amount { set; get; }
+            public string expired_date { set; get; }
+        }
+        public ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, decimal lockedAmount, decimal rolloverAmount, long expiredDate, string transID, string thirdPartyTransID)
+        {
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            BonusTransferReg input = new BonusTransferReg();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_member_id = tpCustInfo.TpUserName;
+            input.vendor_trans_id = transID;
+            input.amount = bonus;
+
+            if (tpCustInfo.IsTest)
+                input.currency = 20;
+            else
+                input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
+
+            input.locked_amount = lockedAmount;
+            input.rollover_amount = rolloverAmount;
+            input.expired_date = DateTimeOffset.FromUnixTimeSeconds(expiredDate).ToOffset(new TimeSpan(8, 0, 0)).DateTime.AddDays(1).ToString("yyyy/MM/dd");
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
+            string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+
+            ApiUrl = $"{ApiUrl}/BonusTransfer";
+            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
+
+            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<TransResult>(result);
+                if (json.error_code == 0 && json.Data.status == 0)
+                {
+                    apiResult.ErrorCode = ErrorCode.Success;
+                    apiResult.Data.Status = TransferStatus.Success;
+                    apiResult.Data.ThirdId = json.Data.trans_id.ToString();
+                }
+                else if (json.error_code == 0 && json.Data.status == 1)
+                {
+                    apiResult.RawMessage = json.message;
+                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Data.Status = TransferStatus.Fail;
+                }
+                else if (json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 5 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
+                {
+                    apiResult.RawMessage = json.message;
+                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Data.Status = TransferStatus.Fail;
+                }
+                else
+                {
+                    apiResult.RawMessage = json.message;
+                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.ErrorCode = ErrorCode.TransferPending;
+                    apiResult.Data.Status = TransferStatus.Pending;
+                }
+            }
+            else
+            {
+                apiResult.RawMessage = "No Result";
+                apiResult.RawErrorCode = "1";
+                apiResult.ErrorCode = ErrorCode.TransferPending;
+                apiResult.Data.Status = TransferStatus.Pending;
             }
 
             return apiResult;

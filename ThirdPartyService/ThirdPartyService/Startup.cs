@@ -40,7 +40,9 @@ namespace ThirdPartyService
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<WalletService>();
+            services.AddSingleton<BonusWalletService>();
             services.AddSingleton<TpTransferInfo>();
+            services.AddSingleton<TpTransferBonusInfoService>();
             services.AddSingleton<ServerInfoService>();
             services.AddSingleton<AuthService>();
 

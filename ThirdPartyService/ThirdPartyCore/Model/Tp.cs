@@ -70,4 +70,15 @@ namespace ThirdPartyCore.Model
         public int Status { set; get; }
         public DateTime CreateTime { set; get; }
     }
+    public class TpBonusTransfer
+    {
+        public int TpId { set; get; }
+        public int CustId { set; get; }
+        public decimal Bonus { set; get; }
+        public decimal BonusAmount { set; get; }
+        public decimal LockedAmount { set; get; }
+        public decimal RolloverAmount { set; get; }
+        public long ExpiryTime { set; get; }
+        public Dictionary<string, string> inputs { set; get; }
+    }
 }
