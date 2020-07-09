@@ -231,12 +231,14 @@ namespace ThirdParty.Saba
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Data.balance = json.Data[0].balance ?? 0;
+                    oApiResult.Data.bonus = json.Data[0].bonus_balance ?? 0;
                     oApiResult.Data.outstanding = json.Data[0].outstanding ?? 0;
                 }
                 else if (json.error_code == 2 || json.error_code == 6)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Data.balance = 0;
+                    oApiResult.Data.bonus = 0;
                     oApiResult.Data.outstanding = 0;
                 }
                 else

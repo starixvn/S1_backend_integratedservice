@@ -35,6 +35,7 @@ namespace ThirdPartyCore.Model
     public class UserBalance
     {
         public decimal balance { get; set; }
+        public decimal bonus { get; set; }
         public decimal outstanding { get; set; }
         public byte Currency { get; set; }
     }
