@@ -30,18 +30,19 @@ namespace ThirdPartyService.Service.DAL
             var apiResult = new ApiResult<TransferResult>();
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
-                transId = conn.ExecuteScalar<string>("Service_TpTransferBonusInfo_Ins", new { TpId = tpBonusTransfer.TpId, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, SiteId = tpCustInfo.SiteId, Memo = (string)null, ThirdId = thirdId, Prefix = $"V{common.GetEnv()}" }, commandType: CommandType.StoredProcedure);
+                transId = conn.QueryFirstOrDefault<string>("Service_TpTransferBonusInfo_Ins", new { TpId = tpBonusTransfer.TpId, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, SiteId = tpCustInfo.SiteId, Memo = (string)null, ThirdId = thirdId, Prefix = $"V{common.GetEnv()}" }, commandType: CommandType.StoredProcedure);
                 conn.Open();
 
                 Match m = Regex.Match(transId, @"\d+");
                 int.TryParse(m.Value, out int transferId);
 
                 using var trans = conn.BeginTransaction();
-                var rwalletServiceResult = bonusService.BonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpBonusTransfer.TpId, null, transId, out BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out long ExpiryTime, conn, trans);
+                var rwalletServiceResult = bonusService.BonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpBonusTransfer.TpId, null, transId, out BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out decimal RolloverAmount, out long ExpiryTime, conn, trans);
                 tpBonusTransfer.Bonus = Bonus;
                 tpBonusTransfer.LockedAmount = LockedAmount;
                 tpBonusTransfer.BonusAmount = BonusAmount;
                 tpBonusTransfer.ExpiryTime = ExpiryTime;
+                tpBonusTransfer.RolloverAmount = RolloverAmount;
 
                 if (!rwalletServiceResult)
                 {
@@ -49,13 +50,13 @@ namespace ThirdPartyService.Service.DAL
                     apiResult.Data.Difference = 0;
                     apiResult.Message = "No bonus can be transferred.";
 
-                    conn.Execute("Service_TpTransferBonusInfo_Set", new { TransferBonusId = transferId, Bonus = tpBonusTransfer.Bonus, BonusAmount = tpBonusTransfer.BonusAmount, LockedAmount = tpBonusTransfer.LockedAmount, ExpiryTime = tpBonusTransfer.ExpiryTime, ThirdId = thirdId, Memo = $"{apiResult.Message}", ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail }, trans, commandType: CommandType.StoredProcedure);
+                    conn.Execute("Service_TpTransferBonusInfo_Set", new { TransferBonusId = transferId, Bonus = tpBonusTransfer.Bonus, BonusAmount = tpBonusTransfer.BonusAmount, LockedAmount = tpBonusTransfer.LockedAmount, RolloverAmount = tpBonusTransfer.RolloverAmount, ExpiredDate = tpBonusTransfer.ExpiryTime, ThirdId = thirdId, Memo = $"{apiResult.Message}", ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail }, trans, commandType: CommandType.StoredProcedure);
                     trans.Commit();
                     return apiResult;
                 }
                 else
                 {
-                    conn.Execute("Service_TpTransferBonusInfo_Set", new { TransferBonusId = transferId, Bonus = tpBonusTransfer.Bonus, BonusAmount = tpBonusTransfer.BonusAmount, LockedAmount = tpBonusTransfer.LockedAmount, ExpiryTime = tpBonusTransfer.ExpiryTime, ThirdId = thirdId, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.PendingD }, trans, commandType: CommandType.StoredProcedure);
+                    conn.Execute("Service_TpTransferBonusInfo_Set", new { TransferBonusId = transferId, Bonus = tpBonusTransfer.Bonus, BonusAmount = tpBonusTransfer.BonusAmount, LockedAmount = tpBonusTransfer.LockedAmount, RolloverAmount = tpBonusTransfer.RolloverAmount, ExpiredDate = tpBonusTransfer.ExpiryTime, ThirdId = thirdId, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.PendingD }, trans, commandType: CommandType.StoredProcedure);
                     trans.Commit();
                 }
             }
@@ -79,7 +80,7 @@ namespace ThirdPartyService.Service.DAL
                 int forStatus = 0;
                 forStatus = (int)TransferStatus.PendingD;
 
-                bool isSuccess = conn.Execute("Service_TpTransferBonusInfo_Set", new { TransferBonusId = transferId, transferResult.Data.ThirdId, Memo = transferResult.RawMessage, ForStatus = forStatus, Status = (int)TransferStatus.Success }, trans, commandType: CommandType.StoredProcedure) > 0;
+                bool isSuccess = conn.Execute("Service_TpTransferBonusInfoStatus_Set", new { TransferBonusId = transferId, transferResult.Data.ThirdId, Memo = transferResult.RawMessage, ForStatus = forStatus, Status = (int)TransferStatus.Success }, trans, commandType: CommandType.StoredProcedure) > 0;
 
                 if (isSuccess)
                 {
@@ -108,7 +109,7 @@ namespace ThirdPartyService.Service.DAL
 
                 var p = new DynamicParameters(new { TransferId = transferId, transferResult.Data.ThirdId, ForStatus = forStatus, Status = (int)TransferStatus.Fail });
                 p.Add("Memo", Memo, dbType: DbType.String, direction: ParameterDirection.Input, size: 100);
-                bool isSuccess = conn.Execute("Service_TpTransferBonusInfo_Set", p, trans, commandType: CommandType.StoredProcedure) > 0;
+                bool isSuccess = conn.Execute("Service_TpTransferBonusInfoStatus_Set", p, trans, commandType: CommandType.StoredProcedure) > 0;
                 bool rwalletServiceResult = false;
                 if (isSuccess)
                 {

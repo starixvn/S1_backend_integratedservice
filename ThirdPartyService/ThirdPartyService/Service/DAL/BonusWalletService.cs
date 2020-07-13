@@ -17,7 +17,7 @@ namespace ThirdPartyService.Service.DAL
         {
             this.configuration = configuration;
         }
-        public bool BonusTransferOutAll(int custId, int siteId, string userName, int tpId, string Memo, string RefTransId, out int BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out long ExpiryTime, MySqlConnection conn, MySqlTransaction trans)
+        public bool BonusTransferOutAll(int custId, int siteId, string userName, int tpId, string Memo, string RefTransId, out int BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out decimal RolloverAmount, out long ExpiryTime, MySqlConnection conn, MySqlTransaction trans)
         {
             int type = typePosition + tpId;
             BonusId = 0;
@@ -25,18 +25,21 @@ namespace ThirdPartyService.Service.DAL
             LockedAmount = 0;
             BonusAmount = 0;
             ExpiryTime = 0;
+            RolloverAmount = 0;
 
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Type = type, Memo, RefTransId });
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("LockedAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("RolloverAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ExpiryTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             conn.Execute("Common_BonusTransferOutAll_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             BonusId = p.Get<int>("BonusId");
             Bonus = p.Get<decimal>("Bonus");
             LockedAmount = p.Get<decimal>("LockedAmount");
             BonusAmount = p.Get<decimal>("BonusAmount");
+            RolloverAmount = p.Get<decimal>("BonusAmount");
             ExpiryTime = p.Get<long>("ExpiryTime");
             return BonusId > 0;
         }

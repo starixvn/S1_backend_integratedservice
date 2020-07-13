@@ -305,6 +305,7 @@ namespace ThirdPartyService.Service.BLL
             }
 
             decimal bonus = tpBonusTransfer.Bonus;
+            decimal bonusAmount = tpBonusTransfer.BonusAmount;
             decimal lockedAmount = tpBonusTransfer.LockedAmount;
             decimal rolloverAmount = tpBonusTransfer.RolloverAmount;
 
@@ -315,7 +316,7 @@ namespace ThirdPartyService.Service.BLL
                 rolloverAmount /= tpCustInfoResult.Data.ExchangeRate;
             }
 
-            apiResult = tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonus, lockedAmount, rolloverAmount, tpBonusTransfer.ExpiryTime, transId, thirdId);
+            apiResult = tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, lockedAmount, rolloverAmount, tpBonusTransfer.ExpiryTime, transId, thirdId);
 
             tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
             return apiResult;
