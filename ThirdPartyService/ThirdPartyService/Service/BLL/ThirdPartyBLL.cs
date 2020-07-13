@@ -319,6 +319,15 @@ namespace ThirdPartyService.Service.BLL
             apiResult = tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, lockedAmount, rolloverAmount, tpBonusTransfer.ExpiryTime, transId, thirdId);
 
             tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
+
+            if (apiResult.ErrorCode == ErrorCode.Success)
+            {
+                Task.Run(() =>
+                {
+                    tpCustInfoService.SetTpLastTradingTime(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
+                });
+            }
+
             return apiResult;
         }
     }

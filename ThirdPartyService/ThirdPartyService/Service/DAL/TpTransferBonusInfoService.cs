@@ -107,7 +107,7 @@ namespace ThirdPartyService.Service.DAL
                     Memo = transferResult.RawMessage;
                 }
 
-                var p = new DynamicParameters(new { TransferId = transferId, transferResult.Data.ThirdId, ForStatus = forStatus, Status = (int)TransferStatus.Fail });
+                var p = new DynamicParameters(new { TransferBonusId = transferId, transferResult.Data.ThirdId, ForStatus = forStatus, Status = (int)TransferStatus.Fail });
                 p.Add("Memo", Memo, dbType: DbType.String, direction: ParameterDirection.Input, size: 100);
                 bool isSuccess = conn.Execute("Service_TpTransferBonusInfoStatus_Set", p, trans, commandType: CommandType.StoredProcedure) > 0;
                 bool rwalletServiceResult = false;

@@ -39,7 +39,7 @@ namespace ThirdPartyService.Service.DAL
             Bonus = p.Get<decimal>("Bonus");
             LockedAmount = p.Get<decimal>("LockedAmount");
             BonusAmount = p.Get<decimal>("BonusAmount");
-            RolloverAmount = p.Get<decimal>("BonusAmount");
+            RolloverAmount = p.Get<decimal>("RolloverAmount");
             ExpiryTime = p.Get<long>("ExpiryTime");
             return BonusId > 0;
         }
