@@ -9,42 +9,51 @@ using System.Threading.Tasks;
 
 namespace ThirdPartyService.Service.DAL
 {
-    public class BonusWalletService
+    public class BonusService
     {
         private readonly IConfiguration configuration;
         private int typePosition = 1000;
-        public BonusWalletService(IConfiguration configuration)
+        public BonusService(IConfiguration configuration)
         {
             this.configuration = configuration;
         }
-        public bool SetBonusTransferOutAll(int custId, int siteId, string userName, int tpId, string Memo, string RefTransId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out long ExpiryTime, MySqlConnection conn, MySqlTransaction trans)
+        public bool BonusTransferOutAll(int custId, int siteId, string userName, int tpId, string Memo, string RefTransId, out int BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out long ExpiryTime, MySqlConnection conn, MySqlTransaction trans)
         {
             int type = typePosition + tpId;
+            BonusId = 0;
             Bonus = 0;
             LockedAmount = 0;
             BonusAmount = 0;
             ExpiryTime = 0;
 
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Type = type, Memo, RefTransId });
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("LockedAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ExpiryTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             conn.Execute("Common_BonusTransferOutAll_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            BonusId = p.Get<int>("BonusId");
             Bonus = p.Get<decimal>("Bonus");
             LockedAmount = p.Get<decimal>("LockedAmount");
             BonusAmount = p.Get<decimal>("BonusAmount");
             ExpiryTime = p.Get<long>("ExpiryTime");
-            return Bonus > 0m;
+            return BonusId > 0;
         }
-        public bool SetBonusBalance(int custId, int siteId, string userName, decimal Bonus, int tpId, string Memo, string RefTransId, out decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)
+        public bool BonusTransferRollback(int custId, int siteId, string userName, decimal Bonus, int tpId, string Memo, string RefTransId, int bonusId, out decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)
         {
             int type = typePosition + tpId;
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Bonus = Bonus, Type = type, Memo = Memo, RefTransId = RefTransId });
+            var p = new DynamicParameters(new { BonusId = bonusId, CustId = custId, SiteId = siteId, UserName = userName, Bonus = Bonus, Type = type, Memo = Memo, RefTransId = RefTransId });
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            conn.Execute("Common_BonusWallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            conn.Execute("Common_BonusTransferRollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             afterBonus = p.Get<decimal>("AfterBonus");
             return afterBonus >= 0;
+        }
+        public int SetBonusStatus(int bonusId, int status, int forStatus, MySqlConnection conn, MySqlTransaction trans)
+        {
+            int result = 0;
+            result = conn.Execute("Common_BonusStatus_Set", new { BonusId = bonusId, Status = status, ForStatus = forStatus }, transaction: trans, commandType: CommandType.StoredProcedure);
+            return result;
         }
     }
 }

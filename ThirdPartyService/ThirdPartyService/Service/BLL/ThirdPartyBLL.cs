@@ -298,7 +298,7 @@ namespace ThirdPartyService.Service.BLL
             string transId = null;
             var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
             string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
-            var tpTransferReqResult = tpTransferBonusInfoService.TpTransferBonusReq(tpBonusTransfer, tpCustInfoResult.Data, thirdId, out transId);
+            var tpTransferReqResult = tpTransferBonusInfoService.TpTransferBonusReq(tpBonusTransfer, tpCustInfoResult.Data, thirdId, out transId, out int bonusId);
             if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
             {
                 return tpTransferReqResult;
@@ -317,7 +317,7 @@ namespace ThirdPartyService.Service.BLL
 
             apiResult = tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonus, lockedAmount, rolloverAmount, tpBonusTransfer.ExpiryTime, transId, thirdId);
 
-            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId);
+            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
             return apiResult;
         }
     }

@@ -17,15 +17,15 @@ namespace ThirdPartyService.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly Common common;
-        private readonly BonusWalletService bonusWalletService;
-        public TpTransferBonusInfoService(IConfiguration configuration, Common common, BonusWalletService bonusWalletService)
+        private readonly BonusService bonusService;
+        public TpTransferBonusInfoService(IConfiguration configuration, Common common, BonusService bonusService)
         {
             this.configuration = configuration;
             this.common = common;
-            this.bonusWalletService = bonusWalletService;
+            this.bonusService = bonusService;
         }
 
-        public ApiResult<TransferResult> TpTransferBonusReq(TpBonusTransfer tpBonusTransfer, TpCustInfo tpCustInfo, string thirdId, out string transId)
+        public ApiResult<TransferResult> TpTransferBonusReq(TpBonusTransfer tpBonusTransfer, TpCustInfo tpCustInfo, string thirdId, out string transId, out int BonusId)
         {
             var apiResult = new ApiResult<TransferResult>();
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
@@ -37,7 +37,7 @@ namespace ThirdPartyService.Service.DAL
                 int.TryParse(m.Value, out int transferId);
 
                 using var trans = conn.BeginTransaction();
-                var rwalletServiceResult = bonusWalletService.SetBonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpBonusTransfer.TpId, null, transId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out long ExpiryTime, conn, trans);
+                var rwalletServiceResult = bonusService.BonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpBonusTransfer.TpId, null, transId, out BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out long ExpiryTime, conn, trans);
                 tpBonusTransfer.Bonus = Bonus;
                 tpBonusTransfer.LockedAmount = LockedAmount;
                 tpBonusTransfer.BonusAmount = BonusAmount;
@@ -64,7 +64,7 @@ namespace ThirdPartyService.Service.DAL
             return apiResult;
         }
 
-        public void TpTransferBonusCommit(ApiResult<TransferResult> transferResult, TpCustInfo tpCustInfo, TpBonusTransfer tpBonusTransfer, string transId)
+        public void TpTransferBonusCommit(ApiResult<TransferResult> transferResult, TpCustInfo tpCustInfo, TpBonusTransfer tpBonusTransfer, string transId, int bonusId)
         {
             int transferId = 0;
             Match m = Regex.Match(transId, @"\d+");
@@ -72,6 +72,7 @@ namespace ThirdPartyService.Service.DAL
 
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
+                //bonusId
                 using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
                 using var trans = conn.BeginTransaction();
@@ -79,6 +80,11 @@ namespace ThirdPartyService.Service.DAL
                 forStatus = (int)TransferStatus.PendingD;
 
                 bool isSuccess = conn.Execute("Service_TpTransferBonusInfo_Set", new { TransferBonusId = transferId, transferResult.Data.ThirdId, Memo = transferResult.RawMessage, ForStatus = forStatus, Status = (int)TransferStatus.Success }, trans, commandType: CommandType.StoredProcedure) > 0;
+
+                if (isSuccess)
+                {
+                    bonusService.SetBonusStatus(bonusId, 5, 1, conn, trans);
+                }
 
                 if (isSuccess)
                     trans.Commit();
@@ -107,7 +113,8 @@ namespace ThirdPartyService.Service.DAL
                 if (isSuccess)
                 {
                     Memo = $"\r\nreturn amount. Cause: {transferResult.RawMessage}";
-                    rwalletServiceResult = bonusWalletService.SetBonusBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpBonusTransfer.Bonus, tpBonusTransfer.TpId, Memo, transId, out decimal afterBonus, conn, trans);
+                    //bonusId
+                    rwalletServiceResult = bonusService.BonusTransferRollback(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpBonusTransfer.Bonus, tpBonusTransfer.TpId, Memo, transId, bonusId, out decimal afterBonus, conn, trans);
                 }
 
                 if (rwalletServiceResult)
