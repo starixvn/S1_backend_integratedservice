@@ -122,10 +122,24 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 Bet bet = JsonConvert.DeserializeObject<Bet>(req.message);
 
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, bet.UserId);
+                if (tpCheck == null)
+                {
+                    resp.status = "500";
+                    resp.msg = "system busy";
+                    return resp;
+                }
+                else if (tpCheck.Locked)
+                {
+                    resp.status = "500";
+                    resp.msg = "system busy";
+                    return resp;
+                }
+
                 try
                 {
                     int result = bettingBLL.PlaceBetLC_Sexy(bet, out decimal tpAffterAmount);
-
+                    //Task.Delay(70000).Wait();
                     if (result > 0)
                     {
                         resp.balance = tpAffterAmount.ToString("0.00");
@@ -156,11 +170,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (string.Equals(reqAction.action, "cancelBet", StringComparison.OrdinalIgnoreCase))
             {
-                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
+                CancelBetTxn cancelBetTxn = JsonConvert.DeserializeObject<CancelBetTxn>(req.message);
 
                 try
                 {
-                    int result = settledBLL.RefundFish_YL(null, out decimal tpAffterAmount);
+                    int result = bettingBLL.CancelBetLC_Sexy(cancelBetTxn, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
@@ -169,11 +183,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (result == -1)
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, cancelBetTxn.userId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
                         resp.status = "200";
                     }
-                    else if (tpAffterAmount < 0)
+                    else if (tpAffterAmount < 0 || result == 0)
                     {
                         //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
                         //resp.balance = tpCustBalance.Balance.ToString("0.00");
@@ -181,8 +195,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.msg = "system busy";
                     }
 
-                    string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-                    log2File.Info(voidFishBetLog, "YL_VoidFishBet");
+                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
                 }
                 catch (Exception ex)
                 {

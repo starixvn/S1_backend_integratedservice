@@ -121,4 +121,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Status { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }
+
+    public class Txn
+    {
+        public string dealerDomain { get; set; }
+        public int tableId { get; set; }
+        public string roundId { get; set; }
+        public string txId { get; set; }
+        public string updateTime { get; set; }
+    }
+    public class CancelBetTxn
+    {
+        public string action { get; set; }
+        public string requestId { get; set; }
+        public string extension3 { get; set; }
+        public string userId { get; set; }
+        public IList<Txn> txns { get; set; }
+    }
 }

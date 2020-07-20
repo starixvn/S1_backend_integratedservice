@@ -561,5 +561,41 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int CancelBetLC_Sexy(TpCustInfo tpCustInfo, CancelBetTxn cancelBetTxn, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            foreach (var txn in cancelBetTxn.txns)
+            {
+                DateTime.TryParse(txn.updateTime, out DateTime uT);
+                DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
+
+                var p = new DynamicParameters(new { txId = txn.txId, userId = cancelBetTxn.userId, updateTime = updateTime.ToUnixTimeSeconds() });
+                p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_CancelBetLC_Sexy_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal betAmount = p.Get<decimal>("betAmount");
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betAmount, (int)Tp.Sexy, TransType.Refunds, $"Cancel Bet: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans);
+                    if (result == 0)
+                    {
+                        return 0;
+                    }
+                }
+                else
+                {
+                    result = -1;
+                    continue;
+                }
+            }
+
+            trans.Commit();
+            return result;
+        }
     }
 }

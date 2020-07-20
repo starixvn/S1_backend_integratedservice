@@ -318,5 +318,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int CancelBetLC_Sexy(CancelBetTxn cancelBetTxn, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, cancelBetTxn.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+            var result = bettingService.CancelBetLC_Sexy(tpCustInfo, cancelBetTxn, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
     }
 }
