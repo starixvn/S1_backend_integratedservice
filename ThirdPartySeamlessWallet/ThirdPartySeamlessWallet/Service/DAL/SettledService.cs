@@ -7,6 +7,7 @@ using System.Data;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using System.Linq;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -1013,6 +1014,81 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw mySqlEx;
                 }
             }
+
+            return result;
+        }
+        public int SettledLC_Sexy(BettingDataLC_Sexy_Settle bettingDataLC_Sexy_Settle, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+            using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            DateTime.TryParse(bettingDataLC_Sexy_Settle.RoundStartTime, out DateTime dtTransTime);
+            long roundStartTime = tools.ConvertLocTime(dtTransTime, 8);
+
+            connSettled.Execute("Service_BettransLC_Sexy_Settle_Ins", new { roundId = bettingDataLC_Sexy_Settle.RoundId, dealerDomain = bettingDataLC_Sexy_Settle.DealerDomain, roundStartTime = roundStartTime, validBetTime = bettingDataLC_Sexy_Settle.ValidBetTime / 1000, winner = bettingDataLC_Sexy_Settle.Winner, result = bettingDataLC_Sexy_Settle.Result }, commandType: CommandType.StoredProcedure);
+
+            foreach (var txn in bettingDataLC_Sexy_Settle.Txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                DateTime.TryParse(txn.BetTime, out dtTransTime);
+                long betTime = tools.ConvertLocTime(dtTransTime, 8);
+                DateTime.TryParse(txn.UpdateTime, out dtTransTime);
+                long updateTime = tools.ConvertLocTime(dtTransTime, 8);
+                try
+                {
+                    result = conn.Execute("Service_BettransmLC_Sexy_Settle_Ins", new { txId = txn.TxId, roundId = bettingDataLC_Sexy_Settle.RoundId, userId = txn.UserId, category = txn.Category, gameType = txn.GameType, betAmount = txn.BetAmount, betTime = betTime, updateTime = updateTime, winLoss = txn.WinLoss, odds = txn.Odds, settleWinLoss = txn.SettleWinLoss, validBet = txn.ValidBet, status = txn.Status }, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        throw mySqlEx;
+                    }
+                }
+
+                if (result > 0)
+                {
+                    if (txn.SettleWinLoss != 0)
+                    {
+                        result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.Sexy, TransType.Settled, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        BetRecordInfo betRecordInfo = new BetRecordInfo();
+                        betRecordInfo.TpId = (int)Tp.Sexy;
+                        betRecordInfo.Stake = txn.ValidBet;
+                        betRecordInfo.WinlostAmount = txn.WinLoss;
+                        betRecordInfo.TransId = txn.TxId;
+                        betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                        betRecordInfo.TpUserName = txn.UserId;
+                        betRecordInfo.SettledTime = betTime;
+                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+                else
+                {
+                    trans.Commit();
+                }
+            }
+
+            connSettled.Execute("Service_BettransLC_Sexy_Settle_Set", new
+            {
+                roundId = bettingDataLC_Sexy_Settle.RoundId
+            }, commandType: CommandType.StoredProcedure);
 
             return result;
         }

@@ -524,25 +524,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-
-        public int PlaceBetRNG_Sexy(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
+        public int PlaceBetLC_Sexy(TpCustInfo tpCustInfo, BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            bettingDataRNG_PP.amount *= -1;
-            bettingDataRNG_PP.TicketStatus = (int)TicketStatus.UnSettled;
-            bettingDataRNG_PP.type = BettransType.Bet;
-            var p = new DynamicParameters(new { reference = bettingDataRNG_PP.reference, roundId = bettingDataRNG_PP.roundId, gameId = bettingDataRNG_PP.gameId, amount = bettingDataRNG_PP.amount, userId = bettingDataRNG_PP.userId, roundDetails = bettingDataRNG_PP.roundDetails, timestamp = bettingDataRNG_PP.timestamp, bonusCode = bettingDataRNG_PP.bonusCode, jackpotId = bettingDataRNG_PP.jackpotId, jackpotContribution = bettingDataRNG_PP.jackpotContribution, type = (int)bettingDataRNG_PP.type, TicketStatus = (int)bettingDataRNG_PP.TicketStatus, promoWinAmount = (decimal?)null, promoWinReference = (string)null, promoCampaignID = (int?)null, promoCampaignType = (string)null });
-            /*p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);*/
-            result = conn.Execute("Service_BettransRng_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0 && bettingDataRNG_PP.amount != 0)
+            foreach (var txn in bettingDataLC_Sexy_Bet.Txns)
             {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PP.amount, (int)Tp.PP, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PP.amount).ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
+                DateTime.TryParse(txn.BetTime, out DateTime bBet);
+                DateTime.TryParse(txn.UpdateTime, out DateTime uT);
+                DateTimeOffset betTime = new DateTimeOffset(bBet, new TimeSpan(8, 0, 0));
+                DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
+
+                var p = new DynamicParameters(new { txId = txn.TxId, userId = bettingDataLC_Sexy_Bet.UserId, IP = bettingDataLC_Sexy_Bet.Ip, currency = bettingDataLC_Sexy_Bet.Currency, roundId = bettingDataLC_Sexy_Bet.RoundId, gameType = bettingDataLC_Sexy_Bet.RoundId, betAmount = txn.BetAmount, betTime = betTime.ToUnixTimeSeconds(), updateTime = updateTime.ToUnixTimeSeconds(), category = txn.Category });
+                result = conn.Execute("Service_BettransLC_Sexy_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, txn.BetAmount * -1, (int)Tp.Sexy, TransType.Wagers, $"Stake: {Math.Abs(txn.BetAmount).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans);
+                    if (result == 0)
+                    {
+                        return 0;
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
             }
 
             if (result > 0)

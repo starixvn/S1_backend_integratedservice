@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -118,5 +119,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("status")]
         public string Status { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
     }
 }

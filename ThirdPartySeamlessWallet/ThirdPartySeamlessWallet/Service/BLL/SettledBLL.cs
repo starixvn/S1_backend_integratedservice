@@ -444,5 +444,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int SettledLC_Sexy(BettingDataLC_Sexy_Settle bettingDataLC_Sexy_Settle, out decimal afterAmount)
+        {
+
+            foreach (var txn in bettingDataLC_Sexy_Settle.Txns)
+            {
+
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, txn.UserId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    txn.BetAmount *= tpCurrency.ExchangeRate;
+                    txn.SettleWinLoss *= tpCurrency.ExchangeRate;
+                    txn.ValidBet *= tpCurrency.ExchangeRate;
+                    txn.WinLoss *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.SettledLC_Sexy(bettingDataLC_Sexy_Settle, out afterAmount);
+
+            return result;
+        }
     }
 }

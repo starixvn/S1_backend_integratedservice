@@ -124,7 +124,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 try
                 {
-                    int result = bettingBLL.PlaceBetRNG_Sexy(null, out decimal tpAffterAmount);
+                    int result = bettingBLL.PlaceBetLC_Sexy(bet, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
@@ -133,14 +133,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (result == -1)
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, bet.UserId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
                         resp.status = "200";
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, bet.UserId);
+                        resp.balance = tpCustBalance.Balance.ToString("0.00");
                         resp.status = "500";
                         resp.msg = "code:9001";
                     }
@@ -194,12 +194,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (string.Equals(reqAction.action, "settle", StringComparison.OrdinalIgnoreCase))
             {
                 Settle settle = JsonConvert.DeserializeObject<Settle>(req.message);
-
+                //roundID + TxID.
                 log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
 
                 try
                 {
-                    int result = settledBLL.RefundFish_YL(null, out decimal tpAffterAmount);
+                    int result = settledBLL.SettledLC_Sexy(settle, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
@@ -220,8 +220,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.msg = "system busy";
                     }
 
-                    string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-                    log2File.Info(voidFishBetLog, "YL_VoidFishBet");
+                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
                 }
                 catch (Exception ex)
                 {

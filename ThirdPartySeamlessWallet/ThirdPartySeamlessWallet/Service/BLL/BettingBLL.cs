@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
-        public int PlaceBetRNG_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
+        public int PlaceBetLC_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, bettingDataLC_Sexy_Bet.UserId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
@@ -311,7 +311,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
 
-            var result = bettingService.PlaceBetRNG_PP(tpCustInfo, null, out afterAmount);
+            var result = bettingService.PlaceBetLC_Sexy(tpCustInfo, bettingDataLC_Sexy_Bet, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
