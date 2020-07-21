@@ -170,10 +170,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (string.Equals(reqAction.action, "cancelBet", StringComparison.OrdinalIgnoreCase))
             {
-                CancelBetTxn cancelBetTxn = JsonConvert.DeserializeObject<CancelBetTxn>(req.message);
-
                 try
                 {
+                    BettingDataLC_Sexy_CancelBet cancelBetTxn = JsonConvert.DeserializeObject<BettingDataLC_Sexy_CancelBet>(req.message);
+
                     int result = bettingBLL.CancelBetLC_Sexy(cancelBetTxn, out decimal tpAffterAmount);
 
                     if (result > 0)
@@ -206,29 +206,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (string.Equals(reqAction.action, "settle", StringComparison.OrdinalIgnoreCase))
             {
-                Settle settle = JsonConvert.DeserializeObject<Settle>(req.message);
-                //roundID + TxID.
-                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-
                 try
                 {
+                    Settle settle = JsonConvert.DeserializeObject<Settle>(req.message);
+
                     int result = settledBLL.SettledLC_Sexy(settle, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
-                        resp.balance = tpAffterAmount.ToString("0.00");
                         resp.status = "200";
                     }
-                    else if (result == -1)
+                    else
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
-                        resp.status = "200";
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
                         resp.status = "500";
                         resp.msg = "system busy";
                     }
@@ -244,33 +233,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (string.Equals(reqAction.action, "unsettle", StringComparison.OrdinalIgnoreCase))
             {
-                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-
                 try
                 {
-                    int result = settledBLL.RefundFish_YL(null, out decimal tpAffterAmount);
+                    BettingDataLC_Sexy_Unsettle bettingDataLC_Sexy_Unsettle = JsonConvert.DeserializeObject<BettingDataLC_Sexy_Unsettle>(req.message);
+                    int result = settledBLL.UnsettledLC_Sexy(bettingDataLC_Sexy_Unsettle, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
-                        resp.balance = tpAffterAmount.ToString("0.00");
                         resp.status = "200";
                     }
-                    else if (result == -1)
+                    else
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
-                        resp.status = "200";
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
                         resp.status = "500";
                         resp.msg = "system busy";
                     }
 
-                    string voidFishBetLog = $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}";
-                    log2File.Info(voidFishBetLog, "YL_VoidFishBet");
+                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
                 }
                 catch (Exception ex)
                 {

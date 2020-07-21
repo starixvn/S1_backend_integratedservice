@@ -468,5 +468,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int UnsettledLC_Sexy(BettingDataLC_Sexy_Unsettle bettingDataLC_Sexy_Unsettle, out decimal afterAmount)
+        {
+
+            foreach (var txn in bettingDataLC_Sexy_Unsettle.txns)
+            {
+
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+            }
+
+            var result = settledService.UnsettledLC_Sexy(bettingDataLC_Sexy_Unsettle, out afterAmount);
+
+            return result;
+        }
     }
 }

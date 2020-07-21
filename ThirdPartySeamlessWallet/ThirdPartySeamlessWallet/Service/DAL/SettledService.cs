@@ -1092,6 +1092,88 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public int UnsettledLC_Sexy(BettingDataLC_Sexy_Unsettle bettingDataLC_Sexy_Unsettle, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+            bool cantUnsettle = false;
+
+            foreach (var txn in bettingDataLC_Sexy_Unsettle.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                var p = new DynamicParameters(new { txId = txn.txId });
+                p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("winLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("settleWinLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("validBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_BettransmLC_Sexy_Unsettle_Del", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal settleWinLoss = p.Get<decimal>("settleWinLoss");
+                    decimal validBet = p.Get<decimal>("validBet");
+                    decimal winLoss = p.Get<decimal>("winLoss");
+                    if (settleWinLoss != 0)
+                    {
+                        result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, settleWinLoss * -1, (int)Tp.Sexy, TransType.Settled, $"Unsettle: {(settleWinLoss * -1).ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        BetRecordInfo betRecordInfo = new BetRecordInfo();
+                        betRecordInfo.TpId = (int)Tp.Sexy;
+                        betRecordInfo.Stake = validBet;
+                        betRecordInfo.WinlostAmount = winLoss;
+                        betRecordInfo.TransId = txn.txId;
+                        betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                        betRecordInfo.TpUserName = txn.userId;
+                        betRecordInfo.SettledTime = 0;
+                        betRecordInfo.SettlementType = SettlementType.UnSettled;
+                        betRecordInfo.TicketStatus = TicketStatus.UnSettled;
+
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                        else
+                        {
+                            cantUnsettle = true;
+                            trans.Rollback();
+                        }
+                    }
+                    else
+                    {
+                        cantUnsettle = true;
+                        trans.Rollback();
+                    }
+                }
+                else
+                {
+                    trans.Rollback();
+                }
+            }
+
+            if (!cantUnsettle)
+            {
+                using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                connSettled.Execute("Service_BettransLC_Sexy_Unsettle_Del", new
+                {
+                    roundId = bettingDataLC_Sexy_Unsettle.roundId
+                }, commandType: CommandType.StoredProcedure);
+
+                result = 1;
+            }
+            else
+            {
+                return -99;
+            }
+
+            return result;
+        }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
