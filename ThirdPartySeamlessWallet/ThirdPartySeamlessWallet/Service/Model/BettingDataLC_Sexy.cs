@@ -138,7 +138,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string userId { get; set; }
         public IList<CancelBetTxn> txns { get; set; }
     }
-    public class UnsettleTxn
+    public class Unsettle_VoidRoundTxn
     {
         public string txId { get; set; }
         public decimal betAmount { get; set; }
@@ -146,7 +146,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string userId { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }
-    public class BettingDataLC_Sexy_Unsettle
+    public class Unsettle_VoidRound
     {
         public string action { get; set; }
         public string requestId { get; set; }
@@ -154,6 +154,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string dealerDomain { get; set; }
         public int tableId { get; set; }
         public string roundId { get; set; }
-        public IList<UnsettleTxn> txns { get; set; }
+        public IList<Unsettle_VoidRoundTxn> txns { get; set; }
+    }
+
+    public class VoidTxnTxn
+    {
+        public string txId { get; set; }
+        public decimal betAmount { get; set; }
+        public string updateTime { get; set; }
+        public string userId { get; set; }
+        public decimal winLoss { get; set; }
+        public string status { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class VoidTxn
+    {
+        public string action { get; set; }
+        public string requestId { get; set; }
+        public long validBetTime { get; set; }
+        public IList<VoidTxnTxn> txns { get; set; }
     }
 }

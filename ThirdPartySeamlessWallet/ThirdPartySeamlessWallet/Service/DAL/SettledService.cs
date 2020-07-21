@@ -1092,14 +1092,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int UnsettledLC_Sexy(BettingDataLC_Sexy_Unsettle bettingDataLC_Sexy_Unsettle, out decimal afterAmount)
+        public int UnsettledLC_Sexy(Unsettle_VoidRound unsettle, out decimal afterAmount)
         {
             afterAmount = 0;
             int result = 0;
             bool cantUnsettle = false;
 
-            foreach (var txn in bettingDataLC_Sexy_Unsettle.txns)
+            foreach (var txn in unsettle.txns)
             {
+                DateTime.TryParse(txn.updateTime, out DateTime uT);
+                DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
+
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
                 using var trans = conn.BeginTransaction();
@@ -1129,7 +1132,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.TransId = txn.txId;
                         betRecordInfo.GameType = GameType.Sexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.userId;
-                        betRecordInfo.SettledTime = 0;
+                        betRecordInfo.SettledTime = updateTime.ToUnixTimeSeconds();
                         betRecordInfo.SettlementType = SettlementType.UnSettled;
                         betRecordInfo.TicketStatus = TicketStatus.UnSettled;
 
@@ -1166,9 +1169,151 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 connSettled.Execute("Service_BettransLC_Sexy_Unsettle_Del", new
                 {
-                    roundId = bettingDataLC_Sexy_Unsettle.roundId
+                    roundId = unsettle.roundId
                 }, commandType: CommandType.StoredProcedure);
 
+                return 1;
+            }
+        }
+
+        public int VoidRoundLC_Sexy(Unsettle_VoidRound voidRound, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+
+            using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var checkUnsettled = connSettled.QueryFirstOrDefault<int>("Service_BettransLC_Sexy_CheckUnsettled_Get", new { roundId = voidRound.roundId }, commandType: CommandType.StoredProcedure) > 0;
+            if (checkUnsettled)
+            {
+                return 0;
+            }
+            else
+            {
+                foreach (var txn in voidRound.txns)
+                {
+                    DateTime.TryParse(txn.updateTime, out DateTime uT);
+                    DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
+
+                    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                    conn.Open();
+                    using var trans = conn.BeginTransaction();
+                    var p = new DynamicParameters(new { txId = txn.txId, userId = txn.userId, updateTime = updateTime.ToUnixTimeSeconds() });
+                    p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                    result = conn.Execute("Service_CancelBetLC_Sexy_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        decimal betAmount = p.Get<decimal>("betAmount");
+
+                        if (betAmount != 0)
+                        {
+                            result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, betAmount, (int)Tp.Sexy, TransType.Refunds, $"VoidRound: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans);
+                        }
+
+                        if (result > 0)
+                        {
+                            BetRecordInfo betRecordInfo = new BetRecordInfo();
+                            betRecordInfo.TpId = (int)Tp.Sexy;
+                            betRecordInfo.Stake = 0;
+                            betRecordInfo.WinlostAmount = 0;
+                            betRecordInfo.TransId = txn.txId;
+                            betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                            betRecordInfo.TpUserName = txn.userId;
+                            betRecordInfo.SettledTime = updateTime.ToUnixTimeSeconds();
+                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+
+                            result = SettleTicket(txn.tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                            if (result > 0)
+                            {
+                                trans.Commit();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        trans.Rollback();
+                        result = 1;
+                    }
+                }
+            }
+
+            return result;
+        }
+        public int VoidTxnLC_Sexy(VoidTxn voidTxn, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+            bool cantVoidTxn = false;
+
+            foreach (var txn in voidTxn.txns)
+            {
+                DateTime.TryParse(txn.updateTime, out DateTime uT);
+                DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                var p = new DynamicParameters(new { txId = txn.txId, userId = txn.userId, updateTime = updateTime.ToUnixTimeSeconds() });
+                p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("winLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("settleWinLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("validBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_BettransmLC_Sexy_VoidTxn_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal betAmount = p.Get<decimal>("betAmount");
+                    decimal settleWinLoss = p.Get<decimal>("settleWinLoss");
+                    decimal validBet = p.Get<decimal>("validBet");
+                    decimal fixAmount = betAmount - settleWinLoss;
+                    if (fixAmount != 0)
+                    {
+                        result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, fixAmount, (int)Tp.Sexy, TransType.Refunds, $"VoidTxn: {fixAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        BetRecordInfo betRecordInfo = new BetRecordInfo();
+                        betRecordInfo.TpId = (int)Tp.Sexy;
+                        betRecordInfo.Stake = validBet;
+                        betRecordInfo.WinlostAmount = 0;
+                        betRecordInfo.TransId = txn.txId;
+                        betRecordInfo.GameType = GameType.Sexy_LiveCasino;
+                        betRecordInfo.TpUserName = txn.userId;
+                        betRecordInfo.SettledTime = updateTime.ToUnixTimeSeconds();
+                        betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                        betRecordInfo.TicketStatus = TicketStatus.Refund;
+
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                        else
+                        {
+                            cantVoidTxn = true;
+                        }
+                    }
+                    else
+                    {
+                        cantVoidTxn = true;
+                    }
+                }
+                else
+                {
+                    trans.Rollback();
+                }
+            }
+
+            if (cantVoidTxn)
+            {
+                return -99;
+            }
+            else
+            {
                 return 1;
             }
         }

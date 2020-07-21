@@ -469,7 +469,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int UnsettledLC_Sexy(BettingDataLC_Sexy_Unsettle bettingDataLC_Sexy_Unsettle, out decimal afterAmount)
+        public int UnsettledLC_Sexy(Unsettle_VoidRound bettingDataLC_Sexy_Unsettle, out decimal afterAmount)
         {
 
             foreach (var txn in bettingDataLC_Sexy_Unsettle.txns)
@@ -481,6 +481,37 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.UnsettledLC_Sexy(bettingDataLC_Sexy_Unsettle, out afterAmount);
+
+            return result;
+        }
+        public int VoidRoundLC_Sexy(Unsettle_VoidRound voidRound, out decimal afterAmount)
+        {
+
+            foreach (var txn in voidRound.txns)
+            {
+
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+            }
+
+            var result = settledService.VoidRoundLC_Sexy(voidRound, out afterAmount);
+
+            return result;
+        }
+
+        public int VoidTxnLC_Sexy(VoidTxn voidTxn, out decimal afterAmount)
+        {
+
+            foreach (var txn in voidTxn.txns)
+            {
+
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+            }
+
+            var result = settledService.VoidTxnLC_Sexy(voidTxn, out afterAmount);
 
             return result;
         }
