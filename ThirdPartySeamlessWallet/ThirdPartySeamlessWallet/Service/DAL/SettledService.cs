@@ -1157,7 +1157,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
 
-            if (!cantUnsettle)
+            if (cantUnsettle)
+            {
+                return -99;
+            }
+            else
             {
                 using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 connSettled.Execute("Service_BettransLC_Sexy_Unsettle_Del", new
@@ -1165,14 +1169,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     roundId = bettingDataLC_Sexy_Unsettle.roundId
                 }, commandType: CommandType.StoredProcedure);
 
-                result = 1;
+                return 1;
             }
-            else
-            {
-                return -99;
-            }
-
-            return result;
         }
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
