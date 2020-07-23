@@ -83,4 +83,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Bonus = 7,
         Jackpot = 8
     }
+    public enum AllowNegative
+    {
+        Allow = 1,
+        NotAllow = 0
+    }
 }
