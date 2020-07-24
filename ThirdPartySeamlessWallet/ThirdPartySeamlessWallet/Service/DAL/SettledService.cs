@@ -1498,7 +1498,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                 }
             }
-            else
+            else if (RefBetRecord != null)
             {
                 decimal refWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
                 decimal refLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
