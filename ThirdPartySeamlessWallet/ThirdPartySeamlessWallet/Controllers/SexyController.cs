@@ -74,7 +74,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]")]
         [HttpPost]
-        public Resp SeamlessWallet([FromBody]Req req)
+        public Resp SeamlessWallet([FromForm]Req req)
         {
             Resp resp = new Resp();
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
