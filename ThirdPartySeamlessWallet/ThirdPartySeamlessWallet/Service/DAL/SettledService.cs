@@ -1118,6 +1118,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     decimal settleWinLoss = p.Get<decimal>("settleWinLoss");
                     decimal validBet = p.Get<decimal>("validBet");
+                    decimal betAmount = p.Get<decimal>("betAmount");
                     decimal winLoss = p.Get<decimal>("winLoss");
                     if (settleWinLoss != 0)
                     {
@@ -1128,9 +1129,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
                         betRecordInfo.TpId = (int)Tp.Sexy;
-                        betRecordInfo.Stake = 0;
-                        betRecordInfo.ValidBet = validBet;
-                        betRecordInfo.WinlostAmount = winLoss;
+                        betRecordInfo.Stake = betAmount;
+                        betRecordInfo.ValidBet = 0;
+                        betRecordInfo.WinlostAmount = 0;
                         betRecordInfo.TransId = txn.txId;
                         betRecordInfo.GameType = GameType.Sexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.userId;
@@ -1216,7 +1217,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             BetRecordInfo betRecordInfo = new BetRecordInfo();
                             betRecordInfo.TpId = (int)Tp.Sexy;
-                            betRecordInfo.Stake = 0;
+                            betRecordInfo.Stake = betAmount;
                             betRecordInfo.ValidBet = 0;
                             betRecordInfo.WinlostAmount = 0;
                             betRecordInfo.TransId = txn.txId;
@@ -1366,7 +1367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     betRecord.WinlostAmount = -betRecord.Stake;
                 }
-                else if (betRecord.TicketStatus != TicketStatus.Refund)
+                else if (betRecord.TicketStatus != TicketStatus.Refund && betRecord.SettlementType != SettlementType.UnSettled)
                 {
                     if (doPayout)
                     {
@@ -1539,7 +1540,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw)
                 && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund))
                 {
-                    SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, validBet * -1, conn, trans);
+                    SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, refValidBet * -1, conn, trans);
                 }
                 else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw)
                     && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Draw))
