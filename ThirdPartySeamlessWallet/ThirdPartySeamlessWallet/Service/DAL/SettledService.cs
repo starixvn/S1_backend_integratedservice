@@ -1021,6 +1021,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             int result = 0;
+            bool haveNoBetting = false;
             using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             DateTime.TryParse(bettingDataLC_Sexy_Settle.RoundStartTime, out DateTime dtTransTime);
             long roundStartTime = tools.ConvertLocTime(dtTransTime, 8);
@@ -1082,16 +1083,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    trans.Commit();
+                    haveNoBetting = true;
+                    trans.Rollback();
                 }
             }
 
-            connSettled.Execute("Service_BettransLC_Sexy_Settle_Set", new
+            if (haveNoBetting)
             {
-                roundId = bettingDataLC_Sexy_Settle.RoundId
-            }, commandType: CommandType.StoredProcedure);
+                return 0;
+            }
+            else
+            {
+                connSettled.Execute("Service_BettransLC_Sexy_Settle_Set", new
+                {
+                    roundId = bettingDataLC_Sexy_Settle.RoundId
+                }, commandType: CommandType.StoredProcedure);
 
-            return result;
+                return result;
+            }
         }
         public int UnsettledLC_Sexy(Unsettle_VoidRound unsettle, out decimal afterAmount)
         {
@@ -1479,42 +1488,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             #endregion
 
             #region Set WinLostAmount of Cust
-            if (betRecord.WinlostAmount != 0)
+            decimal Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
+            decimal Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
+            if (RefBetRecord == null && betRecord.WinlostAmount != 0)
             {
-                decimal Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
-                decimal Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
-                if (RefBetRecord == null)
+                if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin)
                 {
-                    if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin)
-                    {
-                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
-                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-                    }
+                    SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
+                    AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                 }
-                else
-                {
-                    if ((RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund)
-                    && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
-                    {
-                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
-                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-                    }
-                    else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
-                        && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund))
-                    {
-                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings * -1, Losses * -1, "Settled To Refund", betRecord.TransId, conn, trans);
-                    }
-                    else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
-                        && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
-                    {
-                        decimal RefWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
-                        decimal RefLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
+            }
+            else
+            {
+                decimal refWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
+                decimal refLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
 
-                        if (RefWinnings != Winnings || RefLosses != Losses)
-                        {
-                            SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", betRecord.TransId, conn, trans);
-                            AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-                        }
+                if ((RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund)
+                && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
+                {
+                    SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
+                    AutoCancelBonus(tpCustInfo.CustId, conn, trans);
+                }
+                else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
+                    && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund))
+                {
+                    SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refWinnings * -1, refLosses * -1, "Settled To Refund", betRecord.TransId, conn, trans);
+                }
+                else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
+                    && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
+                {
+                    if (refWinnings != Winnings || refLosses != Losses)
+                    {
+                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - refWinnings, Losses - refLosses, "Settled", betRecord.TransId, conn, trans);
+                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
                 }
             }
@@ -1537,7 +1543,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, validBet, conn, trans);
                 }
-                if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw)
+                else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw)
                 && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund))
                 {
                     SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, refValidBet * -1, conn, trans);
@@ -1578,18 +1584,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int SetRollOverTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
+            if (TurnOver == 0)
+                return 0;
             return conn.Execute("Common_RollOverTurnOver_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetWithdrawalLimitTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
+            if (TurnOver == 0)
+                return 0;
             return conn.Execute("Common_WithdrawalLimitTurnOver_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetWinLostAmount(int TpId, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
+            if (Winnings == 0 && Losses == 0)
+                return 0;
             return conn.Execute("Common_WinLostAmount_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetEffectiveBetSum(int CustId, int SiteId, decimal validBet, MySqlConnection conn, MySqlTransaction trans)
         {
+            if (validBet == 0)
+                return 0;
             return conn.Execute("Service_EffectiveBetSum_Set", new { CustId = CustId, SiteId = SiteId, Stake = validBet }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int AutoCancelBonus(int CustId, MySqlConnection conn, MySqlTransaction trans)
