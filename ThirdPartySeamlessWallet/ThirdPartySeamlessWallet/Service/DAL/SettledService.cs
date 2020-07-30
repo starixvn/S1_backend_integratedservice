@@ -8,6 +8,7 @@ using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -631,6 +632,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {
+            using var connPre = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            connPre.Execute("Service_SettledRng_PPV2_Set", new { bettingDataRNG_PP.roundId }, commandType: CommandType.StoredProcedure);
+
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
@@ -687,6 +691,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+        public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<BettingDataRNG_PP>("Service_UnsettledListRng_PP_Get", commandType: CommandType.StoredProcedure);
         }
         public int CancelBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {

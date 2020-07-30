@@ -342,6 +342,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP()
+        {
+            return settledService.GetUnsettledListRNG_PP();
+        }
+
         public int PromoBonus_PP(PromoBonus promoBonus, out decimal afterAmount)
         {
 
