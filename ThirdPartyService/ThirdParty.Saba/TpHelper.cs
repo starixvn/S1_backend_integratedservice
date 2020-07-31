@@ -21,6 +21,7 @@ namespace ThirdParty.Saba
             {"43","esports" },
             {"161","numbergame" },
             {"180","virtualsports" },
+            {"200","sabaclub" },
             {"202","keno" },
             {"208","casino" },
             {"211","allbet" },
@@ -328,7 +329,7 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        else if (SportType == "245" || SportType == "43" || SportType == "220" || SportType == "223")
+                        else if (SportType == "200" || SportType == "245" || SportType == "43" || SportType == "220" || SportType == "223")
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
@@ -352,7 +353,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (act == "keno" || SportType == "43" || SportType == "220" || SportType == "223")
+                        if (act == "keno" || SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223")
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
                         else
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
