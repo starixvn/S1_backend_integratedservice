@@ -39,5 +39,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId }, commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<BonusCategory> GetBonusCategoryList()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<BonusCategory>("Service_BonusCategory_Get", commandType: CommandType.StoredProcedure);
+        }
     }
 }

@@ -27,6 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly IHostEnvironment environment;
         private readonly Tp thisTp;
+        private readonly int gameType = 0;
 
         public YGGController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
@@ -39,6 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.log2File = log2File;
             this.environment = environment;
             this.thisTp = Tp.YGG;
+            gameType = (int)GameType.YGG_RNG;
         }
 
         public class PlayerInfoData
@@ -95,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
                             PlayerInfoData playerInfoData = new PlayerInfoData();
                             playerInfoRep.data = playerInfoData;
                             playerInfoData.balance = tpCustBalance.Balance;
@@ -198,7 +200,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             if (wagerReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid, gameType);
                                 wagerData.balance = tpCustBalance.Balance;
                             }
                             else
@@ -209,13 +211,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid, gameType);
                             wagerData.balance = tpCustBalance.Balance;
                             wagerRep.code = 1006;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, wagerReq.playerid, gameType);
                             wagerData.balance = tpCustBalance.Balance;
                             wagerRep.code = 0;
                         }
@@ -270,14 +272,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (settledDataRNG_YGG.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         wagerRep.code = 0;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
                     wagerData.balance = tpCustBalance.Balance;
                     wagerRep.code = 0;
                 }
@@ -323,7 +325,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (result > 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YGG, wagerReq.playerid);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YGG, wagerReq.playerid, gameType);
                 CancelwagerData cancelwagerData = new CancelwagerData();
                 cancelwagerRep.data = cancelwagerData;
                 cancelwagerData.playerId = wagerReq.playerid;
@@ -334,7 +336,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (tpAffterAmount == 0)
                 {
-                    tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid);
+                    tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid, gameType);
                     cancelwagerRep.data.balance = tpCustBalance.Balance;
                     cancelwagerRep.data.currency = tpCustBalance.TpCurrencyId;
                 }
@@ -345,7 +347,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 cancelwagerRep.data = cancelwagerData;
                 cancelwagerData.playerId = wagerReq.playerid;
                 cancelwagerData.organization = cancelwagerReqq["org"];
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid, gameType);
                 cancelwagerData.currency = tpCustBalance.TpCurrencyId;
                 cancelwagerRep.data.balance = tpCustBalance.Balance;
                 cancelwagerRep.code = 0;
@@ -391,14 +393,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (settledDataRNG_YGG.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         wagerRep.code = 0;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
                     wagerData.balance = tpCustBalance.Balance;
                     wagerRep.code = 0;
                 }
@@ -533,7 +535,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getbalanceReq.playerid);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getbalanceReq.playerid, gameType);
                     GetbalanceData getbalanceData = new GetbalanceData();
                     getbalanceRep.data = getbalanceData;
                     getbalanceData.balance = tpCustBalance.Balance;

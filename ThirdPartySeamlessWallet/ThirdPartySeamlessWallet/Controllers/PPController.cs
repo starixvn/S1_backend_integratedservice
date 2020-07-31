@@ -87,7 +87,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                            var gameType = thirdPartyBLL.GetGameType_PP(authenticateReq.gameId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                             authenticateResp.userId = tpCustInfoAuth.TpUserName;
                             authenticateResp.currency = tpCustInfoAuth.TpCurrencyId;
                             authenticateResp.cash = tpCustBalance.Balance;
@@ -162,7 +163,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balanceReq.userId);
+                        //var gameType = thirdPartyBLL.GetGameType_PP(balanceReq.gameId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balanceReq.userId, (int)GameType.PP_RNG);
 
                         balanceResp.currency = tpCustBalance.TpCurrencyId;
                         balanceResp.cash = tpCustBalance.Balance;
@@ -241,17 +243,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
+                        var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
                         if (bettingBLL.PlaceBetRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                         {
                             if (betReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                                 betResp.cash = tpCustBalance.Balance;
                                 betResp.currency = tpCustBalance.TpCurrencyId;
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId);
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                                 betResp.cash = tpAffterAmount;
                                 betResp.currency = tpCustBalance.TpCurrencyId;
                             }
@@ -261,7 +264,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             betResp.cash = tpCustBalance.Balance;
                             betResp.currency = tpCustBalance.TpCurrencyId;
                             betResp.bonus = 0;
@@ -270,7 +273,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             betResp.cash = tpCustBalance.Balance;
                             betResp.currency = tpCustBalance.TpCurrencyId;
                             betResp.bonus = 0;
@@ -330,17 +333,18 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     resultResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Payout;
+                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
                     if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             resultResp.cash = tpCustBalance.Balance;
                             resultResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                             resultResp.cash = tpAffterAmount;
                             resultResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -350,7 +354,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         resultResp.cash = tpCustBalance.Balance;
                         resultResp.currency = tpCustBalance.TpCurrencyId;
                         resultResp.bonus = 0;
@@ -359,7 +363,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         resultResp.cash = tpCustBalance.Balance;
                         resultResp.currency = tpCustBalance.TpCurrencyId;
                         resultResp.bonus = 0;
@@ -402,17 +406,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(bonusWinReqq));
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Bonus;
+                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
                     if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             payoutResp.cash = tpCustBalance.Balance;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                             payoutResp.cash = tpAffterAmount;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -422,7 +427,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -431,7 +436,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -473,17 +478,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(jackpotWinReqq));
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Jackpot;
+                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
                     if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             payoutResp.cash = tpCustBalance.Balance;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                             payoutResp.cash = tpAffterAmount;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -493,7 +499,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -502,7 +508,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -553,13 +559,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         if (promoWinReq.Amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                             payoutResp.cash = tpCustBalance.Balance;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, promoWinReq.UserId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                             payoutResp.cash = tpAffterAmount;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -569,7 +575,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -578,7 +584,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
