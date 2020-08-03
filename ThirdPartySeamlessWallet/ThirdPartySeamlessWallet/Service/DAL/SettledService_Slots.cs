@@ -35,9 +35,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataRNG_SG.amount > 0)
                     {
-                        int bonusId = 0;
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_SG.amount, (int)Tp.SG, TransType.Settled, $"{bettingDataRNG_SG.type}: {Math.Abs(bettingDataRNG_SG.amount).ToString("#,##0.##")}", bettingDataRNG_SG.transferId, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, gameType, bettingDataRNG_SG.transferId, TransType.Settled, null, out afterAmount, bonusId, $"{bettingDataRNG_SG.type}", conn, trans);
+                        result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, bettingDataRNG_SG.transferId, TransType.Settled, null, out afterAmount, $"{bettingDataRNG_SG.type}", conn, trans);
                     }
 
                     if (result > 0)
@@ -106,9 +105,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (cancelStake != 0)
                 {
-                    int bonusId = 0;
                     //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, cancelStake, (int)Tp.SG, TransType.Refunds, $"Refund: {cancelStake.ToString("#,##0.##")}", bettingDataRNG_SG.referenceId, out afterAmount, conn, trans);
-                    result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, gameType, bettingDataRNG_SG.transferId, TransType.Refunds, null, out afterAmount, bonusId, $"Refund", conn, trans);
+                    result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, bettingDataRNG_SG.referenceId, TransType.Refunds, null, out afterAmount, $"Refund", conn, trans);
                 }
 
                 if (result > 0)
@@ -142,13 +140,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, int gameType, string refId, TransType transType, string betData, out decimal afterAmount, int bonusId, string memoHead, MySqlConnection conn, MySqlTransaction trans)
+        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, MySqlConnection conn, MySqlTransaction trans)
         {
             afterAmount = 0;
-            int result = 0;
+            int result = GetTpBonus(tpId, tpTransId, gameType, TpCategory.Slots, out int custId, out int bonusId);
 
             if (bonusId > 0 || transType == TransType.Prize)
             {
+                if (bonusId > 0 && custId != tpCustInfo.CustId)
+                {
+                    return 0;
+                }
+
                 result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
 
                 if ((transType == TransType.Prize && bonusId == 0) || amount < 0)
@@ -159,6 +162,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             else
             {
                 result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+            }
+
+            return result;
+        }
+        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
+        {
+            CustId = 0;
+            BonusId = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var p = new DynamicParameters(new { tpId, tpTransId, gameType });
+            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            var result = conn.Execute($"Service_Tp{tpCategory}Bonus_Get", p, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                CustId = p.Get<int>("CustId");
+                BonusId = p.Get<int>("BonusId");
             }
 
             return result;

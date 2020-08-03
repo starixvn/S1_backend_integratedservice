@@ -35,7 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (result > 0 && bettingDataRNG_SG.amount != 0)
             {
                 //gameType
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, gameType, bettingDataRNG_SG.transferId, null, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.transferId, gameType, bettingDataRNG_SG.transferId, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
