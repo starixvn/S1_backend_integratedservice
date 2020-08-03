@@ -54,6 +54,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
         }
+        public int SetBonus(int gameType, int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            int result = 0;
+            Tp tp = Tp.None;
+
+            int type = typePosition + ((int)transType * 1000) + tpId;
+            Enum.TryParse(tpId.ToString(), out tp);
+            var p = new DynamicParameters(new { gameType = gameType, CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
+            p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
+            p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BonusWallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            bonusId = p.Get<int?>("BonusId") ?? 0;
+            afterBonus = p.Get<decimal>("AfterAmount");
+
+            return result;
+        }
         public decimal GetBonus(int custId, int promoCategoryId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
