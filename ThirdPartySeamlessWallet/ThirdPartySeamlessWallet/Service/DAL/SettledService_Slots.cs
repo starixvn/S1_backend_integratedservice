@@ -154,9 +154,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
 
-                if ((transType == TransType.Prize && bonusId == 0) || amount < 0)
+                if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0)
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                }
+                else
+                {
+                    afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
                 }
             }
             else
@@ -172,7 +176,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             BonusId = 0;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { tpId, tpTransId, gameType });
+            var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = conn.Execute($"Service_Tp{tpCategory}Bonus_Get", p, commandType: CommandType.StoredProcedure);

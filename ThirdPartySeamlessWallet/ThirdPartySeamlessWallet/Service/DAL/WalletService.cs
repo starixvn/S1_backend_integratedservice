@@ -67,7 +67,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             result = conn.Execute("Service_BonusWallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             bonusId = p.Get<int?>("BonusId") ?? 0;
-            afterBonus = p.Get<decimal>("AfterAmount");
+            afterBonus = p.Get<decimal>("AfterBonus");
 
             return result;
         }
