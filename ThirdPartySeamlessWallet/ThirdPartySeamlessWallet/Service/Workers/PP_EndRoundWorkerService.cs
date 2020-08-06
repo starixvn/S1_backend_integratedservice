@@ -33,6 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private void DoWork(object state)
         {
             bool forContinue = false;
+            bool isError = false;
             try
             {
                 var unsettledList = settledBLL.GetUnsettledListRNG_PP();
@@ -56,6 +57,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             catch (Exception ex)
             {
                 log2File.Error(ex.ToString(), "PP_EndRoundWorkerService");
+                isError = true;
             }
             finally
             {
@@ -64,6 +66,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
