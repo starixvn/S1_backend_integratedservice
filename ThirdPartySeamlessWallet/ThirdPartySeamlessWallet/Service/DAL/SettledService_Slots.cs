@@ -30,13 +30,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 result = conn.Execute("Service_BettransRng_SG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
+                int bonusId = 0;
                 if (result > 0)
                 {
                     if (bettingDataRNG_SG.amount > 0)
                     {
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_SG.amount, (int)Tp.SG, TransType.Settled, $"{bettingDataRNG_SG.type}: {Math.Abs(bettingDataRNG_SG.amount).ToString("#,##0.##")}", bettingDataRNG_SG.transferId, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, bettingDataRNG_SG.transferId, TransType.Settled, null, out afterAmount, $"{bettingDataRNG_SG.type}", conn, trans);
+                        result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, bettingDataRNG_SG.transferId, TransType.Settled, null, out afterAmount, $"{bettingDataRNG_SG.type}", out bonusId, conn, trans);
+                    }
+                    else
+                    {
+                        GetTpBonus((int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, out int custId, out bonusId);
                     }
 
                     if (result > 0)
@@ -52,7 +56,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             GameType = GameType.SG_RNG,
                             TpUserName = bettingDataRNG_SG.acctId,
                             SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValidNotRollover
+                            SettlementType = SettlementType.SettledForValidNotRollover,
+                            BonusId = bonusId
                         };
 
                         result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
@@ -97,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (result > 0)
             {
                 decimal cancelStake = p.Get<decimal>("CancelStake");
-
+                int bonusId = 0;
                 if (cancelStake != bettingDataRNG_SG.amount)
                 {
                     throw new Exception($"SG Cancel amount {bettingDataRNG_SG.amount.ToString("#,##0.##")} it not equal {cancelStake.ToString("#,##0.##")}");
@@ -106,7 +111,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (cancelStake != 0)
                 {
                     //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, cancelStake, (int)Tp.SG, TransType.Refunds, $"Refund: {cancelStake.ToString("#,##0.##")}", bettingDataRNG_SG.referenceId, out afterAmount, conn, trans);
-                    result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, bettingDataRNG_SG.referenceId, TransType.Refunds, null, out afterAmount, $"Refund", conn, trans);
+                    result = PayoutV2(tpCustInfo, bettingDataRNG_SG.amount, (int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, bettingDataRNG_SG.referenceId, TransType.Refunds, null, out afterAmount, $"Refund", out bonusId, conn, trans);
+                }
+                else
+                {
+                    GetTpBonus((int)Tp.SG, bettingDataRNG_SG.referenceId, gameType, TpCategory.Slots, out int custId, out bonusId);
                 }
 
                 if (result > 0)
@@ -121,7 +130,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TpUserName = bettingDataRNG_SG.acctId,
                         SettledTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                         SettlementType = SettlementType.SettledForInvalid,
-                        TicketStatus = TicketStatus.Refund
+                        TicketStatus = TicketStatus.Refund,
+                        BonusId = bonusId
                     };
 
                     result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
@@ -140,10 +150,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, MySqlConnection conn, MySqlTransaction trans)
+        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead,out int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             afterAmount = 0;
-            int result = GetTpBonus(tpId, tpTransId, gameType, TpCategory.Slots, out int custId, out int bonusId);
+            bonusId = 0;
+            int result = GetTpBonus(tpId, tpTransId, gameType, TpCategory.Slots, out int custId, out bonusId);
 
             if (bonusId > 0 || transType == TransType.Prize)
             {
@@ -154,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
 
-                if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0)
+                if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
                 {
                     result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                 }

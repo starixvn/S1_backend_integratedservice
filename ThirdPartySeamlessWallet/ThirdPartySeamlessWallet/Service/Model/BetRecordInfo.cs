@@ -21,5 +21,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public TicketStatus TicketStatus { get; set; }
         public string OriginalState { get; set; }
         public int TicketKey { get; set; }
+        public int BonusId { get; set; }
     }
 }
