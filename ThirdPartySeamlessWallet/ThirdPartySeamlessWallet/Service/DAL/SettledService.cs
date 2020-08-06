@@ -1525,7 +1525,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return 0;
 
             var p = new DynamicParameters(new { TpId = TpId, GameType = GameType, CustId = CustId, UserName = UserName, SiteId = SiteId, Turnover = Turnover, Memo, RefTransId });
-            p.Add("BonusId", value: BonusId, dbType: DbType.Decimal, direction: ParameterDirection.InputOutput);
+            p.Add("BonusId", value: BonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
             var result = conn.Execute("Service_RolloverTurnover_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             BonusId = p.Get<int>("BonusId");
             return result;

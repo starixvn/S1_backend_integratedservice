@@ -56,7 +56,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             GameType = GameType.SG_RNG,
                             TpUserName = bettingDataRNG_SG.acctId,
                             SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValidNotRollover,
+                            SettlementType = SettlementType.SettledForValid,
                             BonusId = bonusId
                         };
 
@@ -129,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         GameType = GameType.SG_RNG,
                         TpUserName = bettingDataRNG_SG.acctId,
                         SettledTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                        SettlementType = SettlementType.SettledForInvalid,
+                        SettlementType = SettlementType.SettledForValid,
                         TicketStatus = TicketStatus.Refund,
                         BonusId = bonusId
                     };
