@@ -8,25 +8,27 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.DAL;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
     public class BonusWorker : BackgroundService
     {
         private readonly IConfiguration configuration;
+        private readonly WalletService walletService;
 
-        public BonusWorker(IConfiguration configuration)
+        public BonusWorker(IConfiguration configuration, WalletService walletService)
         {
             this.configuration = configuration;
+            this.walletService = walletService;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            conn.Execute(@"Test_Scott", new { Bonus = 0 }, transaction: trans, commandType: CommandType.StoredProcedure);
+            foreach (var bonusId in walletService.GetBonusFulfill())
+            {
 
-            trans.Commit();
+            }
+
             return Task.CompletedTask;
         }
     }

@@ -76,5 +76,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<decimal>("Service_Bonus_Get", new { CustId = custId, PromoCategoryId = promoCategoryId }, commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<int> GetBonusFulfill()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<int>("Service_BonusFulfill_Get", commandType: CommandType.StoredProcedure);
+        }
+        public int BonusSettle(int bonusId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            int result = conn.Execute("Service_BonusFulfill_Get", new { }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+
+                trans.Commit();
+            }
+        }
     }
 }
