@@ -27,6 +27,7 @@ namespace ThirdPartySeamlessWallet
                 {
                     //services.AddHostedService<AG_EnquireWorkerService>();
                     services.AddHostedService<PP_EndRoundWorkerService>();
+                    services.AddHostedService<BonusWorker>();
                 });
     }
 }
