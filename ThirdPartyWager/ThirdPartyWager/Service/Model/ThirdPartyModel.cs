@@ -18,6 +18,7 @@ namespace ThirdPartyWager.Service.Model
         public string APIkey { get; set; }
         public string ApiUrl { get; set; }
         public string WalletUrl { get; set; }
+        public string WagerUrl { get; set; }
         public string AgentAccount { get; set; }
 
     }

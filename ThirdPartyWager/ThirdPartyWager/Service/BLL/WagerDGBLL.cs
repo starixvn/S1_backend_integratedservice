@@ -28,12 +28,14 @@ namespace ThirdPartyWager.Service.BLL
 
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly WagerDGService wagerDGService;
+        private readonly ApiDGBLL apiDGBLL;
 
-        public WagerDGBLL(IHttpClientFactory clientFactory, ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService)
+        public WagerDGBLL(IHttpClientFactory clientFactory, ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
         {
             _clientFactory = clientFactory;
             this.thirdPartyHelper = thirdPartyHelper;
             this.wagerDGService = wagerDGService;
+            this.apiDGBLL = apiDGBLL;
         }
 
         public async Task<IEnumerable<dynamic>> GetWagersAsync()
@@ -43,73 +45,89 @@ namespace ThirdPartyWager.Service.BLL
             var dataTpList = thirdPartyHelper.GetThirdPartySetting(tpId);
             var setting = JsonConvert.DeserializeObject<Setting>(dataTpList.Setting);
 
-            string domain = setting.ApiUrl;
-            string uri = "/game/getReport/";
-            string agentName = setting.AgentAccount;
-            string apiKey = setting.APIkey;
-            string random = GetRandomString(8);
-            string apiUrl = $"{domain}{uri}{agentName}";
-            string token = ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            // get wagers
+            var dataWager = apiDGBLL.GetBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey);
+            // insert to db
+            var count = wagerDGService.InsertWagerDG(dataWager.list);
+            // get all wager ids
+            var wagerIds = new { };
+            // set wager as mark
+            apiDGBLL.MarkGotBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey, wagerIds);
 
-            // call api
-            var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
-            var postData = new { token = $"{token}", random = $"{random}" };
-            var json = JsonConvert.SerializeObject(postData);
-            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            var client = _clientFactory.CreateClient();
-            // response
-            var response = await client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                string r = response.Content.ReadAsStringAsync().Result;
-                var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
-                if (dataWager.codeId != 0)
-                {
-                    // return errorcode
-                }
-                if (dataWager.list == null || dataWager.list.Count() == 0)
-                {
-                    // no data
-                    Console.WriteLine("list null");
-                    // return errorcode
-                }
-                Console.WriteLine("in");
-                var count = wagerDGService.InsertWagerDG(dataWager.list);
+            //string domain = setting.ApiUrl;
+            //string uri = "/game/getReport/";
+            //string agentName = setting.AgentAccount;
+            //string apiKey = setting.APIkey;
+            //string random = GetRandomString(8);
+            //string apiUrl = $"{domain}{uri}{agentName}";
+            //string token = ToMD5($"{agentName}{apiKey}{random}").ToLower();
 
-            }
-            else
-            {
-                // errorcode
-                Result = response.StatusCode.ToString();
-            }
-            // return errorcode
-            return null;
-            //return (IEnumerable<dynamic>)Result;
+            //// call api
+            //var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
+            //var postData = new { token = $"{token}", random = $"{random}" };
+            //var json = JsonConvert.SerializeObject(postData);
+            //request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            //var client = _clientFactory.CreateClient();
+            //// response
+            //var response = await client.SendAsync(request);
+            //if (response.IsSuccessStatusCode)
+            //{
+            //    string r = response.Content.ReadAsStringAsync().Result;
+            //    var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
+
+            //    if (dataWager.codeId != 0)
+            //    {
+            //        // return errorcode
+            //    }
+            //    if (dataWager.list == null || dataWager.list.Count() == 0)
+            //    {
+            //        // no data
+            //        Console.WriteLine("list null");
+            //        // return errorcode
+            //    }
+            //    Console.WriteLine("in");
+            //    // write bet record
+            //    var count = wagerDGService.InsertWagerDG(dataWager.list);
+            //    if(count > 0)
+            //    {
+            //        // mark ids
+            //    }
+
+            //}
+            //else
+            //{
+            //    // errorcode
+            //    Result = response.StatusCode.ToString();
+            //}
+            //// return errorcode
+            //return null;
+            ////return (IEnumerable<dynamic>)Result;
         }
 
-        protected string GetRandomString(int length)
-        {
-            var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
-            var next = new Random();
-            var builder = new StringBuilder();
-            for (var i = 0; i < length; i++)
-            {
-                builder.Append(str[next.Next(0, str.Length)]);
-            }
-            return builder.ToString();
-        }
 
-        protected string ToMD5(string encodeStr)
-        {
-            using var cryptoMD5 = MD5.Create();
-            var bytes = Encoding.UTF8.GetBytes(encodeStr);
-            var hash = cryptoMD5.ComputeHash(bytes);
-            var md5 = BitConverter.ToString(hash)
-              .Replace("-", string.Empty);
+        //protected string GetRandomString(int length)
+        //{
+        //    var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        //    var next = new Random();
+        //    var builder = new StringBuilder();
+        //    for (var i = 0; i < length; i++)
+        //    {
+        //        builder.Append(str[next.Next(0, str.Length)]);
+        //    }
+        //    return builder.ToString();
+        //}
 
-            return md5;
-        }
+        //protected string ToMD5(string encodeStr)
+        //{
+        //    using var cryptoMD5 = MD5.Create();
+        //    var bytes = Encoding.UTF8.GetBytes(encodeStr);
+        //    var hash = cryptoMD5.ComputeHash(bytes);
+        //    var md5 = BitConverter.ToString(hash)
+        //      .Replace("-", string.Empty);
+
+        //    return md5;
+        //}
 
     }
 }
