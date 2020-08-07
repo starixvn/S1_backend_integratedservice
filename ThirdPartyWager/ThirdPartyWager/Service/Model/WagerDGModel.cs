@@ -11,7 +11,6 @@ namespace ThirdPartyWager.Service.Model
         public string token { get; set; }
         public string random { get; set; }
         public IEnumerable<Bet> list { get; set; }
-
         public IEnumerable<Data> data { get; set; }
     }
 

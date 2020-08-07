@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Service.BLL
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
         }
-        public async Task<IEnumerable<dynamic>> RedoWagersAsync()
+        public async Task RedoWagersAsync()
         {
             // get dg api info
             int tpId = 4;
@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Service.BLL
             int pageNow = 1;
 
             // get wagers
-            var dataWager = apiDGBLL.GetBetListByTime(setting.WagerUrl, setting.AgentAccount, setting.APIkey, beginTime, endTime, pageNow);
+            var dataWager = await apiDGBLL.GetBetListByTime(setting.WagerUrl, setting.AgentAccount, setting.APIkey, beginTime, endTime, pageNow);
             // insert to db
             var count = wagerDGService.InsertWagerDG(dataWager.list);
            

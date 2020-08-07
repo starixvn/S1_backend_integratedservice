@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
             this.apiDGBLL = apiDGBLL;
         }
 
-        public async Task<IEnumerable<dynamic>> GetWagersAsync()
+        public async Task GetWagersAsync()
         {
             // get dg api info
             int tpId = 4;
@@ -46,13 +46,19 @@ namespace ThirdPartyWager.Service.BLL
             var setting = JsonConvert.DeserializeObject<Setting>(dataTpList.Setting);
 
             // get wagers
-            var dataWager = apiDGBLL.GetBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey);
+            var dataWager = await apiDGBLL.GetBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey);
             // insert to db
             var count = wagerDGService.InsertWagerDG(dataWager.list);
             // get all wager ids
-            var wagerIds = new { };
+            List<long> wagerIds = new List<long>();
+
+            foreach(var item in dataWager.list)
+            {
+                wagerIds.Add(item.id);
+            }
+
             // set wager as mark
-            apiDGBLL.MarkGotBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey, wagerIds);
+            await apiDGBLL.MarkGotBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey, wagerIds);
 
 
             //string domain = setting.ApiUrl;

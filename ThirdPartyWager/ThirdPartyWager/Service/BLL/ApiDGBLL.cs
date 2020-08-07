@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             _clientFactory = clientFactory;
         }
 
-        public async Task GetBetList(string apiUrl, string agentName, string apiKey)
+        public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
         {
             // param
             string uri = "/game/getReport/";
@@ -35,26 +35,13 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            var response = DoHttpClientAsync(url, param);
-            string r = await response.Content.ReadAsStringAsync().Result;
+            var r = await DoHttpClientAsync(url, param);
             var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
-
-            if (dataWager.codeId != 0)
-            {
-                // error
-                // return
-            }
-            if (dataWager.list == null || dataWager.list.Count() == 0)
-            {
-                // no data
-                // return
-            }
-
             // data
-            return;
+            return dataWager;
         }
 
-        public Task MarkGotBetList(string apiUrl, string agentName, string apiKey, int[] idList)
+        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> idList)
         {
             // param
             string uri = "/game/markReport/";
@@ -65,26 +52,25 @@ namespace ThirdPartyWager.Service.BLL
             {
                 token = $"{token}",
                 random = $"{random}",
-                list = $"{idList}"
+                list = $"{JsonConvert.SerializeObject(idList)}"
             };
 
             // request
-            var response = DoHttpClientAsync(url, param);
 
-            string r = response.Content.ReadAsStringAsync().Result;
+            string r = await DoHttpClientAsync(url, param);
             var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
             if (dataWager.codeId != 0)
             {
+
+                throw new Exception("Error.");
                 // error
                 // return
             }
-
-            // data
             return;
         }
 
-        public Task GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
+        public async Task<WagerDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
         {
             // param
             string uri = "/game/markReport/";
@@ -99,44 +85,21 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            var response = DoHttpClientAsync(url, param);
+            var r = await DoHttpClientAsync(url, param);
 
-            string r = response.Content.ReadAsStringAsync().Result;
             var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
-            if (dataWager.codeId != 0)
-            {
-                // error
-                // return
-            }
-            if (dataWager.list == null || dataWager.list.Count() == 0)
-            {
-                // no data
-                // return
-            }
-
-            // data
-            return;
+            return dataWager;
         }
 
-        private async Task<HttpResponseMessage> DoHttpClientAsync(string url, object param)
+        private async Task<string> DoHttpClientAsync(string url, object param)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = JsonConvert.SerializeObject(param);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             var client = _clientFactory.CreateClient();
-            // response
-            //var response = await client.SendAsync(request);
-            // check status code
-            //if (response.IsSuccessStatusCode)
-            //{
-            //}
-            //else
-            //{
-            //}
-
-            //return response;
-            return await client.SendAsync(request);
+            var response = await client.SendAsync(request);
+            return response.Content.ReadAsStringAsync().Result;
         }
 
         protected string GetRandomString(int length)
