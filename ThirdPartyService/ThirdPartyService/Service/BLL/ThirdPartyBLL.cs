@@ -167,7 +167,7 @@ namespace ThirdPartyService.Service.BLL
             var apiResult = new ApiResult<UserBalance>();
             apiResult.ErrorCode = ErrorCode.SystemError;
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
-            if (tpCustInfoResult.ErrorCode == ErrorCode.Success || tpCustInfoResult.ErrorCode == ErrorCode.UserLocked)
+            if (tpCustInfoResult.Data != null)
             {
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
@@ -193,7 +193,7 @@ namespace ThirdPartyService.Service.BLL
             var apiResult = new ApiResult();
             apiResult.ErrorCode = ErrorCode.SystemError;
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
-            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            if (tpCustInfoResult.Data != null)
             {
                 var tpHelper = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
@@ -247,7 +247,7 @@ namespace ThirdPartyService.Service.BLL
 
             apiResult.ErrorCode = ErrorCode.SystemError;
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
-            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            if (tpCustInfoResult.Data != null)
             {
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
