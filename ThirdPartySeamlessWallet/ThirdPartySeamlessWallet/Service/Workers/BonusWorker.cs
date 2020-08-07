@@ -24,9 +24,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            foreach (var bonusId in walletService.GetBonusFulfill())
+            foreach (var bonus in walletService.GetBonusFulfill())
             {
-
+                walletService.BonusSettle(bonus);
             }
 
             return Task.CompletedTask;

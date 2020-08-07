@@ -24,6 +24,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             Tp tp = Tp.None;
             int type = typePosition + ((int)transType * 1000) + tpId;
             Enum.TryParse(tpId.ToString(), out tp);
+
+            if(tpId==0 && transType== TransType.Prize)
+            {
+                type = 5;
+            }
+
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
@@ -76,23 +82,35 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<decimal>("Service_Bonus_Get", new { CustId = custId, PromoCategoryId = promoCategoryId }, commandType: CommandType.StoredProcedure);
         }
-        public IEnumerable<int> GetBonusFulfill()
+        public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<int>("Service_BonusFulfill_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<BonusFulfill>("Service_BonusFulfill_Get", commandType: CommandType.StoredProcedure);
         }
-        public int BonusSettle(int bonusId)
+        public int BonusSettle(BonusFulfill bonusFulfill)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            int result = conn.Execute("Service_BonusFulfill_Get", new { }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            var p = new DynamicParameters(bonusFulfill);
+            p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            int result = conn.Execute("Service_BonusSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
+                decimal bonus = p.Get<decimal>("Bonus");
+                if (bonus > 0)
+                {
+                    result = SetBalance(bonusFulfill.CustId, bonusFulfill.SiteId, bonusFulfill.UserName, bonus, 0, TransType.Prize, $"Bonus Transfer to Cash: {Math.Abs(bonus).ToString("#,##0.##")}", bonusFulfill.BonusId.ToString(), out decimal _, conn, trans);
+                }
 
-                trans.Commit();
+                if (result > 0)
+                    trans.Commit();
             }
+
+            return result;
         }
     }
 }
