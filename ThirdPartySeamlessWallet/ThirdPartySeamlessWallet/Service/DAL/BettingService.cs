@@ -37,6 +37,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 trans.Commit();
             }
+            else if (result == -1)
+            {
+                trans.Rollback();
+            }
 
             return result;
         }
@@ -44,20 +48,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
 
-            var result = 0;
-            if (betRecordInfo.Stake != 0)
+            int result;
+
+            try
             {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betRecordInfo.Stake * -1, betRecordInfo.TpId, TransType.Wagers, $"Stake: {betRecordInfo.Stake}", betRecordInfo.TransId, out afterAmount, conn, trans);
+                result = conn.Execute("Service_TpInsertBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, Stake = betRecordInfo.Stake }, transaction: trans, commandType: CommandType.StoredProcedure);
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    return -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            if (result > 0 && betRecordInfo.Stake != 0)
+            {
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, betRecordInfo.Stake * -1, betRecordInfo.TpId, TransType.Wagers, $"Stake: {betRecordInfo.Stake.ToString("#,##0.##")}", betRecordInfo.TransId, out afterAmount, conn, trans);
             }
             else
             {
                 /*Free Bet*/
                 result = 1;
-            }
-
-            if (result > 0)
-            {
-                result = conn.Execute("Service_TpInsertBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, Stake = betRecordInfo.Stake }, transaction: trans, commandType: CommandType.StoredProcedure);
             }
 
             return result;

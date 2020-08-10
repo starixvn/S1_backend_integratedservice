@@ -1619,5 +1619,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
+
+        public IEnumerable<dynamic> GetTpBetRecordUnsettle(int tpId, int gameType)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<dynamic>("Service_TpBetRecordUnsettle_Get", new { TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
