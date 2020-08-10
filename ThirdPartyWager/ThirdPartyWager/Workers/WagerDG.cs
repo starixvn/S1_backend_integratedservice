@@ -23,10 +23,9 @@ namespace ThirdPartyWager.Workers
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 DoTask();
                 logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(10000, stoppingToken);
+                await Task.Delay(30000, stoppingToken);
             }
         }
         
@@ -40,7 +39,6 @@ namespace ThirdPartyWager.Workers
            {
                logger.LogError(ex.Message);
            }
-
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +14,14 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
+        private readonly ILogger<WagerRedoDGBLL> logger;
 
-        public WagerRedoDGBLL(ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
+        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
         {
             this.thirdPartyHelper = thirdPartyHelper;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
+            this.logger = logger;
         }
         public async Task RedoWagersAsync()
         {
@@ -32,9 +35,20 @@ namespace ThirdPartyWager.Service.BLL
 
             // get wagers
             var dataWager = await apiDGBLL.GetBetListByTime(setting.WagerUrl, setting.AgentAccount, setting.APIkey, beginTime, endTime, pageNow);
-            // insert to db
-            var count = wagerDGService.InsertWagerDG(dataWager.list);
-           
+            // insert wager to db
+            foreach (var bet in dataWager.list)
+            {
+                try
+                {
+                    wagerDGService.InsertWagerDG(bet);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                    continue;
+                }
+            }
+
             return;
         }
     }

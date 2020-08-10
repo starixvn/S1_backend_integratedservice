@@ -19,10 +19,10 @@ namespace ThirdPartyWager.Service.DAL
             this.configuration = configuration;
         }
 
-        public int InsertWagerDG(IEnumerable<Bet> list)
+        public int InsertWagerDG(Bet bet)
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("TpWagerDG_Ins", list, commandType: CommandType.StoredProcedure);
+            return conn.Execute("TpWagerDG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
     }
 }
