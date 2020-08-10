@@ -36,12 +36,17 @@ namespace ThirdPartyWager.Service.BLL
 
             // request
             var r = await DoHttpClientAsync(url, param);
-            var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
-            // data
-            return dataWager;
+            var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
+
+            if (result.list == null || result.list.Count() == 0)
+            {
+                throw new Exception("No Data.");
+            }
+
+            return result;
         }
 
-        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> idList)
+        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds)
         {
             // param
             string uri = "/game/markReport/";
@@ -52,20 +57,16 @@ namespace ThirdPartyWager.Service.BLL
             {
                 token = $"{token}",
                 random = $"{random}",
-                list = $"{JsonConvert.SerializeObject(idList)}"
+                list = wagerIds
             };
 
             // request
-
             string r = await DoHttpClientAsync(url, param);
-            var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
+            var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
-            if (dataWager.codeId != 0)
+            if (result.codeId != 0)
             {
-
                 throw new Exception("Error.");
-                // error
-                // return
             }
             return;
         }
@@ -73,7 +74,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
         {
             // param
-            string uri = "/game/markReport/";
+            string uri = "/game/getReport/";
             string url = $"{apiUrl}{uri}{agentName}";
             string token = ToMD5($"{agentName}{apiKey}").ToLower();
             var param = new
@@ -87,9 +88,9 @@ namespace ThirdPartyWager.Service.BLL
             // request
             var r = await DoHttpClientAsync(url, param);
 
-            var dataWager = JsonConvert.DeserializeObject<WagerDGModel>(r);
+            var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
-            return dataWager;
+            return result;
         }
 
         private async Task<string> DoHttpClientAsync(string url, object param)

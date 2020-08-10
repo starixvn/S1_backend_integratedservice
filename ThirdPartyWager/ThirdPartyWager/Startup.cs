@@ -33,7 +33,8 @@ namespace ThirdPartyWager
 
             /*BLL*/
             services.AddSingleton<WagerDGBLL>();
-            services.AddSingleton<WagerRedoDGBLL>();
+            services.AddSingleton<ApiDGBLL>();
+            //services.AddSingleton<WagerRedoDGBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
