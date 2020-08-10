@@ -119,6 +119,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
+                            log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", "AG_PostTransfer_Retry");
                             resp.ResponseCode = Error.OK.ToString();
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
                             resp.Balance = tpCustBalance.Balance;
