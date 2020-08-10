@@ -29,9 +29,10 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoTask(object state)
         {
+            var isContinue = false;
             try
             {
-                await wagerDGBLL.GetWagersAsync();
+                isContinue = await wagerDGBLL.GetWagersAsync();
             }
             catch (Exception ex)
             {
@@ -39,8 +40,8 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(30);
-                if (environment.IsDevelopment() || environment.IsEnvironment("QA"))
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                if (environment.IsDevelopment() || environment.IsEnvironment("QA") || isContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }

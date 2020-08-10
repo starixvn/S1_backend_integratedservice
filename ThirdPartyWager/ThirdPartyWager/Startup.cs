@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -15,23 +17,35 @@ namespace ThirdPartyWager
 {
     public class Startup
     {
+        private readonly IConfiguration configuration;
+
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            this.configuration = configuration;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHttpClient();
+            services.AddMemoryCache();
+            if (configuration.GetValue<string>("ProxyHost") != null)
+            {
+                var proxy = new HttpClientHandler
+                {
+                    Proxy = new WebProxy(configuration.GetValue<string>("ProxyHost"), configuration.GetValue<int>("ProxyPort")),
+                    UseProxy = true
+                };
+
+                services.AddHttpClient("with_proxy")
+                .ConfigurePrimaryHttpMessageHandler(() => proxy);
+            }
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<WagerDGService>();
 
             /*BLL*/
+            services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<WagerDGBLL>();
             services.AddSingleton<ApiDGBLL>();
             //services.AddSingleton<WagerRedoDGBLL>();

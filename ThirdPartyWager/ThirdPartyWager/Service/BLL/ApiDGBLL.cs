@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Math;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Security.Policy;
@@ -15,12 +17,20 @@ namespace ThirdPartyWager.Service.BLL
     public class ApiDGBLL
     {
         private readonly IHttpClientFactory _clientFactory;
-
-        public ApiDGBLL(IHttpClientFactory clientFactory)
+        private readonly HttpClient client;
+        public ApiDGBLL(IHttpClientFactory clientFactory, IConfiguration configuration)
         {
             _clientFactory = clientFactory;
-        }
 
+            if (configuration.GetValue<string>("ProxyHost") != null)
+            {
+                client = _clientFactory.CreateClient("with_proxy");
+            }
+            else
+            {
+                client = _clientFactory.CreateClient();
+            }
+        }
         public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
         {
             // param
@@ -98,7 +108,6 @@ namespace ThirdPartyWager.Service.BLL
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = JsonConvert.SerializeObject(param);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            var client = _clientFactory.CreateClient();
             var response = await client.SendAsync(request);
             return response.Content.ReadAsStringAsync().Result;
         }
