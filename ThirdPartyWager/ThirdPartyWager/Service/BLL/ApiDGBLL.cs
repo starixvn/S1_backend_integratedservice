@@ -89,11 +89,11 @@ namespace ThirdPartyWager.Service.BLL
             string token = ToMD5($"{agentName}{apiKey}").ToLower();
             var param = new
             {
-                token = $"{token}",
-                beginTime = $"{beginTime}",
-                endTime = $"{endTime}",
-                agentName = $"{agentName}",
-                pageNow = $"{pageNow}"
+                token = token,
+                beginTime = beginTime,
+                endTime = endTime,
+                agentName = agentName,
+                pageNow = pageNow
             };
 
             // request
@@ -117,7 +117,14 @@ namespace ThirdPartyWager.Service.BLL
             var json = JsonConvert.SerializeObject(param);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.SendAsync(request);
-            return response.Content.ReadAsStringAsync().Result;
+            if (response.IsSuccessStatusCode)
+            {
+                return response.Content.ReadAsStringAsync().Result;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         protected string GetRandomString(int length)

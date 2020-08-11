@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -16,13 +17,15 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
         private readonly ILogger<WagerRedoDGBLL> logger;
+        private readonly IHostEnvironment environment;
 
-        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
+        public WagerRedoDGBLL(IHostEnvironment environment, ILogger<WagerRedoDGBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
             this.logger = logger;
+            this.environment = environment;
         }
         public async Task<bool> RedoWagersAsync()
         {
@@ -34,10 +37,8 @@ namespace ThirdPartyWager.Service.BLL
                 // define time
                 DateTime current = DateTime.Now;
                 DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
-                DateTime start = timeBase.Add(new TimeSpan(-6, 0, 0));
-                DateTime end = timeBase.Add(new TimeSpan(-5, 0, 0));
-                string beginTime = "2020-08-05 00:00:00";
-                string endTime = "2020-08-05 23:59:59";
+                string beginTime = timeBase.AddHours(-6).ToString("yyyy-MM-dd HH:00:00");
+                string endTime = timeBase.AddHours(-5).ToString("yyyy-MM-dd  HH:59:59");
                 int pageNow = 1;
 
                 // get wagers
