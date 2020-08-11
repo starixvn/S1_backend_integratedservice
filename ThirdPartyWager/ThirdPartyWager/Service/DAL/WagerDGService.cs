@@ -24,5 +24,11 @@ namespace ThirdPartyWager.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("TpWagerDG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
+
+        public WagerDGTotal GetWagerDGTotal(string beginTime, string endTime)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<WagerDGTotal>("TpWagerDGTotal_Get", new { BeginTime = beginTime, EndTime = endTime }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
