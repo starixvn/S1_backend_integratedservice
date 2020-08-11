@@ -43,7 +43,7 @@ namespace ThirdPartyWager.Workers
                 TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (environment.IsDevelopment() || environment.IsEnvironment("QA") || isContinue)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                    dueTimeSpan = TimeSpan.FromSeconds(10);
                 }
 
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
