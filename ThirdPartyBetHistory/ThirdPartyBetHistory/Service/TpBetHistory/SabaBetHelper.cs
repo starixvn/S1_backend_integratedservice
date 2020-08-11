@@ -9,12 +9,19 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
+        public interface ISabaBet
+        {
+            decimal odds { get; set; }
+            decimal stake { get; set; }
+            public int? odds_type { get; set; }
+            public int? bet_type { get; set; }
+            public string ticket_status { get; set; }
+        }
         private class Req
         {
             public string vendor_id { set; get; }
             public long version_key { set; get; }
         }
-
         private class CashOutData
         {
             public long cashout_id { get; set; }
@@ -27,8 +34,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string ticket_status { get; set; }
             public DateTime winlost_datetime { get; set; }
         }
-
-        private class BetDetail
+        private class BetDetail : ISabaBet
         {
             public long trans_id { get; set; }
             public string vendor_member_id { get; set; }
@@ -71,7 +77,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public decimal? original_stake { get; set; }
             public IEnumerable<CashOutData> CashOutData { get; set; }
         }
-        public class BetNumberDetail
+        public class BetNumberDetail : ISabaBet
         {
             public long trans_id { get; set; }
             public string vendor_member_id { get; set; }
@@ -86,7 +92,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public int? last_ball_no { get; set; }
             public string bet_team { get; set; }
             public DateTime winlost_datetime { get; set; }
-            public int bet_type { get; set; }
+            public int? bet_type { get; set; }
             public int currency { get; set; }
             public int? odds_type { get; set; }
             public int sport_type { get; set; }
@@ -98,10 +104,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string customInfo4 { get; set; }
             public string customInfo5 { get; set; }
             public string ba_status { get; set; }
-            public int version_key { get; set; }
+            public long version_key { get; set; }
         }
-
-        public class BetVirtualSportDetail
+        public class BetVirtualSportDetail : ISabaBet
         {
             public long trans_id { get; set; }
             public string vendor_member_id { get; set; }
@@ -112,7 +117,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public int? away_id { get; set; }
             public string match_datetime { get; set; }
             public int? sport_type { get; set; }
-            public int bet_type { get; set; }
+            public int? bet_type { get; set; }
             public long? parlay_ref_no { get; set; }
             public decimal odds { get; set; }
             public decimal stake { get; set; }
@@ -122,7 +127,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public decimal after_amount { get; set; }
             public int currency { get; set; }
             public DateTime winlost_datetime { get; set; }
-            public int odds_type { get; set; }
+            public int? odds_type { get; set; }
             public string bet_team { get; set; }
             public decimal? home_hdp { get; set; }
             public decimal? away_hdp { get; set; }
@@ -135,7 +140,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string customInfo4 { get; set; }
             public string customInfo5 { get; set; }
             public string ba_status { get; set; }
-            public int version_key { get; set; }
+            public long version_key { get; set; }
             public dynamic ParlayData { get; set; }
             public string race_number { get; set; }
             public string race_lane { get; set; }
@@ -148,14 +153,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public IEnumerable<BetVirtualSportDetail> BetVirtualSportDetails { get; set; }
             public IEnumerable<dynamic> BetCasinoDetails { get; set; }
         }
-
         private class GetBetDetail
         {
             public int error_code { get; set; }
             public string message { get; set; }
             public Data Data { get; set; }
         }
-
         public async override Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action)
         {
             var tpSetting = thirdPartyModel.TpSetting;
@@ -250,117 +253,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.TpUserName = betDetial.vendor_member_id;
                             betRecordInfo.TicketKey = betDetial.version_key;
 
-                            if (betDetial.ticket_status.Equals("running", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("waiting", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.SettlementType = SettlementType.UnSettled;
-                            }
-                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                            }
-                            else
-                            {
-                                if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG ||
-                                    betRecordInfo.GameType == GameType.Saba_CardClub || betRecordInfo.GameType == GameType.Saba_Indo4D || betRecordInfo.GameType == GameType.Saba_Keno ||
-                                    betRecordInfo.GameType == GameType.Saba_Lottery || betRecordInfo.GameType == GameType.Saba_MacauGame || betRecordInfo.GameType == GameType.Saba_SabaClub ||
-                                    betRecordInfo.GameType == GameType.Saba_VirtualGames)
-                                {
-                                    betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                }
-                                else
-                                {
-                                    if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                    else if ((betDetial.odds_type ?? 0) == 1)
-                                    {
-                                        if (betDetial.odds > 0 && betDetial.odds < 0.5m)
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                        }
-                                        else
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                        }
-                                    }
-                                    else if ((betDetial.odds_type ?? 0) == 2)
-                                    {
-                                        if (betDetial.odds < 0.5m)
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                        }
-                                        else
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                        }
-                                    }
-                                    else if ((betDetial.odds_type ?? 0) == 3)
-                                    {
-                                        if (betDetial.odds < 1.5m)
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                        }
-                                        else
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                        }
-                                    }
-                                    else if ((betDetial.odds_type ?? 0) == 4)
-                                    {
-                                        if (betDetial.odds < -2m)
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                        }
-                                        else
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                        }
-                                    }
-                                    else if ((betDetial.odds_type ?? 0) == 5)
-                                    {
-                                        if (betDetial.odds < -200m)
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                        }
-                                        else
-                                        {
-                                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                        }
-                                    }
-                                    else if ((betDetial.odds_type ?? 0) == 29)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                            }
-
-                            if (betRecordInfo.SettlementType == SettlementType.UnSettled)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.UnSettled;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Win;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Lost;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Draw;
-                                if (betRecordInfo.GameType == GameType.Saba_Sports)
-                                    betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                            }
-                            else
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Refund;
-                            }
+                            CalculateAvailableBet(betDetial, betRecordInfo);
 
                             betRecordInfoList.Add(betRecordInfo);
                         }
@@ -383,94 +276,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.TpUserName = betDetial.vendor_member_id;
                             betRecordInfo.TicketKey = betDetial.version_key;
 
-                            if (betDetial.ticket_status.Equals("running", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("waiting", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.SettlementType = SettlementType.UnSettled;
-                            }
-                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                            }
-                            else
-                            {
-                                if (betDetial.odds_type == 1)
-                                {
-                                    if (betDetial.odds > 0 && betDetial.odds < 0.5m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 2)
-                                {
-                                    if (betDetial.odds < 0.5m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 3)
-                                {
-                                    if (betDetial.odds < 1.5m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 4)
-                                {
-                                    if (betDetial.odds < -2m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 5)
-                                {
-                                    if (betDetial.odds < -200m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                            }
-
-                            if (betRecordInfo.SettlementType == SettlementType.UnSettled)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.UnSettled;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Win;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Lost;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Draw;
-                            }
-                            else
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Refund;
-                            }
-
+                            CalculateAvailableBet(betDetial, betRecordInfo);
                             betRecordInfoList.Add(betRecordInfo);
                         }
                     }
@@ -487,6 +293,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.GameType = GameType.Saba_VirtualSports2;
                             }
+
                             betRecordInfo.TransId = betDetial.trans_id.ToString();
                             betRecordInfo.TransTime = ConvertLocTime(betDetial.transaction_time);
 
@@ -502,95 +309,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.TpUserName = betDetial.vendor_member_id;
                             betRecordInfo.TicketKey = betDetial.version_key;
 
-                            if (betDetial.ticket_status.Equals("running", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("waiting", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.SettlementType = SettlementType.UnSettled;
-                            }
-                            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                            }
-                            else
-                            {
-                                if (betDetial.odds_type == 1)
-                                {
-                                    if (betDetial.odds > 0 && betDetial.odds < 0.5m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 2)
-                                {
-                                    if (betDetial.odds < 0.5m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 3)
-                                {
-                                    if (betDetial.odds < 1.5m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 4)
-                                {
-                                    if (betDetial.odds < -2m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                                else if (betDetial.odds_type == 5)
-                                {
-                                    if (betDetial.odds < -200m)
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                    }
-                                    else
-                                    {
-                                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-                                    }
-                                }
-                            }
-
-                            if (betRecordInfo.SettlementType == SettlementType.UnSettled)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.UnSettled;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Win;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Lost;
-                            }
-                            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Draw;
-                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                            }
-                            else
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Refund;
-                            }
-
+                            CalculateAvailableBet(betDetial, betRecordInfo);
                             betRecordInfoList.Add(betRecordInfo);
                         }
                     }
@@ -616,6 +335,131 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
         }
 
+        void CalculateAvailableBet(ISabaBet betDetial, BetRecordInfo betRecordInfo)
+        {
+            if (betDetial.ticket_status.Equals("running", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("waiting", StringComparison.OrdinalIgnoreCase))
+            {
+                betRecordInfo.SettlementType = SettlementType.UnSettled;
+                betRecordInfo.ValidBet = 0;
+            }
+            else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("draw", StringComparison.OrdinalIgnoreCase))
+            {
+                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                betRecordInfo.ValidBet = 0;
+            }
+            else
+            {
+                if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG ||
+                    betRecordInfo.GameType == GameType.Saba_CardClub || betRecordInfo.GameType == GameType.Saba_Indo4D || betRecordInfo.GameType == GameType.Saba_Keno ||
+                    betRecordInfo.GameType == GameType.Saba_Lottery || betRecordInfo.GameType == GameType.Saba_MacauGame || betRecordInfo.GameType == GameType.Saba_SabaClub ||
+                    betRecordInfo.GameType == GameType.Saba_VirtualGames)
+                {
+                    betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                    betRecordInfo.ValidBet = betRecordInfo.Stake;
+                }
+                else
+                {
+                    if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
+                    {
+                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                    }
+                    else if ((betDetial.odds_type ?? 0) == 1)
+                    {
+                        if (betDetial.odds > 0 && betDetial.odds < 0.5m)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        }
+                        else
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                    }
+                    else if ((betDetial.odds_type ?? 0) == 2)
+                    {
+                        if (betDetial.odds < 0.5m)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        }
+                        else
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                    }
+                    else if ((betDetial.odds_type ?? 0) == 3)
+                    {
+                        if (betDetial.odds < 1.5m)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        }
+                        else
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                    }
+                    else if ((betDetial.odds_type ?? 0) == 4)
+                    {
+                        if (betDetial.odds < -2m)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        }
+                        else
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                    }
+                    else if ((betDetial.odds_type ?? 0) == 5)
+                    {
+                        if (betDetial.odds < -200m)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        }
+                        else
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                        }
+                    }
+                    else if ((betDetial.odds_type ?? 0) == 29)
+                    {
+                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                    }
+                    else
+                    {
+                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
+                    }
+                }
+
+                //half won/half lose/won/lose/void/running/draw/reject/refund/waiting
+                if (betDetial.ticket_status.StartsWith("half", StringComparison.OrdinalIgnoreCase))
+                {
+                    betRecordInfo.ValidBet = betRecordInfo.Stake / 2;
+                }
+                else
+                {
+                    betRecordInfo.ValidBet = betRecordInfo.Stake;
+                }
+            }
+
+            if (betRecordInfo.SettlementType == SettlementType.UnSettled)
+            {
+                betRecordInfo.TicketStatus = TicketStatus.UnSettled;
+            }
+            else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
+            {
+                betRecordInfo.TicketStatus = TicketStatus.Win;
+            }
+            else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
+            {
+                betRecordInfo.TicketStatus = TicketStatus.Lost;
+            }
+            else if (betDetial.ticket_status.EndsWith("draw", StringComparison.OrdinalIgnoreCase))
+            {
+                betRecordInfo.TicketStatus = TicketStatus.Draw;
+            }
+            else
+            {
+                betRecordInfo.TicketStatus = TicketStatus.Refund;
+            }
+        }
         public override SyncParams InitialSyncParams()
         {
             SyncParams syncParams = new SyncParams();
