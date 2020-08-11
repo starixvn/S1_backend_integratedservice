@@ -15,14 +15,14 @@ namespace ThirdPartyWager.Service.DAL
 
         private readonly IConfiguration configuration;
 
-        public ThirdPartyHelper( IConfiguration configuration)
+        public ThirdPartyHelper(IConfiguration configuration)
         {
             this.configuration = configuration;
         }
 
         public ThirdPartyModel GetThirdPartySetting(int tpId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
             return conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
     }

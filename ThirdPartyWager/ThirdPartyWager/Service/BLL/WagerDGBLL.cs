@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -25,30 +26,28 @@ namespace ThirdPartyWager.Service.BLL
     {
         public IEnumerable Result { get; private set; }
 
-        private readonly ThirdPartyHelper thirdPartyHelper;
+        private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
         private readonly ILogger<WagerDGBLL> logger;
 
-        public WagerDGBLL(ILogger<WagerDGBLL> logger, ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
+        public WagerDGBLL(ILogger<WagerDGBLL> logger, WagerDGService wagerDGService, ApiDGBLL apiDGBLL, ThirdPartyBLL thirdPartyBLL)
         {
-            this.thirdPartyHelper = thirdPartyHelper;
+            this.thirdPartyBLL = thirdPartyBLL;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
             this.logger = logger;
         }
-
-        public async Task GetWagersAsync()
+        public async Task<bool> GetWagersAsync()
         {
             // get dg api info
-            int tpId = 4;
             try
             {
-                var dataTpList = thirdPartyHelper.GetThirdPartySetting(tpId);
-                var setting = JsonConvert.DeserializeObject<Setting>(dataTpList.Setting);
+                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+
                 List<long> wagerIds = new List<long>();
                 // get wagers
-                var dataWager = await apiDGBLL.GetBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey);
+                var dataWager = await apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"]);
 
                 // insert wager to db
                 foreach (var bet in dataWager.list)
@@ -65,11 +64,13 @@ namespace ThirdPartyWager.Service.BLL
                     }
                 }
                 // mark wager
-                await apiDGBLL.MarkGotBetList(setting.ApiUrl, setting.AgentAccount, setting.APIkey, wagerIds);
+                await apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
+                return dataWager.list.Count() == 1000;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                return true;
             }
         }
 

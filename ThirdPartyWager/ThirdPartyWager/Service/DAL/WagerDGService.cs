@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public int InsertWagerDG(Bet bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("TpWagerDG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
     }

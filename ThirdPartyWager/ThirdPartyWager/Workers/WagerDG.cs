@@ -13,32 +13,47 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<WagerDG> logger;
         private readonly WagerDGBLL wagerDGBLL;
+        private readonly IHostEnvironment environment;
+        private Timer timer;
 
-        public WagerDG(ILogger<WagerDG> logger, WagerDGBLL wagerDGBLL)
+        public WagerDG(ILogger<WagerDG> logger, IHostEnvironment environment, WagerDGBLL wagerDGBLL)
         {
             this.logger = logger;
             this.wagerDGBLL = wagerDGBLL;
+            this.environment = environment;
         }
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+        private async void DoTask(object state)
+        {
+            var isContinue = false;
+            try
             {
-                DoTask();
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(30000, stoppingToken);
+                isContinue = await wagerDGBLL.GetWagersAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                if (environment.IsDevelopment() || environment.IsEnvironment("QA") || isContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
-        private async void DoTask()
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-           try
-           {
-                await wagerDGBLL.GetWagersAsync();
-           }
-           catch (Exception ex)
-           {
-               logger.LogError(ex.Message);
-           }
+            //WriteToFile("WriteToFileHostedService: Process Stopped");
+            timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
         }
 
     }
