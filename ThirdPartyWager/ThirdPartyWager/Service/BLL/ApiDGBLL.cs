@@ -81,7 +81,7 @@ namespace ThirdPartyWager.Service.BLL
             return;
         }
 
-        public async Task<WagerDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
+        public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
         {
             // param
             string uri = "/game/getReport/";
@@ -92,14 +92,22 @@ namespace ThirdPartyWager.Service.BLL
                 token = $"{token}",
                 beginTime = $"{beginTime}",
                 endTime = $"{endTime}",
-                agentName = $"{agentName}"
+                agentName = $"{agentName}",
+                pageNow = $"{pageNow}"
             };
 
             // request
             var r = await DoHttpClientAsync(url, param);
 
-            var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
-
+            var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
+            Console.WriteLine("------");
+            Console.WriteLine(result);
+            Console.WriteLine("------");
+            Console.WriteLine(result.data);
+            Console.WriteLine("------");
+            Console.WriteLine("------");
+            //Console.WriteLine(result.data.records);
+            Console.WriteLine("------");
             return result;
         }
 

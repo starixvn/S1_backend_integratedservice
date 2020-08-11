@@ -64,7 +64,7 @@ namespace ThirdPartyWager.Service.BLL
                     }
                 }
                 // mark wager
-                await apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
+                //await apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
                 return dataWager.list.Count() == 1000;
             }
             catch (Exception ex)

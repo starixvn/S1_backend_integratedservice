@@ -6,50 +6,67 @@ using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoDGBLL
     {
-        private readonly ThirdPartyHelper thirdPartyHelper;
+        private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
         private readonly ILogger<WagerRedoDGBLL> logger;
 
-        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
+        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
         {
-            this.thirdPartyHelper = thirdPartyHelper;
+            this.thirdPartyBLL = thirdPartyBLL;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
             this.logger = logger;
         }
-        public async Task RedoWagersAsync()
+        public async Task<bool> RedoWagersAsync()
         {
-            // get dg api info
-            int tpId = 4;
-            var dataTpList = thirdPartyHelper.GetThirdPartySetting(tpId);
-            var setting = JsonConvert.DeserializeObject<Setting>(dataTpList.Setting);
-            string beginTime = "";
-            string endTime = "";
-            int pageNow = 1;
-
-            // get wagers
-            var dataWager = await apiDGBLL.GetBetListByTime(setting.WagerUrl, setting.AgentAccount, setting.APIkey, beginTime, endTime, pageNow);
-            // insert wager to db
-            foreach (var bet in dataWager.list)
+            try
             {
-                try
-                {
-                    wagerDGService.InsertWagerDG(bet);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                    continue;
-                }
+                // get dg api info
+                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+
+                // define time
+                DateTime current = DateTime.Now;
+                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
+                DateTime start = timeBase.Add(new TimeSpan(-6, 0, 0));
+                DateTime end = timeBase.Add(new TimeSpan(-5, 0, 0));
+                string beginTime = "2020-08-05 00:00:00";
+                string endTime = "2020-08-05 23:59:59";
+                int pageNow = 1;
+
+                // get wagers
+                var dataWager = await apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], beginTime, endTime, pageNow);
+               
+                // insert wager to db
+                //foreach (var bet in dataWager.data.records)
+                //{
+                //    Console.WriteLine(bet);
+                //    Console.WriteLine("=====");
+                //    try
+                //    {
+                //        wagerDGService.InsertWagerDG(bet);
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        logger.LogError(ex, ex.Message);
+                //        continue;
+                //    }
+                //}
+                return true;
+                //return dataWager.list.Count() == 1000;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return true;
             }
 
-            return;
         }
     }
 }
