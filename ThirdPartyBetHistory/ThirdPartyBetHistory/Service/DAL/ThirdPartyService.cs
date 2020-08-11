@@ -114,7 +114,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     {
                         isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, $"Re-Settled", RefBetRecord.TransId, conn, trans)>0;
                     }
-                    else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && RefBetRecord.Stake != betRecord.Stake)
+                    else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && RefBetRecord.ValidBet != betRecord.ValidBet)
                     {
                         isRollover = SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, conn, trans) > 0;
                     }
@@ -162,7 +162,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                 else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
                     && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                 {
-                    if (RefBetRecord.Stake != betRecord.Stake)
+                    if (RefBetRecord.ValidBet != betRecord.ValidBet)
                     {
                         SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, betRecord.ValidBet - RefBetRecord.ValidBet, conn, trans);
                     }
