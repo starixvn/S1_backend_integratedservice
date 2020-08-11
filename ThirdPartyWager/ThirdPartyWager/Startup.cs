@@ -40,6 +40,10 @@ namespace ThirdPartyWager
                 services.AddHttpClient("with_proxy")
                 .ConfigurePrimaryHttpMessageHandler(() => proxy);
             }
+            else
+            {
+                services.AddHttpClient();
+            }
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<WagerDGService>();
