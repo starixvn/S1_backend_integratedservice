@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
@@ -17,15 +18,13 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
         private readonly ILogger<WagerRedoDGBLL> logger;
-        private readonly IHostEnvironment environment;
 
-        public WagerRedoDGBLL(IHostEnvironment environment, ILogger<WagerRedoDGBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
+        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
             this.logger = logger;
-            this.environment = environment;
         }
         public async Task<bool> RedoWagersAsync()
         {
@@ -37,30 +36,48 @@ namespace ThirdPartyWager.Service.BLL
                 // define time
                 DateTime current = DateTime.Now;
                 DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
-                string beginTime = timeBase.AddHours(-6).ToString("yyyy-MM-dd HH:00:00");
-                string endTime = timeBase.AddHours(-5).ToString("yyyy-MM-dd  HH:59:59");
-                int pageNow = 1;
+                string beginTime = timeBase.AddHours(-4).ToString("yyyy-MM-dd HH:00:00");
+                string endTime = timeBase.AddHours(-3).ToString("yyyy-MM-dd HH:59:59");
 
-                // get wagers
-                var dataWager = await apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], beginTime, endTime, pageNow);
-               
-                // insert wager to db
-                //foreach (var bet in dataWager.data.records)
-                //{
-                //    Console.WriteLine(bet);
-                //    Console.WriteLine("=====");
-                //    try
-                //    {
-                //        wagerDGService.InsertWagerDG(bet);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        logger.LogError(ex, ex.Message);
-                //        continue;
-                //    }
-                //}
+                // count interval wagers
+                var getWagerCount = wagerDGService.GetWagerDGTotal(beginTime, endTime);
+                int wagerCount = getWagerCount.wagerCount;
+
+                // pagination
+                int page = 1;
+                int totalPage = 1;
+                while (page <= totalPage)
+                {
+                    var dataWager = await apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], beginTime, endTime, page);
+                    totalPage = dataWager.data.pageCount;
+                    int totalNum = dataWager.data.rowCount;
+
+                    // db wager count equals api bet count do nothing
+                    if (totalNum == wagerCount)
+                    {
+                        break;
+                    }
+
+                    // insert wager to db
+                    foreach (var bet in dataWager.data.records)
+                    {
+                        try
+                        {
+                            wagerDGService.InsertWagerDG(bet);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, ex.Message);
+                            continue;
+                        }
+                    }
+                    page++;
+
+                    // sleep 15 sec
+                    Thread.Sleep(15000);
+                }
+
                 return true;
-                //return dataWager.list.Count() == 1000;
             }
             catch (Exception ex)
             {

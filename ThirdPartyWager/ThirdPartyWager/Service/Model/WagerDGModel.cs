@@ -82,4 +82,9 @@ namespace ThirdPartyWager.Service.Model
         public int endindex { get; set; }
 
     }
+
+    public class WagerDGTotal
+    {
+        public int wagerCount { get; set; }
+    }
 }

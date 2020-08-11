@@ -40,8 +40,8 @@ namespace ThirdPartyWager.Service.BLL
             string token = ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
-                token = $"{token}",
-                random = $"{random}"
+                token = token,
+                random = random
             };
 
             // request
@@ -65,8 +65,8 @@ namespace ThirdPartyWager.Service.BLL
             string token = ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
-                token = $"{token}",
-                random = $"{random}",
+                token = token,
+                random = random,
                 list = wagerIds
             };
 
@@ -84,9 +84,10 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
         {
             // param
-            string uri = "/game/getReport/";
-            string url = $"{apiUrl}{uri}{agentName}";
+            string uri = "/game/getReport";
+            string url = $"{apiUrl}{uri}";
             string token = ToMD5($"{agentName}{apiKey}").ToLower();
+
             var param = new
             {
                 token = token,
@@ -95,19 +96,13 @@ namespace ThirdPartyWager.Service.BLL
                 agentName = agentName,
                 pageNow = pageNow
             };
-
             // request
             var r = await DoHttpClientAsync(url, param);
-
             var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
-            Console.WriteLine("------");
-            Console.WriteLine(result);
-            Console.WriteLine("------");
-            Console.WriteLine(result.data);
-            Console.WriteLine("------");
-            Console.WriteLine("------");
-            //Console.WriteLine(result.data.records);
-            Console.WriteLine("------");
+            if (result.data == null)
+            {
+                throw new Exception("No Data.");
+            }
             return result;
         }
 
