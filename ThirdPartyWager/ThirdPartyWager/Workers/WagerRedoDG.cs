@@ -13,25 +13,22 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<WagerDG> logger;
         private readonly WagerRedoDGBLL wagerRedoDGBLL;
+        private readonly IHostEnvironment environment;
+        private Timer timer;
 
-        public WagerRedoDG(ILogger<WagerDG> logger, WagerRedoDGBLL wagerRedoDGBLL)
+        public WagerRedoDG(ILogger<WagerDG> logger, IHostEnvironment environment, WagerRedoDGBLL wagerRedoDGBLL)
         {
             this.logger = logger;
             this.wagerRedoDGBLL = wagerRedoDGBLL;
+            this.environment = environment;
         }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //while (!stoppingToken.IsCancellationRequested)
-            //{
-            //    //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            //    DoTask();
-            //    logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            //    await Task.Delay(10000, stoppingToken);
-            //}
+            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
         }
 
-        private async void DoTask()
+        private async void DoTask(object state)
         {
             try
             {
@@ -41,7 +38,18 @@ namespace ThirdPartyWager.Workers
             {
                 logger.LogError(ex.Message);
             }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(60);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
 
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            //WriteToFile("WriteToFileHostedService: Process Stopped");
+            timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
         }
     }
 }
