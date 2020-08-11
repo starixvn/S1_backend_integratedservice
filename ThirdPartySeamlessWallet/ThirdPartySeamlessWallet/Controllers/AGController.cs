@@ -105,7 +105,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (bettingDataLC_AG.Value > 0)
                     {
                         logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_AG));
-                        if (bettingBLL.PlaceBet((int)Tp.AG, bettingDataLC_AG.TransactionID.ToString(), username, bettingDataLC_AG.Value, GameType.AG_LiveCasino, JsonConvert.SerializeObject(bettingDataLC_AG), out tpAffterAmount) > 0)
+                        int result = bettingBLL.PlaceBet((int)Tp.AG, bettingDataLC_AG.TransactionID.ToString(), username, bettingDataLC_AG.Value, GameType.AG_LiveCasino, JsonConvert.SerializeObject(bettingDataLC_AG), out tpAffterAmount);
+                        if (result > 0)
                         {
                             resp.ResponseCode = Error.OK.ToString();
                             resp.Balance = tpAffterAmount;
@@ -115,6 +116,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
                             resp.Balance = tpCustBalance.Balance;
+                        }
+                        else if (result == -1)
+                        {
+                            resp.ResponseCode = Error.OK.ToString();
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            resp.Balance = tpCustBalance.Balance;
+                            log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", "AG_PostTransfer_Retry");
                         }
                         else
                         {

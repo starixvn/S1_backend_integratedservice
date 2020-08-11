@@ -133,6 +133,7 @@ namespace ThirdPartyService.Service.DAL
                         tpCustInfo.CStatus == (int)CustStatus.Closed ||
                         tpCustInfo.CStatus == (int)CustStatus.Suspend)
                     {
+                        apiResult.Data = tpCustInfo;
                         apiResult.ErrorCode = ErrorCode.UserLocked;
                         return apiResult;
                     }
