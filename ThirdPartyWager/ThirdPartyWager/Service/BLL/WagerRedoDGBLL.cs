@@ -1,55 +1,90 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoDGBLL
     {
-        private readonly ThirdPartyHelper thirdPartyHelper;
+        private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
         private readonly ILogger<WagerRedoDGBLL> logger;
 
-        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyHelper thirdPartyHelper, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
+        public WagerRedoDGBLL(ILogger<WagerRedoDGBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerDGService wagerDGService, ApiDGBLL apiDGBLL)
         {
-            this.thirdPartyHelper = thirdPartyHelper;
+            this.thirdPartyBLL = thirdPartyBLL;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
             this.logger = logger;
         }
-        public async Task RedoWagersAsync()
+        public async Task<bool> RedoWagersAsync()
         {
-            // get dg api info
-            int tpId = 4;
-            var dataTpList = thirdPartyHelper.GetThirdPartySetting(tpId);
-            var setting = JsonConvert.DeserializeObject<Setting>(dataTpList.Setting);
-            string beginTime = "";
-            string endTime = "";
-            int pageNow = 1;
-
-            // get wagers
-            var dataWager = await apiDGBLL.GetBetListByTime(setting.WagerUrl, setting.AgentAccount, setting.APIkey, beginTime, endTime, pageNow);
-            // insert wager to db
-            foreach (var bet in dataWager.list)
+            try
             {
-                try
+                // get dg api info
+                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+
+                // define time
+                DateTime current = DateTime.Now;
+                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
+                string beginTime = timeBase.AddHours(-4).ToString("yyyy-MM-dd HH:00:00");
+                string endTime = timeBase.AddHours(-3).ToString("yyyy-MM-dd HH:59:59");
+
+                // count interval wagers
+                var getWagerCount = wagerDGService.GetWagerDGTotal(beginTime, endTime);
+                int wagerCount = getWagerCount.wagerCount;
+
+                // pagination
+                int page = 1;
+                int totalPage = 1;
+                while (page <= totalPage)
                 {
-                    wagerDGService.InsertWagerDG(bet);
+                    var dataWager = await apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], beginTime, endTime, page);
+                    totalPage = dataWager.data.pageCount;
+                    int totalNum = dataWager.data.rowCount;
+
+                    // db wager count equals api bet count do nothing
+                    if (totalNum == wagerCount)
+                    {
+                        break;
+                    }
+
+                    // insert wager to db
+                    foreach (var bet in dataWager.data.records)
+                    {
+                        try
+                        {
+                            wagerDGService.InsertWagerDG(bet);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, ex.Message);
+                            continue;
+                        }
+                    }
+                    page++;
+
+                    // sleep 15 sec
+                    Thread.Sleep(15000);
                 }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                    continue;
-                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return true;
             }
 
-            return;
         }
     }
 }
