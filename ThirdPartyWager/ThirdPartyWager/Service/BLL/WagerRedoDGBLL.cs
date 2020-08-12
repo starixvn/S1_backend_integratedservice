@@ -36,11 +36,14 @@ namespace ThirdPartyWager.Service.BLL
                 // define time
                 DateTime current = DateTime.Now;
                 DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
-                string beginTime = timeBase.AddHours(-4).ToString("yyyy-MM-dd HH:00:00");
-                string endTime = timeBase.AddHours(-3).ToString("yyyy-MM-dd HH:59:59");
+                //string beginTime = timeBase.AddHours(-4).ToString("yyyy-MM-dd HH:00:00");
+                //string endTime = timeBase.AddHours(-3).ToString("yyyy-MM-dd HH:59:59");
+
+                var beginTime = new DateTimeOffset(timeBase.AddHours(-4));
+                var endTime = new DateTimeOffset(timeBase.AddHours(-3).AddMilliseconds(-1));
 
                 // count interval wagers
-                var getWagerCount = wagerDGService.GetWagerDGTotal(beginTime, endTime);
+                var getWagerCount = wagerDGService.GetWagerDGTotal(beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds());
                 int wagerCount = getWagerCount.wagerCount;
 
                 // pagination
@@ -48,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL
                 int totalPage = 1;
                 while (page <= totalPage)
                 {
-                    var dataWager = await apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], beginTime, endTime, page);
+                    var dataWager = await apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], beginTime.ToOffset(new TimeSpan(8,0,0)).ToString("yyyy-MM-dd HH:mm:ss"), endTime.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss"), page);
                     totalPage = dataWager.data.pageCount;
                     int totalNum = dataWager.data.rowCount;
 
