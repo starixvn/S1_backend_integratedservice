@@ -266,5 +266,68 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
+
+        public ApiResult<TransferResult> AdjustWallet(AdminTpTransfer adminTpTransfer)
+        {
+            var apiResult = new ApiResult<TransferResult>();
+
+            if (adminTpTransfer.direction != Direction.ToMain && adminTpTransfer.direction != Direction.ToTp)
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                return apiResult;
+            }
+            else if (adminTpTransfer.Amount <= 0)
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                return apiResult;
+            }
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(adminTpTransfer.CustId, adminTpTransfer.TpId);
+
+            // Test account create 3rd party only for saba
+            if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && adminTpTransfer.TpId != 1)
+            {
+                apiResult.ErrorCode = ErrorCode.NoAuthority;
+                apiResult.RawMessage = "This Account is for Testing.";
+                return apiResult;
+            }
+            else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
+                return apiResult;
+            }
+
+            IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(adminTpTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(adminTpTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+            if (balanceApiResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;/*3RD Error Code*/
+                apiResult.RawMessage = balanceApiResult.RawMessage;/*3RD Error Message*/
+                return apiResult;
+            }
+
+            string transId = null;
+            var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
+            string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
+
+            decimal amount = adminTpTransfer.Amount;
+
+            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+            {
+                amount = adminTpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
+            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId, thirdId);
+            tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
+              
+            return apiResult;
+        }
     }
 }

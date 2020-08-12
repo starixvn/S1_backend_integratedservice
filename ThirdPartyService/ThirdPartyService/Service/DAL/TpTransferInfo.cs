@@ -144,5 +144,32 @@ namespace ThirdPartyService.Service.DAL
                 return conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, ThirdId = (string)null, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail }, commandType: CommandType.StoredProcedure) > 0;
             }
         }
+
+        public void InsAdjustWalletLog(TpCustInfo tpCustInfo, AdminTpTransfer adminTpTransfer, out string transId)
+        {
+            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            {
+                var p = new DynamicParameters(new { Prefix = $"T{common.GetEnv()}", adminTpTransfer.TpId, tpCustInfo.SiteId, tpCustInfo.CustId, tpCustInfo.UserName, Direction = adminTpTransfer.direction, adminTpTransfer.Amount, adminTpTransfer.Operator, adminTpTransfer.Remarks });
+                transId = conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Ins", p, commandType: CommandType.StoredProcedure);
+            }
+        }
+        public void SetAdjustWalletLog(ApiResult<TransferResult> transferResult, string transId)
+        {
+            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            {
+                string Memo = null;
+                if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
+                {
+                    Memo = "3RD wallet amount isn't enough";
+                }
+                else if (!string.IsNullOrEmpty(transferResult.RawMessage))
+                {
+                    Memo = transferResult.RawMessage;
+                }
+
+                var p = new DynamicParameters(new { TransId = transId, transferResult.Data.ThirdId, Memo, transferResult.Data.Status });
+                conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Set", p, commandType: CommandType.StoredProcedure);
+            }
+        }
     }
 }

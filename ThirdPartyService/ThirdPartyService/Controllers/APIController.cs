@@ -149,5 +149,25 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+        [HttpPost]
+        public ActionResult<ApiResult<TransferResult>> AdjustWallet([FromBody] AdminTpTransfer adminTpTransfer)
+        {
+            var apiResult = new ApiResult<TransferResult>();
+            apiResult.ErrorCode = ErrorCode.SystemError;
+            apiResult.Data = new TransferResult();
+
+            try
+            {
+                apiResult = thirdPartyBLL.AdjustWallet(adminTpTransfer);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+            }
+
+            return apiResult;
+        }
     }
 }

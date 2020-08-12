@@ -21,6 +21,11 @@ namespace ThirdPartyCore.Model
         public Direction direction { set; get; }
         public Dictionary<string, string> inputs { set; get; }
     }
+    public class AdminTpTransfer:TpTransfer
+    {
+        public string Operator { set; get; }
+        public string Remarks { set; get; }
+    }
 
     public class TransferResult
     {
