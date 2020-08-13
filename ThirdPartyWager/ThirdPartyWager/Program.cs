@@ -27,6 +27,7 @@ namespace ThirdPartyWager
                 {
                     services.AddHostedService<WagerDG>();
                     services.AddHostedService<WagerRedoDG>();
+                    services.AddHostedService<WagerAllBet>();
                 });
     }
 }
