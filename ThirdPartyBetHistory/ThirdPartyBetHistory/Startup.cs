@@ -32,10 +32,12 @@ namespace ThirdPartyBetHistory
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/
+            services.AddSingleton<SettledService>();
             services.AddSingleton<ThirdPartyService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
+            services.AddSingleton<SettledBLL>();
 
             ThirdPartyBetHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
             ThirdPartyBetHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");

@@ -290,7 +290,7 @@ namespace ThirdPartyService.Service.BLL
                 rolloverAmount /= tpCustInfoResult.Data.ExchangeRate;
             }
 
-            apiResult = tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);
+            apiResult = apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp, transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
 
             tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
 
@@ -389,7 +389,7 @@ namespace ThirdPartyService.Service.BLL
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
             apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId, thirdId);
             tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
-              
+
             return apiResult;
         }
     }
