@@ -35,9 +35,11 @@ namespace ThirdPartyWager.Service.BLL
                 // define time
                 DateTime current = DateTime.Now;
                 DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, current.Minute, 0);
-                var startTime = new DateTimeOffset(timeBase.AddMinutes(-10)).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = new DateTimeOffset(timeBase.AddMinutes(-5)).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                
+                var beginAt = new DateTimeOffset(timeBase.AddMinutes(-10));
+                var endAt = new DateTimeOffset(timeBase.AddMinutes(-5));
+                var startTime = beginAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
+                var endTime = endAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
+
                 // pagination
                 int pageIndex = 1;
                 int pageRowCnt = 1;
@@ -56,7 +58,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            wagerAllBetService.InsertWagerAllBet(bet);
+                            wagerAllBetService.InsertWager(bet);
                         }
                         catch (Exception ex)
                         {
@@ -85,7 +87,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            wagerAllBetService.InsertWagerAllBet(bet);
+                            wagerAllBetService.InsertWager(bet);
                         }
                         catch (Exception ex)
                         {
