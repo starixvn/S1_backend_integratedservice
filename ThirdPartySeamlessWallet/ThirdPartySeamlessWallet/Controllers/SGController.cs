@@ -28,17 +28,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment environment;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
+        private readonly int gameType = 0;
 
         public SGController(IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
         {
             this.log2File = log2File;
             this.thirdPartyBLL = thirdPartyBLL;
-            this.thisTp = Tp.SG;
+            thisTp = Tp.SG;
             this.authBLL = authBLL;
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.environment = environment;
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
+            gameType = (int)GameType.SG_RNG;
         }
         public class Resp
         {
@@ -113,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
                             authorizeResp.acctInfo = new AcctInfo
                             {
                                 acctId = tpCustInfoAuth.TpUserName,
@@ -175,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.acctId);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.acctId, gameType);
                     getBalanceResp.acctInfo = new AcctInfo
                     {
                         acctId = getBalanceReq.acctId,
@@ -247,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                             }
                             else
@@ -259,14 +261,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 50110;
                             transferResp.msg = "Insufficient Balance";
                         }
                         else/*Can't Insert Bet*/
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 1;
                             transferResp.msg = "System Error";
@@ -286,7 +288,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                             }
                             else
@@ -298,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 0;
                             transferResp.msg = "Success";
@@ -318,7 +320,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         if (result > 0)
                         {
-
                             if (transferReq.amount > 0)
                             {
                                 transferResp.balance = tpAffterAmount;
@@ -327,7 +328,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                                 transferResp.code = 0;
                                 transferResp.msg = "Success";
@@ -335,7 +336,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 0;
                             transferResp.msg = "Success";
@@ -364,7 +365,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                                 transferResp.code = 0;
                                 transferResp.msg = "Success";
@@ -372,7 +373,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 0;
                             transferResp.msg = "Success";

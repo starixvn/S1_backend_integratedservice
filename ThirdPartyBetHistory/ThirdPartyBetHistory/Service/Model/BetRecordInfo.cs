@@ -21,5 +21,13 @@ namespace ThirdPartyBetHistory.Service.Model
         public TicketStatus TicketStatus { get; set; }
         public string OriginalState { get; set; }
         public long TicketKey { get; set; }
+        public int BonusId { get; set; }
+    }
+    public class BonusFulfill
+    {
+        public int BonusId { get; set; }
+        public int CustId { get; set; }
+        public int SiteId { get; set; }
+        public string UserName { get; set; }
     }
 }

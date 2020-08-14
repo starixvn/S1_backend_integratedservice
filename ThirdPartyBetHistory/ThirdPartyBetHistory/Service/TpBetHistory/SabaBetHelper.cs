@@ -171,6 +171,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             var result = await HttpPostAsync(getBetDetailUrl, P, "application/x-www-form-urlencoded");
             var getBetDetail = FromJson<GetBetDetail>(result);
+
             if (getBetDetail.error_code != 0)
             {
                 throw new Exception(getBetDetail.message);

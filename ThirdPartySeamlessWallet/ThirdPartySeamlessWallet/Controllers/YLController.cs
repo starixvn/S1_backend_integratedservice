@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly Log2File log2File;
         private readonly SettledBLL settledBLL;
+        private readonly int gameType = 0;
 
         public YLController(ILogger<YLController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, SettledBLL settledBLL, Log2File log2File)
         {
@@ -29,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.thirdPartyBLL = thirdPartyBLL;
             this.log2File = log2File;
             this.settledBLL = settledBLL;
+            this.gameType = (int)GameType.YL_Fish;
         }
         public class Req
         {

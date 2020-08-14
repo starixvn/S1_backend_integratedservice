@@ -19,4 +19,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
     }
+    public class BonusCategory
+    {
+        public int Type { set; get; }
+        public int Id { set; get; }
+        public int TpId { set; get; }
+    }
 }

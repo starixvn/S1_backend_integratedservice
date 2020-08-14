@@ -29,6 +29,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly IHostEnvironment environment;
         private readonly Tools tools;
+        private readonly int gameType = 0;
 
         public JokerController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools)
         {
@@ -41,6 +42,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.log2File = log2File;
             this.environment = environment;
             this.tools = tools;
+            gameType = (int)GameType.Joker_RNG;
         }
         private string GetMD5Signature(string rawData)
         {
@@ -112,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, tpCustInfoAuth.TpUserName);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, tpCustInfoAuth.TpUserName, gameType);
                         authenticateTokenRep.Status = 0;
                         authenticateTokenRep.Message = "Success";
                         authenticateTokenRep.Balance = tpCustBalance.Balance;
@@ -171,7 +173,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == balanceReq.hash)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, balanceReq.username);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, balanceReq.username, gameType);
                 rep.Status = 0;
                 rep.Message = "Success";
                 rep.Balance = tpCustBalance.Balance;
@@ -219,7 +221,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (betReq.amount < 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username, gameType);
                 rep.Balance = tpCustBalance.Balance;
                 rep.Status = 4;
                 rep.Message = "InvalidParameters";
@@ -253,7 +255,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             rep.Message = "Success";
                             if (betReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username, gameType);
                                 rep.Balance = tpCustBalance.Balance;
                             }
                             else
@@ -263,14 +265,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, betReq.username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, betReq.username, gameType);
                             rep.Status = 100;
                             rep.Balance = tpCustBalance.Balance;
                             rep.Message = "Insufficient fund";
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username, gameType);
                             rep.Balance = tpCustBalance.Balance;
                             rep.Status = 0;
                             rep.Message = "The Bet already existed";
@@ -327,7 +329,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (settleBetReq.amount < 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                 rep.Balance = tpCustBalance.Balance;
                 rep.Status = 4;
                 rep.Message = "InvalidParameters";
@@ -355,7 +357,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (settleBetReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                             rep.Balance = tpCustBalance.Balance;
                             rep.Status = 0;
                             rep.Message = "Success";
@@ -363,14 +365,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (result == -1)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                         rep.Balance = tpCustBalance.Balance;
                         rep.Status = 0;
                         rep.Message = "Transaction can not be found";
                     }
                     else if (result == -2)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                         rep.Balance = tpCustBalance.Balance;
                         rep.Status = 0;
                         rep.Message = "Success";
@@ -431,20 +433,20 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (tpAffterAmount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username, gameType);
                         rep.Balance = tpCustBalance.Balance;
                     }
                 }
                 else if (result == -2)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username, gameType);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 1000;
                     rep.Message = "Bet was settled";
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, cancelBetReq.username, gameType);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";
@@ -483,7 +485,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (settleBetReq.amount < 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                 rep.Balance = tpCustBalance.Balance;
                 rep.Status = 4;
                 rep.Message = "InvalidParameters";
@@ -509,7 +511,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (settleBetReq.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                         rep.Status = 0;
                         rep.Message = "Success";
                         rep.Balance = tpAffterAmount;
@@ -517,14 +519,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";
                 }
                 else if (result == -2)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";
@@ -563,7 +565,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (settleBetReq.amount < 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                 rep.Balance = tpCustBalance.Balance;
                 rep.Status = 4;
                 rep.Message = "InvalidParameters";
@@ -589,7 +591,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (settleBetReq.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                         rep.Status = 0;
                         rep.Message = "Success";
                         rep.Balance = tpAffterAmount;
@@ -597,14 +599,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";
                 }
                 else if (result == -2)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, settleBetReq.username, gameType);
                     rep.Balance = tpCustBalance.Balance;
                     rep.Status = 0;
                     rep.Message = "Success";

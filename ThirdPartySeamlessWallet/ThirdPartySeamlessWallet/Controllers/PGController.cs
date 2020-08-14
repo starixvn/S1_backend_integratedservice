@@ -27,6 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly IHostEnvironment environment;
+        private readonly int gameType = 0;
 
         public PGController(IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
         {
@@ -38,6 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.environment = environment;
+            gameType = (int)GameType.PG_RNG;
         }
 
         public class Error
@@ -289,9 +291,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     TpCustBalance tpCustBalance = null;
                     if (environment.IsDevelopment())
-                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBalanceReq.PlayerName);
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBalanceReq.PlayerName, gameType);
                     else
-                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.PlayerName);
+                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.PlayerName, gameType);
 
                     BalanceData respData = new BalanceData();
                     resp.data = respData;
@@ -390,7 +392,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 return resp;
             }
-            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName);
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName, gameType);
 
             if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferOutReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
@@ -458,7 +460,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         if (transferOutReqq.TransferAmount == 0)
                         {
-                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
+                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName, gameType);
                             respData.currency_code = tpCustBalance.TpCurrencyId;
                             respData.balance_amount = tpCustBalance.Balance;
                             resp.error = null;
@@ -473,7 +475,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         if (environment.IsDevelopment())
-                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName);
+                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName, gameType);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpCustBalance.Balance;
                         resp.error = null;
@@ -594,7 +596,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName);
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName, gameType);
 
             if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferInReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
@@ -627,7 +629,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (transferInReqq.TransferAmount == 0)
                     {
-                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName);
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName, gameType);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpCustBalance.Balance;
                         resp.error = null;
@@ -635,7 +637,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName);
+                    tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName, gameType);
                     respData.currency_code = tpCustBalance.TpCurrencyId;
                     respData.balance_amount = tpCustBalance.Balance;
                     resp.error = null;

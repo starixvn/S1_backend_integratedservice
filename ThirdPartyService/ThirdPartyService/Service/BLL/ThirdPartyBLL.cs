@@ -240,7 +240,70 @@ namespace ThirdPartyService.Service.BLL
                 tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, tpTransferInfoModel.TransId);
             }
         }
+        public ApiResult BonusTransfer(TpBonusTransfer tpBonusTransfer)
+        {
+            var apiResult = new ApiResult<TransferResult>();
 
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
+
+            // Test account create 3rd party only for saba
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
+                return apiResult;
+            }
+
+            IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var tpHelperParticular = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+            if (balanceApiResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;/*3RD Error Code*/
+                apiResult.RawMessage = balanceApiResult.RawMessage;/*3RD Error Message*/
+                return apiResult;
+            }
+
+            string transId = null;
+            var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
+            string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
+            var tpTransferReqResult = tpTransferBonusInfoService.TpTransferBonusReq(tpBonusTransfer, tpCustInfoResult.Data, thirdId, out transId, out int bonusId);
+            if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
+            {
+                return tpTransferReqResult;
+            }
+
+            decimal bonus = tpBonusTransfer.Bonus;
+            decimal bonusAmount = tpBonusTransfer.BonusAmount;
+            decimal lockedAmount = tpBonusTransfer.LockedAmount;
+            decimal rolloverAmount = tpBonusTransfer.RolloverAmount;
+
+            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+            {
+                bonus /= tpCustInfoResult.Data.ExchangeRate;
+                lockedAmount /= tpCustInfoResult.Data.ExchangeRate;
+                rolloverAmount /= tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            apiResult = apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp, transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
+
+            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
+
+            if (apiResult.ErrorCode == ErrorCode.Success)
+            {
+                Task.Run(() =>
+                {
+                    tpCustInfoService.SetTpLastTradingTime(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
+                });
+            }
+
+            return apiResult;
+        }
         public ApiResult FixNegative(TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
@@ -319,7 +382,7 @@ namespace ThirdPartyService.Service.BLL
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
             apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId, thirdId);
             tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
-              
+
             return apiResult;
         }
     }

@@ -10,6 +10,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Wagers = 1,
         Refunds = 2,
         Settled = 3,
+        Prize = 4
     }
     public enum SettlementType
     {
@@ -87,5 +88,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         Allow = 1,
         NotAllow = 0
+    }
+    public enum TpCategory
+    {
+        Slots
     }
 }

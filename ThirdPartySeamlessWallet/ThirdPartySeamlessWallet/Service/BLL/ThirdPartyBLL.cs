@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
@@ -75,6 +76,49 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             var tpCurrency = TpCurrencyList[key];
             return tpCurrency;
+        }
+        private Dictionary<int, int> GetBonusCategoryList()
+        {
+            string key = $"GetBonusCategoryList";
+            var dBonusCategoryList = cache.Get<Dictionary<int, int>>(key);
+            if (dBonusCategoryList == null)
+            {
+                dBonusCategoryList = new Dictionary<int, int>();
+
+                var bonusCategoryList = thirdPartyService.GetBonusCategoryList();
+                foreach (var bonusCategory in bonusCategoryList.Where(x => x.TpId == 0))
+                {
+                    dBonusCategoryList.Add(bonusCategory.Type, bonusCategory.Id);
+                }
+
+                cache.Set(key, dBonusCategoryList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            }
+
+            return dBonusCategoryList;
+        }
+
+        public int GetBonusCategoryId(int gameType)
+        {
+            if (gameType == 0)
+                return 0;
+
+            var bonusCategoryList = GetBonusCategoryList();
+
+            if (bonusCategoryList.ContainsKey(gameType))
+                return bonusCategoryList[gameType];
+            else
+                return 0;
+        }
+        public GameType GetGameType_PP(string gameId)
+        {
+            GameType gameType = GameType.PP_RNG;
+
+            if (gameId.Length == 3 && int.TryParse(gameId, out int tempGameId))
+            {
+                gameType = GameType.PP_LiveCasino;
+            }
+
+            return gameType;
         }
     }
 }

@@ -32,6 +32,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
+        private readonly int gameType = 0;
 
         public GPIController(ILogger<GPIController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
@@ -42,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
+            gameType = (int)GameType.GPI_RNG;
         }
 
         [XmlRoot(ElementName = "resp")]
@@ -145,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             GetbalanceResp getbalanceResp = new GetbalanceResp();
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, getbalanceReq.cust_id);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, getbalanceReq.cust_id, gameType);
             if (getbalanceReq.currency != tpCustBalance.TpCurrencyId)
             {
                 getbalanceResp.Error_code = -29;
@@ -212,7 +214,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         debitResp.Error_msg = "No errors";
                         if (debitReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, debitReq.cust_id);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, debitReq.cust_id, gameType);
                             debitResp.After = tpCustBalance.Balance;
                             debitResp.Before = debitResp.After;
                         }
@@ -297,7 +299,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (creditReq.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id, gameType);
                         creditResp.After = tpCustBalance.Balance;
                         creditResp.Before = tpCustBalance.Balance;
                         creditResp.Error_code = 0;
@@ -306,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id, gameType);
                     creditResp.After = tpCustBalance.Balance;
                     creditResp.Before = tpCustBalance.Balance;
                     creditResp.Error_code = 0;
