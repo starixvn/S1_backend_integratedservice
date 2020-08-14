@@ -27,20 +27,25 @@ namespace ThirdPartyService.Service.DAL
             ExpiryTime = 0;
             RolloverAmount = 0;
 
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Type = type, Memo, RefTransId });
+            var p = new DynamicParameters(new { TpId = tpId, CustId = custId, SiteId = siteId, UserName = userName, Type = type, Memo, RefTransId });
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("LockedAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("RolloverAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ExpiryTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            conn.Execute("Common_BonusTransferOutAll_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-            BonusId = p.Get<int>("BonusId");
-            Bonus = p.Get<decimal>("Bonus");
-            LockedAmount = p.Get<decimal>("LockedAmount");
-            BonusAmount = p.Get<decimal>("BonusAmount");
-            RolloverAmount = p.Get<decimal>("RolloverAmount");
-            ExpiryTime = p.Get<long>("ExpiryTime");
+            var result = conn.Execute("Common_BonusTransferOutAll_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                BonusId = p.Get<int>("BonusId");
+                Bonus = p.Get<decimal>("Bonus");
+                LockedAmount = p.Get<decimal>("LockedAmount");
+                BonusAmount = p.Get<decimal>("BonusAmount");
+                RolloverAmount = p.Get<decimal>("RolloverAmount");
+                ExpiryTime = p.Get<long>("ExpiryTime");
+            }
+
             return BonusId > 0;
         }
         public bool BonusTransferRollback(int custId, int siteId, string userName, decimal Bonus, int tpId, string Memo, string RefTransId, int bonusId, out decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)

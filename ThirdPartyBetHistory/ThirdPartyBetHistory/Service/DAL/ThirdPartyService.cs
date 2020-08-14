@@ -119,6 +119,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     {
                         hasJoinBonus = true;
                         betRecord.BonusId = RefBetRecord.BonusId;
+                        bonusId = betRecord.BonusId;
                     }
                     else
                     {
