@@ -67,4 +67,9 @@ namespace ThirdPartyWager.Service.Model
         }
 
     }
+
+    public class WagerAllBetTotal
+    {
+        public int wagerCount { get; set; }
+    }
 }
