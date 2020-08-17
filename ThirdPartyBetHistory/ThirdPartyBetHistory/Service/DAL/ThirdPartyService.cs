@@ -232,14 +232,14 @@ namespace ThirdPartyBetHistory.Service.DAL
                     && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                 {
                     SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
-                    if (hasBonusRunning)
+                    if (hasJoinBonus)
                         SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
                     if (Losses != 0)
                     {
                         AutoCancelBonus(tpCustInfo.CustId, conn, trans);
 
-                        if (hasBonusRunning)
+                        if (hasJoinBonus)
                             AutoCancelBonusV2(bonusId, conn, trans);
                     }
                 }
@@ -252,13 +252,13 @@ namespace ThirdPartyBetHistory.Service.DAL
                     if (RefWinnings != Winnings || RefLosses != Losses)
                     {
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", betRecord.TransId, conn, trans);
-                        if (hasBonusRunning)
+                        if (hasJoinBonus)
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
                         if (Losses != 0)
                         {
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-                            if (hasBonusRunning)
+                            if (hasJoinBonus)
                                 AutoCancelBonusV2(bonusId, conn, trans);
                         }
                     }
