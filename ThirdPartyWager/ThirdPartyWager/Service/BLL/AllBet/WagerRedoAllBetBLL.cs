@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.AllBet
+namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoAllBetBLL
     {

@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.AllBet;
 
 namespace ThirdPartyWager
 {
@@ -30,6 +29,7 @@ namespace ThirdPartyWager
                     services.AddHostedService<WagerRedoDG>();
                     services.AddHostedService<WagerAllBet>();
                     services.AddHostedService<WagerRedoAllBet>();
+                    services.AddHostedService<WagerSA>();
                 });
     }
 }
