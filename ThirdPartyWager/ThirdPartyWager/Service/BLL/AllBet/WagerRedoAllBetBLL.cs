@@ -48,16 +48,30 @@ namespace ThirdPartyWager.Service.BLL.AllBet
                 {
                     // bet 
                     var dataWager = await apiAllBetBLL.GetBetListByTime(setting["ApiUrl"], setting["DesKey"], setting["MD5Key"], setting["PropertyId"], startTime, endTime, pageIndex);
+
+                    // error condition
+                    var errorCode = dataWager.error_code;
+                    var errorMsg = dataWager.message;
+                    if (errorCode != "OK")
+                    {
+                        logger.LogError(errorCode, errorMsg);
+                        logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime} )");
+                        break;
+                    }
+
                     pageRowCnt = dataWager.page.datas.Count();
                     int totalNum = dataWager.page.count;
                     if (pageRowCnt == 0)
                     {
+                        //logger.LogError(errorCode, errorMsg);
+                        logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} PAGE: {pageRowCnt} )");
                         break;
                     }
 
                     // db wager count equals api bet count do nothing
                     if (totalNum == wagerCount)
                     {
+                        logger.LogInformation($"MATCH ( START: {startTime} END: {endTime} TOTAL: {totalNum} )");
                         break;
                     }
 
@@ -77,6 +91,7 @@ namespace ThirdPartyWager.Service.BLL.AllBet
                     pageIndex++;
                 }
 
+                logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} )");
                 return true;
             }
             catch (Exception ex)
