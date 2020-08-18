@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.AllBet;
 using ThirdPartyWager.Service.DAL;
 
 namespace ThirdPartyWager
@@ -49,6 +48,7 @@ namespace ThirdPartyWager
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<WagerDGService>();
             services.AddSingleton<WagerAllBetService>();
+            services.AddSingleton<WagerSAService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -60,6 +60,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerAllBetBLL>();
             services.AddSingleton<ApiAllBetBLL>();
             services.AddSingleton<WagerRedoAllBetBLL>();
+            // SA
+            services.AddSingleton<WagerSABLL>();
+            services.AddSingleton<ApiSABLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

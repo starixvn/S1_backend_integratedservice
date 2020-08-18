@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ThirdPartyWager.Service.BLL.AllBet;
+using ThirdPartyWager.Service.BLL;
 
-namespace ThirdPartyWager.Workers.AllBet
+namespace ThirdPartyWager.Workers
 {
     public class WagerRedoAllBet : BackgroundService
     {
