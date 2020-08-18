@@ -31,10 +31,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-            var isContinue = false;
             try
             {
-                isContinue = await wagerAllBetBLL.GetWagersAsync();
+                await wagerAllBetBLL.GetWagersAsync();
             }
             catch (Exception ex)
             {
