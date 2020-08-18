@@ -16,19 +16,48 @@ namespace ThirdPartySeamlessWallet.Service.Workers
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-
-        public BonusWorker(IConfiguration configuration, WalletService walletService)
+        private readonly IHostEnvironment environment;
+        private Timer timer;
+        public BonusWorker(IConfiguration configuration, IHostEnvironment environment, WalletService walletService)
         {
             this.configuration = configuration;
             this.walletService = walletService;
+            this.environment = environment;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            foreach (var bonus in walletService.GetBonusFulfill())
-            {
-                walletService.BonusSettle(bonus);
-            }
+            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
 
+        private void DoTask(object state)
+        {
+            try
+            {
+                foreach (var bonus in walletService.GetBonusFulfill())
+                {
+                    walletService.BonusSettle(bonus);
+                }
+            }
+            catch (Exception ex)
+            {
+                //logger.LogError(ex.Message);
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                if (environment.IsDevelopment())
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            //WriteToFile("WriteToFileHostedService: Process Stopped");
+            timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
