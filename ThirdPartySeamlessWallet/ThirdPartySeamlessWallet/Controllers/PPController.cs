@@ -334,7 +334,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     resultResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Payout;
                     var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                    if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
@@ -407,7 +407,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Bonus;
                     var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                    if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
@@ -479,7 +479,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Jackpot;
                     var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (bettingBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                    if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
