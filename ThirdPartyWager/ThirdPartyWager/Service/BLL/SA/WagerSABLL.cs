@@ -54,7 +54,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     //logger.LogError(errorCode, errorMsg);
                     logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} )");
-                    return false;
+                    return true;
                 }
 
                 // insert wager to db
