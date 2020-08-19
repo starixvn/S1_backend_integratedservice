@@ -18,12 +18,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly WalletService walletService;
         private readonly Tools tools;
         private readonly BettingService bettingService;
-        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, BettingService bettingService)
+        private readonly Log2File log2File;
+
+        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, BettingService bettingService, Log2File log2File)
         {
             this.configuration = configuration;
             this.walletService = walletService;
             this.tools = tools;
             this.bettingService = bettingService;
+            this.log2File = log2File;
         }
 
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
@@ -1054,6 +1057,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                     {
+                        result = -1;
+                        log2File.Error($"{JsonConvert.SerializeObject(txn)}", $"Sexy_Duplicate");
                         continue;
                     }
                     else
@@ -1092,6 +1097,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
+                    log2File.Error($"{JsonConvert.SerializeObject(txn)}", $"Sexy_haveNoBetting");/*need add check in SP*/
                     haveNoBetting = true;
                     trans.Rollback();
                 }
@@ -1108,6 +1114,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     roundId = bettingDataLC_Sexy_Settle.RoundId
                 }, commandType: CommandType.StoredProcedure);
 
+                result = result == -1 ? 1 : result;
                 return result;
             }
         }
