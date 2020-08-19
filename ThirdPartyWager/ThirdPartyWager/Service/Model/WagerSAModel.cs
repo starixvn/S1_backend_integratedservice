@@ -17,13 +17,11 @@ namespace ThirdPartyWager.Service.Model
         public int ErrorMsgId { get; set; }
         public string ErrorMsg { get; set; }
         public BetDetailList BetDetailList { get; set; }
-
     }
 
     public class BetDetailList
     {
         public IList<BetSA> BetDetail { get; set; }
-
     }
 
     public class BetSA
@@ -67,5 +65,37 @@ namespace ThirdPartyWager.Service.Model
     {
         public int ErrorMsgId { get; set; }
         public string ErrorMsg { get; set; }
+    }
+
+    public class WagerRedoSAModel
+    {
+        public GetTransactionDetailsResponse GetTransactionDetailsResponse { get; set; }
+        public APIResponse APIResponse { get; set; }
+    }
+
+    public class GetTransactionDetailsResponse
+    {
+        public int ErrorMsgId { get; set; }
+        public string ErrorMsg { get; set; }
+        public Details Details { get; set; }
+    }
+
+    public class Details
+    {
+        public IList<TransactionDetails> TransactionDetails { get; set; }
+    }
+
+    public class TransactionDetails
+    {
+        public string CurrencyName { get; set; }
+        public int Count { get; set; }
+        public decimal Winlose { get; set; }
+        public decimal TotalBet { get; set; }
+        public decimal TotalRolling { get; set; }
+    }
+
+    public class WagerSATotal
+    {
+        public int wagerCount { get; set; }
     }
 }
