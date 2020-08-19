@@ -86,7 +86,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                               }
                               catch (Exception ex)
                               {
-                                  logger.LogError(ex.Message);
+                                  logger.LogError($"{ex}");
                               }
                               finally
                               {

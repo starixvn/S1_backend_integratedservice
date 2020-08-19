@@ -85,7 +85,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BonusFulfill>("Service_BonusFulfill_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<BonusFulfill>("Service_BonusFulfillSeamless_Get", commandType: CommandType.StoredProcedure);
         }
         public int BonusSettle(BonusFulfill bonusFulfill)
         {
