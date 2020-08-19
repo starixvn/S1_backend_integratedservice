@@ -36,7 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (result > 0 && bettingDataRNG_GPI.amount != 0)
             {
                 //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_GPI.amount, (int)Tp.GPI, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_GPI.amount).ToString("#,##0.##")}", bettingDataRNG_GPI.trx_id, out afterAmount, conn, trans);
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_GPI.amount, (int)Tp.GPI, bettingDataRNG_GPI.trx_id, gameType, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_GPI.amount, (int)Tp.GPI, bettingDataRNG_GPI.round_id, gameType, bettingDataRNG_GPI.trx_id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_Joker.amount != 0)
             {
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.id, gameType, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.roundid, gameType, bettingDataRNG_Joker.id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
@@ -103,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PP.amount, (int)Tp.PP, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PP.amount).ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
 
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_PP.amount, (int)Tp.PP, bettingDataRNG_PP.reference, gameType, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_PP.amount, (int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), gameType, bettingDataRNG_PP.reference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
@@ -138,7 +138,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataRNG_YGG.amount < 0)
                 {
                     //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_YGG.amount, (int)Tp.YGG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_YGG.amount).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
-                    result = PlaceBetV2(tpCustInfo, bettingDataRNG_YGG.amount, (int)Tp.YGG, bettingDataRNG_YGG.subreference, gameType, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                    result = PlaceBetV2(tpCustInfo, bettingDataRNG_YGG.amount, (int)Tp.YGG, bettingDataRNG_YGG.reference, gameType, bettingDataRNG_YGG.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
                 }
 
                 if (result > 0)
@@ -216,7 +216,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
                 {
                     //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PG.TransferAmount).ToString("#,##0.##")}", bettingDataRNG_PG.TransactionId, out afterAmount, conn, trans);
-                    result = PlaceBetV2(tpCustInfo, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, bettingDataRNG_PG.TransactionId, gameType, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                    result = PlaceBetV2(tpCustInfo, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, bettingDataRNG_PG.TransactionId, gameType, bettingDataRNG_PG.TransactionId, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
                 }
 
                 if (result > 0)
