@@ -75,5 +75,37 @@ namespace CommonService.Service.Library
 
             return response;
         }
+
+        public async Task<HttpResponseMessage> HttpFromPostAsync(string url, Dictionary<string, string> headerParams, Dictionary<string, string> parameters, string contentType)
+        {
+            HttpClientHandler handler = null;
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler = new HttpClientHandler()
+                {
+                    Proxy = new WebProxy(proxyHost, proxyPort),
+                    UseProxy = true,
+                };
+            }
+            else
+            {
+                handler = new HttpClientHandler();
+            }
+
+            using var client = new HttpClient(handler);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(contentType));
+            if (headerParams != null)
+            {
+                foreach (var param in headerParams)
+                {
+                    client.DefaultRequestHeaders.Add(param.Key, param.Value);
+                }
+            }
+            var data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters) };
+            
+            var response = await client.SendAsync(data);
+
+            return response;
+        }
     }
 }
