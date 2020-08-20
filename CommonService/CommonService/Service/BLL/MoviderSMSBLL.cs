@@ -21,29 +21,33 @@ namespace CommonService.Service.BLL
         }
         public async Task<ApiResult> SendVerifySMSAsync(CustInfoProfile custInfo, string phone)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var config = moviderVerifySMSConfig.Value[custInfo.SiteName];
             string url = config.SendVerifyUrl;
 
-            Dictionary<string, string> langlist = new Dictionary<string, string>();
-            langlist.Add("en", "en-us");
-            langlist.Add("th", "th-th");
-            langlist.Add("vn", "vi-vn");
+            Dictionary<string, string> langlist = new Dictionary<string, string>()
+            {
+                { "en", "en-us" },
+                { "th", "th-th" },
+                { "vn", "vi-vn" }
+            };
 
             if (!langlist.TryGetValue(custInfo.UserLang, out string langvalue))
             {
                 langvalue = "en-us";
             }
 
-            Dictionary<string, string> sendVerifySMS = new Dictionary<string, string>();
-            sendVerifySMS.Add("api_key", config.ApiKey);
-            sendVerifySMS.Add("api_secret", config.ApiSecret);
-            sendVerifySMS.Add("code_length", config.CodeLength);
-            sendVerifySMS.Add("from", config.From);
-            sendVerifySMS.Add("language", langvalue);
-            sendVerifySMS.Add("next_event_wait", config.NextEventWait);
-            sendVerifySMS.Add("pin_expire", config.PinExpire);
-            sendVerifySMS.Add("to", phone);
+            Dictionary<string, string> sendVerifySMS = new Dictionary<string, string>
+            {
+                { "api_key", config.ApiKey },
+                { "api_secret", config.ApiSecret },
+                { "code_length", config.CodeLength },
+                { "from", config.From },
+                { "language", langvalue },
+                { "next_event_wait", config.NextEventWait },
+                { "pin_expire", config.PinExpire },
+                { "to", phone }
+            };
 
             var result = await httpHelper.HttpFromPostAsync(url, null, sendVerifySMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<MoviderResult>(result.Content.ReadAsStringAsync().Result);
@@ -68,11 +72,13 @@ namespace CommonService.Service.BLL
             var config = moviderVerifySMSConfig.Value[custInfo.SiteName];
             string url = config.AcknowledgeVerifyUrl;
 
-            Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>();
-            AcknowledgeVerifySMS.Add("api_key", config.ApiKey);
-            AcknowledgeVerifySMS.Add("api_secret", config.ApiSecret);
-            AcknowledgeVerifySMS.Add("request_id", request_id);
-            AcknowledgeVerifySMS.Add("code", code);
+            Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
+            {
+                { "api_key", config.ApiKey },
+                { "api_secret", config.ApiSecret },
+                { "request_id", request_id },
+                { "code", code }
+            };
 
             var result = await httpHelper.HttpFromPostAsync(url, null, AcknowledgeVerifySMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<MoviderResult>(result.Content.ReadAsStringAsync().Result);
