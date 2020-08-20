@@ -24,8 +24,6 @@ namespace ThirdPartyWager.Service.BLL
 
     public class WagerDGBLL
     {
-        public IEnumerable Result { get; private set; }
-
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;

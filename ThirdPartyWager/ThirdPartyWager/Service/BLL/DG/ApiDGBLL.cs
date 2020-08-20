@@ -10,34 +10,28 @@ using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class ApiDGBLL
     {
-        private readonly IHttpClientFactory _clientFactory;
-        private readonly HttpClient client;
-        public ApiDGBLL(IHttpClientFactory clientFactory, IConfiguration configuration)
-        {
-            _clientFactory = clientFactory;
+        private readonly HttpHelper httpHelper;
+        private readonly Common common;
 
-            if (configuration.GetValue<string>("ProxyHost") != null)
-            {
-                client = _clientFactory.CreateClient("with_proxy");
-            }
-            else
-            {
-                client = _clientFactory.CreateClient();
-            }
+        public ApiDGBLL(HttpHelper httpHelper, Common common)
+        {
+            this.httpHelper = httpHelper;
+            this.common = common;
         }
         public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
         {
             // param
             string uri = "/game/getReport/";
-            string random = GetRandomString(8);
+            string random = common.GetRandomString(8);
             string url = $"{apiUrl}{uri}{agentName}";
-            string token = ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            string token = common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -55,9 +49,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             // param
             string uri = "/game/markReport/";
-            string random = GetRandomString(8);
+            string random = common.GetRandomString(8);
             string url = $"{apiUrl}{uri}{agentName}";
-            string token = ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            string token = common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -81,7 +75,7 @@ namespace ThirdPartyWager.Service.BLL
             // param
             string uri = "/game/getReport";
             string url = $"{apiUrl}{uri}";
-            string token = ToMD5($"{agentName}{apiKey}").ToLower();
+            string token = common.ToMD5($"{agentName}{apiKey}").ToLower();
 
             var param = new
             {
@@ -100,13 +94,12 @@ namespace ThirdPartyWager.Service.BLL
             }
             return result;
         }
-
         private async Task<string> DoHttpClientAsync(string url, object param)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = JsonConvert.SerializeObject(param);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.SendAsync(request);
+            var response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 return response.Content.ReadAsStringAsync().Result;
@@ -115,29 +108,6 @@ namespace ThirdPartyWager.Service.BLL
             {
                 return null;
             }
-        }
-
-        protected string GetRandomString(int length)
-        {
-            var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
-            var next = new Random();
-            var builder = new StringBuilder();
-            for (var i = 0; i < length; i++)
-            {
-                builder.Append(str[next.Next(0, str.Length)]);
-            }
-            return builder.ToString();
-        }
-
-        protected string ToMD5(string encodeStr)
-        {
-            using var cryptoMD5 = MD5.Create();
-            var bytes = Encoding.UTF8.GetBytes(encodeStr);
-            var hash = cryptoMD5.ComputeHash(bytes);
-            var md5 = BitConverter.ToString(hash)
-              .Replace("-", string.Empty);
-
-            return md5;
         }
     }
 }

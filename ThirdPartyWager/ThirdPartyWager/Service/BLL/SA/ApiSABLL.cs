@@ -9,27 +9,20 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class ApiSABLL
     {
-        private readonly IHttpClientFactory _clientFactory;
-        private readonly HttpClient client;
+        private readonly HttpHelper httpHelper;
+        private readonly Common common;
 
-        public ApiSABLL(IHttpClientFactory clientFactory, IConfiguration configuration)
+        public ApiSABLL(HttpHelper httpHelper, Common common)
         {
-            _clientFactory = clientFactory;
-
-            if (configuration.GetValue<string>("ProxyHost") != null)
-            {
-                client = _clientFactory.CreateClient("with_proxy");
-            }
-            else
-            {
-                client = _clientFactory.CreateClient();
-            }
+            this.httpHelper = httpHelper;
+            this.common = common;
         }
 
         public async Task<WagerSAModel> GetBetListByTime(string apiUrl, string encrypKey, string md5Key, string secretKey, string startTime, string endTime)
@@ -41,8 +34,8 @@ namespace ThirdPartyWager.Service.BLL
             string parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
 
             // encrype param
-            string q = encrypt(parameter, encrypKey);
-            string s = ToMD5($"{parameter}{md5Key}{time}{secretKey}");
+            string q = common.encrypt(parameter, encrypKey);
+            string s = common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
             string param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
 
             // request
@@ -60,8 +53,8 @@ namespace ThirdPartyWager.Service.BLL
             string parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
 
             // encrype param
-            string q = encrypt(parameter, encrypKey);
-            string s = ToMD5($"{parameter}{md5Key}{time}{secretKey}");
+            string q = common.encrypt(parameter, encrypKey);
+            string s = common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
             string param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
 
             // request
@@ -74,7 +67,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
-            var response = await client.SendAsync(request);
+            var response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 var result = response.Content.ReadAsStringAsync().Result;
@@ -101,36 +94,5 @@ namespace ThirdPartyWager.Service.BLL
                 return null;
             }
         }
-
-        public static string encrypt(string data, string base64Key)
-        {
-
-            byte[] btIv = Encoding.UTF8.GetBytes(base64Key);
-            byte[] btKey = Encoding.UTF8.GetBytes(base64Key);
-            DESCryptoServiceProvider des = new DESCryptoServiceProvider();
-            using (MemoryStream ms = new MemoryStream())
-            {
-                byte[] inData = Encoding.UTF8.GetBytes(data);
-
-                using (CryptoStream cs = new CryptoStream(ms, des.CreateEncryptor(btKey, btIv), CryptoStreamMode.Write))
-                {
-                    cs.Write(inData, 0, inData.Length);
-                    cs.FlushFinalBlock();
-                }
-                return Convert.ToBase64String(ms.ToArray());
-            }
-
-        }
-
-        protected string ToMD5(string encodeStr)
-        {
-            using var cryptoMD5 = MD5.Create();
-            var bytes = Encoding.UTF8.GetBytes(encodeStr);
-            var hash = cryptoMD5.ComputeHash(bytes);
-            var md5 = BitConverter.ToString(hash)
-              .Replace("-", string.Empty);
-            return md5.ToLower();
-        }
-
     }
 }

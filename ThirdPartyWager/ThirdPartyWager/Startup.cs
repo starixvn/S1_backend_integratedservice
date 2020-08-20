@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 
 namespace ThirdPartyWager
 {
@@ -44,6 +45,10 @@ namespace ThirdPartyWager
             {
                 services.AddHttpClient();
             }
+            /*Library*/
+            services.AddSingleton<HttpHelper>();
+            services.AddSingleton<Common>();
+
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<WagerDGService>();

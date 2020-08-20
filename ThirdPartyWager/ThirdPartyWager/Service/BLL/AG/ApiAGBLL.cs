@@ -8,36 +8,28 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class ApiAGBLL
     {
-        private readonly IHttpClientFactory _clientFactory;
-        private readonly HttpClient client;
+        private readonly HttpHelper httpHelper;
+        private readonly Common common;
 
-        public ApiAGBLL(IHttpClientFactory clientFactory, IConfiguration configuration)
+        public ApiAGBLL(HttpHelper httpHelper, Common common)
         {
-            _clientFactory = clientFactory;
-
-            if (configuration.GetValue<string>("ProxyHost") != null)
-            {
-                client = _clientFactory.CreateClient("with_proxy");
-            }
-            else
-            {
-                client = _clientFactory.CreateClient();
-            }
+            this.httpHelper = httpHelper;
+            this.common = common;
         }
-
         public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page)
         {
             // param
             string uri = "/getorders.xml";
             string url = $"{apiUrl}{uri}";
             int perPage = 500;
-            string key = ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
+            string key = common.ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
            
             // request
@@ -52,7 +44,7 @@ namespace ThirdPartyWager.Service.BLL
             // param
             string uri = "/getsumorders.xml";
             string url = $"{apiUrl}{uri}";
-            string key = ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
+            string key = common.ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&key={key}";
 
             // request
@@ -65,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
-            var response = await client.SendAsync(request);
+            var response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 var result = response.Content.ReadAsStringAsync().Result;
@@ -91,17 +83,6 @@ namespace ThirdPartyWager.Service.BLL
             {
                 return null;
             }
-        }
-
-
-        protected string ToMD5(string encodeStr)
-        {
-            using var cryptoMD5 = MD5.Create();
-            var bytes = Encoding.UTF8.GetBytes(encodeStr);
-            var hash = cryptoMD5.ComputeHash(bytes);
-            var md5 = BitConverter.ToString(hash)
-              .Replace("-", string.Empty);
-            return md5.ToLower();
         }
     }
 }
