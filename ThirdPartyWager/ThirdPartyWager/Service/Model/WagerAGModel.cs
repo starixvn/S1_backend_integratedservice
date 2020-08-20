@@ -90,6 +90,10 @@ namespace ThirdPartyWager.Service.Model
 
         [JsonProperty("@deviceType")]
         public int deviceType { get; set; }
+
+        [JsonProperty("@wagersTotal")]
+        public int wagersTotal { get; set; }
+
         public long betUnix
         {
             get
@@ -104,5 +108,10 @@ namespace ThirdPartyWager.Service.Model
                 return new DateTimeOffset(recalcuTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
             }
         }
+    }
+
+    public class WagerAGTotal
+    {
+        public int wagerCount { get; set; }
     }
 }
