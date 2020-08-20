@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
             // param
             string uri = "/getorders.xml";
             string url = $"{apiUrl}{uri}";
-            int perPage = 5;
+            int perPage = 500;
             string key = ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
            
@@ -44,6 +44,20 @@ namespace ThirdPartyWager.Service.BLL
             var r = await DoHttpClientAsync(url, param, "row");
             var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
             
+            return result;
+        }
+
+        public async Task<WagerAGModel> GetBetSummaryByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime)
+        {
+            // param
+            string uri = "/getsumorders.xml";
+            string url = $"{apiUrl}{uri}";
+            string key = ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
+            string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&key={key}";
+
+            // request
+            var r = await DoHttpClientAsync(url, param, "row");
+            var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
             return result;
         }
 
