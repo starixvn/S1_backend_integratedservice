@@ -94,14 +94,14 @@ namespace ThirdPartyWager.Service.Model
         {
             get
             {
-                return new DateTimeOffset(betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+                return new DateTimeOffset(betTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
             }
         }
         public long recalcuUnix
         {
             get
             {
-                return new DateTimeOffset(recalcuTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+                return new DateTimeOffset(recalcuTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
             }
         }
     }
