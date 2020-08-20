@@ -49,6 +49,20 @@ namespace ThirdPartyWager.Service.BLL
                 // get wagers
                 var dataWager = await apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"]);
 
+                var errorCode = dataWager.codeId;
+                if (errorCode != 0)
+                {
+                    logger.LogError(errorCode, null);
+                    logger.LogInformation($"THIRD_PARTY_ERROR");
+                    return false;
+                }
+
+                if (dataWager.list == null || dataWager.list.Count() == 0)
+                {
+                    logger.LogInformation($"NO_DATA");
+                    return true;
+                }
+
                 // insert wager to db
                 foreach (var bet in dataWager.list)
                 {
@@ -65,6 +79,8 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 // mark wager
                 await apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
+                
+                logger.LogInformation($"FINISH");
                 return dataWager.list.Count() == 1000;
             }
             catch (Exception ex)

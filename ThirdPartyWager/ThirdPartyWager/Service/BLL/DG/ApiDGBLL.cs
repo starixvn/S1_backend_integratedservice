@@ -48,11 +48,6 @@ namespace ThirdPartyWager.Service.BLL
             var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
-            if (result.list == null || result.list.Count() == 0)
-            {
-                throw new Exception("No Data.");
-            }
-
             return result;
         }
 
