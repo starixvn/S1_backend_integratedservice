@@ -19,7 +19,6 @@ namespace CommonService.Service.Model
     public class SendVerifySMSReq
     {
         public int custId { get; set; }
-        public string phone { get; set; }
     }
     public class AcknowledgeVerifySMSReq : SendVerifySMSReq
     {

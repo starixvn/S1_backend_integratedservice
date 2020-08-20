@@ -23,7 +23,9 @@ namespace CommonService.Controllers
             var custInfo = custInfoBLL.GetCustInfoProfile(sendVerifySMSReq.custId);
             if (custInfo != null)
             {
-                var resultResp = await moviderSMSBLL.SendVerifySMSAsync(custInfo, sendVerifySMSReq.phone);
+                var phoneNo = !string.IsNullOrEmpty(custInfo.PhoneNo) && custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
+                var phone = $"{custInfo.AreaCode}{phoneNo}";
+                var resultResp = await moviderSMSBLL.SendVerifySMSAsync(custInfo, phone);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
