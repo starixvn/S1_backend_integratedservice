@@ -33,7 +33,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.PG", "ThirdParty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Sexy", "ThirdParty.Sexy\ThirdParty.Sexy.csproj", "{F18B2E8C-77AB-440E-B367-EEDDBC92CDF0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.CQ9", "ThirdParty.CQ9\ThirdParty.CQ9.csproj", "{5013FB54-BDA4-4123-848D-DFE82AF66189}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.CQ9", "ThirdParty.CQ9\ThirdParty.CQ9.csproj", "{5013FB54-BDA4-4123-848D-DFE82AF66189}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.CF", "ThirdParty.CF\ThirdParty.CF.csproj", "{E60887C5-1030-408B-9E75-2805815FCD51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +107,10 @@ Global
 		{5013FB54-BDA4-4123-848D-DFE82AF66189}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5013FB54-BDA4-4123-848D-DFE82AF66189}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5013FB54-BDA4-4123-848D-DFE82AF66189}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E60887C5-1030-408B-9E75-2805815FCD51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E60887C5-1030-408B-9E75-2805815FCD51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E60887C5-1030-408B-9E75-2805815FCD51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E60887C5-1030-408B-9E75-2805815FCD51}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
