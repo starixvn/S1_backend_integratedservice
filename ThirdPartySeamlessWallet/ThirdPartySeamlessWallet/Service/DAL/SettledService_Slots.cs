@@ -821,24 +821,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             bonusId = 0;
-            int result = GetTpBonus(tpId, tpTransId, gameType, TpCategory.Slots, out int custId, out bonusId);
-
-            if (bonusId > 0 || transType == TransType.Prize)
+            int result = 0;
+            bool bHasBonusWallet = hasBonusWallet.Any(x => x == tpCustInfo.SiteId);
+            if (bHasBonusWallet)
             {
-                if (bonusId > 0 && custId != tpCustInfo.CustId)
-                {
-                    return 0;
-                }
+                result = GetTpBonus(tpId, tpTransId, gameType, TpCategory.Slots, out int custId, out bonusId);
 
-                result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
-
-                if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
+                if (bonusId > 0 || transType == TransType.Prize)
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    if (bonusId > 0 && custId != tpCustInfo.CustId)
+                    {
+                        return 0;
+                    }
+
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
+
+                    if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    }
+                    else
+                    {
+                        afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
+                    }
                 }
                 else
                 {
-                    afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                 }
             }
             else

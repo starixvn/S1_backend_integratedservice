@@ -25,7 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int type = typePosition + ((int)transType * 1000) + tpId;
             Enum.TryParse(tpId.ToString(), out tp);
 
-            if(tpId==0 && transType== TransType.Prize)
+            if (tpId == 0 && transType == TransType.Prize)
             {
                 type = 5;
             }

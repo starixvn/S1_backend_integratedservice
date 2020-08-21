@@ -17,11 +17,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
+        private readonly int[] hasBonusWallet;
 
         public BettingService(IConfiguration configuration, WalletService walletService)
         {
             this.configuration = configuration;
             this.walletService = walletService;
+            hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
 
         /*Single Bet for Settled*/

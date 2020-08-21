@@ -19,6 +19,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly BettingService bettingService;
         private readonly Log2File log2File;
+        private readonly int[] hasBonusWallet;
 
         public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, BettingService bettingService, Log2File log2File)
         {
@@ -27,6 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.tools = tools;
             this.bettingService = bettingService;
             this.log2File = log2File;
+            hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
 
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
