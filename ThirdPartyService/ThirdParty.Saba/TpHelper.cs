@@ -139,6 +139,13 @@ namespace ThirdParty.Saba
                     apiResult.Data.Status = TransferStatus.Success;
                     apiResult.Data.ThirdId = json.Data.trans_id.ToString();
                 }
+                else if (json.error_code == 2)
+                {
+                    apiResult.RawMessage = json.message;
+                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Data.Status = TransferStatus.Fail;
+                }
                 else if (json.error_code == 0 && json.Data.status == 1)
                 {
                     apiResult.RawMessage = json.message;
