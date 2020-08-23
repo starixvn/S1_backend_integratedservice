@@ -1006,6 +1006,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int AutoCancelBonusV2(int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
+            return 1;
             return conn.Execute("Service_AutoCancelBonusV2_Set", new { BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
