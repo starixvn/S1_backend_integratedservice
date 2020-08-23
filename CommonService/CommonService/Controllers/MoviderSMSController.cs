@@ -1,5 +1,6 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
+using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -21,15 +22,25 @@ namespace CommonService.Controllers
         {
             ApiResult apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(sendVerifySMSReq.custId);
-            if (custInfo != null)
+
+            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
             {
-                var phoneNo = !string.IsNullOrEmpty(custInfo.PhoneNo) && custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
+                var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var phone = $"{custInfo.AreaCode}{phoneNo}";
                 var resultResp = await moviderSMSBLL.SendVerifySMSAsync(custInfo, phone);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
             }
+            else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+            }
+            else
+            {
+                apiResult.ErrorCode = ErrorCode.UserNotExist;
+            }
+
             return apiResult;
         }
         [HttpPost]
@@ -47,7 +58,5 @@ namespace CommonService.Controllers
             }
             return apiResult;
         }
-
-
     }
 }
