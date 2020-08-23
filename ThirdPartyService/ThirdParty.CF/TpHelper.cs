@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -58,16 +59,17 @@ namespace ThirdParty.CF
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string ApiKey = inputs.ContainsKey("api_key") && !string.IsNullOrEmpty(inputs["api_key"]) ? inputs["api_key"] : throw new Exception();
-            string AgentCode = inputs.ContainsKey("agent_code") && !string.IsNullOrEmpty(inputs["agent_code"]) ? inputs["agent_code"] : throw new Exception();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl is empty");
+            string ApiKey = inputs.ContainsKey("api_key") && !string.IsNullOrEmpty(inputs["api_key"]) ? inputs["api_key"] : throw new Exception("api_key is empty");
+            string AgentCode = inputs.ContainsKey("agent_code") && !string.IsNullOrEmpty(inputs["agent_code"]) ? inputs["agent_code"] : throw new Exception("agent_code is empty");
 
-            LoginReq loginReq = new LoginReq();
-
-            loginReq.api_key = ApiKey;
-            loginReq.agent_code = AgentCode;
-            loginReq.login_id = tpCustInfo.TpUserName;
-            loginReq.name = tpCustInfo.TpUserName;
+            LoginReq loginReq = new LoginReq
+            {
+                api_key = ApiKey,
+                agent_code = AgentCode,
+                login_id = tpCustInfo.TpUserName,
+                name = tpCustInfo.TpUserName
+            };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -88,8 +90,9 @@ namespace ThirdParty.CF
                 }
                 else
                 {
-                    oApiResult.RawMessage = tpData.status_code;
-                    oApiResult.RawErrorCode = tpData.status_text;
+                    oApiResult.RawMessage = tpData.status_text;
+                    oApiResult.RawErrorCode = tpData.status_code;
+                    oApiResult.Message = $"{tpData.status_code}-{tpData.status_text}";
                     oApiResult.ErrorCode = ErrorCode.Fail;
                 }
             }
