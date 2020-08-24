@@ -31,11 +31,11 @@ namespace ThirdPartyWager.Service.BLL
             int perPage = 500;
             string key = common.ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
-           
+
             // request
             var r = await DoHttpClientAsync(url, param, "row");
             var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
-            
+
             return result;
         }
 
@@ -53,6 +53,18 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<TicketAGModel> CheckTicketStatus(string apiUrl, string transactionID)
+        {
+            // param
+            string uri = "/CheckTicketStatus.ucs";
+            string url = $"{apiUrl}{uri}";
+            string param = $"transactionID={transactionID}";
+            // request
+            var r = await DoHttpClientByGetAsync(url, param);
+            var result = JsonConvert.DeserializeObject<TicketAGModel>(r);
+            return result;
+        }
+
         private async Task<string> DoHttpClientAsync(string url, string param, string tagName)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
@@ -61,7 +73,7 @@ namespace ThirdPartyWager.Service.BLL
             if (response.IsSuccessStatusCode)
             {
                 var result = response.Content.ReadAsStringAsync().Result;
-                
+
                 // xml to json
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(result);
@@ -76,6 +88,29 @@ namespace ThirdPartyWager.Service.BLL
                     node.Attributes.Append(attribute);
                 }
 
+                string json = JsonConvert.SerializeXmlNode(xmlDoc);
+                return json;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private async Task<string> DoHttpClientByGetAsync(string url, string param)
+        {
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Content = new StringContent(param, Encoding.UTF8);
+            var response = await httpHelper.GetClient().SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = response.Content.ReadAsStringAsync().Result;
+
+                // xml to json
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(result);
                 string json = JsonConvert.SerializeXmlNode(xmlDoc);
                 return json;
             }
