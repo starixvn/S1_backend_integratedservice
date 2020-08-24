@@ -113,21 +113,18 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                 var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
 
-                if (tpCustInfo.SiteId == 3)
+                if (RefBetRecord != null && RefBetRecord.BonusId > 0)
                 {
-                    if (RefBetRecord != null && RefBetRecord.BonusId > 0)
+                    hasJoinBonus = true;
+                    betRecord.BonusId = RefBetRecord.BonusId;
+                    bonusId = betRecord.BonusId;
+                }
+                else
+                {
+                    hasJoinBonus = settledService.GetBonusIdByTpId(1, tpCustInfo.CustId, out bonusId);
+                    if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                     {
-                        hasJoinBonus = true;
-                        betRecord.BonusId = RefBetRecord.BonusId;
-                        bonusId = betRecord.BonusId;
-                    }
-                    else
-                    {
-                        hasJoinBonus = settledService.GetBonusIdByTpId(1, tpCustInfo.CustId, out bonusId);
-                        if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
-                        {
-                            betRecord.BonusId = bonusId;
-                        }
+                        betRecord.BonusId = bonusId;
                     }
                 }
 
