@@ -406,7 +406,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(bonusWinReqq));
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Bonus;
-                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
+                    var gameType = (int)GameType.PP_RNG;
                     if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
