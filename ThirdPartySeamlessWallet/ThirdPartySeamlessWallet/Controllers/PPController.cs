@@ -407,7 +407,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Bonus;
                     var gameType = (int)GameType.PP_RNG;
-                    if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                    if (settledBLL.BonusWinRNG_PP(betReq, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
