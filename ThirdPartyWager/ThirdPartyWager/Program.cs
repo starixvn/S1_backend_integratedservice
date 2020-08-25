@@ -34,6 +34,7 @@ namespace ThirdPartyWager
                     services.AddHostedService<WagerAG>();
                     services.AddHostedService<WagerRedoAG>();
                     services.AddHostedService<CheckTicketAG>();
+                    services.AddHostedService<WagerCF>();
                 });
     }
 }
