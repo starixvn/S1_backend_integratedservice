@@ -63,6 +63,7 @@ namespace ThirdParty.CF
             string ApiKey = inputs.ContainsKey("api_key") && !string.IsNullOrEmpty(inputs["api_key"]) ? inputs["api_key"] : throw new Exception("api_key is empty");
             string AgentCode = inputs.ContainsKey("agent_code") && !string.IsNullOrEmpty(inputs["agent_code"]) ? inputs["agent_code"] : throw new Exception("agent_code is empty");
             string WebUrl = inputs.ContainsKey("WebUrl") && !string.IsNullOrEmpty(inputs["WebUrl"]) ? inputs["WebUrl"] : throw new Exception("WebUrl is empty");
+            string MobileUrl = inputs.ContainsKey("MobileUrl") && !string.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception("MobileUrl is empty");
 
             LoginReq loginReq = new LoginReq
             {
@@ -87,9 +88,14 @@ namespace ThirdParty.CF
                 if (tpData.status_code == "00")
                 {
                     var uri = "/api/auth_login.aspx";
-                    var loginUrl = $"{WebUrl}{uri}?session_id={tpData.session_id}&lang={TpLangId}&login_id={tpCustInfo.TpUserName}";
+                    var url = WebUrl;
+                    if (appType != AppType.Desktop)
+                    {
+                        url = MobileUrl;
+                    }
+                   
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = loginUrl;
+                    oApiResult.Message = $"{url}{uri}?session_id={tpData.session_id}&lang={TpLangId}&login_id={tpCustInfo.TpUserName}";
                 }
                 else
                 {
