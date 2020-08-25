@@ -84,7 +84,7 @@ namespace CommonService.Service.BLL
             var resultResp = JsonConvert.DeserializeObject<MoviderResult>(result.Content.ReadAsStringAsync().Result);
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                apiResult.ErrorCode = 0;
+                apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.price;
                 apiResult.RawMessage = resultResp.request_id;
             }

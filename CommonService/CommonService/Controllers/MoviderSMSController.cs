@@ -56,6 +56,7 @@ namespace CommonService.Controllers
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
             }
+
             return apiResult;
         }
     }
