@@ -62,6 +62,7 @@ namespace ThirdParty.CF
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl is empty");
             string ApiKey = inputs.ContainsKey("api_key") && !string.IsNullOrEmpty(inputs["api_key"]) ? inputs["api_key"] : throw new Exception("api_key is empty");
             string AgentCode = inputs.ContainsKey("agent_code") && !string.IsNullOrEmpty(inputs["agent_code"]) ? inputs["agent_code"] : throw new Exception("agent_code is empty");
+            string WebUrl = inputs.ContainsKey("WebUrl") && !string.IsNullOrEmpty(inputs["WebUrl"]) ? inputs["WebUrl"] : throw new Exception("WebUrl is empty");
 
             LoginReq loginReq = new LoginReq
             {
@@ -85,8 +86,10 @@ namespace ThirdParty.CF
                 var tpData = xml.get_session_id;
                 if (tpData.status_code == "00")
                 {
+                    var uri = "/api/auth_login.aspx";
+                    var loginUrl = $"{WebUrl}{uri}?session_id={tpData.session_id}&lang={TpLangId}&login_id={tpCustInfo.TpUserName}";
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = tpData.session_id;
+                    oApiResult.Message = loginUrl;
                 }
                 else
                 {
