@@ -8,7 +8,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
-    public class BettingBLL
+    public partial class BettingBLL
     {
         private readonly BettingService bettingService;
         private readonly TpCustInfoBLL tpCustInfoBLL;
