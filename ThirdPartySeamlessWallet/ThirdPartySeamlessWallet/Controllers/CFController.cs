@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -23,6 +24,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
+        private readonly Tp thisTp;
         private readonly int gameType = 0;
 
         public CFController(ILogger<CFController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
@@ -34,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
+            this.thisTp = Tp.CF;
             gameType = (int)GameType.CF_Rooster;
         }
 
@@ -118,10 +121,28 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             GetBalanceResp getBalanceResp = new GetBalanceResp();
 
-            //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.CF, getBalanceReq.login_id, gameType);
-            getBalanceResp.status_code = "00";
-            getBalanceResp.balance = 5000;
+            // check key
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            if (thirdPartySetting.TpSetting["api_key"] != getBalanceReq.api_key)
+            {
+                getBalanceResp.status_code = "61.01";
+                getBalanceResp.status_text = "error : api key not found";
+                return getBalanceResp;
+            }
 
+            // check user (exist status online)
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.login_id);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                getBalanceResp.status_code = "99";
+                getBalanceResp.status_text = "error : login id not found";
+                return getBalanceResp;
+            }
+
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.login_id, gameType);
+            getBalanceResp.status_code = "00";
+            getBalanceResp.status_text = "OK";
+            getBalanceResp.balance = tpCustBalance.Balance;
             return getBalanceResp;
         }
 
@@ -129,11 +150,66 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public GetBetResp bet([FromForm] Dictionary<string, string> getBetReq)
         {
-            log2File.Info(JsonConvert.SerializeObject(getBetReq), $"CF_Bet");
-            //logger.LogCritical(JsonConvert.SerializeObject(getBetReq));
+            var json = JsonConvert.SerializeObject(getBetReq);
+            var betReq = JsonConvert.DeserializeObject<BettingData_CF>(json);
+            log2File.Info(json, $"CF_Bet");
+            //logger.LogCritical(json);
 
             GetBetResp getBetResp = new GetBetResp();
-            getBetResp.status_code = "00";
+
+            // check key
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            if (thirdPartySetting.TpSetting["api_key"] != betReq.api_key)
+            {
+                getBetResp.status_code = "61.01";
+                getBetResp.status_text = "error : api key not found";
+                return getBetResp;
+            }
+
+            // check user (exist status online)
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, betReq.login_id);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                getBetResp.status_code = "99";
+                getBetResp.status_text = "error : player suspended";
+                return getBetResp;
+            }
+
+            try
+            {
+                // check bet amount
+                int result = bettingBLL.PlaceBet_CF(betReq, out decimal tpAffterAmount);
+                if (result > 0)
+                {
+                    getBetResp.status_code = "00";
+                    getBetResp.status_text = "OK";
+                    getBetResp.ref_id = betReq.ticket_id;
+                    getBetResp.balance = tpAffterAmount;
+                }
+                else if (result == -1)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.login_id);
+                    getBetResp.status_code = "00";
+                    getBetResp.status_text = "OK";
+                    getBetResp.ref_id = betReq.ticket_id;
+                    getBetResp.balance = tpAffterAmount;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.login_id);
+                    getBetResp.status_code = "88";
+                    getBetResp.status_text = "error : insufficient fund";
+                }
+
+                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"CF_Bet");
+            }
+            catch (Exception ex)
+            {
+                getBetResp.status_code = "500";
+                getBetResp.status_text = "system busy";
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"CF_Bet");
+                throw ex;
+            }
 
             return getBetResp;
         }
