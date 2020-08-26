@@ -87,15 +87,14 @@ namespace ThirdParty.CF
                 var tpData = xml.get_session_id;
                 if (tpData.status_code == "00")
                 {
-                    var uri = "/api/auth_login.aspx";
-                    var url = WebUrl;
+                    var url = $"{WebUrl}/api/auth_login.aspx";
                     if (appType != AppType.Desktop)
                     {
-                        url = MobileUrl;
+                        url = $"{MobileUrl}/api/cash/auth";
                     }
                    
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{url}{uri}?session_id={tpData.session_id}&lang={TpLangId}&login_id={tpCustInfo.TpUserName}";
+                    oApiResult.Message = $"{url}?session_id={tpData.session_id}&lang={TpLangId}&login_id={tpCustInfo.TpUserName}";
                 }
                 else
                 {
