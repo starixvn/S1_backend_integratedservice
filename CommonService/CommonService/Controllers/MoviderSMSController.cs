@@ -48,14 +48,11 @@ namespace CommonService.Controllers
         {
 
             ApiResult apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(acknowledgeVerifySMSReq.custId);
-            if (custInfo != null)
-            {
-                var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(custInfo, acknowledgeVerifySMSReq.request_id, acknowledgeVerifySMSReq.code);
-                apiResult.ErrorCode = resultResp.ErrorCode;
-                apiResult.Message = resultResp.Message;
-                apiResult.RawMessage = resultResp.RawMessage;
-            }
+            //var custInfo = custInfoBLL.GetCustInfoProfile(acknowledgeVerifySMSReq.custId);
+            var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(acknowledgeVerifySMSReq.siteName, acknowledgeVerifySMSReq.request_id, acknowledgeVerifySMSReq.code);
+            apiResult.ErrorCode = resultResp.ErrorCode;
+            apiResult.Message = resultResp.Message;
+            apiResult.RawMessage = resultResp.RawMessage;
 
             return apiResult;
         }

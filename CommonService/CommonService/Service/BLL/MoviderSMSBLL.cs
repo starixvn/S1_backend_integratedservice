@@ -42,7 +42,7 @@ namespace CommonService.Service.BLL
                 { "api_key", config.ApiKey },
                 { "api_secret", config.ApiSecret },
                 { "code_length", config.CodeLength },
-                { "from", config.From },
+                { "from", custInfo.SiteName },
                 { "language", langvalue },
                 { "next_event_wait", config.NextEventWait },
                 { "pin_expire", config.PinExpire },
@@ -66,10 +66,10 @@ namespace CommonService.Service.BLL
 
             return apiResult;
         }
-        public async Task<ApiResult> AcknowledgeVerifySMSAsync(CustInfoProfile custInfo, string request_id, string code)
+        public async Task<ApiResult> AcknowledgeVerifySMSAsync(string siteName, string request_id, string code)
         {
             ApiResult apiResult = new ApiResult();
-            var config = moviderVerifySMSConfig.Value[custInfo.SiteName];
+            var config = moviderVerifySMSConfig.Value[siteName];
             string url = config.AcknowledgeVerifyUrl;
 
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>

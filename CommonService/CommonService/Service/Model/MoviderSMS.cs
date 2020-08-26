@@ -20,8 +20,9 @@ namespace CommonService.Service.Model
     {
         public int custId { get; set; }
     }
-    public class AcknowledgeVerifySMSReq : SendVerifySMSReq
+    public class AcknowledgeVerifySMSReq
     {
+        public string siteName { get; set; }
         public string request_id { get; set; }
         public string code { get; set; }
     }
