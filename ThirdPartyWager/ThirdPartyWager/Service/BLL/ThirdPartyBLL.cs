@@ -2,9 +2,11 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -33,6 +35,17 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return setting;
+        }
+
+        public ThirdPartyTimerModel GetThirdPartyTimer(int tpId, int type)
+        {
+            var dataTpTimer = thirdPartyHelper.GetThirdPartyTimer(tpId, type);
+            return dataTpTimer;
+        }
+
+        public int SetThirdPartyTimer(int tpId, int type, long start)
+        {
+            return thirdPartyHelper.SetThirdPartyTimer(tpId, type, start);
         }
     }
 }

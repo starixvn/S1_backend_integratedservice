@@ -13,6 +13,13 @@ namespace ThirdPartyWager.Service.Model
         public int Status { set; get; }
     }
 
+    public class ThirdPartyTimerModel
+    {
+        public int TpId { set; get; }
+        public int Type { set; get; }
+        public DateTime StartTime { set; get; }
+    }
+
     public class Setting
     {
         public string APIkey { get; set; }

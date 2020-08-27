@@ -48,6 +48,7 @@ namespace ThirdPartyWager
             /*Library*/
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<Common>();
+            services.AddSingleton<DateTimeHelper>();
 
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
@@ -55,6 +56,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerAllBetService>();
             services.AddSingleton<WagerSAService>();
             services.AddSingleton<WagerAGService>();
+            services.AddSingleton<WagerCFService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -75,6 +77,9 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiAGBLL>();
             services.AddSingleton<WagerRedoAGBLL>();
             services.AddSingleton<TicketAGBLL>();
+            // CF
+            services.AddSingleton<WagerCFBLL>();
+            services.AddSingleton<ApiCFBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
