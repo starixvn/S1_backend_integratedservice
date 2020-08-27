@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // get wager
                 var dataWager = await apiCFBLL.GetBetListByTime(setting["ApiUrl"], setting["api_key"], setting["agent_code"], startTime, endTime);
-                var arrWager = dataWager.get_cockfight_processed_ticket_by_bet_time;
+                var arrWager = dataWager.get_cockfight_processed_ticket;
 
                 // error condition
                 var errorCode = arrWager.status_code;
