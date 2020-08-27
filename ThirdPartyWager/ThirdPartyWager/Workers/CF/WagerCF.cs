@@ -17,6 +17,7 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
         private Timer timer;
+        private int intervalMins = 3;
 
         public WagerCF(
             ILogger<WagerCF> logger,
@@ -45,30 +46,30 @@ namespace ThirdPartyWager.Workers
             {
                 int tpId = (int)Tp.CF;
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, 1);
-                Console.WriteLine(dataTpTimer);
+
                 DateTime timerTime;
-                int first;
                 int last;
+
                 if (dataTpTimer == null)
                 {
-                    timerTime = DateTime.Now;
-                    first = -10;
-                    last = -5;
+                    timerTime = DateTime.Now.AddMinutes(-1 * intervalMins);
+                    last = intervalMins;
                 }
                 else
                 {
                     timerTime = dataTpTimer.StartTime;
-                    first = 0;
-                    last = 5;
+                    last = intervalMins;
                 }
-                var time = dateTimeHelper.GetTimeByMinute(first, last, 8, "yyyy-MM-dd HH:mm", timerTime);
-                var startTime = $"{time["startTime"]}";
-                var endTime = $"{time["endTime"]}";
-                bool result = await wagerCFBLL.GetWagersAsync(tpId, startTime, endTime);
-                if (result == true)
+
+                if (timerTime < DateTime.Now)
                 {
-                    var setTime = time["endUnix"];
-                    thirdPartyBLL.SetThirdPartyTimer(tpId, 1, setTime);
+                    var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyy-MM-dd HH:mm", timerTime);
+                    bool result = await wagerCFBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
+
+                    if (result == true)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimer(tpId, 1, time.endUnix);
+                    }
                 }
             }
             catch (Exception ex)
@@ -77,8 +78,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(5);
-
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
