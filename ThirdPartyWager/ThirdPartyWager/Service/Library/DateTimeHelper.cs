@@ -1,8 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace ThirdPartyWager.Service.Library
 {
@@ -32,7 +28,6 @@ namespace ThirdPartyWager.Service.Library
 
             var beginAt = new DateTimeOffset(timeBase);
             var endAt = new DateTimeOffset(timeBase.AddMinutes(period + 1).AddMilliseconds(-1));
-
             var startTime = beginAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
             var endTime = endAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
             long startUnix = beginAt.ToUnixTimeSeconds();
