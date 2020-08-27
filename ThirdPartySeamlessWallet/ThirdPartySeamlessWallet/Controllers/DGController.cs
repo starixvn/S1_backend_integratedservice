@@ -199,7 +199,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return transferRep;
                     }
 
-                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
+                    BettingDataLC_DG bettingDataLC_DG = new BettingDataLC_DG();
+                    bettingDataLC_DG.Username = transferReq.member.username;
+                    bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
+                    bettingDataLC_DG.data = transferReq.data;
+                    bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
+
+                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
@@ -214,7 +220,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-
                     if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
@@ -225,7 +230,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return transferRep;
                     }
 
-                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
+                    BettingDataLC_DG bettingDataLC_DG = new BettingDataLC_DG();
+                    bettingDataLC_DG.Username = transferReq.member.username;
+                    bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
+                    bettingDataLC_DG.data = transferReq.data;
+                    bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
+                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
+
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
@@ -289,14 +300,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
-                        transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                        transferRep.member.balance = tpAffterAmount - Math.Abs(transferReq.member.amount);
                     }
                     else if (result == -1)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
                         var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
-                        transferRep.member.balance = tpCustBalance.Balance;
+                        transferRep.member.balance = tpCustBalance.Balance - Math.Abs(transferReq.member.amount);
                     }
                     else
                     {
@@ -316,13 +327,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return transferRep;
                     }
 
-                    var result = settledBLL.Win((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, transferReq.member.amount, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
+                    BettingDataLC_DG bettingDataLC_DG = new BettingDataLC_DG();
+                    bettingDataLC_DG.Username = transferReq.member.username;
+                    bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
+                    bettingDataLC_DG.data = transferReq.data;
+                    bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
+                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
-                        transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                        if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                            transferRep.member.balance = tpCustBalance.Balance - transferReq.member.amount;
+                        }
+                        else
+                        {
+                            transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
+                        }
                     }
                     else
                     {
@@ -341,7 +365,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return transferRep;
                     }
 
-                    var result = settledBLL.Lost((int)Tp.DG, transferReq.ticketId.ToString(), transferReq.member.username, DateTimeOffset.Now.ToUnixTimeSeconds(), GameType.DG_LiveCasino, out decimal tpAffterAmount);
+                    BettingDataLC_DG bettingDataLC_DG = new BettingDataLC_DG();
+                    bettingDataLC_DG.Username = transferReq.member.username;
+                    bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
+                    bettingDataLC_DG.data = transferReq.data;
+                    bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
+                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
+
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
@@ -366,6 +396,51 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             return transferRep;
+        }
+
+        public class CheckTransferReq
+        {
+            public string token { get; set; }
+            public string data { get; set; }
+        }
+
+        public class CheckTransferRep
+        {
+            public string token { get; set; }
+            public int codeId { get; set; }
+        }
+
+        [Route("[controller]/account/checkTransfer/{agentName}")]
+        [HttpPost]
+        public async Task<CheckTransferRep> checkTransferAsync(string agentName)
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string bodyText = await reader.ReadToEndAsync();
+            var checkTransferReq = JsonConvert.DeserializeObject<CheckTransferReq>(bodyText);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
+
+            CheckTransferRep checkTransferRep = new CheckTransferRep();
+            checkTransferRep.token = token;
+            checkTransferRep.codeId = (int)Error.SystemError;
+            try
+            {
+                if (checkTransferRep.token != token)
+                {
+                    checkTransferRep.codeId = (int)Error.TokenVerificationFailed;
+                    return checkTransferRep;
+                }
+                throw new Exception("Not Implement.");
+                log2File.Info($"{bodyText}\r\n{JsonConvert.SerializeObject(checkTransferRep)}", "DG_checkTransfer");
+            }
+            catch (Exception ex)
+            {
+                //logger.LogError(ex.Message);
+                checkTransferRep.codeId = (int)Error.SystemError;
+                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(checkTransferRep)}\r\n{ex}", "DG_checkTransfer");
+            }
+
+            return checkTransferRep;
         }
         public enum Error
         {

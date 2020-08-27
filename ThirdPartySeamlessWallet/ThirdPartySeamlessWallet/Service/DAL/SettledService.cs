@@ -30,6 +30,77 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.log2File = log2File;
             hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
+        public int SettledLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            TransferType transferType = TransferType.Payout;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { data = bettingDataLC_DG.data, TransId = bettingDataLC_DG.TransId, Username = bettingDataLC_DG.Username, Amount = bettingDataLC_DG.Amount, Memo = (string)null, TicketType = (int)transferType });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            try
+            {
+                result = conn.Execute("Service_BettransLC_DGV2_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (p.Get<decimal?>("Stake") == null)
+                {
+                    result = 0;
+                }
+
+                if (result > 0)
+                {
+                    decimal Stake = p.Get<decimal>("Stake");
+
+                    if (bettingDataLC_DG.Amount != 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_DG.Amount, (int)Tp.DG, TransType.Settled, $"Payout: {bettingDataLC_DG.Amount.ToString("#,##0.##")}", bettingDataLC_DG.TransId, out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        decimal WinLostAmount = p.Get<decimal?>("WinLostAmount") ?? 0;
+
+                        BetRecordInfo betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp.DG,
+                            Stake = Stake,
+                            WinlostAmount = WinLostAmount,
+                            TransId = bettingDataLC_DG.TransId,
+                            GameType = GameType.DG_LiveCasino,
+                            TpUserName = bettingDataLC_DG.Username,
+                            SettledTime = 0,
+                            SettlementType = SettlementType.SettledForValidNotRollover
+                        };
+
+                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+                        conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 1 }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
 
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
         {

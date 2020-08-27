@@ -97,7 +97,26 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public int SettledLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        {
 
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.DG, bettingDataLC_DG.Username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.DG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_DG.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SettledLC_DG(tpCustInfo, bettingDataLC_DG, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
         public int SettledLC_AG(PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
         {
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
