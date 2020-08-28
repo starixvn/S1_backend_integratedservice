@@ -18,6 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly IHostEnvironment environment;
         private Timer timer;
         private int intervalMins = 3;
+        private int tpId = (int)Tp.CF;
 
         public WagerCF(
             ILogger<WagerCF> logger,
@@ -44,7 +45,6 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
-                int tpId = (int)Tp.CF;
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, 1);
 
                 DateTime timerTime;

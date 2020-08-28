@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Asn1.X9;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,7 +13,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL apiAllBetBLL;
         private readonly ILogger<WagerAllBetBLL> logger;
 
-        public WagerAllBetBLL(ILogger<WagerAllBetBLL> logger, WagerAllBetService wagerAllBetService, ApiAllBetBLL apiAllBetBLL, ThirdPartyBLL thirdPartyBLL)
+        public WagerAllBetBLL(
+            ILogger<WagerAllBetBLL> logger, 
+            WagerAllBetService wagerAllBetService, 
+            ApiAllBetBLL apiAllBetBLL, 
+            ThirdPartyBLL thirdPartyBLL
+        )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerAllBetService = wagerAllBetService;
@@ -24,21 +26,13 @@ namespace ThirdPartyWager.Service.BLL
             this.logger = logger;
         }
 
-        public async Task<bool> GetWagersAsync()
+        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
             
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.Allbet);
-
-                // define time
-                DateTime current = DateTime.Now;
-                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, current.Minute, 0);
-                var beginAt = new DateTimeOffset(timeBase.AddMinutes(-10));
-                var endAt = new DateTimeOffset(timeBase.AddMinutes(-5));
-                var startTime = beginAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = endAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
+                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // pagination
                 int pageIndex = 1;
@@ -55,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         logger.LogError(errorCode, errorMsg);
                         logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime} )");
-                        break;
+                        return false;
                     }
 
                     pageRowCnt = dataWager.page.datas.Count();
@@ -119,7 +113,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return true;
+                return false;
             }
         }
     }
