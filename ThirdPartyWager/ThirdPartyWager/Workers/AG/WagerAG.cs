@@ -21,6 +21,7 @@ namespace ThirdPartyWager.Workers
         private Timer timer;
         private int intervalMins = 3;
         private int tpId = (int)Tp.AG;
+        private int tpType = 1;
 
         public WagerAG(
             ILogger<WagerAG> logger,
@@ -47,7 +48,7 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, 1);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -66,7 +67,7 @@ namespace ThirdPartyWager.Workers
                     bool result = await wagerAGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result == true)
                     {
-                        thirdPartyBLL.SetThirdPartyTimer(tpId, 1, time.endUnix);
+                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                 }
             }
