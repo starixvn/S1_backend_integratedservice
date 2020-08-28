@@ -119,13 +119,37 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
-            var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
-            p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
             try
             {
-                result = conn.Execute("Service_BettransLC_AG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_AGV2_Payout_Ins", new
+                {
+                    billNo = payoutDataLC_AG.BillNo,
+                    transactionID = payoutDataLC_AG.TransactionID,
+                    transactionIDs = payoutDataLC_AG.TransactionIDs.Count() > 1 ? JsonConvert.SerializeObject(payoutDataLC_AG.TransactionIDs) : null,
+                    currency = payoutDataLC_AG.Currency,
+                    netAmount = payoutDataLC_AG.NetAmount,
+                    validBetAmount = payoutDataLC_AG.ValidBetAmount,
+                    playname = payoutDataLC_AG.Playname,
+                    settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4),
+                    gametype = payoutDataLC_AG.Gametype,
+                    gameCode = payoutDataLC_AG.GameCode,
+                    transactionType = payoutDataLC_AG.TransactionType,
+                    transactionCode = payoutDataLC_AG.TransactionCode,
+                    gameResult = payoutDataLC_AG.GameResult,
+                    TicketStatus = payoutDataLC_AG.TransactionType.Equals("LOSE", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Lost : (int)TicketStatus.Win
+                }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                decimal payoutAmount = payoutDataLC_AG.ValidBetAmount + payoutDataLC_AG.NetAmount;
+
+                if (result > 0 && payoutAmount > 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutAmount, (int)Tp.AG, TransType.Settled, $"Payout: {payoutAmount.ToString("#,##0.##")}", payoutDataLC_AG.BillNo, out afterAmount, conn, trans);
+                }
+
+                var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
+                p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
                 decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
 
@@ -146,8 +170,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                 }
 
-                result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
-                trans.Commit();
+                result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                //result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
             }
             catch (MySqlException mySqlEx)
             {

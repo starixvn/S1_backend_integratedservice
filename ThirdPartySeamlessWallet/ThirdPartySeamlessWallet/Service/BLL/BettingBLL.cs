@@ -44,6 +44,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int PlaceBetLC_AG(BettingDataLC_AG bettingDataLC_AG, out decimal afterAmount)
+        {
+            string username = bettingDataLC_AG.Playname.Substring(bettingDataLC_AG.AgentCode.Length);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AG, username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_AG.Value *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetLC_AG(tpCustInfo, bettingDataLC_AG, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public int PlaceBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SA, bettingDataLC_SA.username);

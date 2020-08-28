@@ -8,6 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -17,12 +18,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
+        private readonly Tools tools;
         private readonly int[] hasBonusWallet;
 
-        public BettingService(IConfiguration configuration, WalletService walletService)
+        public BettingService(IConfiguration configuration, WalletService walletService, Tools tools)
         {
             this.configuration = configuration;
             this.walletService = walletService;
+            this.tools = tools;
             hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
 
@@ -108,6 +111,44 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int PlaceBetLC_AG(TpCustInfo tpCustInfo, BettingDataLC_AG bettingDataLC_AG, out decimal afterAmount)
+        {
+            afterAmount = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { transactionID = bettingDataLC_AG.TransactionID, currency = bettingDataLC_AG.Currency, value = bettingDataLC_AG.Value, playname = bettingDataLC_AG.Playname, betTime = tools.ConvertLocTime(bettingDataLC_AG.BetTime, -4), round = bettingDataLC_AG.Round, gametype = bettingDataLC_AG.Gametype, gameCode = bettingDataLC_AG.GameCode, tableCode = bettingDataLC_AG.GameCode, transactionCode = bettingDataLC_AG.GameCode, playtype = bettingDataLC_AG.Playtype });
+            try
+            {
+                result = conn.Execute("Service_BettransLC_AGV2_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_AG.Value) * -1, (int)Tp.AG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_AG.Value).ToString("#,##0.##")}", bettingDataLC_AG.TransactionID, out afterAmount, conn, trans);
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
         public int PlaceBetLC_SA(TpCustInfo tpCustInfo, BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -184,14 +225,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                //BetRecordInfo betRecordInfo = new BetRecordInfo();
-                //betRecordInfo.TpId = (int)Tp.DG;
-                //betRecordInfo.Stake = bettingDataLC_DG.Amount;
-                //betRecordInfo.TransId = bettingDataLC_DG.TransId;
-                //betRecordInfo.GameType = GameType.DG_LiveCasino;
-                //betRecordInfo.TpUserName = bettingDataLC_DG.Username;
                 result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_DG.Amount) * -1, (int)Tp.DG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_DG.Amount).ToString("#,##0.##")}", bettingDataLC_DG.TransId, out afterAmount, conn, trans);
-                //result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
             }
 
             if (result > 0)
