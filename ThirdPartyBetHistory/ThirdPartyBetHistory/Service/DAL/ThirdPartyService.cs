@@ -234,10 +234,10 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                     if (Losses != 0)
                     {
-                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-
                         if (hasJoinBonus)
                             AutoCancelBonusV2(bonusId, conn, trans);
+                        else
+                            AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
                 }
                 else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -254,9 +254,10 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                         if (Losses != 0)
                         {
-                            AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                             if (hasJoinBonus)
                                 AutoCancelBonusV2(bonusId, conn, trans);
+                            else
+                                AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                         }
                     }
                 }
