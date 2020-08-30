@@ -7,7 +7,7 @@ namespace ThirdPartyWager.Service.Model
 {
     public class WagerCFModel
     {
-        public WagerCF get_cockfight_processed_ticket_by_bet_time { get; set; }
+        public WagerCF get_cockfight_processed_ticket { get; set; }
     }
 
     public class WagerCF

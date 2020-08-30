@@ -969,10 +969,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (Losses != 0)
                     {
-                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-
                         if (hasBonusRunning)
-                            AutoCancelBonusV2(bonusId, conn, trans);
+                            AutoCancelSeamlessBonus(bonusId, conn, trans);
+                        else
+                            AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
                 }
             }
@@ -990,10 +990,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (Losses != 0)
                     {
-                        AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-
                         if (hasBonusRunning)
-                            AutoCancelBonusV2(bonusId, conn, trans);
+                            AutoCancelSeamlessBonus(bonusId, conn, trans);
+                        else
+                            AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
                 }
                 else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
@@ -1016,9 +1016,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (Losses != 0)
                         {
-                            AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                             if (hasBonusRunning)
-                                AutoCancelBonusV2(bonusId, conn, trans);
+                                AutoCancelSeamlessBonus(bonusId, conn, trans);
+                            else
+                                AutoCancelBonus(tpCustInfo.CustId, conn, trans);
+
                         }
                     }
                 }
@@ -1109,10 +1111,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
-        public int AutoCancelBonusV2(int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        public int AutoCancelSeamlessBonus(int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            return 1;
-            return conn.Execute("Service_AutoCancelBonusV2_Set", new { BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_AutoCancelSeamlessBonus_Set", new { BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
