@@ -18,6 +18,8 @@ namespace ThirdPartyWager.Workers
         private readonly IHostEnvironment environment;
         private Timer timer;
         private int intervalMins = 3;
+        private int tpId = (int)Tp.CF;
+        private int tpType = 1;
 
         public WagerCF(
             ILogger<WagerCF> logger,
@@ -44,8 +46,7 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
-                int tpId = (int)Tp.CF;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, 1);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
 
                 DateTime timerTime;
                 int last;
@@ -68,7 +69,7 @@ namespace ThirdPartyWager.Workers
 
                     if (result == true)
                     {
-                        thirdPartyBLL.SetThirdPartyTimer(tpId, 1, time.endUnix);
+                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                 }
             }

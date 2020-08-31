@@ -1,10 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -15,7 +12,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL apiAGBLL;
         private readonly ILogger<WagerRedoAGBLL> logger;
 
-        public WagerRedoAGBLL(ILogger<WagerRedoAGBLL> logger, WagerAGService wagerAGService, ApiAGBLL apiAGBLL, ThirdPartyBLL thirdPartyBLL)
+        public WagerRedoAGBLL(
+            ILogger<WagerRedoAGBLL> logger,
+            WagerAGService wagerAGService,
+            ApiAGBLL apiAGBLL,
+            ThirdPartyBLL thirdPartyBLL
+        )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerAGService = wagerAGService;
@@ -23,23 +25,16 @@ namespace ThirdPartyWager.Service.BLL
             this.logger = logger;
         }
 
-        public async Task<bool> RedoWagersAsync()
+        public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.AG);
+                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                // define time
-                DateTime current = DateTime.Now;
-                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
-                var beginAt = new DateTimeOffset(timeBase.AddHours(-4));
-                var endAt = new DateTimeOffset(timeBase.AddHours(-3).AddMilliseconds(-1));
-                var startTime = beginAt.ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = endAt.ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
 
                 // count interval wagers
-                var getWagerCount = wagerAGService.GetWagerTotal(beginAt.ToUnixTimeSeconds(), endAt.ToUnixTimeSeconds());
+                var getWagerCount = wagerAGService.GetWagerTotal(startUnix, endUnix);
                 int wagerCount = getWagerCount.wagerCount;
 
                 var getWagerSummary = await apiAGBLL.GetBetSummaryByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime);
@@ -73,8 +68,8 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 // parse 10 minute
-                var st = beginAt;
-                var ed = beginAt.AddMinutes(10).AddMilliseconds(-1);
+                var st = Convert.ToDateTime(startTime);
+                var ed = Convert.ToDateTime(startTime).AddMinutes(10).AddMilliseconds(-1);
                 var bg = "";
                 var fn = "";
                 for (int i = 1; i <= 6; i++)
@@ -86,13 +81,13 @@ namespace ThirdPartyWager.Service.BLL
                         st = st.AddMinutes(10);
                         ed = ed.AddMinutes(10);
                     }
-                    bg = st.ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                    fn = ed.ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
+                    bg = st.ToString("yyyy-MM-dd HH:mm:ss");
+                    fn = ed.ToString("yyyy-MM-dd HH:mm:ss");
                     while (page <= totalPage)
                     {
                         var dataWager = await apiAGBLL.GetBetListByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], bg, fn, page);
                         var arrWager = dataWager.result;
-                        
+
                         // error condition
                         errorCode = arrWager.info;
                         errorMsg = arrWager.Code ?? "";
@@ -100,9 +95,9 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             logger.LogError(errorCode, errorMsg);
                             logger.LogInformation($"THIRD_PARTY_ERROR ( START: {bg} END: {fn} )");
-                            break;
+                            return false;
                         }
-                        
+
                         // pagination
                         var pageInfo = arrWager.addition;
                         var totalNo = pageInfo.total;
@@ -110,7 +105,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (totalNo == 0)
                         {
                             logger.LogInformation($"NO_DATA ( START: {bg} END: {fn} PAGE: {page} )");
-                            break;
+                            continue;
                         }
 
                         foreach (var bet in arrWager.row)
@@ -139,7 +134,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return true;
+                return false;
             }
         }
     }

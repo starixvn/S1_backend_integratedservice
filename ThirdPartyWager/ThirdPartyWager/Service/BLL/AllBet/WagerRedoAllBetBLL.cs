@@ -15,30 +15,27 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL apiAllBetBLL;
         private readonly ILogger<WagerRedoAllBetBLL> logger;
 
-        public WagerRedoAllBetBLL(ILogger<WagerRedoAllBetBLL> logger, ThirdPartyBLL thirdPartyBLL, WagerAllBetService wagerAllBetService, ApiAllBetBLL apiAllBetBLL)
+        public WagerRedoAllBetBLL(
+            ILogger<WagerRedoAllBetBLL> logger,
+            ThirdPartyBLL thirdPartyBLL,
+            WagerAllBetService wagerAllBetService,
+            ApiAllBetBLL apiAllBetBLL
+        )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerAllBetService = wagerAllBetService;
             this.apiAllBetBLL = apiAllBetBLL;
             this.logger = logger;
         }
-        public async Task<bool> RedoWagersAsync()
+        public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.Allbet);
-
-                // define time
-                DateTime current = DateTime.Now;
-                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
-                var beginAt = new DateTimeOffset(timeBase.AddHours(-4));
-                var endAt = new DateTimeOffset(timeBase.AddHours(-3));
-                var startTime = beginAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = endAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
+                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // count interval wagers
-                var getWagerCount = wagerAllBetService.GetWagerTotal(beginAt.ToUnixTimeSeconds(), endAt.ToUnixTimeSeconds());
+                var getWagerCount = wagerAllBetService.GetWagerTotal(startUnix, endUnix);
                 int wagerCount = getWagerCount.wagerCount;
 
                 // pagination
@@ -59,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         logger.LogError(errorCode, errorMsg);
                         logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime} )");
-                        break;
+                        return false;
                     }
 
                     pageRowCnt = dataWager.page.datas.Count();
@@ -68,14 +65,14 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         //logger.LogError(errorCode, errorMsg);
                         logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} PAGE: {pageRowCnt} )");
-                        break;
+                        return true;
                     }
 
                     // db wager count equals api bet count do nothing
                     if (totalNum == wagerCount)
                     {
                         logger.LogInformation($"MATCH ( START: {startTime} END: {endTime} TOTAL: {totalNum} )");
-                        break;
+                        return true;
                     }
 
                     // insert wager to db
@@ -100,7 +97,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return true;
+                return false;
             }
 
         }

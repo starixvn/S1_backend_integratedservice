@@ -31,12 +31,12 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
-        public async Task<bool> GetWagersAsync(int TpId, string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(TpId);
+                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // get wager
                 var dataWager = await apiCFBLL.GetBetListByTime(setting["ApiUrl"], setting["api_key"], setting["agent_code"], startTime, endTime);

@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,7 +12,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSABLL apiSABLL;
         private readonly ILogger<WagerRedoSABLL> logger;
 
-        public WagerRedoSABLL(ILogger<WagerRedoSABLL> logger, ThirdPartyBLL thirdPartyBLL, WagerSAService wagerSAService, ApiSABLL apiSABLL)
+        public WagerRedoSABLL(
+            ILogger<WagerRedoSABLL> logger,
+            ThirdPartyBLL thirdPartyBLL,
+            WagerSAService wagerSAService,
+            ApiSABLL apiSABLL
+        )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerSAService = wagerSAService;
@@ -24,23 +25,15 @@ namespace ThirdPartyWager.Service.BLL
             this.logger = logger;
         }
 
-        public async Task<bool> RedoWagersAsync()
+        public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.SA);
-
-                // define time
-                DateTime current = DateTime.Now;
-                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, 0, 0);
-                var beginAt = new DateTimeOffset(timeBase.AddHours(-4));
-                var endAt = new DateTimeOffset(timeBase.AddHours(-3));
-                var startTime = beginAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = endAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
+                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // count interval wagers
-                var getWagerCount = wagerSAService.GetWagerTotal(beginAt.ToUnixTimeSeconds(), endAt.ToUnixTimeSeconds());
+                var getWagerCount = wagerSAService.GetWagerTotal(startUnix, endUnix);
                 int wagerCount = getWagerCount.wagerCount;
 
                 var getWagerSummary = await apiSABLL.GetBetSummaryByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime);
@@ -111,7 +104,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return true;
+                return false;
             }
 
         }

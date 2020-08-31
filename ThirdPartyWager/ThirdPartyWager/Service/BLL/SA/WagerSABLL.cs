@@ -1,11 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,7 +12,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSABLL apiSABLL;
         private readonly ILogger<WagerSABLL> logger;
 
-        public WagerSABLL(ILogger<WagerSABLL> logger, WagerSAService wagerSAService, ApiSABLL apiSABLL, ThirdPartyBLL thirdPartyBLL)
+        public WagerSABLL(
+            ILogger<WagerSABLL> logger,
+            WagerSAService wagerSAService,
+            ApiSABLL apiSABLL,
+            ThirdPartyBLL thirdPartyBLL
+        )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerSAService = wagerSAService;
@@ -24,21 +25,14 @@ namespace ThirdPartyWager.Service.BLL
             this.logger = logger;
         }
 
-        public async Task<bool> GetWagersAsync()
+        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.SA);
+                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                // define time
-                DateTime current = DateTime.Now;
-                DateTime timeBase = new DateTime(current.Year, current.Month, current.Day, current.Hour, current.Minute, 0);
-                var beginAt = new DateTimeOffset(timeBase.AddMinutes(-10));
-                var endAt = new DateTimeOffset(timeBase.AddMinutes(-5));
-                var startTime = beginAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-                var endTime = endAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
-
+                // get wager
                 var dataWager = await apiSABLL.GetBetListByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime);
 
                 // error condition
@@ -79,7 +73,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return true;
+                return false;
             }
         }
     }

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -13,13 +15,26 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<WagerAllBet> logger;
         private readonly WagerAllBetBLL wagerAllBetBLL;
+        private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
         private Timer timer;
+        private int intervalMins = 3;
+        private int tpId = (int)Tp.Allbet;
+        private int tpType = 1;
 
-        public WagerAllBet(ILogger<WagerAllBet> logger, IHostEnvironment environment, WagerAllBetBLL wagerAllBetBLL)
+        public WagerAllBet(
+            ILogger<WagerAllBet> logger,
+            WagerAllBetBLL wagerAllBetBLL,
+            ThirdPartyBLL thirdPartyBLL,
+            DateTimeHelper dateTimeHelper,
+            IHostEnvironment environment
+        )
         {
             this.logger = logger;
             this.wagerAllBetBLL = wagerAllBetBLL;
+            this.thirdPartyBLL = thirdPartyBLL;
+            this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
         }
 
@@ -33,7 +48,28 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
-                await wagerAllBetBLL.GetWagersAsync();
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
+                DateTime timerTime;
+                int last;
+                if (dataTpTimer == null)
+                {
+                    timerTime = DateTime.Now.AddMinutes(-1 * intervalMins);
+                    last = intervalMins;
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime;
+                    last = intervalMins;
+                }
+                if (timerTime < DateTime.Now)
+                {
+                    var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    bool result = await wagerAllBetBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
+                    if (result == true)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -41,7 +77,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(5);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
 
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
