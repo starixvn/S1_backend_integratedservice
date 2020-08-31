@@ -138,9 +138,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            var result = settledService.Settle(tpCustInfo, payoutDataLC_AG, out _);
+
+            return result;
+        }
         public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
         {
             return settledService.GetUnsettledListLC_AG();
+        }
+        public IEnumerable<PayoutDataLC_AG> Get_PayoutList_AG(string transactionID)
+        {
+            return settledService.Get_PayoutList_AG(transactionID);
+        }
+        public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
+        {
+            return settledService.Get_BetList_AG(transactionIDs);
+        }
+        public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount)
+        {
+            var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount);
+            return result;
         }
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
         {

@@ -98,12 +98,9 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                 if (tpCustInfo.SiteId == 3)/*Hard Code for Bwing*/
                 {
-                    if (betRecord.GameType == GameType.Saba_Sports || betRecord.GameType == GameType.Saba_SabaClub)
+                    if (betRecord.GameType == GameType.Saba_Sports)
                     {
-                        if (betRecord.GameType == GameType.Saba_SabaClub)
-                        {
-                            betRecord.SettlementType = SettlementType.SettledForValid;
-                        }
+                        betRecord.SettlementType = SettlementType.SettledForValid;
                     }
                     else
                     {
