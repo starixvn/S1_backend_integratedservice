@@ -24,4 +24,40 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime created_datetime { get; set; }
         public TicketStatus TicketStatus { get; set; }
     }
+
+    public class PayoutData_CF
+    {
+        public long ticket_id { get; set; }
+        public string login_id { get; set; }
+        public decimal winloss { get; set; }
+        public decimal payout { get; set; }
+        public int SettleFlag { get; set; }
+        public string status { get; set; }
+    }
+   
+    public class SettleData_CF
+    {
+        public long ticket_id { get; set; }
+        public string login_id { get; set; }
+        public decimal stake { get; set; }
+        public decimal winloss { get; set; }
+        public decimal payout { get; set; }
+        public string status { get; set; }
+    }
+
+    public class CancelBetData_CF
+    {
+        public string api_key { get; set; }
+        public string agent_code { get; set; }
+        public long ticket_id { get; set; }
+        public string login_id { get; set; }
+        public decimal stake { get; set; }
+    }
+
+    public class BetRecordData_CF
+    {
+        public long ticket_id { get; set; }
+        public string login_id { get; set; }
+    }
+
 }

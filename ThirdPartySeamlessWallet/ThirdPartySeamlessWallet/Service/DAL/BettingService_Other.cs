@@ -66,5 +66,49 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         }
 
+        public int CancelBet_CF(TpCustInfo tpCustInfo, CancelBetData_CF cancelBetData_CF)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            int result = 0;
+            var p = new DynamicParameters(new { ticket_id = cancelBetData_CF.ticket_id });
+            p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            result = conn.Execute("Service_Bettrans_CF_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal payout = p.Get<decimal>("out_stake");
+                result = walletService.SetBalance(
+                    tpCustInfo.CustId,
+                    tpCustInfo.SiteId,
+                    tpCustInfo.UserName,
+                    payout,
+                    (int)Tp.CF,
+                    TransType.Refunds,
+                    $"Cancel: {Math.Abs(cancelBetData_CF.stake):#,##0.##}",
+                    cancelBetData_CF.ticket_id.ToString(),
+                    out _,
+                    conn,
+                    trans
+                );
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+            return result;
+
+        }
+
+        public BetRecordData_CF GetBetRecord_CF(CancelBetData_CF cancelBetData_CF)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = cancelBetData_CF.ticket_id },  commandType: CommandType.StoredProcedure);
+        }
+
     }
 }
