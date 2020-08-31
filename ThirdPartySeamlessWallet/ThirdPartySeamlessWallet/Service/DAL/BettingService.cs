@@ -119,7 +119,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            var p = new DynamicParameters(new { transactionID = bettingDataLC_AG.TransactionID, currency = bettingDataLC_AG.Currency, value = bettingDataLC_AG.Value, playname = bettingDataLC_AG.Playname, betTime = tools.ConvertLocTime(bettingDataLC_AG.BetTime, -4), round = bettingDataLC_AG.Round, gametype = bettingDataLC_AG.Gametype, gameCode = bettingDataLC_AG.GameCode, tableCode = bettingDataLC_AG.GameCode, transactionCode = bettingDataLC_AG.GameCode, playtype = bettingDataLC_AG.Playtype });
+            var p = new DynamicParameters(new { transactionID = bettingDataLC_AG.TransactionID, currency = bettingDataLC_AG.Currency, value = bettingDataLC_AG.Value, playname = bettingDataLC_AG.Playname, betTime = tools.ConvertLocTime(bettingDataLC_AG.BetTime, -4), round = bettingDataLC_AG.Round, gametype = bettingDataLC_AG.Gametype, gameCode = bettingDataLC_AG.GameCode, tableCode = bettingDataLC_AG.TableCode, transactionCode = bettingDataLC_AG.TransactionCode, playtype = bettingDataLC_AG.Playtype });
             try
             {
                 result = conn.Execute("Service_BettransLC_AGV2_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);

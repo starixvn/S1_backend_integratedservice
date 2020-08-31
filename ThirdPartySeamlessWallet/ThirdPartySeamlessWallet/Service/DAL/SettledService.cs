@@ -136,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_AGV2_Payout_Ins", new
+                var p = new DynamicParameters(new
                 {
                     billNo = payoutDataLC_AG.BillNo,
                     transactionID = payoutDataLC_AG.TransactionID,
@@ -145,6 +145,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     netAmount = payoutDataLC_AG.NetAmount,
                     validBetAmount = payoutDataLC_AG.ValidBetAmount,
                     playname = payoutDataLC_AG.Playname,
+                    agentCode = payoutDataLC_AG.AgentCode,
                     settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4),
                     gametype = payoutDataLC_AG.Gametype,
                     gameCode = payoutDataLC_AG.GameCode,
@@ -152,45 +153,28 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     transactionCode = payoutDataLC_AG.TransactionCode,
                     gameResult = payoutDataLC_AG.GameResult,
                     TicketStatus = payoutDataLC_AG.TransactionType.Equals("LOSE", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Lost : (int)TicketStatus.Win
-                }, transaction: trans, commandType: CommandType.StoredProcedure);
+                });
 
-                decimal payoutAmount = payoutDataLC_AG.ValidBetAmount + payoutDataLC_AG.NetAmount;
+                p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("CanPayout", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                if (result > 0 && payoutAmount > 0)
+                result = conn.Execute("Service_BettransLC_AGV2_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (p.Get<int>("CanPayout") == 1)
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutAmount, (int)Tp.AG, TransType.Settled, $"Payout: {payoutAmount.ToString("#,##0.##")}", payoutDataLC_AG.BillNo, out afterAmount, conn, trans);
+                    decimal payoutAmount = p.Get<decimal>("Stake") + p.Get<decimal>("WinLostAmount");
+
+                    if (result > 0 && payoutAmount > 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutAmount, (int)Tp.AG, TransType.Settled, $"Payout: {payoutAmount.ToString("#,##0.##")}", payoutDataLC_AG.TransactionIDs.Count() > 1 ? payoutDataLC_AG.BillNo : payoutDataLC_AG.TransactionID, out afterAmount, conn, trans);
+                    }
                 }
 
                 if (result > 0)
                 {
                     trans.Commit();
                 }
-
-                ////var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
-                ////p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                ////p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                ////decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
-                ////decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
-
-                ////decimal backAmount = OutValidBetAmount + OutNetAmount;
-
-                ////BetRecordInfo betRecordInfo = new BetRecordInfo();
-                ////betRecordInfo.TpId = (int)Tp.AG;
-                ////betRecordInfo.Stake = OutValidBetAmount;
-                ////betRecordInfo.WinlostAmount = backAmount;
-                ////betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
-                ////betRecordInfo.GameType = GameType.AG_LiveCasino;
-                ////betRecordInfo.TpUserName = username;
-                ////betRecordInfo.SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4);
-                ////betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-
-                ////if (backAmount == 0)
-                ////{
-                ////    betRecordInfo.TicketStatus = TicketStatus.UnSettled;
-                ////}
-
-                ////result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-                //result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
             }
             catch (MySqlException mySqlEx)
             {
@@ -211,34 +195,50 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<DataLC_AG>("Service_BettransLC_AGV2_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
-        public IEnumerable<PayoutDataLC_AG> Get_PayoutList_AG(string transactionID)
+        public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<PayoutDataLC_AG>("Service_BettransLC_AGV2_Payout_Get", new { transactionID = transactionID }, commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_Payout_Get", new { transactionID = transactionID }, commandType: CommandType.StoredProcedure);
         }
         public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", new { transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
         }
-        public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount)
+        public int SetSettleFlag_AG(string transactionID, string transactionIDs)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_AGV2_SettleFlag_Set", new { transactionID = transactionID, transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
+        }
+        public int SetSettleFlag_TpWagerAG(string billNoList)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerAG_Settle_Set", new { billNoList = billNoList }, commandType: CommandType.StoredProcedure);
+        }
+        public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
         {
             stake = 0;
             validBet = 0;
             winLostAmount = 0;
-
+            settleTime = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             var p = new DynamicParameters(new { billNoList = billNoList });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             int result = conn.Execute("Service_TpWagerAG_Settle_Get", p, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+            if (p.Get<decimal?>("Stake") != null)
             {
                 stake = p.Get<decimal>("Stake");
                 validBet = p.Get<decimal>("ValidBet");
                 winLostAmount = p.Get<decimal>("WinLostAmount");
+                settleTime = p.Get<long>("SettleTime");
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
@@ -858,10 +858,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return -1;
             }
             else if (doPayout && RefBetRecord.TicketStatus != TicketStatus.UnSettled)
-            {
-                return -1;
-            }
-            else if (tp == Tp.AG && RefBetRecord.Stake != betRecord.Stake)
             {
                 return -1;
             }

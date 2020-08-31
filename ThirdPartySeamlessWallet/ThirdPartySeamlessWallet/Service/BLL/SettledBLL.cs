@@ -140,15 +140,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
         {
-            var result = settledService.Settle(tpCustInfo, payoutDataLC_AG, out _);
-
+            var result = settledService.Settle(tpCustInfo, betRecordInfo);
             return result;
         }
         public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
         {
             return settledService.GetUnsettledListLC_AG();
         }
-        public IEnumerable<PayoutDataLC_AG> Get_PayoutList_AG(string transactionID)
+        public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {
             return settledService.Get_PayoutList_AG(transactionID);
         }
@@ -156,9 +155,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.Get_BetList_AG(transactionIDs);
         }
-        public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount)
+        public int SetSettleFlag_AG(string transactionID, string transactionIDs)
         {
-            var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount);
+            return settledService.SetSettleFlag_AG(transactionID, transactionIDs);
+        }
+        public int SetSettleFlag_TpWagerAG(string billNoList)
+        {
+            return settledService.SetSettleFlag_TpWagerAG(billNoList);
+        }
+        public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        {
+            var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount, out settleTime);
             return result;
         }
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
@@ -193,7 +200,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int SettledFish_YL(BettingDataFish_YL bettingDataFish_YL, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.YL, bettingDataFish_YL.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YL, tpCustInfo.CurrencyId);
 
