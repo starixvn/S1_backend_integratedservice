@@ -488,6 +488,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<BettingDataRNG_PP>("Service_UnsettledListRng_PP_Get", commandType: CommandType.StoredProcedure);
+        }
         public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {
             using var connPre = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -522,12 +527,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     int bonusId;
 
                     GetTpBonus((int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), (int)gameType, TpCategory.Slots, out int custId, out bonusId);
+                    decimal validBet = stake;
+
+                    if (gameType == GameType.PP_LiveCasino)
+                    {
+                        if (winLostAmount >= 0 && winLostAmount < stake)
+                        {
+                            validBet = winLostAmount;
+                        }
+                        else if (winLostAmount < 0)
+                        {
+                            validBet = Math.Abs(winLostAmount);
+                        }
+                    }
 
                     BetRecordInfo betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp.PP,
                         Stake = stake,
-                        ValidBet = stake,
+                        ValidBet = validBet,
                         WinlostAmount = winLostAmount,
                         TransId = bettingDataRNG_PP.roundId.ToString(),
                         GameType = gameType,

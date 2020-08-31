@@ -117,7 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int SettledLC_AG(PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
+        public int PayoutLC_AG(PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
         {
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AG, username);
@@ -129,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 payoutDataLC_AG.ValidBetAmount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.SettledLC_AG(tpCustInfo, payoutDataLC_AG, out afterAmount);
+            var result = settledService.PayoutLC_AG(tpCustInfo, payoutDataLC_AG, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -137,6 +137,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             return result;
+        }
+        public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
+        {
+            return settledService.GetUnsettledListLC_AG();
         }
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
         {

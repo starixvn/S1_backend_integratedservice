@@ -111,7 +111,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             trans.Commit();
             return result;
         }
-        public int SettledLC_AG(TpCustInfo tpCustInfo, PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
+        //SettledLC_AG
+        public int PayoutLC_AG(TpCustInfo tpCustInfo, PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
         {
             afterAmount = 0;
             var result = 0;
@@ -147,35 +148,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutAmount, (int)Tp.AG, TransType.Settled, $"Payout: {payoutAmount.ToString("#,##0.##")}", payoutDataLC_AG.BillNo, out afterAmount, conn, trans);
                 }
 
-                var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
-                p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
-                decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
-
-                decimal backAmount = OutValidBetAmount + OutNetAmount;
-
-                BetRecordInfo betRecordInfo = new BetRecordInfo();
-                betRecordInfo.TpId = (int)Tp.AG;
-                betRecordInfo.Stake = OutValidBetAmount;
-                betRecordInfo.WinlostAmount = backAmount;
-                betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
-                betRecordInfo.GameType = GameType.AG_LiveCasino;
-                betRecordInfo.TpUserName = username;
-                betRecordInfo.SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4);
-                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-
-                if (backAmount == 0)
-                {
-                    betRecordInfo.TicketStatus = TicketStatus.UnSettled;
-                }
-
-                result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-                //result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
                 if (result > 0)
                 {
                     trans.Commit();
                 }
+
+                ////var p = new DynamicParameters(new { TransactionID = payoutDataLC_AG.TransactionID, BillNo = payoutDataLC_AG.BillNo, TpUserName = username, ValidBetAmount = payoutDataLC_AG.ValidBetAmount, NetAmount = payoutDataLC_AG.NetAmount, Settletime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4), OriginalState = payoutDataLC_AG.TransactionType, Memo = payoutDataLC_AG.Memo, TicketStatus = payoutDataLC_AG.TransactionType.Equals("Win", StringComparison.OrdinalIgnoreCase) ? (int)TicketStatus.Win : (int)TicketStatus.Lost });
+                ////p.Add("OutValidBetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                ////p.Add("OutNetAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                ////decimal OutValidBetAmount = p.Get<decimal>("OutValidBetAmount");
+                ////decimal OutNetAmount = p.Get<decimal>("OutNetAmount");
+
+                ////decimal backAmount = OutValidBetAmount + OutNetAmount;
+
+                ////BetRecordInfo betRecordInfo = new BetRecordInfo();
+                ////betRecordInfo.TpId = (int)Tp.AG;
+                ////betRecordInfo.Stake = OutValidBetAmount;
+                ////betRecordInfo.WinlostAmount = backAmount;
+                ////betRecordInfo.TransId = payoutDataLC_AG.TransactionID.ToString();
+                ////betRecordInfo.GameType = GameType.AG_LiveCasino;
+                ////betRecordInfo.TpUserName = username;
+                ////betRecordInfo.SettledTime = tools.ConvertLocTime(payoutDataLC_AG.Settletime, -4);
+                ////betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+
+                ////if (backAmount == 0)
+                ////{
+                ////    betRecordInfo.TicketStatus = TicketStatus.UnSettled;
+                ////}
+
+                ////result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                //result = SettleTicket(tpCustInfo, betRecordInfo, backAmount, out afterAmount, conn, trans);/*Not necessarily Settled, Need the all stake of reference bill No is correct*/
             }
             catch (MySqlException mySqlEx)
             {
@@ -191,7 +193,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-
+        public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<DataLC_AG>("Service_BettransLC_AGV2_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
         public int SettledFish_YL(TpCustInfo tpCustInfo, BettingDataFish_YL bettingDataFish_YL, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -308,11 +314,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
-        }
-        public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BettingDataRNG_PP>("Service_UnsettledListRng_PP_Get", commandType: CommandType.StoredProcedure);
         }
         public int SettledLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
