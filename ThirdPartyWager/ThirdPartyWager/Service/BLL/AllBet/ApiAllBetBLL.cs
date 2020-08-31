@@ -42,9 +42,16 @@ namespace ThirdPartyWager.Service.BLL
 
             // request
             var r = await DoHttpClientAsync(url, param);
-            var result = JsonConvert.DeserializeObject<WagerAllBetModel>(r);
-            
-            return result;
+
+            if (string.IsNullOrEmpty(r))
+            {
+                return null;
+            }
+            else
+            {
+                var result = JsonConvert.DeserializeObject<WagerAllBetModel>(r);
+                return result;
+            }
         }
 
         public async Task<WagerAllBetModel> GetModifiedBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex)
@@ -62,9 +69,15 @@ namespace ThirdPartyWager.Service.BLL
 
             // request
             var r = await DoHttpClientAsync(url, param);
-            var result = JsonConvert.DeserializeObject<WagerAllBetModel>(r);
-
-            return result;
+            if (string.IsNullOrEmpty(r))
+            {
+                return null;
+            }
+            else
+            {
+                var result = JsonConvert.DeserializeObject<WagerAllBetModel>(r);
+                return result;
+            }
         }
 
         private async Task<string> DoHttpClientAsync(string url, string param)

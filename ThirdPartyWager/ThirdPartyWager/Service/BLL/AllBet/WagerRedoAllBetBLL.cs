@@ -48,7 +48,10 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     // bet 
                     var dataWager = await apiAllBetBLL.GetBetListByTime(setting["ApiUrl"], setting["DesKey"], setting["MD5Key"], setting["PropertyId"], startTime, endTime, pageIndex);
-
+                    if (dataWager == null)
+                    {
+                        return false;
+                    }
                     // error condition
                     var errorCode = dataWager.error_code;
                     var errorMsg = dataWager.message;
