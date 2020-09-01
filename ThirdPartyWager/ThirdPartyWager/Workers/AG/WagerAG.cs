@@ -20,6 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly IHostEnvironment environment;
         private Timer timer;
         private int intervalMins = 3;
+        private int iRangMins = 10;
         private int tpId = (int)Tp.AG;
         private int tpType = 1;
 
@@ -53,17 +54,18 @@ namespace ThirdPartyWager.Workers
                 int last;
                 if (dataTpTimer == null)
                 {
-                    timerTime = DateTime.Now.AddMinutes(-1 * intervalMins);
-                    last = intervalMins;
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
                 }
                 else
                 {
                     timerTime = dataTpTimer.StartTime;
-                    last = intervalMins;
+                    last = iRangMins - 1;
                 }
+
                 if (timerTime < DateTime.Now)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    var time = dateTimeHelper.GetTimeByMinuteV2(last, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerAGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result == true)
                     {
