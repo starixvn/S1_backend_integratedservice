@@ -30,6 +30,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class PayoutDataLC_AG : DataLC_AG
     {
+        public List<string> TransactionIDs { get; set; }
+        public decimal NetAmount { get; set; }
+        public decimal ValidBetAmount { get; set; }
+        public DateTime Settletime { get; set; }
+        public string BillNo { get; set; }
+        public string TicketStatus { get; set; }
+        public string GameResult { get; set; }
+        public string Finish { get; set; }
+        public string Memo { get; set; }
+    }
+    public class SettleDataLC_AG : DataLC_AG
+    {
+        public string TransactionIDs { get; set; }
         public decimal NetAmount { get; set; }
         public decimal ValidBetAmount { get; set; }
         public DateTime Settletime { get; set; }
