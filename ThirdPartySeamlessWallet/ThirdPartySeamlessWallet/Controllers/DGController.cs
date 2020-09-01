@@ -205,7 +205,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bettingDataLC_DG.data = transferReq.data;
                     bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
 
-                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
+                    var result = settledBLL.PayoutLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
@@ -235,7 +235,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
                     bettingDataLC_DG.data = transferReq.data;
                     bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
-                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
+                    var result = settledBLL.PayoutLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
@@ -332,7 +332,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
                     bettingDataLC_DG.data = transferReq.data;
                     bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
-                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
+                    var result = settledBLL.PayoutLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
@@ -370,7 +370,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
                     bettingDataLC_DG.data = transferReq.data;
                     bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
-                    var result = settledBLL.SettledLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
+                    var result = settledBLL.PayoutLC_DG(bettingDataLC_DG, out decimal tpAffterAmount);
 
                     if (result > 0 || result == -1/*has been Settled*/)
                     {

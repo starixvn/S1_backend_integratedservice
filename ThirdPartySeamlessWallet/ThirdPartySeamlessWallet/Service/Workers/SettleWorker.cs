@@ -16,6 +16,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
     public class SettleWorker : BackgroundService
     {
         private Timer timerSettleAG;
+        private Timer timerSettleDG;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -35,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerSettleAG = new Timer(DoSettleAGWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -71,12 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 if (betList.Sum(x => x.Value) == payoutList.Sum(x => x.ValidBetAmount))
                                 {
                                     var billNoList = payoutList.Select(x => x.BillNo).ToArray();
-                                    decimal stake = 0;
-                                    decimal validBet = 0;
-                                    decimal winLostAmount = 0;
-                                    long settleTime = 0;
-
-                                    var result = settledBLL.Get_TpWagerAG_Settle(JsonConvert.SerializeObject(billNoList), out stake, out validBet, out winLostAmount, out settleTime);
+                                    var result = settledBLL.Get_TpWagerAG_Settle(JsonConvert.SerializeObject(billNoList), out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
 
                                     if (result > 0)
                                     {
@@ -155,6 +152,95 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                 timerSettleAG.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private void DoSettleDGWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.DG;
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListLC_DG();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var result = settledBLL.Get_TpWagerDG_Settle(unsettled.TransId, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
+
+                            if (result > 0)
+                            {
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.Username);
+                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+
+                                if (tpCurrency.ExchangeRate > 1)
+                                {
+                                    stake *= tpCurrency.ExchangeRate;
+                                    validBet *= tpCurrency.ExchangeRate;
+                                    winLostAmount *= tpCurrency.ExchangeRate;
+                                }
+
+                                BetRecordInfo betRecordInfo = new BetRecordInfo
+                                {
+                                    TpId = thisTp,
+                                    Stake = stake,
+                                    ValidBet = validBet,
+                                    WinlostAmount = winLostAmount,
+                                    TransId = unsettled.TransId,
+                                    GameType = GameType.DG_LiveCasino,
+                                    TpUserName = unsettled.Username,
+                                    SettledTime = settleTime,
+                                    SettlementType = SettlementType.SettledForValidNotRollover
+                                };
+
+                                result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlag_DG(unsettled.TransId);
+                                });
+                            }
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleDG");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), "SettleAG");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleDG.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            //WriteToFile("WriteToFileHostedService: Process Stopped");
+            timerSettleAG?.Change(Timeout.Infinite, 0);
+            timerSettleDG?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
         }
     }
 }

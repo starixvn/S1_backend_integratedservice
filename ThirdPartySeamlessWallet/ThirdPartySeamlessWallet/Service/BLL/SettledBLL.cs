@@ -97,7 +97,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int SettledLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            var result = settledService.Settle(tpCustInfo, betRecordInfo);
+            return result;
+        }
+        public int PayoutLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.DG, bettingDataLC_DG.Username);
@@ -108,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataLC_DG.Amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.SettledLC_DG(tpCustInfo, bettingDataLC_DG, out afterAmount);
+            var result = settledService.PayoutLC_DG(tpCustInfo, bettingDataLC_DG, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -116,6 +121,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             return result;
+        }
+        public IEnumerable<BettingDataLC_DG> GetUnsettledListLC_DG()
+        {
+            return settledService.GetUnsettledListLC_DG();
+        }
+        public int Get_TpWagerDG_Settle(string TransId, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        {
+            return settledService.Get_TpWagerDG_Settle(TransId, out stake, out validBet, out winLostAmount, out settleTime);
+        }
+        public int SetSettleFlag_DG(string TransId)
+        {
+            return settledService.SetSettleFlag_DG(TransId);
         }
         public int PayoutLC_AG(PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
         {
@@ -141,11 +158,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
         {
             return settledService.GetUnsettledListLC_AG();
-        }
-        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
-        {
-            var result = settledService.Settle(tpCustInfo, betRecordInfo);
-            return result;
         }
         public int RefundLC_AG(BettingDataLC_AG_Refund bettingDataLC_AG_Refund, out decimal afterAmount)
         {

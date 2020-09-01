@@ -27,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.bettingService = bettingService;
             this.log2File = log2File;
         }
-        public int SettledLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        public int PayoutLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
             afterAmount = 0;
             TransferType transferType = TransferType.Payout;
@@ -59,28 +59,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        decimal WinLostAmount = p.Get<decimal?>("WinLostAmount") ?? 0;
-
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp.DG,
-                            Stake = Stake,
-                            WinlostAmount = WinLostAmount,
-                            TransId = bettingDataLC_DG.TransId,
-                            GameType = GameType.DG_LiveCasino,
-                            TpUserName = bettingDataLC_DG.Username,
-                            SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValidNotRollover
-                        };
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                        conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 1 }, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
+                        conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
+                        trans.Commit();
                     }
                 }
             }
@@ -98,7 +78,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public int Get_TpWagerDG_Settle(string TransId, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        {
+            stake = 0;
+            validBet = 0;
+            winLostAmount = 0;
+            settleTime = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            var p = new DynamicParameters(new { TransId = TransId });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            int result = conn.Execute("Service_TpWagerDG_Settle_Get", p, commandType: CommandType.StoredProcedure);
 
+            if (p.Get<decimal?>("Stake") != null)
+            {
+                stake = p.Get<decimal>("Stake");
+                validBet = p.Get<decimal>("ValidBet");
+                winLostAmount = p.Get<decimal>("WinLostAmount");
+                settleTime = p.Get<long>("SettleTime");
+            }
+            else
+            {
+                result = 0;
+            }
+
+            return result;
+        }
+        public IEnumerable<BettingDataLC_DG> GetUnsettledListLC_DG()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<BettingDataLC_DG>("Service_BettransLC_DG_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -244,6 +256,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", new { transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
+        }
+        public int SetSettleFlag_DG(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
         }
         public int SetSettleFlag_AG(string transactionID, string transactionIDs)
         {
