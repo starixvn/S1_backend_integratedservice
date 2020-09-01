@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.Model
     public class BetAG
     {
         [JsonProperty("@billNo")]
-        public long billNo { get; set; }
+        public string billNo { get; set; }
 
         [JsonProperty("@playName")]
         public string playName { get; set; }
