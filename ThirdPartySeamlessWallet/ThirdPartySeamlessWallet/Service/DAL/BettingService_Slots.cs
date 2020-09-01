@@ -248,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             int result = 0;
-            bool bHasBonusWallet = hasBonusWallet.Any(x => x == tpCustInfo.SiteId);
+            bool bHasBonusWallet = true;
 
             if (bHasBonusWallet)
             {

@@ -19,14 +19,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
         private readonly Tools tools;
-        private readonly int[] hasBonusWallet;
-
         public BettingService(IConfiguration configuration, WalletService walletService, Tools tools)
         {
             this.configuration = configuration;
             this.walletService = walletService;
             this.tools = tools;
-            hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
 
         /*Single Bet for Settled*/

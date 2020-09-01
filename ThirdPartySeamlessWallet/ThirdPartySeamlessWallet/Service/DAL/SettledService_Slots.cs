@@ -912,7 +912,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             bonusId = 0;
             int result = 0;
-            bool bHasBonusWallet = hasBonusWallet.Any(x => x == tpCustInfo.SiteId);
+            bool bHasBonusWallet = true;
             if (bHasBonusWallet)
             {
                 result = GetTpBonus(tpId, tpTransId, gameType, TpCategory.Slots, out int custId, out bonusId);

@@ -19,8 +19,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly BettingService bettingService;
         private readonly Log2File log2File;
-        private readonly int[] hasBonusWallet;
-
         public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, BettingService bettingService, Log2File log2File)
         {
             this.configuration = configuration;
@@ -28,7 +26,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.tools = tools;
             this.bettingService = bettingService;
             this.log2File = log2File;
-            hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
         public int SettledLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
@@ -211,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
 
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_CancelBetLC_AG_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = conn.Execute("Service_CancelBetLC_AGV2_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
@@ -890,8 +887,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             int result = 0;
             afterAmount = 0;
-            var isBonusWallet = configuration.GetValue<bool>("BonusWallet");
-
             var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
             #region Payout Process
             Enum.TryParse(betRecord.TpId.ToString(), out Tp tp);

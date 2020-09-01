@@ -17,8 +17,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
         private readonly Tools tools;
-        private readonly int[] hasBonusWallet;
-
         public TpCustInfoBLL(IMemoryCache cache, IConfiguration configuration, WalletService walletService, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL, Tools tools)
         {
             this.walletService = walletService;
@@ -26,7 +24,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             this.tpCustInfoService = tpCustInfoService;
             this.cache = cache;
             this.tools = tools;
-            hasBonusWallet = configuration.GetSection("HasBonusWallet").Get<int[]>();
         }
         public TpCustBalance GetBalanceByHalfSecCache(int tpId, string tpUserName, int gameType = 0)
         {
@@ -50,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var balance = walletService.GetBalance(tpCustInfo.CustId);
             var bonusCategoryId = thirdPartyBLL.GetBonusCategoryId(gameType);
 
-            if (hasBonusWallet.Any(x => x == tpCustInfo.SiteId) && bonusCategoryId > 0)
+            if (bonusCategoryId > 0)
             {
                 balance += walletService.GetBonus(tpCustInfo.CustId, bonusCategoryId);
             }
