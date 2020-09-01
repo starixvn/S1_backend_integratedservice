@@ -78,7 +78,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                                     var result = settledBLL.Get_TpWagerAG_Settle(JsonConvert.SerializeObject(billNoList), out stake, out validBet, out winLostAmount, out settleTime);
 
-                                    if (result > 0 && betList.Sum(x => x.Value) == stake)
+                                    if (result > 0)
                                     {
                                         string username = unsettled.Playname.Substring(unsettled.AgentCode.Length);
 
@@ -92,26 +92,29 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                             winLostAmount *= tpCurrency.ExchangeRate;
                                         }
 
-                                        BetRecordInfo betRecordInfo = new BetRecordInfo
+                                        if (betList.Sum(x => x.Value) == stake)
                                         {
-                                            TpId = (int)Tp.AG,
-                                            Stake = stake,
-                                            ValidBet = validBet,
-                                            WinlostAmount = winLostAmount,
-                                            TransId = unsettled.TransactionID,
-                                            GameType = GameType.AG_LiveCasino,
-                                            TpUserName = username,
-                                            SettledTime = settleTime,
-                                            SettlementType = SettlementType.SettledForValidNotRollover
-                                        };
+                                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                                            {
+                                                TpId = (int)Tp.AG,
+                                                Stake = stake,
+                                                ValidBet = validBet,
+                                                WinlostAmount = winLostAmount,
+                                                TransId = unsettled.TransactionID,
+                                                GameType = GameType.AG_LiveCasino,
+                                                TpUserName = username,
+                                                SettledTime = settleTime,
+                                                SettlementType = SettlementType.SettledForValidNotRollover
+                                            };
 
-                                        result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+                                            result = settledBLL.Settled(tpCustInfo, betRecordInfo);
 
-                                        Task.Run(() =>
-                                        {
-                                            settledBLL.SetSettleFlag_TpWagerAG(JsonConvert.SerializeObject(billNoList));
-                                            settledBLL.SetSettleFlag_AG(unsettled.TransactionID, JsonConvert.SerializeObject(transactionIDs));
-                                        });
+                                            Task.Run(() =>
+                                            {
+                                                settledBLL.SetSettleFlag_TpWagerAG(JsonConvert.SerializeObject(billNoList));
+                                                settledBLL.SetSettleFlag_AG(unsettled.TransactionID, JsonConvert.SerializeObject(transactionIDs));
+                                            });
+                                        }
                                     }
                                 }
                                 else
