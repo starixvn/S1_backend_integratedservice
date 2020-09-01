@@ -23,6 +23,7 @@ namespace ThirdPartyWager.Workers
         private int iRangMins = 10;
         private int tpId = (int)Tp.AG;
         private int tpType = 1;
+        private int quick = 0;
 
         public WagerAG(
             ILogger<WagerAG> logger,
@@ -49,6 +50,7 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
+                quick = 0;
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 DateTime timerTime;
                 int last;
@@ -65,12 +67,19 @@ namespace ThirdPartyWager.Workers
 
                 if (timerTime < DateTime.Now)
                 {
-                    var time = dateTimeHelper.GetTimeByMinuteV2(last, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    var time = dateTimeHelper.GetTimeByMinute(last, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerAGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result == true)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
+                }
+
+                TimeSpan ts = DateTime.Now - timerTime;
+                int diffMin = (int)ts.TotalMinutes;
+                if (diffMin > 5)
+                {
+                    quick = 1;
                 }
             }
             catch (Exception ex)
@@ -79,9 +88,16 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                if (quick == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
         }
         public override Task StopAsync(CancellationToken cancellationToken)

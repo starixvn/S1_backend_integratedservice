@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Service.Model
     {
         public string status_code { get; set; }
         public string status_text { get; set; }
-        public int total_records { get; set; }
+        public int? total_records { get; set; }
         public dynamic data { get; set; }
     }
 
@@ -46,6 +46,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal payout { get; set; }
         public decimal balance_open1 { get; set; }
         public decimal balance_close1 { get; set; }
+        public int SettleFlag { get; set; }
         public DateTime created_datetime { get; set; }
         public DateTime processed_datetime { get; set; }
         public DateTime fight_datetime { get; set; }
