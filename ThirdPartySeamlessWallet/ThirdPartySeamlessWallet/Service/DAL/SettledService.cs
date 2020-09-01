@@ -195,6 +195,49 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<DataLC_AG>("Service_BettransLC_AGV2_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
+        public int RefundLC_AG(TpCustInfo tpCustInfo, BettingDataLC_AG_Refund bettingDataLC_AG_Refund, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            string username = bettingDataLC_AG_Refund.Playname.Substring(bettingDataLC_AG_Refund.AgentCode.Length);
+
+            var p = new DynamicParameters(new
+            {
+                transactionID = bettingDataLC_AG_Refund.TransactionID,
+                playname = bettingDataLC_AG_Refund.Playname
+            });
+
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_CancelBetLC_AG_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal payoutAmount = p.Get<decimal?>("Stake") ?? 0;
+
+                if (payoutAmount == bettingDataLC_AG_Refund.Value)
+                {
+                    if (payoutAmount > 0)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutAmount, (int)Tp.AG, TransType.Refunds, $"Refund: {payoutAmount.ToString("#,##0.##")}", bettingDataLC_AG_Refund.TransactionID, out afterAmount, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                trans.Rollback();
+                return -1;
+            }
+
+            return result;
+        }
         public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

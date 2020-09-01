@@ -138,14 +138,34 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
+        {
+            return settledService.GetUnsettledListLC_AG();
+        }
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
         {
             var result = settledService.Settle(tpCustInfo, betRecordInfo);
             return result;
         }
-        public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
+        public int RefundLC_AG(BettingDataLC_AG_Refund bettingDataLC_AG_Refund, out decimal afterAmount)
         {
-            return settledService.GetUnsettledListLC_AG();
+            string username = bettingDataLC_AG_Refund.Playname.Substring(bettingDataLC_AG_Refund.AgentCode.Length);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AG, username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_AG_Refund.Value *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RefundLC_AG(tpCustInfo, bettingDataLC_AG_Refund, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
         }
         public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {

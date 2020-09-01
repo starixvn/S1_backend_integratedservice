@@ -174,7 +174,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_AG_Refund));
                     if (bettingDataLC_AG_Refund.Value > 0)
                     {
-                        if (settledBLL.Refund((int)Tp.AG, bettingDataLC_AG_Refund.TransactionID.ToString(), username, bettingDataLC_AG_Refund.Value, 0, GameType.AG_LiveCasino, out tpAffterAmount) > 0)
+                        var result = settledBLL.RefundLC_AG(bettingDataLC_AG_Refund, out tpAffterAmount);
+
+                        if (result > 0)
                         {
                             resp.ResponseCode = Error.OK.ToString();
                             resp.Balance = tpAffterAmount;
@@ -208,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Response.StatusCode = (int)error;
                 }
 
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", "AG_PostTransfer");
+                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"AG_PostTransfer_{dataLC_AG.TransactionType}");
             }
             catch (Exception ex)
             {
