@@ -18,8 +18,10 @@ namespace ThirdPartyWager.Workers
         private readonly IHostEnvironment environment;
         private Timer timer;
         private int intervalMins = 3;
+        private int iRangMins = 20;
         private int tpId = (int)Tp.CF;
         private int tpType = 1;
+        private int quick = 0;
 
         public WagerCF(
             ILogger<WagerCF> logger,
@@ -46,6 +48,7 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
+                quick = 0;
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
 
                 DateTime timerTime;
@@ -53,13 +56,13 @@ namespace ThirdPartyWager.Workers
 
                 if (dataTpTimer == null)
                 {
-                    timerTime = DateTime.Now.AddMinutes(-1 * intervalMins);
-                    last = intervalMins;
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
                 }
                 else
                 {
                     timerTime = dataTpTimer.StartTime;
-                    last = intervalMins;
+                    last = iRangMins - 1;
                 }
 
                 if (timerTime < DateTime.Now)
@@ -72,6 +75,13 @@ namespace ThirdPartyWager.Workers
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                 }
+
+                TimeSpan ts = DateTime.Now - timerTime;
+                int diffMin = (int)ts.TotalMinutes;
+                if (diffMin > 5)
+                {
+                    quick = 1;
+                }
             }
             catch (Exception ex)
             {
@@ -79,8 +89,16 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                if (quick == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(70);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
         }
         public override Task StopAsync(CancellationToken cancellationToken)

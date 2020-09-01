@@ -51,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL
                     logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime} )");
                     return false;
                 }
-                if (arrWager.total_records == 0)
+                if ((arrWager.total_records ?? 0) == 0)
                 {
                     //logger.LogError(errorCode, errorMsg);
                     logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} )");
@@ -82,6 +82,11 @@ namespace ThirdPartyWager.Service.BLL
                     var bet = JsonConvert.DeserializeObject<BetCF>(JsonConvert.SerializeObject(keyValuePairs));
                     try
                     {
+                        bet.SettleFlag = 0;
+                        if (bet.payout == 0)
+                        {
+                            bet.SettleFlag = 2;
+                        }
                         wagerCFService.InsertWager(bet);
                     }
                     catch (Exception ex)

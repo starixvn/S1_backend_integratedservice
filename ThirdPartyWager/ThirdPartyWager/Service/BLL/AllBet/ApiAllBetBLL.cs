@@ -42,7 +42,6 @@ namespace ThirdPartyWager.Service.BLL
 
             // request
             var r = await DoHttpClientAsync(url, param);
-
             if (string.IsNullOrEmpty(r))
             {
                 return null;
