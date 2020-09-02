@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn_wag.Execute("Service_TpWagerCF_Settle_Set", new { ticket_id = settleData_CF.ticket_id }, commandType: CommandType.StoredProcedure);
 
             using var conn_sec = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn_sec.Execute("Service_Bettrans_CF_Payout_Set", new { ticket_id = settleData_CF.ticket_id, TicketStatus = betRes }, commandType: CommandType.StoredProcedure);
+            conn_sec.Execute("Service_Bettrans_CF_Settle_Set", new { ticket_id = settleData_CF.ticket_id, TicketStatus = betRes }, commandType: CommandType.StoredProcedure);
 
             return result;
         }
