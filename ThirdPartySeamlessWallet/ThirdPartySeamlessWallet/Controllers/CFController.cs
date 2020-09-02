@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -26,8 +27,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly Tp thisTp;
         private readonly int gameType = 0;
+        private readonly IHostEnvironment environment;
 
-        public CFController(ILogger<CFController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
+        public CFController(IHostEnvironment environment, ILogger<CFController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
             this.authBLL = authBLL;
             this.logger = logger;
@@ -38,6 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.log2File = log2File;
             this.thisTp = Tp.CF;
             gameType = (int)GameType.CF_Rooster;
+            this.environment = environment;
         }
 
         public class GetBalanceReq
@@ -178,6 +181,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 // check bet amount
+                if (environment.IsDevelopment() && betReq.stake == 44m)
+                {
+                    System.Threading.Thread.Sleep(60000);
+                }
+
                 int result = bettingBLL.PlaceBet_CF(betReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
