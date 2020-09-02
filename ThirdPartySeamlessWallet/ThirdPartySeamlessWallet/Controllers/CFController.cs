@@ -218,12 +218,38 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public GetCancelBetResp cancel_bet([FromForm] Dictionary<string, string> getCancelBetReq)
         {
-            log2File.Info(JsonConvert.SerializeObject(getCancelBetReq), $"CF_Cancel_Bet");
-            //logger.LogCritical(JsonConvert.SerializeObject(getCancelBetReq));
+            var json = JsonConvert.SerializeObject(getCancelBetReq);
+            var cancelBetReq = JsonConvert.DeserializeObject<CancelBetData_CF>(json);
+            log2File.Info(json, $"CF_Cancel_Bet");
 
             GetCancelBetResp getCancelBetResp = new GetCancelBetResp();
-            getCancelBetResp.status_code = "00";
 
+            // check key
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            if (thirdPartySetting.TpSetting["api_key"] != cancelBetReq.api_key)
+            {
+                getCancelBetResp.status_code = "61.01";
+                getCancelBetResp.status_text = "error : api key not found";
+                return getCancelBetResp;
+            }
+
+            try
+            {
+                int result = bettingBLL.CancelBet_CF(cancelBetReq);
+
+            }
+            catch (Exception ex)
+            {
+                getCancelBetResp.status_code = "500";
+                getCancelBetResp.status_text = "system busy";
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getCancelBetResp)}\r\n{ex}", $"CF_Cancel_Bet");
+                throw ex;
+            }
+
+            log2File.Info(JsonConvert.SerializeObject(getCancelBetReq), $"CF_Cancel_Bet");
+
+            getCancelBetResp.status_code = "00";
+            getCancelBetResp.status_text = "OK";
             return getCancelBetResp;
         }
     }
