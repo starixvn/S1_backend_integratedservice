@@ -134,6 +134,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlag_DG(TransId);
         }
+        public int SetSettleFlag_TpWagerDG(string transId)
+        {
+            return settledService.SetSettleFlag_TpWagerDG(transId);
+        }
         public int PayoutLC_AG(PayoutDataLC_AG payoutDataLC_AG, out decimal afterAmount)
         {
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);

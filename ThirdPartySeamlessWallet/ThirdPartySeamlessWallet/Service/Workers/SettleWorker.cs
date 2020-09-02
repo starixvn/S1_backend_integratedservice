@@ -203,6 +203,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 Task.Run(() =>
                                 {
                                     settledBLL.SetSettleFlag_DG(unsettled.TransId);
+                                    settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
                                 });
                             }
                         }

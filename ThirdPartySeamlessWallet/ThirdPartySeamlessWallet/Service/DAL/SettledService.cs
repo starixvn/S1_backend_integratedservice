@@ -111,6 +111,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BettingDataLC_DG>("Service_BettransLC_DG_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
+        public int SetSettleFlag_TpWagerDG(string transId)
+        {
+            long.TryParse(transId, out long lTransId);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerDG_Settle_Set", new { TransId = lTransId }, commandType: CommandType.StoredProcedure);
+        }
         public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
