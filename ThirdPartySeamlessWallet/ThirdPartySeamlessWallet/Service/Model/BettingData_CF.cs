@@ -58,6 +58,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public long ticket_id { get; set; }
         public string login_id { get; set; }
+        public int SettleFlag { get; set; }
+        public decimal Payout { get; set; }
     }
 
 }
