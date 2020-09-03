@@ -30,8 +30,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int CancelBet_CF(CancelBetData_CF cancelBetData_CF)
         {
             var betrecord = bettingService.GetBetRecord_CF(cancelBetData_CF);
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, betrecord.login_id);
-            var result = bettingService.CancelBet_CF(tpCustInfo, cancelBetData_CF);
+            int result = 0;
+            if (betrecord != null)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, betrecord.login_id);
+                result = bettingService.CancelBet_CF(tpCustInfo, cancelBetData_CF);
+            }
+            else
+            {
+                return 1;
+            }
+
             return result;
         }
     }

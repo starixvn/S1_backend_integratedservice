@@ -244,7 +244,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 int result = bettingBLL.CancelBet_CF(cancelBetReq);
-
             }
             catch (Exception ex)
             {

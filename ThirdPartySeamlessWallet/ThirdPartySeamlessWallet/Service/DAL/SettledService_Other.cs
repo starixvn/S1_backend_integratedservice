@@ -44,6 +44,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
 
+            int betRes = 0;
+            betRes = payoutData_CF.status switch
+            {
+                "WIN" => (int)TicketStatus.Win,
+                "LOST" => (int)TicketStatus.Lost,
+                _ => (int)TicketStatus.Refund,
+            };
+
+            using var conn_sec = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn_sec.Execute("Service_Bettrans_CF_Payout_Set", new { ticket_id = payoutData_CF.ticket_id, TicketStatus = betRes }, commandType: CommandType.StoredProcedure);
+
             return result;
         }
 
