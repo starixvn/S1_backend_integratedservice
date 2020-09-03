@@ -488,8 +488,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-
-        public int SettledLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        public IEnumerable<UnsettleBettingDataLC_Allbet> GetUnsettledListLC_Allbet()
+        {
+            return settledService.GetUnsettledListLC_Allbet();
+        }
+        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        {
+            var result = settledService.Get_TpWagerAllbet_Settle(betNum, out stake, out validBet, out winLostAmount, out settleTime);
+            return result;
+        }
+        public int SetSettleFlag_Allbet(long betNum)
+        {
+            return settledService.SetSettleFlag_Allbet(betNum);
+        }
+        public int SetSettleFlag_TpWagerAllbet(long betNum)
+        {
+            return settledService.SetSettleFlag_TpWagerAllbet(betNum);
+        }
+        public int PayoutLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Allbet, bettingDataLC_Allbet.Client);
@@ -504,7 +520,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
 
-            var result = settledService.SettledLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
+            var result = settledService.PayoutLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {

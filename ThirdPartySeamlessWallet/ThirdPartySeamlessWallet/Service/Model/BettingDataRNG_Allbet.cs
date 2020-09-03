@@ -38,4 +38,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("betNum")]
         public long BetNum { get; set; }
     }
+
+    public class UnsettleBettingDataLC_Allbet
+    {
+        public long BetNum { get; set; }
+        public string Client { get; set; }
+    }
 }

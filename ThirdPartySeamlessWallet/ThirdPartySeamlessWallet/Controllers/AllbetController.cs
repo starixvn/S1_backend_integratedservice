@@ -242,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = settledBLL.SettledLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        int result = settledBLL.PayoutLC_Allbet(transferReq, out decimal tpAffterAmount);
 
                         if (result > 0)
                         {

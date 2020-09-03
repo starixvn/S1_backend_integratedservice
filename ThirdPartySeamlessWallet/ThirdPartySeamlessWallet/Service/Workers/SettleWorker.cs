@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
     {
         private Timer timerSettleAG;
         private Timer timerSettleDG;
+        private Timer timerSettleAllbet;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -37,6 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             timerSettleAG = new Timer(DoSettleAGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleAllbet = new Timer(DoSettleAllbetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -234,6 +236,88 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleDG.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+        private void DoSettleAllbetWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.Allbet;
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListLC_Allbet();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var result = settledBLL.Get_TpWagerAllbet_Settle(unsettled.BetNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
+
+                            if (result > 0)
+                            {
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.Client);
+                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+
+                                if (tpCurrency.ExchangeRate > 1)
+                                {
+                                    stake *= tpCurrency.ExchangeRate;
+                                    validBet *= tpCurrency.ExchangeRate;
+                                    winLostAmount *= tpCurrency.ExchangeRate;
+                                }
+
+                                BetRecordInfo betRecordInfo = new BetRecordInfo
+                                {
+                                    TpId = thisTp,
+                                    Stake = stake,
+                                    ValidBet = validBet,
+                                    WinlostAmount = winLostAmount,
+                                    TransId = unsettled.BetNum.ToString(),
+                                    GameType = GameType.Allbet_LiveCasino,
+                                    TpUserName = unsettled.Client,
+                                    SettledTime = settleTime,
+                                    SettlementType = SettlementType.SettledForValidNotRollover
+                                };
+
+                                result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlag_TpWagerAllbet(unsettled.BetNum);
+                                    settledBLL.SetSettleFlag_Allbet(unsettled.BetNum);
+                                });
+                            }
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAllbet");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), "SettleAllbet");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleAllbet.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
         public override Task StopAsync(CancellationToken cancellationToken)

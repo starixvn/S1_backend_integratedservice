@@ -423,7 +423,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int SettledLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        public IEnumerable<UnsettleBettingDataLC_Allbet> GetUnsettledListLC_Allbet()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<UnsettleBettingDataLC_Allbet>("Service_BettransLC_Allbet_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+        public int PayoutLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -454,24 +459,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp.Allbet,
-                            Stake = Stake,
-                            WinlostAmount = bettingDataLC_Allbet.Amount,
-                            TransId = bettingDataLC_Allbet.Details[0].BetNum.ToString(),
-                            GameType = GameType.Allbet_LiveCasino,
-                            TpUserName = bettingDataLC_Allbet.Client,
-                            SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValidNotRollover
-                        };
+                        ////BetRecordInfo betRecordInfo = new BetRecordInfo
+                        ////{
+                        ////    TpId = (int)Tp.Allbet,
+                        ////    Stake = Stake,
+                        ////    WinlostAmount = bettingDataLC_Allbet.Amount,
+                        ////    TransId = bettingDataLC_Allbet.Details[0].BetNum.ToString(),
+                        ////    GameType = GameType.Allbet_LiveCasino,
+                        ////    TpUserName = bettingDataLC_Allbet.Client,
+                        ////    SettledTime = 0,
+                        ////    SettlementType = SettlementType.SettledForValidNotRollover
+                        ////};
 
-                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                        ////result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
+                        conn.Execute("Service_BettransLC_Allbet_SettleFlag_Set", new { betNum = bettingDataLC_Allbet.Details[0].BetNum, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
+                        trans.Commit();
                     }
                 }
             }
@@ -489,7 +492,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-
         public int ReSettledLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -534,24 +536,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = (int)Tp.Allbet,
-                                Stake = Stake,
-                                WinlostAmount = bettingDataLC_Allbet.Amount,
-                                TransId = bettingDataLC_Allbet.Details[0].BetNum.ToString(),
-                                GameType = GameType.Allbet_LiveCasino,
-                                TpUserName = bettingDataLC_Allbet.Client,
-                                SettledTime = 0,
-                                SettlementType = SettlementType.SettledForValidNotRollover
-                            };
+                            ////BetRecordInfo betRecordInfo = new BetRecordInfo
+                            ////{
+                            ////    TpId = (int)Tp.Allbet,
+                            ////    Stake = Stake,
+                            ////    WinlostAmount = bettingDataLC_Allbet.Amount,
+                            ////    TransId = bettingDataLC_Allbet.Details[0].BetNum.ToString(),
+                            ////    GameType = GameType.Allbet_LiveCasino,
+                            ////    TpUserName = bettingDataLC_Allbet.Client,
+                            ////    SettledTime = 0,
+                            ////    SettlementType = SettlementType.SettledForValidNotRollover
+                            ////};
 
-                            result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                            if (result > 0)
-                            {
-                                trans.Commit();
-                            }
+                            ////result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                            conn.Execute("Service_BettransLC_Allbet_SettleFlag_Set", new { betNum = bettingDataLC_Allbet.Details[0].BetNum, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
+                            trans.Commit();
                         }
                     }
                     else
@@ -571,6 +570,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     throw mySqlEx;
                 }
+            }
+
+            return result;
+        }
+        public int SetSettleFlag_Allbet(long betNum)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_Allbet_SettleFlag_Set", new { betNum = betNum, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerAllbet(long betNum)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerAllBet_Settle_Set", new { betNum = betNum }, commandType: CommandType.StoredProcedure);
+        }
+        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        {
+            stake = 0;
+            validBet = 0;
+            winLostAmount = 0;
+            settleTime = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            var p = new DynamicParameters(new { betNum = betNum });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            int result = conn.Execute("Service_TpWagerAllBet_Settle_Get", p, commandType: CommandType.StoredProcedure);
+
+            if (p.Get<decimal?>("Stake") != null)
+            {
+                stake = p.Get<decimal>("Stake");
+                validBet = p.Get<decimal>("ValidBet");
+                winLostAmount = p.Get<decimal>("WinLostAmount");
+                settleTime = p.Get<long>("SettleTime");
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
