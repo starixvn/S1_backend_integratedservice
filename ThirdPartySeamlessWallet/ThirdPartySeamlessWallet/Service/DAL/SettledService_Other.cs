@@ -45,7 +45,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else if (betData.Payout == 0 && betRes == (int)TicketStatus.Win)
                 {
-                    payoutAmount = betData.Payout;
+                    payoutAmount = payoutData_CF.payout;
                     headMemo = "Resettle";
                 }
                 else if (betData.Payout > 0 && betRes == (int)TicketStatus.Lost)

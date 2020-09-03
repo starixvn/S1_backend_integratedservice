@@ -22,14 +22,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int Payout_CF(PayoutData_CF payoutData_CF, out decimal afterAmount)
         {
-            // check bettrans bet whether paid or not by settleflag
-            var betrecord = settledService.GetBetRecord_CF(payoutData_CF);
-            if (betrecord != null && betrecord.SettleFlag != 0 )
-            {
-                // recalculate payout
-                payoutData_CF.payout -= betrecord.Payout;
-            }
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, payoutData_CF.login_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CF, tpCustInfo.CurrencyId);
 
