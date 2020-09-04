@@ -1,0 +1,217 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Controllers
+{
+    [ApiController]
+    [Route("[controller]/[action]")]
+    public class EBetController : ControllerBase
+    {
+        private readonly AuthBLL authBLL;
+        private readonly ILogger<EBetController> logger;
+        private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly TpCustInfoBLL tpCustInfoBLL;
+        private readonly BettingBLL bettingBLL;
+        private readonly SettledBLL settledBLL;
+        private readonly Log2File log2File;
+        private readonly Tp thisTp;
+        private readonly int gameType = 0;
+        private readonly IHostEnvironment environment;
+
+        public EBetController(
+            IHostEnvironment environment,
+            ILogger<EBetController> logger,
+            AuthBLL authBLL,
+            ThirdPartyBLL thirdPartyBLL,
+            TpCustInfoBLL tpCustInfoBLL,
+            BettingBLL bettingBLL,
+            SettledBLL settledBLL,
+            Log2File log2File
+        )
+        {
+            this.authBLL = authBLL;
+            this.logger = logger;
+            this.thirdPartyBLL = thirdPartyBLL;
+            this.tpCustInfoBLL = tpCustInfoBLL;
+            this.bettingBLL = bettingBLL;
+            this.settledBLL = settledBLL;
+            this.log2File = log2File;
+            this.thisTp = Tp.EBet;
+            gameType = (int)GameType.EBet_LiveCasino;
+            this.environment = environment;
+        }
+
+        #region Response
+
+        public class GetRegisterLoginResp
+        {
+            public string accessToken { get; set; }
+            public int subChannelId { get; set; }
+            public string username { get; set; }
+            public string sessionToken { get; set; }
+            public string currency { get; set; }
+            public int status { get; set; }
+            [JsonProperty("event")]
+            public string Event { get; set; }
+            public string seqNo { get; set; }
+            public string nickname { get; set; }
+        }
+
+        public class GetBalanceResp
+        {
+            public string username { get; set; }
+            public decimal money { get; set; }
+            public string currency { get; set; }
+            public int status { get; set; }
+            [JsonProperty("event")]
+            public string Event { get; set; }
+            public string seqNo { get; set; }
+            public int timestamp { get; set; }
+        }
+
+        #endregion
+
+        [HttpPost]
+        [Produces("application/json")]
+        public GetRegisterLoginResp registerOrLogin([FromForm] Dictionary<string, string> getRegisterLoginReq)
+        {
+            var json = JsonConvert.SerializeObject(getRegisterLoginReq);
+            var registerLoginReq = JsonConvert.DeserializeObject<RegisterLoginData_EBet>(json);
+            log2File.Info(json, $"EBet_Register_Login");
+
+            GetRegisterLoginResp getRegisterLoginResp = new GetRegisterLoginResp();
+
+            // check signature
+            if (registerLoginReq.signature == null)
+            {
+                getRegisterLoginResp.status = 4026;
+                return getRegisterLoginResp;
+            }
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            string sign = $"{registerLoginReq.seqNo}{registerLoginReq.Event}{registerLoginReq.channelId}{registerLoginReq.timestamp}{registerLoginReq.username}{registerLoginReq.accessToken}";
+            string privateKey = thirdPartySetting.TpSetting[$"PrivateKey_{registerLoginReq.currency}"];
+            var check = VerifySignature(sign, registerLoginReq.signature, privateKey);
+            if (check != true)
+            {
+                getRegisterLoginResp.status = 4026;
+                return getRegisterLoginResp;
+            }
+
+            try
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(registerLoginReq.sessionToken));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                /* 1 Time*/
+                string authToken = sessionKeyArr[0];
+                /* Long Time*/
+                string sessionToken = sessionKeyArr[1];
+
+                if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                    if (tpCheck == null || tpCheck.Locked)
+                    {
+                        getRegisterLoginResp.status = 4037;
+                        return getRegisterLoginResp;
+                    }
+                    if (tpCheck.Token != sessionToken)
+                    {
+                        getRegisterLoginResp.status = 410;
+                        return getRegisterLoginResp;
+                    }
+                }
+                else
+                {
+                    getRegisterLoginResp.status = 410;
+                    return getRegisterLoginResp;
+                }
+
+                getRegisterLoginResp.status = 200;
+                getRegisterLoginResp.accessToken = registerLoginReq.accessToken;
+                getRegisterLoginResp.subChannelId = 0;
+                getRegisterLoginResp.sessionToken = sessionToken;
+                getRegisterLoginResp.username = registerLoginReq.username;
+                getRegisterLoginResp.currency = registerLoginReq.currency;
+                getRegisterLoginResp.Event = registerLoginReq.Event;
+                getRegisterLoginResp.seqNo = registerLoginReq.seqNo;
+                getRegisterLoginResp.nickname = registerLoginReq.username;
+            }
+            catch (Exception ex)
+            {
+                getRegisterLoginResp.status = 500;
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}\r\n{ex}", $"EBet_Register_Login");
+                throw ex;
+            }
+
+            log2File.Info(JsonConvert.SerializeObject(getRegisterLoginResp), $"EBet_Register_Login");
+
+            return getRegisterLoginResp;
+        }
+
+        [HttpPost]
+        [Produces("application/json")]
+        public GetBalanceResp syncCredit([FromForm] Dictionary<string, string> getSyncCreditReq)
+        {
+
+            var json = JsonConvert.SerializeObject(getSyncCreditReq);
+            var syncCreditReq = JsonConvert.DeserializeObject<SyncCreditData_EBet>(json);
+            log2File.Info(json, $"EBet_Sync_Credit");
+
+            GetBalanceResp getBalanceResp = new GetBalanceResp();
+
+            // check user (exist status online)
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, syncCreditReq.username);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                getBalanceResp.status = 4037;
+                return getBalanceResp;
+            }
+
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, syncCreditReq.username, gameType);
+            getBalanceResp.status = 200;
+            getBalanceResp.username = syncCreditReq.username;
+            getBalanceResp.money = tpCustBalance.Balance;
+            getBalanceResp.currency = tpCustBalance.TpCurrencyId;
+            getBalanceResp.Event = "syncCredit";
+            getBalanceResp.seqNo = syncCreditReq.seqNo;
+            getBalanceResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            log2File.Info(JsonConvert.SerializeObject(getBalanceResp), $"EBet_Sync_Credit");
+
+            return getBalanceResp;
+        }
+
+        private bool VerifySignature(string dataToSign, string signedData, string publicKey)
+        {
+            try
+            {
+                UnicodeEncoding ByteConverter = new UnicodeEncoding();
+                var encoder = new UTF8Encoding();
+                RSACryptoServiceProvider RSAalg = new RSACryptoServiceProvider();
+                RSAParameters priKey = RSAalg.ExportParameters(true);
+                RSAalg.ImportParameters(priKey);
+                RSAalg.FromXmlString(publicKey);
+                byte[] plaintext = encoder.GetBytes(dataToSign);
+                return RSAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
+            }
+            catch (CryptographicException e)
+            {
+                return false;
+            }
+        }
+    }
+}
