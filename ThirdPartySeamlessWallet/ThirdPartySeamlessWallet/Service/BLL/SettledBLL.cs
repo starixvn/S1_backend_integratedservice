@@ -102,6 +102,42 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.Settle(tpCustInfo, betRecordInfo);
             return result;
         }
+        public IEnumerable<PayoutDataLC_SA> GetUnsettledListLC_SA()
+        {
+            return settledService.GetUnsettledListLC_SA();
+        }
+        public int PayoutLC_SA(PayoutDataLC_SA payoutDataLC_SA, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SA, payoutDataLC_SA.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SA, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoutDataLC_SA.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutLC_SA(tpCustInfo, payoutDataLC_SA, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        {
+            return settledService.Get_TpWagerSA_Settle(GameID, Username, out stake, out validBet, out winLostAmount, out settleTime);
+        }
+        public int SetSettleFlag_TpWagerSA(string GameID, string Username)
+        {
+            return settledService.SetSettleFlag_TpWagerSA(GameID, Username);
+        }
+        public int SetSettleFlag_SA(string GameID, string Username)
+        {
+            return settledService.SetSettleFlag_SA(GameID, Username);
+        }
         public int PayoutLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
 

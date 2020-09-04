@@ -153,23 +153,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            result = conn.Execute("Service_BettransLC_SA_Ins", new { Txnid = bettingDataLC_SA.txnid, TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", Currency = bettingDataLC_SA.currency, Username = bettingDataLC_SA.username, Gametype = bettingDataLC_SA.gametype, Amount = bettingDataLC_SA.amount, Betdetails = bettingDataLC_SA.Betdetails, Gameid = bettingDataLC_SA.gameid, Memo = (string)null }, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = conn.Execute("Service_BettransLC_SAV2_Ins", new { Txnid = bettingDataLC_SA.txnid, TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", Currency = bettingDataLC_SA.currency, Username = bettingDataLC_SA.username, Gametype = bettingDataLC_SA.gametype, Amount = bettingDataLC_SA.amount, Betdetails = bettingDataLC_SA.Betdetails, Gameid = bettingDataLC_SA.gameid }, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                BetRecordInfo betRecordInfo = new BetRecordInfo();
-                betRecordInfo.TpId = (int)Tp.SA;
-                betRecordInfo.Stake = bettingDataLC_SA.amount;
-                betRecordInfo.TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}";
-                betRecordInfo.GameType = GameType.SA_LiveCasino;
-                betRecordInfo.TpUserName = bettingDataLC_SA.username;
+                ////BetRecordInfo betRecordInfo = new BetRecordInfo();
+                ////betRecordInfo.TpId = (int)Tp.SA;
+                ////betRecordInfo.Stake = bettingDataLC_SA.amount;
+                ////betRecordInfo.TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}";
+                ////betRecordInfo.GameType = GameType.SA_LiveCasino;
+                ////betRecordInfo.TpUserName = bettingDataLC_SA.username;
 
-                result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
-            }
+                ////result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", bettingDataLC_SA.txnid, out afterAmount, conn, trans);
 
-            if (result > 0)
-            {
-                trans.Commit();
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
             }
 
             return result;
@@ -181,26 +182,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var refBettransLC = conn.QueryFirstOrDefault<BettingDataLC_SA>("Service_BettransLC_SA_Get", new { Txnid = bettingDataLC_SA.txn_reverse_id }, transaction: trans, commandType: CommandType.StoredProcedure);
-            if (refBettransLC == null || refBettransLC.TicketStatus == TicketStatus.Refund)
-            {
-                return -1;
-            }
-            else if (refBettransLC.TicketStatus == TicketStatus.UnSettled)
-            {
-                BetRecordInfo betRecordInfo = new BetRecordInfo();
-                betRecordInfo.TpId = (int)Tp.SA;
-                betRecordInfo.Stake = bettingDataLC_SA.amount;
-                betRecordInfo.TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}";
-                betRecordInfo.GameType = GameType.SA_LiveCasino;
-                betRecordInfo.TpUserName = bettingDataLC_SA.username;
 
-                result = CancelBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
-                result = conn.Execute("Service_BettransLC_SA_Set", new { Txnid = refBettransLC.txnid, Memo = "Cancel Bet", TicketStatus = (int)TicketStatus.Refund }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var refBettransLC = conn.Execute("Service_CancelBetLC_SA_Set", new { Txnid = bettingDataLC_SA.txn_reverse_id }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            /*BetRecordInfo betRecordInfo = new BetRecordInfo();
+            betRecordInfo.TpId = (int)Tp.SA;
+            betRecordInfo.Stake = bettingDataLC_SA.amount;
+            betRecordInfo.TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}";
+            betRecordInfo.GameType = GameType.SA_LiveCasino;
+            betRecordInfo.TpUserName = bettingDataLC_SA.username;
+
+            result = CancelBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);*/
+            if (refBettransLC > 0)
+            {
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount), (int)Tp.SA, TransType.Refunds, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", bettingDataLC_SA.txnid, out afterAmount, conn, trans);
+
                 if (result > 0)
                 {
                     trans.Commit();
                 }
+            }
+            else
+            {
+                return -1;
             }
 
             return result;

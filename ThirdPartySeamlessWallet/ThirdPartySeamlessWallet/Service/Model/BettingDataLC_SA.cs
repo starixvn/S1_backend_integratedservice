@@ -21,4 +21,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Betdetails { get; set; }
         public TicketStatus TicketStatus { get; set; }
     }
+    public class PayoutDataLC_SA
+    {
+        public string username { get; set; }
+        public string currency { get; set; }
+        public decimal amount { get; set; }
+        public long txnid { get; set; }
+        public DateTime timestamp { get; set; }
+        public string gametype { get; set; }
+        public DateTime Payouttime { get; set; }
+        public string gameid { get; set; }
+        public int hostid { get; set; }
+    }
 }
