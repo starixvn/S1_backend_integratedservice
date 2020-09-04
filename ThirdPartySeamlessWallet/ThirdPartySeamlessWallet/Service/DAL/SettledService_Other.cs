@@ -33,6 +33,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var betData = conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = payoutData_CF.ticket_id }, transaction: trans, commandType: CommandType.StoredProcedure);
             var payoutAmount = payoutData_CF.payout;
             var headMemo = "Payout";
+            if (betRes == (int)TicketStatus.Refund)
+            {
+                headMemo = "Refund";
+            }
+
             if (betData.SettleFlag != 0)
             {
                 payoutAmount = 0;
