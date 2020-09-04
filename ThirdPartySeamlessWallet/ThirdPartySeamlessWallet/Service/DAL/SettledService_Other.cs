@@ -164,13 +164,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<PayoutData_CF> GetUnPayoutList_CF()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Query<PayoutData_CF>("Service_TpWagerCF_PayoutList_Get", commandType: CommandType.StoredProcedure);
         }
 
         public IEnumerable<SettleData_CF> GetUnSettleList_CF()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Query<SettleData_CF>("Service_TpWagerCF_SettleList_Get", commandType: CommandType.StoredProcedure);
         }
 
