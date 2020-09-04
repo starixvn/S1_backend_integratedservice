@@ -75,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (payoutDataLC_SA.amount != 0)
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutDataLC_SA.amount, (int)Tp.SA, TransType.Settled, $"Payout: {payoutDataLC_SA.amount:#,##0.##}", payoutDataLC_SA.gameid, out afterAmount, conn, trans);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutDataLC_SA.amount, (int)Tp.SA, TransType.Settled, $"Payout: {payoutDataLC_SA.amount:#,##0.##}", $"{payoutDataLC_SA.gameid}_{payoutDataLC_SA.username}", out afterAmount, conn, trans);
                     }
 
                     if (result > 0)

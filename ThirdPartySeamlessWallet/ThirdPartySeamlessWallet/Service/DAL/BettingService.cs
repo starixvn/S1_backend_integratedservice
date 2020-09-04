@@ -165,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 ////betRecordInfo.TpUserName = bettingDataLC_SA.username;
 
                 ////result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", bettingDataLC_SA.txnid, out afterAmount, conn, trans);
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", out afterAmount, conn, trans);
 
                 if (result > 0)
                 {
@@ -195,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             result = CancelBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);*/
             if (refBettransLC > 0)
             {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount), (int)Tp.SA, TransType.Refunds, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", bettingDataLC_SA.txnid, out afterAmount, conn, trans);
+                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount), (int)Tp.SA, TransType.Refunds, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", out afterAmount, conn, trans);
 
                 if (result > 0)
                 {
