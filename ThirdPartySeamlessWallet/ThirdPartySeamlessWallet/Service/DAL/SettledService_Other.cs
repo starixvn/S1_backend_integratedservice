@@ -25,7 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 "LOST" => (int)TicketStatus.Lost,
                 _ => (int)TicketStatus.Refund,
             };
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
