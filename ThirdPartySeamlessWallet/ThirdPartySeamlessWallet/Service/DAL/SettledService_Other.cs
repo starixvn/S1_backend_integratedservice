@@ -25,49 +25,56 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 "LOST" => (int)TicketStatus.Lost,
                 _ => (int)TicketStatus.Refund,
             };
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var connWager = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            connWager.Open();
+            using var wagerTrans = connWager.BeginTransaction();
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
+
             var result = 0;
-            result = conn.Execute("Service_TpWagerCF_Payout_Set", new { ticket_id = payoutData_CF.ticket_id }, transaction: trans, commandType: CommandType.StoredProcedure);
-            var betData = conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = payoutData_CF.ticket_id }, transaction: trans, commandType: CommandType.StoredProcedure);
-            var payoutAmount = payoutData_CF.payout;
-            var headMemo = "Payout";
-            if (betRes == (int)TicketStatus.Refund)
-            {
-                headMemo = "Refund";
-            }
-
-            if (betData.SettleFlag != 0)
-            {
-                payoutAmount = 0;
-
-                if (betData.Payout == 0 && betRes == (int)TicketStatus.Refund)
-                {
-                    payoutAmount = payoutData_CF.payout;
-                    transType = TransType.Refunds;
-                    headMemo = "Refund";
-                }
-                else if (betData.Payout == 0 && betRes == (int)TicketStatus.Win)
-                {
-                    payoutAmount = payoutData_CF.payout;
-                    headMemo = "Resettle";
-                }
-                else if (betData.Payout > 0 && betRes == (int)TicketStatus.Lost)
-                {
-                    payoutAmount = -1 * betData.Payout;
-                    headMemo = "Resettle";
-                }
-                else if (betData.Payout > 0 && betData.Payout != payoutData_CF.payout && betRes == (int)TicketStatus.Refund)
-                {
-                    payoutAmount = payoutData_CF.payout - betData.Payout;
-                    transType = TransType.Refunds;
-                    headMemo = "Refund";
-                }
-            }
-
+            result = connWager.Execute("Service_TpWagerCF_Payout_Set", new { ticket_id = payoutData_CF.ticket_id }, transaction: wagerTrans, commandType: CommandType.StoredProcedure);
             if (result > 0)
             {
+                conn.Execute("Service_Bettrans_CF_Payout_Set", new { ticket_id = payoutData_CF.ticket_id, Payout = payoutData_CF.payout, TicketStatus = betRes }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var betData = conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = payoutData_CF.ticket_id }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var payoutAmount = payoutData_CF.payout;
+                var headMemo = "Payout";
+                if (betRes == (int)TicketStatus.Refund)
+                {
+                    headMemo = "Refund";
+                }
+
+                if (betData.SettleFlag != 0)
+                {
+                    payoutAmount = 0;
+
+                    if (betData.Payout == 0 && betRes == (int)TicketStatus.Refund)
+                    {
+                        payoutAmount = payoutData_CF.payout;
+                        transType = TransType.Refunds;
+                        headMemo = "Refund";
+                    }
+                    else if (betData.Payout == 0 && betRes == (int)TicketStatus.Win)
+                    {
+                        payoutAmount = payoutData_CF.payout;
+                        headMemo = "Resettle";
+                    }
+                    else if (betData.Payout > 0 && betRes == (int)TicketStatus.Lost)
+                    {
+                        payoutAmount = -1 * betData.Payout;
+                        headMemo = "Resettle";
+                    }
+                    else if (betData.Payout > 0 && betData.Payout != payoutData_CF.payout && betRes == (int)TicketStatus.Refund)
+                    {
+                        payoutAmount = payoutData_CF.payout - betData.Payout;
+                        transType = TransType.Refunds;
+                        headMemo = "Refund";
+                    }
+                }
+
+
                 if (payoutAmount != 0)
                 {
                     result = walletService.SetBalance(
@@ -88,12 +95,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    wagerTrans.Commit();
                     trans.Commit();
                 }
             }
 
-            using var conn_sec = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn_sec.Execute("Service_Bettrans_CF_Payout_Set", new { ticket_id = payoutData_CF.ticket_id, Payout = payoutData_CF.payout, TicketStatus = betRes }, commandType: CommandType.StoredProcedure);
+            //using var conn_sec = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            //conn_sec.Execute("Service_Bettrans_CF_Payout_Set", new { ticket_id = payoutData_CF.ticket_id, Payout = payoutData_CF.payout, TicketStatus = betRes }, commandType: CommandType.StoredProcedure);
 
             return result;
         }
