@@ -27,6 +27,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
+        private readonly int gameType = 0;
+
         private readonly Dictionary<string, string> BetTransactionCode = new Dictionary<string, string>()
         {
             {"SWB", null},
@@ -41,7 +43,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"BJB", null},
         };
 
-
         public AGController(ILogger<SAController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
             this.tpCustInfoBLL = tpCustInfoBLL;
@@ -51,6 +52,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
+            gameType = (int)GameType.AG_LiveCasino;
         }
 
         public class TransferResponse
@@ -114,27 +116,27 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                         else if (result == -1)
                         {
                             resp.ResponseCode = Error.OK.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username, gameType);
                             resp.Balance = tpCustBalance.Balance;
                             log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", "AG_PostTransfer_Retry");
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                 }
@@ -152,13 +154,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (reslut > 0)
                     {
                         resp.ResponseCode = Error.OK.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username, gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                     else if (reslut == -1)
                     {
                         resp.ResponseCode = Error.OK.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                     else
@@ -185,20 +187,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                 }
