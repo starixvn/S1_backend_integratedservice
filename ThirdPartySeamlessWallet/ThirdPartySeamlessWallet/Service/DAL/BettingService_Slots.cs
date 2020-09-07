@@ -238,5 +238,74 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        #region CQ9
+        public int PlaceBetRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            bettingDataRNG_CQ9.amount *= -1;
+            var p = new DynamicParameters(new
+            {
+                account = bettingDataRNG_CQ9.account,
+                eventTime = bettingDataRNG_CQ9.eventTime,
+                gamehall = bettingDataRNG_CQ9.gamehall,
+                gamecode = bettingDataRNG_CQ9.gamecode,
+                roundid = bettingDataRNG_CQ9.roundid,
+                amount = bettingDataRNG_CQ9.amount,
+                mtcode = bettingDataRNG_CQ9.mtcode,
+                TicketStatus = (int)TicketStatus.UnSettled
+            }
+            );
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            try
+            {
+                result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0 && bettingDataRNG_CQ9.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingDataRNG_CQ9.amount,
+                        (int)Tp.CQ9,
+                        bettingDataRNG_CQ9.mtcode,
+                        gameType,
+                        bettingDataRNG_CQ9.mtcode,
+                        null,
+                        TpCategory.Slots,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        #endregion
     }
 }
