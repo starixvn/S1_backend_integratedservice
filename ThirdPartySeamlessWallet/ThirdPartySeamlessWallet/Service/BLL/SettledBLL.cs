@@ -240,11 +240,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount, out settleTime);
             return result;
         }
-        public int SettledLC_AG_Merger(PayoutDataLC_AG payoutDataLC_AG, string relTransId)
-        {
-            int result = settledService.SettledLC_AG_Merger(payoutDataLC_AG, relTransId);
-            return result;
-        }
         public int SettledRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
 
