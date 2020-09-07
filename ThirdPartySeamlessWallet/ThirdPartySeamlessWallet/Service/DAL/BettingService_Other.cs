@@ -41,7 +41,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_CF.stake != 0)
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingData_CF.stake * -1, (int)Tp.CF, TransType.Wagers, $"Stake: {bettingData_CF.stake:#,##0.##}", bettingData_CF.ticket_id.ToString(), out afterAmount, conn, trans);
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        bettingData_CF.stake_money * -1,
+                        (int)Tp.CF,
+                        TransType.Wagers,
+                        $"Stake: {bettingData_CF.stake_money:#,##0.##}",
+                        bettingData_CF.ticket_id.ToString(),
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
                 }
 
                 if (result > 0)
@@ -75,12 +87,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             var p = new DynamicParameters(new { ticket_id = cancelBetData_CF.ticket_id });
             p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("out_stake_money", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
             result = conn.Execute("Service_Bettrans_CF_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                decimal payout = p.Get<decimal>("out_stake");
+                decimal payout = p.Get<decimal>("out_stake_money");
                 result = walletService.SetBalance(
                     tpCustInfo.CustId,
                     tpCustInfo.SiteId,
@@ -88,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     payout,
                     (int)Tp.CF,
                     TransType.Refunds,
-                    $"Cancel: {Math.Abs(cancelBetData_CF.stake):#,##0.##}",
+                    $"Cancel: {Math.Abs(cancelBetData_CF.stake_money):#,##0.##}",
                     cancelBetData_CF.ticket_id.ToString(),
                     out _,
                     conn,
@@ -107,7 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public BetRecordData_CF GetBetRecord_CF(CancelBetData_CF cancelBetData_CF)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = cancelBetData_CF.ticket_id },  commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = cancelBetData_CF.ticket_id }, commandType: CommandType.StoredProcedure);
         }
 
     }
