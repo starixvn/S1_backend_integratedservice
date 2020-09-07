@@ -30,9 +30,9 @@ namespace CommonService.Service.BLL
             {
                 { "en", "en" },
                 { "th", "th" },
-                { "vn", "en" },
-                { "cs", "zh-CN" },
-                { "ch", "zh-HK" },
+                { "vn", "vi" },
+                { "cs", "zh" },
+                { "ch", "zh-CN" },
             };
 
             if (!langlist.TryGetValue(custInfo.UserLang, out string langvalue))
@@ -40,11 +40,17 @@ namespace CommonService.Service.BLL
                 langvalue = "en";
             }
 
+            Dictionary<string, string> RateLimits = new Dictionary<string, string>
+            {
+                { "phone_number_and_end_user_ip_address", phone }
+            };
+            string _RateLimits = JsonConvert.SerializeObject(RateLimits);
             Dictionary<string, string> sendVerifySMS = new Dictionary<string, string>
             {
                 { "To", phone },
                 { "Channel", "sms" },
-                { "Locale", langvalue }
+                { "Locale", langvalue },
+                { "RateLimits",_RateLimits}
             };
 
             string Authtoken = $"{config.AccountSID}:{config.Authtoken}";
