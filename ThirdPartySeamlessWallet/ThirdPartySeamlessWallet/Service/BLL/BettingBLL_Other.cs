@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingData_CF.stake *= tpCurrency.ExchangeRate;
+                bettingData_CF.stake_money *= tpCurrency.ExchangeRate;
             }
 
             var result = bettingService.PlaceBet_CF(tpCustInfo, bettingData_CF, out afterAmount);
