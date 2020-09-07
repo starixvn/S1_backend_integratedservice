@@ -51,7 +51,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PP_LiveCasino = 16,
         PG_RNG = 17,
         Sexy_LiveCasino = 18,
-        CF_Rooster = 19
+        CF_Rooster = 27
     }
     public enum Tp
     {
@@ -93,6 +93,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     }
     public enum TpCategory
     {
-        Slots
+        Slots,
+        LiveCasino,
+        Fish
     }
 }

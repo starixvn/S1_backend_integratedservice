@@ -48,6 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 settleData_CF.stake *= tpCurrency.ExchangeRate;
+                settleData_CF.stake_money *= tpCurrency.ExchangeRate;
                 settleData_CF.payout *= tpCurrency.ExchangeRate;
                 settleData_CF.winloss *= tpCurrency.ExchangeRate;
             }

@@ -61,7 +61,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddMinutes(-3);
                     last = iRangMins - 1;
                 }
 
@@ -78,7 +78,7 @@ namespace ThirdPartyWager.Workers
 
                 TimeSpan ts = DateTime.Now - timerTime;
                 int diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
+                if (diffMin > 8)
                 {
                     quick = 1;
                 }

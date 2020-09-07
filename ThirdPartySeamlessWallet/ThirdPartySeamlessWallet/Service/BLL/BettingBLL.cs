@@ -20,29 +20,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.thirdPartyBLL = thirdPartyBLL;
         }
-        public int PlaceBet(int tpId, string TransId, string tpUserName, decimal tpStake, GameType gameType, string betDetial, out decimal tpAfterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(tpId, tpUserName);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
-            //tpCustBalance.ExchangeRate
-            BetRecordInfo betRecordInfo = new BetRecordInfo();
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                tpStake *= tpCurrency.ExchangeRate;
-            }
-            betRecordInfo.TpId = tpId;
-            betRecordInfo.Stake = tpStake;
-            betRecordInfo.TransId = TransId;
-            betRecordInfo.GameType = gameType;
-            betRecordInfo.TpUserName = tpUserName;
-
-            var result = bettingService.PlaceBet(tpCustInfo, betRecordInfo, out tpAfterAmount);
-            if (result > 0 && tpAfterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                tpAfterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
 
         public int PlaceBetLC_AG(BettingDataLC_AG bettingDataLC_AG, out decimal afterAmount)
         {
@@ -70,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                bettingDataLC_SA.amount *= tpCurrency.ExchangeRate;
+                bettingDataLC_SA.amount *= tpCurrency.ExchangeRate; /*bettingDataLC_SA.Betdetails has not fixed*/
             }
 
             var result = bettingService.PlaceBetLC_SA(tpCustInfo, bettingDataLC_SA, out afterAmount);
