@@ -13,6 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class BettingService
     {
+        #region Set EffectiveBet of Cust
         public int PlaceBetLC_SA(TpCustInfo tpCustInfo, BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -76,5 +77,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        #endregion
     }
 }
