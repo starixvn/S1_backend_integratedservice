@@ -26,6 +26,7 @@ namespace CommonService
             services.Configure<SendXConfig>(Configuration.GetSection("SendXConfig"));
             services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
             services.Configure<Dictionary<string, MoviderVerifySMSConfig>>(Configuration.GetSection("MoviderVerifySMSConfig"));
+            services.Configure<Dictionary<string, TwilioVerifySMSServices>>(Configuration.GetSection("TwilioVerifySMSServices"));
 
             services.AddMemoryCache();
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
@@ -42,6 +43,7 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<MoviderSMSBLL>();
+            services.AddSingleton<TwilioSMSBLL>();
 
             services.AddControllers();
 

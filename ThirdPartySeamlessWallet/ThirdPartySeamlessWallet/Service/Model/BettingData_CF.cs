@@ -40,6 +40,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long ticket_id { get; set; }
         public string login_id { get; set; }
         public decimal stake { get; set; }
+        public decimal stake_money { get; set; }
         public decimal winloss { get; set; }
         public decimal payout { get; set; }
         public string status { get; set; }
@@ -52,6 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long ticket_id { get; set; }
         public string login_id { get; set; }
         public decimal stake { get; set; }
+        public decimal stake_money { get; set; }
     }
 
     public class BetRecordData_CF

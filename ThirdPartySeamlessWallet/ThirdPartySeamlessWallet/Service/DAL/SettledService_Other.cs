@@ -126,12 +126,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _ => TicketStatus.Refund,
             };
 
-            decimal Stake = settleData_CF.stake;
-            decimal ValidBet = (betRes == (int)TicketStatus.Refund && settleData_CF.winloss == 0) ? 0 : Stake;
+            decimal ValidBet = (betRes == (int)TicketStatus.Refund && settleData_CF.winloss == 0) ? 0 : settleData_CF.stake_money;
             BetRecordInfo betRecordInfo = new BetRecordInfo
             {
                 TpId = (int)Tp.CF,
-                Stake = Stake,
+                Stake = settleData_CF.stake,
                 ValidBet = ValidBet,
                 WinlostAmount = settleData_CF.winloss,
                 TransId = settleData_CF.ticket_id.ToString(),
