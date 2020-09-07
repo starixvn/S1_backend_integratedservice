@@ -93,6 +93,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     }
     public enum TpCategory
     {
-        Slots
+        Slots,
+        LiveCasino,
+        Fish
     }
 }
