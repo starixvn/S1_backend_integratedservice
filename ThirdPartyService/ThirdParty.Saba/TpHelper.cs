@@ -306,7 +306,9 @@ namespace ThirdParty.Saba
                     oApiResult.Message = $"{url}?token={json.Data}&lang={langid}";
 
                     string SportType = null;
+                    string matchId = null;
                     inputs.TryGetValue("gameId", out SportType);
+                    inputs.TryGetValue("matchid", out matchId);
 
                     if (SportType == "211")
                     {
@@ -322,7 +324,14 @@ namespace ThirdParty.Saba
 
                     if (appType == AppType.Native)
                     {
-                        oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
+                        if (matchId == null)
+                        {
+                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
+                        }
+                        else
+                        {
+                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
+                        }
                     }
                     else if (appType == AppType.Mobile)
                     {
@@ -347,7 +356,14 @@ namespace ThirdParty.Saba
                         }
                         else
                         {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
+                            if (matchId == null)
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
+                            }
+                            else
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
+                            }
                         }
                     }
                     else
@@ -362,8 +378,14 @@ namespace ThirdParty.Saba
 
                         if (act == "keno" || SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223")
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
-                        else
+                        else if (matchId == null)
+                        {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                        }
+                        else
+                        {
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
+                        }
                     }
                 }
                 else
