@@ -31,6 +31,7 @@ namespace CommonService.Service.BLL
                 { "en", "en" },
                 { "th", "th" },
                 { "vn", "vi" },
+                { "id", "id" },
                 { "cs", "zh" },
                 { "ch", "zh-CN" },
             };
@@ -42,8 +43,7 @@ namespace CommonService.Service.BLL
 
             Dictionary<string, string> RateLimits = new Dictionary<string, string>
             {
-                { config.RateLimits, phone },
-                { config.RateLimits,ip}
+                { config.RateLimits, $"{phone} {ip}" },
             };
             string _RateLimits = JsonConvert.SerializeObject(RateLimits);
             Dictionary<string, string> sendVerifySMS = new Dictionary<string, string>
