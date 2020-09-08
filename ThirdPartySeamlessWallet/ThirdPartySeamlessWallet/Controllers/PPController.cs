@@ -88,6 +88,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else
                         {
                             var gameType = thirdPartyBLL.GetGameType_PP(authenticateReq.gameId);
+                            tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)thisTp, (int)gameType);
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                             authenticateResp.userId = tpCustInfoAuth.TpUserName;
                             authenticateResp.currency = tpCustInfoAuth.TpCurrencyId;
@@ -164,7 +165,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else
                     {
                         //var gameType = thirdPartyBLL.GetGameType_PP(balanceReq.gameId);
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balanceReq.userId, (int)GameType.PP_RNG);
+                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, balanceReq.userId);
+                        var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)thisTp);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balanceReq.userId, gameType);
 
                         balanceResp.currency = tpCustBalance.TpCurrencyId;
                         balanceResp.cash = tpCustBalance.Balance;
