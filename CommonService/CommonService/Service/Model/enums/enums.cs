@@ -13,6 +13,7 @@ namespace CommonService.Service.Model.enums
         NoAuthority = 1001,
         KEY_ERROR = 1002,
         NETWORK_ERROR = 1003,
+        Too_Many_Requests = 1004,
         OTHER_ERROR = 1999,
         // Account 
         UserNotExist = 1101,
@@ -36,8 +37,10 @@ namespace CommonService.Service.Model.enums
         InvalidCurrency = 2002,
         InvalidLanguage = 2003,
         #endregion
-        Not_allowed_country = 5001,
-        Not_allowed_currency = 5002,
+        #region SMS  (5xxxx)
+        //Not_allowed_country = 5001,
+        //Not_allowed_currency = 5002,
+        #endregion
         #region System Error(9xxxx)
         ConnectionTimeOut = 9002,
         ServerIsBusy = 9003,

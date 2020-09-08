@@ -27,7 +27,7 @@ namespace CommonService.Controllers
             {
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var phone = $"{custInfo.AreaCode}{phoneNo}";
-                var resultResp = await twilioSMSBLL.SendVerifySMSAsync(custInfo, phone);
+                var resultResp = await twilioSMSBLL.SendVerifySMSAsync(custInfo, phone, twilioVerificationsSMSReq.ip);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawErrorCode = resultResp.RawErrorCode;
