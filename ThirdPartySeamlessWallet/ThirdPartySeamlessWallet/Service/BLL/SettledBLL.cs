@@ -97,14 +97,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory)
         {
-            var result = settledService.Settle(tpCustInfo, betRecordInfo);
+            var result = settledService.Settle(tpCustInfo, betRecordInfo, tpCategory);
             return result;
         }
         public IEnumerable<PayoutDataLC_SA> GetUnsettledListLC_SA()
         {
             return settledService.GetUnsettledListLC_SA();
+        }
+        public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SA, bettingDataLC_SA.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SA, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_SA.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetLC_SA(tpCustInfo, bettingDataLC_SA, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
         }
         public int PayoutLC_SA(PayoutDataLC_SA payoutDataLC_SA, out decimal afterAmount)
         {
@@ -137,6 +154,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag_SA(string GameID, string Username)
         {
             return settledService.SetSettleFlag_SA(GameID, Username);
+        }
+        public int CancelBetLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.DG, bettingDataLC_DG.Username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.DG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_DG.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetLC_DG(tpCustInfo, bettingDataLC_DG, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
         }
         public int PayoutLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
@@ -536,6 +570,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlag_TpWagerAllbet(betNum);
         }
+        public int CancelBetLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Allbet, bettingDataLC_Allbet.Client);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_Allbet.Amount *= tpCurrency.ExchangeRate;
+                foreach (var bet in bettingDataLC_Allbet.Details)
+                {
+                    bet.Amount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.CancelBetLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                foreach (var bet in bettingDataLC_Allbet.Details)
+                {
+                    bet.Amount /= tpCurrency.ExchangeRate;
+                }
+            }
+            return result;
+        }
         public int PayoutLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
 
@@ -616,7 +676,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public int CancelBetLC_Sexy(BettingDataLC_Sexy_CancelBet cancelBetTxn, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, cancelBetTxn.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+            var result = settledService.CancelBetLC_Sexy(tpCustInfo, cancelBetTxn, out afterAmount);
 
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
         public int SettledLC_Sexy(BettingDataLC_Sexy_Settle bettingDataLC_Sexy_Settle, out decimal afterAmount)
         {
 

@@ -26,7 +26,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
-
+        private readonly int thisTp;
+        private readonly int gameType = 0;
         public DGController(ILogger<DGController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
         {
             this.logger = logger;
@@ -36,6 +37,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
+            gameType = (int)GameType.DG_LiveCasino;
+            thisTp = (int)Tp.DG;
         }
         public class Member
         {
@@ -64,7 +67,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public GetBalanceRep getBalance(string agentName, [FromBody] GetBalanceReq getBalanceReq)
         {
             logger.LogInformation(JsonConvert.SerializeObject(getBalanceReq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting(thisTp);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
             GetBalanceRep getBalanceRep = new GetBalanceRep();
             getBalanceRep.member = new MemberBalance();
@@ -80,7 +83,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             string username = getBalanceReq.member.username;
 
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.DG, username);
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache(thisTp, username);
             if (tpCheck == null)
             {
                 getBalanceRep.codeId = (int)Error.Thisaccounthasbeensignedout;
@@ -92,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBalanceRep;
             }
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, username);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, username, gameType);
             getBalanceRep.member.balance = tpCustBalance.Balance;
             getBalanceRep.codeId = (int)Error.OperationSuccessful;
             return getBalanceRep;
@@ -130,7 +133,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string bodyText = await reader.ReadToEndAsync();
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting(thisTp);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
             TransferRep transferRep = new TransferRep();
             transferRep.member = new MemberTransfer2();
@@ -149,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string username = transferReq.member.username;
                 if (transferReq.member.amount < 0)
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.DG, username);
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache(thisTp, username);
                     if (tpCheck == null)
                     {
                         transferRep.codeId = (int)Error.Thisaccounthasbeensignedout;
@@ -178,12 +181,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+                        //var tpCustBalance = tpCustInfoBLL.GetBalance(thisTp, username,gameType);
                         transferRep.codeId = (int)Error.Insufficientbalance;
                     }
                     else
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+                        //var tpCustBalance = tpCustInfoBLL.GetBalance(thisTp, username,gameType);
                         transferRep.codeId = (int)Error.Transferfailed;
                     }
                 }
@@ -194,7 +197,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
                         return transferRep;
                     }
@@ -225,7 +228,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
                         return transferRep;
                     }
@@ -242,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
                     }
                     else
@@ -271,7 +274,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string bodyText = await reader.ReadToEndAsync();
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
             logger.LogInformation(JsonConvert.SerializeObject(transferReq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting(thisTp);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
             TransferRep transferRep = new TransferRep();
             transferRep.member = new MemberTransfer2();
@@ -295,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bettingDataLC_DG.Amount = Math.Abs(transferReq.member.amount);
                     bettingDataLC_DG.data = transferReq.data;
                     bettingDataLC_DG.TransId = transferReq.ticketId.ToString();
-                    var result = bettingBLL.CancelBetLC_DG(bettingDataLC_DG, out tpAffterAmount);
+                    var result = settledBLL.CancelBetLC_DG(bettingDataLC_DG, out tpAffterAmount);
                     if (result > 0)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
@@ -306,12 +309,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance - Math.Abs(transferReq.member.amount);
                     }
                     else
                     {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.DG, username);
+                        //var tpCustBalance = tpCustInfoBLL.GetBalance(thisTp, username);
                         transferRep.codeId = (int)Error.Transferfailed;
                     }
                 }
@@ -322,7 +325,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
                         return transferRep;
                     }
@@ -340,7 +343,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.token = token;
                         if (result == -1)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                             transferRep.member.balance = tpCustBalance.Balance - transferReq.member.amount;
                         }
                         else
@@ -360,7 +363,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
                         return transferRep;
                     }
@@ -377,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         transferRep.codeId = (int)Error.OperationSuccessful;
                         transferRep.token = token;
 
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.DG, transferReq.member.username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, transferReq.member.username, gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
                     }
                     else
@@ -417,7 +420,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string bodyText = await reader.ReadToEndAsync();
             var checkTransferReq = JsonConvert.DeserializeObject<CheckTransferReq>(bodyText);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting(thisTp);
             string token = tools.ToMD5($"{agentName}{thirdPartySetting.TpSetting["APIkey"]}").ToLower();
 
             CheckTransferRep checkTransferRep = new CheckTransferRep();
@@ -430,7 +433,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     checkTransferRep.codeId = (int)Error.TokenVerificationFailed;
                     return checkTransferRep;
                 }
-                throw new Exception("Not Implement.");
+                throw new NotImplementedException();
                 log2File.Info($"{bodyText}\r\n{JsonConvert.SerializeObject(checkTransferRep)}", "DG_checkTransfer");
             }
             catch (Exception ex)

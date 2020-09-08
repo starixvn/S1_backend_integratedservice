@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly IHostEnvironment environment;
-
+        private readonly int gameType = 0;
         public enum TransferType : int
         {
             Bet = 10,
@@ -44,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.environment = environment;
+            gameType = (int)GameType.Allbet_LiveCasino;
         }
         public class Resp
         {
@@ -193,7 +194,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else if (tpAffterAmount < 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                                 resp.balance = tpCustBalance.Balance;
                                 resp.error_code = "10101";
                                 resp.message = "Credit is not enough.";
@@ -205,7 +206,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                                 resp.balance = tpCustBalance.Balance;
                                 resp.error_code = "50000";
                                 resp.message = "server error";
@@ -254,7 +255,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                                 resp.balance = tpCustBalance.Balance;
                                 resp.error_code = "0";
                                 resp.message = "success";
@@ -310,7 +311,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = bettingBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        int result = settledBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -322,7 +323,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                                 resp.balance = tpCustBalance.Balance;
                                 resp.error_code = "0";
                                 resp.message = "success";
@@ -330,7 +331,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                             resp.balance = tpCustBalance.Balance;
                             resp.error_code = "0";
                             resp.message = "success";
@@ -383,7 +384,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                                 resp.balance = tpCustBalance.Balance;
                                 resp.error_code = "0";
                                 resp.message = "success";
@@ -391,7 +392,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                             resp.balance = tpCustBalance.Balance;
                             resp.error_code = "10101";
                             resp.message = "Credit is not enough.";
@@ -408,7 +409,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -2)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client);
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
                             resp.balance = tpCustBalance.Balance;
                             resp.error_code = "0";
                             resp.message = "success";
@@ -490,15 +491,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client);
+                    //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client, gameType);
                     TpCustBalance tpCustBalance = null;
                     if (environment.IsDevelopment())
                     {
-                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, client);
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, client, gameType);
                     }
                     else
                     {
-                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client);
+                        tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, client, gameType);
                     }
 
                     resp.balance = tpCustBalance.Balance;

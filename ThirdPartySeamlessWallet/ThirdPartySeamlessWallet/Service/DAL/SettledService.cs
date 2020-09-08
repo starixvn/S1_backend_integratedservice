@@ -27,8 +27,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.bettingService = bettingService;
             this.log2File = log2File;
         }
-        public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory)
         {
+            int bonusId = 0;
+            int gameType = (int)betRecordInfo.GameType;
+
+            GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
+            betRecordInfo.BonusId = bonusId;
+
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -59,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataFish_YL.profit != 0)
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit, (int)Tp.YL, TransType.Settled, $"Settled: {Math.Abs(bettingDataFish_YL.profit).ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit, (int)Tp.YL, TransType.Payout, $"Settled: {Math.Abs(bettingDataFish_YL.profit).ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans);
                     }
 
                     if (result > 0)
@@ -240,7 +246,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             sMemo = $"Free Bet Payout: {backAmount.ToString("#,##0.##")}";
                         }
 
-                        walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, backAmount, betRecord.TpId, TransType.Settled, sMemo, betRecord.TransId, out afterAmount, conn, trans);
+                        walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, backAmount, betRecord.TpId, TransType.Payout, sMemo, betRecord.TransId, out afterAmount, conn, trans);
                     }
                 }
             }

@@ -108,7 +108,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                                 SettlementType = SettlementType.SettledForValidNotRollover
                                             };
 
-                                            result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+                                            result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                             Task.Run(() =>
                                             {
@@ -202,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     SettlementType = SettlementType.SettledForValidNotRollover
                                 };
 
-                                result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+                                result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                 Task.Run(() =>
                                 {
@@ -284,7 +284,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     SettlementType = SettlementType.SettledForValidNotRollover
                                 };
 
-                                result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+                                result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                 Task.Run(() =>
                                 {
@@ -368,7 +368,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     SettlementType = SettlementType.SettledForValidNotRollover
                                 };
 
-                                result = settledBLL.Settled(tpCustInfo, betRecordInfo);
+                                result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                 //Task.Run(() =>
                                 //{

@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
+        private readonly int gameType = 0;
         public SexyController(Log2File log2File, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
         {
             this.log2File = log2File;
@@ -29,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
+            gameType = (int)GameType.Sexy_LiveCasino;
         }
         public class Req
         {
@@ -174,7 +176,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     BettingDataLC_Sexy_CancelBet cancelBetTxn = JsonConvert.DeserializeObject<BettingDataLC_Sexy_CancelBet>(req.message);
 
-                    int result = bettingBLL.CancelBetLC_Sexy(cancelBetTxn, out decimal tpAffterAmount);
+                    int result = settledBLL.CancelBetLC_Sexy(cancelBetTxn, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
