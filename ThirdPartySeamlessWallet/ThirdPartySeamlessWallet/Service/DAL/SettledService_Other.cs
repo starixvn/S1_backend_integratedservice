@@ -18,7 +18,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             int betRes = 0;
-            var transType = TransType.Settled;
+            var transType = TransType.Payout;
             betRes = payoutData_CF.status switch
             {
                 "WIN" => (int)TicketStatus.Win,

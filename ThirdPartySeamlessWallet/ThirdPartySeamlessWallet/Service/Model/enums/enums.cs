@@ -9,8 +9,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         Wagers = 1,
         Refunds = 2,
-        Settled = 3,
-        Prize = 4
+        Payout = 3,
+        Prize = 4,
+        Undo = 5
     }
     public enum SettlementType
     {

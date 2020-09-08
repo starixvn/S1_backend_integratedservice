@@ -97,9 +97,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory)
         {
-            var result = settledService.Settle(tpCustInfo, betRecordInfo);
+            var result = settledService.Settle(tpCustInfo, betRecordInfo, tpCategory);
             return result;
         }
         public IEnumerable<PayoutDataLC_SA> GetUnsettledListLC_SA()

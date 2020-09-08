@@ -40,6 +40,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", out afterAmount, conn, trans);
                 result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", gameType, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", null, TpCategory.LiveCasino, out afterAmount, ref bonusId, conn, trans);
 
+                if (bonusId > 0)
+                {
+                    AddTpBonus((int)Tp.SA, bettingDataLC_SA.txnid, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bettingDataLC_SA.amount, bonusId, TpCategory.LiveCasino, conn, trans);
+                }
+
                 if (result > 0)
                 {
                     trans.Commit();
@@ -148,12 +153,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_Allbet.Amount * -1, (int)Tp.Allbet, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_Allbet.Amount).ToString("#,##0.##")}", bettingDataLC_Allbet.TranId.ToString(), out afterAmount, conn, trans);
 
                     //AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans);
-                    foreach (var bet in bettingDataLC_Allbet.Details)
+                    result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataLC_Allbet.Amount) * -1, (int)Tp.Allbet, $"T{bettingDataLC_Allbet.TranId}", gameType, bettingDataLC_Allbet.TranId.ToString(), null, TpCategory.LiveCasino, out afterAmount, ref bonusId, conn, trans);
+                    if (bonusId > 0)
                     {
-                        AddTpBonus((int)Tp.Allbet, bet.BetNum.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bet.Amount, bonusId, TpCategory.LiveCasino, conn, trans);
+                        foreach (var bet in bettingDataLC_Allbet.Details)
+                        {
+                            AddTpBonus((int)Tp.Allbet, bet.BetNum.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bet.Amount, bonusId, TpCategory.LiveCasino, conn, trans);
+                        }
                     }
-
-                    result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataLC_Allbet.Amount) * -1, (int)Tp.Allbet, null, gameType, bettingDataLC_Allbet.TranId.ToString(), null, TpCategory.LiveCasino, out afterAmount, ref bonusId, conn, trans);
                 }
 
                 if (result > 0)
