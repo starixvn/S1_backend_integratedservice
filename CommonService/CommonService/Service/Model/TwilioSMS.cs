@@ -13,10 +13,12 @@ namespace CommonService.Service.Model
         public string VerificationService { get; set; }
         public string Verifications { get; set; }
         public string VerificationChecks { get; set; }
+        public string RateLimits { get; set; }
     }
     public class TwilioVerificationsSMSReq
     {
         public int custId { get; set; }
+        public string ip { get; set; }
     }
     public class TwilioVerificationCheckSMSReq
     {

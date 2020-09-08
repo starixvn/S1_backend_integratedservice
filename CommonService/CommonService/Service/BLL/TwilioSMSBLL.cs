@@ -20,7 +20,7 @@ namespace CommonService.Service.BLL
             this.twilioVerifySMSServices = twilioVerifySMSServices;
             this.httpHelper = httpHelper;
         }
-        public async Task<ApiResult> SendVerifySMSAsync(CustInfoProfile custInfo, string phone)
+        public async Task<ApiResult> SendVerifySMSAsync(CustInfoProfile custInfo, string phone, string ip)
         {
             var apiResult = new ApiResult();
             var config = twilioVerifySMSServices.Value[custInfo.SiteName];
@@ -42,7 +42,8 @@ namespace CommonService.Service.BLL
 
             Dictionary<string, string> RateLimits = new Dictionary<string, string>
             {
-                { "phone_number_and_end_user_ip_address", phone }
+                { config.RateLimits, phone },
+                { config.RateLimits,ip}
             };
             string _RateLimits = JsonConvert.SerializeObject(RateLimits);
             Dictionary<string, string> sendVerifySMS = new Dictionary<string, string>
@@ -70,12 +71,19 @@ namespace CommonService.Service.BLL
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.sid;
             }
+            else if (resultResp.code == 20429)
+            {
+                apiResult.ErrorCode = ErrorCode.Too_Many_Requests;
+                apiResult.Message = resultResp.message;
+                apiResult.RawErrorCode = Convert.ToString(resultResp.code);
+                apiResult.RawMessage = Convert.ToString(resultResp.status);
+            }
             else
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
                 apiResult.Message = resultResp.message;
                 apiResult.RawErrorCode = Convert.ToString(resultResp.code);
-                apiResult.RawMessage = Convert.ToString(resultResp.status); 
+                apiResult.RawMessage = Convert.ToString(resultResp.status);
             }
 
             return apiResult;
