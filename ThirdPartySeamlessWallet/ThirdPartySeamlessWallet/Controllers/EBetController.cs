@@ -89,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string username { get; set; }
             public decimal money { get; set; }
-            public string currency { get; set; }
+            public decimal moneyBefore { get; set; }
             public int status { get; set; }
             [JsonProperty("event")]
             public string Event { get; set; }
@@ -203,11 +203,18 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<GetBetResp> increaseCreditAsync(BettingData_EBet getBetReq)
         {
             GetBetResp getBetResp = new GetBetResp();
-            
+
             if (getBetReq.type == 1)
             {
                 log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}", $"EBet_Betting");
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username, gameType);
+
                 getBetResp.status = 200;
+                getBetResp.username = getBetReq.username;
+                getBetResp.money = tpCustBalance.Balance + getBetReq.money;
+                getBetResp.moneyBefore = tpCustBalance.Balance;
+                getBetResp.Event = getBetReq.username;
+                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 getBetResp.seqNo = getBetReq.seqNo;
             }
             else if (getBetReq.type == 2)
