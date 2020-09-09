@@ -166,15 +166,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/json")]
-        public async Task<GetBalanceResp> syncCreditAsync(/*[FromForm] Dictionary<string, string> getSyncCreditReq*/)
+        public async Task<GetBalanceResp> syncCreditAsync(SyncCreditData_EBet syncCreditReq)
         {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var Content = await reader.ReadToEndAsync();
-
-            var syncCreditReq = JsonConvert.DeserializeObject<SyncCreditData_EBet>(Content);
-            log2File.Info(Content, $"EBet_Sync_Credit");
-
             GetBalanceResp getBalanceResp = new GetBalanceResp();
 
             // check user (exist status online)
@@ -194,7 +187,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.seqNo = syncCreditReq.seqNo;
             getBalanceResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            log2File.Info($"{Content}\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
+            log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
 
             return getBalanceResp;
         }
