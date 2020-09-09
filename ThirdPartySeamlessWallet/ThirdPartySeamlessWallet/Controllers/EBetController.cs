@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -86,15 +87,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
-        [Produces("application/json")]
-        public GetRegisterLoginResp registerOrLogin([FromForm] Dictionary<string, string> getRegisterLoginReq)
+        //[Produces("application/json")]
+        public GetRegisterLoginResp registerOrLoginAsync(RegisterLoginData_EBet registerLoginReq)
         {
-            var json = JsonConvert.SerializeObject(getRegisterLoginReq);
-            var registerLoginReq = JsonConvert.DeserializeObject<RegisterLoginData_EBet>(json);
-            log2File.Info(json, $"EBet_Register_Login");
+            //using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            //var Content = await reader.ReadToEndAsync();
+            //var json = JsonConvert.SerializeObject(null);
+            //var registerLoginReq = JsonConvert.DeserializeObject<RegisterLoginData_EBet>(Content);
 
             GetRegisterLoginResp getRegisterLoginResp = new GetRegisterLoginResp();
-
+            getRegisterLoginResp.status = 500;
             // check signature
             if (registerLoginReq.signature == null)
             {
@@ -153,23 +155,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 getRegisterLoginResp.status = 500;
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}\r\n{ex}", $"EBet_Register_Login");
-                throw ex;
+                log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}\r\n{ex}", $"EBet_Register_Login");
             }
 
-            log2File.Info(JsonConvert.SerializeObject(getRegisterLoginResp), $"EBet_Register_Login");
+            log2File.Info($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", $"EBet_Register_Login");
 
             return getRegisterLoginResp;
         }
 
         [HttpPost]
         [Produces("application/json")]
-        public GetBalanceResp syncCredit([FromForm] Dictionary<string, string> getSyncCreditReq)
+        public async Task<GetBalanceResp> syncCreditAsync(/*[FromForm] Dictionary<string, string> getSyncCreditReq*/)
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
 
-            var json = JsonConvert.SerializeObject(getSyncCreditReq);
-            var syncCreditReq = JsonConvert.DeserializeObject<SyncCreditData_EBet>(json);
-            log2File.Info(json, $"EBet_Sync_Credit");
+            var syncCreditReq = JsonConvert.DeserializeObject<SyncCreditData_EBet>(Content);
+            log2File.Info(Content, $"EBet_Sync_Credit");
 
             GetBalanceResp getBalanceResp = new GetBalanceResp();
 
@@ -190,28 +192,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.seqNo = syncCreditReq.seqNo;
             getBalanceResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            log2File.Info(JsonConvert.SerializeObject(getBalanceResp), $"EBet_Sync_Credit");
+            log2File.Info($"{Content}\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
 
             return getBalanceResp;
         }
 
         private bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {
-            try
-            {
-                UnicodeEncoding ByteConverter = new UnicodeEncoding();
-                var encoder = new UTF8Encoding();
-                RSACryptoServiceProvider RSAalg = new RSACryptoServiceProvider();
-                RSAParameters priKey = RSAalg.ExportParameters(true);
-                RSAalg.ImportParameters(priKey);
-                RSAalg.FromXmlString(publicKey);
-                byte[] plaintext = encoder.GetBytes(dataToSign);
-                return RSAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
-            }
-            catch (CryptographicException e)
-            {
-                return false;
-            }
+            //UnicodeEncoding ByteConverter = new UnicodeEncoding();
+            var encoder = new UTF8Encoding();
+            using var RSAalg = new RSACryptoServiceProvider();
+            RSAParameters priKey = RSAalg.ExportParameters(true);
+            RSAalg.ImportParameters(priKey);
+            RSAalg.FromXmlString(publicKey);
+            byte[] plaintext = encoder.GetBytes(dataToSign);
+            return RSAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
         }
     }
 }
