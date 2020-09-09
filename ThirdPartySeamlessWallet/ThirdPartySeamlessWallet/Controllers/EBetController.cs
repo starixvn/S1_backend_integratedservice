@@ -82,14 +82,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             [JsonProperty("event")]
             public string Event { get; set; }
             public string seqNo { get; set; }
-            public int timestamp { get; set; }
+            public long timestamp { get; set; }
+        }
+
+        public class GetBetResp
+        {
+            public string username { get; set; }
+            public decimal money { get; set; }
+            public string currency { get; set; }
+            public int status { get; set; }
+            [JsonProperty("event")]
+            public string Event { get; set; }
+            public string seqNo { get; set; }
+            public long timestamp { get; set; }
         }
 
         #endregion
 
         [HttpPost]
         //[Produces("application/json")]
-        public GetRegisterLoginResp registerOrLoginAsync(RegisterLoginData_EBet registerLoginReq)
+        public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq)
         {
             //using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             //var Content = await reader.ReadToEndAsync();
@@ -166,7 +178,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<GetBalanceResp> syncCreditAsync(SyncCreditData_EBet syncCreditReq)
+        public GetBalanceResp syncCredit(SyncCreditData_EBet syncCreditReq)
         {
             GetBalanceResp getBalanceResp = new GetBalanceResp();
 
@@ -191,6 +203,27 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return getBalanceResp;
         }
+
+        [HttpPost]
+        public async Task<GetBetResp> increaseCreditAsync()
+        {
+            //BettingData_EBet getBetReq;
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+
+            var syncCreditReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
+            log2File.Info(Content, $"EBet_Betting");
+
+
+            GetBetResp getBetResp = new GetBetResp();
+            getBetResp.status = 200;
+
+            log2File.Info($"{JsonConvert.SerializeObject(Content)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
+            //log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
+
+            return getBetResp;
+        }
+
 
         private bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {

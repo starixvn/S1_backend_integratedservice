@@ -37,4 +37,57 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string sessionToken { get; set; }
         public string seqNo { get; set; }
     }
+
+    public class BettingData_EBet
+    {
+        public string username { get; set; }
+        public int channelId { get; set; }
+        public decimal money { get; set; }
+        public int type { get; set; }
+        public int platform { get; set; }
+        public string currency { get; set; }
+        public string seqNo { get; set; }
+        public string Event { get; set; }
+        public long timestamp { get; set; }
+        public string sessionToken { get; set; }
+        public string signature { get; set; }
+        public DetailEbet detail { get; set; }
+    }
+
+    public class DetailEbet
+    {
+        public string tableCode { get; set; }
+        public int tableType { get; set; }
+        public int tableSubType { get; set; }
+        public string roundCode { get; set; }
+        public long betTime { get; set; }
+        public decimal totalBet { get; set; }
+        public decimal validBet { get; set; }
+        public IList<int?> srcResults { get; set; }
+        public bool brokerageRequired { get; set; }
+        public IList<int?> results { get; set; }
+        public decimal payout { get; set; }
+        public long payoutTime { get; set; }
+        public BetListEbet betList { get; set; }
+        public ModifyBetListEbet modifyBetList { get; set; }
+    }
+
+    public class BetListEbet
+    {
+        public int betType { get; set; }
+        public decimal betMoney { get; set; }
+        public string seqNo { get; set; }
+        public decimal payout { get; set; }
+        public string number { get; set; }
+
+    }
+    public class ModifyBetListEbet
+    {
+        public int betType { get; set; }
+        public decimal betMoney { get; set; }
+        public string seqNo { get; set; }
+        public decimal payout { get; set; }
+        public string number { get; set; }
+
+    }
 }
