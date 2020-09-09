@@ -200,8 +200,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<GetBetResp> increaseCreditAsync(BettingData_EBet getBetReq)
+        public async Task<GetBetResp> increaseCreditAsync()
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+
+            BettingData_EBet getBetReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
             GetBetResp getBetResp = new GetBetResp();
 
             if (getBetReq.type == 1)
@@ -219,20 +223,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (getBetReq.type == 2)
             {
-                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                var Content = await reader.ReadToEndAsync();
-                log2File.Info(Content, $"EBet_Payout");
+               log2File.Info(Content, $"EBet_Payout");
                 getBetResp.status = 500;
                 getBetResp.seqNo = getBetReq.seqNo;
             }
             else
             {
-                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                var Content = await reader.ReadToEndAsync();
-                log2File.Info(Content, $"EBet_Betting");
+                log2File.Info(Content, $"EBet_Other");
                 getBetResp.status = 500;
                 getBetResp.seqNo = getBetReq.seqNo;
             }
+
+            log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_increaseCredit");
             return getBetResp;
 
             //var syncCreditReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
