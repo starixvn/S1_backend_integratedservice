@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -98,16 +99,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             GetRegisterLoginResp getRegisterLoginResp = new GetRegisterLoginResp();
             getRegisterLoginResp.status = 500;
             // check signature
-            if (registerLoginReq.signature == null)
+            if (string.IsNullOrEmpty(registerLoginReq.signature))
             {
                 getRegisterLoginResp.status = 4026;
                 return getRegisterLoginResp;
             }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             string sign = $"{registerLoginReq.seqNo}{registerLoginReq.Event}{registerLoginReq.channelId}{registerLoginReq.timestamp}{registerLoginReq.username}{registerLoginReq.accessToken}";
             string privateKey = thirdPartySetting.TpSetting[$"PrivateKey_{registerLoginReq.currency}"];
             var check = VerifySignature(sign, registerLoginReq.signature, privateKey);
-            if (check != true)
+            if (!check)
             {
                 getRegisterLoginResp.status = 4026;
                 return getRegisterLoginResp;
@@ -115,7 +117,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(registerLoginReq.sessionToken));
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(registerLoginReq.accessToken)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 /* 1 Time*/
                 string authToken = sessionKeyArr[0];
