@@ -103,11 +103,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         //[Produces("application/json")]
         public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq)
         {
-            //using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            //var Content = await reader.ReadToEndAsync();
-            //var json = JsonConvert.SerializeObject(null);
-            //var registerLoginReq = JsonConvert.DeserializeObject<RegisterLoginData_EBet>(Content);
-
             GetRegisterLoginResp getRegisterLoginResp = new GetRegisterLoginResp();
             getRegisterLoginResp.status = 500;
             // check signature
@@ -205,23 +200,45 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<GetBetResp> increaseCreditAsync()
+        public async Task<GetBetResp> increaseCreditAsync(BettingData_EBet getBetReq)
         {
-            //BettingData_EBet getBetReq;
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var Content = await reader.ReadToEndAsync();
-
-            var syncCreditReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
-            log2File.Info(Content, $"EBet_Betting");
-
-
             GetBetResp getBetResp = new GetBetResp();
-            getBetResp.status = 200;
-
-            log2File.Info($"{JsonConvert.SerializeObject(Content)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
-            //log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
-
+            
+            if (getBetReq.type == 1)
+            {
+                log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}", $"EBet_Betting");
+                getBetResp.status = 200;
+                getBetResp.seqNo = getBetReq.seqNo;
+            }
+            else if (getBetReq.type == 2)
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var Content = await reader.ReadToEndAsync();
+                log2File.Info(Content, $"EBet_Payout");
+                getBetResp.status = 500;
+                getBetResp.seqNo = getBetReq.seqNo;
+            }
+            else
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var Content = await reader.ReadToEndAsync();
+                log2File.Info(Content, $"EBet_Betting");
+                getBetResp.status = 500;
+                getBetResp.seqNo = getBetReq.seqNo;
+            }
             return getBetResp;
+
+            //var syncCreditReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
+
+
+
+            //GetBetResp getBetResp = new GetBetResp();
+            //getBetResp.status = 200;
+
+            //log2File.Info($"{JsonConvert.SerializeObject(Content)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
+            ////log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
+
+            //return getBetResp;
         }
 
 
