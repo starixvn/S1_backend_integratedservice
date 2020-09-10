@@ -1079,5 +1079,100 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
         #endregion
+
+        #region EBet
+        public int PayoutLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.EBet_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            int ticketStatus = (int)TicketStatus.Lost;
+            if (bettingData_EBet.money > 0)
+            {
+                ticketStatus = (int)TicketStatus.Win;
+            }
+
+            string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
+            var p = new DynamicParameters(new
+            {
+                TransId = mixUniqueId,
+                username = bettingData_EBet.username,
+                channelId = bettingData_EBet.channelId,
+                money = bettingData_EBet.money,
+                type = bettingData_EBet.type,
+                platform = bettingData_EBet.platform,
+                currency = bettingData_EBet.currency,
+                seqNo = bettingData_EBet.seqNo,
+                Event = bettingData_EBet.Event,
+                timestamp = bettingData_EBet.timestamp,
+                tableCode = bettingData_EBet.detail.tableCode,
+                roundCode = bettingData_EBet.detail.roundCode,
+                betTime = bettingData_EBet.detail.betTime,
+                totalBet = bettingData_EBet.detail.totalBet,
+                validBet = bettingData_EBet.detail.validBet,
+                detail = bettingData_EBet.detail,
+                betList = bettingData_EBet.detail.betList,
+                payoutTime = bettingData_EBet.detail.payoutTime,
+                payout = bettingData_EBet.detail.payout,
+                srcResults = bettingData_EBet.detail.srcResults,
+                results = bettingData_EBet.detail.results,
+                TicketStatus = ticketStatus,
+                TicketType = (int)BettransType.Payout,
+                SettleFlag = 2
+            });
+
+            try
+            {
+                result = conn.Execute("Service_BettransLC_Ebet_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingData_EBet.money != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingData_EBet.money,
+                            (int)Tp.EBet,
+                            mixUniqueId,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            mixUniqueId,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        #endregion
     }
 }

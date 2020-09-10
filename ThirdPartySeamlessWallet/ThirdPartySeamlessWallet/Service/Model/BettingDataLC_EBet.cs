@@ -56,21 +56,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class DetailEbet
     {
-
         public string tableCode { get; set; }
         public int tableType { get; set; }
         public int tableSubType { get; set; }
         public string roundCode { get; set; }
         public long betTime { get; set; }
+        public IList<int?> srcResults { get; set; }
+        public IList<int?> results { get; set; }
         public IList<BetListEbet> betList { get; set; }
         public decimal totalBet { get; set; }
         public decimal validBet { get; set; }
+        public decimal payout { get; set; }
+        public long payoutTime { get; set; }
     }
 
     public class BetListEbet
     {
         public int betType { get; set; }
         public decimal betMoney { get; set; }
+        public string seqNo { get; set; }
+        public decimal payout { get; set; }
     }
-
 }

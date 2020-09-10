@@ -194,7 +194,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.seqNo = syncCreditReq.seqNo;
             getBalanceResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
+            log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
 
             return getBalanceResp;
         }
@@ -204,50 +204,148 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-
             BettingData_EBet getBetReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
+
             GetBetResp getBetResp = new GetBetResp();
+            getBetResp.status = 500;
+            getBetResp.money = 0;
+            getBetResp.seqNo = getBetReq.seqNo;
+            getBetResp.username = getBetReq.username;
+            getBetResp.Event = "increaseCredit";
+            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            if (getBetReq.type == 1)
+            // check signature
+            if (string.IsNullOrEmpty(getBetReq.signature))
             {
-                log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}", $"EBet_Betting");
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username, gameType);
-
-                getBetResp.status = 200;
-                getBetResp.username = getBetReq.username;
-                getBetResp.money = tpCustBalance.Balance + getBetReq.money;
-                getBetResp.moneyBefore = tpCustBalance.Balance;
-                getBetResp.Event = getBetReq.username;
+                getBetResp.status = 4026;
                 getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                getBetResp.seqNo = getBetReq.seqNo;
+                return getBetResp;
             }
-            else if (getBetReq.type == 2)
+
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            string sign = $"{getBetReq.seqNo}{getBetReq.Event}{getBetReq.channelId}{getBetReq.timestamp}{getBetReq.username}{getBetReq.money}";
+            string privateKey = thirdPartySetting.TpSetting[$"PrivateKey_{getBetReq.currency}"];
+            var check = VerifySignature(sign, getBetReq.signature, privateKey);
+            if (!check)
             {
-               log2File.Info(Content, $"EBet_Payout");
-                getBetResp.status = 500;
-                getBetResp.seqNo = getBetReq.seqNo;
+                getBetResp.status = 4026;
+                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                return getBetResp;
             }
-            else
+
+            // check session
+            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBetReq.sessionToken)));
+            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+            /* Long Time*/
+            string sessionToken = sessionKeyArr[1];
+
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
+            if (tpCheck == null || tpCheck.Locked)
             {
-                log2File.Info(Content, $"EBet_Other");
-                getBetResp.status = 500;
-                getBetResp.seqNo = getBetReq.seqNo;
+                getBetResp.status = 4037;
+                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                return getBetResp;
             }
+            if (tpCheck.Token != sessionToken)
+            {
+                getBetResp.status = 410;
+                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                return getBetResp;
+            }
+            var result = 0;
+            //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username, gameType);
+            try
+            {
+                switch (getBetReq.type)
+                {
+                    case 1:
+                        // bet
+                        // 当betMoney = 0时，视为下注失败。
+                        result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            getBetResp.status = 200;
+                            getBetResp.money = tpAffterAmount;
+                            getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username);
+                            getBetResp.status = 200;
+                            getBetResp.money = tpAffterAmount;
+                            getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else if (tpAffterAmount < 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username);
+                            getBetResp.status = 500;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Bet");
 
-            log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_increaseCredit");
-            return getBetResp;
+                        break;
+                    case 2:
+                        // payout
+                        /*
+                         渠道自己退款
+                         派彩: 渠道检查betList，如果有投注失败的纪录就自己退款
+                         查询: 在eBET送出查询的请求 的时候，该下注注单status返回209代表这个下注已经退款
 
-            //var syncCreditReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
+                         之前已经成功处理过，请向eBET返回201（重复seqNo）或200（成功但不更改玩家金额）
+                         */
+                        int flag = 0;
+                        if (getBetReq.money > 0)
+                        {
+                            result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
+                            if (result > 0 || result == -1)
+                            {
+                                flag = 1;
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
+                                getBetResp.status = 200;
+                                getBetResp.money = tpCustBalance.Balance;
+                                getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
+                                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            }
+                        }
+                        if (flag == 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 500;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Payout");
 
+                        break;
+                    case 11:
+                        // cancel bet
+                        break;
+                    case 27:
+                        // pre-bet
+                        /*
+                         投注: 先请求预扣（type = 27），如果预扣响应成功，则请求下注（type = 1）。 预扣回应失败则使用基本流程的投注失败处理。如果投注回应失败，会使用下注seqNo将下注错误退款（type = 11）请求发送至渠道以要求退还预扣款。
+                         */
+                        break;
+                    case 28:
+                        /*
+                         派彩: 如果还有剩余的预扣金额，请先请求预扣返还（type = 28），然后再请求派彩（type = 2）。 如果没有剩余的预扣金额，则直接请求派彩（type = 2）。
+                         */
+                        // pre-refund
+                        break;
+                    default:
+                        break;
+                }
 
-
-            //GetBetResp getBetResp = new GetBetResp();
-            //getBetResp.status = 200;
-
-            //log2File.Info($"{JsonConvert.SerializeObject(Content)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
-            ////log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Betting");
-
-            //return getBetResp;
+                return getBetResp;
+            }
+            catch (Exception ex)
+            {
+                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                log2File.Error($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"EBet_increaseCredit");
+                return getBetResp;
+            }
         }
 
 
