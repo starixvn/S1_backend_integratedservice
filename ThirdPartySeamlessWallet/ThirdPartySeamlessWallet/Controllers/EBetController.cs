@@ -276,25 +276,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBetResp;
             }
 
-            // check session
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBetReq.sessionToken)));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            /* Long Time*/
-            string sessionToken = sessionKeyArr[1];
 
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
-            if (tpCheck == null || tpCheck.Locked)
-            {
-                getBetResp.status = 4037;
-                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                return getBetResp;
-            }
-            if (tpCheck.Token != sessionToken)
-            {
-                getBetResp.status = 410;
-                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                return getBetResp;
-            }
             var result = 0;
             //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username, gameType);
             try
@@ -302,6 +284,25 @@ namespace ThirdPartySeamlessWallet.Controllers
                 switch (getBetReq.type)
                 {
                     case 1:
+                        // check session
+                        string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBetReq.sessionToken)));
+                        var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                        /* Long Time*/
+                        string sessionToken = sessionKeyArr[1];
+
+                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
+                        if (tpCheck == null || tpCheck.Locked)
+                        {
+                            getBetResp.status = 4037;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            return getBetResp;
+                        }
+                        if (tpCheck.Token != sessionToken)
+                        {
+                            getBetResp.status = 410;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            return getBetResp;
+                        }
                         // bet
                         // 当betMoney = 0时，视为下注失败。
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
@@ -316,8 +317,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username);
                             getBetResp.status = 200;
-                            getBetResp.money = tpAffterAmount;
-                            getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
                             getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (tpAffterAmount < 0)
@@ -338,21 +339,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                          之前已经成功处理过，请向eBET返回201（重复seqNo）或200（成功但不更改玩家金额）
                          */
-                        int flag = 0;
-                        if (getBetReq.money > 0)
+                        result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
+                        if (result > 0 || result == -1)
                         {
-                            result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
-                            if (result > 0 || result == -1)
-                            {
-                                flag = 1;
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
-                                getBetResp.status = 200;
-                                getBetResp.money = tpCustBalance.Balance;
-                                getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
-                                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            }
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 200;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
-                        if (flag == 0)
+                        else
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 500;

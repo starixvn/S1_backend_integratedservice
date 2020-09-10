@@ -1088,14 +1088,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
             var result = 0;
 
-            int ticketStatus = (int)TicketStatus.Lost;
-            if (bettingData_EBet.money > 0)
+            int ticketStatus = ticketStatus = (int)TicketStatus.Win;
+
+            if (bettingData_EBet.detail.payout == 0)
             {
-                ticketStatus = (int)TicketStatus.Win;
+                ticketStatus = (int)TicketStatus.Lost;
+            }
+            else if (bettingData_EBet.detail.payout == bettingData_EBet.detail.totalBet)
+            {
+                ticketStatus = (int)TicketStatus.Draw;
             }
 
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
@@ -1127,6 +1130,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettleFlag = 2
             });
 
+            conn.Open();
+            using var trans = conn.BeginTransaction();
             try
             {
                 result = conn.Execute("Service_BettransLC_Ebet_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
