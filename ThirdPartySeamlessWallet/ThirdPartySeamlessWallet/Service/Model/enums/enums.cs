@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
-    public enum TransType
+    public enum TransType/*Finical Type*/
     {
         Wagers = 1,
         Refunds = 2,
@@ -81,7 +81,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Payout = 4,
         Bonus = 7
     }
-    public enum BettransType : int
+    public enum BettransType : int/*Ticket Type*/
     {
         Bet = 1,
         CancelBet = 2,
