@@ -758,5 +758,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int PayoutLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, bettingData_EBet.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money *= tpCurrency.ExchangeRate;
+                bettingData_EBet.detail.totalBet *= tpCurrency.ExchangeRate;
+                bettingData_EBet.detail.validBet *= tpCurrency.ExchangeRate;
+                bettingData_EBet.detail.payout *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
     }
 }
