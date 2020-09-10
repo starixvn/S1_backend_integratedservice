@@ -269,7 +269,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = PlaceBetV2(
                     tpCustInfo,
-                    Math.Abs(bettingData_EBet.money),
+                    Math.Abs(bettingData_EBet.money) * -1,
                     (int)Tp.EBet,
                     mixUniqueId,
                     gameType,
@@ -292,7 +292,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.UserName,
                         tpCustInfo.CurrencyId,
                         tpCustInfo.SiteId,
-                        bettingData_EBet.money * -1,
+                        Math.Abs(bettingData_EBet.money),
                         bonusId,
                         TpCategory.LiveCasino,
                         conn,

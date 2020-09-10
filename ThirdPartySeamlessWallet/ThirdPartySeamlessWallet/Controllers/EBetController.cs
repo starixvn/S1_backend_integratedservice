@@ -97,6 +97,49 @@ namespace ThirdPartySeamlessWallet.Controllers
             public long timestamp { get; set; }
         }
 
+        public class GetCancelBetResp
+        {
+            public int status { get; set; }
+            public string seqNo { get; set; }
+            [JsonProperty("event")]
+            public string Event { get; set; }
+            public long timestamp { get; set; }
+            public decimal moneyBefore { get; set; }
+            public decimal moneyAfter { get; set; }
+            public decimal refundMoney { get; set; }
+            public IList<RefundList> refundList { get; set; }
+        }
+
+        public class RefundList
+        {
+            public string refundSeqNo { get; set; }
+            public int status { get; set; }
+        }
+
+        public class GetBatchCancelBetResp
+        {
+            public int status { get; set; }
+            public long timestamp { get; set; }
+            [JsonProperty("event")]
+            public string Event { get; set; }
+            public string seqNo { get; set; }
+            public IList<RefundResultList> refundResultList { get; set; }
+        }
+
+        public class RefundResultList
+        {
+            public decimal refundTotalMoney { get; set; }
+            public string roundCode { get; set; }
+            public string username { get; set; }
+            public IList<SucRefundSeqNoList> sucRefundSeqNoList { get; set; }
+        }
+
+        public class SucRefundSeqNoList
+        {
+            public int status { get; set; }
+            public string seqNo { get; set; }
+        }
+
         #endregion
 
         [HttpPost]
@@ -190,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.username = syncCreditReq.username;
             getBalanceResp.money = tpCustBalance.Balance;
             getBalanceResp.currency = tpCustBalance.TpCurrencyId;
-            getBalanceResp.Event = "syncCredit";
+            getBalanceResp.Event = syncCreditReq.Event;
             getBalanceResp.seqNo = syncCreditReq.seqNo;
             getBalanceResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
@@ -211,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBetResp.money = 0;
             getBetResp.seqNo = getBetReq.seqNo;
             getBetResp.username = getBetReq.username;
-            getBetResp.Event = "increaseCredit";
+            getBetResp.Event = getBetReq.Event;
             getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             // check signature
@@ -348,6 +391,41 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<GetCancelBetResp> refundSingleWallet()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            CancelBetData_EBet getCancelBetReq = JsonConvert.DeserializeObject<CancelBetData_EBet>(Content);
+            GetCancelBetResp getCancelBetResp = new GetCancelBetResp();
+            getCancelBetResp.status = 500;
+            getCancelBetResp.seqNo = getCancelBetReq.seqNo;
+            getCancelBetResp.Event = getCancelBetReq.Event;
+            getCancelBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getCancelBetResp.moneyBefore = 0;
+            getCancelBetResp.moneyAfter = 0;
+            getCancelBetResp.refundMoney = 0;
+            ////bet
+            //getCancelBetResp.refundList.refundSeqNo = 500;
+            //getCancelBetResp.refundList.status = 500;
+            log2File.Info(Content, $"EBet_Cancel_Bet");
+            return getCancelBetResp;
+        }
+
+        [HttpPost]
+        public async Task<GetBatchCancelBetResp> autoBatchRefundAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            BatchCancelBetData_EBet getBatchCancelBetReq = JsonConvert.DeserializeObject<BatchCancelBetData_EBet>(Content);
+            GetBatchCancelBetResp getBatchCancelBetResp = new GetBatchCancelBetResp();
+            getBatchCancelBetResp.status = 500;
+            getBatchCancelBetResp.seqNo = getBatchCancelBetReq.seqNo;
+            getBatchCancelBetResp.Event = getBatchCancelBetResp.Event;
+            getBatchCancelBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            log2File.Info(Content, $"EBet_Cancel_Bet_Batch");
+            return getBatchCancelBetResp;
+        }
 
         private bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {

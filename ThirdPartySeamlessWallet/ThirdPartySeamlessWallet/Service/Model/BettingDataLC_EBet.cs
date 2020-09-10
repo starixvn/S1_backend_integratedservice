@@ -77,4 +77,47 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string seqNo { get; set; }
         public decimal payout { get; set; }
     }
+
+    public class CancelBetData_EBet
+    {
+        public int channelId { get; set; }
+        public string username { get; set; }
+        public string roundCode { get; set; }
+        public string seqNo { get; set; }
+        public string Event { get; set; }
+        public long timestamp { get; set; }
+        public string sessionToken { get; set; }
+        public string signature { get; set; }
+        public IList<ResultListEbet> resultList { get; set; }
+    }
+
+    public class ResultListEbet
+    {
+        public string refundSeqNo { get; set; }
+        public string username { get; set; }
+        public string roundCode { get; set; }
+        public decimal refundMoney { get; set; }
+    }
+
+    public class BatchCancelBetData_EBet
+    {
+        public int channelId { get; set; }
+        public int lastStartProcessTime { get; set; }
+        public decimal refundThreshold { get; set; }
+        public string sessionToken { get; set; }
+        public string seqNo { get; set; }
+        public string currency { get; set; }
+        public string Event { get; set; }
+        public long timestamp { get; set; }
+        public string signature { get; set; }
+        public IList<BatchRefundList> batchRefundList { get; set; }
+    }
+
+    public class BatchRefundList
+    {
+        public string seqNo { get; set; }
+        public string username { get; set; }
+        public string roundCode { get; set; }
+        public decimal refundMoney { get; set; }
+    }
 }
