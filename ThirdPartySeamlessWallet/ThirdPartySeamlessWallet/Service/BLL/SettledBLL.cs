@@ -774,6 +774,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 foreach (var item in bettingData_EBet.detail.betList)
                 {
                     item.betMoney *= tpCurrency.ExchangeRate;
+                    item.payout *= tpCurrency.ExchangeRate;
                 }
             }
 
