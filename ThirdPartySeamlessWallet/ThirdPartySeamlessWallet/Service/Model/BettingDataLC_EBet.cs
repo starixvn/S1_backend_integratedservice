@@ -62,21 +62,31 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int tableSubType { get; set; }
         public string roundCode { get; set; }
         public long betTime { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IList<int?> srcResults { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IList<int?> results { get; set; }
         public IList<BetListEbet> betList { get; set; }
         public decimal totalBet { get; set; }
         public decimal validBet { get; set; }
-        public decimal payout { get; set; }
-        public long payoutTime { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? payout { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public long? payoutTime { get; set; }
     }
 
     public class BetListEbet
     {
         public int betType { get; set; }
         public decimal betMoney { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string seqNo { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public decimal? payout { get; set; }
     }

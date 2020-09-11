@@ -771,6 +771,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingData_EBet.detail.totalBet *= tpCurrency.ExchangeRate;
                 bettingData_EBet.detail.validBet *= tpCurrency.ExchangeRate;
                 bettingData_EBet.detail.payout *= tpCurrency.ExchangeRate;
+                foreach (var item in bettingData_EBet.detail.betList)
+                {
+                    item.betMoney *= tpCurrency.ExchangeRate;
+                }
             }
 
             var result = settledService.PayoutLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
