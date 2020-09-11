@@ -1101,6 +1101,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 ticketStatus = (int)TicketStatus.Draw;
             }
 
+            /*
+             * 渠道自己退款
+             * 派彩: 渠道检查betList，如果有投注失败的纪录就自己退款
+             * 查询: 在eBET送出查询的请求 的时候，该下注注单status返回209代表这个下注已经退款
+             * 之前已经成功处理过，请向eBET返回201（重复seqNo）或200（成功但不更改玩家金额）
+             */
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
             var p = new DynamicParameters(new
             {
@@ -1177,6 +1183,88 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+
+        public int CancelBetLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.EBet_LiveCasino;
+
+            afterAmount = 0;
+            int result = 0;
+            string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var refBettransLC = conn.Execute("Service_BettransLC_Ebet_CancelBet_Set", new
+            {
+                seqNo = bettingData_EBet.seqNo
+            },
+            transaction: trans,
+            commandType: CommandType.StoredProcedure
+            );
+            if (refBettransLC > 0)
+            {
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(bettingData_EBet.money),
+                    (int)Tp.EBet,
+                    bettingData_EBet.seqNo,
+                    gameType, TpCategory.LiveCasino,
+                    mixUniqueId,
+                    TransType.Refunds,
+                    null,
+                    out afterAmount,
+                    "CancelBet",
+                    out bonusId,
+                    conn,
+                    trans
+                );
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
+
+        public BettingData_EBet CheckPayoutLC_EBet(string seqNo)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<BettingData_EBet>("Service_BettransLC_EBet_Payout_Get", new { seqNo = seqNo }, commandType: CommandType.StoredProcedure);
+        }
+
+        public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string[] seqNo)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var jsonSeqNo = JsonConvert.SerializeObject(seqNo);
+            var bet = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", new { seqNo = jsonSeqNo }, commandType: CommandType.StoredProcedure);
+            var payout = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", new { seqNo = jsonSeqNo }, commandType: CommandType.StoredProcedure);
+            var list = bet.Union(payout).ToArray();
+            if ((list?.Length > 0))
+            {
+                foreach (var record in list)
+                {
+                    if (record.TicketStatus == (int)TicketStatus.Refund)
+                    {
+                        // 已经退款的数据
+                        record.status = 209;
+                    }
+                    else
+                    {
+                        record.status = 200;
+                    }
+                }
+            }
+            return list;
         }
         #endregion
     }

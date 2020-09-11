@@ -759,9 +759,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        #region EBet
         public int PayoutLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, bettingData_EBet.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
 
@@ -787,5 +787,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int CancelBetLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, bettingData_EBet.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money *= tpCurrency.ExchangeRate;
+                bettingData_EBet.detail.totalBet *= tpCurrency.ExchangeRate;
+                bettingData_EBet.detail.validBet *= tpCurrency.ExchangeRate;
+                foreach (var item in bettingData_EBet.detail.betList)
+                {
+                    item.betMoney *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.CancelBetLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        //public BettingData_EBet CheckPayoutLC_EBet(string seqNo)
+        //{
+        //    return settledService.CheckPayoutLC_EBet(seqNo);
+        //}
+
+        public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string seqNo)
+        {
+            string[] list = seqNo.Split(',');
+            return settledService.GetCreditRecordLC_EBet(list);
+        }
+        #endregion
     }
 }

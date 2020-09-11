@@ -91,6 +91,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal? payout { get; set; }
     }
 
+    public class CreditRecordData_EBet
+    {
+        public int channelId { get; set; }
+        public string username { get; set; }
+        public string querySeqNo { get; set; }
+        public string roundCode { get; set; }
+        public string Event { get; set; }
+        public long timestamp { get; set; }
+        public string sessionToken { get; set; }
+        public string seqNo { get; set; }
+        public string signature { get; set; }
+    }
+
     public class CancelBetData_EBet
     {
         public int channelId { get; set; }
@@ -132,5 +145,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
         public string roundCode { get; set; }
         public decimal refundMoney { get; set; }
+    }
+
+    public class CreditRecord_EBet
+    {
+        public string querySeqNo { get; set; }
+        public int type { get; set; }
+        public string username { get; set; }
+        public string roundCode { get; set; }
+        public int status { get; set; }
+        public long creditTime { get; set; }
+        public decimal moneyBefore { get; set; }
+        public decimal moneyAfter { get; set; }
+        public decimal money { get; set; }
+        public int TicketStatus { get; set; }
+
     }
 }

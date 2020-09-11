@@ -97,6 +97,30 @@ namespace ThirdPartySeamlessWallet.Controllers
             public long timestamp { get; set; }
         }
 
+        public class GetCreditRecordResp
+        {
+            public string seqNo { get; set; }
+            [JsonProperty("event")]
+            public string Event { get; set; }
+            public long timestamp { get; set; }
+            public string username { get; set; }
+            public IList<CreditRecord> creditRecord { get; set; }
+            public int status { get; set; }
+        }
+
+        public class CreditRecord
+        {
+            public string querySeqNo { get; set; }
+            public int type { get; set; }
+            public string username { get; set; }
+            public string roundCode { get; set; }
+            public int status { get; set; }
+            public long creditTime { get; set; }
+            public decimal moneyBefore { get; set; }
+            public decimal moneyAfter { get; set; }
+            public decimal money { get; set; }
+        }
+
         public class GetCancelBetResp
         {
             public int status { get; set; }
@@ -283,6 +307,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 switch (getBetReq.type)
                 {
                     case 1:
+                        // bet
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
                         if (tpCheck == null || tpCheck.Locked)
                         {
@@ -297,8 +322,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             return getBetResp;
                         }
-                        // bet
-                        // 当betMoney = 0时，视为下注失败。
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
@@ -354,18 +377,55 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                     case 11:
                         // cancel bet
+                        result = settledBLL.CancelBetLC_EBet(getBetReq, out tpAffterAmount);
+                        if (result > 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 200;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else if (result == -1)
+                        {
+
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 200;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 500;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Cancel_Bet");
+
                         break;
                     case 27:
                         // pre-bet
                         /*
-                         投注: 先请求预扣（type = 27），如果预扣响应成功，则请求下注（type = 1）。 预扣回应失败则使用基本流程的投注失败处理。如果投注回应失败，会使用下注seqNo将下注错误退款（type = 11）请求发送至渠道以要求退还预扣款。
+                         * 投注: 先请求预扣（type = 27），
+                         * 如果预扣响应成功，则请求下注（type = 1）。 
+                         * 预扣回应失败则使用基本流程的投注失败处理。
+                         * 如果投注回应失败，
+                         * 会使用下注seqNo将下注错误退款（type = 11）
+                         * 请求发送至渠道以要求退还预扣款。
                          */
                         break;
                     case 28:
-                        /*
-                         派彩: 如果还有剩余的预扣金额，请先请求预扣返还（type = 28），然后再请求派彩（type = 2）。 如果没有剩余的预扣金额，则直接请求派彩（type = 2）。
-                         */
                         // pre-refund
+                        /*
+                         * 派彩: 如果还有剩余的预扣金额，
+                         * 请先请求预扣返还（type = 28），
+                         * 然后再请求派彩（type = 2）。
+                         * 如果没有剩余的预扣金额，
+                         * 则直接请求派彩（type = 2）。
+                         */
+
                         break;
                     default:
                         break;
@@ -382,7 +442,34 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<GetCancelBetResp> refundSingleWallet()
+        public async Task<GetCreditRecordResp> queryIncreaseCreditRecordAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            log2File.Info(Content, $"EBet_queryIncreaseCreditRecord");
+            CreditRecordData_EBet getCreditRecordReq = JsonConvert.DeserializeObject<CreditRecordData_EBet>(Content);
+
+            GetCreditRecordResp getCreditRecordResp = new GetCreditRecordResp();
+            getCreditRecordResp.status = 200;
+            getCreditRecordResp.seqNo = getCreditRecordReq.seqNo;
+            getCreditRecordResp.Event = getCreditRecordReq.Event;
+            getCreditRecordResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getCreditRecordResp.username = getCreditRecordReq.username;
+
+            var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.seqNo);
+            if (data.Count() == 0)
+            {
+                // seqNo 不存在
+                getCreditRecordResp.status = 206;
+            }
+            getCreditRecordResp.creditRecord = (IList<CreditRecord>)data;
+            log2File.Info($"{JsonConvert.SerializeObject(getCreditRecordReq)}\r\n{JsonConvert.SerializeObject(getCreditRecordResp)}", $"EBet_queryIncreaseCreditRecord");
+
+            return getCreditRecordResp;
+        }
+
+        [HttpPost]
+        public async Task<GetCancelBetResp> refundSingleWalletAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
@@ -398,7 +485,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             ////bet
             //getCancelBetResp.refundList.refundSeqNo = 500;
             //getCancelBetResp.refundList.status = 500;
-            log2File.Info(Content, $"EBet_Cancel_Bet");
+            log2File.Info(Content, $"EBet_refundSingleWallet");
             return getCancelBetResp;
         }
 
@@ -413,7 +500,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBatchCancelBetResp.seqNo = getBatchCancelBetReq.seqNo;
             getBatchCancelBetResp.Event = getBatchCancelBetResp.Event;
             getBatchCancelBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            log2File.Info(Content, $"EBet_Cancel_Bet_Batch");
+            log2File.Info(Content, $"EBet_autoBatchRefund");
             return getBatchCancelBetResp;
         }
 
