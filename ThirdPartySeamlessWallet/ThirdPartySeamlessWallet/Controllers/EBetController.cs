@@ -285,10 +285,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     case 1:
                         // check session
-                        string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBetReq.sessionToken)));
-                        var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                        /*string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBetReq.sessionToken)));
+                        var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);*/
                         /* Long Time*/
-                        string sessionToken = sessionKeyArr[1];
+                        //string sessionToken = sessionKeyArr[1];
 
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
                         if (tpCheck == null || tpCheck.Locked)
@@ -297,7 +297,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             return getBetResp;
                         }
-                        if (tpCheck.Token != sessionToken)
+
+                        if (tpCheck.Token != HttpUtility.UrlDecode(getBetReq.sessionToken))
                         {
                             getBetResp.status = 410;
                             getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

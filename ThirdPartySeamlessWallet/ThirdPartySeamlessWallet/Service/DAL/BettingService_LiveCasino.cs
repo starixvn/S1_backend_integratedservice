@@ -258,8 +258,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betTime = bettingData_EBet.detail.betTime,
                 totalBet = bettingData_EBet.detail.totalBet,
                 validBet = bettingData_EBet.detail.validBet,
-                detail = bettingData_EBet.detail,
-                betList = bettingData_EBet.detail.betList
+                detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
+                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList)
             },
             transaction: trans,
             commandType: CommandType.StoredProcedure

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -74,8 +75,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public int betType { get; set; }
         public decimal betMoney { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string seqNo { get; set; }
-        public decimal payout { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? payout { get; set; }
     }
 
     public class CancelBetData_EBet
