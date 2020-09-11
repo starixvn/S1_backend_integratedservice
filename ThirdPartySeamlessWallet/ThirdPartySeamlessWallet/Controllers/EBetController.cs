@@ -278,18 +278,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
 
             var result = 0;
-            //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username, gameType);
             try
             {
                 switch (getBetReq.type)
                 {
                     case 1:
-                        // check session
-                        /*string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBetReq.sessionToken)));
-                        var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);*/
-                        /* Long Time*/
-                        //string sessionToken = sessionKeyArr[1];
-
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
                         if (tpCheck == null || tpCheck.Locked)
                         {
