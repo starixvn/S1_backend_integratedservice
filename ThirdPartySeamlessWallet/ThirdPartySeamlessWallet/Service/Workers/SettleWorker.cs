@@ -486,7 +486,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleSA.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleEBet.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
