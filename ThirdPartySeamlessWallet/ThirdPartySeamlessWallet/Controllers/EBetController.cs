@@ -335,18 +335,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                     case 2:
                         // payout
-                        
-                        var data = settledBLL.CheckPayoutLC_EBet(getBetResp.seqNo);
-                        // check seqNo
-                        if (string.IsNullOrEmpty(data.seqNo))
-                        {
-                            getBetResp.status = 201;
-                        }
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0 || result == -1)
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 200;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 201;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
