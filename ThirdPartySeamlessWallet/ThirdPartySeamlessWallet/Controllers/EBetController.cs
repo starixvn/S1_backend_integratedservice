@@ -104,23 +104,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string Event { get; set; }
             public long timestamp { get; set; }
             public string username { get; set; }
-            public IList<CreditRecord> creditRecord { get; set; }
+            public IEnumerable<CreditRecord_EBet> creditRecord { get; set; }
             public int status { get; set; }
         }
-
-        public class CreditRecord
-        {
-            public string querySeqNo { get; set; }
-            public int type { get; set; }
-            public string username { get; set; }
-            public string roundCode { get; set; }
-            public int status { get; set; }
-            public long creditTime { get; set; }
-            public decimal moneyBefore { get; set; }
-            public decimal moneyAfter { get; set; }
-            public decimal money { get; set; }
-        }
-
         public class GetCancelBetResp
         {
             public int status { get; set; }
@@ -457,12 +443,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             getCreditRecordResp.username = getCreditRecordReq.username;
 
             var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.seqNo);
-            if (data.Count() == 0)
+            if (data == null || data.Count() == 0)
             {
                 // seqNo 不存在
                 getCreditRecordResp.status = 206;
             }
-            getCreditRecordResp.creditRecord = (IList<CreditRecord>)data;
+            getCreditRecordResp.creditRecord = data;
             log2File.Info($"{JsonConvert.SerializeObject(getCreditRecordReq)}\r\n{JsonConvert.SerializeObject(getCreditRecordResp)}", $"EBet_queryIncreaseCreditRecord");
 
             return getCreditRecordResp;

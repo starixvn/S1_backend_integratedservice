@@ -25,4 +25,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Id { set; get; }
         public int TpId { set; get; }
     }
+    public class BonusMinBet
+    {
+        public int GameType { set; get; }
+        public int CurrencyId { set; get; }
+        public decimal MinBet { set; get; }
+    }
 }

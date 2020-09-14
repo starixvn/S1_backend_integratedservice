@@ -1248,8 +1248,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var jsonSeqNo = JsonConvert.SerializeObject(seqNo);
             var bet = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", new { seqNo = jsonSeqNo }, commandType: CommandType.StoredProcedure);
             var payout = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", new { seqNo = jsonSeqNo }, commandType: CommandType.StoredProcedure);
-            var list = bet.Union(payout).ToArray();
-            if ((list?.Length > 0))
+            var list = bet.Union(payout);
+            if (list?.Count() > 0)
             {
                 foreach (var record in list)
                 {

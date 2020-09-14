@@ -49,7 +49,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (bonusCategoryId > 0)
             {
-                balance += walletService.GetBonus(tpCustInfo.CustId, bonusCategoryId);
+                var bonusAmount = walletService.GetBonus(tpCustInfo.CustId, bonusCategoryId);
+                var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
+                if (bonusMinBet == null || bonusAmount > bonusMinBet.MinBet)
+                    balance += bonusAmount;
             }
 
             tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;

@@ -44,5 +44,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BonusCategory>("Service_BonusCategory_Get", commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<BonusMinBet> GetBonusMinBetList()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<BonusMinBet>("Service_BonusMinBet_Get", commandType: CommandType.StoredProcedure);
+        }
     }
 }

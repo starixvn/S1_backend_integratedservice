@@ -344,7 +344,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (Losses != 0)
                     {
                         if (hasBonusRunning)
-                            AutoCancelSeamlessBonus(bonusId, conn, trans);
+                            AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                         else
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
@@ -365,7 +365,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (Losses != 0)
                     {
                         if (hasBonusRunning)
-                            AutoCancelSeamlessBonus(bonusId, conn, trans);
+                            AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                         else
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
@@ -391,7 +391,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (Losses != 0)
                         {
                             if (hasBonusRunning)
-                                AutoCancelSeamlessBonus(bonusId, conn, trans);
+                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                             else
                                 AutoCancelBonus(tpCustInfo.CustId, conn, trans);
 
@@ -485,9 +485,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
-        public int AutoCancelSeamlessBonus(int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_AutoCancelSeamlessBonus_Set", new { BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_AutoCancelSeamlessBonus_Set", new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {

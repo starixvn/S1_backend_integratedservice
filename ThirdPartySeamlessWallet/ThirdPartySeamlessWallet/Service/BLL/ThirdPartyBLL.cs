@@ -97,6 +97,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return dBonusCategoryList;
         }
 
+        public BonusMinBet GetBonusMinBet(int gameType, int currencyId)
+        {
+            string key = $"BonusMinBetList";
+            var dBonusMinBetList = cache.Get<IEnumerable<BonusMinBet>>(key);
+            if (dBonusMinBetList == null)
+            {
+                dBonusMinBetList = thirdPartyService.GetBonusMinBetList();
+                cache.Set(key, dBonusMinBetList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            }
+
+            return dBonusMinBetList.Where(x => x.GameType == gameType && x.CurrencyId == currencyId).FirstOrDefault();
+        }
+
         public int GetBonusCategoryId(int gameType)
         {
             if (gameType == 0)
