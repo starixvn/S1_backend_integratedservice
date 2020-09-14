@@ -822,11 +822,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_EBet(TransId);
         }
 
-        public BettingData_EBet CheckPayoutLC_EBet(string seqNo)
-        {
-            return settledService.CheckPayoutLC_EBet(seqNo);
-        }
-
         public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string seqNo)
         {
             string[] list = seqNo.Split(',');

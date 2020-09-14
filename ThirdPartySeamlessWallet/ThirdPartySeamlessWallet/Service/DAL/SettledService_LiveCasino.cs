@@ -1230,12 +1230,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public BettingData_EBet CheckPayoutLC_EBet(string seqNo)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<BettingData_EBet>("Service_BettransLC_EBet_Payout_Get", new { seqNo = seqNo }, commandType: CommandType.StoredProcedure);
-        }
-
         public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string[] seqNo)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
