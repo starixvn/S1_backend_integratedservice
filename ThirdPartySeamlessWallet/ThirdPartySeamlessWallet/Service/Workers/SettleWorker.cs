@@ -427,18 +427,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         try
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.username);
-                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
 
                             decimal stake = unsettled.totalBet;
                             decimal validBet = unsettled.validBet;
                             decimal winLostAmount = (unsettled.payout != 0) ? (unsettled.payout - unsettled.totalBet) : 0;
-
-                            if (tpCurrency.ExchangeRate > 1)
-                            {
-                                stake *= tpCurrency.ExchangeRate;
-                                validBet *= tpCurrency.ExchangeRate;
-                                winLostAmount *= tpCurrency.ExchangeRate;
-                            }
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
