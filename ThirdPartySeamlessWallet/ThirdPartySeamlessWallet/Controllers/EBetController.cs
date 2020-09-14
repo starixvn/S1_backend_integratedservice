@@ -245,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.currency = tpCustBalance.TpCurrencyId;
             getBalanceResp.Event = syncCreditReq.Event;
             getBalanceResp.seqNo = syncCreditReq.seqNo;
-            getBalanceResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getBalanceResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
 
@@ -421,7 +421,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                getBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"EBet_increaseCredit");
                 return getBetResp;
             }
@@ -439,7 +439,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getCreditRecordResp.status = 200;
             getCreditRecordResp.seqNo = getCreditRecordReq.seqNo;
             getCreditRecordResp.Event = getCreditRecordReq.Event;
-            getCreditRecordResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getCreditRecordResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             getCreditRecordResp.username = getCreditRecordReq.username;
 
             var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.seqNo);
@@ -464,7 +464,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getCancelBetResp.status = 500;
             getCancelBetResp.seqNo = getCancelBetReq.seqNo;
             getCancelBetResp.Event = getCancelBetReq.Event;
-            getCancelBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getCancelBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             getCancelBetResp.moneyBefore = 0;
             getCancelBetResp.moneyAfter = 0;
             getCancelBetResp.refundMoney = 0;
@@ -485,7 +485,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBatchCancelBetResp.status = 500;
             getBatchCancelBetResp.seqNo = getBatchCancelBetReq.seqNo;
             getBatchCancelBetResp.Event = getBatchCancelBetResp.Event;
-            getBatchCancelBetResp.timestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getBatchCancelBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             log2File.Info(Content, $"EBet_autoBatchRefund");
             return getBatchCancelBetResp;
         }
