@@ -96,7 +96,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     betRecord.WinlostAmount *= tpCurrency.ExchangeRate;
                 }
 
-                if (tpCustInfo.SiteId == 3)/*Hard Code for Bwing*/
+                if (true || tpCustInfo.SiteId == 2 || tpCustInfo.SiteId == 3)/*for All*/
                 {
                     if (betRecord.GameType == GameType.Saba_Sports)
                     {
