@@ -1101,12 +1101,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 ticketStatus = (int)TicketStatus.Draw;
             }
 
-            /*
-             * 渠道自己退款
-             * 派彩: 渠道检查betList，如果有投注失败的纪录就自己退款
-             * 查询: 在eBET送出查询的请求 的时候，该下注注单status返回209代表这个下注已经退款
-             * 之前已经成功处理过，请向eBET返回201（重复seqNo）或200（成功但不更改玩家金额）
-             */
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
             var p = new DynamicParameters(new
             {
@@ -1246,8 +1240,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var jsonSeqNo = JsonConvert.SerializeObject(seqNo);
-            var bet = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", new { seqNo = jsonSeqNo }, commandType: CommandType.StoredProcedure);
-            var payout = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", new { seqNo = jsonSeqNo }, commandType: CommandType.StoredProcedure);
+            var bet = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", new { seqNos = jsonSeqNo }, commandType: CommandType.StoredProcedure);
+            var payout = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", new { seqNos = jsonSeqNo }, commandType: CommandType.StoredProcedure);
             var list = bet.Union(payout);
             if (list?.Count() > 0)
             {

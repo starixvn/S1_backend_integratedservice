@@ -335,13 +335,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                     case 2:
                         // payout
-                        /*
-                         渠道自己退款
-                         派彩: 渠道检查betList，如果有投注失败的纪录就自己退款
-                         查询: 在eBET送出查询的请求 的时候，该下注注单status返回209代表这个下注已经退款
-
-                         之前已经成功处理过，请向eBET返回201（重复seqNo）或200（成功但不更改玩家金额）
-                         */
+                        
+                        var data = settledBLL.CheckPayoutLC_EBet(getBetResp.seqNo);
+                        // check seqNo
+                        if (string.IsNullOrEmpty(data.seqNo))
+                        {
+                            getBetResp.status = 201;
+                        }
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0 || result == -1)
                         {
