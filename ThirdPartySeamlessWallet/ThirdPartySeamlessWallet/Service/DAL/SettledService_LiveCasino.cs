@@ -1134,7 +1134,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransLC_Ebet_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_EBet_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -1259,6 +1259,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
             return list;
+        }
+
+        public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData_EBet>("Service_BettransLC_EBet_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_EBet(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_EBet_Settle_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
         }
         #endregion
     }

@@ -159,6 +159,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal moneyAfter { get; set; }
         public decimal money { get; set; }
         public int TicketStatus { get; set; }
+    }
 
+    public class SettleData_EBet
+    {
+        public string seqNo { get; set; }
+        public string username { get; set; }
+        public string TransId { get; set; }
+        public decimal totalBet { get; set; }
+        public decimal validBet { get; set; }
+        public decimal payout { get; set; }
+        public long payoutTime { get; set; }
     }
 }

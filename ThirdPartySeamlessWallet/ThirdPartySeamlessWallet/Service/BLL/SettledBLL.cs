@@ -812,6 +812,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
+        {
+            return settledService.GetUnsettledListLC_EBet();
+        }
+
+        public int SetSettleFlag_EBet(string TransId)
+        {
+            return settledService.SetSettleFlag_EBet(TransId);
+        }
+
         public BettingData_EBet CheckPayoutLC_EBet(string seqNo)
         {
             return settledService.CheckPayoutLC_EBet(seqNo);
