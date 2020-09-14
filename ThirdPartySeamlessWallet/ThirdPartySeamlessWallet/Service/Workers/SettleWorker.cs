@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                                 GameType = GameType.AG_LiveCasino,
                                                 TpUserName = username,
                                                 SettledTime = settleTime,
-                                                SettlementType = SettlementType.SettledForValidNotRollover
+                                                SettlementType = SettlementType.SettledForValid
                                             };
 
                                             result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -201,7 +201,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     GameType = GameType.DG_LiveCasino,
                                     TpUserName = unsettled.Username,
                                     SettledTime = settleTime,
-                                    SettlementType = SettlementType.SettledForValidNotRollover
+                                    SettlementType = SettlementType.SettledForValid
                                 };
 
                                 result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -283,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     GameType = GameType.Allbet_LiveCasino,
                                     TpUserName = unsettled.Client,
                                     SettledTime = settleTime,
-                                    SettlementType = SettlementType.SettledForValidNotRollover
+                                    SettlementType = SettlementType.SettledForValid
                                 };
 
                                 result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -367,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     GameType = GameType.SA_LiveCasino,
                                     TpUserName = unsettled.username,
                                     SettledTime = settleTime,
-                                    SettlementType = SettlementType.SettledForValidNotRollover
+                                    SettlementType = SettlementType.SettledForValid
                                 };
 
                                 result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -450,7 +450,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.EBet_LiveCasino,
                                 TpUserName = unsettled.username,
                                 SettledTime = unsettled.payoutTime / 1000,
-                                SettlementType = SettlementType.SettledForValidNotRollover
+                                SettlementType = SettlementType.SettledForValid
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
