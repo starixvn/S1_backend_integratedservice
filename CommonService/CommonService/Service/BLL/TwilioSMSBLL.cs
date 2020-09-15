@@ -114,8 +114,17 @@ namespace CommonService.Service.BLL
             var resultResp = JsonConvert.DeserializeObject<TwilioVerificationsResult>(result.Content.ReadAsStringAsync().Result);
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                apiResult.ErrorCode = ErrorCode.Success;
-                apiResult.Message = resultResp.status;
+                if (resultResp.valid == "true")
+                {
+                    apiResult.ErrorCode = ErrorCode.Success;
+                    apiResult.Message = resultResp.status;
+                }
+                else {
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Message = resultResp.message;
+                    apiResult.RawErrorCode = Convert.ToString(resultResp.code);
+                    apiResult.RawMessage = Convert.ToString(resultResp.status);
+                }
             }
             else
             {
