@@ -82,7 +82,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                                   }
 
                                   tpBetHelp.syncParams.DoneTime = DateTime.Now;
-                                  logger.LogInformation($"Name: {tpBetHelp.thirdPartyModel.TpName}, key: {tpBetHelp.syncParams.key}");
+                                  logger.LogInformation($"Name: {tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.thirdPartyModel.SiteId} , key: {tpBetHelp.syncParams.key}");
                               }
                               catch (Exception ex)
                               {
@@ -96,7 +96,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                     }
                 }
 
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                //logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 await Task.Delay(1000, stoppingToken);
             }
         }
