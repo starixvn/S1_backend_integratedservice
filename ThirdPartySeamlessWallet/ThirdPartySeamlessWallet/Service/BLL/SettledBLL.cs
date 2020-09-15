@@ -812,20 +812,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int RefundLC_EBet(RefundSingleWallet_EBet refundSingleWallet_EBet, out decimal afterAmount)
+        public int RefundLC_EBet(ResultListEbet resultListEbet, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, refundSingleWallet_EBet.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, resultListEbet.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                foreach (var item in refundSingleWallet_EBet.resultList)
-                {
-                    item.refundMoney *= tpCurrency.ExchangeRate;
-                }
+                resultListEbet.refundMoney *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.RefundLC_EBet(tpCustInfo, refundSingleWallet_EBet, out afterAmount);
+            var result = settledService.RefundLC_EBet(tpCustInfo, resultListEbet, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

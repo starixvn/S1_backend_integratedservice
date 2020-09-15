@@ -118,7 +118,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal moneyBefore { get; set; }
             public decimal moneyAfter { get; set; }
             public decimal refundMoney { get; set; }
-            public IEnumerable<RefundList> refundList { get; set; }
+            public List<RefundList> refundList { get; set; }
         }
 
         public class RefundList
@@ -465,44 +465,49 @@ namespace ThirdPartySeamlessWallet.Controllers
             getRefundSingleWalletResp.status = 500;
             getRefundSingleWalletResp.seqNo = getRefundBetReq.seqNo;
             getRefundSingleWalletResp.Event = getRefundBetReq.Event;
-            var resultList = getRefundBetReq.resultList.First();
-
             try
             {
-                var result = settledBLL.RefundLC_EBet(getRefundBetReq, out decimal tpAffterAmount);
-                if (result > 0)
+                foreach (var item in getRefundBetReq.resultList)
                 {
-                    // 200: 渠道已收到eBET请求并已对其进行处理
-                    var refundMoney = Math.Abs(resultList.refundMoney);
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getRefundBetReq.username, gameType);
-                    getRefundSingleWalletResp.status = 200;
-                    getRefundSingleWalletResp.moneyBefore = tpCustBalance.Balance - refundMoney;
-                    getRefundSingleWalletResp.moneyAfter = tpCustBalance.Balance + refundMoney;
-                    getRefundSingleWalletResp.refundMoney = refundMoney;
-                    getRefundSingleWalletResp.refundList.First().refundSeqNo = resultList.refundSeqNo;
-                    getRefundSingleWalletResp.refundList.First().status = 200;
+                    var result = settledBLL.RefundLC_EBet(item, out decimal tpAffterAmount);
+                    RefundList refRefundList = new RefundList();
+                    if (result > 0)
+                    {
+                        // 200: 渠道已收到eBET请求并已对其进行处理
+                        var refundMoney = Math.Abs(item.refundMoney);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, item.username, gameType);
+                        getRefundSingleWalletResp.status = 200;
+                        getRefundSingleWalletResp.moneyBefore = tpCustBalance.Balance - refundMoney;
+                        getRefundSingleWalletResp.moneyAfter = tpCustBalance.Balance + refundMoney;
+                        getRefundSingleWalletResp.refundMoney = refundMoney;
+                        refRefundList.refundSeqNo = item.refundSeqNo;
+                        refRefundList.status = 200;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
+                    }
+                    else if (result == -2)
+                    {
+                        // 208 记录不存在
+                        getRefundSingleWalletResp.status = 200;
+                        refRefundList.refundSeqNo = item.refundSeqNo;
+                        refRefundList.status = 208;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
+                    }
+                    else if (result == -3)
+                    {
+                        // 209: 渠道已自行退款
+                        getRefundSingleWalletResp.status = 200;
+                        refRefundList.refundSeqNo = item.refundSeqNo;
+                        refRefundList.status = 209;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
+                    }
+                    else
+                    {
+                        getRefundSingleWalletResp.status = 500;
+                        refRefundList.refundSeqNo = item.refundSeqNo;
+                        refRefundList.status = 500;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
+                    }
                 }
-                else if (result == -2)
-                {
-                    // 208 记录不存在
-                    getRefundSingleWalletResp.status = 200;
-                    getRefundSingleWalletResp.refundList.First().refundSeqNo = resultList.refundSeqNo;
-                    getRefundSingleWalletResp.refundList.First().status = 208;
-                }
-                else if (result == -3)
-                {
-                    // 209: 渠道已自行退款
-                    getRefundSingleWalletResp.status = 200;
-                    getRefundSingleWalletResp.refundList.First().refundSeqNo = resultList.refundSeqNo;
-                    getRefundSingleWalletResp.refundList.First().status = 209;
-                }
-                else
-                {
-                    getRefundSingleWalletResp.status = 200;
-                    getRefundSingleWalletResp.refundList.First().refundSeqNo = resultList.refundSeqNo;
-                    getRefundSingleWalletResp.refundList.First().status = 500;
-                }
-
                 getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             }
             catch (Exception ex)
@@ -521,75 +526,54 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, $"EBet_refundSingleWallet");
+            log2File.Info(Content, $"EBet_autoBatchRefund");
             AutoBatchRefund_EBet getAutoBatchRefundReq = JsonConvert.DeserializeObject<AutoBatchRefund_EBet>(Content);
             GetAutoBatchRefundResp getAutoBatchRefundResp = new GetAutoBatchRefundResp();
-            getAutoBatchRefundResp.status = 200;
+            getAutoBatchRefundResp.status = 500;
             getAutoBatchRefundResp.seqNo = getAutoBatchRefundReq.seqNo;
             getAutoBatchRefundResp.Event = getAutoBatchRefundReq.Event;
-            int i = 0;
-            //List<KeyValuePair<string, dynamic>> batchList = new List<KeyValuePair<string, dynamic>>();
-            Dictionary<string, RefundResultList> keyValuePairs = new Dictionary<string, RefundResultList>();
-            foreach (var item in getAutoBatchRefundReq.batchRefundList)
+            try
             {
-                var result = settledBLL.RefundBatchLC_EBet(item, out decimal tpAffterAmount);
-                if (result > 0)
+                Dictionary<string, RefundResultList> keyValuePairs = new Dictionary<string, RefundResultList>();
+                foreach (var item in getAutoBatchRefundReq.batchRefundList)
                 {
-                    RefundResultList refBatchRefundList;
-                    if (keyValuePairs.ContainsKey(item.roundCode))
+                    var result = settledBLL.RefundBatchLC_EBet(item, out decimal tpAffterAmount);
+                    if (result > 0)
                     {
-                        refBatchRefundList = keyValuePairs[item.roundCode];
-                        refBatchRefundList.refundTotalMoney += item.refundMoney;
-                    }
-                    else
-                    {
-                        refBatchRefundList = new RefundResultList();
-                        keyValuePairs.Add(item.roundCode, refBatchRefundList);
-                        refBatchRefundList.username = item.username;
-                        refBatchRefundList.roundCode = item.roundCode;
-                        refBatchRefundList.refundTotalMoney = item.refundMoney;/**/
-                        refBatchRefundList.sucRefundSeqNoList = new List<SucRefundSeqNoList>();
-                    }
-
-                    SucRefundSeqNoList sucRefundSeqNoList = new SucRefundSeqNoList();
-                    refBatchRefundList.sucRefundSeqNoList.Add(sucRefundSeqNoList);
-                    sucRefundSeqNoList.seqNo = item.seqNo;
-                    sucRefundSeqNoList.status = 200;
-                    /*
-                     {
-                      "status": 200,
-                      "timestamp": 1577808000000,
-                      "event": "autoBatchRefund",
-                      "seqNo": "seqNoseqNoseqNoseqNo",
-                    ***  "refundResultList": [
+                        RefundResultList refBatchRefundList;
+                        if (keyValuePairs.ContainsKey(item.roundCode))
                         {
-                          "refundTotalMoney": 1000,
-                          "roundCode": "B1-200101012345",
-                          "username": "apitest01",
-                        ***  "sucRefundSeqNoList": [
-                                {
-                                  "status": 200,
-                                  "seqNo": "seqNoBetseqNoRefund"
-                                }
-                              ]
+                            refBatchRefundList = keyValuePairs[item.roundCode];
+                            refBatchRefundList.refundTotalMoney += item.refundMoney;
                         }
-                      ]
-                    }
-                     */
+                        else
+                        {
+                            refBatchRefundList = new RefundResultList();
+                            keyValuePairs.Add(item.roundCode, refBatchRefundList);
+                            refBatchRefundList.username = item.username;
+                            refBatchRefundList.roundCode = item.roundCode;
+                            refBatchRefundList.refundTotalMoney = item.refundMoney;/**/
+                            refBatchRefundList.sucRefundSeqNoList = new List<SucRefundSeqNoList>();
+                        }
 
-                    //getAutoBatchRefundResp.refundResultList.refundTotalMoney = item.refundMoney;
-                    //getAutoBatchRefundResp.refundResultList.roundCode = item.roundCode;
-                    //getAutoBatchRefundResp.refundResultList.username = item.username;
-                    //getAutoBatchRefundResp.refundResultList.sucRefundSeqNoList.status = 200;
-                    //getAutoBatchRefundResp.refundResultList.sucRefundSeqNoList.seqNo = item.seqNo;
+                        SucRefundSeqNoList sucRefundSeqNoList = new SucRefundSeqNoList();
+                        refBatchRefundList.sucRefundSeqNoList.Add(sucRefundSeqNoList);
+                        sucRefundSeqNoList.seqNo = item.seqNo;
+                        sucRefundSeqNoList.status = 200;
+                    }
                 }
+                getAutoBatchRefundResp.refundResultList = keyValuePairs.Values.ToList();
+                getAutoBatchRefundResp.status = 200;
+                getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            }
+            catch (Exception ex)
+            {
+                getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                log2File.Error($"{JsonConvert.SerializeObject(getAutoBatchRefundReq)}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}\r\n{ex}", $"EBet_autoBatchRefund");
+                return getAutoBatchRefundResp;
             }
 
-            getAutoBatchRefundResp.status = 200;
-            getAutoBatchRefundResp.refundResultList = keyValuePairs.Values.ToList();
-
-            getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            log2File.Info(Content, $"EBet_autoBatchRefund");
+            log2File.Info($"{JsonConvert.SerializeObject(getAutoBatchRefundReq)}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}", $"EBet_autoBatchRefund");
             return getAutoBatchRefundResp;
         }
 
