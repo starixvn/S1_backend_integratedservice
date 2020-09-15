@@ -38,6 +38,7 @@ namespace CommonService.Service.Model.enums
         InvalidLanguage = 2003,
         #endregion
         #region SMS  (5xxxx)
+        Verified = 5001,
         //Not_allowed_country = 5001,
         //Not_allowed_currency = 5002,
         #endregion

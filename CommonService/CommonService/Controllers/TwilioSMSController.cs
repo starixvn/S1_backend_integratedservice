@@ -39,7 +39,7 @@ namespace CommonService.Controllers
             }
             else if (custInfo.PhoneVerified)
             {
-                apiResult.ErrorCode = ErrorCode.OTHER_ERROR;
+                apiResult.ErrorCode = ErrorCode.Verified;
             }
             else
             {
