@@ -812,6 +812,42 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RefundLC_EBet(ResultListEbet resultListEbet, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, resultListEbet.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                resultListEbet.refundMoney *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RefundLC_EBet(tpCustInfo, resultListEbet, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int RefundBatchLC_EBet(BatchRefundList batchRefundList, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, batchRefundList.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                batchRefundList.refundMoney *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RefundBatchLC_EBet(tpCustInfo, batchRefundList, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
         {
             return settledService.GetUnsettledListLC_EBet();
