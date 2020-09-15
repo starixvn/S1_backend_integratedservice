@@ -26,5 +26,7 @@ namespace CommonService.Service.Model
         public string Birth_m { get; set; }
         public string Birth_y { get; set; }
         public string RealName { get; set; }
+        public bool PhoneVerified { get; set; }
+        public bool EmailVerified { get; set; }
     }
 }

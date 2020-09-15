@@ -23,7 +23,7 @@ namespace CommonService.Controllers
             ApiResult apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(twilioVerificationsSMSReq.custId);
 
-            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
+            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo) && !custInfo.PhoneVerified)
             {
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var phone = $"{custInfo.AreaCode}{phoneNo}";
@@ -36,6 +36,10 @@ namespace CommonService.Controllers
             else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
             {
                 apiResult.ErrorCode = ErrorCode.InvalidParameter;
+            }
+            else if (custInfo.PhoneVerified)
+            {
+                apiResult.ErrorCode = ErrorCode.OTHER_ERROR;
             }
             else
             {
