@@ -104,7 +104,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string signature { get; set; }
     }
 
-    public class CancelBetData_EBet
+    public class RefundSingleWallet_EBet
     {
         public int channelId { get; set; }
         public string username { get; set; }
@@ -114,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long timestamp { get; set; }
         public string sessionToken { get; set; }
         public string signature { get; set; }
-        public IList<ResultListEbet> resultList { get; set; }
+        public IEnumerable<ResultListEbet> resultList { get; set; }
     }
 
     public class ResultListEbet
@@ -125,10 +125,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal refundMoney { get; set; }
     }
 
-    public class BatchCancelBetData_EBet
+    public class AutoBatchRefund_EBet
     {
         public int channelId { get; set; }
-        public int lastStartProcessTime { get; set; }
+        public long lastStartProcessTime { get; set; }
         public decimal refundThreshold { get; set; }
         public string sessionToken { get; set; }
         public string seqNo { get; set; }
@@ -136,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Event { get; set; }
         public long timestamp { get; set; }
         public string signature { get; set; }
-        public IList<BatchRefundList> batchRefundList { get; set; }
+        public IEnumerable<BatchRefundList> batchRefundList { get; set; }
     }
 
     public class BatchRefundList
