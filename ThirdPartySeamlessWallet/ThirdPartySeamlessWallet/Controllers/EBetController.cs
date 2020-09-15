@@ -142,7 +142,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal refundTotalMoney { get; set; }
             public string roundCode { get; set; }
             public string username { get; set; }
-            public IEnumerable<SucRefundSeqNoList> sucRefundSeqNoList { get; set; }
+            public List<SucRefundSeqNoList> sucRefundSeqNoList { get; set; }
         }
 
         public class SucRefundSeqNoList
@@ -528,12 +528,33 @@ namespace ThirdPartySeamlessWallet.Controllers
             getAutoBatchRefundResp.seqNo = getAutoBatchRefundReq.seqNo;
             getAutoBatchRefundResp.Event = getAutoBatchRefundReq.Event;
             int i = 0;
-            List<KeyValuePair<string, dynamic>> batchList = new List<KeyValuePair<string, dynamic>>();
+            //List<KeyValuePair<string, dynamic>> batchList = new List<KeyValuePair<string, dynamic>>();
+            Dictionary<string, RefundResultList> keyValuePairs = new Dictionary<string, RefundResultList>();
             foreach (var item in getAutoBatchRefundReq.batchRefundList)
             {
                 var result = settledBLL.RefundBatchLC_EBet(item, out decimal tpAffterAmount);
                 if (result > 0)
                 {
+                    RefundResultList refBatchRefundList;
+                    if (keyValuePairs.ContainsKey(item.roundCode))
+                    {
+                        refBatchRefundList = keyValuePairs[item.roundCode];
+                        refBatchRefundList.refundTotalMoney += item.refundMoney;
+                    }
+                    else
+                    {
+                        refBatchRefundList = new RefundResultList();
+                        keyValuePairs.Add(item.roundCode, refBatchRefundList);
+                        refBatchRefundList.username = item.username;
+                        refBatchRefundList.roundCode = item.roundCode;
+                        refBatchRefundList.refundTotalMoney = item.refundMoney;/**/
+                        refBatchRefundList.sucRefundSeqNoList = new List<SucRefundSeqNoList>();
+                    }
+
+                    SucRefundSeqNoList sucRefundSeqNoList = new SucRefundSeqNoList();
+                    refBatchRefundList.sucRefundSeqNoList.Add(sucRefundSeqNoList);
+                    sucRefundSeqNoList.seqNo = item.seqNo;
+                    sucRefundSeqNoList.status = 200;
                     /*
                      {
                       "status": 200,
@@ -556,20 +577,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                      */
 
-                    batchList.Insert(i, new KeyValuePair<string, dynamic>("refundTotalMoney", item.refundMoney));
-                    batchList.Insert(i, new KeyValuePair<string, dynamic>("roundCode", item.roundCode));
-                    batchList.Insert(i, new KeyValuePair<string, dynamic>("username", item.username));
-                    batchList.Insert(i, new KeyValuePair<string, dynamic>("sucRefundSeqNoList", item.username));
-                    getAutoBatchRefundResp.refundResultList = (IEnumerable<RefundResultList>)batchList;
                     //getAutoBatchRefundResp.refundResultList.refundTotalMoney = item.refundMoney;
                     //getAutoBatchRefundResp.refundResultList.roundCode = item.roundCode;
                     //getAutoBatchRefundResp.refundResultList.username = item.username;
                     //getAutoBatchRefundResp.refundResultList.sucRefundSeqNoList.status = 200;
                     //getAutoBatchRefundResp.refundResultList.sucRefundSeqNoList.seqNo = item.seqNo;
                 }
-
-                i++;
             }
+
+            getAutoBatchRefundResp.status = 200;
+            getAutoBatchRefundResp.refundResultList = keyValuePairs.Values.ToList();
 
             getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             log2File.Info(Content, $"EBet_autoBatchRefund");
