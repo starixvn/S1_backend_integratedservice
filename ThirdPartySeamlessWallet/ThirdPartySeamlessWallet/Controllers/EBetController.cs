@@ -293,7 +293,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 switch (getBetReq.type)
                 {
                     case 1:
-                        // bet
+                    case 27:
+                        // 1: bet、27: pre-bet
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
                         if (tpCheck == null || tpCheck.Locked)
                         {
@@ -334,7 +335,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         break;
                     case 2:
-                        // payout
+                    case 28:
+                        // 2: payout、28: pre-refund
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0 || result == -1)
                         {
@@ -390,28 +392,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Cancel_Bet");
-
-                        break;
-                    case 27:
-                        // pre-bet
-                        /*
-                         * 投注: 先请求预扣（type = 27），
-                         * 如果预扣响应成功，则请求下注（type = 1）。 
-                         * 预扣回应失败则使用基本流程的投注失败处理。
-                         * 如果投注回应失败，
-                         * 会使用下注seqNo将下注错误退款（type = 11）
-                         * 请求发送至渠道以要求退还预扣款。
-                         */
-                        break;
-                    case 28:
-                        // pre-refund
-                        /*
-                         * 派彩: 如果还有剩余的预扣金额，
-                         * 请先请求预扣返还（type = 28），
-                         * 然后再请求派彩（type = 2）。
-                         * 如果没有剩余的预扣金额，
-                         * 则直接请求派彩（type = 2）。
-                         */
 
                         break;
                     default:
