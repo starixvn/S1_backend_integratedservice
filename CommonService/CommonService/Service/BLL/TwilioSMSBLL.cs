@@ -112,19 +112,10 @@ namespace CommonService.Service.BLL
 
             var result = await httpHelper.HttpFromPostAsync(url, Authorization, VerificationCheckSMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<TwilioVerificationsResult>(result.Content.ReadAsStringAsync().Result);
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.valid == "true")
             {
-                if (resultResp.valid == "true")
-                {
-                    apiResult.ErrorCode = ErrorCode.Success;
-                    apiResult.Message = resultResp.status;
-                }
-                else {
-                    apiResult.ErrorCode = ErrorCode.Fail;
-                    apiResult.Message = resultResp.message;
-                    apiResult.RawErrorCode = Convert.ToString(resultResp.code);
-                    apiResult.RawMessage = Convert.ToString(resultResp.status);
-                }
+                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.Message = resultResp.status;
             }
             else
             {
