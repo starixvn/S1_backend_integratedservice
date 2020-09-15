@@ -344,7 +344,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (Losses != 0)
                     {
                         if (hasBonusRunning)
-                            AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                            AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                         else
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
@@ -365,7 +365,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (Losses != 0)
                     {
                         if (hasBonusRunning)
-                            AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                            AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                         else
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
                     }
@@ -391,7 +391,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (Losses != 0)
                         {
                             if (hasBonusRunning)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                             else
                                 AutoCancelBonus(tpCustInfo.CustId, conn, trans);
 
@@ -485,9 +485,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
-        public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
+        public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_AutoCancelSeamlessBonus_Set", new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId });
+            p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            var result = conn.Execute("Service_AutoCancelSeamlessBonus_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            decimal bonus = p.Get<decimal?>("Bonus") ?? 0;
+
+            if (bonus > 0)
+            {
+                result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans);
+            }
+
+            return result;
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
