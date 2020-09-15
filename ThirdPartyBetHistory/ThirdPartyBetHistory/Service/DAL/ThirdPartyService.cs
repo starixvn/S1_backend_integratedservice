@@ -95,17 +95,10 @@ namespace ThirdPartyBetHistory.Service.DAL
                     betRecord.ValidBet *= tpCurrency.ExchangeRate;
                     betRecord.WinlostAmount *= tpCurrency.ExchangeRate;
                 }
-
-                if (true || tpCustInfo.SiteId == 2 || tpCustInfo.SiteId == 3)/*for All*/
+                /*Only count Sports*/
+                if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                 {
-                    if (betRecord.GameType == GameType.Saba_Sports)
-                    {
-                        betRecord.SettlementType = SettlementType.SettledForValid;
-                    }
-                    else
-                    {
-                        betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
-                    }
+                    betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                 }
 
                 var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
