@@ -466,7 +466,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             SyncParams syncParams = new SyncParams();
             syncParams.key = thirdPartyModel.TicketKey;
             syncParams.Offsets = -4;
-            syncParams.timeOfFrequency = 10;
+            syncParams.timeOfFrequency = 3;
             //syncParams.DoneTime=DateT
             return syncParams;
         }
