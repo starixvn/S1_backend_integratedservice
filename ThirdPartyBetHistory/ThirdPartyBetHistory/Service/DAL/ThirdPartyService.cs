@@ -71,10 +71,11 @@ namespace ThirdPartyBetHistory.Service.DAL
             var BetRecordInfos = betRecordInfos.OrderBy(x => x.TicketKey).ToArray();
             int idx = 0;
             BetRecordInfo betRecordInfo = null;
+
             while (BetRecordInfos.Length > idx)
             {
                 int result = 0;
-                var betRecord = BetRecordInfos[idx];
+                var betRecord = Newtonsoft.Json.JsonConvert.DeserializeObject<BetRecordInfo>(Newtonsoft.Json.JsonConvert.SerializeObject(BetRecordInfos[idx]));
                 betRecordInfo = betRecord;
                 var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
 
@@ -90,7 +91,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                 }
 
                 var tpCurrency = TpCurrencyList[$"{betRecord.TpId}_{tpCustInfo.CurrencyId}"];
-                if (tpCurrency.ExchangeRate != 0)
+                if (tpCurrency.ExchangeRate > 1)
                 {
                     betRecord.Stake *= tpCurrency.ExchangeRate;
                     betRecord.ValidBet *= tpCurrency.ExchangeRate;
