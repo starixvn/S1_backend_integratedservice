@@ -118,7 +118,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal moneyBefore { get; set; }
             public decimal moneyAfter { get; set; }
             public decimal refundMoney { get; set; }
-            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<RefundList> refundList { get; set; }
         }
 
@@ -448,6 +447,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getRefundSingleWalletResp.Event = getRefundBetReq.Event;
             try
             {
+                getRefundSingleWalletResp.refundList = new List<RefundList>();
                 foreach (var item in getRefundBetReq.resultList)
                 {
                     var result = settledBLL.RefundLC_EBet(item, out decimal tpAffterAmount);
@@ -461,32 +461,32 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getRefundSingleWalletResp.moneyBefore = tpCustBalance.Balance - refundMoney;
                         getRefundSingleWalletResp.moneyAfter = tpCustBalance.Balance + refundMoney;
                         getRefundSingleWalletResp.refundMoney = refundMoney;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                         refRefundList.refundSeqNo = item.refundSeqNo;
                         refRefundList.status = 200;
-                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                     }
                     else if (result == -2)
                     {
                         // 208 记录不存在
                         getRefundSingleWalletResp.status = 200;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                         refRefundList.refundSeqNo = item.refundSeqNo;
                         refRefundList.status = 208;
-                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                     }
                     else if (result == -3)
                     {
                         // 209: 渠道已自行退款
                         getRefundSingleWalletResp.status = 200;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                         refRefundList.refundSeqNo = item.refundSeqNo;
                         refRefundList.status = 209;
-                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                     }
                     else
                     {
                         getRefundSingleWalletResp.status = 500;
+                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                         refRefundList.refundSeqNo = item.refundSeqNo;
                         refRefundList.status = 500;
-                        getRefundSingleWalletResp.refundList.Add(refRefundList);
                     }
                 }
                 getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
