@@ -115,9 +115,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             [JsonProperty("event")]
             public string Event { get; set; }
             public long timestamp { get; set; }
-            public decimal moneyBefore { get; set; }
-            public decimal moneyAfter { get; set; }
-            public decimal refundMoney { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public decimal? moneyBefore { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public decimal? moneyAfter { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public decimal? refundMoney { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<RefundList> refundList { get; set; }
         }
 
@@ -422,7 +426,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getCreditRecordResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             getCreditRecordResp.username = getCreditRecordReq.username;
 
-            var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.querySeqNo);
+            var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.username, getCreditRecordReq.querySeqNo);
             if (data == null || data.Count() == 0)
             {
                 // seqNo 不存在
