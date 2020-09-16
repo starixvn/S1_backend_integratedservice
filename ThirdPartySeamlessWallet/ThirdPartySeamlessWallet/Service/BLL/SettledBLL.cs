@@ -858,10 +858,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_EBet(TransId);
         }
 
-        public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string seqNo)
+        public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string username, string seqNo)
         {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
             string[] list = seqNo.Split(',');
-            return settledService.GetCreditRecordLC_EBet(list);
+            var data = settledService.GetCreditRecordLC_EBet(list);
+            foreach (var record in data)
+            {
+                record.money /= tpCurrency.ExchangeRate;
+            }
+            return data;
         }
         #endregion
     }

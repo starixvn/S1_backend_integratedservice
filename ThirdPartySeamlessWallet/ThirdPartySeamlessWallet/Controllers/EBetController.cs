@@ -422,7 +422,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getCreditRecordResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             getCreditRecordResp.username = getCreditRecordReq.username;
 
-            var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.querySeqNo);
+            var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.username, getCreditRecordReq.querySeqNo);
             if (data == null || data.Count() == 0)
             {
                 // seqNo 不存在
