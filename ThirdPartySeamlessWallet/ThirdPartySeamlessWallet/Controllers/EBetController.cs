@@ -115,9 +115,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             [JsonProperty("event")]
             public string Event { get; set; }
             public long timestamp { get; set; }
-            public decimal moneyBefore { get; set; }
-            public decimal moneyAfter { get; set; }
-            public decimal refundMoney { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public decimal? moneyBefore { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public decimal? moneyAfter { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public decimal? refundMoney { get; set; }
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<RefundList> refundList { get; set; }
         }
 
