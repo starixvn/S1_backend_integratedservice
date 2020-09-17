@@ -110,14 +110,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
         public string roundCode { get; set; }
         public string seqNo { get; set; }
+        public string currency { get; set; }
         public string Event { get; set; }
         public long timestamp { get; set; }
         public string sessionToken { get; set; }
         public string signature { get; set; }
-        public IEnumerable<ResultListEbet> resultList { get; set; }
+        public IEnumerable<RefundListEbet> refundList { get; set; }
     }
 
-    public class ResultListEbet
+    public class RefundListEbet
     {
         public string refundSeqNo { get; set; }
         public string username { get; set; }

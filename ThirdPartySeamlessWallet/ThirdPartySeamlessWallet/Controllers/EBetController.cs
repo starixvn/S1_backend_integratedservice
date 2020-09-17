@@ -453,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 getRefundSingleWalletResp.refundList = new List<RefundList>();
-                foreach (var item in getRefundBetReq.resultList)
+                foreach (var item in getRefundBetReq.refundList)
                 {
                     var result = settledBLL.RefundLC_EBet(item, out decimal tpAffterAmount);
                     RefundList refRefundList = new RefundList();
