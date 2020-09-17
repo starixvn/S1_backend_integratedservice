@@ -1230,19 +1230,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int RefundLC_EBet(TpCustInfo tpCustInfo, ResultListEbet resultListEbet, out decimal afterAmount)
+        public int RefundLC_EBet(TpCustInfo tpCustInfo, RefundListEbet refundListEbet, out decimal afterAmount)
         {
             int bonusId = 0;
             int gameType = (int)GameType.EBet_LiveCasino;
 
             afterAmount = 0;
             int result = 0;
-            string mixUniqueId = $"{resultListEbet.roundCode}_{resultListEbet.username}";
+            string mixUniqueId = $"{refundListEbet.roundCode}_{refundListEbet.username}";
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var p = new DynamicParameters(new { seqNo = resultListEbet.refundSeqNo });
+            var p = new DynamicParameters(new { seqNo = refundListEbet.refundSeqNo });
             p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var refBettransLC = -99;
             conn.Execute("Service_BettransLC_Ebet_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -1252,9 +1252,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = PayoutV2(
                     tpCustInfo,
-                    Math.Abs(resultListEbet.refundMoney),
+                    Math.Abs(refundListEbet.refundMoney),
                     (int)Tp.EBet,
-                    resultListEbet.refundSeqNo,
+                    refundListEbet.refundSeqNo,
                     gameType, TpCategory.LiveCasino,
                     mixUniqueId,
                     TransType.Refunds,
