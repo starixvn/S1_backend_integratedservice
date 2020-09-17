@@ -317,7 +317,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            getBetResp.status = 500;
+                            getBetResp.status = 200;
                             getBetResp.money = tpAffterAmount;
                             getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
