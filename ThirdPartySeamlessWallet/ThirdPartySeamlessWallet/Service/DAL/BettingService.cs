@@ -47,8 +47,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
                 if (bonusId > 0)
                 {
-                    var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CustId);
-                    if (bonusMinBet.MinBet > amount && afterAmount >= 0)
+                    var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
+                    if (bonusMinBet?.MinBet > amount && afterAmount >= 0)
                     {
                         bonusId = 0;
                     }

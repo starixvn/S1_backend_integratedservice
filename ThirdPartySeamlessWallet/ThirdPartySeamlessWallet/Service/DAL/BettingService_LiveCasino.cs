@@ -282,7 +282,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans
                 );
 
-                if (bonusId > 0)
+                if (bonusId > 0 && result > 0)
                 {
                     AddTpBonus(
                         (int)Tp.EBet,
