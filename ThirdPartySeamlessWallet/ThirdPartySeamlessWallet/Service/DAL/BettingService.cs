@@ -48,11 +48,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (bonusId > 0)
                 {
                     var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
-                    if (bonusMinBet?.MinBet > amount && afterAmount >= 0)
+                    if (afterAmount >= 0 && bonusMinBet?.MinBet > (Math.Abs(amount) + afterAmount))
                     {
                         bonusId = 0;
                     }
-                    else if (afterAmount < 0 && bonusMinBet.MinBet > (Math.Abs(amount) - Math.Abs(afterAmount)))
+                    else if (afterAmount < 0 && bonusMinBet?.MinBet > (Math.Abs(amount) - Math.Abs(afterAmount)))
                     {
                         bonusId = 0;
                     }
