@@ -257,8 +257,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            BettingData_EBet getBetReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
+            log2File.Info(Content, $"EBet_increaseCredit");
 
+            BettingData_EBet getBetReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
             GetBetResp getBetResp = new GetBetResp();
             getBetResp.status = 500;
             getBetResp.money = 0;
@@ -272,6 +273,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status = 4026;
                 getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_increaseCredit");
                 return getBetResp;
             }
 
@@ -283,6 +285,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status = 4026;
                 getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_increaseCredit");
                 return getBetResp;
             }
 
@@ -300,6 +303,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             getBetResp.status = 4037;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Bet");
                             return getBetResp;
                         }
 
@@ -307,12 +311,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             getBetResp.status = 410;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Bet");
                             return getBetResp;
                         }
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            getBetResp.status = 200;
+                            getBetResp.status = 500;
                             getBetResp.money = tpAffterAmount;
                             getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -429,8 +434,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getCreditRecordResp.status = 206;
             }
             getCreditRecordResp.creditRecord = data;
-            log2File.Info($"{JsonConvert.SerializeObject(getCreditRecordReq)}\r\n{JsonConvert.SerializeObject(getCreditRecordResp)}", $"EBet_queryIncreaseCreditRecord");
 
+            log2File.Info($"{JsonConvert.SerializeObject(getCreditRecordReq)}\r\n{JsonConvert.SerializeObject(getCreditRecordResp)}", $"EBet_queryIncreaseCreditRecord");
             return getCreditRecordResp;
         }
 
