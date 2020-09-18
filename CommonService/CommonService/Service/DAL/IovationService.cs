@@ -1,0 +1,32 @@
+﻿using CommonService.Service.Model;
+using Dapper;
+using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
+using System.Data;
+
+namespace CommonService.Service.DAL
+{
+    public class IovationService
+    {
+        private readonly IConfiguration configuration;
+        public IovationService(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+        public int IovationResultIns(IovationResult iovationResult)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
+            var p = new
+            {
+                AccountCode = iovationResult.accountCode,
+                Details = iovationResult.details,
+                UUId = iovationResult.id,
+                Reason = iovationResult.reason,
+                Result = iovationResult.result,
+                StatedIp = iovationResult.statedIp,
+                TrackingNumber = iovationResult.trackingNumber
+            };
+            return conn.Execute("Common_Iovation_Log_Ins", p, commandType: CommandType.StoredProcedure);
+        }
+    }
+}
