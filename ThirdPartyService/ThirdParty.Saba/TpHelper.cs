@@ -307,8 +307,10 @@ namespace ThirdParty.Saba
 
                     string SportType = null;
                     string matchId = null;
+                    string betType = null;
                     inputs.TryGetValue("gameId", out SportType);
                     inputs.TryGetValue("matchid", out matchId);
+                    inputs.TryGetValue("bettype", out betType);
 
                     if (SportType == "211")
                     {
@@ -324,13 +326,19 @@ namespace ThirdParty.Saba
 
                     if (appType == AppType.Native)
                     {
-                        if (matchId == null)
+                        if (matchId != null)
                         {
-                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
+                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
+                            
+                        }
+                        else if (betType != null)
+                        {
+                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&gameid={betType}";
+
                         }
                         else
                         {
-                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
+                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
                         }
                     }
                     else if (appType == AppType.Mobile)
@@ -356,13 +364,17 @@ namespace ThirdParty.Saba
                         }
                         else
                         {
-                            if (matchId == null)
+                            if (matchId != null)
                             {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
+                            }
+                            else if(betType != null)
+                            { 
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&gameid={betType}";
                             }
                             else
                             {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
                             }
                         }
                     }
@@ -378,13 +390,17 @@ namespace ThirdParty.Saba
 
                         if (act == "keno" || SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223")
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
-                        else if (matchId == null)
+                        else if (matchId != null)
                         {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
+                        }
+                        else if(betType != null)
+                        {
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}";
                         }
                         else
                         {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
                         }
                     }
                 }
