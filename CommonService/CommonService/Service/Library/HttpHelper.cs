@@ -1,6 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -101,8 +100,17 @@ namespace CommonService.Service.Library
                     client.DefaultRequestHeaders.Add(param.Key, param.Value);
                 }
             }
-            var data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters) };
-            
+
+            HttpRequestMessage data = null;
+            if (contentType == "application/json")
+            {
+                data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new StringContent(JsonConvert.SerializeObject(parameters, Formatting.Indented), Encoding.UTF8, contentType) };
+            }
+            else
+            {
+                data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters) };
+            }
+
             var response = await client.SendAsync(data);
 
             return response;
