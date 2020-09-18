@@ -52,6 +52,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PP_LiveCasino = 16,
         PG_RNG = 17,
         Sexy_LiveCasino = 18,
+        CQ9_RNG = 26,
         CF_Rooster = 27,
         EBet_LiveCasino = 28,
     }
@@ -71,6 +72,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Allbet = 12,
         PG = 14,
         Sexy = 15,
+        CQ9 = 16,
         CF = 17,
         EBet = 18
     }
