@@ -15,6 +15,9 @@ namespace ThirdParty.CQ9
         public class LoginReq
         {
             public string account { get; set; }
+            public string gamehall { get; set; }
+            public string gamecode { get; set; }
+            public string gameplat { get; set; }
             public string lang { get; set; }
             public string session { get; set; }
         }
@@ -63,6 +66,7 @@ namespace ThirdParty.CQ9
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string API_Token = inputs.ContainsKey("API_Token") && !string.IsNullOrEmpty(inputs["API_Token"]) ? inputs["API_Token"] : throw new Exception("API_Token");
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             ApiResult oApiResult = new ApiResult();
 
@@ -77,10 +81,19 @@ namespace ThirdParty.CQ9
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
+            var mobileParam = "web";
+            if (appType != AppType.Desktop)
+            {
+                mobileParam = "mobile";
+            }
+
             // Login params
             LoginReq loginReq = new LoginReq
             {
                 account = tpCustInfo.TpUserName,
+                gamehall = "cq9",
+                gamecode = gameId,
+                gameplat = mobileParam,
                 lang = TpLangId,
                 session = HttpUtility.UrlEncode(sessionKey)
             };
@@ -89,7 +102,7 @@ namespace ThirdParty.CQ9
             var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var result = HttpPost(
-                $"{ApiUrl}/gameboy/player/sw/lobbylink",
+                $"{ApiUrl}/gameboy/player/sw/gamelink",
                 sParam,
                 "application/x-www-form-urlencoded",
                 headerReq
