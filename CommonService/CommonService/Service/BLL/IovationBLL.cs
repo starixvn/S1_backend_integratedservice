@@ -50,7 +50,8 @@ namespace CommonService.Service.BLL
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(result.Content.ReadAsStringAsync().Result);
             var resultIns = iovationService.IovationResultIns(resultResp);
 
-            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0  )
+            //if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0  )
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.result;
@@ -58,7 +59,7 @@ namespace CommonService.Service.BLL
             else
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Message = resultResp.result;
+                apiResult.Message = resultResp.message;
             }
 
             return apiResult;

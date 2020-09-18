@@ -29,5 +29,11 @@ namespace CommonService.Service.Model
         public string result { get; set; }
         public string statedIp { get; set; }
         public long trackingNumber { get; set; }
+        public string transactionId { get; set; }
+        public string timestamp { get; set; }
+        public string path { get; set; }
+        public string type { get; set; }
+        public int code { get; set; }
+        public string message { get; set; }
     }
 }
