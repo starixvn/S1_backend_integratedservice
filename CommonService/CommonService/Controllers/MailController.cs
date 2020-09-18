@@ -1,6 +1,7 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
 namespace CommonService.Controllers
@@ -13,13 +14,15 @@ namespace CommonService.Controllers
         private readonly SendXBLL sendXBLL;
         private readonly SendGridBLL sendGridBLL;
         private readonly RestPasswordBLL restPasswordBLL;
+        private readonly ILogger<MailController> logger;
 
-        public MailController(CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, RestPasswordBLL restPasswordBLL)
+        public MailController(ILogger<MailController> logger, CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, RestPasswordBLL restPasswordBLL)
         {
             this.custInfoBLL = custInfoBLL;
             this.sendXBLL = sendXBLL;
             this.sendGridBLL = sendGridBLL;
             this.restPasswordBLL = restPasswordBLL;
+            this.logger = logger;
         }
         public class Req
         {
@@ -94,6 +97,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> RestPasswordAsync(Req2 req2)
         {
+            logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(req2));
             ApiResult apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req2.custId);
             if (custInfo != null)
