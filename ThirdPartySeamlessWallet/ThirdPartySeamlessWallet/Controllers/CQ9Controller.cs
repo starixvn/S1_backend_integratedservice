@@ -56,6 +56,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class GetHeader
         {
+            [FromHeader]
             public string wtoken { get; set; }
         }
 
@@ -107,14 +108,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/player/check/{account}")]
-        public CheckPlayerResp CheckPlayer(string account, [FromHeader] GetHeader getHeader)
+        public CheckPlayerResp CheckPlayer(string account, [FromQuery] GetHeader getHeader)
         {
             log2File.Info($"{JsonConvert.SerializeObject(getHeader)}", $"CQ9_CheckPlayer");
             CheckPlayerResp checkPlayerResp = new CheckPlayerResp();
-            checkPlayerResp.status.code = "1100";
-            checkPlayerResp.status.message = "Error";
-            checkPlayerResp.status.datetime = getCurrentGameTime();
-            checkPlayerResp.data = false;
+            checkPlayerResp.status = new GameResponse();
 
             // check key
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -142,55 +140,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             checkPlayerResp.status.message = "Success";
             checkPlayerResp.status.datetime = getCurrentGameTime();
             checkPlayerResp.data = true;
-            /*
-            try
-            {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getHeader.wtoken)));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                // 1 Time
-                string authToken = sessionKeyArr[0];
-                // Long Time
-                string sessionToken = sessionKeyArr[1];
-
-                if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-                {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null || tpCheck.Locked)
-                    {
-                        checkPlayerResp.status.code = "0";
-                        checkPlayerResp.status.message = "Success";
-                        checkPlayerResp.status.datetime = getCurrentGameTime();
-                        checkPlayerResp.data = false;
-                        return checkPlayerResp;
-                    }
-                    if (tpCheck.Token != sessionToken)
-                    {
-                        checkPlayerResp.status.code = "1003";
-                        checkPlayerResp.status.message = "Error : wtoken";
-                        checkPlayerResp.status.datetime = getCurrentGameTime();
-                        checkPlayerResp.data = false;
-                        return checkPlayerResp;
-                    }
-                }
-                else
-                {
-                    checkPlayerResp.status.code = "1003";
-                    checkPlayerResp.status.message = "Error : wtoken";
-                    checkPlayerResp.status.datetime = getCurrentGameTime();
-                    checkPlayerResp.data = false;
-                    return checkPlayerResp;
-                }
-
-                checkPlayerResp.status.code = "0";
-                checkPlayerResp.status.message = "Success";
-                checkPlayerResp.status.datetime = getCurrentGameTime();
-                checkPlayerResp.data = true;
-            }
-            catch (Exception ex)
-            {
-                log2File.Error($"{JsonConvert.SerializeObject(checkPlayerResp)}\r\n{ex}", $"CQ9_CheckPlayer");
-            }
-            */
 
             log2File.Info($"{JsonConvert.SerializeObject(checkPlayerResp)}", $"CQ9_CheckPlayer");
             return checkPlayerResp;
@@ -198,14 +147,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/transaction/balance/{account}")]
-        public GetBalanceResp Balance(string account, [FromHeader] GetHeader getHeader, [FromForm] GetBalanceReq getBalanceReq)
+        public GetBalanceResp Balance(string account, [FromQuery] GetHeader getHeader, [FromForm] GetBalanceReq getBalanceReq)
         {
             log2File.Info($"{JsonConvert.SerializeObject(getHeader)}\r\n{JsonConvert.SerializeObject(getBalanceReq)}", $"CQ9_Balance");
 
             GetBalanceResp getBalanceResp = new GetBalanceResp();
-            getBalanceResp.status.code = "1100";
-            getBalanceResp.status.message = "Error";
-            getBalanceResp.status.datetime = getCurrentGameTime();
+            getBalanceResp.status = new GameResponse();
 
             // check key
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -242,13 +189,15 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/bet")]
-        public GetBetResp Bet([FromHeader] GetHeader getHeader, [FromForm] Dictionary<string, string> getBetReq)
+        public GetBetResp Bet([FromQuery] GetHeader getHeader, [FromForm] Dictionary<string, string> getBetReq)
         {
             var json = JsonConvert.SerializeObject(getBetReq);
             var betReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
             log2File.Info($"{json}\r\n{betReq}", $"CQ9_Bet");
 
             GetBetResp getBetResp = new GetBetResp();
+            getBetResp.status = new GameResponse();
+
             getBetResp.status.code = "1100";
             getBetResp.status.message = "Error";
             getBetResp.status.datetime = getCurrentGameTime();
@@ -336,13 +285,15 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/endround")]
-        public GetEndRoundResp EndRound([FromHeader] GetHeader getHeader, [FromForm] Dictionary<string, string> getEndRoundReq)
+        public GetEndRoundResp EndRound([FromQuery] GetHeader getHeader, [FromForm] Dictionary<string, string> getEndRoundReq)
         {
             var json = JsonConvert.SerializeObject(getEndRoundReq);
             var endRoundReq = JsonConvert.DeserializeObject<EndRoundDataRNG_CQ9>(json);
             log2File.Info($"{json}\r\n{endRoundReq}", $"CQ9_EndRound");
 
             GetEndRoundResp getEndRoundResp = new GetEndRoundResp();
+            getEndRoundResp.status = new GameResponse();
+
             getEndRoundResp.status.code = "1100";
             getEndRoundResp.status.message = "Error";
             getEndRoundResp.status.datetime = getCurrentGameTime();
