@@ -9,7 +9,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string account { get; set; }
         public string eventTime { get; set; }
-        public long gamehall { get; set; }
+        public string gamehall { get; set; }
         public string gamecode { get; set; }
         public string roundid { get; set; }
         public decimal amount { get; set; }

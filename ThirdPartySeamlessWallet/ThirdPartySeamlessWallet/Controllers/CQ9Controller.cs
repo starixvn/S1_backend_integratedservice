@@ -102,12 +102,22 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class GetBetResp
         {
+            public GetBetResp()
+            {
+                data = new BalanceData();
+                status = new GameResponse();
+            }
             public BalanceData data { get; set; }
             public GameResponse status { get; set; }
         }
 
         public class GetEndRoundResp
         {
+            public GetEndRoundResp()
+            {
+                data = new BalanceData();
+                status = new GameResponse();
+            }
             public BalanceData data { get; set; }
             public GameResponse status { get; set; }
         }
@@ -157,13 +167,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/transaction/balance/{account}")]
-        public GetBalanceResp Balance(string account, [FromHeader(Name = "wtoken")] string wtoken,/*[FromQuery] GetHeader getHeader,*/ [FromForm] Dictionary<string, string> getBalanceReq)
+        public GetBalanceResp Balance(string account, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
         {
             string logName = $"{tpGameName}_Balance";
             log2File.Info($"wtoken={wtoken}\r\n{JsonConvert.SerializeObject(getBalanceReq)}", logName);
 
             GetBalanceResp getBalanceResp = new GetBalanceResp();
-            getBalanceResp.status = new GameResponse();
 
             // check key
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -200,23 +209,21 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/bet")]
-        public GetBetResp Bet([FromQuery] GetHeader getHeader, [FromForm] Dictionary<string, string> getBetReq)
+        public GetBetResp Bet([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBetReq)
         {
             string logName = $"{tpGameName}_Bet";
             var json = JsonConvert.SerializeObject(getBetReq);
             var betReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
-            log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getHeader)}\r\n{betReq}", logName);
+            log2File.Info($"wtoken={wtoken}\r\n{betReq}", logName);
 
             GetBetResp getBetResp = new GetBetResp();
-            getBetResp.status = new GameResponse();
-
             getBetResp.status.code = "1100";
             getBetResp.status.message = "Error";
             getBetResp.status.datetime = getCurrentGameTime();
 
             // check key
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting["wtoken"] != getHeader.wtoken)
+            if (thirdPartySetting.TpSetting["wtoken"] != wtoken)
             {
                 getBetResp.status.code = "1100";
                 getBetResp.status.message = "Error : wtoken";
@@ -301,15 +308,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/endround")]
-        public GetEndRoundResp EndRound([FromQuery] GetHeader getHeader, [FromForm] Dictionary<string, string> getEndRoundReq)
+        public GetEndRoundResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq)
         {
             string logName = $"{tpGameName}_EndRound";
             var json = JsonConvert.SerializeObject(getEndRoundReq);
             var endRoundReq = JsonConvert.DeserializeObject<EndRoundDataRNG_CQ9>(json);
-            log2File.Info($"{json}\r\n{endRoundReq}", logName);
+            log2File.Info($"wtoken={wtoken}\r\n{endRoundReq}", logName);
 
             GetEndRoundResp getEndRoundResp = new GetEndRoundResp();
-            getEndRoundResp.status = new GameResponse();
 
             getEndRoundResp.status.code = "1100";
             getEndRoundResp.status.message = "Error";
