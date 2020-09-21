@@ -13,7 +13,7 @@ namespace CommonService.Service.Model
 
     public class IovationChecksRequest
     {
-        public string accountCode { get; set; }
+        public int accountCode { get; set; }
         public string blackbox { get; set; }
         public string statedIp { get; set; }
         public Dictionary<string, string> transactionInsight { get; set; }
@@ -22,7 +22,7 @@ namespace CommonService.Service.Model
 
     public class IovationResult
     {
-        public string accountCode { get; set; }
+        public int accountCode { get; set; }
         public Dictionary<string, dynamic> details { get; set; }
         public string id { get; set; }
         public string reason { get; set; }
