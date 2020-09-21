@@ -26,13 +26,12 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
 
-            string transactionInsight = JsonConvert.SerializeObject(iovationChecksRequest.transactionInsight);
-            Dictionary<string, string> sendIovationChecks = new Dictionary<string, string>
+            Dictionary<string, dynamic> sendIovationChecks = new Dictionary<string, dynamic>
             {
                 { "accountCode", iovationChecksRequest.accountCode },
                 { "blackbox", iovationChecksRequest.blackbox },
                 { "statedIp", iovationChecksRequest.statedIp },
-                { "transactionInsight",transactionInsight},
+                { "transactionInsight",iovationChecksRequest.transactionInsight},
                 { "type",iovationChecksRequest.type}
             };
 
@@ -46,12 +45,13 @@ namespace CommonService.Service.BLL
                 { "Authorization", $"Basic {Base64Authtoken}" }
             };
 
-            var result = await httpHelper.HttpFromPostAsync(iovationServicesConfig.Value.ResourceURL, Authorization, sendIovationChecks, "application/json");
+            var parameters = JsonConvert.SerializeObject(sendIovationChecks);
+            var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(result.Content.ReadAsStringAsync().Result);
             var resultIns = iovationService.IovationResultIns(resultResp);
 
-            //if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0  )
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0)
+                //if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.result;

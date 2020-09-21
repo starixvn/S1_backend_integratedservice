@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using System.Data;
 
 namespace CommonService.Service.DAL
@@ -19,7 +20,7 @@ namespace CommonService.Service.DAL
             var p = new
             {
                 AccountCode = iovationResult.accountCode,
-                Details = iovationResult.details,
+                Details = JsonConvert.SerializeObject(iovationResult.details),
                 UUId = iovationResult.id,
                 Reason = iovationResult.reason,
                 Result = iovationResult.result,
