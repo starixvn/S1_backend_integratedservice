@@ -67,62 +67,71 @@ namespace ThirdParty.CQ9
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string API_Token = inputs.ContainsKey("API_Token") && !string.IsNullOrEmpty(inputs["API_Token"]) ? inputs["API_Token"] : throw new Exception("API_Token");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
 
             ApiResult oApiResult = new ApiResult();
 
-            // Header
-            Dictionary<string, string> headerReq = new Dictionary<string, string>();
-            headerReq.Add("Authorization", API_Token);
-
-            // Token
-            var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token };
-            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            string sessionKey = Convert.ToBase64String(bytes);
-
-            var mobileParam = "web";
-            if (appType != AppType.Desktop)
-            {
-                mobileParam = "mobile";
-            }
-
-            // Login params
-            LoginReq loginReq = new LoginReq
-            {
-                account = tpCustInfo.TpUserName,
-                gamehall = "cq9",
-                gamecode = gameId,
-                gameplat = mobileParam,
-                lang = TpLangId,
-                session = HttpUtility.UrlEncode(sessionKey)
-            };
-
-            // Call
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var result = HttpPost(
-                $"{ApiUrl}/gameboy/player/sw/gamelink",
-                sParam,
-                "application/x-www-form-urlencoded",
-                headerReq
-            );
-
-            // Response
-            var tpData = JsonConvert.DeserializeObject<LoginResult>(result);
-            if (tpData.status.code == "0")
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = tpData.data.url;
+                oApiResult.Message = $"{FunGameUrl}/{gameId}?language={TpLangId}&token=guest_{tpCustInfo.TpUserName}";
             }
             else
             {
-                oApiResult.RawMessage = tpData.status.message;
-                oApiResult.RawErrorCode = tpData.status.code;
-                oApiResult.Message = $"{tpData.status.code}-{tpData.status.message}";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-            }
+                // Header
+                Dictionary<string, string> headerReq = new Dictionary<string, string>();
+                headerReq.Add("Authorization", API_Token);
 
+                // Token
+                var key = ApplyToken(tpCustInfo);
+                inputs.TryGetValue("Token", out string token);
+                var sessionKeyArr = new string[] { key, token };
+                byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+                string sessionKey = Convert.ToBase64String(bytes);
+
+                var mobileParam = "web";
+                if (appType != AppType.Desktop)
+                {
+                    mobileParam = "mobile";
+                }
+
+                // Login params
+                LoginReq loginReq = new LoginReq
+                {
+                    account = tpCustInfo.TpUserName,
+                    gamehall = "cq9",
+                    gamecode = gameId,
+                    gameplat = mobileParam,
+                    lang = TpLangId,
+                    session = HttpUtility.UrlEncode(sessionKey)
+                };
+
+                // Call
+                var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
+                var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                var result = HttpPost(
+                    $"{ApiUrl}/gameboy/player/sw/gamelink",
+                    sParam,
+                    "application/x-www-form-urlencoded",
+                    headerReq
+                );
+
+                // Response
+                var tpData = JsonConvert.DeserializeObject<LoginResult>(result);
+                if (tpData.status.code == "0")
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = tpData.data.url;
+                }
+                else
+                {
+                    oApiResult.RawMessage = tpData.status.message;
+                    oApiResult.RawErrorCode = tpData.status.code;
+                    oApiResult.Message = $"{tpData.status.code}-{tpData.status.message}";
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
             return oApiResult;
         }
 
