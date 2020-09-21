@@ -100,6 +100,54 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string datetime { get; set; }
         }
 
+        public class GetRecordResp
+        {
+            public GetRecordResp()
+            {
+                data = new RecordData();
+                status = new GameResponse();
+            }
+            public RecordData data { get; set; }
+            public GameResponse status { get; set; }
+        }
+
+        public class RecordData
+        {
+            public RecordData()
+            {
+                target = new Target();
+                status = new DetailStatus();
+            }
+            public string _id { get; set; }
+            public string action { get; set; }
+            public Target target { get; set; }
+            public DetailStatus status { get; set; }
+            public decimal before { get; set; }
+            public decimal balance { get; set; }
+            public string currency { get; set; }
+            [JsonProperty("event")]
+            public IList<RecordEvent> Event { get; set; }
+        }
+
+        public class Target
+        {
+            public string account { get; set; }
+        }
+
+        public class DetailStatus
+        {
+            public string createtime { get; set; }
+            public string endtime { get; set; }
+            public string status { get; set; }
+            public string message { get; set; }
+        }
+
+        public class RecordEvent
+        {
+            public string mtcode { get; set; }
+            public decimal amount { get; set; }
+            public string eventtime { get; set; }
+        }
         #endregion
 
         [HttpGet]
@@ -361,12 +409,74 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getEndRoundResp;
         }
 
-        //[HttpGet]
-        //[Route("[controller]/transaction/record/{mtcode}")]
-        //public GetApiResp Record(string mtcode, [FromHeader(Name = "wtoken")] string wtoken)
-        //{
+        [HttpPost]
+        [Route("[controller]/transaction/game/refund")]
+        public GetApiResp Refund([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRefundReq)
+        {
+            string logName = $"{tpGameName}_Refund";
+            var json = JsonConvert.SerializeObject(getRefundReq);
+            var refundReq = JsonConvert.DeserializeObject<RefundDataRNG_CQ9>(json);
+            log2File.Info($"wtoken={wtoken}\r\n{refundReq}", logName);
 
-        //}
+            GetApiResp getRefundResp = new GetApiResp();
+            getRefundResp.status.code = "1100";
+            getRefundResp.status.message = "Error";
+            getRefundResp.status.datetime = getCurrentGameTime();
+
+            // 當refund未查詢到紀錄時回傳該錯誤編碼1014
+            /*
+             getRefundResp.status.code = "1014";
+             getRefundResp.status.message = "Error : record not found";
+             getRefundResp.status.datetime = getCurrentGameTime();
+            */
+            
+            // 當該mtcode已經被refund時回傳該錯誤編碼 1015
+            /*
+             getRefundResp.status.code = "1015";
+             getRefundResp.status.message = "Error : refunded";
+             getRefundResp.status.datetime = getCurrentGameTime();
+            */
+
+            log2File.Info($"{JsonConvert.SerializeObject(getRefundResp)}", logName);
+            return getRefundResp;
+        }
+
+        [HttpGet]
+        [Route("[controller]/transaction/record/{mtcode}")]
+        public GetRecordResp Record(string mtcode, [FromHeader(Name = "wtoken")] string wtoken)
+        {
+            string logName = $"{tpGameName}_Record";
+            log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}", logName);
+
+            GetRecordResp getRecordResp = new GetRecordResp();
+            getRecordResp.status.code = "1100";
+            getRecordResp.status.message = "Error";
+            getRecordResp.status.datetime = getCurrentGameTime();
+
+            getRecordResp.data.status.createtime = getCurrentGameTime();
+
+            //getRecordResp.data._id = "123";
+            //getRecordResp.data.action = "bet";
+            //getRecordResp.data.target.account = "nova88_";
+            //getRecordResp.data.status.status = "failed";
+            //getRecordResp.data.before = 0;
+            //getRecordResp.data.balance = 0;
+            //getRecordResp.data.currency = "MYR";
+            //getRecordResp.status.code = "0";
+            //getRecordResp.status.message = "Success";
+            getRecordResp.data.status.endtime = getCurrentGameTime();
+
+
+            // 當未查詢到紀錄時回傳該錯誤編碼1014
+            /*
+            getRecordResp.data = null;
+            getRecordResp.status.code = "1014";
+            getRecordResp.status.message = "Error : record not found";
+            getRecordResp.status.datetime = getCurrentGameTime();
+            */
+            log2File.Info($"mtcode={mtcode}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+            return getRecordResp;
+        }
 
         private string getCurrentGameTime()
         {

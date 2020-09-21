@@ -32,7 +32,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string mtcode { get; set; }
         public decimal amount { get; set; }
         public string eventtime { get; set; }
-
     }
 
+    public class RefundDataRNG_CQ9
+    {
+        public string mtcode { get; set; }
+    }
 }
