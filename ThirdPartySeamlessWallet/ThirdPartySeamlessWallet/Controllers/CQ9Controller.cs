@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{tpGameName}_Bet";
             var json = JsonConvert.SerializeObject(getBetReq);
             var betReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
-            log2File.Info($"wtoken={wtoken}\r\n{betReq}", logName);
+            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
 
             GetApiResp getBetResp = new GetApiResp();
             getBetResp.status.code = "1100";
@@ -340,7 +340,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{tpGameName}_EndRound";
             var json = JsonConvert.SerializeObject(getEndRoundReq);
             var endRoundReq = JsonConvert.DeserializeObject<EndRoundDataRNG_CQ9>(json);
-            log2File.Info($"wtoken={wtoken}\r\n{endRoundReq}", logName);
+            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
 
             GetApiResp getEndRoundResp = new GetApiResp();
 
@@ -416,7 +416,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{tpGameName}_Refund";
             var json = JsonConvert.SerializeObject(getRefundReq);
             var refundReq = JsonConvert.DeserializeObject<RefundDataRNG_CQ9>(json);
-            log2File.Info($"wtoken={wtoken}\r\n{refundReq}", logName);
+            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
 
             GetApiResp getRefundResp = new GetApiResp();
             getRefundResp.status.code = "1100";
