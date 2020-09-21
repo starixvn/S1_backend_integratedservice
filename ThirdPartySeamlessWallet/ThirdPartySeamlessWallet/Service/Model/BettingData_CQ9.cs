@@ -9,7 +9,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string account { get; set; }
         public string eventTime { get; set; }
-        public long gamehall { get; set; }
+        public string gamehall { get; set; }
         public string gamecode { get; set; }
         public string roundid { get; set; }
         public decimal amount { get; set; }
@@ -32,7 +32,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string mtcode { get; set; }
         public decimal amount { get; set; }
         public string eventtime { get; set; }
-
     }
 
+    public class RefundDataRNG_CQ9
+    {
+        public string mtcode { get; set; }
+    }
 }
