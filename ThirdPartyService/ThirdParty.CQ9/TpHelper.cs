@@ -82,15 +82,8 @@ namespace ThirdParty.CQ9
                 // Header
                 Dictionary<string, string> headerReq = new Dictionary<string, string>();
                 headerReq.Add("Authorization", API_Token);
-
                 // Token
-                var key = ApplyToken(tpCustInfo);
                 inputs.TryGetValue("Token", out string token);
-                var sessionKeyArr = new string[] { key, token };
-                /* 1 Time*/
-                string authToken = sessionKeyArr[0];
-                /* Long Time*/
-                string sessionToken = sessionKeyArr[1];
 
                 var mobileParam = "web";
                 if (appType != AppType.Desktop)
@@ -106,7 +99,7 @@ namespace ThirdParty.CQ9
                     gamecode = gameId,
                     gameplat = mobileParam,
                     lang = TpLangId,
-                    session = HttpUtility.UrlEncode(sessionToken)
+                    session = HttpUtility.UrlEncode(token)
                 };
 
                 // Call
