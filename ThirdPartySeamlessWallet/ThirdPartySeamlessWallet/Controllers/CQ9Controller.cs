@@ -76,9 +76,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             public GameResponse status { get; set; }
         }
 
-        public class GetBalanceResp
+        public class GetApiResp
         {
-            public GetBalanceResp()
+            public GetApiResp()
             {
                 data = new BalanceData();
                 status = new GameResponse();
@@ -100,27 +100,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string datetime { get; set; }
         }
 
-        public class GetBetResp
-        {
-            public GetBetResp()
-            {
-                data = new BalanceData();
-                status = new GameResponse();
-            }
-            public BalanceData data { get; set; }
-            public GameResponse status { get; set; }
-        }
-
-        public class GetEndRoundResp
-        {
-            public GetEndRoundResp()
-            {
-                data = new BalanceData();
-                status = new GameResponse();
-            }
-            public BalanceData data { get; set; }
-            public GameResponse status { get; set; }
-        }
         #endregion
 
         [HttpGet]
@@ -128,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public CheckPlayerResp CheckPlayer(string account, [FromQuery] GetHeader getHeader)
         {
             string logName = $"{tpGameName}_CheckPlayer";
-            log2File.Info($"{JsonConvert.SerializeObject(getHeader)}", logName);
+            log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getHeader)}", logName);
             CheckPlayerResp checkPlayerResp = new CheckPlayerResp();
             checkPlayerResp.status = new GameResponse();
 
@@ -140,7 +119,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Error : wtoken";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -152,7 +131,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Success";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -161,18 +140,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             checkPlayerResp.status.datetime = getCurrentGameTime();
             checkPlayerResp.data = true;
 
-            log2File.Info($"{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+            log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
             return checkPlayerResp;
         }
 
         [HttpGet]
         [Route("[controller]/transaction/balance/{account}")]
-        public GetBalanceResp Balance(string account, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
+        public GetApiResp Balance(string account, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
         {
             string logName = $"{tpGameName}_Balance";
-            log2File.Info($"wtoken={wtoken}\r\n{JsonConvert.SerializeObject(getBalanceReq)}", logName);
+            log2File.Info($"account={account}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getBalanceReq)}", logName);
 
-            GetBalanceResp getBalanceResp = new GetBalanceResp();
+            GetApiResp getBalanceResp = new GetApiResp();
 
             // check key
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -181,7 +160,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getBalanceResp.status.code = "1100";
                 getBalanceResp.status.message = "Error : wtoken";
                 getBalanceResp.status.datetime = getCurrentGameTime();
-                log2File.Info($"{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                 return getBalanceResp;
             }
 
@@ -192,7 +171,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getBalanceResp.status.code = "1006";
                 getBalanceResp.status.message = "Error : account not found";
                 getBalanceResp.status.datetime = getCurrentGameTime();
-                log2File.Info($"{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                 return getBalanceResp;
             }
 
@@ -203,20 +182,20 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.data.balance = tpCustBalance.Balance;
             getBalanceResp.data.currency = tpCustBalance.TpCurrencyId;
 
-            log2File.Info($"{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+            log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
             return getBalanceResp;
         }
 
         [HttpPost]
         [Route("[controller]/transaction/game/bet")]
-        public GetBetResp Bet([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBetReq)
+        public GetApiResp Bet([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBetReq)
         {
             string logName = $"{tpGameName}_Bet";
             var json = JsonConvert.SerializeObject(getBetReq);
             var betReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
             log2File.Info($"wtoken={wtoken}\r\n{betReq}", logName);
 
-            GetBetResp getBetResp = new GetBetResp();
+            GetApiResp getBetResp = new GetApiResp();
             getBetResp.status.code = "1100";
             getBetResp.status.message = "Error";
             getBetResp.status.datetime = getCurrentGameTime();
@@ -308,14 +287,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/endround")]
-        public GetEndRoundResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq)
+        public GetApiResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq)
         {
             string logName = $"{tpGameName}_EndRound";
             var json = JsonConvert.SerializeObject(getEndRoundReq);
             var endRoundReq = JsonConvert.DeserializeObject<EndRoundDataRNG_CQ9>(json);
             log2File.Info($"wtoken={wtoken}\r\n{endRoundReq}", logName);
 
-            GetEndRoundResp getEndRoundResp = new GetEndRoundResp();
+            GetApiResp getEndRoundResp = new GetApiResp();
 
             getEndRoundResp.status.code = "1100";
             getEndRoundResp.status.message = "Error";
@@ -381,6 +360,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
             return getEndRoundResp;
         }
+
+        //[HttpGet]
+        //[Route("[controller]/transaction/record/{mtcode}")]
+        //public GetApiResp Record(string mtcode, [FromHeader(Name = "wtoken")] string wtoken)
+        //{
+
+        //}
 
         private string getCurrentGameTime()
         {
