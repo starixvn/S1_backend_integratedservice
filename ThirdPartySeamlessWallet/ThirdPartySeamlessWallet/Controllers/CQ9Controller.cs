@@ -78,6 +78,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class GetBalanceResp
         {
+            public GetBalanceResp()
+            {
+                data = new BalanceData();
+                status = new GameResponse();
+            }
             public BalanceData data { get; set; }
             public GameResponse status { get; set; }
         }
@@ -152,17 +157,17 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/transaction/balance/{account}")]
-        public GetBalanceResp Balance(string account, [FromQuery] GetHeader getHeader, [FromForm] GetBalanceReq getBalanceReq)
+        public GetBalanceResp Balance(string account, [FromHeader(Name = "wtoken")] string wtoken,/*[FromQuery] GetHeader getHeader,*/ [FromForm] Dictionary<string, string> getBalanceReq)
         {
             string logName = $"{tpGameName}_Balance";
-            log2File.Info($"{JsonConvert.SerializeObject(getHeader)}\r\n{JsonConvert.SerializeObject(getBalanceReq)}", logName);
+            log2File.Info($"wtoken={wtoken}\r\n{JsonConvert.SerializeObject(getBalanceReq)}", logName);
 
             GetBalanceResp getBalanceResp = new GetBalanceResp();
             getBalanceResp.status = new GameResponse();
 
             // check key
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting["wtoken"] != getHeader.wtoken)
+            if (thirdPartySetting.TpSetting["wtoken"] != wtoken)
             {
                 getBalanceResp.status.code = "1100";
                 getBalanceResp.status.message = "Error : wtoken";
