@@ -31,7 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         {
             get
             {
-                yield return JsonConvert.DeserializeObject<EndRound_CQ9>(data);
+                return JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
             }
         }
     }
