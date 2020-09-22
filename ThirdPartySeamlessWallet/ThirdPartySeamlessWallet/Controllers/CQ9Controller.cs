@@ -280,6 +280,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
+            betReq.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
 
             // check session
             var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, betReq.account);
@@ -331,6 +332,60 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             return getBetResp;
+        }
+
+        [HttpPost]
+        [Route("[controller]/transaction/game/debit")]
+        public GetApiResp Debit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getDebitReq)
+        {
+            string logName = $"{tpGameName}_Debit";
+            var json = JsonConvert.SerializeObject(getDebitReq);
+            var debitReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
+            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+
+            GetApiResp getDebitResp = new GetApiResp();
+            getDebitResp.status.code = "1100";
+            getDebitResp.status.message = "Error";
+            getDebitResp.status.datetime = getCurrentGameTime();
+
+            log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getDebitResp)}", logName);
+            return getDebitResp;
+        }
+
+        [HttpPost]
+        [Route("[controller]/transaction/game/credit")]
+        public GetApiResp Credit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getCreditReq)
+        {
+            string logName = $"{tpGameName}_Credit";
+            var json = JsonConvert.SerializeObject(getCreditReq);
+            var creditReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
+            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+
+            GetApiResp getCreditResp = new GetApiResp();
+            getCreditResp.status.code = "1100";
+            getCreditResp.status.message = "Error";
+            getCreditResp.status.datetime = getCurrentGameTime();
+
+            log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getCreditResp)}", logName);
+            return getCreditResp;
+        }
+
+        [HttpPost]
+        [Route("[controller]/transaction/game/bonus")]
+        public GetApiResp Bonus([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBonusReq)
+        {
+            string logName = $"{tpGameName}_Credit";
+            var json = JsonConvert.SerializeObject(getBonusReq);
+            var bonusReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
+            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+
+            GetApiResp getBonusResp = new GetApiResp();
+            getBonusResp.status.code = "1100";
+            getBonusResp.status.message = "Error";
+            getBonusResp.status.datetime = getCurrentGameTime();
+
+            log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getBonusResp)}", logName);
+            return getBonusResp;
         }
 
         [HttpPost]
@@ -429,7 +484,7 @@ namespace ThirdPartySeamlessWallet.Controllers
              getRefundResp.status.message = "Error : record not found";
              getRefundResp.status.datetime = getCurrentGameTime();
             */
-            
+
             // 當該mtcode已經被refund時回傳該錯誤編碼 1015
             /*
              getRefundResp.status.code = "1015";
