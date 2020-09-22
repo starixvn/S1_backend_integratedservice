@@ -991,6 +991,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 amount = endRound_CQ9.amount,
                 validbet = endRound_CQ9.validbet,
                 eventUnix = endRound_CQ9.eventUnix,
+                createUnix = endRound_CQ9.createUnix,
                 Actions = "endround",
                 TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,

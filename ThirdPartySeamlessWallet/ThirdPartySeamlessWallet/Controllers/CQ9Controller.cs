@@ -353,7 +353,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 foreach (var item in endRoundReq.detail)
-                    //foreach (var item in detail)
                 {
                     if (item.amount < 0)
                     {
@@ -371,7 +370,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                         continue;
                     }
                     item.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
-
+                    
+                    DateTime dtFormatCreate;
+                    if (DateTime.TryParse(endRoundReq.createTime, out dtFormatCreate))
+                    {
+                        item.createUnix = new DateTimeOffset(dtFormatCreate).ToUnixTimeSeconds();
+                    }
 
                     var result = settledBLL.PayoutRNG_CQ9(endRoundReq, item, out decimal tpAffterAmount);
                     if (result > 0)

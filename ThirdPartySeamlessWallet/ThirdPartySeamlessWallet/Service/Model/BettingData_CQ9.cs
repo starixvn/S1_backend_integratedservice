@@ -43,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string eventtime { get; set; }
         public decimal validbet { get; set; }
         public long? eventUnix { get; set; }
+        public long? createUnix { get; set; }
     }
 
     public class RefundDataRNG_CQ9
