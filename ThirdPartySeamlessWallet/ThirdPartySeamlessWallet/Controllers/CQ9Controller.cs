@@ -348,56 +348,49 @@ namespace ThirdPartySeamlessWallet.Controllers
             getEndRoundResp.status.code = "1100";
             getEndRoundResp.status.message = "Error";
             getEndRoundResp.status.datetime = getCurrentGameTime();
+            int cntError = 0;
 
-            foreach (var item in endRoundReq.data)
-            {
-                if (item.amount < 0)
-                {
-                    // amount不得為負值為負值時則反回錯誤編碼1003
-                    getEndRoundResp.status.code = "1003";
-                    getEndRoundResp.status.message = "Error : insufficient amount";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
-                    log2File.Info($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                    return getEndRoundResp;
-                }
-                DateTime dtFormat;
-                if (!DateTime.TryParse(item.eventtime, out dtFormat))
-                {
-                    // 當eventTime格式錯誤時回傳 1004
-                    getEndRoundResp.status.code = "1004";
-                    getEndRoundResp.status.message = "Error : invalid eventtime";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
-                    log2File.Info($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                    return getEndRoundResp;
-                }
-            }
-            /*
             try
             {
-                var result = settledBLL.PayoutRNG_CQ9(endRoundReq, out decimal tpAffterAmount);
-                if (result > 0)
+                foreach (var item in endRoundReq.detail)
+                    //foreach (var item in detail)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, endRoundReq.account, gameType);
-                    getEndRoundResp.status.code = "0";
-                    getEndRoundResp.status.message = "Success";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
-                    getEndRoundResp.data.balance = tpAffterAmount;
-                    getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
-                }
-                else if (result == -1)
-                {
-                    // mtcode重複時則反回錯誤編碼 2009
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
-                    getEndRoundResp.status.code = "2009";
-                    getEndRoundResp.status.message = "Error : mtcode";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
-                }
-                else
-                {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
-                    getEndRoundResp.status.code = "1100";
-                    getEndRoundResp.status.message = "Error";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
+                    if (item.amount < 0)
+                    {
+                        // amount不得為負值為負值時則反回錯誤編碼1003
+                        log2File.Info($"code=1003\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        cntError++;
+                        continue;
+                    }
+                    DateTime dtFormat;
+                    if (!DateTime.TryParse(item.eventtime, out dtFormat))
+                    {
+                        // 當eventTime格式錯誤時回傳 1004
+                        log2File.Info($"code=1004\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        cntError++;
+                        continue;
+                    }
+                    item.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
+
+
+                    var result = settledBLL.PayoutRNG_CQ9(endRoundReq, item, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, endRoundReq.account, gameType);
+                        getEndRoundResp.data.balance = tpAffterAmount;
+                        getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
+                    }
+                    else if (result == -1)
+                    {
+                        // mtcode重複時則反回錯誤編碼 2009
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
+                        log2File.Info($"code=2009\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    }
+                    else
+                    {
+                        log2File.Info($"code=1100\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        cntError++;
+                    }
                 }
             }
             catch (Exception ex)
@@ -405,7 +398,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}\r\n{ex}", logName);
                 return getEndRoundResp;
             }
-            */
+
+            // 單筆失敗 回傳錯誤讓對方重新送資料
+            if (cntError > 0)
+            {
+                getEndRoundResp.status.code = "1100";
+                getEndRoundResp.status.message = "Error";
+                getEndRoundResp.status.datetime = getCurrentGameTime();
+            }
+            else
+            {
+                getEndRoundResp.status.code = "0";
+                getEndRoundResp.status.message = "Success";
+                getEndRoundResp.status.datetime = getCurrentGameTime();
+            }
+
             log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
             return getEndRoundResp;
         }

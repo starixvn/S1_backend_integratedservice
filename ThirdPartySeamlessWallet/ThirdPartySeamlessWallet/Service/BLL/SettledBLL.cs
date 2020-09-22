@@ -872,5 +872,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return data;
         }
         #endregion
+
+        #region CQ9
+        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, EndRound_CQ9 endRound_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, endRoundDataRNG_CQ9.account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                endRound_CQ9.amount *= tpCurrency.ExchangeRate;
+                endRound_CQ9.validbet *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, endRound_CQ9, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

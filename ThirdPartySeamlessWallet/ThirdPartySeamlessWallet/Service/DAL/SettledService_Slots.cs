@@ -907,7 +907,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead,out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
+        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
             afterAmount = 0;
             bonusId = 0;
@@ -968,5 +968,83 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        #region CQ9
+        public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, EndRound_CQ9 endRound_CQ9, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            int ticketStatus = endRound_CQ9.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+
+            var p = new DynamicParameters(new
+            {
+                account = endRoundDataRNG_CQ9.account,
+                gamecode = endRoundDataRNG_CQ9.gamecode,
+                gamehall = endRoundDataRNG_CQ9.gamehall,
+                roundid = endRoundDataRNG_CQ9.roundid,
+                mtcode = endRound_CQ9.mtcode,
+                amount = endRound_CQ9.amount,
+                validbet = endRound_CQ9.validbet,
+                eventUnix = endRound_CQ9.eventUnix,
+                Actions = "endround",
+                TicketStatus = ticketStatus,
+                TicketType = (int)BettransType.Payout,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (endRound_CQ9.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            endRound_CQ9.amount,
+                            (int)Tp.CQ9,
+                            endRoundDataRNG_CQ9.roundid,
+                            gameType,
+                            TpCategory.Slots,
+                            endRound_CQ9.mtcode,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        #endregion
     }
 }
