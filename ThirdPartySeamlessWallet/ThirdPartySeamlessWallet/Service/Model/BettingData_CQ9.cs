@@ -15,6 +15,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string mtcode { get; set; }
         public string session { get; set; }
+        public long? eventUnix { get; set; }
     }
 
     public class EndRoundDataRNG_CQ9

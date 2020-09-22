@@ -239,7 +239,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #region CQ9
         public int PlaceBetRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -255,17 +254,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new
             {
                 account = bettingDataRNG_CQ9.account,
-                eventTime = bettingDataRNG_CQ9.eventTime,
+                eventUnix = bettingDataRNG_CQ9.eventUnix,
                 gamehall = bettingDataRNG_CQ9.gamehall,
                 gamecode = bettingDataRNG_CQ9.gamecode,
                 roundid = bettingDataRNG_CQ9.roundid,
                 amount = bettingDataRNG_CQ9.amount,
                 mtcode = bettingDataRNG_CQ9.mtcode,
+                TicketType = (int)BettransType.Bet,
+                Actions = "bet",
                 TicketStatus = (int)TicketStatus.UnSettled
             }
             );
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
             try
             {
                 result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -275,7 +275,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         bettingDataRNG_CQ9.amount,
                         (int)Tp.CQ9,
-                        bettingDataRNG_CQ9.mtcode,
+                        bettingDataRNG_CQ9.roundid,
                         gameType,
                         bettingDataRNG_CQ9.mtcode,
                         null,
@@ -285,11 +285,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans
                     );
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
+                    if (bonusId > 0 && result > 0)
+                    {
+                        AddTpBonus(
+                            (int)Tp.CQ9,
+                            bettingDataRNG_CQ9.mtcode,
+                            gameType,
+                            tpCustInfo.CustId,
+                            tpCustInfo.UserName,
+                            tpCustInfo.CurrencyId,
+                            tpCustInfo.SiteId,
+                            bettingDataRNG_CQ9.amount,
+                            bonusId,
+                            TpCategory.Slots,
+                            conn,
+                            trans
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
                 }
             }
             catch (MySqlException mySqlEx)
@@ -306,6 +322,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        #endregion
     }
 }
