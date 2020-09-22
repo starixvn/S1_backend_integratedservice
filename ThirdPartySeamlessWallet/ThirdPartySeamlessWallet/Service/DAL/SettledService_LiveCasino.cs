@@ -1090,7 +1090,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
 
-            int ticketStatus = ticketStatus = (int)TicketStatus.Win;
+            int ticketStatus = (int)TicketStatus.Win;
 
             if (bettingData_EBet.detail.payout == 0)
             {

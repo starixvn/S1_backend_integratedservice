@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,7 +26,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gamecode { get; set; }
         public string roundid { get; set; }
         public string createTime { get; set; }
-        public IEnumerable<EndRound_CQ9> data { get; set; }
+        public string data { get; set; }
+        public IEnumerable<EndRound_CQ9> detail
+        {
+            get
+            {
+                yield return JsonConvert.DeserializeObject<EndRound_CQ9>(data);
+            }
+        }
     }
 
     public class EndRound_CQ9
@@ -34,6 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string eventtime { get; set; }
         public decimal validbet { get; set; }
+        public long? eventUnix { get; set; }
     }
 
     public class RefundDataRNG_CQ9
