@@ -16,7 +16,6 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
-    //[Route("api/[controller]")]
     [ApiController]
     public class CQ9Controller : ControllerBase
     {
@@ -126,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal balance { get; set; }
             public string currency { get; set; }
             [JsonProperty("event")]
-            public IList<RecordEvent> Event { get; set; }
+            public List<RecordEvent> Event { get; set; }
         }
 
         public class Target
@@ -370,7 +369,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         continue;
                     }
                     item.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
-                    
+
                     DateTime dtFormatCreate;
                     if (DateTime.TryParse(endRoundReq.createTime, out dtFormatCreate))
                     {
@@ -434,22 +433,46 @@ namespace ThirdPartySeamlessWallet.Controllers
             getRefundResp.status.code = "1100";
             getRefundResp.status.message = "Error";
             getRefundResp.status.datetime = getCurrentGameTime();
+            try
+            {
+                var result = settledBLL.RefundRNG_CQ9(refundReq, out decimal tpAffterAmount, out string account);
+                if (result > 0)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account, gameType);
+                    getRefundResp.status.code = "0";
+                    getRefundResp.status.message = "Success";
+                    getRefundResp.status.datetime = getCurrentGameTime();
+                    getRefundResp.data.balance = tpCustBalance.Balance;
+                    getRefundResp.data.currency = tpCustBalance.TpCurrencyId;
+                }
+                else if (result == -2)
+                {
+                    // 當refund未查詢到紀錄時回傳該錯誤編碼1014
+                    getRefundResp.status.code = "1014";
+                    getRefundResp.status.message = "Error : record not found";
+                    getRefundResp.status.datetime = getCurrentGameTime();
+                }
+                else if (result == -3)
+                {
+                    // 當該mtcode已經被refund時回傳該錯誤編碼 1015
+                    getRefundResp.status.code = "1015";
+                    getRefundResp.status.message = "Error : refunded";
+                    getRefundResp.status.datetime = getCurrentGameTime();
+                }
+                else
+                {
+                    getRefundResp.status.code = "1100";
+                    getRefundResp.status.message = "Error";
+                    getRefundResp.status.datetime = getCurrentGameTime();
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}\r\n{ex}", logName);
+                return getRefundResp;
+            }
 
-            // 當refund未查詢到紀錄時回傳該錯誤編碼1014
-            /*
-             getRefundResp.status.code = "1014";
-             getRefundResp.status.message = "Error : record not found";
-             getRefundResp.status.datetime = getCurrentGameTime();
-            */
-
-            // 當該mtcode已經被refund時回傳該錯誤編碼 1015
-            /*
-             getRefundResp.status.code = "1015";
-             getRefundResp.status.message = "Error : refunded";
-             getRefundResp.status.datetime = getCurrentGameTime();
-            */
-
-            log2File.Info($"{JsonConvert.SerializeObject(getRefundResp)}", logName);
+            log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
             return getRefundResp;
         }
 
@@ -463,29 +486,37 @@ namespace ThirdPartySeamlessWallet.Controllers
             GetRecordResp getRecordResp = new GetRecordResp();
             getRecordResp.status.code = "1100";
             getRecordResp.status.message = "Error";
-            getRecordResp.status.datetime = getCurrentGameTime();
 
-            getRecordResp.data.status.createtime = getCurrentGameTime();
+            var data = settledBLL.GetRecordRNG_CQ9(mtcode);
+            if (data == null)
+            {
+                // 當未查詢到紀錄時回傳該錯誤編碼1014
+                getRecordResp.data = null;
+                getRecordResp.status.code = "1014";
+                getRecordResp.status.message = "Error : record not found";
+                getRecordResp.status.datetime = getCurrentGameTime();
+            }
+            else
+            {
+                getRecordResp.data._id = mtcode;
+                getRecordResp.data.action = data.Actions;
+                getRecordResp.data.target.account = data.account;
+                getRecordResp.data.status.createtime = data.CreateFormat;
+                getRecordResp.data.status.endtime = data.UpdateFormat;
+                getRecordResp.data.status.status = (data.TicketStatus == (int)TicketStatus.Refund) ? "refund" : "success";
+                getRecordResp.data.status.message = "success";
+                getRecordResp.data.currency = data.currency;
+                getRecordResp.data.Event = new List<RecordEvent>();
+                RecordEvent refRecordEvent = new RecordEvent();
+                getRecordResp.data.Event.Add(refRecordEvent);
+                refRecordEvent.mtcode = mtcode;
+                refRecordEvent.amount = data.amount;
+                refRecordEvent.eventtime = data.eventFormat;
+                getRecordResp.status.code = "0";
+                getRecordResp.status.message = "Success";
+                getRecordResp.status.datetime = getCurrentGameTime();
+            }
 
-            //getRecordResp.data._id = "123";
-            //getRecordResp.data.action = "bet";
-            //getRecordResp.data.target.account = "nova88_";
-            //getRecordResp.data.status.status = "failed";
-            //getRecordResp.data.before = 0;
-            //getRecordResp.data.balance = 0;
-            //getRecordResp.data.currency = "MYR";
-            //getRecordResp.status.code = "0";
-            //getRecordResp.status.message = "Success";
-            getRecordResp.data.status.endtime = getCurrentGameTime();
-
-
-            // 當未查詢到紀錄時回傳該錯誤編碼1014
-            /*
-            getRecordResp.data = null;
-            getRecordResp.status.code = "1014";
-            getRecordResp.status.message = "Error : record not found";
-            getRecordResp.status.datetime = getCurrentGameTime();
-            */
             log2File.Info($"mtcode={mtcode}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
             return getRecordResp;
         }
