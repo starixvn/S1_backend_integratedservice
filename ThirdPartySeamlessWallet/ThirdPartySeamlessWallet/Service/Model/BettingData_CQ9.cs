@@ -84,4 +84,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string mtcode { get; set; }
     }
+
+    public class SettleDataRNG_CQ9
+    {
+        public string mtcode { get; set; }
+        public string account { get; set; }
+        public string roundid { get; set; }
+        public decimal amount { get; set; }
+        public long createUnix { get; set; }
+    }
 }

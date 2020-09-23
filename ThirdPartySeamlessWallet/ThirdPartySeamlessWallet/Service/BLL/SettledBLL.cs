@@ -922,6 +922,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        {
+            return settledService.GetUnsettledListRNG_CQ9();
+        }
+
+        public int SettledRNG_CQ9(SettleDataRNG_CQ9 settleDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, settleDataRNG_CQ9.account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            var result = settledService.SettledRNG_CQ9(tpCustInfo, settleDataRNG_CQ9, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
 
         public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
         {
