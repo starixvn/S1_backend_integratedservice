@@ -1046,6 +1046,57 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int RefundRNG_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, decimal amount, string roundid, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            int result = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            result = conn.Execute("Service_BettransRng_CQ9_Refund_Set", new { mtcode = refundDataRNG_CQ9.mtcode }, transaction: trans, commandType: CommandType.StoredProcedure);
+            if (result > 0)
+            {
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(amount),
+                    (int)Tp.CQ9,
+                    roundid,
+                    gameType,
+                    TpCategory.Slots,
+                    refundDataRNG_CQ9.mtcode,
+                    TransType.Refunds,
+                    null,
+                    out afterAmount,
+                    "Refund",
+                    out bonusId,
+                    conn,
+                    trans
+                );
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
+
+
+        public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<Record_CQ9>("Service_BettransRng_CQ9_Get", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
+        }
         #endregion
     }
 }

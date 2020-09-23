@@ -895,6 +895,53 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RefundRNG_CQ9(RefundDataRNG_CQ9 refundDataRNG_CQ9, out decimal afterAmount, out string account)
+        {
+            account = "";
+            afterAmount = 0;
+            var data = settledService.GetRecordRNG_CQ9(refundDataRNG_CQ9.mtcode);
+            if (data == null)
+            {
+                return -2;
+            }
+            if (data.TicketStatus == (int)TicketStatus.Refund)
+            {
+                return -3;
+            }
+
+            account = data.account;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            var result = settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9, data.amount, data.roundid, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+
+        public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
+        {
+            var data = settledService.GetRecordRNG_CQ9(mtcode);
+
+            if (data != null)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, data.account);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    data.amount /= tpCurrency.ExchangeRate;
+                }
+
+                data.currency = tpCurrency.TpCurrencyId;
+            }
+            return data;
+        }
+
         #endregion
     }
 }
