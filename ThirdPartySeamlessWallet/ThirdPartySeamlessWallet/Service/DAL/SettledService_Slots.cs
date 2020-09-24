@@ -1136,7 +1136,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TransId = settleDataRNG_CQ9.roundid,
                         GameType = GameType.CQ9_RNG,
                         TpUserName = settleDataRNG_CQ9.account,
-                        SettledTime = settleDataRNG_CQ9.createUnix / 1000,
+                        SettledTime = settleDataRNG_CQ9.createUnix,
                         SettlementType = SettlementType.SettledForValid,
                         TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                         BonusId = bonusId
