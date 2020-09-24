@@ -13,13 +13,14 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
-    public class SettleWorker : BackgroundService
+    public partial class SettleWorker : BackgroundService
     {
         private Timer timerSettleAG;
         private Timer timerSettleDG;
         private Timer timerSettleAllbet;
         private Timer timerSettleSA;
         private Timer timerSettleEBet;
+        private Timer timerSettleCQ9;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -43,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAllbet = new Timer(DoSettleAllbetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSA = new Timer(DoSettleSAWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleCQ9 = new Timer(DoSettleCQ9Work, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 

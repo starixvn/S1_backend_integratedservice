@@ -1091,6 +1091,84 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SettledRNG_CQ9(TpCustInfo tpCustInfo, SettleDataRNG_CQ9 settleDataRNG_CQ9, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { settleDataRNG_CQ9.roundid });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BettransRng_CQ9_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal stake = p.Get<decimal>("Stake");
+                decimal winLostAmount = (settleDataRNG_CQ9.amount != 0) ? settleDataRNG_CQ9.amount - stake : 0;
+
+                if (result > 0)
+                {
+                    int bonusId;
+
+                    GetTpBonus(
+                        (int)Tp.CQ9,
+                        settleDataRNG_CQ9.roundid,
+                        (int)GameType.CQ9_RNG,
+                        TpCategory.Slots,
+                        out int custId,
+                        out bonusId
+                    );
+                    decimal validBet = stake;
+
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.CQ9,
+                        Stake = stake,
+                        ValidBet = validBet,
+                        WinlostAmount = winLostAmount,
+                        TransId = settleDataRNG_CQ9.roundid,
+                        GameType = GameType.CQ9_RNG,
+                        TpUserName = settleDataRNG_CQ9.account,
+                        SettledTime = settleDataRNG_CQ9.createUnix / 1000,
+                        SettlementType = SettlementType.SettledForValid,
+                        TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                        BonusId = bonusId
+                    };
+
+                    if (betRecordInfo.WinlostAmount == 0)
+                        betRecordInfo.TicketStatus = TicketStatus.Draw;
+
+                    result = SettleTicket(
+                        tpCustInfo,
+                        betRecordInfo,
+                        0,
+                        out _,
+                        conn,
+                        trans,
+                        false/*Don't need Payout*/
+                    );
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
+
 
         public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
         {
