@@ -354,6 +354,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getEndRoundResp.status.message = "Error";
             getEndRoundResp.status.datetime = getCurrentGameTime();
             int cntError = 0;
+            int cntSucc = 0;
 
             try
             {
@@ -391,12 +392,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account);/*Just for TpCurrencyId*/
                             getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
                         }
+                        cntSucc++;
                     }
                     else if (result != -1)
                     {
                         log2File.Info($"code=1100\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                         cntError++;
                     }
+                }
+
+                if (cntSucc > 0)
+                {
+                    settledBLL.SetSettleFlagRNG_CQ9(endRoundReq.roundid, 2);
                 }
             }
             catch (Exception ex)

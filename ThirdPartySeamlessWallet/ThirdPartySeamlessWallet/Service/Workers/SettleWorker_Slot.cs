@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             bool forContinue = false;
             bool isError = false;
+            int thisTp = (int)Tp.CQ9;
 
             try
             {
@@ -29,7 +30,31 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            settledBLL.SettledRNG_CQ9(unsettled, out _);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.roundid,
+                                GameType = GameType.CQ9_RNG,
+                                TpUserName = unsettled.account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValid
+                            };
+
+                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+
+                            Task.Run(() =>
+                            {
+                                settledBLL.SetSettleFlagRNG_CQ9(unsettled.roundid, 1);
+                            });
                         }
                         catch (Exception ex1)
                         {
