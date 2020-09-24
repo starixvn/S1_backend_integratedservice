@@ -279,6 +279,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
+
             betReq.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
 
             // check session
@@ -295,32 +296,36 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 int result = bettingBLL.PlaceBetRNG_CQ9(betReq, out decimal tpAffterAmount);
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.account);
                 if (result > 0)
                 {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.account); /*Just for TpCurrencyId*/
+                    getBetResp.data.balance = tpAffterAmount;
+                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
+
                     getBetResp.status.code = "0";
                     getBetResp.status.message = "Success";
                     getBetResp.status.datetime = getCurrentGameTime();
-                    getBetResp.data.balance = tpAffterAmount;
-                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                 }
                 else if (result == -1)
                 {
+                    //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.account, gameType);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.account, gameType);
+                    getBetResp.data.balance = tpCustBalance.Balance;
+                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                     // 當mtcode重複時則反回錯誤編碼 2009
                     getBetResp.status.code = "2009";
                     getBetResp.status.message = "Error : mtcode exist";
                     getBetResp.status.datetime = getCurrentGameTime();
-                    getBetResp.data.balance = tpAffterAmount;
-                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                 }
                 else if (tpAffterAmount < 0)
                 {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.account, gameType);
+                    getBetResp.data.balance = tpCustBalance.Balance;
+                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                     // 當餘額不足時回傳 1005
                     getBetResp.status.code = "1005";
                     getBetResp.status.message = "Error : insufficient amount";
                     getBetResp.status.datetime = getCurrentGameTime();
-                    getBetResp.data.balance = tpAffterAmount;
-                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                 }
 
                 log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
@@ -337,6 +342,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/endround")]
         public GetApiResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq)
         {
+            var result = 0;
             string logName = $"{tpGameName}_EndRound";
             var json = JsonConvert.SerializeObject(getEndRoundReq);
             log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
@@ -376,20 +382,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                         item.createUnix = new DateTimeOffset(dtFormatCreate).ToUnixTimeSeconds();
                     }
 
-                    var result = settledBLL.PayoutRNG_CQ9(endRoundReq, item, out decimal tpAffterAmount);
+                    result = settledBLL.PayoutRNG_CQ9(endRoundReq, item, out decimal tpAffterAmount);
                     if (result > 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, endRoundReq.account, gameType);
                         getEndRoundResp.data.balance = tpAffterAmount;
-                        getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
+                        if (string.IsNullOrEmpty(getEndRoundResp.data.currency))
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account);/*Just for TpCurrencyId*/
+                            getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
+                        }
                     }
-                    else if (result == -1)
-                    {
-                        // mtcode重複時則反回錯誤編碼 2009
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
-                        log2File.Info($"code=2009\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                    }
-                    else
+                    else if (result != -1)
                     {
                         log2File.Info($"code=1100\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                         cntError++;
@@ -405,12 +408,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             // 單筆失敗 回傳錯誤讓對方重新送資料
             if (cntError > 0)
             {
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
+                getEndRoundResp.data.balance = tpCustBalance.Balance;
+                getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
                 getEndRoundResp.status.code = "1100";
                 getEndRoundResp.status.message = "Error";
                 getEndRoundResp.status.datetime = getCurrentGameTime();
             }
             else
             {
+                if (string.IsNullOrEmpty(getEndRoundResp.data.currency) && result == -1)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, endRoundReq.account, gameType);
+                    getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
+                    getEndRoundResp.data.balance = tpCustBalance.Balance;
+                }
+
                 getEndRoundResp.status.code = "0";
                 getEndRoundResp.status.message = "Success";
                 getEndRoundResp.status.datetime = getCurrentGameTime();

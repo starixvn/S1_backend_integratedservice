@@ -250,20 +250,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var result = 0;
 
-            bettingDataRNG_CQ9.amount *= -1;
+            bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
             var p = new DynamicParameters(new
-            {
-                account = bettingDataRNG_CQ9.account,
-                eventUnix = bettingDataRNG_CQ9.eventUnix,
-                gamehall = bettingDataRNG_CQ9.gamehall,
-                gamecode = bettingDataRNG_CQ9.gamecode,
-                roundid = bettingDataRNG_CQ9.roundid,
-                amount = bettingDataRNG_CQ9.amount,
-                mtcode = bettingDataRNG_CQ9.mtcode,
-                TicketType = (int)BettransType.Bet,
-                Actions = "bet",
-                TicketStatus = (int)TicketStatus.UnSettled
-            }
+                    {
+                        account = bettingDataRNG_CQ9.account,
+                        eventUnix = bettingDataRNG_CQ9.eventUnix,
+                        gamehall = bettingDataRNG_CQ9.gamehall,
+                        gamecode = bettingDataRNG_CQ9.gamecode,
+                        roundid = bettingDataRNG_CQ9.roundid,
+                        amount = bettingDataRNG_CQ9.amount,
+                        mtcode = bettingDataRNG_CQ9.mtcode,
+                        TicketType = (int)BettransType.Bet,
+                        Actions = "bet",
+                        TicketStatus = (int)TicketStatus.UnSettled
+                    }
             );
 
             try
@@ -285,7 +285,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans
                     );
-                    if (bonusId > 0 && result > 0)
+
+                    /*if (bonusId > 0 && result > 0)
                     {
                         AddTpBonus(
                             (int)Tp.CQ9,
@@ -301,7 +302,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
-                    }
+                    }*/
+
                     if (result > 0)
                     {
                         trans.Commit();
