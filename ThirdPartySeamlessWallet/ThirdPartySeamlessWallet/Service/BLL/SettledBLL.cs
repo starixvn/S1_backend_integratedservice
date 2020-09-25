@@ -942,7 +942,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int PayoffRNG_CQ9(PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
+        public int RewardRNG_CQ9(PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, payoffDataRNG_CQ9.account);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
@@ -952,7 +952,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 payoffDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.PayoffRNG_CQ9(tpCustInfo, payoffDataRNG_CQ9, out afterAmount);
+            var result = settledService.RewardRNG_CQ9(tpCustInfo, payoffDataRNG_CQ9, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {

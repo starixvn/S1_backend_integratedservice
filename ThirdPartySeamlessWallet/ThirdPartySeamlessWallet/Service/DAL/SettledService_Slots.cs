@@ -1165,7 +1165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int PayoffRNG_CQ9(TpCustInfo tpCustInfo, PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
+        public int RewardRNG_CQ9(TpCustInfo tpCustInfo, PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
         {
             int bonusId = 0;
             int gameType = (int)GameType.CQ9_RNG;
@@ -1190,7 +1190,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransRng_CQ9_Payoff_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_RewardRNG_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -1257,7 +1257,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             string[] sType = mtcode.Split("-");
             if (sType[1] == "payoff")
             {
-                sp = "Service_BettransRNG_CQ9_Payoff_Get";
+                sp = "Service_RewardRNG_CQ9_Get";
             }
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<Record_CQ9>($"{sp}", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
