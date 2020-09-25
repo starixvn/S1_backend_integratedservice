@@ -272,5 +272,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int DebitRNG_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.DebitRNG_CQ9(tpCustInfo, bettingDataRNG_CQ9, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
     }
 }
