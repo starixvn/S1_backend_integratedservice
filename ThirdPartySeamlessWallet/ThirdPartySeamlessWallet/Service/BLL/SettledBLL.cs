@@ -922,6 +922,46 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int CreditRNG_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CreditRNG_CQ9(tpCustInfo, bettingDataRNG_CQ9, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int PayoffRNG_CQ9(PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, payoffDataRNG_CQ9.account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoffDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoffRNG_CQ9(tpCustInfo, payoffDataRNG_CQ9, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
         {
             return settledService.GetUnsettledListRNG_CQ9();
@@ -931,6 +971,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlagRNG_CQ9(roundid, SettleFlag);
         }
+
         public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
         {
             var data = settledService.GetRecordRNG_CQ9(mtcode);

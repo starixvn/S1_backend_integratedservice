@@ -93,4 +93,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string roundid { get; set; }
         public long SettleTime { get; set; }
     }
+
+    public class PayoffDataRNG_CQ9
+    {
+        public string account { get; set; }
+        public string eventTime { get; set; }
+        public decimal amount { get; set; }
+        public string mtcode { get; set; }
+        public string remark { get; set; }
+        public long? eventUnix { get; set; }
+    }
 }
