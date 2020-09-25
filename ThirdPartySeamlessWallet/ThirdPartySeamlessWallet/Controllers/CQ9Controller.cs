@@ -748,7 +748,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var result = settledBLL.PayoffRNG_CQ9(payoffReq, out decimal tpAffterAmount);
+                var result = settledBLL.RewardRNG_CQ9(payoffReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, payoffReq.account);/*Just for TpCurrencyId*/
