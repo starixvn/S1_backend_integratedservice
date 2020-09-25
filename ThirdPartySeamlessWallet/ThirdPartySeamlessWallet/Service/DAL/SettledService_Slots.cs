@@ -1100,7 +1100,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransRng_CQ9_Settle_Set", new { roundid = roundid, SettleFlag = SettleFlag }, commandType: CommandType.StoredProcedure);
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = conn.Execute("Service_BettransRng_CQ9_Settle_Set", new { roundid = roundid, SettleFlag = SettleFlag }, transaction: trans, commandType: CommandType.StoredProcedure);
+            trans.Commit();
+            return result;
         }
 
         public Record_CQ9 GetRecordRNG_CQ9(string mtcode)

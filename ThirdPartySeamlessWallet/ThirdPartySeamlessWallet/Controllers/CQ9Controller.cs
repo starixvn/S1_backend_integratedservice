@@ -405,6 +405,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     settledBLL.SetSettleFlagRNG_CQ9(endRoundReq.roundid, 2);
                 }
+
+                getEndRoundResp.status.code = "0";
+                getEndRoundResp.status.message = "Success";
             }
             catch (Exception ex)
             {
@@ -418,8 +421,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
                 getEndRoundResp.data.balance = tpCustBalance.Balance;
                 getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
-                getEndRoundResp.status.code = "1100";
-                getEndRoundResp.status.message = "Error";
                 getEndRoundResp.status.datetime = getCurrentGameTime();
             }
             else
@@ -431,8 +432,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getEndRoundResp.data.balance = tpCustBalance.Balance;
                 }
 
-                getEndRoundResp.status.code = "0";
-                getEndRoundResp.status.message = "Success";
                 getEndRoundResp.status.datetime = getCurrentGameTime();
             }
 
