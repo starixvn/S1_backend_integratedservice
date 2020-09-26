@@ -1091,6 +1091,81 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int DebitRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
+            var p = new DynamicParameters(new
+            {
+                account = bettingDataRNG_CQ9.account,
+                gamecode = bettingDataRNG_CQ9.gamecode,
+                gamehall = bettingDataRNG_CQ9.gamehall,
+                roundid = bettingDataRNG_CQ9.roundid,
+                mtcode = bettingDataRNG_CQ9.mtcode,
+                amount = bettingDataRNG_CQ9.amount,
+                eventUnix = bettingDataRNG_CQ9.eventUnix,
+                Actions = "debit",
+                TicketStatus = (int)TicketStatus.Lost,
+                TicketType = (int)BettransType.Payout
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataRNG_CQ9.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_CQ9.amount,
+                            (int)Tp.CQ9,
+                            bettingDataRNG_CQ9.roundid,
+                            gameType,
+                            TpCategory.Slots,
+                            bettingDataRNG_CQ9.mtcode,
+                            TransType.Undo,
+                            null,
+                            out afterAmount,
+                            "Resettle",
+                            out bonusId,
+                            conn,
+                            trans
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+
+                    SetSettleFlagRNG_CQ9(bettingDataRNG_CQ9.roundid, 2);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
         public int CreditRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -1100,6 +1175,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
 
+            bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount);
             var p = new DynamicParameters(new
             {
                 account = bettingDataRNG_CQ9.account,
@@ -1132,7 +1208,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             gameType,
                             TpCategory.Slots,
                             bettingDataRNG_CQ9.mtcode,
-                            TransType.Payout,
+                            TransType.Undo,
                             null,
                             out afterAmount,
                             "Resettle",

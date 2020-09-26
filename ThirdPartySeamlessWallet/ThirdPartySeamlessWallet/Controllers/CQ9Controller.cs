@@ -586,7 +586,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                int result = bettingBLL.DebitRNG_CQ9(debitReq, out decimal tpAffterAmount);
+                int result = settledBLL.DebitRNG_CQ9(debitReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, debitReq.account); /*Just for TpCurrencyId*/
