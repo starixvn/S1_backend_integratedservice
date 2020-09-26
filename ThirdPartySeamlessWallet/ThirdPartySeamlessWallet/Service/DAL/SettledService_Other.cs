@@ -115,14 +115,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             betRes = settleData_CF.status switch
             {
                 "WIN" => (int)TicketStatus.Win,
-                "LOST" => (int)TicketStatus.Lost,
+                "LOSE" => (int)TicketStatus.Lost,
                 _ => (int)TicketStatus.Refund,
             };
 
             var ticketStatus = settleData_CF.status switch
             {
                 "WIN" => TicketStatus.Win,
-                "LOST" => TicketStatus.Lost,
+                "LOSE" => TicketStatus.Lost,
                 _ => TicketStatus.Refund,
             };
 
