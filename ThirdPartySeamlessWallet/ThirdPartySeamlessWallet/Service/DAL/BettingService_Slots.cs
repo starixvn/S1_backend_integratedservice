@@ -251,25 +251,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
-            var p = new DynamicParameters(new
-            {
-                account = bettingDataRNG_CQ9.account,
-                eventUnix = bettingDataRNG_CQ9.eventUnix,
-                gamehall = bettingDataRNG_CQ9.gamehall,
-                gamecode = bettingDataRNG_CQ9.gamecode,
-                roundid = bettingDataRNG_CQ9.roundid,
-                amount = bettingDataRNG_CQ9.amount,
-                mtcode = bettingDataRNG_CQ9.mtcode,
-                TicketType = (int)BettransType.Bet,
-                Actions = "bet",
-                TicketStatus = (int)TicketStatus.UnSettled
-            }
-            );
 
             try
             {
-                result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (result > 0 && bettingDataRNG_CQ9.amount != 0)
+                if (bettingDataRNG_CQ9.amount != 0)
                 {
                     result = PlaceBetV2(
                         tpCustInfo,
@@ -286,34 +271,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans
                     );
 
-                    /*if (bonusId > 0 && result > 0)
+                    var p = new DynamicParameters(new
                     {
-                        AddTpBonus(
-                            (int)Tp.CQ9,
-                            bettingDataRNG_CQ9.mtcode,
-                            gameType,
-                            tpCustInfo.CustId,
-                            tpCustInfo.UserName,
-                            tpCustInfo.CurrencyId,
-                            tpCustInfo.SiteId,
-                            bettingDataRNG_CQ9.amount,
-                            bonusId,
-                            TpCategory.Slots,
-                            conn,
-                            trans
-                        );
-                    }*/
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
+                        account = bettingDataRNG_CQ9.account,
+                        eventUnix = bettingDataRNG_CQ9.eventUnix,
+                        gamehall = bettingDataRNG_CQ9.gamehall,
+                        gamecode = bettingDataRNG_CQ9.gamecode,
+                        roundid = bettingDataRNG_CQ9.roundid,
+                        amount = bettingDataRNG_CQ9.amount,
+                        mtcode = bettingDataRNG_CQ9.mtcode,
+                        before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
+                        balance = afterAmount,
+                        TicketType = (int)BettransType.Bet,
+                        Actions = "bet",
+                        TicketStatus = (int)TicketStatus.UnSettled
                     }
+                    );
+                    result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                if (result > 0)
+                {
+                    trans.Commit();
                 }
             }
             catch (MySqlException mySqlEx)
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
+                    trans.Rollback();
                     result = -1;
                 }
                 else

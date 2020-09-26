@@ -50,6 +50,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string roundid { get; set; }
         public decimal amount { get; set; }
+        public decimal Before { get; set; }
+        public decimal Balance { get; set; }
         public DateTime eventtime { get; set; }
         public string Actions { get; set; }
         public string account { get; set; }
