@@ -14,7 +14,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class SettledService
     {
-        public int SettledRNG_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
+        public int PayoutRNG_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
             int bonusId = 0;
             int gameType = (int)GameType.GPI_RNG;
@@ -30,8 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(settledDataRNG_GPI);
             p.Add("jackpot_contribution", 0);
             p.Add("type", (int)BettransType.Payout);
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
             try
             {
                 result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -56,33 +55,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        decimal Stake = p.Get<decimal>("Stake");
-                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp.GPI,
-                            Stake = Stake,
-                            ValidBet = Stake,
-                            WinlostAmount = WinLostAmount,
-                            TransId = settledDataRNG_GPI.round_id,
-                            GameType = GameType.GPI_RNG,
-                            TpUserName = settledDataRNG_GPI.cust_id,
-                            SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValid,
-                            BonusId = bonusId
-                        };
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, settledDataRNG_GPI.amount, out _, conn, trans, false/*Don't need Payout*/);
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
+                        trans.Commit();
                     }
-                }
-                else
-                {
-                    result = -1;
                 }
             }
             catch (MySqlException mySqlEx)
@@ -95,6 +69,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     throw mySqlEx;
                 }
+            }
+
+            return result;
+        }
+        public int SettledRNG_GPI(TpCustInfo tpCustInfo, EndgameRNG_GPI endgameRNG_GPI)
+        {
+            int bonusId = 0;
+
+            var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var p = new DynamicParameters(endgameRNG_GPI);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            conn.Execute("Service_BettransRNG_GPI_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            decimal Stake = p.Get<decimal>("Stake");
+            decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+
+            BetRecordInfo betRecordInfo = new BetRecordInfo
+            {
+                TpId = (int)Tp.GPI,
+                Stake = Stake,
+                ValidBet = Stake,
+                WinlostAmount = WinLostAmount,
+                TransId = endgameRNG_GPI.round_id,
+                GameType = GameType.GPI_RNG,
+                TpUserName = endgameRNG_GPI.cust_id,
+                SettledTime = 0,
+                SettlementType = SettlementType.SettledForValid,
+                BonusId = bonusId
+            };
+
+            result = Settle(tpCustInfo, betRecordInfo, TpCategory.Slots);
+
+            if (result > 0)
+            {
+                trans.Commit();
             }
 
             return result;

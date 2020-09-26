@@ -274,7 +274,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount, out settleTime);
             return result;
         }
-        public int SettledRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
+        public int PayoutRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, settledDataRNG_GPI.cust_id);
@@ -289,13 +289,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
 
-            var result = settledService.SettledRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
+            var result = settledService.PayoutRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
                 settledDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
             }
+
+            return result;
+        }
+        public int SettledRNG_GPI(EndgameRNG_GPI endgameRNG_GPI)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, endgameRNG_GPI.cust_id);
+            var result = settledService.SettledRNG_GPI(tpCustInfo, endgameRNG_GPI);
 
             return result;
         }

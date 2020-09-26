@@ -74,7 +74,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/validateticket")]
         [HttpPost]
         [Produces("application/xml")]
-        public ValidateTicketResp validateticket([FromForm]string ticket)
+        public ValidateTicketResp validateticket([FromForm] string ticket)
         {
             logger.LogCritical(ticket);
 
@@ -141,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/getbalance")]
         [HttpPost]
         [Produces("application/xml")]
-        public GetbalanceResp getbalance([FromForm]GetbalanceReq getbalanceReq)
+        public GetbalanceResp getbalance([FromForm] GetbalanceReq getbalanceReq)
         {
             logger.LogCritical(JsonConvert.SerializeObject(getbalanceReq));
 
@@ -185,7 +185,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/debit")]
         [HttpPost]
         [Produces("application/xml")]
-        public DebitResp debit([FromForm]DebitReq debitReq)
+        public DebitResp debit([FromForm] DebitReq debitReq)
         {
             logger.LogCritical(JsonConvert.SerializeObject(debitReq));
 
@@ -276,7 +276,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/credit")]
         [HttpPost]
         [Produces("application/xml")]
-        public CreditResp credit([FromForm]CreditReq creditReq)
+        public CreditResp credit([FromForm] CreditReq creditReq)
         {
             CreditResp creditResp = new CreditResp();
             creditResp.Exchange_rate = 1;
@@ -285,7 +285,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             //logger.LogCritical(JsonConvert.SerializeObject(creditReq));
             try
             {
-                int result = settledBLL.SettledRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
+                int result = settledBLL.PayoutRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
 
                 if (result > 0)
                 {
@@ -337,7 +337,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public class EndgameResp
         {
             [XmlElement(ElementName = "error_code")]
-            public string Error_code { get; set; }
+            public int Error_code { get; set; }
             [XmlElement(ElementName = "error_msg")]
             public string Error_msg { get; set; }
         }
@@ -345,14 +345,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/endgame")]
         [HttpPost]
         [Produces("application/xml")]
-        public EndgameResp endgame([FromForm]EndgameReq endgameReq)
+        public EndgameResp endgame([FromForm] EndgameReq endgameReq)
         {
             EndgameResp endgameResp = new EndgameResp();
-            endgameResp.Error_code = "0";
+            endgameResp.Error_code = -1;
+            endgameResp.Error_msg = "Unknown error";
+
+            int result = settledBLL.SettledRNG_GPI(endgameReq);
+            endgameResp.Error_code = 0;
             endgameResp.Error_msg = "No errors";
 
             string endgameLog = $"{JsonConvert.SerializeObject(endgameReq)}\r\n{JsonConvert.SerializeObject(endgameResp)}";
             log2File.Info(endgameLog, "GPI_endgame");
+
             return endgameResp;
         }
     }
