@@ -40,6 +40,8 @@ namespace CommonService
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<IovationService>();
+            services.AddSingleton<OTPSMSService>();
+            
 
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<AuthBLL>();
@@ -49,6 +51,8 @@ namespace CommonService
             services.AddSingleton<MoviderSMSBLL>();
             services.AddSingleton<TwilioSMSBLL>();
             services.AddSingleton<IovationBLL>();
+            services.AddSingleton<OTPSMSBLL>();
+            
 
             services.AddControllers();
 
