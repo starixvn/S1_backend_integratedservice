@@ -31,9 +31,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         {
             get
             {
+                if (string.IsNullOrEmpty(data))
+                {
+                    return null;
+                }
                 return JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
             }
         }
+        public long? createUnix { get; set; }
     }
 
     public class EndRound_CQ9
@@ -43,13 +48,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string eventtime { get; set; }
         public decimal validbet { get; set; }
         public long? eventUnix { get; set; }
-        public long? createUnix { get; set; }
     }
 
     public class Record_CQ9
     {
         public string roundid { get; set; }
         public decimal amount { get; set; }
+        public decimal Before { get; set; }
+        public decimal Balance { get; set; }
         public DateTime eventtime { get; set; }
         public string Actions { get; set; }
         public string account { get; set; }

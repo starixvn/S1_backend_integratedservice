@@ -64,8 +64,9 @@ namespace ThirdParty.CQ9
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var paramToken = $"API_Token_{tpCustInfo.TpCurrencyId}";
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string API_Token = inputs.ContainsKey("API_Token") && !string.IsNullOrEmpty(inputs["API_Token"]) ? inputs["API_Token"] : throw new Exception("API_Token");
+            string API_Token = inputs.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(inputs[$"{paramToken}"]) ? inputs[$"{paramToken}"] : throw new Exception($"{paramToken}");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
