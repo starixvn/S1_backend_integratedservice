@@ -881,7 +881,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region CQ9
-        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, EndRound_CQ9 endRound_CQ9, out decimal afterAmount)
+        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, endRoundDataRNG_CQ9.account);
             if (tpCustInfo == null)
@@ -893,11 +893,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                endRound_CQ9.amount *= tpCurrency.ExchangeRate;
-                endRound_CQ9.validbet *= tpCurrency.ExchangeRate;
+                foreach (var item in endRoundDataRNG_CQ9.detail)
+                {
+                    item.amount *= tpCurrency.ExchangeRate;
+                }
             }
 
-            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, endRound_CQ9, out afterAmount);
+            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -1027,7 +1029,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, data.account);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
-                
+
                 if (tpCurrency.ExchangeRate > 0)
                 {
                     data.amount /= tpCurrency.ExchangeRate;
