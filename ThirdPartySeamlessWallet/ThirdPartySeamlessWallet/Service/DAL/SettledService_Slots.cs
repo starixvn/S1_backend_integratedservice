@@ -1028,7 +1028,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             amount = item.amount,
                             validbet = item.validbet,
                             eventUnix = item.eventUnix,
-                            createUnix = item.createUnix,
+                            createUnix = endRoundDataRNG_CQ9.createUnix,
                             before = afterAmount - (Math.Abs(item.amount)),
                             balance = afterAmount,
                             Actions = "endround",

@@ -293,8 +293,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBetResp;
             }
 
-            DateTime dtFormat;
-            if (!DateTime.TryParse(betReq.eventTime, out dtFormat))
+            long chkEventTimeParse = checkTimeParse(betReq.eventTime);
+            if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 getBetResp.status.code = "1004";
@@ -302,20 +302,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
-            else
-            {
-                string[] chkDt = betReq.eventTime.Split("-");
-                int cntDt = chkDt.Count();
-                if (cntDt != 4 || chkDt[3] != "04:00")
-                {
-                    // 當eventTime格式錯誤時回傳 1004
-                    getBetResp.status.code = "1004";
-                    getBetResp.status.message = "Error : invalid eventTime";
-                    log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                    return getBetResp;
-                }
-            }
-            betReq.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
+            betReq.eventUnix = chkEventTimeParse;
 
             // check key
             var tokenCurrency = getTokenCurrency(wtoken);
@@ -324,7 +311,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status.code = "1100";
                 getBetResp.status.message = "Error : wtoken";
-                getBetResp.data.currency = tokenCurrency;
                 log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
@@ -406,6 +392,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getEndRoundResp;
             }
 
+            // check key
+            var tokenCurrency = getTokenCurrency(wtoken);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            {
+                getEndRoundResp.status.code = "1100";
+                getEndRoundResp.status.message = "Error : wtoken";
+                log2File.Info($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                return getEndRoundResp;
+            }
+
             // check item param
             foreach (var item in endRoundReq.detail)
             {
@@ -414,43 +411,27 @@ namespace ThirdPartySeamlessWallet.Controllers
                     // amount不得為負值為負值時則反回錯誤編碼1003
                     getEndRoundResp.status.code = "1003";
                     getEndRoundResp.status.message = "Error : insufficient amount";
-                    log2File.Info($"code=1003\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    log2File.Info($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                     return getEndRoundResp;
                 }
-                DateTime dtFormat;
-                if (!DateTime.TryParse(item.eventtime, out dtFormat))
+
+                long chkEventTimeParse = checkTimeParse(item.eventtime);
+                if (chkEventTimeParse == 0)
                 {
                     // 當eventTime格式錯誤時回傳 1004
                     getEndRoundResp.status.code = "1004";
                     getEndRoundResp.status.message = "Error : invalid eventTime";
-                    log2File.Info($"code=1004\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    log2File.Info($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                     return getEndRoundResp;
                 }
-                else
-                {
-                    string[] chkDt = item.eventtime.Split("-");
-                    int cntDt = chkDt.Count();
-                    if (cntDt != 4 || chkDt[3] != "04:00")
-                    {
-                        // 當eventTime格式錯誤時回傳 1004
-                        getEndRoundResp.status.code = "1004";
-                        getEndRoundResp.status.message = "Error : invalid eventTime";
-                        log2File.Info($"code=1004\r\n{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                        return getEndRoundResp;
-                    }
-                }
-                item.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
-
-                DateTime dtFormatCreate;
-                if (DateTime.TryParse(endRoundReq.createTime, out dtFormatCreate))
-                {
-                    item.createUnix = new DateTimeOffset(dtFormatCreate).ToUnixTimeSeconds();
-                }
+                item.eventUnix = chkEventTimeParse;
             }
 
             try
             {
-                var tokenCurrency = getTokenCurrency(wtoken);
+                long chkCreateTimeParse = checkTimeParse(endRoundReq.createTime);
+                endRoundReq.createUnix = chkCreateTimeParse;
+
                 result = settledBLL.PayoutRNG_CQ9(endRoundReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -462,10 +443,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    // 當mtcode重複時則反回錯誤編碼 2009
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
                     getEndRoundResp.data.balance = tpCustBalance.Balance;
                     getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
+                    // 當mtcode重複時則反回錯誤編碼 2009
                     getEndRoundResp.status.code = "2009";
                     getEndRoundResp.status.message = "Error : mtcode exist";
                     getEndRoundResp.status.datetime = getCurrentGameTime();
@@ -475,6 +456,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     // 1100 對方重送資料
                     getEndRoundResp.data.currency = tokenCurrency;
                 }
+
                 log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                 return getEndRoundResp;
             }
@@ -508,6 +490,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getRefundResp;
             }
 
+            // check key
+            var tokenCurrency = getTokenCurrency(wtoken);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            {
+                getRefundResp.status.code = "1100";
+                getRefundResp.status.message = "Error : wtoken";
+                log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                return getRefundResp;
+            }
+
             try
             {
                 var result = settledBLL.RefundRNG_CQ9(refundReq, out decimal tpAffterAmount, out string account);
@@ -526,6 +519,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getRefundResp.status.code = "1014";
                     getRefundResp.status.message = "Error : record not found";
                     getRefundResp.status.datetime = getCurrentGameTime();
+                    getRefundResp.data.currency = tokenCurrency;
                 }
                 else if (result == -3)
                 {
@@ -533,22 +527,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getRefundResp.status.code = "1015";
                     getRefundResp.status.message = "Error : refunded";
                     getRefundResp.status.datetime = getCurrentGameTime();
+                    getRefundResp.data.currency = tokenCurrency;
                 }
-                else
-                {
-                    getRefundResp.status.code = "1100";
-                    getRefundResp.status.message = "Error";
-                    getRefundResp.status.datetime = getCurrentGameTime();
-                }
+
+                log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                return getRefundResp;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}\r\n{ex}", logName);
                 return getRefundResp;
             }
-
-            log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
-            return getRefundResp;
         }
 
         [HttpGet]
@@ -566,6 +555,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getRecordResp.status.code = "1003";
                 getRecordResp.status.message = "Error : param invalid";
+                log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+                return getRecordResp;
+            }
+
+            // check key
+            var tokenCurrency = getTokenCurrency(wtoken);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            {
+                getRecordResp.status.code = "1100";
+                getRecordResp.status.message = "Error : wtoken";
                 log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
                 return getRecordResp;
             }
@@ -638,29 +638,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return apiResponse;
             }
 
-            // 當eventTime格式錯誤時回傳 1004
-            DateTime dtFormat;
-            if (!DateTime.TryParse(debitReq.eventTime, out dtFormat))
+            long chkEventTimeParse = checkTimeParse(debitReq.eventTime);
+            if (chkEventTimeParse == 0)
             {
+                // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
                 log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
-            else
-            {
-                string[] chkDt = debitReq.eventTime.Split("-");
-                int cntDt = chkDt.Count();
-                if (cntDt != 4 || chkDt[3] != "04:00")
-                {
-                    // 當eventTime格式錯誤時回傳 1004
-                    apiResponse.status.code = "1004";
-                    apiResponse.status.message = "Error : invalid eventTime";
-                    log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                    return apiResponse;
-                }
-            }
-            debitReq.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
+            debitReq.eventUnix = chkEventTimeParse;
 
             // check key
             var tokenCurrency = getTokenCurrency(wtoken);
@@ -711,14 +698,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.message = "Error : insufficient amount";
                     apiResponse.status.datetime = getCurrentGameTime();
                 }
+                log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
+                return apiResponse;
             }
-
-            log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-            return apiResponse;
         }
 
         [HttpPost]
@@ -753,29 +740,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return apiResponse;
             }
 
-            // 當eventTime格式錯誤時回傳 1004
-            DateTime dtFormat;
-            if (!DateTime.TryParse(creditReq.eventTime, out dtFormat))
+            long chkEventTimeParse = checkTimeParse(creditReq.eventTime);
+            if (chkEventTimeParse == 0)
             {
+                // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
                 log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
-            else
-            {
-                string[] chkDt = creditReq.eventTime.Split("-");
-                int cntDt = chkDt.Count();
-                if (cntDt != 4 || chkDt[3] != "04:00")
-                {
-                    // 當eventTime格式錯誤時回傳 1004
-                    apiResponse.status.code = "1004";
-                    apiResponse.status.message = "Error : invalid eventTime";
-                    log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                    return apiResponse;
-                }
-            }
-            creditReq.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
+            creditReq.eventUnix = chkEventTimeParse;
 
             // check key
             var tokenCurrency = getTokenCurrency(wtoken);
@@ -816,14 +790,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.code = "1006";
                     apiResponse.status.message = "Error : account not found";
                 }
+                log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
+                return apiResponse;
             }
-
-            log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-            return apiResponse;
         }
 
         [HttpPost]
@@ -858,29 +832,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return apiResponse;
             }
 
-            // 當eventTime格式錯誤時回傳 1004
-            DateTime dtFormat;
-            if (!DateTime.TryParse(payoffReq.eventTime, out dtFormat))
+            long chkEventTimeParse = checkTimeParse(payoffReq.eventTime);
+            if (chkEventTimeParse == 0)
             {
+                // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
                 log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
-            else
-            {
-                string[] chkDt = payoffReq.eventTime.Split("-");
-                int cntDt = chkDt.Count();
-                if (cntDt != 4 || chkDt[3] != "04:00")
-                {
-                    // 當eventTime格式錯誤時回傳 1004
-                    apiResponse.status.code = "1004";
-                    apiResponse.status.message = "Error : invalid eventTime";
-                    log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                    return apiResponse;
-                }
-            }
-            payoffReq.eventUnix = new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
+            payoffReq.eventUnix = chkEventTimeParse;
 
             // check key
             var tokenCurrency = getTokenCurrency(wtoken);
@@ -921,14 +882,33 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.code = "1006";
                     apiResponse.status.message = "Error : account not found";
                 }
+                log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
+                return apiResponse;
             }
+        }
 
-            log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-            return apiResponse;
+        private long checkTimeParse(string time)
+        {
+            DateTime dtFormat;
+            if (!DateTime.TryParse(time, out dtFormat))
+            {
+                return 0;
+            }
+            else
+            {
+                string[] chkDt = time.Split("-");
+                int cntDt = chkDt.Count();
+                if (cntDt != 4 || chkDt[3] != "04:00")
+                {
+                    return 0;
+                }
+            }
+            return new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
         }
 
         private string getCurrentGameTime()
