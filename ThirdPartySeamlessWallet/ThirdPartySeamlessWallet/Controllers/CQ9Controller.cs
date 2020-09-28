@@ -159,7 +159,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/player/check/{account}")]
         public CheckPlayerResp CheckPlayer(string account, [FromQuery] GetHeader getHeader)
         {
-
             string logName = $"{tpGameName}_CheckPlayer";
             log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getHeader)}", logName);
             CheckPlayerResp checkPlayerResp = new CheckPlayerResp();
@@ -864,6 +863,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
                 return apiResponse;
             }
+        }
+
+        [HttpPost]
+        [HttpGet]
+        [Route("[controller]/{path1?}/{path2?}/{path3?}")]
+        public GetApiResp NotFound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getReq)
+        {
+            string logName = $"{tpGameName}_NotFound";
+            var json = JsonConvert.SerializeObject(getReq);
+            GetApiResp apiResponse = new GetApiResp();
+            apiResponse.status.code = "1002";
+            apiResponse.status.message = "Error: 404";
+            apiResponse.status.datetime = getCurrentGameTime();
+            log2File.Error($"wtoken={wtoken}\r\n{json}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+            return apiResponse;
         }
 
         private long checkTimeParse(string time)
