@@ -27,6 +27,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string roundid { get; set; }
         public string createTime { get; set; }
         public string data { get; set; }
+
+        private IEnumerable<EndRound_CQ9> _detail = null;
         public IEnumerable<EndRound_CQ9> detail
         {
             get
@@ -35,7 +37,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 {
                     return null;
                 }
-                return JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
+                else if (_detail == null)
+                {
+                    _detail = JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
+                }
+
+                return _detail;
             }
         }
         public long? createUnix { get; set; }
