@@ -64,9 +64,12 @@ namespace CommonService.Service.Library
 
             using var client = new HttpClient(handler);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(contentType));
-            foreach (var param in headerParams)
+            if (headerParams != null)
             {
-                client.DefaultRequestHeaders.Add(param.Key, param.Value);
+                foreach (var param in headerParams)
+                {
+                    client.DefaultRequestHeaders.Add(param.Key, param.Value);
+                }
             }
             var data = new StringContent(parameters, Encoding.UTF8, contentType);
             var response = await client.PostAsync(url, data);
