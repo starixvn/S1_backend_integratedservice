@@ -339,23 +339,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.account, gameType);
-                    getBetResp.data.balance = tpCustBalance.Balance;
-                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                     // 當mtcode重複時則反回錯誤編碼 2009
                     getBetResp.status.code = "2009";
                     getBetResp.status.message = "Error : mtcode exist";
-                    getBetResp.status.datetime = getCurrentGameTime();
                 }
                 else if (tpAffterAmount < 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.account, gameType);
-                    getBetResp.data.balance = tpCustBalance.Balance;
-                    getBetResp.data.currency = tpCustBalance.TpCurrencyId;
                     // 當餘額不足時回傳 1005
                     getBetResp.status.code = "1005";
                     getBetResp.status.message = "Error : insufficient amount";
-                    getBetResp.status.datetime = getCurrentGameTime();
                 }
 
                 log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
@@ -384,7 +376,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getEndRoundResp.status.datetime = getCurrentGameTime();
 
             // check param
-            if (wtoken == null || endRoundReq.account == null || endRoundReq.gamecode == null || endRoundReq.gamehall == null || endRoundReq.roundid == null)
+            if (wtoken == null || endRoundReq.account == null || endRoundReq.gamecode == null || endRoundReq.gamehall == null || endRoundReq.roundid == null || endRoundReq.data == null || endRoundReq.createTime == null)
             {
                 getEndRoundResp.status.code = "1003";
                 getEndRoundResp.status.message = "Error : param invalid";
@@ -443,18 +435,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, endRoundReq.account, gameType);
-                    getEndRoundResp.data.balance = tpCustBalance.Balance;
-                    getEndRoundResp.data.currency = tpCustBalance.TpCurrencyId;
                     // 當mtcode重複時則反回錯誤編碼 2009
                     getEndRoundResp.status.code = "2009";
                     getEndRoundResp.status.message = "Error : mtcode exist";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
+                }
+                else if (result == -21)
+                {
+                    // 查無玩家時回傳該編碼
+                    getEndRoundResp.status.code = "1006";
+                    getEndRoundResp.status.message = "Error : account not found";
                 }
                 else
                 {
                     // 1100 對方重送資料
-                    getEndRoundResp.data.currency = tokenCurrency;
                 }
 
                 log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
@@ -518,16 +511,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     // 當refund未查詢到紀錄時回傳該錯誤編碼1014
                     getRefundResp.status.code = "1014";
                     getRefundResp.status.message = "Error : record not found";
-                    getRefundResp.status.datetime = getCurrentGameTime();
-                    getRefundResp.data.currency = tokenCurrency;
                 }
                 else if (result == -3)
                 {
                     // 當該mtcode已經被refund時回傳該錯誤編碼 1015
                     getRefundResp.status.code = "1015";
                     getRefundResp.status.message = "Error : refunded";
-                    getRefundResp.status.datetime = getCurrentGameTime();
-                    getRefundResp.data.currency = tokenCurrency;
                 }
 
                 log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
@@ -550,6 +539,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             GetRecordResp getRecordResp = new GetRecordResp();
             getRecordResp.status.code = "1100";
             getRecordResp.status.message = "Error";
+            getRecordResp.status.datetime = getCurrentGameTime();
 
             if (wtoken == null)
             {
@@ -674,13 +664,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, debitReq.account, gameType);
-                    apiResponse.data.balance = tpCustBalance.Balance;
-                    apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     // 當mtcode重複時則反回錯誤編碼 2009
                     apiResponse.status.code = "2009";
                     apiResponse.status.message = "Error : mtcode exist";
-                    apiResponse.status.datetime = getCurrentGameTime();
                 }
                 else if (result == -21)
                 {
@@ -690,13 +676,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (tpAffterAmount < 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, debitReq.account, gameType);
-                    apiResponse.data.balance = tpCustBalance.Balance;
-                    apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     // 當餘額不足時回傳 1005
                     apiResponse.status.code = "1005";
                     apiResponse.status.message = "Error : insufficient amount";
-                    apiResponse.status.datetime = getCurrentGameTime();
                 }
                 log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
@@ -776,13 +758,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, creditReq.account, gameType);
-                    apiResponse.data.balance = tpCustBalance.Balance;
-                    apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     // 當重複時則反回錯誤編碼 2009
                     apiResponse.status.code = "2009";
                     apiResponse.status.message = "Error : mtcode exist";
-                    apiResponse.status.datetime = getCurrentGameTime();
                 }
                 else if (result == -21)
                 {
@@ -868,13 +846,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, payoffReq.account, gameType);
-                    apiResponse.data.balance = tpCustBalance.Balance;
-                    apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     // 當重複時則反回錯誤編碼 2009
                     apiResponse.status.code = "2009";
                     apiResponse.status.message = "Error : mtcode exist";
-                    apiResponse.status.datetime = getCurrentGameTime();
                 }
                 else if (result == -21)
                 {

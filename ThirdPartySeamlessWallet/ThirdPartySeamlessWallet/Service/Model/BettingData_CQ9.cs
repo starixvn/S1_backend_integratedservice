@@ -31,6 +31,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         {
             get
             {
+                if (string.IsNullOrEmpty(data))
+                {
+                    return null;
+                }
                 return JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
             }
         }
