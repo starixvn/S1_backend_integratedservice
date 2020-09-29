@@ -270,27 +270,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans
                     );
-
-                    var p = new DynamicParameters(new
-                    {
-                        account = bettingDataRNG_CQ9.account,
-                        eventUnix = bettingDataRNG_CQ9.eventUnix,
-                        gamehall = bettingDataRNG_CQ9.gamehall,
-                        gamecode = bettingDataRNG_CQ9.gamecode,
-                        roundid = bettingDataRNG_CQ9.roundid,
-                        amount = bettingDataRNG_CQ9.amount,
-                        mtcode = bettingDataRNG_CQ9.mtcode,
-                        before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
-                        balance = afterAmount,
-                        TicketType = (int)BettransType.Bet,
-                        Actions = "bet",
-                        TicketStatus = (int)TicketStatus.UnSettled
-                    });
-
-                    result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                     if (result > 0)
                     {
-                        trans.Commit();
+                        var p = new DynamicParameters(new
+                        {
+                            account = bettingDataRNG_CQ9.account,
+                            eventUnix = bettingDataRNG_CQ9.eventUnix,
+                            gamehall = bettingDataRNG_CQ9.gamehall,
+                            gamecode = bettingDataRNG_CQ9.gamecode,
+                            roundid = bettingDataRNG_CQ9.roundid,
+                            amount = bettingDataRNG_CQ9.amount,
+                            mtcode = bettingDataRNG_CQ9.mtcode,
+                            before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
+                            balance = afterAmount,
+                            TicketType = (int)BettransType.Bet,
+                            Actions = "bet",
+                            TicketStatus = (int)TicketStatus.UnSettled
+                        });
+
+                        result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                 }
             }
