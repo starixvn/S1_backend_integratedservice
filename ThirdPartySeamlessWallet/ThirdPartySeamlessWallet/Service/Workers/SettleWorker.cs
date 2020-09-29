@@ -432,7 +432,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             decimal stake = unsettled.totalBet;
                             decimal validBet = unsettled.validBet;
-                            decimal winLostAmount = (unsettled.payout != 0) ? (unsettled.payout - unsettled.totalBet) : 0;
+                            decimal winLostAmount = unsettled.payout - unsettled.totalBet;
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
