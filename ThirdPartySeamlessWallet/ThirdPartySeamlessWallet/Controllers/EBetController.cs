@@ -177,14 +177,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(registerLoginReq.accessToken)));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                /* 1 Time*/
-                string authToken = sessionKeyArr[0];
-                /* Long Time*/
-                string sessionToken = sessionKeyArr[1];
-
-                if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                if (authBLL.Authenticate(HttpUtility.UrlDecode(registerLoginReq.accessToken), out TpCustInfoAuth tpCustInfoAuth))
                 {
                     var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
                     if (tpCheck == null || tpCheck.Locked)
@@ -192,27 +185,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getRegisterLoginResp.status = 4037;
                         return getRegisterLoginResp;
                     }
-                    if (tpCheck.Token != sessionToken)
-                    {
-                        getRegisterLoginResp.status = 410;
-                        return getRegisterLoginResp;
-                    }
+
+                    getRegisterLoginResp.status = 200;
+                    getRegisterLoginResp.accessToken = registerLoginReq.accessToken;
+                    getRegisterLoginResp.subChannelId = 0;
+                    getRegisterLoginResp.sessionToken = HttpUtility.UrlEncode(tpCheck.Token);
+                    getRegisterLoginResp.username = registerLoginReq.username;
+                    getRegisterLoginResp.currency = registerLoginReq.currency;
+                    getRegisterLoginResp.Event = registerLoginReq.Event;
+                    getRegisterLoginResp.seqNo = registerLoginReq.seqNo;
+                    getRegisterLoginResp.nickname = registerLoginReq.username;
                 }
                 else
                 {
                     getRegisterLoginResp.status = 410;
                     return getRegisterLoginResp;
                 }
-
-                getRegisterLoginResp.status = 200;
-                getRegisterLoginResp.accessToken = registerLoginReq.accessToken;
-                getRegisterLoginResp.subChannelId = 0;
-                getRegisterLoginResp.sessionToken = sessionToken;
-                getRegisterLoginResp.username = registerLoginReq.username;
-                getRegisterLoginResp.currency = registerLoginReq.currency;
-                getRegisterLoginResp.Event = registerLoginReq.Event;
-                getRegisterLoginResp.seqNo = registerLoginReq.seqNo;
-                getRegisterLoginResp.nickname = registerLoginReq.username;
             }
             catch (Exception ex)
             {
