@@ -77,13 +77,14 @@ namespace CommonService.Service.BLL
             string url = $"{OTPSMSServiceConfig.Value.ResourceURL}account={OTPSMSServiceConfig.Value.Account}&sign={sign}&datetime={dateTime}";
 
             //String smsMessage = $"{selLangBLL.GetResourceValue("lbl_OTP", langId)} {OTPNum}";
-            
-            String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
+
+            //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
+            String smsMessage = $"{OTPNum}";
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
-                { "senderid", "" }
+                { "senderid", "Bwing" }
             };
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);

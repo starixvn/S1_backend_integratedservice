@@ -13,6 +13,7 @@ namespace CommonService.Service.Model
     {
         public int Status { get; set; }
         public long StartUnixTime { get; set; }
+        public string ?Request_id { get; set; }
     }
     public class VerifyOTPReq
     {

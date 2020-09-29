@@ -23,26 +23,31 @@ namespace CommonService.Service.DAL
             SendOTPSMSResult result = new SendOTPSMSResult();
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { CustId = custId });
-            p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.InputOutput);
+            p.Add("Request_id", dbType: DbType.String, direction: ParameterDirection.Output);
+            p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             conn.Execute("Service_OTPVerifyinfo_Get", p, commandType: CommandType.StoredProcedure);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
+            result.Request_id = p.Get<string?>("Request_id") ?? null;
 
             return result;
         }
-        public SendOTPSMSResult OTPVerifyinfoIns(int custId,string sOTPNum)
+        public SendOTPSMSResult OTPVerifyinfoIns(int custId,string sOTPNum, string request_id = null)
         {
             SendOTPSMSResult result = new SendOTPSMSResult();
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { CustId = custId, OTPNum = sOTPNum, TimeOutMin = 5});
-            p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.InputOutput);
+            p.Add("Request_id", dbType: DbType.String, direction: ParameterDirection.InputOutput);
+            p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
 
              conn.Execute("Service_OTPVerifyinfo_Ins", p, commandType: CommandType.StoredProcedure);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
+            result.Request_id = p.Get<string?>("Request_id") ?? null;
 
             return result;
         }
