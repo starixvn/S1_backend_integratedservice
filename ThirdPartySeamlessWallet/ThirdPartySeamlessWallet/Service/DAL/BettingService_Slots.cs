@@ -285,13 +285,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TicketType = (int)BettransType.Bet,
                         Actions = "bet",
                         TicketStatus = (int)TicketStatus.UnSettled
-                    }
-                    );
+                    });
+
                     result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                }
-                if (result > 0)
-                {
-                    trans.Commit();
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
                 }
             }
             catch (MySqlException mySqlEx)

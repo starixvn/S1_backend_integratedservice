@@ -610,7 +610,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             apiResponse.status.datetime = getCurrentGameTime();
 
             // 當為負值時則反回錯誤編碼1003
-            if (debitReq.amount < 0)
+            if (debitReq.amount <= 0)
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
@@ -792,7 +792,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             apiResponse.status.datetime = getCurrentGameTime();
 
             // 當為負值時則反回錯誤編碼1003
-            if (payoffReq.amount < 0)
+            if (payoffReq.amount <= 0)
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
