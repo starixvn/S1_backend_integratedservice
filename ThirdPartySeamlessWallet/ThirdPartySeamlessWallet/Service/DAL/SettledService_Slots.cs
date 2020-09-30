@@ -996,7 +996,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                int cntSucc = 1;
+                int cntSucc = 0;
                 foreach (var item in endRoundDataRNG_CQ9.detail)
                 {
                     ticketStatus = item.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
@@ -1039,11 +1039,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         result = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                         cntSucc++;
-                        if (result > 0 && cntSucc == endRoundDataRNG_CQ9.detail.Count())
-                        {
-                            trans.Commit();
-                        }
+                        
                     }
+                }
+                if (result > 0 && cntSucc == endRoundDataRNG_CQ9.detail.Count())
+                {
+                    trans.Commit();
                 }
             }
             catch (MySqlException mySqlEx)
