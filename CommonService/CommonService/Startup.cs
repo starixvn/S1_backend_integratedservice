@@ -30,7 +30,8 @@ namespace CommonService
             services.Configure<Dictionary<string, MoviderVerifySMSConfig>>(Configuration.GetSection("MoviderVerifySMSConfig"));
             services.Configure<Dictionary<string, TwilioVerifySMSServices>>(Configuration.GetSection("TwilioVerifySMSServices"));
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
-            services.Configure<OTPSMSServiceConfig>(Configuration.GetSection("OTPSMSServiceConfig"));
+            services.Configure<Dictionary<string, OTPSMSServiceConfig>>(Configuration.GetSection("OTPSMSServiceConfig"));
+            
 
             services.AddMemoryCache();
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");

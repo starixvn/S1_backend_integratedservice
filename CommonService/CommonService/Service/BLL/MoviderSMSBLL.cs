@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using CommonService.Service.DAL;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
@@ -13,11 +14,33 @@ namespace CommonService.Service.BLL
     {
         private readonly IOptions<Dictionary<string, MoviderVerifySMSConfig>> moviderVerifySMSConfig;
         private readonly HttpHelper httpHelper;
+        private readonly OTPSMSService sOTPSMSService;
 
-        public MoviderSMSBLL(IOptions<Dictionary<string, MoviderVerifySMSConfig>> moviderVerifySMSConfig, HttpHelper httpHelper)
+        public MoviderSMSBLL(IOptions<Dictionary<string, MoviderVerifySMSConfig>> moviderVerifySMSConfig, HttpHelper httpHelper, OTPSMSService sOTPSMSService)
         {
             this.moviderVerifySMSConfig = moviderVerifySMSConfig;
             this.httpHelper = httpHelper;
+            this.sOTPSMSService = sOTPSMSService;
+        }
+        public async Task<ApiResult<SendOTPSMSResult>> SendMoviderVerifySMSAsync(CustInfoProfile custInfo, string phone, int custId)
+        {
+            var apiResult = new ApiResult<SendOTPSMSResult>();
+            var Result = await SendVerifySMSAsync(custInfo, phone);
+            if (Result.ErrorCode == ErrorCode.Success)
+            {
+                SendOTPSMSResult sOresult = sOTPSMSService.OTPVerifyinfoInsWithRequest_id(custId, Result.Message);
+                apiResult.ErrorCode = (ErrorCode)sOresult.Status;
+                apiResult.Data = sOresult;
+                apiResult.Message = Result.Message;
+
+            }
+            else
+            {
+                apiResult.ErrorCode = Result.ErrorCode;
+                apiResult.Message = Result.Message;
+            }
+            return apiResult;
+
         }
         public async Task<ApiResult> SendVerifySMSAsync(CustInfoProfile custInfo, string phone)
         {

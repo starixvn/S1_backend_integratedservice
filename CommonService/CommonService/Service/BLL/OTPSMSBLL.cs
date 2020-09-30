@@ -17,15 +17,15 @@ namespace CommonService.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly OTPSMSService sOTPSMSService;
-        private readonly IOptions<OTPSMSServiceConfig> OTPSMSServiceConfig;
+        private readonly IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList;
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
 
-        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<OTPSMSServiceConfig> OTPSMSServiceConfig,Tools tools, SelLangBLL selLangBLL)
+        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfig, Tools tools, SelLangBLL selLangBLL)
         {
             this.httpHelper = httpHelper;
             this.sOTPSMSService = sOTPSMSService;
-            this.OTPSMSServiceConfig = OTPSMSServiceConfig;
+            this.OTPSMSServiceConfigList = OTPSMSServiceConfig;
             this.tools = tools;
             this.selLangBLL = selLangBLL;
 
@@ -68,13 +68,35 @@ namespace CommonService.Service.BLL
            return tools.ToMD5(tmpstr);
             
         }
-       
-        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, string langId)
+        public async Task<ApiResult<SendOTPSMSResult>> SendSkyLineOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId)
+        {
+            string OTPNum = tools.GetRandomNumString(6);
+            var apiResult = new ApiResult<SendOTPSMSResult>();
+            var apiResultSendOTP = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo);
+            //if send SMS Success
+            if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
+            {
+                apiResult = await OTPVerifyinfoInsAsync(custId, OTPNum);
+            }
+            else
+            {
+                apiResult.ErrorCode = apiResultSendOTP.ErrorCode;
+                apiResult.Message = apiResultSendOTP.Message;
+            }
+
+            return apiResult;
+
+
+        }
+
+
+        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo)
         {
             var apiResult = new ApiResult();
-            string dateTime = DateTime.Now.ToString("yyyyMMddHHmmss");
-            string sign = MakeSignString(OTPSMSServiceConfig.Value.Account, OTPSMSServiceConfig.Value.Password, dateTime);
-            string url = $"{OTPSMSServiceConfig.Value.ResourceURL}account={OTPSMSServiceConfig.Value.Account}&sign={sign}&datetime={dateTime}";
+            string dateTime = DateTime.Now.ToString("yyyyMMddHHmmss"); 
+            var Config = OTPSMSServiceConfigList.Value[custInfo.SiteName];
+            string sign = MakeSignString(Config.Account, Config.Password, dateTime);
+            string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
             //String smsMessage = $"{selLangBLL.GetResourceValue("lbl_OTP", langId)} {OTPNum}";
 
