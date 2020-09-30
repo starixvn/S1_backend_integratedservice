@@ -70,14 +70,15 @@ namespace CommonService.Service.DAL
 
             return result;
         }
-        public int? VerifyOPT(VerifyOTPReq verifyOTPReq)
+        public int VerifyOPT(VerifyOTPReq verifyOTPReq)
         {
             SendOTPSMSResult result = new SendOTPSMSResult();
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { CustId = verifyOTPReq.CustId, OTPNumInput = verifyOTPReq.InputOTP });
+            p.Add("OTPResult", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            conn.Execute("Service_VerifyOTPinfo_Get", p, commandType: CommandType.StoredProcedure);
 
-            return conn.QueryFirstOrDefault<int?>("Service_VerifyOTPinfo_Get", p, commandType: CommandType.StoredProcedure);
-
+            return p.Get<int>("OTPResult");
         }
     }
 }

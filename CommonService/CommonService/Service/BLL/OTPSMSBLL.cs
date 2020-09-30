@@ -28,38 +28,32 @@ namespace CommonService.Service.BLL
             this.OTPSMSServiceConfigList = OTPSMSServiceConfig;
             this.tools = tools;
             this.selLangBLL = selLangBLL;
-
-
-
         }
-
-
-        public async Task<ApiResult<SendOTPSMSResult>> GetOTPVerifyInfoAsync(int custId)
+        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfoAsync(int custId)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
             SendOTPSMSResult result = sOTPSMSService.GetOTPVerifyinfo(custId);
             apiResult.ErrorCode = (ErrorCode)(result.Status == 1 ? 0 : 1000);
             apiResult.Data = result;
 
-
             return apiResult;
         }
-        public async Task<ApiResult<SendOTPSMSResult>> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
+        public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
             SendOTPSMSResult result = sOTPSMSService.OTPVerifyinfoIns(custId, sOTPNum);
             apiResult.ErrorCode = (ErrorCode)result.Status;
             apiResult.Data = result;
 
-
             return apiResult;
         }
 
-        public async Task<ApiResult> VerifyOPTAsync(VerifyOTPReq verifyOTPReq)
+        public ApiResult VerifyOPTAsync(VerifyOTPReq verifyOTPReq)
         {
             var apiResult = new ApiResult();
-            int? result = sOTPSMSService.VerifyOPT(verifyOTPReq);
-            apiResult.ErrorCode = (ErrorCode)(result == 0 ? 0 : 1000);
+            int result = sOTPSMSService.VerifyOPT(verifyOTPReq);
+
+            apiResult.ErrorCode = (ErrorCode)(result);
             return apiResult;
         }
         public string MakeSignString(string account, string pwd, string datatime)
@@ -72,11 +66,12 @@ namespace CommonService.Service.BLL
         {
             string OTPNum = tools.GetRandomNumString(6);
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            var apiResultSendOTP = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo);
+            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo);
+            var apiResultSendOTP = apiResult1;
             //if send SMS Success
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
             {
-                apiResult = await OTPVerifyinfoInsAsync(custId, OTPNum);
+                apiResult = OTPVerifyinfoInsAsync(custId, OTPNum);
             }
             else
             {

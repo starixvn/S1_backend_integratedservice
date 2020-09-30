@@ -17,13 +17,10 @@ namespace CommonService.Controllers
         private readonly OTPSMSBLL sOTPSMSBLL;
         private readonly MoviderSMSBLL moviderSMSBLL;
         private readonly CustInfoBLL custInfoBLL;
-        private readonly Tools tools;
-
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL , CustInfoBLL custInfoBLL, Tools tools, MoviderSMSBLL moviderSMSBLL)
+        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, MoviderSMSBLL moviderSMSBLL)
         {
             this.sOTPSMSBLL = sOTPSMSBLL;
             this.custInfoBLL = custInfoBLL;
-            this.tools = tools;
             this.moviderSMSBLL = moviderSMSBLL;
         }
         
@@ -43,25 +40,13 @@ namespace CommonService.Controllers
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areacode}{phoneNo}";
-                apiResult = await sOTPSMSBLL.GetOTPVerifyInfoAsync(req.CustId);
+                apiResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(req.CustId);
                 if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
                 {
-                    //string sOTPNum = tools.GetRandomNumString(6);
-                    //send SMS 
-                    //var apiResultSendOTP = await sOTPSMSBLL.SendOTPSMSAsync(phone, sOTPNum, custInfo);
-                    ////if send SMS Success
-                    //if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
-                    //{
-                    //    apiResult = await sOTPSMSBLL.OTPVerifyinfoInsAsync(req.custId, sOTPNum);
-                    //}
-                    //else
-                    //{
-                    //    apiResult.ErrorCode = apiResultSendOTP.ErrorCode;
-                    //    apiResult.Message = apiResultSendOTP.Message;
-
-                    //}
-                    if (custInfo.SiteName == "Bwing" || custInfo.SiteName == "Goal123")
+                    if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
+                    {
                         apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId);
+                    }
                     else
                     {
                         var resultResp = await moviderSMSBLL.SendMoviderVerifySMSAsync(custInfo, phone, req.CustId);
@@ -93,12 +78,12 @@ namespace CommonService.Controllers
         {
             ApiResult apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
-            var GetOTPVerifyResult = await sOTPSMSBLL.GetOTPVerifyInfoAsync(verifyOTPReq.CustId);
+            var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(verifyOTPReq.CustId);
             if (GetOTPVerifyResult.ErrorCode == 0)
             {
-                if (custInfo.SiteName == "Bwing" || custInfo.SiteName == "Goal123")
+                if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
                 {
-                    apiResult = await sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
+                    apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
                 }
                 else
                 {
