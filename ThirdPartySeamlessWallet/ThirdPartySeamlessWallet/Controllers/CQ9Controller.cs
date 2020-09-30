@@ -348,14 +348,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getBetResp.status.code = "1005";
                     getBetResp.status.message = "Error : insufficient amount";
                 }
-
-                log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", logName);
+                return getBetResp;
             }
 
+            log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
             return getBetResp;
         }
 
@@ -382,44 +382,43 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                 return getEndRoundResp;
             }
-
-            // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
-            {
-                getEndRoundResp.status.code = "1100";
-                getEndRoundResp.status.message = "Error : wtoken";
-                log2File.Info($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                return getEndRoundResp;
-            }
-
-            // check item param
-            foreach (var item in endRoundReq.detail)
-            {
-                if (item.amount < 0)
-                {
-                    // amount不得為負值為負值時則反回錯誤編碼1003
-                    getEndRoundResp.status.code = "1003";
-                    getEndRoundResp.status.message = "Error : insufficient amount";
-                    log2File.Info($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                    return getEndRoundResp;
-                }
-
-                long chkEventTimeParse = checkTimeParse(item.eventtime);
-                if (chkEventTimeParse == 0)
-                {
-                    // 當eventTime格式錯誤時回傳 1004
-                    getEndRoundResp.status.code = "1004";
-                    getEndRoundResp.status.message = "Error : invalid eventTime";
-                    log2File.Info($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                    return getEndRoundResp;
-                }
-                item.eventUnix = chkEventTimeParse;
-            }
-
             try
             {
+                // check key
+                var tokenCurrency = getTokenCurrency(wtoken);
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+                {
+                    getEndRoundResp.status.code = "1100";
+                    getEndRoundResp.status.message = "Error : wtoken";
+                    log2File.Info($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    return getEndRoundResp;
+                }
+                // check item param
+                foreach (var item in endRoundReq.detail)
+                {
+                    if (item.amount < 0)
+                    {
+                        // amount不得為負值為負值時則反回錯誤編碼1003
+                        getEndRoundResp.status.code = "1003";
+                        getEndRoundResp.status.message = "Error : insufficient amount";
+                        log2File.Info($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        return getEndRoundResp;
+                    }
+
+                    long chkEventTimeParse = checkTimeParse(item.eventtime);
+                    if (chkEventTimeParse == 0)
+                    {
+                        // 當eventTime格式錯誤時回傳 1004
+                        getEndRoundResp.status.code = "1004";
+                        getEndRoundResp.status.message = "Error : invalid eventTime";
+                        log2File.Info($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        return getEndRoundResp;
+                    }
+                    item.eventUnix = chkEventTimeParse;
+                }
+
+
                 long chkCreateTimeParse = checkTimeParse(endRoundReq.createTime);
                 endRoundReq.createUnix = chkCreateTimeParse;
 
@@ -448,15 +447,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     // 1100 對方重送資料
                 }
-
-                log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                return getEndRoundResp;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}\r\n{ex}", logName);
                 return getEndRoundResp;
             }
+
+            log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+            return getEndRoundResp;
         }
 
         [HttpPost]
@@ -517,15 +516,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getRefundResp.status.code = "1015";
                     getRefundResp.status.message = "Error : refunded";
                 }
-
-                log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
-                return getRefundResp;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}\r\n{ex}", logName);
                 return getRefundResp;
             }
+            log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+            return getRefundResp;
         }
 
         [HttpGet]
@@ -679,14 +677,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.code = "1005";
                     apiResponse.status.message = "Error : insufficient amount";
                 }
-                log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                return apiResponse;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
                 return apiResponse;
             }
+            log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+            return apiResponse;
         }
 
         [HttpPost]
@@ -767,14 +765,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.code = "1006";
                     apiResponse.status.message = "Error : account not found";
                 }
-                log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                return apiResponse;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
                 return apiResponse;
             }
+            log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+            return apiResponse;
         }
 
         [HttpPost]
@@ -855,14 +853,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.code = "1006";
                     apiResponse.status.message = "Error : account not found";
                 }
-                log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                return apiResponse;
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName);
                 return apiResponse;
             }
+            log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+            return apiResponse;
         }
 
         [HttpPost]
