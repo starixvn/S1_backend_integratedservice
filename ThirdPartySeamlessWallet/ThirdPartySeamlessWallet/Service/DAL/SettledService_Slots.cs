@@ -989,36 +989,44 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.CQ9_RNG;
             afterAmount = 0;
             var result = 0;
-            var insertRes = 0;
-            int ticketStatus;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
+
             try
             {
                 int cntSucc = 0;
                 foreach (var item in endRoundDataRNG_CQ9.detail)
                 {
-                    ticketStatus = item.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-                    result = PayoutV2(
-                        tpCustInfo,
-                        item.amount,
-                        (int)Tp.CQ9,
-                        endRoundDataRNG_CQ9.roundid,
-                        gameType,
-                        TpCategory.Slots,
-                        item.mtcode,
-                        TransType.Payout,
-                        null,
-                        out afterAmount,
-                        "Payout",
-                        out bonusId,
-                        conn,
-                        trans
-                     );
+                    if (item.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            item.amount,
+                            (int)Tp.CQ9,
+                            endRoundDataRNG_CQ9.roundid,
+                            gameType,
+                            TpCategory.Slots,
+                            item.mtcode,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                         );
+                    }
+                    else
+                    {
+                        result = 1;
+                    }
+
                     if (result > 0)
                     {
+                        var ticketStatus = item.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+
                         var p = new DynamicParameters(new
                         {
                             account = endRoundDataRNG_CQ9.account,
@@ -1038,7 +1046,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             SettleFlag = 0
                         });
 
-                        insertRes = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                        int insertRes = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                         if (insertRes > 0)
                         {
@@ -1046,6 +1054,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         }
                     }
                 }
+
                 if (cntSucc == endRoundDataRNG_CQ9.detail.Count())
                 {
                     trans.Commit();
