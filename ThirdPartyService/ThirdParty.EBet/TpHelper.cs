@@ -57,7 +57,7 @@ namespace ThirdParty.EBet
             }
 
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?username={tpCustInfo.TpUserName}&accessToken={HttpUtility.UrlEncode(sessionKey)}&language={TpLangId}{mobileParam}{funParam}";
+            oApiResult.Message = $"{GameUrl}?username={tpCustInfo.TpUserName}&accessToken={HttpUtility.UrlEncode(key)}&language={TpLangId}{mobileParam}{funParam}";
             return oApiResult;
         }
 

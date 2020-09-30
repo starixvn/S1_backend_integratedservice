@@ -27,13 +27,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string roundid { get; set; }
         public string createTime { get; set; }
         public string data { get; set; }
+
+        private IEnumerable<EndRound_CQ9> _detail = null;
         public IEnumerable<EndRound_CQ9> detail
         {
             get
             {
-                return JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
+                if (string.IsNullOrEmpty(data))
+                {
+                    return null;
+                }
+                else if (_detail == null)
+                {
+                    _detail = JsonConvert.DeserializeObject<IEnumerable<EndRound_CQ9>>(data);
+                }
+
+                return _detail;
             }
         }
+        public long? createUnix { get; set; }
     }
 
     public class EndRound_CQ9
@@ -43,13 +55,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string eventtime { get; set; }
         public decimal validbet { get; set; }
         public long? eventUnix { get; set; }
-        public long? createUnix { get; set; }
     }
 
     public class Record_CQ9
     {
         public string roundid { get; set; }
         public decimal amount { get; set; }
+        public decimal Before { get; set; }
+        public decimal Balance { get; set; }
         public DateTime eventtime { get; set; }
         public string Actions { get; set; }
         public string account { get; set; }
@@ -87,10 +100,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class SettleDataRNG_CQ9
     {
-        public string mtcode { get; set; }
+        public decimal Stake { get; set; }
+        public decimal WinLostAmount { get; set; }
         public string account { get; set; }
         public string roundid { get; set; }
+        public long SettleTime { get; set; }
+    }
+
+    public class PayoffDataRNG_CQ9
+    {
+        public string account { get; set; }
+        public string eventTime { get; set; }
         public decimal amount { get; set; }
-        public long createUnix { get; set; }
+        public string mtcode { get; set; }
+        public string remark { get; set; }
+        public long? eventUnix { get; set; }
     }
 }

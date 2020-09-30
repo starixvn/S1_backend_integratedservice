@@ -274,7 +274,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount, out settleTime);
             return result;
         }
-        public int SettledRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
+        public int PayoutRNG_GPI(SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, settledDataRNG_GPI.cust_id);
@@ -289,13 +289,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
 
-            var result = settledService.SettledRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
+            var result = settledService.PayoutRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
                 settledDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
             }
+
+            return result;
+        }
+        public int SettledRNG_GPI(EndgameRNG_GPI endgameRNG_GPI)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, endgameRNG_GPI.cust_id);
+            var result = settledService.SettledRNG_GPI(tpCustInfo, endgameRNG_GPI);
 
             return result;
         }
@@ -874,18 +881,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region CQ9
-        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, EndRound_CQ9 endRound_CQ9, out decimal afterAmount)
+        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, endRoundDataRNG_CQ9.account);
+            if (tpCustInfo == null)
+            {
+                afterAmount = 0;
+                return -21;
+            }
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                endRound_CQ9.amount *= tpCurrency.ExchangeRate;
-                endRound_CQ9.validbet *= tpCurrency.ExchangeRate;
+                foreach (var item in endRoundDataRNG_CQ9.detail)
+                {
+                    item.amount *= tpCurrency.ExchangeRate;
+                }
             }
 
-            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, endRound_CQ9, out afterAmount);
+            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -922,23 +936,89 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        public int DebitRNG_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
         {
-            return settledService.GetUnsettledListRNG_CQ9();
-        }
-
-        public int SettledRNG_CQ9(SettleDataRNG_CQ9 settleDataRNG_CQ9, out decimal afterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, settleDataRNG_CQ9.account);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            if (tpCustInfo == null)
+            {
+                afterAmount = 0;
+                return -21;
+            }
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
-            var result = settledService.SettledRNG_CQ9(tpCustInfo, settleDataRNG_CQ9, out afterAmount);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.DebitRNG_CQ9(tpCustInfo, bettingDataRNG_CQ9, out afterAmount);
+
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
             }
 
             return result;
+        }
+
+        public int CreditRNG_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            if (tpCustInfo == null)
+            {
+                afterAmount = 0;
+                return -21;
+            }
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CreditRNG_CQ9(tpCustInfo, bettingDataRNG_CQ9, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int RewardRNG_CQ9(PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, payoffDataRNG_CQ9.account);
+            if (tpCustInfo == null)
+            {
+                afterAmount = 0;
+                return -21;
+            }
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoffDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RewardRNG_CQ9(tpCustInfo, payoffDataRNG_CQ9, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        {
+            return settledService.GetUnsettledListRNG_CQ9();
+        }
+
+        public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
+        {
+            return settledService.SetSettleFlagRNG_CQ9(roundid, SettleFlag);
         }
 
         public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
@@ -953,8 +1033,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 if (tpCurrency.ExchangeRate > 0)
                 {
                     data.amount /= tpCurrency.ExchangeRate;
+                    data.Before /= tpCurrency.ExchangeRate;
+                    data.Balance /= tpCurrency.ExchangeRate;
                 }
-
                 data.currency = tpCurrency.TpCurrencyId;
             }
             return data;

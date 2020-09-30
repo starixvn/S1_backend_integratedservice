@@ -14,7 +14,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class SettledService
     {
-        public int SettledRNG_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
+        public int PayoutRNG_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
             int bonusId = 0;
             int gameType = (int)GameType.GPI_RNG;
@@ -30,8 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(settledDataRNG_GPI);
             p.Add("jackpot_contribution", 0);
             p.Add("type", (int)BettransType.Payout);
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
             try
             {
                 result = conn.Execute("Service_BettransRNG_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -56,33 +55,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        decimal Stake = p.Get<decimal>("Stake");
-                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp.GPI,
-                            Stake = Stake,
-                            ValidBet = Stake,
-                            WinlostAmount = WinLostAmount,
-                            TransId = settledDataRNG_GPI.round_id,
-                            GameType = GameType.GPI_RNG,
-                            TpUserName = settledDataRNG_GPI.cust_id,
-                            SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValid,
-                            BonusId = bonusId
-                        };
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, settledDataRNG_GPI.amount, out _, conn, trans, false/*Don't need Payout*/);
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
+                        trans.Commit();
                     }
-                }
-                else
-                {
-                    result = -1;
                 }
             }
             catch (MySqlException mySqlEx)
@@ -95,6 +69,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     throw mySqlEx;
                 }
+            }
+
+            return result;
+        }
+        public int SettledRNG_GPI(TpCustInfo tpCustInfo, EndgameRNG_GPI endgameRNG_GPI)
+        {
+            int bonusId = 0;
+
+            var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var p = new DynamicParameters(endgameRNG_GPI);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            conn.Execute("Service_BettransRNG_GPI_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            decimal Stake = p.Get<decimal>("Stake");
+            decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+
+            BetRecordInfo betRecordInfo = new BetRecordInfo
+            {
+                TpId = (int)Tp.GPI,
+                Stake = Stake,
+                ValidBet = Stake,
+                WinlostAmount = WinLostAmount,
+                TransId = endgameRNG_GPI.round_id,
+                GameType = GameType.GPI_RNG,
+                TpUserName = endgameRNG_GPI.cust_id,
+                SettledTime = 0,
+                SettlementType = SettlementType.SettledForValid,
+                BonusId = bonusId
+            };
+
+            result = Settle(tpCustInfo, betRecordInfo, TpCategory.Slots);
+
+            if (result > 0)
+            {
+                trans.Commit();
             }
 
             return result;
@@ -970,52 +983,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #region CQ9
-        public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, EndRound_CQ9 endRound_CQ9, out decimal afterAmount)
+        public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, out decimal afterAmount)
         {
             int bonusId = 0;
             int gameType = (int)GameType.CQ9_RNG;
-
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
 
-            int ticketStatus = endRound_CQ9.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-
-            var p = new DynamicParameters(new
-            {
-                account = endRoundDataRNG_CQ9.account,
-                gamecode = endRoundDataRNG_CQ9.gamecode,
-                gamehall = endRoundDataRNG_CQ9.gamehall,
-                roundid = endRoundDataRNG_CQ9.roundid,
-                mtcode = endRound_CQ9.mtcode,
-                amount = endRound_CQ9.amount,
-                validbet = endRound_CQ9.validbet,
-                eventUnix = endRound_CQ9.eventUnix,
-                createUnix = endRound_CQ9.createUnix,
-                Actions = "endround",
-                TicketStatus = ticketStatus,
-                TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
-            });
-
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
+
             try
             {
-                result = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
+                int cntSucc = 0;
+                foreach (var item in endRoundDataRNG_CQ9.detail)
                 {
-                    if (endRound_CQ9.amount != 0)
+                    if (item.amount > 0)
                     {
                         result = PayoutV2(
                             tpCustInfo,
-                            endRound_CQ9.amount,
+                            item.amount,
                             (int)Tp.CQ9,
                             endRoundDataRNG_CQ9.roundid,
                             gameType,
                             TpCategory.Slots,
-                            endRound_CQ9.mtcode,
+                            item.mtcode,
                             TransType.Payout,
                             null,
                             out afterAmount,
@@ -1025,17 +1018,54 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans
                          );
                     }
+                    else
+                    {
+                        result = 1;
+                    }
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        var ticketStatus = item.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+
+                        var p = new DynamicParameters(new
+                        {
+                            account = endRoundDataRNG_CQ9.account,
+                            gamecode = endRoundDataRNG_CQ9.gamecode,
+                            gamehall = endRoundDataRNG_CQ9.gamehall,
+                            roundid = endRoundDataRNG_CQ9.roundid,
+                            mtcode = item.mtcode,
+                            amount = item.amount,
+                            validbet = item.validbet,
+                            eventUnix = item.eventUnix,
+                            createUnix = endRoundDataRNG_CQ9.createUnix,
+                            before = afterAmount - (Math.Abs(item.amount)),
+                            balance = afterAmount,
+                            Actions = "endround",
+                            TicketStatus = ticketStatus,
+                            TicketType = (int)BettransType.Payout,
+                            SettleFlag = 2
+                        });
+
+                        int insertRes = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                        if (insertRes > 0)
+                        {
+                            cntSucc++;
+                        }
                     }
+                }
+
+                if (cntSucc == endRoundDataRNG_CQ9.detail.Count())
+                {
+                    trans.Commit();
                 }
             }
             catch (MySqlException mySqlEx)
             {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
                 {
+                    trans.Rollback();
                     result = -1;
                 }
                 else
@@ -1058,8 +1088,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            result = conn.Execute("Service_BettransRng_CQ9_Refund_Set", new { mtcode = refundDataRNG_CQ9.mtcode }, transaction: trans, commandType: CommandType.StoredProcedure);
-            if (result > 0)
+            if (amount != 0)
             {
                 result = PayoutV2(
                     tpCustInfo,
@@ -1077,85 +1106,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     conn,
                     trans
                 );
-
                 if (result > 0)
                 {
-                    trans.Commit();
-                }
-            }
-            else
-            {
-                return -1;
-            }
-
-            return result;
-        }
-
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SettledRNG_CQ9(TpCustInfo tpCustInfo, SettleDataRNG_CQ9 settleDataRNG_CQ9, out decimal afterAmount)
-        {
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            var result = 0;
-            var p = new DynamicParameters(new { settleDataRNG_CQ9.roundid });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransRng_CQ9_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
-            {
-                decimal stake = p.Get<decimal>("Stake");
-                decimal winLostAmount = (settleDataRNG_CQ9.amount != 0) ? settleDataRNG_CQ9.amount - stake : 0;
-
-                if (result > 0)
-                {
-                    int bonusId;
-
-                    GetTpBonus(
-                        (int)Tp.CQ9,
-                        settleDataRNG_CQ9.roundid,
-                        (int)GameType.CQ9_RNG,
-                        TpCategory.Slots,
-                        out int custId,
-                        out bonusId
+                  var insertRes = conn.Execute(
+                        "Service_BettransRng_CQ9_Refund_Set",
+                        new
+                        {
+                            mtcode = refundDataRNG_CQ9.mtcode,
+                            before = afterAmount - Math.Abs(amount),
+                            balance = afterAmount,
+                        },
+                        transaction: trans,
+                        commandType: CommandType.StoredProcedure
                     );
-                    decimal validBet = stake;
-
-                    BetRecordInfo betRecordInfo = new BetRecordInfo
-                    {
-                        TpId = (int)Tp.CQ9,
-                        Stake = stake,
-                        ValidBet = validBet,
-                        WinlostAmount = winLostAmount,
-                        TransId = settleDataRNG_CQ9.roundid,
-                        GameType = GameType.CQ9_RNG,
-                        TpUserName = settleDataRNG_CQ9.account,
-                        SettledTime = settleDataRNG_CQ9.createUnix,
-                        SettlementType = SettlementType.SettledForValid,
-                        TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
-                        BonusId = bonusId
-                    };
-
-                    if (betRecordInfo.WinlostAmount == 0)
-                        betRecordInfo.TicketStatus = TicketStatus.Draw;
-
-                    result = SettleTicket(
-                        tpCustInfo,
-                        betRecordInfo,
-                        0,
-                        out _,
-                        conn,
-                        trans,
-                        false/*Don't need Payout*/
-                    );
-
-                    if (result > 0)
+                    if (insertRes > 0)
                     {
                         trans.Commit();
                     }
@@ -1169,11 +1133,261 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int DebitRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                if (bettingDataRNG_CQ9.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataRNG_CQ9.amount,
+                        (int)Tp.CQ9,
+                        bettingDataRNG_CQ9.roundid,
+                        gameType,
+                        TpCategory.Slots,
+                        bettingDataRNG_CQ9.mtcode,
+                        TransType.Undo,
+                        null,
+                        out afterAmount,
+                        "Resettle",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (result > 0)
+                    {
+                        var p = new DynamicParameters(new
+                        {
+                            account = bettingDataRNG_CQ9.account,
+                            gamecode = bettingDataRNG_CQ9.gamecode,
+                            gamehall = bettingDataRNG_CQ9.gamehall,
+                            roundid = bettingDataRNG_CQ9.roundid,
+                            mtcode = bettingDataRNG_CQ9.mtcode,
+                            amount = bettingDataRNG_CQ9.amount,
+                            eventUnix = bettingDataRNG_CQ9.eventUnix,
+                            before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
+                            balance = afterAmount,
+                            Actions = "debit",
+                            TicketStatus = (int)TicketStatus.Lost,
+                            TicketType = (int)BettransType.Payout
+                        });
+
+                        var insertRes = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                        if (insertRes > 0)
+                        {
+                            var settleRes = conn.Execute("Service_BettransRng_CQ9_Settle_Set", new { roundid = bettingDataRNG_CQ9.roundid, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
+                            if (settleRes > 0)
+                            {
+                                trans.Commit();
+                            }
+                        }
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    trans.Rollback();
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int CreditRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount);
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                if (bettingDataRNG_CQ9.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataRNG_CQ9.amount,
+                        (int)Tp.CQ9,
+                        bettingDataRNG_CQ9.roundid,
+                        gameType,
+                        TpCategory.Slots,
+                        bettingDataRNG_CQ9.mtcode,
+                        TransType.Undo,
+                        null,
+                        out afterAmount,
+                        "Resettle",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                    if (result > 0)
+                    {
+                        var p = new DynamicParameters(new
+                        {
+                            account = bettingDataRNG_CQ9.account,
+                            gamecode = bettingDataRNG_CQ9.gamecode,
+                            gamehall = bettingDataRNG_CQ9.gamehall,
+                            roundid = bettingDataRNG_CQ9.roundid,
+                            mtcode = bettingDataRNG_CQ9.mtcode,
+                            amount = bettingDataRNG_CQ9.amount,
+                            eventUnix = bettingDataRNG_CQ9.eventUnix,
+                            before = afterAmount - (Math.Abs(bettingDataRNG_CQ9.amount)),
+                            balance = afterAmount,
+                            Actions = "credit",
+                            TicketStatus = (int)TicketStatus.Win,
+                            TicketType = (int)BettransType.Payout
+                        });
+
+                        var insertRes = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                        if (insertRes > 0)
+                        {
+                            var settleRes = conn.Execute("Service_BettransRng_CQ9_Settle_Set", new { roundid = bettingDataRNG_CQ9.roundid, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
+                            if (settleRes > 0)
+                            {
+                                trans.Commit();
+                            }
+                        }
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    trans.Rollback();
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int RewardRNG_CQ9(TpCustInfo tpCustInfo, PayoffDataRNG_CQ9 payoffDataRNG_CQ9, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.CQ9_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            var insertRes = 0;
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                if (payoffDataRNG_CQ9.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        payoffDataRNG_CQ9.amount,
+                        (int)Tp.CQ9,
+                        payoffDataRNG_CQ9.mtcode,
+                        gameType,
+                        TpCategory.Slots,
+                        payoffDataRNG_CQ9.mtcode,
+                        TransType.Prize,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out bonusId,
+                        conn,
+                        trans
+                     );
+
+                    var p = new DynamicParameters(new
+                    {
+                        account = payoffDataRNG_CQ9.account,
+                        mtcode = payoffDataRNG_CQ9.mtcode,
+                        amount = payoffDataRNG_CQ9.amount,
+                        eventUnix = payoffDataRNG_CQ9.eventUnix,
+                        remark = payoffDataRNG_CQ9.remark,
+                        before = afterAmount - (Math.Abs(payoffDataRNG_CQ9.amount)),
+                        balance = afterAmount,
+                        Actions = "payoff",
+                        TicketStatus = (int)TicketStatus.Related,
+                        TicketType = (int)BettransType.Bonus
+                    });
+
+                   insertRes = conn.Execute("Service_RewardRNG_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (insertRes > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    trans.Rollback();
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = conn.Execute("Service_BettransRng_CQ9_Settle_Set", new { roundid = roundid, SettleFlag = SettleFlag }, transaction: trans, commandType: CommandType.StoredProcedure);
+            trans.Commit();
+            return result;
+        }
 
         public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
         {
+            string sp = "Service_BettransRng_CQ9_Get";
+            string[] sType = mtcode.Split("-");
+            if (sType.Count() > 1 && sType[1] == "payoff")
+            {
+                sp = "Service_RewardRNG_CQ9_Get";
+            }
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<Record_CQ9>("Service_BettransRng_CQ9_Get", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<Record_CQ9>($"{sp}", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
         }
         #endregion
     }

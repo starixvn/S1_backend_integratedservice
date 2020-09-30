@@ -52,9 +52,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PP_LiveCasino = 16,
         PG_RNG = 17,
         Sexy_LiveCasino = 18,
-        CQ9_RNG = 26,
         CF_Rooster = 27,
         EBet_LiveCasino = 28,
+        CQ9_RNG = 29,
     }
     public enum Tp
     {
