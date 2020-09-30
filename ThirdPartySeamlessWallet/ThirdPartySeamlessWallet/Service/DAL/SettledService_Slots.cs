@@ -999,7 +999,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 int cntSucc = 0;
                 foreach (var item in endRoundDataRNG_CQ9.detail)
                 {
-                    if (item.amount != 0)
+                    if (item.amount > 0)
                     {
                         result = PayoutV2(
                             tpCustInfo,
@@ -1043,7 +1043,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             Actions = "endround",
                             TicketStatus = ticketStatus,
                             TicketType = (int)BettransType.Payout,
-                            SettleFlag = 0
+                            SettleFlag = 2
                         });
 
                         int insertRes = conn.Execute("Service_BettransRng_CQ9_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
