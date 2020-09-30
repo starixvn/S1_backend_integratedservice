@@ -39,6 +39,7 @@ namespace CommonService.Service.Model.enums
         #endregion
         #region SMS  (5xxxx)
         Verified = 5001,
+        PhoneError = 5002,
         //Not_allowed_country = 5001,
         //Not_allowed_currency = 5002,
         #endregion
