@@ -800,7 +800,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.GameType = GameType.Sexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.UserId;
                         betRecordInfo.SettledTime = betTime;
-                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         betRecordInfo.BonusId = bonusId;
 
                         result = SettleTicket(txn.tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
