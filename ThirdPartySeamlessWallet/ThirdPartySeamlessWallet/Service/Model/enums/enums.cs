@@ -55,6 +55,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         CF_Rooster = 27,
         EBet_LiveCasino = 28,
         CQ9_RNG = 29,
+        AWC_Rooster = 30,
     }
     public enum Tp
     {
@@ -74,7 +75,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Sexy = 15,
         CQ9 = 16,
         CF = 17,
-        EBet = 18
+        EBet = 18,
+        AWC = 19
     }
     public enum TransferType : int
     {
