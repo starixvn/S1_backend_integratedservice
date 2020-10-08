@@ -21,11 +21,11 @@ namespace CommonService.Service.BLL
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
 
-        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfig, Tools tools, SelLangBLL selLangBLL)
+        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL)
         {
             this.httpHelper = httpHelper;
             this.sOTPSMSService = sOTPSMSService;
-            this.OTPSMSServiceConfigList = OTPSMSServiceConfig;
+            this.OTPSMSServiceConfigList = OTPSMSServiceConfigList;
             this.tools = tools;
             this.selLangBLL = selLangBLL;
         }
