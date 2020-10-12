@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Allbet\ThirdParty.Allbet.csproj" />
+    <ProjectReference Include="..\ThirdParty.AWC\ThirdParty.AWC.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />
     <ProjectReference Include="..\ThirdParty.CQ9\ThirdParty.CQ9.csproj" />
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
