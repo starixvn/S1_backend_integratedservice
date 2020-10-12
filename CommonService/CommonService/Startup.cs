@@ -31,7 +31,8 @@ namespace CommonService
             services.Configure<Dictionary<string, TwilioVerifySMSServices>>(Configuration.GetSection("TwilioVerifySMSServices"));
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
             services.Configure<Dictionary<string, OTPSMSServiceConfig>>(Configuration.GetSection("OTPSMSServiceConfig"));
-            
+            services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
+
 
             services.AddMemoryCache();
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
@@ -43,10 +44,6 @@ namespace CommonService
             services.AddSingleton<AuthService>();
             services.AddSingleton<IovationService>();
             services.AddSingleton<OTPSMSService>();
-            
-            
-
-
 
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<AuthBLL>();
@@ -58,8 +55,9 @@ namespace CommonService
             services.AddSingleton<IovationBLL>();
             services.AddSingleton<OTPSMSBLL>();
             services.AddSingleton<SelLangBLL>();
+            services.AddSingleton<FPSBLL>();
 
-            services.AddSingleton<Tools>();    
+            services.AddSingleton<Tools>();
 
             services.AddControllers();
 
