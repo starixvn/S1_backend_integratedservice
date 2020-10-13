@@ -27,7 +27,7 @@ namespace CommonService.Service.DAL
                 StatedIp = iovationResult.statedIp,
                 TrackingNumber = iovationResult.trackingNumber
             };
-            return conn.Execute("Common_Iovation_Log_Ins", p, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Common_IovationLog_Ins", p, commandType: CommandType.StoredProcedure);
         }
     }
 }
