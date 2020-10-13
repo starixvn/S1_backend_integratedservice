@@ -26,12 +26,12 @@ namespace CommonService.Service.BLL
 
             Dictionary<string, string> sendIovationChecks = new Dictionary<string, string>
             {
-                { "Account", fpsChecksRequest.account.ToString() },
+                { "Account", custInfo.UserName },
                 { "Action", fpsChecksRequest.action },
                 { "ActionResult", fpsChecksRequest.actionResult },
                 { "Subscriber",config.Subscriber},
-                { "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(8)).ToString()},
-                //{ "SubscriberDate",DateTime.Now},
+                //{ "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(8)).ToString()},
+                { "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(-4)).ToString()},
                 { "Ip",fpsChecksRequest.ip},
                 { "Url",fpsChecksRequest.url},
                 { "AcceptTypes","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*; q = 0.8,application / signed - exchange; v = b3; q = 0.9"},
@@ -44,7 +44,7 @@ namespace CommonService.Service.BLL
 
             var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
             //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
-            
+
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
