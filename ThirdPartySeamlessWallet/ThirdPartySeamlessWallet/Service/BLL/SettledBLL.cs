@@ -299,13 +299,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int SettledRNG_GPI(EndgameRNG_GPI endgameRNG_GPI)
+        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI()
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, endgameRNG_GPI.cust_id);
-            var result = settledService.SettledRNG_GPI(tpCustInfo, endgameRNG_GPI);
-
-            return result;
+            return settledService.GetUnsettledListRNG_GPI();
         }
+        public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
+        {
+            return settledService.SetSettleFlagRNG_GPI(roundId, custId, SettleFlag);
+        }
+
         public int SettledFish_YL(BettingDataFish_YL bettingDataFish_YL, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.YL, bettingDataFish_YL.userId);

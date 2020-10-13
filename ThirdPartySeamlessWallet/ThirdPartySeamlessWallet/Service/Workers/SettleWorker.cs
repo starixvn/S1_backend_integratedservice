@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleSA;
         private Timer timerSettleEBet;
         private Timer timerSettleCQ9;
+        private Timer timerSettleGPI;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -45,6 +46,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSA = new Timer(DoSettleSAWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleCQ9 = new Timer(DoSettleCQ9Work, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleGPI = new Timer(DoSettleGPIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -492,6 +494,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAllbet?.Change(Timeout.Infinite, 0);
             timerSettleSA?.Change(Timeout.Infinite, 0);
             timerSettleEBet?.Change(Timeout.Infinite, 0);
+            timerSettleCQ9?.Change(Timeout.Infinite, 0);
+            timerSettleGPI?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

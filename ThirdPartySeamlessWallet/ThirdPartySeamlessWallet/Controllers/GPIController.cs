@@ -351,7 +351,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             endgameResp.Error_code = -1;
             endgameResp.Error_msg = "Unknown error";
 
-            int result = settledBLL.SettledRNG_GPI(endgameReq);
+            int result = settledBLL.SetSettleFlagRNG_GPI(endgameReq.round_id, endgameReq.cust_id, 2);
             endgameResp.Error_code = 0;
             endgameResp.Error_msg = "No errors";
 
