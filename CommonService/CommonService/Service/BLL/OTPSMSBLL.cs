@@ -92,7 +92,7 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo)
         {
             var apiResult = new ApiResult();
-            string dateTime = DateTime.Now.ToString("yyyyMMddHHmmss");
+            string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
             var Config = OTPSMSServiceConfigList.Value[custInfo.SiteName];
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
@@ -110,8 +110,6 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
-            logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(AcknowledgeVerifySMS));
-            logger.LogInformation("OTP url:" + url);
             var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
 
@@ -128,7 +126,7 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
-                    logger.LogError($"Error HttpStatus = {result.StatusCode}  Respstatus ={resultResp.status} RespMsg = {resultResp.reason}");
+                    logger.LogError($"Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                     apiResult.ErrorCode = ErrorCode.Fail;
                     //apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
                 }
