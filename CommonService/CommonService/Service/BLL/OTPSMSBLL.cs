@@ -2,6 +2,7 @@
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
@@ -20,14 +21,17 @@ namespace CommonService.Service.BLL
         private readonly IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList;
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
+        private readonly ILogger<OTPSMSService> logger;
 
-        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL)
+        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger)
         {
             this.httpHelper = httpHelper;
             this.sOTPSMSService = sOTPSMSService;
             this.OTPSMSServiceConfigList = OTPSMSServiceConfigList;
             this.tools = tools;
             this.selLangBLL = selLangBLL;
+            this.logger = logger;
+
         }
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfoAsync(int custId)
         {
@@ -59,8 +63,8 @@ namespace CommonService.Service.BLL
         public string MakeSignString(string account, string pwd, string datatime)
         {
             string tmpstr = $"{account}{pwd}{datatime}";
-           return tools.ToMD5(tmpstr);
-            
+            return tools.ToMD5(tmpstr);
+
         }
         public async Task<ApiResult<SendOTPSMSResult>> SendSkyLineOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId)
         {
@@ -88,7 +92,7 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo)
         {
             var apiResult = new ApiResult();
-            string dateTime = DateTime.Now.ToString("yyyyMMddHHmmss"); 
+            string dateTime = DateTime.Now.ToString("yyyyMMddHHmmss");
             var Config = OTPSMSServiceConfigList.Value[custInfo.SiteName];
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
@@ -97,20 +101,23 @@ namespace CommonService.Service.BLL
 
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
             String smsMessage = $"{OTPNum}";
+            String siteName = custInfo.SiteName;
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
-                { "senderid", "Bwing" }
+                { "senderid", siteName }
             };
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
+            logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(AcknowledgeVerifySMS));
+            logger.LogInformation("OTP url:" + url);
             var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.status == 0)
             {
-                    apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.ErrorCode = ErrorCode.Success;
             }
             else
             {
@@ -121,8 +128,9 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
+                    logger.LogError($"Error HttpStatus = {result.StatusCode}  Respstatus ={resultResp.status} RespMsg = {resultResp.reason}");
                     apiResult.ErrorCode = ErrorCode.Fail;
-                   // apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
+                    //apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
                 }
 
             }
