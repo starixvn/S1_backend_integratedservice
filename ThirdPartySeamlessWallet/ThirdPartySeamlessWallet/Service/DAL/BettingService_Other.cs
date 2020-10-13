@@ -352,7 +352,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo.CustId,
                     tpCustInfo.SiteId,
                     tpCustInfo.UserName,
-                    Math.Abs(stake * -1),
+                    Math.Abs(stake) * -1,
                     (int)Tp.AWC,
                     TransType.Undo,
                     $"Resettle: {Math.Abs(stake):#,##0.##}",
