@@ -85,5 +85,78 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleCQ9.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        private void DoSettleGPIWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.GPI;
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListRNG_GPI();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.cust_id);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.round_id,
+                                GameType = GameType.GPI_RNG,
+                                TpUserName = unsettled.cust_id,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValid
+                            };
+
+                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+
+                            Task.Run(() =>
+                            {
+                                settledBLL.SetSettleFlagRNG_GPI(unsettled.round_id, unsettled.cust_id, 1);
+                            });
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleGPI");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), "SettleGPI");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleGPI.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
     }
 }
