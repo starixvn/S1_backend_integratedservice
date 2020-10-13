@@ -318,18 +318,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 try
                 {
                     SettleDataCF_AWC settle = JsonConvert.DeserializeObject<SettleDataCF_AWC>(req.message);
-                    resp.status = "0000";
-                    //int result = settledBLL.SettleCF_AWC(settle, out decimal tpAffterAmount);
-
-                    //if (result > 0)
-                    //{
-                    //    resp.status = "0000";
-                    //}
-                    //else
-                    //{
-                    //    resp.status = "9999";
-                    //    resp.desc = "fail";
-                    //}
+                    
+                    int result = settledBLL.PayoutCF_AWC(settle, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
+                    {
+                        resp.status = "0000";
+                    }
+                    else
+                    {
+                        resp.status = "9999";
+                        resp.desc = "fail";
+                    }
 
                     log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }
@@ -345,18 +348,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 try
                 {
                     UnsettleDataCF_AWC unsettle = JsonConvert.DeserializeObject<UnsettleDataCF_AWC>(req.message);
-                    resp.status = "0000";
-                    //int result = settledBLL.UnsettleCF_AWC(unsettle, out decimal tpAffterAmount);
-
-                    //if (result > 0)
-                    //{
-                    //    resp.status = "0000";
-                    //}
-                    //else
-                    //{
-                    //    resp.status = "9999";
-                    //    resp.desc = "fail";
-                    //}
+                    
+                    int result = settledBLL.UnPayoutCF_AWC(unsettle, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else
+                    {
+                        resp.status = "9999";
+                        resp.desc = "fail";
+                    }
 
                     log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }
@@ -372,18 +374,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 try
                 {
                     VoidSettleDataCF_AWC voidSettle = JsonConvert.DeserializeObject<VoidSettleDataCF_AWC>(req.message);
-                    resp.status = "0000";
-                    //int result = settledBLL.VoidSettleCF_AWC(voidSettle, out decimal tpAffterAmount);
-
-                    //if (result > 0)
-                    //{
-                    //    resp.status = "0000";
-                    //}
-                    //else
-                    //{
-                    //    resp.status = "9999";
-                    //    resp.desc = "fail";
-                    //}
+                    
+                    int result = settledBLL.VoidSettleCF_AWC(voidSettle, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else
+                    {
+                        resp.status = "9999";
+                        resp.desc = "fail";
+                    }
 
                     log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }
@@ -399,18 +400,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 try
                 {
                     UnvoidSettleDataCF_AWC unvoidSettle = JsonConvert.DeserializeObject<UnvoidSettleDataCF_AWC>(req.message);
-                    resp.status = "0000";
-                    //int result = settledBLL.UnvoidSettleCF_AWC(unvoidSettle, out decimal tpAffterAmount);
 
-                    //if (result > 0)
-                    //{
-                    //    resp.status = "0000";
-                    //}
-                    //else
-                    //{
-                    //    resp.status = "9999";
-                    //    resp.desc = "fail";
-                    //}
+                    int result = settledBLL.UnvoidSettleCF_AWC(unvoidSettle, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else
+                    {
+                        resp.status = "9999";
+                        resp.desc = "fail";
+                    }
 
                     log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }

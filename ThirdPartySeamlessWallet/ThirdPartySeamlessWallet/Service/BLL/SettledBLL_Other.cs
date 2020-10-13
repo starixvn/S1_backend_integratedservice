@@ -10,6 +10,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     public partial class SettledBLL
     {
 
+        #region CF
+
         public IEnumerable<PayoutData_CF> GetUnPayoutList_CF()
         {
             return settledService.GetUnPayoutList_CF();
@@ -61,5 +63,83 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        #endregion
+
+        #region AWC
+
+        public int PayoutCF_AWC(SettleDataCF_AWC settleDataCF_AWC, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, settleDataCF_AWC.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                settleDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
+                settleDataCF_AWC.winAmount *= tpCurrency.ExchangeRate;
+                settleDataCF_AWC.turnover *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutCF_AWC(tpCustInfo, settleDataCF_AWC, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int UnPayoutCF_AWC(UnsettleDataCF_AWC unsettleDataCF_AWC, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, unsettleDataCF_AWC.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                unsettleDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.UnPayoutCF_AWC(tpCustInfo, unsettleDataCF_AWC, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int VoidSettleCF_AWC(VoidSettleDataCF_AWC voidSettleDataCF_AWC, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, voidSettleDataCF_AWC.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                voidSettleDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.VoidSettleCF_AWC(tpCustInfo, voidSettleDataCF_AWC, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int UnvoidSettleCF_AWC(UnvoidSettleDataCF_AWC unvoidSettleDataCF_AWC, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, unvoidSettleDataCF_AWC.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+            var result = settledService.UnvoidSettleCF_AWC(tpCustInfo, unvoidSettleDataCF_AWC, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }
