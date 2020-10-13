@@ -83,7 +83,7 @@ namespace ThirdParty.AWC
             SignUp.betLimit = JsonConvert.SerializeObject(betLimitMapping[tpCustInfo.TpCurrencyId]);
 
             string InputJson = JsonConvert.SerializeObject(SignUp);
-            var result = HttpPost(ApiUrl, InputJson, "application/x-www-form-urlencoded");
+            var result = HttpPost(ApiUrl, InputJson, "application/x-www-form-urlencoded;charset=utf-8");
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
             {
@@ -138,7 +138,7 @@ namespace ThirdParty.AWC
             Login.language = TpLangId;
 
             string InputJson = JsonConvert.SerializeObject(Login);
-            var result = HttpPost(ApiUrl, InputJson, "application/x-www-form-urlencoded");
+            var result = HttpPost(ApiUrl, InputJson, "application/x-www-form-urlencoded;charset=utf-8");
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
             {
