@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -55,10 +56,10 @@ namespace ThirdParty.AWC
 
         Dictionary<string, betLimit> betLimitMapping = new Dictionary<string, betLimit>(comparer: StringComparer.OrdinalIgnoreCase)
         {
-            { "MYR", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 200 } },
-            { "THB", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 200 } },
-            { "CNY", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 200 } },
-            { "IDR", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 200 } }
+            { "MYR", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } },
+            { "THB", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } },
+            { "CNY", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } },
+            { "IDR", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } }
         };
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -75,20 +76,32 @@ namespace ThirdParty.AWC
 
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
-            SignupReq SignUp = new SignupReq();
-            SignUp.cert = cert;
-            SignUp.agentId = agentId;
-            SignUp.userId = tpCustInfo.TpUserName;
-            SignUp.currency = tpCustInfo.TpCurrencyId;
-            SignUp.betLimit = JsonConvert.SerializeObject(betLimitMapping[tpCustInfo.TpCurrencyId]);
+            SignupReq SignUp = new SignupReq
+            {
+                cert = cert,
+                agentId = agentId,
+                userId = tpCustInfo.TpUserName,
+                currency = tpCustInfo.TpCurrencyId,
+                betLimit = JsonConvert.SerializeObject(new { SV388 = new { LIVE = betLimitMapping[tpCustInfo.TpCurrencyId] } }),
+            };
 
-            string InputJson = JsonConvert.SerializeObject(SignUp);
-            var result = HttpPost(ApiUrl, InputJson, "application/x-www-form-urlencoded");
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var result = HttpPost(
+                ApiUrl,
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
+
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<SignupResult>(result);
                 if (json.status == "0000")
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+                else if (json.status == "1001")
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                 }
@@ -127,18 +140,27 @@ namespace ThirdParty.AWC
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
             ApiUrl = $"{ApiUrl}/wallet/login";
 
-            LoginReq Login = new LoginReq();
-            Login.cert = cert;
-            Login.agentId = agentId;
-            Login.userId = tpCustInfo.TpUserName;
-            Login.isMobileLogin = (appType == AppType.Desktop) ? "false" : "true";
-            Login.externalURL = lobbyUrl;
-            Login.gameType = "LIVE";
-            Login.platform = "SV388";
-            Login.language = TpLangId;
 
-            string InputJson = JsonConvert.SerializeObject(Login);
-            var result = HttpPost(ApiUrl, InputJson, "application/x-www-form-urlencoded");
+            LoginReq Login = new LoginReq
+            {
+                cert = cert,
+                agentId = agentId,
+                userId = tpCustInfo.TpUserName,
+                isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
+                externalURL = lobbyUrl,
+                gameType = "LIVE",
+                platform = "SV388",
+                language = TpLangId,
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var result = HttpPost(
+                ApiUrl,
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
+
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
             {
