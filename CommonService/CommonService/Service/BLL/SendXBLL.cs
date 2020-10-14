@@ -1,11 +1,13 @@
 ﻿using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
@@ -16,6 +18,7 @@ namespace CommonService.Service.BLL
         private readonly HttpHelper httpHelper;
         private readonly CustInfoBLL custInfoBLL;
         private readonly Dictionary<string, string> headerParams;
+        private readonly ILogger<SendXBLL> logger;
 
         private class Result
         {
@@ -23,7 +26,7 @@ namespace CommonService.Service.BLL
             public string message { get; set; }
         }
 
-        public SendXBLL(IOptions<SendXConfig> sendXConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL)
+        public SendXBLL(ILogger<SendXBLL> logger, IOptions<SendXConfig> sendXConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL)
         {
             this.sendXConfig = sendXConfig;
             this.httpHelper = httpHelper;
@@ -31,6 +34,8 @@ namespace CommonService.Service.BLL
             headerParams = new Dictionary<string, string> {
                 { "api_key", sendXConfig.Value.ApiKey}
             };
+
+            this.logger = logger;
         }
         public class IdentifyParams
         {
@@ -43,32 +48,40 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> IdentifyAsync(CustInfoProfile custInfo)
         {
             ApiResult apiResult = new ApiResult();
+            var pattern = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
 
-            string url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
-            IdentifyParams identifyParams = new IdentifyParams
+            if (!string.IsNullOrEmpty(custInfo.Email) && Regex.IsMatch(custInfo.Email, pattern))
             {
-                email = custInfo.Email,
-                firstName = custInfo.UserName,
-                lastName = "",
-                userName = custInfo.UserName,
-                tags = new List<string>()
-            };
+                string url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
+                IdentifyParams identifyParams = new IdentifyParams
+                {
+                    email = custInfo.Email,
+                    firstName = custInfo.UserName,
+                    lastName = "",
+                    userName = custInfo.UserName,
+                    tags = new List<string>()
+                };
 
-            identifyParams.tags.Add($"{custInfo.SiteName}_Welcome_{custInfo.UserLang}");
-            var result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(identifyParams), "application/json");
+                identifyParams.tags.Add($"{custInfo.SiteName}_Welcome_{custInfo.UserLang}");
+                var result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(identifyParams), "application/json");
+                var resultResp = JsonConvert.DeserializeObject<Result>(result);
 
-            var resultResp= JsonConvert.DeserializeObject<Result>(result);
-
-            if (resultResp.status == 200)
-            {
-                apiResult.ErrorCode = 0;
-                apiResult.RawMessage = resultResp.message;
+                if (resultResp.status == 200)
+                {
+                    apiResult.ErrorCode = 0;
+                    apiResult.RawMessage = resultResp.message;
+                }
+                else
+                {
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Message = resultResp.message;
+                    apiResult.RawMessage = resultResp.message;
+                }
             }
             else
             {
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Message = resultResp.message;
-                apiResult.RawMessage = resultResp.message;
+                apiResult.ErrorCode = 0;
+                apiResult.RawMessage = null;
             }
 
             return apiResult;
