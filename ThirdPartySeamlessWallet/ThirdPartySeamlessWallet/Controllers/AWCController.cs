@@ -16,7 +16,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
-    [Route("[controller]")]
+    
     [ApiController]
     public class AWCController : ControllerBase
     {
@@ -94,6 +94,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
+        [Route("[controller]")]
         [HttpPost]
         public GetSeamlessWalletResp SeamlessWallet([FromForm] Req req)
         {
