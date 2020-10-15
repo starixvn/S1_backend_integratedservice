@@ -143,6 +143,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int voidType { get; set; }
     }
 
+    public class RefundCF_AWC
+    {
+        public IList<RefundDataCF_AWC> txns { get; set; }
+    }
+
     public class RefundDataCF_AWC
     {
         public long txId { get; set; }

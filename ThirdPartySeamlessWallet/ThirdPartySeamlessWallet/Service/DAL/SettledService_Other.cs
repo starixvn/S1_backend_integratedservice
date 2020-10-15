@@ -207,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 ticketStatus = (int)TicketStatus.Draw;
             }
 
-            decimal payout = settleDataCF_AWC.turnover + settleDataCF_AWC.winAmount;
+
             var p = new DynamicParameters(new
             {
                 platformTxId = settleDataCF_AWC.platformTxId,
@@ -226,12 +226,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betUnix = new DateTimeOffset(settleDataCF_AWC.betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                 txUnix = new DateTimeOffset(settleDataCF_AWC.txTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                 updateUnix = new DateTimeOffset(settleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                Payout = payout,
                 TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,
                 SettleFlag = 2
             });
-            p.Add("out_row_count", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("out_action", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
@@ -240,13 +239,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 result = conn.Execute("Service_BettransCF_AWC_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
+                decimal payout = settleDataCF_AWC.winAmount;
+                if (result > 0 && payout != 0)
                 {
-                    int rowCnt = p.Get<int>("out_row_count");
-                    if (payout > 0 && rowCnt > 0)
+                    int doAction = p.Get<int>("out_action");
+                    if (doAction > 0)
                     {
-                        var headMemo = (rowCnt == 1) ? "Payout" : "Resettle";
+                        var headMemo = (doAction == 1) ? "Payout" : "Resettle";
                         result = walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
@@ -258,13 +257,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             settleDataCF_AWC.platformTxId,
                             out _,
                             conn,
-                            trans
+                            trans,
+                            AllowNegative.Allow
                         );
 
                         if (result > 0)
                         {
                             trans.Commit();
                         }
+                    }
+                    else
+                    {
+                        return doAction;
                     }
                 }
                 else
@@ -295,6 +299,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 platformTxId = unsettleDataCF_AWC.platformTxId,
                 txId = unsettleDataCF_AWC.txId,
+                voidType = 0,
                 updateUnix = new DateTimeOffset(unsettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                 TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Payout,
@@ -320,7 +325,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
-                            payout,
+                            payout * -1,
                             (int)Tp.AWC,
                             TransType.Undo,
                             $"{headMemo}: {Math.Abs(payout):#,##0.##}",
@@ -375,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransCF_AWC_VoidSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransCF_AWC_UnPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -387,7 +392,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
-                            payout,
+                            payout * -1,
                             (int)Tp.AWC,
                             TransType.Undo,
                             $"{headMemo}: {Math.Abs(payout):#,##0.##}",
@@ -441,7 +446,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransCF_AWC_UnvoidSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransCF_AWC_UnvoidPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -461,6 +466,87 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             out _,
                             conn,
                             trans
+                        );
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int RefundCF_AWC(TpCustInfo tpCustInfo, RefundCF_AWC refundCF_AWC, out decimal afterAmount)
+        {
+            afterAmount = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var before = refundCF_AWC.txns.ElementAt(0);
+                var after = refundCF_AWC.txns.ElementAt(1);
+                var payout = before.winAmount + after.winAmount;
+
+                int ticketStatus = (int)TicketStatus.Win;
+                if (after.winAmount < 0)
+                {
+                    ticketStatus = (int)TicketStatus.Lost;
+                }
+                else if (after.winAmount == 0)
+                {
+                    ticketStatus = (int)TicketStatus.Draw;
+                }
+
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = after.platformTxId,
+                    txId = after.txId,
+                    betAmount = after.betAmount,
+                    winAmount = after.winAmount,
+                    turnover = after.turnover,
+                    updateUnix = new DateTimeOffset(after.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                    TicketStatus = ticketStatus,
+                    TicketType = (int)BettransType.Payout,
+                    SettleFlag = 2
+                });
+
+                result = conn.Execute("Service_BettransCF_AWC_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (payout != 0)
+                    {
+                        var headMemo = "Resettle";
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            payout,
+                            (int)Tp.AWC,
+                            TransType.Refunds,
+                            $"{headMemo}: {Math.Abs(payout):#,##0.##}",
+                            after.platformTxId,
+                            out _,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
                         );
 
                         if (result > 0)

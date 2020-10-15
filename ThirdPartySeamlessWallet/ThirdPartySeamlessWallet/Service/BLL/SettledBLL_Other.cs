@@ -81,11 +81,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.PayoutCF_AWC(tpCustInfo, settleDataCF_AWC, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-
             return result;
         }
 
@@ -100,11 +95,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.UnPayoutCF_AWC(tpCustInfo, unsettleDataCF_AWC, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-
             return result;
         }
 
@@ -119,11 +109,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.VoidSettleCF_AWC(tpCustInfo, voidSettleDataCF_AWC, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-
             return result;
         }
 
@@ -132,11 +117,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, unvoidSettleDataCF_AWC.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
             var result = settledService.UnvoidSettleCF_AWC(tpCustInfo, unvoidSettleDataCF_AWC, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            return result;
+        }
+
+        public int RefundCF_AWC(RefundCF_AWC refundCF_AWC, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, refundCF_AWC.txns.ElementAt(0).userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+
+            foreach (var item in refundCF_AWC.txns)
             {
-                afterAmount /= tpCurrency.ExchangeRate;
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                    item.winAmount *= tpCurrency.ExchangeRate;
+                    item.turnover *= tpCurrency.ExchangeRate;
+                }
             }
 
+            var result = settledService.RefundCF_AWC(tpCustInfo, refundCF_AWC, out afterAmount);
             return result;
         }
 

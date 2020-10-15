@@ -154,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
             try
             {
-                result = conn.Execute("Service_BettransCF_AWC_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransCF_AWC_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && bettingDataCF_AWC.betAmount != 0)
                 {
@@ -354,7 +354,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo.UserName,
                     Math.Abs(stake) * -1,
                     (int)Tp.AWC,
-                    TransType.Undo,
+                    TransType.Wagers,
                     $"Resettle: {Math.Abs(stake):#,##0.##}",
                     unvoidBetDataCF_AWC.platformTxId,
                     out _,
