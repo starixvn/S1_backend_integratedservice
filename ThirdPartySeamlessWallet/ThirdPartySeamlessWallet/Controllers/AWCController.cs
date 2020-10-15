@@ -472,7 +472,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     RefundCF_AWC refund = JsonConvert.DeserializeObject<RefundCF_AWC>(req.message);
                     int result = settledBLL.RefundCF_AWC(refund, out decimal tpAffterAmount);
-
                     if (result > 0)
                     {
                         resp.status = "0000";

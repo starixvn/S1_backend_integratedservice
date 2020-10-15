@@ -168,5 +168,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public GameInfo gameInfo { get; set; }
     }
 
+    public class SettleCF_AWC
+    {
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public string userId { get; set; }
+        public string platformTxId { get; set; }
+        public long SettleTime { get; set; }
+    }
 
 }

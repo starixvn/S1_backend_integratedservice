@@ -502,7 +502,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var before = refundCF_AWC.txns.ElementAt(0);
                 var after = refundCF_AWC.txns.ElementAt(1);
-                var payout = before.winAmount + after.winAmount;
+                var payout = before.winAmount - after.winAmount;
 
                 int ticketStatus = (int)TicketStatus.Win;
                 if (after.winAmount < 0)
@@ -565,6 +565,41 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 else
                 {
                     throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleCF_AWC>("Service_BettransCF_AWC_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int Settled_AWC(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = 0;
+            result = SettleTicket(
+                tpCustInfo,
+                betRecordInfo,
+                0,
+                out _,
+                conn,
+                trans,
+                false/*Don't need Payout*/
+            );
+
+            if (result > 0)
+            {
+                result = conn.Execute("Service_BettransCF_AWC_Settle_Set", new { platformTxId = betRecordInfo.TransId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    trans.Commit();
                 }
             }
 

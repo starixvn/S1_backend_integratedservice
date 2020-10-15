@@ -139,6 +139,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
+        {
+            return settledService.GetUnsettledListCF_AWC();
+        }
+
+        public int Settled_AWC(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            return settledService.Settled_AWC(tpCustInfo, betRecordInfo);
+        }
+
         #endregion
     }
 }
