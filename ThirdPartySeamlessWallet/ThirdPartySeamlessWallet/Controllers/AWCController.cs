@@ -28,7 +28,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
         private readonly Tp thisTp;
-        private readonly string tpGameName;
         private readonly int gameType = 0;
         private readonly IHostEnvironment environment;
 
@@ -52,7 +51,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.log2File = log2File;
             this.thisTp = Tp.AWC;
             gameType = (int)GameType.AWC_Rooster;
-            tpGameName = "AWC";
             this.environment = environment;
         }
 
@@ -73,51 +71,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string action { get; set; }
             public string userId { get; set; }
-        }
-
-        public class GetBetReq
-        {
-            public IList<BettingDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetCancelReq
-        {
-            public IList<CancelBetDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetAdjustBetReq
-        {
-            public IList<AdjustBetDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetVoidBetReq
-        {
-            public IList<VoidBetDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetUnVoidBetReq
-        {
-            public IList<UnvoidBetDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetSettleReq
-        {
-            public IList<SettleDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetUnSettleReq
-        {
-            public IList<UnsettleDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetVoidSettleReq
-        {
-            public IList<VoidSettleDataCF_AWC> txns { get; set; }
-        }
-
-        public class GetUnVoidSettleReq
-        {
-            public IList<UnvoidSettleDataCF_AWC> txns { get; set; }
         }
 
         #endregion
@@ -191,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (string.Equals(reqAction.action, "bet", StringComparison.OrdinalIgnoreCase))
             {
-                GetBetReq bet = JsonConvert.DeserializeObject<GetBetReq>(req.message);
+                BetCF_AWC bet = JsonConvert.DeserializeObject<BetCF_AWC>(req.message);
 
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, bet.txns.ElementAt(0).userId);
                 if (tpCheck == null)
@@ -212,7 +165,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 try
                 {
-                    int result = bettingBLL.PlaceBetCF_AWC(bet.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = bettingBLL.PlaceBetCF_AWC(bet, out decimal tpAffterAmount);
+                    if (environment.IsDevelopment() && bet.txns.ElementAt(0).betAmount == 40m)
+                    {
+                        System.Threading.Thread.Sleep(60000);
+                    }
                     if (result > 0)
                     {
                         resp.status = "0000";
@@ -244,9 +201,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetCancelReq cancelBet = JsonConvert.DeserializeObject<GetCancelReq>(req.message);
+                    CancelCF_AWC cancelBet = JsonConvert.DeserializeObject<CancelCF_AWC>(req.message);
 
-                    int result = bettingBLL.CancelBetCF_AWC(cancelBet.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = bettingBLL.CancelBetCF_AWC(cancelBet, out decimal tpAffterAmount);
                     if (result > 0)
                     {
                         resp.status = "0000";
@@ -278,9 +235,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetAdjustBetReq adjustBet = JsonConvert.DeserializeObject<GetAdjustBetReq>(req.message);
+                    AdjustBetCF_AWC adjustBet = JsonConvert.DeserializeObject<AdjustBetCF_AWC>(req.message);
 
-                    int result = bettingBLL.AdjustBetCF_AWC(adjustBet.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = bettingBLL.AdjustBetCF_AWC(adjustBet, out decimal tpAffterAmount);
                     if (result > 0)
                     {
                         resp.status = "0000";
@@ -312,10 +269,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetVoidBetReq voidBet = JsonConvert.DeserializeObject<GetVoidBetReq>(req.message);
+                    VoidBetCF_AWC voidBet = JsonConvert.DeserializeObject<VoidBetCF_AWC>(req.message);
 
-                    int result = bettingBLL.VoidBetCF_AWC(voidBet.txns.ElementAt(0));
+                    int result = bettingBLL.VoidBetCF_AWC(voidBet);
                     if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
                     {
                         resp.status = "0000";
                     }
@@ -337,10 +298,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetUnVoidBetReq unvoidBet = JsonConvert.DeserializeObject<GetUnVoidBetReq>(req.message);
+                    UnVoidBetCF_AWC unvoidBet = JsonConvert.DeserializeObject<UnVoidBetCF_AWC>(req.message);
 
-                    int result = bettingBLL.UnvoidBetCF_AWC(unvoidBet.txns.ElementAt(0));
+                    int result = bettingBLL.UnvoidBetCF_AWC(unvoidBet);
                     if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
                     {
                         resp.status = "0000";
                     }
@@ -362,9 +327,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetSettleReq settle = JsonConvert.DeserializeObject<GetSettleReq>(req.message);
+                    PayoutCF_AWC payout = JsonConvert.DeserializeObject<PayoutCF_AWC>(req.message);
 
-                    int result = settledBLL.PayoutCF_AWC(settle.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = settledBLL.PayoutCF_AWC(payout, out decimal tpAffterAmount);
                     if (result > 0)
                     {
                         resp.status = "0000";
@@ -392,10 +357,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetUnSettleReq unsettle = JsonConvert.DeserializeObject<GetUnSettleReq>(req.message);
+                    UnPayoutCF_AWC unpayout = JsonConvert.DeserializeObject<UnPayoutCF_AWC>(req.message);
 
-                    int result = settledBLL.UnPayoutCF_AWC(unsettle.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = settledBLL.UnPayoutCF_AWC(unpayout, out decimal tpAffterAmount);
                     if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
                     {
                         resp.status = "0000";
                     }
@@ -418,10 +387,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetVoidSettleReq voidSettle = JsonConvert.DeserializeObject<GetVoidSettleReq>(req.message);
+                    VoidSettleCF_AWC voidSettle = JsonConvert.DeserializeObject<VoidSettleCF_AWC>(req.message);
 
-                    int result = settledBLL.VoidSettleCF_AWC(voidSettle.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = settledBLL.VoidSettleCF_AWC(voidSettle, out decimal tpAffterAmount);
                     if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
                     {
                         resp.status = "0000";
                     }
@@ -444,10 +417,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    GetUnVoidSettleReq unvoidSettle = JsonConvert.DeserializeObject<GetUnVoidSettleReq>(req.message);
+                    UnVoidSettleCF_AWC unvoidSettle = JsonConvert.DeserializeObject<UnVoidSettleCF_AWC>(req.message);
 
-                    int result = settledBLL.UnvoidSettleCF_AWC(unvoidSettle.txns.ElementAt(0), out decimal tpAffterAmount);
+                    int result = settledBLL.UnvoidSettleCF_AWC(unvoidSettle, out decimal tpAffterAmount);
                     if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
                     {
                         resp.status = "0000";
                     }
@@ -473,6 +450,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                     RefundCF_AWC refund = JsonConvert.DeserializeObject<RefundCF_AWC>(req.message);
                     int result = settledBLL.RefundCF_AWC(refund, out decimal tpAffterAmount);
                     if (result > 0)
+                    {
+                        resp.status = "0000";
+                    }
+                    else if (result == -1)
                     {
                         resp.status = "0000";
                     }

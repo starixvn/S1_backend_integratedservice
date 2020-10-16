@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
+    public class BetCF_AWC
+    {
+        public IList<BettingDataCF_AWC> txns { get; set; }
+    }
+
     public class BettingDataCF_AWC
     {
         public string platformTxId { get; set; }
@@ -19,27 +24,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal betAmount { get; set; }
         public DateTime betTime { get; set; }
         public string roundId { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoBet gameInfo { get; set; }
     }
 
-    public class GameInfo
+    public class CancelCF_AWC
     {
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string arenaCode { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string odds { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public int matchno { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string location { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public decimal realBetAmount { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public int live { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string matchId { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public DateTime eventDate { get; set; }
+        public IList<CancelBetDataCF_AWC> txns { get; set; }
     }
 
     public class CancelBetDataCF_AWC
@@ -50,7 +40,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameCode { get; set; }
         public string gameType { get; set; }
         public string roundId { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoBet gameInfo { get; set; }
+    }
+
+    public class AdjustBetCF_AWC
+    {
+        public IList<AdjustBetDataCF_AWC> txns { get; set; }
     }
 
     public class AdjustBetDataCF_AWC
@@ -61,11 +56,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameType { get; set; }
         public string gameCode { get; set; }
         public string gameName { get; set; }
-        //public string betType { get; set; }
         public decimal betAmount { get; set; }
         public decimal adjustAmount { get; set; }
         public DateTime updateTime { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoBet gameInfo { get; set; }
+    }
+
+    public class VoidBetCF_AWC
+    {
+        public IList<VoidBetDataCF_AWC> txns { get; set; }
     }
 
     public class VoidBetDataCF_AWC
@@ -80,7 +79,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal betAmount { get; set; }
         public DateTime updateTime { get; set; }
         public string roundId { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoBet gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class UnVoidBetCF_AWC
+    {
+        public IList<UnvoidBetDataCF_AWC> txns { get; set; }
     }
 
     public class UnvoidBetDataCF_AWC
@@ -94,6 +99,28 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameName { get; set; }
         public DateTime updateTime { get; set; }
         public string roundId { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class GameInfoBet
+    {
+        public string arenaCode { get; set; }
+        public decimal odds { get; set; }
+        public int matchno { get; set; }
+        public string location { get; set; }
+        public decimal realBetAmount { get; set; }
+        public int live { get; set; }
+        public string matchId { get; set; }
+        public DateTime eventDate { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? voidType { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? realWinAmt { get; set; }
+    }
+
+    public class PayoutCF_AWC
+    {
+        public IList<SettleDataCF_AWC> txns { get; set; }
     }
 
     public class SettleDataCF_AWC
@@ -113,7 +140,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime updateTime { get; set; }
         public DateTime txTime { get; set; }
         public string roundId { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoSettle gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class UnPayoutCF_AWC
+    {
+        public IList<UnsettleDataCF_AWC> txns { get; set; }
     }
 
     public class UnsettleDataCF_AWC
@@ -128,7 +161,27 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal betAmount { get; set; }
         public DateTime updateTime { get; set; }
         public string roundId { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoSettle gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class GameInfoSettle
+    {
+        public int result { get; set; }
+        public int settled { get; set; }
+        public string matchResult { get; set; }
+        public decimal odds { get; set; }
+        public string ip { get; set; }
+        public int oddsMode { get; set; }
+        public int matchno { get; set; }
+        public string arena { get; set; }
+        public int bddType { get; set; }
+        public string status { get; set; }
+    }
+
+    public class VoidSettleCF_AWC
+    {
+        public IList<VoidSettleDataCF_AWC> txns { get; set; }
     }
 
     public class VoidSettleDataCF_AWC
@@ -143,6 +196,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal betAmount { get; set; }
         public DateTime updateTime { get; set; }
         public int voidType { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class UnVoidSettleCF_AWC
+    {
+        public IList<UnvoidSettleDataCF_AWC> txns { get; set; }
     }
 
     public class UnvoidSettleDataCF_AWC
@@ -156,6 +215,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameName { get; set; }
         public DateTime updateTime { get; set; }
         public int voidType { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
     }
 
     public class RefundCF_AWC
@@ -183,6 +243,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public GameInfo gameInfo { get; set; }
     }
 
+    public class GameInfo
+    {
+    }
+
     public class SettleCF_AWC
     {
         public decimal Stake { get; set; }
@@ -191,6 +255,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string userId { get; set; }
         public string platformTxId { get; set; }
         public long SettleTime { get; set; }
+        public int TicketStatus { get; set; }
     }
 
 }

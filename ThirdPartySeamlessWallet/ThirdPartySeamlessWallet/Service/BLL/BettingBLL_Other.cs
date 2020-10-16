@@ -52,17 +52,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region AWC
 
-        public int PlaceBetCF_AWC(BettingDataCF_AWC bettingDataCF_AWC, out decimal afterAmount)
+        public int PlaceBetCF_AWC(BetCF_AWC betCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, bettingDataCF_AWC.userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, betCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
+            foreach (var item in betCF_AWC.txns)
             {
-                bettingDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                    item.gameInfo.realBetAmount *= tpCurrency.ExchangeRate;
+                }
             }
-
-            var result = bettingService.PlaceBetCF_AWC(tpCustInfo, bettingDataCF_AWC, out afterAmount);
+            
+            var result = bettingService.PlaceBetCF_AWC(tpCustInfo, betCF_AWC, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -70,12 +73,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int CancelBetCF_AWC(CancelBetDataCF_AWC cancelBetDataCF_AWC, out decimal afterAmount)
+        public int CancelBetCF_AWC(CancelCF_AWC cancelCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, cancelBetDataCF_AWC.userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, cancelCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
 
-            var result = bettingService.CancelBetCF_AWC(tpCustInfo, cancelBetDataCF_AWC, out afterAmount);
+            var result = bettingService.CancelBetCF_AWC(tpCustInfo, cancelCF_AWC, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -83,18 +86,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int AdjustBetCF_AWC(AdjustBetDataCF_AWC adjustBetDataCF_AWC, out decimal afterAmount)
+        public int AdjustBetCF_AWC(AdjustBetCF_AWC adjustBetCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, adjustBetDataCF_AWC.userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, adjustBetCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
 
-            if (tpCurrency.ExchangeRate > 0)
+            foreach (var item in adjustBetCF_AWC.txns)
             {
-                adjustBetDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
-                adjustBetDataCF_AWC.adjustAmount *= tpCurrency.ExchangeRate;
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                    item.adjustAmount *= tpCurrency.ExchangeRate;
+                    item.gameInfo.realBetAmount *= tpCurrency.ExchangeRate;
+                }
             }
 
-            var result = bettingService.AdjustBetCF_AWC(tpCustInfo, adjustBetDataCF_AWC, out afterAmount);
+            var result = bettingService.AdjustBetCF_AWC(tpCustInfo, adjustBetCF_AWC, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -102,27 +109,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int VoidBetCF_AWC(VoidBetDataCF_AWC voidBetDataCF_AWC)
+        public int VoidBetCF_AWC(VoidBetCF_AWC voidBetCF_AWC)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, voidBetDataCF_AWC.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
+            foreach (var item in voidBetCF_AWC.txns)
             {
-                voidBetDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                }
             }
-
-            var result = bettingService.VoidBetCF_AWC(tpCustInfo, voidBetDataCF_AWC);
-
+            var result = bettingService.VoidBetCF_AWC(voidBetCF_AWC);
             return result;
         }
 
-        public int UnvoidBetCF_AWC(UnvoidBetDataCF_AWC unvoidBetDataCF_AWC)
+        public int UnvoidBetCF_AWC(UnVoidBetCF_AWC unVoidBetCF_AWC)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, unvoidBetDataCF_AWC.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
-
-            var result = bettingService.UnvoidBetCF_AWC(tpCustInfo, unvoidBetDataCF_AWC);
+            foreach (var item in unVoidBetCF_AWC.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+            }
+            var result = bettingService.UnvoidBetCF_AWC(unVoidBetCF_AWC);
             return result;
         }
 

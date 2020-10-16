@@ -68,55 +68,64 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region AWC
 
-        public int PayoutCF_AWC(SettleDataCF_AWC settleDataCF_AWC, out decimal afterAmount)
+        public int PayoutCF_AWC(PayoutCF_AWC payoutCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, settleDataCF_AWC.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
 
-            if (tpCurrency.ExchangeRate > 0)
+            foreach (var item in payoutCF_AWC.txns)
             {
-                settleDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
-                settleDataCF_AWC.winAmount *= tpCurrency.ExchangeRate;
-                settleDataCF_AWC.turnover *= tpCurrency.ExchangeRate;
-            }
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
 
-            var result = settledService.PayoutCF_AWC(tpCustInfo, settleDataCF_AWC, out afterAmount);
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                    item.winAmount *= tpCurrency.ExchangeRate;
+                    item.turnover *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.PayoutCF_AWC(payoutCF_AWC, out afterAmount);
             return result;
         }
 
-        public int UnPayoutCF_AWC(UnsettleDataCF_AWC unsettleDataCF_AWC, out decimal afterAmount)
+        public int UnPayoutCF_AWC(UnPayoutCF_AWC unPayoutCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, unsettleDataCF_AWC.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
+            foreach (var item in unPayoutCF_AWC.txns)
             {
-                unsettleDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
-            }
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
 
-            var result = settledService.UnPayoutCF_AWC(tpCustInfo, unsettleDataCF_AWC, out afterAmount);
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.UnPayoutCF_AWC(unPayoutCF_AWC, out afterAmount);
             return result;
         }
 
-        public int VoidSettleCF_AWC(VoidSettleDataCF_AWC voidSettleDataCF_AWC, out decimal afterAmount)
+        public int VoidSettleCF_AWC(VoidSettleCF_AWC voidSettleCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, voidSettleDataCF_AWC.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
+            foreach (var item in voidSettleCF_AWC.txns)
             {
-                voidSettleDataCF_AWC.betAmount *= tpCurrency.ExchangeRate;
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
             }
-
-            var result = settledService.VoidSettleCF_AWC(tpCustInfo, voidSettleDataCF_AWC, out afterAmount);
+            var result = settledService.VoidSettleCF_AWC(voidSettleCF_AWC, out afterAmount);
             return result;
         }
 
-        public int UnvoidSettleCF_AWC(UnvoidSettleDataCF_AWC unvoidSettleDataCF_AWC, out decimal afterAmount)
+        public int UnvoidSettleCF_AWC(UnVoidSettleCF_AWC unVoidSettleCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, unvoidSettleDataCF_AWC.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
-            var result = settledService.UnvoidSettleCF_AWC(tpCustInfo, unvoidSettleDataCF_AWC, out afterAmount);
+            foreach (var item in unVoidSettleCF_AWC.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+            }
+            var result = settledService.UnvoidSettleCF_AWC(unVoidSettleCF_AWC, out afterAmount);
             return result;
         }
 
