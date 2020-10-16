@@ -24,7 +24,22 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class GameInfo
     {
-
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string arenaCode { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string odds { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int matchno { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string location { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal realBetAmount { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int live { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string matchId { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DateTime eventDate { get; set; }
     }
 
     public class CancelBetDataCF_AWC

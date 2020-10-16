@@ -133,9 +133,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int PlaceBetCF_AWC(TpCustInfo tpCustInfo, BettingDataCF_AWC bettingDataCF_AWC, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
             var result = 0;
             var p = new DynamicParameters(new
             {
@@ -148,10 +145,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 gameName = bettingDataCF_AWC.gameName,
                 betType = bettingDataCF_AWC.betType,
                 betAmount = bettingDataCF_AWC.betAmount,
-                betUnix = new DateTimeOffset(bettingDataCF_AWC.betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                betUnix = new DateTimeOffset(bettingDataCF_AWC.betTime).ToUnixTimeSeconds(),
                 roundId = bettingDataCF_AWC.roundId,
                 gameInfo = JsonConvert.SerializeObject(bettingDataCF_AWC.gameInfo)
             });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
             try
             {
                 result = conn.Execute("Service_BettransCF_AWC_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -252,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 platformTxId = adjustBetDataCF_AWC.platformTxId,
                 betAmount = adjustBetDataCF_AWC.betAmount,
                 adjustAmount = adjustBetDataCF_AWC.adjustAmount,
-                updateUnix = new DateTimeOffset(adjustBetDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                updateUnix = new DateTimeOffset(adjustBetDataCF_AWC.updateTime).ToUnixTimeSeconds(),
             });
             result = conn.Execute("Service_BettransCF_AWC_AdjustBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
@@ -298,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 platformTxId = voidBetDataCF_AWC.platformTxId,
                 txId = voidBetDataCF_AWC.txId,
-                updateUnix = new DateTimeOffset(voidBetDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                updateUnix = new DateTimeOffset(voidBetDataCF_AWC.updateTime).ToUnixTimeSeconds(),
             });
             result = conn.Execute("Service_BettransCF_AWC_VoidBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
@@ -339,7 +341,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 platformTxId = unvoidBetDataCF_AWC.platformTxId,
                 txId = unvoidBetDataCF_AWC.txId,
-                updateUnix = new DateTimeOffset(unvoidBetDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds()
+                updateUnix = new DateTimeOffset(unvoidBetDataCF_AWC.updateTime).ToUnixTimeSeconds()
             });
             p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 

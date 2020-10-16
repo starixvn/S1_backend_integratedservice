@@ -223,9 +223,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 turnover = settleDataCF_AWC.turnover,
                 roundId = settleDataCF_AWC.roundId,
                 gameInfo = JsonConvert.SerializeObject(settleDataCF_AWC.gameInfo),
-                betUnix = new DateTimeOffset(settleDataCF_AWC.betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                txUnix = new DateTimeOffset(settleDataCF_AWC.txTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                updateUnix = new DateTimeOffset(settleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                betUnix = new DateTimeOffset(settleDataCF_AWC.betTime).ToUnixTimeSeconds(),
+                txUnix = new DateTimeOffset(settleDataCF_AWC.txTime).ToUnixTimeSeconds(),
+                updateUnix = new DateTimeOffset(settleDataCF_AWC.updateTime).ToUnixTimeSeconds(),
                 TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,
                 SettleFlag = 2
@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 platformTxId = unsettleDataCF_AWC.platformTxId,
                 txId = unsettleDataCF_AWC.txId,
                 voidType = 0,
-                updateUnix = new DateTimeOffset(unsettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                updateUnix = new DateTimeOffset(unsettleDataCF_AWC.updateTime).ToUnixTimeSeconds(),
                 TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Payout,
                 SettleFlag = 2
@@ -367,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 platformTxId = voidSettleDataCF_AWC.platformTxId,
                 txId = voidSettleDataCF_AWC.txId,
                 voidType = voidSettleDataCF_AWC.voidType,
-                updateUnix = new DateTimeOffset(voidSettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                updateUnix = new DateTimeOffset(voidSettleDataCF_AWC.updateTime).ToUnixTimeSeconds(),
                 TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Payout,
                 SettleFlag = 2
@@ -434,7 +434,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 platformTxId = unvoidSettleDataCF_AWC.platformTxId,
                 txId = unvoidSettleDataCF_AWC.txId,
                 voidType = unvoidSettleDataCF_AWC.voidType,
-                updateUnix = new DateTimeOffset(unvoidSettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                updateUnix = new DateTimeOffset(unvoidSettleDataCF_AWC.updateTime).ToUnixTimeSeconds(),
                 TicketType = (int)BettransType.Payout,
                 SettleFlag = 2
             });
@@ -521,7 +521,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     betAmount = after.betAmount,
                     winAmount = after.winAmount,
                     turnover = after.turnover,
-                    updateUnix = new DateTimeOffset(after.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                    updateUnix = new DateTimeOffset(after.updateTime).ToUnixTimeSeconds(),
                     TicketStatus = ticketStatus,
                     TicketType = (int)BettransType.Payout,
                     SettleFlag = 2
