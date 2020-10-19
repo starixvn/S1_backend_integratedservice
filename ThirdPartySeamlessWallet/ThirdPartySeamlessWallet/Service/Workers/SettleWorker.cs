@@ -73,14 +73,16 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 foreach (var payout in payoutList)
                                 {
                                     transactionIDs.AddRange(JsonConvert.DeserializeObject<IEnumerable<string>>(payout.TransactionIDs));
-                                    var bBetList = settledBLL.Get_BetList_AG(payout.TransactionIDs);
-                                    if (bBetList != null)
-                                    {
-                                        betList.AddRange(bBetList);
-                                    }
                                 }
 
-                                if (betList.Sum(x => x.Value) == payoutList.Sum(x => x.ValidBetAmount))
+                                var bBetList = settledBLL.Get_BetList_AG(JsonConvert.SerializeObject(transactionIDs.Distinct()));
+
+                                if (bBetList != null)
+                                {
+                                    betList.AddRange(bBetList);
+                                }
+
+                                if (betList.Count > 0 && betList.Sum(x => x.Value) == payoutList.Sum(x => x.ValidBetAmount))
                                 {
                                     var billNoList = payoutList.Select(x => x.BillNo).ToArray();
                                     var result = settledBLL.Get_TpWagerAG_Settle(JsonConvert.SerializeObject(billNoList), out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
