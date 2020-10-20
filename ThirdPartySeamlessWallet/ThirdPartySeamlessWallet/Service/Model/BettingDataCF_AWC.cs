@@ -206,7 +206,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class UnvoidSettleDataCF_AWC
     {
-        public long txId { get; set; }
         public string platformTxId { get; set; }
         public string userId { get; set; }
         public string platform { get; set; }
@@ -240,11 +239,24 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime updateTime { get; set; }
         public string roundId { get; set; }
         public string refundPlatformTxId { get; set; }
-        public GameInfo gameInfo { get; set; }
+        public GameInfoRefund gameInfo { get; set; }
     }
 
-    public class GameInfo
+    public class GameInfoRefund
     {
+        public string arenaCode { get; set; }
+        public int settled { get; set; }
+        public string matchResult { get; set; }
+        public int oddsMode { get; set; }
+        public string arena { get; set; }
+        public int bddType { get; set; }
+        public int result { get; set; }
+        public string odds { get; set; }
+        public int matchno { get; set; }
+        public string location { get; set; }
+        public string refundId { get; set; }
+        public int live { get; set; }
+        public string status { get; set; }
     }
 
     public class SettleCF_AWC

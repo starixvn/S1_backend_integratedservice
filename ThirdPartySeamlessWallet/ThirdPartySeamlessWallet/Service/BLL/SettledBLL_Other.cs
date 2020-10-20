@@ -140,7 +140,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     item.betAmount *= tpCurrency.ExchangeRate;
                     item.winAmount *= tpCurrency.ExchangeRate;
-                    item.turnover *= tpCurrency.ExchangeRate;
                 }
             }
 

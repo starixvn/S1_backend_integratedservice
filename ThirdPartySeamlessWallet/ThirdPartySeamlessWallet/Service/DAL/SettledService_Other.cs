@@ -478,25 +478,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var before = refundCF_AWC.txns.ElementAt(0);
                 var after = refundCF_AWC.txns.ElementAt(1);
-                var payout = before.winAmount - after.winAmount;
+                var payout = before.winAmount;
 
-                int ticketStatus = (int)TicketStatus.Win;
-                if (after.winAmount < 0)
+                int ticketStatus;
+                ticketStatus = after.gameInfo.result switch
                 {
-                    ticketStatus = (int)TicketStatus.Lost;
-                }
-                else if (after.winAmount == after.betAmount)
-                {
-                    ticketStatus = (int)TicketStatus.Draw;
-                }
+                    1 => (int)TicketStatus.Win,
+                    -1 => (int)TicketStatus.Lost,
+                    0 => (int)TicketStatus.Draw,
+                    _ => throw new NotImplementedException()
+                };
 
                 var p = new DynamicParameters(new
                 {
-                    platformTxId = after.platformTxId,
+                    platformTxId = after.refundPlatformTxId,
                     txId = after.txId,
                     betAmount = after.betAmount,
                     winAmount = after.winAmount,
-                    turnover = after.turnover,
+                    gameInfo = JsonConvert.SerializeObject(after.gameInfo),
+                    betUnix = new DateTimeOffset(after.betTime).ToUnixTimeSeconds(),
                     updateUnix = new DateTimeOffset(after.updateTime).ToUnixTimeSeconds(),
                     TicketStatus = ticketStatus
                 });
@@ -518,8 +518,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             after.platformTxId,
                             out _,
                             conn,
-                            trans,
-                            AllowNegative.Allow
+                            trans
                         );
                     }
                 }
@@ -527,6 +526,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = -1;
                 }
+
                 if (result > 0)
                 {
                     trans.Commit();

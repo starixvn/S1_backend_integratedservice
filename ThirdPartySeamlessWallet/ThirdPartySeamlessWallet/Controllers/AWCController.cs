@@ -448,21 +448,52 @@ namespace ThirdPartySeamlessWallet.Controllers
                 try
                 {
                     RefundCF_AWC refund = JsonConvert.DeserializeObject<RefundCF_AWC>(req.message);
-                    int result = settledBLL.RefundCF_AWC(refund, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        resp.status = "0000";
-                    }
-                    else if (result == -1)
-                    {
-                        resp.status = "0000";
-                    }
-                    else
+                    int cnt = refund.txns.Count();
+                    if (cnt % 2 != 0)
                     {
                         resp.status = "9999";
                         resp.desc = "fail";
                     }
+                    else
+                    {
+                        Dictionary<string, RefundCF_AWC> keyValuePairs = new Dictionary<string, RefundCF_AWC>();
+                        foreach (var item in refund.txns)
+                        {
+                            RefundCF_AWC refRefundList;
+                            if (keyValuePairs.ContainsKey(item.refundPlatformTxId))
+                            {
+                                refRefundList = keyValuePairs[item.refundPlatformTxId];
+                            }
+                            else
+                            {
+                                refRefundList = new RefundCF_AWC();
+                                keyValuePairs.Add(item.refundPlatformTxId, refRefundList);
+                                refRefundList.txns = new List<RefundDataCF_AWC>();
+                            }
+                            refRefundList.txns.Add(item);
+                        }
 
+                        var segment = keyValuePairs.Values.ToList();
+                        foreach (var record in segment)
+                        {
+                            int result = settledBLL.RefundCF_AWC(record, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                resp.status = "0000";
+                            }
+                            else if (result == -1)
+                            {
+                                resp.status = "0000";
+                            }
+                            else
+                            {
+                                resp.status = "9999";
+                                resp.desc = "fail";
+                                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                                return resp;
+                            }
+                        }
+                    }
                     log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }
                 catch (Exception ex)
