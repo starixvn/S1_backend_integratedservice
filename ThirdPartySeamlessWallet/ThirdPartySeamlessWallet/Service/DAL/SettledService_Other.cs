@@ -193,45 +193,282 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region AWC
 
-        public int PayoutCF_AWC(TpCustInfo tpCustInfo, SettleDataCF_AWC settleDataCF_AWC, out decimal afterAmount)
+        public int PayoutCF_AWC(PayoutCF_AWC payoutCF_AWC, out decimal afterAmount)
+        {
+            /*
+            result ->1:win , -1:lose , 0:draw
+            settled ->0 : non-settled ; 1 : settled
+            status :LOSE / WIN / DRAW / VOID / CANCEL
+            */
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in payoutCF_AWC.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                int ticketStatus;
+                ticketStatus = item.gameInfo.result switch
+                {
+                    1 => (int)TicketStatus.Win,
+                    -1 => (int)TicketStatus.Lost,
+                    0 => (int)TicketStatus.Draw,
+                    _ => throw new NotImplementedException()
+                };
+
+                try
+                {
+                    var p = new DynamicParameters(new
+                    {
+                        platformTxId = item.platformTxId,
+                        txId = item.txId,
+                        winAmount = item.winAmount,
+                        turnover = item.turnover,
+                        roundId = item.roundId,
+                        betType = item.betType,
+                        gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                        betUnix = new DateTimeOffset(item.betTime).ToUnixTimeSeconds(),
+                        txUnix = new DateTimeOffset(item.txTime).ToUnixTimeSeconds(),
+                        updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                        TicketStatus = ticketStatus
+                    });
+                    result = conn.Execute("Service_BettransCF_AWC_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    decimal payout = item.winAmount;
+                    if (result > 0)
+                    {
+                        if (payout != 0)
+                        {
+                            result = walletService.SetBalance(
+                                item.tpCustInfo.CustId,
+                                item.tpCustInfo.SiteId,
+                                item.tpCustInfo.UserName,
+                                payout,
+                                (int)Tp.AWC,
+                                TransType.Payout,
+                                $"Payout: {Math.Abs(payout):#,##0.##}",
+                                item.platformTxId,
+                                out _,
+                                conn,
+                                trans
+                            );
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                    {
+                        result = -1;
+                        continue;
+                    }
+                    else
+                    {
+                        log2File.Error($"{JsonConvert.SerializeObject(item)}", $"AWC_settle");
+                        throw mySqlEx;
+                    }
+                }
+            }
+            return result;
+        }
+
+        public int UnPayoutCF_AWC(UnPayoutCF_AWC unPayoutCF_AWC, out decimal afterAmount)
         {
             afterAmount = 0;
+            var result = 0;
+            foreach (var item in unPayoutCF_AWC.txns)
+            {
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    txId = item.txId,
+                    gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                    updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds()
+                });
+                p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            int ticketStatus = (int)TicketStatus.Win;
-            if (settleDataCF_AWC.winAmount < 0)
-            {
-                ticketStatus = (int)TicketStatus.Lost;
-            }
-            else if (settleDataCF_AWC.winAmount == 0)
-            {
-                ticketStatus = (int)TicketStatus.Draw;
-            }
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                try
+                {
+                    result = conn.Execute("Service_BettransCF_AWC_UnPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    if (result > 0)
+                    {
+                        decimal payout = p.Get<decimal>("out_payout");
+                        if (payout != 0)
+                        {
+                            result = walletService.SetBalance(
+                                item.tpCustInfo.CustId,
+                                item.tpCustInfo.SiteId,
+                                item.tpCustInfo.UserName,
+                                payout * -1,
+                                (int)Tp.AWC,
+                                TransType.Undo,
+                                $"Resettle: {Math.Abs(payout):#,##0.##}",
+                                item.platformTxId,
+                                out _,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
 
-            decimal payout = settleDataCF_AWC.turnover + settleDataCF_AWC.winAmount;
-            var p = new DynamicParameters(new
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}", $"AWC_unsettle");
+                    throw mySqlEx;
+                }
+            }
+            return result;
+        }
+
+        public int VoidSettleCF_AWC(VoidSettleCF_AWC voidSettleCF_AWC, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in voidSettleCF_AWC.txns)
             {
-                platformTxId = settleDataCF_AWC.platformTxId,
-                txId = settleDataCF_AWC.txId,
-                userId = settleDataCF_AWC.userId,
-                platform = settleDataCF_AWC.platform,
-                gameType = settleDataCF_AWC.gameType,
-                gameCode = settleDataCF_AWC.gameCode,
-                gameName = settleDataCF_AWC.gameName,
-                betType = settleDataCF_AWC.betType,
-                betAmount = settleDataCF_AWC.betAmount,
-                winAmount = settleDataCF_AWC.winAmount,
-                turnover = settleDataCF_AWC.turnover,
-                roundId = settleDataCF_AWC.roundId,
-                gameInfo = JsonConvert.SerializeObject(settleDataCF_AWC.gameInfo),
-                betUnix = new DateTimeOffset(settleDataCF_AWC.betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                txUnix = new DateTimeOffset(settleDataCF_AWC.txTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                updateUnix = new DateTimeOffset(settleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                Payout = payout,
-                TicketStatus = ticketStatus,
-                TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
-            });
-            p.Add("out_row_count", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    txId = item.txId,
+                    voidType = item.voidType,
+                    updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                });
+                p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                try
+                {
+                    result = conn.Execute("Service_BettransCF_AWC_VoidPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        decimal payout = p.Get<decimal>("out_payout");
+                        if (payout != 0)
+                        {
+                            result = walletService.SetBalance(
+                                item.tpCustInfo.CustId,
+                                item.tpCustInfo.SiteId,
+                                item.tpCustInfo.UserName,
+                                payout * -1,
+                                (int)Tp.AWC,
+                                TransType.Undo,
+                                $"Resettle: {Math.Abs(payout):#,##0.##}",
+                                item.platformTxId,
+                                out _,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+        }
+
+        public int UnvoidSettleCF_AWC(UnVoidSettleCF_AWC unVoidSettleCF_AWC, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in unVoidSettleCF_AWC.txns)
+            {
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    voidType = item.voidType,
+                    updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds()
+                });
+                p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                try
+                {
+                    result = conn.Execute("Service_BettransCF_AWC_UnvoidPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        decimal payout = p.Get<decimal>("out_payout");
+                        if (payout != 0)
+                        {
+                            result = walletService.SetBalance(
+                                item.tpCustInfo.CustId,
+                                item.tpCustInfo.SiteId,
+                                item.tpCustInfo.UserName,
+                                payout,
+                                (int)Tp.AWC,
+                                TransType.Undo,
+                                $"Resettle: {Math.Abs(payout):#,##0.##}",
+                                item.platformTxId,
+                                out _,
+                                conn,
+                                trans
+                            );
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+        }
+
+        public int RefundCF_AWC(TpCustInfo tpCustInfo, RefundCF_AWC refundCF_AWC, out decimal afterAmount)
+        {
+            afterAmount = 0;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
@@ -239,246 +476,99 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransCF_AWC_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var before = refundCF_AWC.txns.ElementAt(0);
+                var after = refundCF_AWC.txns.ElementAt(1);
+                var payout = before.winAmount;
+
+                int ticketStatus;
+                ticketStatus = after.gameInfo.result switch
+                {
+                    1 => (int)TicketStatus.Win,
+                    -1 => (int)TicketStatus.Lost,
+                    0 => (int)TicketStatus.Draw,
+                    _ => throw new NotImplementedException()
+                };
+
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = after.refundPlatformTxId,
+                    txId = after.txId,
+                    betAmount = after.betAmount,
+                    winAmount = after.winAmount,
+                    gameInfo = JsonConvert.SerializeObject(after.gameInfo),
+                    betUnix = new DateTimeOffset(after.betTime).ToUnixTimeSeconds(),
+                    updateUnix = new DateTimeOffset(after.updateTime).ToUnixTimeSeconds(),
+                    TicketStatus = ticketStatus
+                });
+
+                result = conn.Execute("Service_BettransCF_AWC_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
-                    int rowCnt = p.Get<int>("out_row_count");
-                    if (payout > 0 && rowCnt > 0)
+                    if (payout != 0)
                     {
-                        var headMemo = (rowCnt == 1) ? "Payout" : "Resettle";
                         result = walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
                             payout,
                             (int)Tp.AWC,
-                            TransType.Payout,
-                            $"{headMemo}: {Math.Abs(payout):#,##0.##}",
-                            settleDataCF_AWC.platformTxId,
+                            TransType.Refunds,
+                            $"Resettle: {Math.Abs(payout):#,##0.##}",
+                            after.platformTxId,
                             out _,
                             conn,
                             trans
                         );
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
                     }
                 }
                 else
                 {
-                    return -1;
+                    result = -1;
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
                 }
             }
             catch (MySqlException mySqlEx)
             {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
+                throw mySqlEx;
             }
 
             return result;
         }
 
-        public int UnPayoutCF_AWC(TpCustInfo tpCustInfo, UnsettleDataCF_AWC unsettleDataCF_AWC, out decimal afterAmount)
+        public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
         {
-            afterAmount = 0;
-
-            var p = new DynamicParameters(new
-            {
-                platformTxId = unsettleDataCF_AWC.platformTxId,
-                txId = unsettleDataCF_AWC.txId,
-                updateUnix = new DateTimeOffset(unsettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                TicketStatus = (int)TicketStatus.Refund,
-                TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
-            });
-            p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = 0;
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            try
-            {
-                result = conn.Execute("Service_BettransCF_AWC_UnPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
-                {
-                    decimal payout = p.Get<decimal>("out_payout");
-                    if (payout != 0)
-                    {
-                        var headMemo = "Resettle";
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            payout,
-                            (int)Tp.AWC,
-                            TransType.Undo,
-                            $"{headMemo}: {Math.Abs(payout):#,##0.##}",
-                            unsettleDataCF_AWC.platformTxId,
-                            out _,
-                            conn,
-                            trans,
-                            AllowNegative.Allow
-                        );
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                    }
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
-            }
-
-            return result;
+            return conn.Query<SettleCF_AWC>("Service_BettransCF_AWC_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public int VoidSettleCF_AWC(TpCustInfo tpCustInfo, VoidSettleDataCF_AWC voidSettleDataCF_AWC, out decimal afterAmount)
+        public int Settled_AWC(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
         {
-            afterAmount = 0;
-
-            var p = new DynamicParameters(new
-            {
-                platformTxId = voidSettleDataCF_AWC.platformTxId,
-                txId = voidSettleDataCF_AWC.txId,
-                voidType = voidSettleDataCF_AWC.voidType,
-                updateUnix = new DateTimeOffset(voidSettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                TicketStatus = (int)TicketStatus.Refund,
-                TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
-            });
-            p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = 0;
             conn.Open();
             using var trans = conn.BeginTransaction();
-            try
-            {
-                result = conn.Execute("Service_BettransCF_AWC_VoidSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                if (result > 0)
-                {
-                    decimal payout = p.Get<decimal>("out_payout");
-                    if (payout != 0)
-                    {
-                        var headMemo = "Resettle";
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            payout,
-                            (int)Tp.AWC,
-                            TransType.Undo,
-                            $"{headMemo}: {Math.Abs(payout):#,##0.##}",
-                            voidSettleDataCF_AWC.platformTxId,
-                            out _,
-                            conn,
-                            trans,
-                            AllowNegative.Allow
-                        );
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                    }
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
-            }
-
-            return result;
-        }
-
-        public int UnvoidSettleCF_AWC(TpCustInfo tpCustInfo, UnvoidSettleDataCF_AWC unvoidSettleDataCF_AWC, out decimal afterAmount)
-        {
-            afterAmount = 0;
-
-            var p = new DynamicParameters(new
-            {
-                platformTxId = unvoidSettleDataCF_AWC.platformTxId,
-                txId = unvoidSettleDataCF_AWC.txId,
-                voidType = unvoidSettleDataCF_AWC.voidType,
-                updateUnix = new DateTimeOffset(unvoidSettleDataCF_AWC.updateTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
-            });
-            p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            try
-            {
-                result = conn.Execute("Service_BettransCF_AWC_UnvoidSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = SettleTicket(
+                tpCustInfo,
+                betRecordInfo,
+                0,
+                out _,
+                conn,
+                trans,
+                false/*Don't need Payout*/
+            );
 
+            if (result > 0)
+            {
+                result = conn.Execute("Service_BettransCF_AWC_Settle_Set", new { platformTxId = betRecordInfo.TransId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
-                    decimal payout = p.Get<decimal>("out_payout");
-                    if (payout != 0)
-                    {
-                        var headMemo = "Resettle";
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            payout,
-                            (int)Tp.AWC,
-                            TransType.Undo,
-                            $"{headMemo}: {Math.Abs(payout):#,##0.##}",
-                            unvoidSettleDataCF_AWC.platformTxId,
-                            out _,
-                            conn,
-                            trans
-                        );
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                    }
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
+                    trans.Commit();
                 }
             }
 
