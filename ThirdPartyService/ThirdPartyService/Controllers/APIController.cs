@@ -30,6 +30,7 @@ namespace ThirdPartyService.Controllers
         public APIController(IWebHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL)
         {
             this.env = env;
+            ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
             this.configuration = configuration;
             this.common = common;
             this.tpCustInfoService = tpCustInfoService;

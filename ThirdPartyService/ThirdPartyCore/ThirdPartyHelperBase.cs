@@ -39,6 +39,7 @@ namespace ThirdPartyCore
         private bool _isHeathly;
         public event InsertLogEventHandler InsertLog;
         public static IAuthProvider AuthProvider { set; get; }
+        public static string EnvironmentName { set; get; }
         public bool isHeathly
         {
             set
