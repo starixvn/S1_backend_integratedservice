@@ -200,6 +200,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             settled ->0 : non-settled ; 1 : settled
             status :LOSE / WIN / DRAW / VOID / CANCEL
             */
+            bool isError = false;
             afterAmount = 0;
             var result = 0;
             foreach (var item in payoutCF_AWC.txns)
@@ -252,33 +253,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 trans
                             );
                         }
-                    }
-                    else
-                    {
-                        result = -1;
-                        continue;
-                    }
 
-                    if (result > 0)
-                    {
-                        trans.Commit();
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                 }
                 catch (MySqlException mySqlEx)
                 {
-                    if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                    {
-                        result = -1;
-                        continue;
-                    }
-                    else
-                    {
-                        log2File.Error($"{JsonConvert.SerializeObject(item)}", $"AWC_settle");
-                        throw mySqlEx;
-                    }
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_settle");
                 }
             }
-            return result;
+
+            return isError ? 0 : result;
         }
 
         public int UnPayoutCF_AWC(UnPayoutCF_AWC unPayoutCF_AWC, out decimal afterAmount)
@@ -305,6 +294,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
+                        if (payout > 0)
+                        {
+                            payout = payout * -1 + item.betAmount;
+                        }
+
                         if (payout != 0)
                         {
                             result = walletService.SetBalance(
@@ -314,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 payout * -1,
                                 (int)Tp.AWC,
                                 TransType.Undo,
-                                $"Resettle: {Math.Abs(payout):#,##0.##}",
+                                $"UnSettle: {Math.Abs(payout):#,##0.##}",
                                 item.platformTxId,
                                 out _,
                                 conn,
@@ -369,16 +363,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
+                        if (payout > 0)
+                        {
+                            payout = payout * -1 + item.betAmount; /*Confirm*/
+                        }
+                        else
+                        {
+                            payout = item.betAmount;
+                        }
+
                         if (payout != 0)
                         {
                             result = walletService.SetBalance(
                                 item.tpCustInfo.CustId,
                                 item.tpCustInfo.SiteId,
                                 item.tpCustInfo.UserName,
-                                payout * -1,
+                                payout,
                                 (int)Tp.AWC,
-                                TransType.Undo,
-                                $"Resettle: {Math.Abs(payout):#,##0.##}",
+                                TransType.Refunds,
+                                $"VoidSettle: {Math.Abs(payout):#,##0.##}",
                                 item.platformTxId,
                                 out _,
                                 conn,
@@ -430,6 +433,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
+
+                        if (payout == 0)
+                        {
+                            payout = 0/*item.betAmount*/ * -1;
+                        }
+
                         if (payout != 0)
                         {
                             result = walletService.SetBalance(
@@ -439,11 +448,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 payout,
                                 (int)Tp.AWC,
                                 TransType.Undo,
-                                $"Resettle: {Math.Abs(payout):#,##0.##}",
+                                $"UnVoidSettle: {Math.Abs(payout):#,##0.##}",
                                 item.platformTxId,
                                 out _,
                                 conn,
-                                trans
+                                trans,
+                                AllowNegative.Allow
                             );
                         }
                     }
@@ -465,7 +475,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
-
         public int RefundCF_AWC(TpCustInfo tpCustInfo, RefundCF_AWC refundCF_AWC, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -518,7 +527,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             after.platformTxId,
                             out _,
                             conn,
-                            trans
+                            trans,
+                            AllowNegative.Allow
                         );
                     }
                 }

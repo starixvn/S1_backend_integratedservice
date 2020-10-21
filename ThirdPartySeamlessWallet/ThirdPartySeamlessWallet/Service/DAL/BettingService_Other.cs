@@ -240,7 +240,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    trans.Rollback();
                     result = -1;
                     continue;
                 }
@@ -283,23 +282,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             adjust,
                             (int)Tp.AWC,
                             TransType.Refunds,
-                            $"Resettle: {Math.Abs(adjust):#,##0.##}",
+                            $"AdjustBet: {Math.Abs(adjust):#,##0.##}",
                             item.platformTxId,
                             out afterAmount,
                             conn,
                             trans,
                             AllowNegative.Allow
                         );
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                     else
                     {
                         result = -1;
                         continue;
-                    }
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
                     }
                 }
                 catch (MySqlException mySqlEx)
@@ -307,6 +306,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw mySqlEx;
                 }
             }
+
             return result;
         }
 

@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.AWC_Rooster,
                                 TpUserName = unsettled.userId,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValidNotRollover,
+                                SettlementType = unsettled.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValidNotRollover,
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus
                             };
 
