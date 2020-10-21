@@ -47,19 +47,27 @@ namespace ThirdParty.AWC
 
         class betLimit
         {
-            public int maxbet { get; set; }
-            public int minbet { get; set; }
-            public int mindraw { get; set; }
-            public int matchlimit { get; set; }
-            public int maxdraw { get; set; }
+            public decimal maxbet { get; set; }
+            public decimal minbet { get; set; }
+            public decimal mindraw { get; set; }
+            public decimal matchlimit { get; set; }
+            public decimal maxdraw { get; set; }
         }
 
-        Dictionary<string, betLimit> betLimitMapping = new Dictionary<string, betLimit>(comparer: StringComparer.OrdinalIgnoreCase)
+        Dictionary<string, betLimit> betLimitDev = new Dictionary<string, betLimit>(comparer: StringComparer.OrdinalIgnoreCase)
         {
-            { "MYR", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } },
-            { "THB", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } },
-            { "CNY", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } },
-            { "IDR", new betLimit { maxbet = 200, minbet = 1, mindraw = 1, matchlimit = 200, maxdraw = 100 } }
+            { "MYR", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
+            { "CNY", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
+            { "IDR", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
+            { "THB", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } }
+        };
+
+        Dictionary<string, betLimit> betLimitPrd = new Dictionary<string, betLimit>(comparer: StringComparer.OrdinalIgnoreCase)
+        {
+            { "MYR", new betLimit { minbet = 5, maxbet = 1000, mindraw = 5, maxdraw = 125, matchlimit = 2000 } },
+            { "CNY", new betLimit { minbet = 7.5m, maxbet = 1500, mindraw = 7.5m, maxdraw = 185, matchlimit = 3000 } },
+            { "IDR", new betLimit { minbet = 17.5m, maxbet = 3500, mindraw = 17.5m, maxdraw = 435, matchlimit = 7000 } },
+            { "THB", new betLimit { minbet = 37.5m, maxbet = 7500, mindraw = 37.5m, maxdraw = 935, matchlimit = 15000 } }
         };
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -76,13 +84,15 @@ namespace ThirdParty.AWC
 
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
+            var betLimit = (TpHelper.IsDevelopment == true) ? betLimitDev[tpCustInfo.TpCurrencyId] : betLimitPrd[tpCustInfo.TpCurrencyId];
+           
             SignupReq SignUp = new SignupReq
             {
                 cert = cert,
                 agentId = agentId,
                 userId = tpCustInfo.TpUserName,
                 currency = tpCustInfo.TpCurrencyId,
-                betLimit = JsonConvert.SerializeObject(new { SV388 = new { LIVE = betLimitMapping[tpCustInfo.TpCurrencyId] } }),
+                betLimit = JsonConvert.SerializeObject(new { SV388 = new { LIVE = betLimit } }),
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
