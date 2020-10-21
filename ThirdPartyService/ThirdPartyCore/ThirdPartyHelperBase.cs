@@ -40,6 +40,7 @@ namespace ThirdPartyCore
         public event InsertLogEventHandler InsertLog;
         public static IAuthProvider AuthProvider { set; get; }
         public static string EnvironmentName { set; get; }
+        public static bool IsDevelopment { set; get; }
         public bool isHeathly
         {
             set

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -20,17 +21,18 @@ namespace ThirdPartyService.Controllers
     [ApiController]
     public class APIController : ControllerBase
     {
-        private readonly IWebHostEnvironment env;
+        private readonly IHostEnvironment env;
         private readonly IConfiguration configuration;
         private readonly Common common;
         private readonly TpCustInfoService tpCustInfoService;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ILogger<APIController> logger;
 
-        public APIController(IWebHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL)
+        public APIController(IHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL)
         {
             this.env = env;
             ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
+            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
             this.configuration = configuration;
             this.common = common;
             this.tpCustInfoService = tpCustInfoService;
