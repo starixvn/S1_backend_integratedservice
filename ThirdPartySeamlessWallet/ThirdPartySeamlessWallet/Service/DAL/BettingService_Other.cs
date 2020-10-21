@@ -214,43 +214,38 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new { platformTxId = item.platformTxId });
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                try
-                {
-                    result = conn.Execute("Service_BettransCF_AWC_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransCF_AWC_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                    if (result > 0)
-                    {
-                        decimal stake = p.Get<decimal>("out_stake");
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            stake,
-                            (int)Tp.AWC,
-                            TransType.Refunds,
-                            $"Cancel: {Math.Abs(stake):#,##0.##}",
-                            item.platformTxId,
-                            out afterAmount,
-                            conn,
-                            trans
-                        );
-                    }
-                    else
-                    {
-                        result = -1;
-                        continue;
-                    }
+                if (result > 0)
+                {
+                    decimal stake = p.Get<decimal>("out_stake");
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        stake,
+                        (int)Tp.AWC,
+                        TransType.Refunds,
+                        $"Cancel: {Math.Abs(stake):#,##0.##}",
+                        item.platformTxId,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
 
                     if (result > 0)
                     {
                         trans.Commit();
                     }
                 }
-                catch (MySqlException mySqlEx)
+                else
                 {
-                    throw mySqlEx;
+                    trans.Rollback();
+                    result = -1;
+                    continue;
                 }
             }
+
             return result;
         }
 
@@ -345,11 +340,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             stake,
                             (int)Tp.AWC,
                             TransType.Refunds,
-                            $"Refund: {Math.Abs(stake):#,##0.##}",
+                            $"VoidBet: {Math.Abs(stake):#,##0.##}",
                             item.platformTxId,
                             out _,
                             conn,
-                            trans
+                            trans,
+                            AllowNegative.Allow
                         );
                     }
                     else
@@ -399,7 +395,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             Math.Abs(stake) * -1,
                             (int)Tp.AWC,
                             TransType.Wagers,
-                            $"Resettle: {Math.Abs(stake):#,##0.##}",
+                            $"UnvoidBet: {Math.Abs(stake):#,##0.##}",
                             item.platformTxId,
                             out _,
                             conn,

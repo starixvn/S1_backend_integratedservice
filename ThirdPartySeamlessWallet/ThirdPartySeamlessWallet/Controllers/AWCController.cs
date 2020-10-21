@@ -509,8 +509,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private string getCurrentGameTime()
         {
-            return new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffK");
+            return DateTime.Now.ToString("o");
         }
-
     }
 }

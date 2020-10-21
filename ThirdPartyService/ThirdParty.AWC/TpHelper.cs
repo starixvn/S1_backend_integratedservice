@@ -84,7 +84,7 @@ namespace ThirdParty.AWC
 
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
-            var betLimit = (TpHelper.IsDevelopment == true) ? betLimitDev[tpCustInfo.TpCurrencyId] : betLimitPrd[tpCustInfo.TpCurrencyId];
+            var betLimit = IsDevelopment ? betLimitDev[tpCustInfo.TpCurrencyId] : betLimitPrd[tpCustInfo.TpCurrencyId];
            
             SignupReq SignUp = new SignupReq
             {
