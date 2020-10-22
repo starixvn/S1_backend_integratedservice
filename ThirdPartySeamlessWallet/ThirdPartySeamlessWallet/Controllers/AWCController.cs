@@ -95,7 +95,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             GetSeamlessWalletResp resp = new GetSeamlessWalletResp();
             resp.status = "9999";
-            resp.desc = "fail";
 
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             if (req.key != thirdPartySetting.TpSetting["cert"])
@@ -504,7 +503,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private string getCurrentGameTime()
         {
-            return DateTime.Now.ToString("o");
+            return new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffK");
         }
     }
 }
