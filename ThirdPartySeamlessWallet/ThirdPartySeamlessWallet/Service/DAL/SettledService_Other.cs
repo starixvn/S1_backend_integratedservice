@@ -272,6 +272,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int UnPayoutCF_AWC(UnPayoutCF_AWC unPayoutCF_AWC, out decimal afterAmount)
         {
+            bool isError = false;
             afterAmount = 0;
             var result = 0;
             foreach (var item in unPayoutCF_AWC.txns)
@@ -316,29 +317,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 AllowNegative.Allow
                             );
                         }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                     else
                     {
                         result = -1;
                         continue;
                     }
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
                 }
                 catch (MySqlException mySqlEx)
                 {
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}", $"AWC_unsettle");
-                    throw mySqlEx;
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_unsettle");
                 }
             }
-            return result;
+
+            return isError ? 0 : result;
         }
 
         public int VoidSettleCF_AWC(VoidSettleCF_AWC voidSettleCF_AWC, out decimal afterAmount)
         {
+            bool isError = false;
             afterAmount = 0;
             var result = 0;
             foreach (var item in voidSettleCF_AWC.txns)
@@ -365,7 +368,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         decimal payout = p.Get<decimal>("out_payout");
                         if (payout > 0)
                         {
-                            payout = payout * -1 + item.betAmount; /*Confirm*/
+                            payout = (payout * -1) + item.betAmount;
                         }
                         else
                         {
@@ -389,28 +392,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 AllowNegative.Allow
                             );
                         }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                     else
                     {
                         result = -1;
                         continue;
                     }
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
                 }
                 catch (MySqlException mySqlEx)
                 {
-                    throw mySqlEx;
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_voidSettle");
                 }
             }
-            return result;
+
+            return isError ? 0 : result;
         }
 
         public int UnvoidSettleCF_AWC(UnVoidSettleCF_AWC unVoidSettleCF_AWC, out decimal afterAmount)
         {
+            bool isError = false;
             afterAmount = 0;
             var result = 0;
             foreach (var item in unVoidSettleCF_AWC.txns)
@@ -422,6 +428,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds()
                 });
                 p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
@@ -433,10 +440,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
-
-                        if (payout == 0)
+                        decimal stake = p.Get<decimal>("out_stake");
+                        if (payout > 0)
                         {
-                            payout = 0/*item.betAmount*/ * -1;
+                            payout -= stake;
+                        }
+                        else
+                        {
+                            payout = stake * -1;
                         }
 
                         if (payout != 0)
@@ -456,29 +467,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 AllowNegative.Allow
                             );
                         }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
                     }
                     else
                     {
                         result = -1;
                         continue;
                     }
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
                 }
                 catch (MySqlException mySqlEx)
                 {
-                    throw mySqlEx;
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_unvoidSettle");
                 }
             }
-            return result;
+
+            return isError ? 0 : result;
         }
         public int RefundCF_AWC(TpCustInfo tpCustInfo, RefundCF_AWC refundCF_AWC, out decimal afterAmount)
         {
+            bool isError = false;
             afterAmount = 0;
-
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
             conn.Open();
@@ -501,12 +514,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     platformTxId = after.refundPlatformTxId,
-                    txId = after.txId,
                     betAmount = after.betAmount,
                     winAmount = after.winAmount,
                     gameInfo = JsonConvert.SerializeObject(after.gameInfo),
                     betUnix = new DateTimeOffset(after.betTime).ToUnixTimeSeconds(),
                     updateUnix = new DateTimeOffset(after.updateTime).ToUnixTimeSeconds(),
+                    RefPlatformTxId = after.platformTxId,
+                    RefTxId = after.txId,
                     TicketStatus = ticketStatus
                 });
 
@@ -531,23 +545,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             AllowNegative.Allow
                         );
                     }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
                 }
                 else
                 {
                     result = -1;
                 }
 
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
             }
             catch (MySqlException mySqlEx)
             {
-                throw mySqlEx;
+                isError = true;
+                log2File.Error($"{JsonConvert.SerializeObject(refundCF_AWC)}\r\n{mySqlEx}", $"AWC_refund");
             }
 
-            return result;
+            return isError ? 0 : result;
         }
 
         public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
