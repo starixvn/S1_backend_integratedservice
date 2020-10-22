@@ -368,7 +368,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         decimal payout = p.Get<decimal>("out_payout");
                         if (payout > 0)
                         {
-                            payout = (payout * -1) + item.betAmount;/*Exchange Rate???*/
+                            payout = (payout * -1) + item.betAmount;
                         }
                         else
                         {
@@ -488,6 +488,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return isError ? 0 : result;
         }
+
         public int RefundCF_AWC(TpCustInfo tpCustInfo, RefundCF_AWC refundCF_AWC, out decimal afterAmount)
         {
             afterAmount = 0;

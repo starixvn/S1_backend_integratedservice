@@ -112,6 +112,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                }
             }
             var result = settledService.VoidSettleCF_AWC(voidSettleCF_AWC, out afterAmount);
             return result;
