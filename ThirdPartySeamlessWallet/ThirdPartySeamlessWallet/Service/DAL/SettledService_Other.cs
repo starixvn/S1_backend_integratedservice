@@ -536,7 +536,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)Tp.AWC,
                         TransType.Refunds,
                         $"Resettle: {Math.Abs(payout):#,##0.##}",
-                        after.platformTxId,
+                        after.refundPlatformTxId,
                         out _,
                         conn,
                         trans,
