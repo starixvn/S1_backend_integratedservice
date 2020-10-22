@@ -94,6 +94,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         public GetSeamlessWalletResp SeamlessWallet([FromForm] Req req)
         {
             GetSeamlessWalletResp resp = new GetSeamlessWalletResp();
+            resp.status = "9999";
+            resp.desc = "fail";
 
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             if (req.key != thirdPartySetting.TpSetting["cert"])
@@ -484,13 +486,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                             else if (result == -1)
                             {
                                 resp.status = "0000";
-                            }
-                            else
-                            {
-                                resp.status = "9999";
-                                resp.desc = "fail";
-                                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                                return resp;
                             }
                         }
                     }
