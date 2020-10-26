@@ -158,5 +158,81 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleGPI.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        private void DoSettleSGRngWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.SG;
+            var gameType = GameType.SG_RNG;
+            var category = TpCategory.Slots;
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledList_SG((int)gameType);
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.referenceId,
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValid,
+                                //BonusId = bonusId
+                            };
+
+                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+
+                            Task.Run(() =>
+                            {
+                                settledBLL.SetSettleFlag_SG((int)gameType, unsettled.referenceId);
+                            });
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSGRng");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), "SettleSGRng");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleSGRng.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
     }
 }

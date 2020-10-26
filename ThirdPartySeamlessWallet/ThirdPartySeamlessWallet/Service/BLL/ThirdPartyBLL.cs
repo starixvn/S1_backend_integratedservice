@@ -133,5 +133,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return gameType;
         }
+        public GameType GetGameType_SG(string gameId)
+        {
+            GameType gameType = GameType.SG_RNG;
+            string[] segment = gameId.Split('-');
+            
+            if (segment.ElementAt(0) == "F")
+            {
+                gameType = GameType.SG_Fish;
+            }
+
+            return gameType;
+        }
     }
 }
