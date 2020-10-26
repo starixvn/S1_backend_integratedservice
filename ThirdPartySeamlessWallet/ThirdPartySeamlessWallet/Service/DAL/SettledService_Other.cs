@@ -480,7 +480,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var before = refundCF_AWC.txns.ElementAt(0);
             var after = refundCF_AWC.txns.ElementAt(1);
-            var payout = after.winAmount;
+            var payout = (before.betAmount * -1) + before.winAmount + (after.betAmount * -1) + after.winAmount;
 
             int ticketStatus;
             ticketStatus = after.gameInfo.result switch
