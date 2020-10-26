@@ -295,10 +295,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
-                        if (payout > 0)
-                        {
-                            payout = payout * -1 + item.betAmount;
-                        }
 
                         if (payout != 0)
                         {
@@ -366,14 +362,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
-                        if (payout > 0)
-                        {
-                            payout = (payout * -1) + item.betAmount;
-                        }
-                        else
-                        {
-                            payout = item.betAmount;
-                        }
+                        payout = (payout > 0) ? (payout * -1) + item.betAmount : item.betAmount;
 
                         if (payout != 0)
                         {
@@ -441,14 +430,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         decimal payout = p.Get<decimal>("out_payout");
                         decimal stake = p.Get<decimal>("out_stake");
-                        if (payout > 0)
-                        {
-                            payout -= stake;
-                        }
-                        else
-                        {
-                            payout = stake * -1;
-                        }
+                        payout = (payout > 0) ? (stake * -1) + payout : stake * -1;
 
                         if (payout != 0)
                         {
@@ -498,7 +480,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var before = refundCF_AWC.txns.ElementAt(0);
             var after = refundCF_AWC.txns.ElementAt(1);
-            var payout = after.winAmount;
+            var payout = (before.betAmount * -1) + before.winAmount + (after.betAmount * -1) + after.winAmount;
 
             int ticketStatus;
             ticketStatus = after.gameInfo.result switch
