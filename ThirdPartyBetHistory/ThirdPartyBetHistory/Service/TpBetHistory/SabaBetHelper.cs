@@ -360,12 +360,19 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 }
                 else
                 {
+                    betRecordInfo.ValidBet = betRecordInfo.Stake;
+
                     if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
                     {
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                     }
                     else if ((betDetial.odds_type ?? 0) == 1)
                     {
+                        if (betDetial.odds < 0)
+                        {
+                            betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
+                        }
+
                         if (betDetial.odds > 0 && betDetial.odds < 0.5m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
@@ -399,6 +406,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
                     else if ((betDetial.odds_type ?? 0) == 4)
                     {
+                        if (betDetial.odds < 0)
+                        {
+                            betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
+                        }
+
                         if (betDetial.odds < -2m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
@@ -410,6 +422,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
                     else if ((betDetial.odds_type ?? 0) == 5)
                     {
+                        if (betDetial.odds < 0)
+                        {
+                            betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds) / 100;
+                        }
+
                         if (betDetial.odds < -200m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
@@ -432,11 +449,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 //half won/half lose/won/lose/void/running/draw/reject/refund/waiting
                 if (betDetial.ticket_status.StartsWith("half", StringComparison.OrdinalIgnoreCase))
                 {
-                    betRecordInfo.ValidBet = betRecordInfo.Stake / 2;
-                }
-                else
-                {
-                    betRecordInfo.ValidBet = betRecordInfo.Stake;
+                    betRecordInfo.ValidBet /= 2;
                 }
             }
 
@@ -447,6 +460,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             else if (betDetial.ticket_status.EndsWith("won", StringComparison.OrdinalIgnoreCase))
             {
                 betRecordInfo.TicketStatus = TicketStatus.Win;
+
+                if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
+                {
+                    betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
+                }
             }
             else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
             {
