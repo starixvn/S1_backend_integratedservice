@@ -901,19 +901,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetSettleFlag_SG(int gameType, string referenceId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
             var result = 0;
             if (gameType == (int)GameType.SG_RNG)
             {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
                 result = conn.Execute("Service_BettransRng_SG_Settle_Set", new { referenceId = referenceId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                trans.Commit();
             }
             else
             {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
                 result = conn.Execute("Service_BettransFish_SG_Settle_Set", new { referenceId = referenceId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                trans.Commit();
             }
-            trans.Commit();
+            
             return result;
         }
 
@@ -931,7 +936,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TransId = settleData_SG.referenceId,
                 GameType = GameType.SG_Fish,
                 TpUserName = settleData_SG.Account,
-                SettledTime = 0,
+                SettledTime = settleData_SG.SettleTime,
                 SettlementType = SettlementType.SettledForValidNotRollover
             };
 
