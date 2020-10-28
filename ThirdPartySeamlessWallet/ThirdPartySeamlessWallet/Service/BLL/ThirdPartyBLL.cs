@@ -136,13 +136,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public GameType GetGameType_SG(string gameId)
         {
             GameType gameType = GameType.SG_RNG;
-            string[] segment = gameId.Split('-');
-            
-            if (segment.ElementAt(0) == "F")
+
+            if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = GameType.SG_Fish;
             }
-
+            
             return gameType;
         }
     }
