@@ -68,8 +68,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            string[] segment = bet.gameCode.Split('-');
-                            if (segment.ElementAt(0) != "F")
+                            if (!bet.gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
                             {
                                 continue;
                             }
