@@ -23,7 +23,7 @@ namespace CommonService.Controllers
             ApiResult apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(fpsChecksRequest.account);
 
-            if (custInfo != null)
+            if (custInfo != null && !string.IsNullOrEmpty(custInfo.TpUserName))
             {
                 var resultResp = await fpsBLL.FPSChecksAsync(custInfo, fpsChecksRequest);
                 apiResult.ErrorCode = resultResp.ErrorCode;
