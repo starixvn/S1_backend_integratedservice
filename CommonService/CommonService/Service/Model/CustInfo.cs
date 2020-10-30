@@ -28,5 +28,6 @@ namespace CommonService.Service.Model
         public string RealName { get; set; }
         public bool PhoneVerified { get; set; }
         public bool EmailVerified { get; set; }
+        public string TpUserName { get; set; }
     }
 }
