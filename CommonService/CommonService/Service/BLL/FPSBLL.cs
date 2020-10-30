@@ -26,7 +26,7 @@ namespace CommonService.Service.BLL
 
             Dictionary<string, string> sendIovationChecks = new Dictionary<string, string>
             {
-                { "Account", custInfo.UserName },
+                { "Account", custInfo.TpUserName },
                 { "Action", fpsChecksRequest.action },
                 { "ActionResult", fpsChecksRequest.actionResult },
                 { "Subscriber",config.Subscriber},
