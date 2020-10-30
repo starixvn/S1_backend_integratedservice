@@ -310,5 +310,102 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
+        #region WM
+
+        public int PlaceBetLC_WM(TpCustInfo tpCustInfo, BettingDataLC_WM bettingDataLC_WM, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.WM_LiveCasino;
+            afterAmount = 0;
+            string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
+
+            var p = new DynamicParameters(new
+            {
+                TransId = mixUniqueId,
+                user = bettingDataLC_WM.user,
+                money = bettingDataLC_WM.money,
+                dealid = bettingDataLC_WM.dealid,
+                gtype = bettingDataLC_WM.gtype,
+                type = bettingDataLC_WM.type,
+                betdetail = bettingDataLC_WM.betdetail,
+                gameno = bettingDataLC_WM.gameno,
+                code = bettingDataLC_WM.code,
+                category = bettingDataLC_WM.category,
+                requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                TicketType = (int)BettransType.Bet,
+                SettleFlag = 2
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            result = conn.Execute("Service_BettransLC_WM_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                // 1:下注单
+                if (bettingDataLC_WM.category == "1")
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bettingDataLC_WM.money) * -1,
+                        (int)Tp.WM,
+                        mixUniqueId,
+                        gameType,
+                        mixUniqueId,
+                        null,
+                        TpCategory.LiveCasino,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (bonusId > 0 && result > 0)
+                    {
+                        AddTpBonus(
+                            (int)Tp.WM,
+                            bettingDataLC_WM.dealid,
+                            gameType,
+                            tpCustInfo.CustId,
+                            tpCustInfo.UserName,
+                            tpCustInfo.CurrencyId,
+                            tpCustInfo.SiteId,
+                            Math.Abs(bettingDataLC_WM.money),
+                            bonusId,
+                            TpCategory.LiveCasino,
+                            conn,
+                            trans
+                        );
+                    }
+                }
+                else
+                {
+                    // 2:小费单
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(bettingDataLC_WM.money) * -1,
+                        (int)Tp.WM,
+                        TransType.Prize,
+                        $"Tip: {Math.Abs(bettingDataLC_WM.money):#,##0.##}",
+                        bettingDataLC_WM.dealid,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

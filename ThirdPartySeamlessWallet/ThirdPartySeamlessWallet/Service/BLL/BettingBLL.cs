@@ -271,5 +271,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int PlaceBetLC_WM(BettingDataLC_WM bettingDataLC_WM, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.WM, bettingDataLC_WM.user);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.WM, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
     }
 }
