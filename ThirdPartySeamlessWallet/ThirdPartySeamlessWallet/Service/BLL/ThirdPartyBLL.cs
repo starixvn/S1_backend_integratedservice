@@ -133,5 +133,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return gameType;
         }
+        public GameType GetGameType_SG(string gameId)
+        {
+            GameType gameType = GameType.SG_RNG;
+
+            if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = GameType.SG_Fish;
+            }
+            
+            return gameType;
+        }
     }
 }
