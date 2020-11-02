@@ -209,8 +209,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var result = 0;
             var p = new DynamicParameters(new { data = bettingDataLC_DG.data, TransId = bettingDataLC_DG.TransId, Username = bettingDataLC_DG.Username, Amount = bettingDataLC_DG.Amount, Memo = (string)null, TicketType = (int)transferType });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
             try
             {
