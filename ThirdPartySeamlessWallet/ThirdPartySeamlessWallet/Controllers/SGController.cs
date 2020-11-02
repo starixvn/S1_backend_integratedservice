@@ -313,7 +313,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     catch (Exception ex)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", $"SG_{api}_{transferReq.type}");
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex}", $"SG_{api}_{transferReq.type}");
                         throw ex;
                     }
                 }
