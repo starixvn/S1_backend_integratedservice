@@ -102,6 +102,57 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.Settle(tpCustInfo, betRecordInfo, tpCategory);
             return result;
         }
+
+        private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()
+        {
+            {
+                GameType.Joker_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"dc7sh3dfmjpio",false },
+                    {"3uim5ppkiqwk1",false },
+                    {"j3wngk3efrzn6",false },
+                    {"yr1zy9u9xt6zr",false },
+                    {"hxb3p8r71kj3y",false },
+                }
+            },
+            {
+                GameType.PG_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"joker-wild",false },
+                    {"blackjack-eu",false },
+                    {"blackjack-us",false },
+                    {"baccarat-deluxe",false },
+                    {"cards-hi-lo",false },
+                    {"dice-hi-lo",false },
+                    {"five-num-hi-lo",false },
+                }
+            },
+            {
+                GameType.PP_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"bndt",false },
+                    {"bnadvanced",false },
+                    {"bca",false },
+                    {"bjmb",false },
+                    {"bjma",false },
+                    {"rla",false },
+                }
+            }
+        };
+        public SettlementType GetSettlementType(GameType gameType, string gameId)
+        {
+            SettlementType settlementType = SettlementType.SettledForValid;
+
+            if (excludeRoll.ContainsKey(gameType))
+            {
+                if (excludeRoll[gameType].ContainsKey(gameId))
+                {
+                    settlementType = SettlementType.SettledForValidNotRollover;
+                }
+            }
+
+            return settlementType;
+        }
         public IEnumerable<PayoutDataLC_SA> GetUnsettledListLC_SA()
         {
             return settledService.GetUnsettledListLC_SA();

@@ -119,7 +119,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.GPI_RNG,
                                 TpUserName = unsettled.cust_id,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id)
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
