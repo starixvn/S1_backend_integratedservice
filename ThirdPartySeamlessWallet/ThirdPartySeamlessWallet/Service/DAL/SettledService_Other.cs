@@ -250,7 +250,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 item.platformTxId,
                                 out _,
                                 conn,
-                                trans
+                                trans,
+                                AllowNegative.Allow
                             );
                         }
 
