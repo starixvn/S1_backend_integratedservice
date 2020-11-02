@@ -338,6 +338,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
         void CalculateAvailableBet(ISabaBet betDetial, BetRecordInfo betRecordInfo)
         {
+            bool isEBV = false;
+
             if (betDetial.ticket_status.Equals("running", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("waiting", StringComparison.OrdinalIgnoreCase))
             {
                 betRecordInfo.SettlementType = SettlementType.UnSettled;
@@ -360,6 +362,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 }
                 else
                 {
+                    isEBV = true;
                     betRecordInfo.ValidBet = betRecordInfo.Stake;
 
                     if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
@@ -461,9 +464,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 betRecordInfo.TicketStatus = TicketStatus.Win;
 
-                if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
+                if (isEBV)
                 {
-                    betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
+                    if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
+                    {
+                        betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
+                    }
                 }
             }
             else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))

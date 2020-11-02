@@ -888,13 +888,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_SG> GetUnsettledList_SG(int gameType)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             if (gameType == (int)GameType.SG_RNG)
             {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 return conn.Query<SettleData_SG>("Service_BettransRng_SG_Unsettle_Get", commandType: CommandType.StoredProcedure);
             }
             else
             {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
                 return conn.Query<SettleData_SG>("Service_TpWagerSG_Unsettle_Get", commandType: CommandType.StoredProcedure);
             }
         }
@@ -902,23 +903,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int SetSettleFlag_SG(int gameType, string referenceId)
         {
             var result = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
             if (gameType == (int)GameType.SG_RNG)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
                 result = conn.Execute("Service_BettransRng_SG_Settle_Set", new { referenceId = referenceId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                trans.Commit();
             }
             else
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
                 result = conn.Execute("Service_BettransFish_SG_Settle_Set", new { referenceId = referenceId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                trans.Commit();
             }
-            
+
+            trans.Commit();
+
             return result;
         }
 
