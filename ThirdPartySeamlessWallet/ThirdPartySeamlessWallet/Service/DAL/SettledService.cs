@@ -27,6 +27,57 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.bettingService = bettingService;
             this.log2File = log2File;
         }
+
+        private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()
+        {
+            {
+                GameType.Joker_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"dc7sh3dfmjpio",false },
+                    {"3uim5ppkiqwk1",false },
+                    {"j3wngk3efrzn6",false },
+                    {"yr1zy9u9xt6zr",false },
+                    {"hxb3p8r71kj3y",false },
+                }
+            },
+            {
+                GameType.PG_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"10",false },
+                    {"12",false },
+                    {"11",false },
+                    {"31",false },
+                    {"76",false },
+                    {"77",false },
+                    {"78",false },
+                }
+            },
+            {
+                GameType.PP_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"bndt",false },
+                    {"bnadvanced",false },
+                    {"bca",false },
+                    {"bjmb",false },
+                    {"bjma",false },
+                    {"rla",false },
+                }
+            }
+        };
+        public SettlementType GetSettlementType(GameType gameType, string gameId)
+        {
+            SettlementType settlementType = SettlementType.SettledForValid;
+
+            if (excludeRoll.ContainsKey(gameType))
+            {
+                if (excludeRoll[gameType].ContainsKey(gameId))
+                {
+                    settlementType = SettlementType.SettledForValidNotRollover;
+                }
+            }
+
+            return settlementType;
+        }
         public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory)
         {
             int bonusId = 0;

@@ -138,7 +138,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             GameType = GameType.Joker_RNG,
                             TpUserName = bettingDataRNG_Joker.username,
                             SettledTime = bettingDataRNG_Joker.timestamp / 1000,
-                            SettlementType = SettlementType.SettledForValid,
+                            SettlementType = GetSettlementType(GameType.Joker_RNG, bettingDataRNG_Joker.gamecode),
                             BonusId = bonusId
                         };
 
@@ -545,7 +545,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         GameType = gameType,
                         TpUserName = bettingDataRNG_PP.userId,
                         SettledTime = timestamp / 1000,
-                        SettlementType = SettlementType.SettledForValid,
+                        SettlementType = GetSettlementType(gameType, bettingDataRNG_PP.gameId),
                         TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                         BonusId = bonusId
                     };
@@ -1018,7 +1018,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 GameType = GameType.PG_RNG,
                                 TpUserName = bettingDataRNG_PG.PlayerName,
                                 SettledTime = bettingDataRNG_PG.UpdatedTime,
-                                SettlementType = SettlementType.SettledForValid,
+                                SettlementType = GetSettlementType(GameType.PG_RNG, bettingDataRNG_PG.GameId.ToString()),
                                 BonusId = bonusId
                             };
 
