@@ -117,17 +117,17 @@
   },
   "OTPSMSServiceConfig": {
     "Nova88": {
-      "ResourceURL": "http://sms.skylinelabs.cc:20003/sendsmsV2?",
+      "ResourceURL": "http://sms.chinaskylinetel.net:20003/sendsmsV2?",
       "Account": " ",
       "Password": " "
     },
     "Bwing": {
-      "ResourceURL": "http://sms.skylinelabs.cc:20003/sendsmsV2?",
+      "ResourceURL": "http://sms.chinaskylinetel.net:20003/sendsmsV2?",
       "Account": "cs_0iahqs",
       "Password": "WTLgCL07"
     },
     "Goal123": {
-      "ResourceURL": "http://sms.skylinelabs.cc:20003/sendsmsV2?",
+      "ResourceURL": "http://sms.chinaskylinetel.net:20003/sendsmsV2?",
       "Account": "cs_jlmx2k",
       "Password": "o7cZRLBV"
     }
