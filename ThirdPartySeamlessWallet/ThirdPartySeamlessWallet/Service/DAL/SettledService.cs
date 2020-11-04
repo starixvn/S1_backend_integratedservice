@@ -349,7 +349,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             #endregion
 
             #region Set TurnOver of WithdrawalLimit
-            if (!hasBonusRunning)
+            if (bonusId == 0)
             {
                 if (RefBetRecord == null)
                 {
@@ -389,12 +389,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin)
                 {
                     SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
-                    if (hasBonusRunning)
+                    if (bonusId > 0)
                         SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
                     if (Losses != 0)
                     {
-                        if (hasBonusRunning)
+                        if (bonusId > 0)
                             AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                         else
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
@@ -410,12 +410,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
                 {
                     SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
-                    if (hasBonusRunning)
+                    if (bonusId > 0)
                         SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
                     if (Losses != 0)
                     {
-                        if (hasBonusRunning)
+                        if (bonusId > 0)
                             AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                         else
                             AutoCancelBonus(tpCustInfo.CustId, conn, trans);
@@ -426,7 +426,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refWinnings * -1, refLosses * -1, "Settled To Refund", betRecord.TransId, conn, trans);
 
-                    if (hasBonusRunning)
+                    if (bonusId > 0)
                         SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refWinnings * -1, refLosses * -1, "Settled To Refund", bonusId, betRecord.TransId, conn, trans);
                 }
                 else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
@@ -436,16 +436,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - refWinnings, Losses - refLosses, "Settled", betRecord.TransId, conn, trans);
 
-                        if (hasBonusRunning)
+                        if (bonusId > 0)
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - refWinnings, Losses - refLosses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
                         if (Losses != 0)
                         {
-                            if (hasBonusRunning)
+                            if (bonusId > 0)
                                 AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                             else
                                 AutoCancelBonus(tpCustInfo.CustId, conn, trans);
-
                         }
                     }
                 }

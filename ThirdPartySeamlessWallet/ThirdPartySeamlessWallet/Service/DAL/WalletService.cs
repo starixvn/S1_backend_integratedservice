@@ -103,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 decimal bonus = p.Get<decimal>("Bonus");
                 if (bonus > 0)
                 {
-                    result = SetBalance(bonusFulfill.CustId, bonusFulfill.SiteId, bonusFulfill.UserName, bonus, 0, TransType.Prize, $"Bonus Transfer to Cash: {Math.Abs(bonus).ToString("#,##0.##")}", bonusFulfill.BonusId.ToString(), out decimal _, conn, trans);
+                    result = SetBalance(bonusFulfill.CustId, bonusFulfill.SiteId, bonusFulfill.UserName, bonus, 0, TransType.Prize, $"Bonus Transfer to Cash: {Math.Abs(bonus):#,##0.##}", bonusFulfill.BonusId.ToString(), out decimal _, conn, trans);
                 }
 
                 if (result > 0)
