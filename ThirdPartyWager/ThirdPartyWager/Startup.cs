@@ -59,6 +59,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerAGService>();
             services.AddSingleton<WagerCFService>();
             services.AddSingleton<WagerSGService>();
+            services.AddSingleton<WagerWMService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -85,6 +86,10 @@ namespace ThirdPartyWager
             // SG
             services.AddSingleton<WagerSGBLL>();
             services.AddSingleton<ApiSGBLL>();
+            // WM
+            services.AddSingleton<WagerWMBLL>();
+            services.AddSingleton<ApiWMBLL>();
+            services.AddSingleton<WagerRedoWMBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

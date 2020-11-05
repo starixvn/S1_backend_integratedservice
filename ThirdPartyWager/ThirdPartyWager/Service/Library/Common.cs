@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -80,6 +81,24 @@ namespace ThirdPartyWager.Service.Library
             cs.Write(inData, 0, inData.Length);
             cs.FlushFinalBlock();
             return Convert.ToBase64String(ms.ToArray());
+        }
+        public T FromJson<T>(string jsonString)
+        {
+            if (!string.IsNullOrEmpty(jsonString))
+            {
+                return JsonConvert.DeserializeObject<T>(jsonString);
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+        public string ToJson(object t)
+        {
+            return JsonConvert.SerializeObject(t, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
         }
     }
 }

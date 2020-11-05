@@ -22,9 +22,10 @@ namespace ThirdPartyWager.Workers
         private int intervalMins = 60;
         private int tpId = (int)Tp.Allbet;
         private int tpType = 2;
+        private int quick = 0;
 
         public WagerRedoAllBet(
-            ILogger<WagerRedoAllBet> logger, 
+            ILogger<WagerRedoAllBet> logger,
             WagerRedoAllBetBLL wagerRedoAllBetBLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
@@ -47,6 +48,7 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
+                quick = 0;
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 DateTime timerTime;
                 int last;
@@ -57,7 +59,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     last = intervalMins;
                 }
                 if (timerTime < DateTime.Now)
@@ -69,6 +71,12 @@ namespace ThirdPartyWager.Workers
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                 }
+                TimeSpan ts = DateTime.Now - timerTime;
+                int diffMin = (int)ts.TotalMinutes;
+                if (diffMin >= 120)
+                {
+                    quick = 1;
+                }
             }
             catch (Exception ex)
             {
@@ -76,8 +84,16 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                if (quick == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(120);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
         }
 

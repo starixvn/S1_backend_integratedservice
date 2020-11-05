@@ -39,7 +39,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.CF", "ThirdParty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.EBet", "ThirdParty.EBet\ThirdParty.EBet.csproj", "{13565AB6-DF80-4CED-9D6E-4ECA65155D58}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.AWC", "ThirdParty.AWC\ThirdParty.AWC.csproj", "{2F322B05-E4F5-405F-B6A2-B47C4269A53D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.AWC", "ThirdParty.AWC\ThirdParty.AWC.csproj", "{2F322B05-E4F5-405F-B6A2-B47C4269A53D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.WM", "ThirdParty.WM\ThirdParty.WM.csproj", "{64D5A550-E7DD-4430-BCF9-6EC6D9DABD3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +125,10 @@ Global
 		{2F322B05-E4F5-405F-B6A2-B47C4269A53D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F322B05-E4F5-405F-B6A2-B47C4269A53D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F322B05-E4F5-405F-B6A2-B47C4269A53D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64D5A550-E7DD-4430-BCF9-6EC6D9DABD3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64D5A550-E7DD-4430-BCF9-6EC6D9DABD3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64D5A550-E7DD-4430-BCF9-6EC6D9DABD3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64D5A550-E7DD-4430-BCF9-6EC6D9DABD3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

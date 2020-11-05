@@ -59,7 +59,8 @@ namespace ThirdParty.AWC
             { "MYR", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
             { "CNY", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
             { "IDR", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
-            { "THB", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } }
+            { "THB", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } },
+            { "VND", new betLimit { minbet = 1, maxbet = 200, mindraw = 1, maxdraw = 100, matchlimit = 200 } }
         };
 
         Dictionary<string, betLimit> betLimitPrd = new Dictionary<string, betLimit>(comparer: StringComparer.OrdinalIgnoreCase)
@@ -67,7 +68,8 @@ namespace ThirdParty.AWC
             { "MYR", new betLimit { minbet = 5, maxbet = 1000, mindraw = 5, maxdraw = 125, matchlimit = 2000 } },
             { "CNY", new betLimit { minbet = 7.5m, maxbet = 1500, mindraw = 7.5m, maxdraw = 185, matchlimit = 3000 } },
             { "IDR", new betLimit { minbet = 17.5m, maxbet = 3500, mindraw = 17.5m, maxdraw = 435, matchlimit = 7000 } },
-            { "THB", new betLimit { minbet = 37.5m, maxbet = 7500, mindraw = 37.5m, maxdraw = 935, matchlimit = 15000 } }
+            { "THB", new betLimit { minbet = 37.5m, maxbet = 7500, mindraw = 37.5m, maxdraw = 935, matchlimit = 15000 } },
+            { "VND", new betLimit { minbet = 25, maxbet = 5000, mindraw = 25, maxdraw = 625, matchlimit = 10000 } }
         };
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)

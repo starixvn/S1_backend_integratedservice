@@ -1367,5 +1367,233 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Execute("Service_BettransLC_EBet_Settle_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
         }
         #endregion
+
+        #region WM
+
+        public int PayoutLC_WM(TpCustInfo tpCustInfo, BettingDataLC_WM bettingDataLC_WM, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.WM_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
+            var p = new DynamicParameters(new
+            {
+                TransId = mixUniqueId,
+                user = bettingDataLC_WM.user,
+                money = bettingDataLC_WM.money,
+                dealid = bettingDataLC_WM.dealid,
+                gtype = bettingDataLC_WM.gtype,
+                type = bettingDataLC_WM.type,
+                betdetail = bettingDataLC_WM.betdetail,
+                gameno = bettingDataLC_WM.gameno,
+                code = bettingDataLC_WM.code,
+                category = bettingDataLC_WM.category,
+                requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                TicketType = (int)BettransType.Payout,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransLC_WM_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataLC_WM.money != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataLC_WM.money,
+                            (int)Tp.WM,
+                            mixUniqueId,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            mixUniqueId,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int CancelBetLC_WM(TpCustInfo tpCustInfo, BettingDataLC_WM bettingDataLC_WM, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.WM_LiveCasino;
+
+            afterAmount = 0;
+            int result = 0;
+            string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            result = conn.Execute("Service_BettransLC_WM_CancelBet_Set", new { dealid = bettingDataLC_WM.dealid }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                // 1:下注单 2:小费单
+                string memo = (bettingDataLC_WM.category == "1") ? "CancelBet" : "Tip";
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(bettingDataLC_WM.money),
+                    (int)Tp.WM,
+                    bettingDataLC_WM.dealid,
+                    gameType, TpCategory.LiveCasino,
+                    mixUniqueId,
+                    TransType.Refunds,
+                    null,
+                    out afterAmount,
+                    memo,
+                    out bonusId,
+                    conn,
+                    trans,
+                    AllowNegative.Allow
+                );
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
+
+        public int ResettleLC_WM(TpCustInfo tpCustInfo, BettingDataLC_WM bettingDataLC_WM, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.WM_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
+            var p = new DynamicParameters(new
+            {
+                TransId = mixUniqueId,
+                user = bettingDataLC_WM.user,
+                money = bettingDataLC_WM.money,
+                dealid = bettingDataLC_WM.dealid,
+                gtype = bettingDataLC_WM.gtype,
+                type = bettingDataLC_WM.type,
+                betdetail = bettingDataLC_WM.betdetail,
+                gameno = bettingDataLC_WM.gameno,
+                code = bettingDataLC_WM.code,
+                category = bettingDataLC_WM.category,
+                requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransLC_WM_Resettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataLC_WM.money != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataLC_WM.money,
+                            (int)Tp.WM,
+                            mixUniqueId,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            mixUniqueId,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Resettle",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+        }
+
+        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public SettleData_WM GetSettle_TpWagerWM(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData_WM>("Service_TpWagerWM_Settle_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerWM(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerWM_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_BettransLC_WM(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_WM_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }
