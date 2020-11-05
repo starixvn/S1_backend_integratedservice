@@ -5,6 +5,7 @@ using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using PaymentService.Service.Library;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +23,9 @@ namespace CommonService.Service.BLL
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
+        private readonly Log2File log2File;
 
-        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger)
+        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
         {
             this.httpHelper = httpHelper;
             this.sOTPSMSService = sOTPSMSService;
@@ -31,6 +33,7 @@ namespace CommonService.Service.BLL
             this.tools = tools;
             this.selLangBLL = selLangBLL;
             this.logger = logger;
+            this.log2File = log2File;
 
         }
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfoAsync(int custId)
@@ -100,7 +103,7 @@ namespace CommonService.Service.BLL
             //String smsMessage = $"{selLangBLL.GetResourceValue("lbl_OTP", langId)} {OTPNum}";
 
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
-            String smsMessage = $"{OTPNum}";
+            String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
             String siteName = custInfo.SiteName;
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
@@ -112,14 +115,14 @@ namespace CommonService.Service.BLL
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
             var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
-
+            log2File.Info($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTPLog");
             if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.status == 0)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
             }
             else
             {
-
+                log2File.Info($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTPErrorLog");
                 if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
                 {
                     apiResult.ErrorCode = ErrorCode.PhoneError;

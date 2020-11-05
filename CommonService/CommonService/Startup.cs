@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using PaymentService.Service.Library;
 using System;
 using System.Collections.Generic;
 
@@ -39,6 +40,7 @@ namespace CommonService
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
 
             services.AddSingleton<HttpHelper>();
+            services.AddSingleton<Log2File>();
 
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<AuthService>();
