@@ -49,6 +49,7 @@ namespace ThirdPartyWager
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<Common>();
             services.AddSingleton<DateTimeHelper>();
+            services.AddSingleton<Log2File>();
 
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();

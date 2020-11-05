@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,11 +15,13 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
 
-        public ApiSGBLL(HttpHelper httpHelper, Common common)
+        public ApiSGBLL(HttpHelper httpHelper, Common common, Log2File log2File)
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
         }
 
         public async Task<WagerSGModel> GetBetListByTime(string apiUrl, string merchantCode, string startTime, string endTime, int page)
@@ -50,12 +53,14 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add("DataType", "JSON");
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            try
             {
+                response.EnsureSuccessStatusCode();
                 return response.Content.ReadAsStringAsync().Result;
             }
-            else
+            catch (HttpRequestException HREx)
             {
+                log2File.Error($"{HREx}\r\n{json}\r\n{response?.Content?.ReadAsStringAsync()?.Result}", "ApiSGBLL");
                 return null;
             }
         }
