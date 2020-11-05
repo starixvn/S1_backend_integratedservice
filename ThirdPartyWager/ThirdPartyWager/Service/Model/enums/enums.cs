@@ -21,6 +21,7 @@ namespace ThirdPartyWager.Service.Model.enums
         Allbet = 12,
         PG = 14,
         Sexy = 15,
-        CF = 17
+        CF = 17,
+        WM = 20
     }
 }
