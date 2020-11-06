@@ -40,6 +40,7 @@ namespace ThirdPartyWager.Service.BLL
 
             // request
             string r = await DoHttpClientAsync(url, uri, param);
+            //log2File.Info($"{JsonConvert.SerializeObject(param)}\r\n{r}", "ApiSGBLL");
             var result = JsonConvert.DeserializeObject<WagerSGModel>(r);
             return result;
         }

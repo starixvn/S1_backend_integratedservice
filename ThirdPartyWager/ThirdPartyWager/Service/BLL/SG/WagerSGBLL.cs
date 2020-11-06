@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,18 +15,21 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerSGService wagerSGService;
         private readonly ApiSGBLL apiSGBLL;
         private readonly ILogger<WagerSGBLL> logger;
+        private readonly Log2File log2File;
 
         public WagerSGBLL(
             ILogger<WagerSGBLL> logger,
             WagerSGService wagerSGService,
             ApiSGBLL apiSGBLL,
-            ThirdPartyBLL thirdPartyBLL
+            ThirdPartyBLL thirdPartyBLL,
+            Log2File log2File
         )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerSGService = wagerSGService;
             this.apiSGBLL = apiSGBLL;
             this.logger = logger;
+            this.log2File = log2File;
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
@@ -76,10 +80,8 @@ namespace ThirdPartyWager.Service.BLL
                         }
                         catch (Exception ex)
                         {
-                            var wagerId = bet.ticketId.ToString();
-                            logger.LogError(ex, ex.Message);
-                            logger.LogInformation($"INSERT_WAGER ( WAGERID: {wagerId} )");
-                            continue;
+                            log2File.Error($"WAGERID: {bet.ticketId}\r\n{ex}", "GetWagers");
+                            throw ex;
                         }
                     }
                     page++;
