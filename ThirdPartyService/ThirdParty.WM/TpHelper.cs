@@ -11,7 +11,7 @@ namespace ThirdParty.WM
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private string userPassword = "VyeYHngmE794AXLrDPTN";
+        //private string userPassword = "VyeYHngmE794AXLrDPTN";
 
         public class SignupReq
         {
@@ -57,13 +57,13 @@ namespace ThirdParty.WM
             string vendorId = inputs.ContainsKey($"vendorId_{currency}") && !string.IsNullOrEmpty(inputs[$"vendorId_{currency}"]) ? inputs[$"vendorId_{currency}"] : throw new Exception($"vendorId_{currency}");
             string signature = inputs.ContainsKey($"signature_{currency}") && !string.IsNullOrEmpty(inputs[$"signature_{currency}"]) ? inputs[$"signature_{currency}"] : throw new Exception($"signature_{currency}");
 
-            SignupReq SignUp = new SignupReq
+            var SignUp = new
             {
                 cmd = "MemberRegister",
                 vendorId = vendorId,
-                signature = signature,
+                signature = HttpUtility.UrlEncode(signature),
                 user = tpCustInfo.TpUserName,
-                password = userPassword,
+                password = HttpUtility.UrlEncode(tpCustInfo.TpPwd),
                 username = tpCustInfo.TpUserName,
                 timestamp = DateTimeOffset.Now.ToUnixTimeSeconds()
                 //syslang = 1,
@@ -123,16 +123,18 @@ namespace ThirdParty.WM
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string vendorId = inputs.ContainsKey($"vendorId_{currency}") && !string.IsNullOrEmpty(inputs[$"vendorId_{currency}"]) ? inputs[$"vendorId_{currency}"] : throw new Exception($"vendorId_{currency}");
             string signature = inputs.ContainsKey($"signature_{currency}") && !string.IsNullOrEmpty(inputs[$"signature_{currency}"]) ? inputs[$"signature_{currency}"] : throw new Exception("signature");
+            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
 
-            LoginReq Login = new LoginReq
+            var Login = new
             {
                 cmd = "LoginGame",
                 vendorId = vendorId,
-                signature = signature,
+                signature = HttpUtility.UrlEncode(signature),
                 user = tpCustInfo.TpUserName,
-                password = userPassword,
-                lang = Int32.Parse(TpLangId),
-                timestamp = DateTimeOffset.Now.ToUnixTimeSeconds()
+                password = HttpUtility.UrlEncode(tpCustInfo.TpPwd),
+                lang = TpLangId,
+                timestamp = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                returnurl = lobbyUrl
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
@@ -167,7 +169,6 @@ namespace ThirdParty.WM
             }
 
             return oApiResult;
-
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
