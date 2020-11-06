@@ -54,7 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleGPI = new Timer(DoSettleGPIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSGRng = new Timer(DoSettleSGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSGFish = new Timer(DoSettleSGFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
