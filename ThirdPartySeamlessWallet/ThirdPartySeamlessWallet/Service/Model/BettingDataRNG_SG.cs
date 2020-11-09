@@ -35,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class SettleData_SG
     {
+        public string transferIdList { get; set; }
         public decimal Stake { get; set; }
         public decimal WinLostAmount { get; set; }
         public string Account { get; set; }

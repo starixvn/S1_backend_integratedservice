@@ -912,7 +912,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             if (gameType == (int)GameType.SG_RNG)
             {
-                result = conn.Execute("Service_BettransRng_SG_Settle_Set", new { referenceId = referenceId }, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_SG_Settle_Set", new { transferIdList = referenceId }, commandType: CommandType.StoredProcedure);
             }
             else
             {

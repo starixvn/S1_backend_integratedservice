@@ -183,6 +183,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             decimal stake = unsettled.Stake;
                             decimal validBet = unsettled.Stake;
                             decimal winLostAmount = unsettled.WinLostAmount;
+                            List<string> transferIdList = JsonConvert.DeserializeObject<List<string>>(unsettled.transferIdList);
+                            transferIdList.Add(unsettled.referenceId);
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
@@ -199,16 +201,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-
-                            Task.Run(() =>
-                            {
-                                settledBLL.SetSettleFlag_SG((int)gameType, unsettled.referenceId);
-                            });
+                            settledBLL.SetSettleFlag_SG((int)gameType, JsonConvert.SerializeObject(transferIdList));
                         }
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSGRng");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", "SettleSGRng");
                         }
                     }
                 }
