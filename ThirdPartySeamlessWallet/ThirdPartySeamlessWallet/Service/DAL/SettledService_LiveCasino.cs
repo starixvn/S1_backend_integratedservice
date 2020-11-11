@@ -1464,24 +1464,44 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                // 1:下注单 2:小费单
-                string memo = (bettingDataLC_WM.category == "1") ? "CancelBet" : "Tip";
-                result = PayoutV2(
-                    tpCustInfo,
-                    Math.Abs(bettingDataLC_WM.money),
-                    (int)Tp.WM,
-                    bettingDataLC_WM.dealid,
-                    gameType, TpCategory.LiveCasino,
-                    mixUniqueId,
-                    TransType.Refunds,
-                    null,
-                    out afterAmount,
-                    memo,
-                    out bonusId,
-                    conn,
-                    trans,
-                    AllowNegative.Allow
-                );
+                // 1:下注单
+                if (bettingDataLC_WM.category == "1")
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(bettingDataLC_WM.money),
+                        (int)Tp.WM,
+                        bettingDataLC_WM.dealid,
+                        gameType, TpCategory.LiveCasino,
+                        mixUniqueId,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "CancelBet",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+                }
+                else
+                {
+                    // 2:小费单
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(bettingDataLC_WM.money),
+                        (int)Tp.WM,
+                        TransType.Tip,
+                        $"Tip: {Math.Abs(bettingDataLC_WM.money):#,##0.##}",
+                        bettingDataLC_WM.dealid,
+                        out afterAmount,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+                }
 
                 if (result > 0)
                 {
