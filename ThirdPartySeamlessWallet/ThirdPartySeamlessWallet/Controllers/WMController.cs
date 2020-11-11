@@ -196,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = settledBLL.PayoutLC_WM(getPointInoutReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getPointInoutReq.user, gameType);
+                            //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getPointInoutReq.user, gameType);
                             pointInoutResp.errorCode = 0;
                             pointInoutResp.errorMessage = "";
                             pointInoutResp.result.cash = tpAffterAmount;
@@ -309,7 +309,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = settledBLL.PayoutLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                            //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
                             pointInoutResp.errorCode = 0;
                             pointInoutResp.errorMessage = "";
                             pointInoutResp.result.cash = tpAffterAmount;
@@ -327,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = settledBLL.CancelBetLC_WM(getTimeoutBetReturnReq, out tpAffterAmount);
                         if (result > 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                            //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
                             pointInoutResp.errorCode = 0;
                             pointInoutResp.errorMessage = "";
                             pointInoutResp.result.cash = tpAffterAmount;

@@ -332,7 +332,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 code = bettingDataLC_WM.code,
                 category = bettingDataLC_WM.category,
                 requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                TicketType = (int)BettransType.Bet,
+                TicketType = bettingDataLC_WM.category == "1" ? (int)BettransType.Bet : (int)BettransType.Tip,
                 SettleFlag = 2
             });
 
@@ -389,7 +389,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.UserName,
                         Math.Abs(bettingDataLC_WM.money) * -1,
                         (int)Tp.WM,
-                        TransType.Prize,
+                        TransType.Tip,
                         $"Tip: {Math.Abs(bettingDataLC_WM.money):#,##0.##}",
                         bettingDataLC_WM.dealid,
                         out afterAmount,

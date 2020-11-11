@@ -11,7 +11,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Refunds = 2,
         Payout = 3,
         Prize = 4,
-        Undo = 5
+        Undo = 5,
+        Tip = 6
     }
     public enum SettlementType
     {
@@ -86,13 +87,15 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PlaceBet = 1,
         CancelBet = 2,
         Payout = 4,
-        Bonus = 7
+        Bonus = 7,
+        Tip = 6
     }
     public enum BettransType : int/*Ticket Type*/
     {
         Bet = 1,
         CancelBet = 2,
         Payout = 4,
+        Tip = 6,
         Bonus = 7,
         Jackpot = 8
     }
