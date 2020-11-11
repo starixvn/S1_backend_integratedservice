@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -630,6 +631,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     bet.Amount *= tpCurrency.ExchangeRate;
                 }
             }
+
+            Thread.Sleep(5000);
 
             var result = settledService.CancelBetLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
 

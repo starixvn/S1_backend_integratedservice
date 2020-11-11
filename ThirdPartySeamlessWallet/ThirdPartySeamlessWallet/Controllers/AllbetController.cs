@@ -19,6 +19,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class AllbetController : ControllerBase
     {
+        private readonly Tools tools;
         private readonly Log2File log2File;
         private readonly Tp thisTp;
         private readonly ThirdPartyBLL thirdPartyBLL;
@@ -35,8 +36,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             ReSettle = 21
         }
 
-        public AllbetController(IHostEnvironment environment, BettingBLL bettingBLL, ThirdPartyBLL thirdPartyBLL, SettledBLL settledBLL, TpCustInfoBLL tpCustInfoBLL, Log2File log2File)
+        public AllbetController(IHostEnvironment environment, BettingBLL bettingBLL, ThirdPartyBLL thirdPartyBLL, SettledBLL settledBLL, TpCustInfoBLL tpCustInfoBLL, Log2File log2File, Tools tools)
         {
+            this.tools = tools;
             this.log2File = log2File;
             thisTp = Tp.Allbet;
             this.thirdPartyBLL = thirdPartyBLL;
@@ -413,6 +415,143 @@ namespace ThirdPartySeamlessWallet.Controllers
                             resp.balance = tpCustBalance.Balance;
                             resp.error_code = "0";
                             resp.message = "success";
+                        }
+                    }
+                    else
+                    {
+                        resp.error_code = "40000";
+                        resp.message = "invalid request parameter";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                resp.error_code = "50000";
+                resp.message = "server error";
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer");
+                throw ex;
+            }
+
+            log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+            return resp;
+        }
+
+        [HttpPost]
+        [Route("[controller]/[action]")]
+        public async Task<Resp> TransferFixAsync()/*[FromForm]Dictionary<string, string> transferReqq*/
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string Content = await reader.ReadToEndAsync();
+
+            Resp resp = new Resp();
+            resp.error_code = "50000";
+            resp.message = "server error";
+
+            if (tools.GetClientIP(HttpContext) != "211.75.236.133")
+            {
+                return resp;
+            }
+
+            TransferReq transferReq = null;
+            try
+            {
+                transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
+            }
+            catch (Exception ex)
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer");
+                return resp;
+            }
+            TransferType transferType = TransferType.Bet;
+            Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
+
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+ 
+            if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null || transferReq.Details.Any(bet => bet.BetNum <= 0))
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, transferReq.Client);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)thisTp, tpCustInfo.CurrencyId);
+
+            if (!(tpCurrency.TpCurrencyId.Equals(transferReq.Currency, StringComparison.OrdinalIgnoreCase) || (environment.IsDevelopment() && transferReq.Currency.Equals("CNY", StringComparison.OrdinalIgnoreCase))))
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
+
+            try
+            {
+                if (transferType == TransferType.Cancel)
+                {
+                    decimal amountSum = 0;
+                    bool valid = true;
+                    if (transferReq.OriginalTranId <= 0)
+                    {
+                        valid = false;
+                    }
+                    else if (transferReq.Amount <= 0)
+                    {
+                        valid = false;
+                    }
+                    else
+                    {
+                        foreach (var betAmt in transferReq.Details)
+                        {
+                            if (betAmt.Amount <= 0)
+                            {
+                                valid = false;
+                                break;
+                            }
+
+                            amountSum += betAmt.Amount;
+                        }
+
+                        if (amountSum != transferReq.Amount)
+                        {
+                            valid = false;
+                        }
+                    }
+
+                    if (valid)
+                    {
+                        int result = settledBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+
+                        if (result > 0)
+                        {
+                            if (transferReq.Amount > 0)
+                            {
+                                resp.balance = tpAffterAmount;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                            else
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
+                                resp.balance = tpCustBalance.Balance;
+                                resp.error_code = "0";
+                                resp.message = "success";
+                            }
+                        }
+                        else if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
+                            resp.balance = tpCustBalance.Balance;
+                            resp.error_code = "0";
+                            resp.message = "success";
+                        }
+                        else if (result == -3)
+                        {
+                            resp.error_code = "10006";
+                            resp.message = "transaction not existed";
                         }
                     }
                     else
