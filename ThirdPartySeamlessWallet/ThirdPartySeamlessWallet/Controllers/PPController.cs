@@ -57,7 +57,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/authenticate")]
-        public AuthenticateResp Authenticate([FromForm]Dictionary<string, string> authenticateReqq)
+        public AuthenticateResp Authenticate([FromForm] Dictionary<string, string> authenticateReqq)
         {
             AuthenticateResp authenticateResp = new AuthenticateResp();
             authenticateResp.error = 100;
@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/balance")]
-        public BalanceResp Balance([FromForm]Dictionary<string, string> balanceReqq)
+        public BalanceResp Balance([FromForm] Dictionary<string, string> balanceReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(balanceReqq), $"{thisTp}_Balance");
             BalanceResp balanceResp = new BalanceResp();
@@ -210,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bet")]
-        public BetResp Bet([FromForm]Dictionary<string, string> betReqq)
+        public BetResp Bet([FromForm] Dictionary<string, string> betReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(betReqq), $"{thisTp}_Bet");
             BetResp betResp = new BetResp();
@@ -247,7 +247,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else
                     {
                         var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                        if (bettingBLL.PlaceBetRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                        if (bettingBLL.PlaceBetRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
                         {
                             if (betReq.amount == 0)
                             {
@@ -312,7 +312,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/result")]
-        public PayoutResp Result([FromForm]Dictionary<string, string> resultReqq)
+        public PayoutResp Result([FromForm] Dictionary<string, string> resultReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(resultReqq), $"{thisTp}_Result");
             PayoutResp resultResp = new PayoutResp();
@@ -337,7 +337,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     resultResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Payout;
                     var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                    if (settledBLL.PayoutRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
@@ -391,7 +391,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bonusWin")]
-        public PayoutResp BonusWin([FromForm]Dictionary<string, string> bonusWinReqq)
+        public PayoutResp BonusWin([FromForm] Dictionary<string, string> bonusWinReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(bonusWinReqq), $"{thisTp}_BonusWin");
             PayoutResp payoutResp = new PayoutResp();
@@ -464,7 +464,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/JackpotWin")]
-        public PayoutResp JackpotWin([FromForm]Dictionary<string, string> jackpotWinReqq)
+        public PayoutResp JackpotWin([FromForm] Dictionary<string, string> jackpotWinReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(jackpotWinReqq), $"{thisTp}_JackpotWin");
             PayoutResp payoutResp = new PayoutResp();
@@ -482,7 +482,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Jackpot;
                     var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (settledBLL.PayoutRNG_PP(betReq, out decimal tpAffterAmount) > 0)
+                    if (settledBLL.PayoutRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
@@ -541,7 +541,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/promoWin")]
-        public PayoutResp PromoWin([FromForm]Dictionary<string, string> promoWinReqq)
+        public PayoutResp PromoWin([FromForm] Dictionary<string, string> promoWinReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(promoWinReqq), $"{thisTp}_PromoWin");
             PayoutResp payoutResp = new PayoutResp();
@@ -620,7 +620,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/endRound")]
-        public EndRoundResp EndRound([FromForm]Dictionary<string, string> endRoundReqq)
+        public EndRoundResp EndRound([FromForm] Dictionary<string, string> endRoundReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(endRoundReqq), $"{thisTp}_EndRound");
             EndRoundResp endRoundResp = new EndRoundResp();
@@ -635,7 +635,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (hashCheck(endRoundReqq, secureKey))
                 {
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(endRoundReqq));
-                    int result = settledBLL.SettledRNG_PP(betReq, out decimal tpAffterAmount);
+                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
+                    int result = settledBLL.SettledRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount);
 
                     endRoundResp.cash = 0;
                     endRoundResp.bonus = 0;
@@ -671,7 +672,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/refund")]
-        public RefundResp refund([FromForm]Dictionary<string, string> refundReqq)
+        public RefundResp refund([FromForm] Dictionary<string, string> refundReqq)
         {
             RefundResp refundResp = new RefundResp();
             refundResp.error = 100;
@@ -688,7 +689,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     RefundReq refundReq = JsonConvert.DeserializeObject<RefundReq>(JsonConvert.SerializeObject(refundReqq));
                     refundResp.transactionId = $"{refundReq.reference}_refund";
                     //BetReq betReq = JsonConvert.DeserializeObject<BetReq>(Content);
-                    if (settledBLL.CancelBetRNG_PP(refundReq, out decimal tpAffterAmount) > 0)
+                    var gameType = thirdPartyBLL.GetGameType_PP(refundReq.gameId);
+                    if (settledBLL.CancelBetRNG_PP(refundReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
                         refundResp.error = 0;
                         refundResp.description = "Success.";
