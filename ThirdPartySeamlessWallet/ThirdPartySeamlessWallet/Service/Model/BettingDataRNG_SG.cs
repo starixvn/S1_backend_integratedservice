@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -15,7 +16,31 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public TransferType type { get; set; }
         public string ticketId { get; set; }
         public string channel { get; set; }
-        public string playerIp { get; set; }
+
+        /*
+         
+
+         */
+        private string _playerIp;
+        public string playerIp
+        {
+            get
+            {
+                if (IPAddress.TryParse(_playerIp, out IPAddress ip))
+                {
+                    return ip.MapToIPv4().ToString();
+                }
+                else
+                {
+                    return _playerIp;
+                }
+            }
+
+            set
+            {
+                _playerIp = value;
+            }
+        }
         public string token { get; set; }
         public DateTime transferTime { get; set; }
         public string gameCode { get; set; }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Library;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
@@ -12,10 +13,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
     {
         private Timer timer;
         private readonly ILogger<AG_EnquireWorkerService> logger;
+        private readonly HttpHelper httpHelper;
 
-        public AG_EnquireWorkerService(ILogger<AG_EnquireWorkerService> logger)
+        public AG_EnquireWorkerService(ILogger<AG_EnquireWorkerService> logger, HttpHelper httpHelper)
         {
             this.logger = logger;
+            this.httpHelper = httpHelper;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {

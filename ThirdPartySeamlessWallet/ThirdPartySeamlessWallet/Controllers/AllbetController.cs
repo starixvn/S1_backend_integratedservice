@@ -447,7 +447,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             resp.error_code = "50000";
             resp.message = "server error";
 
-            if (tools.GetClientIP(HttpContext) != "211.75.236.133")
+            if (tools.GetClientIP(HttpContext) != "211.75.236.133" && tools.GetClientIP(HttpContext) != "220.130.219.4")
             {
                 return resp;
             }
