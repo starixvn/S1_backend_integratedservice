@@ -43,4 +43,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("is_end_round")]
         public bool IsEndRound { get; set; }
     }
+
+    public class SettleData_PG
+    {
+        public string ParentBetId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public string Account { get; set; }
+        public long SettleTime { get; set; }
+    }
 }
