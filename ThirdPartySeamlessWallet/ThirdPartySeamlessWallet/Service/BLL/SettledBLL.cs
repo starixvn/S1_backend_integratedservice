@@ -709,6 +709,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        
+        #region PG
 
         public int SettledRNG_PG(BettingDataRNG_PG bettingDataRNG_PG, out decimal afterAmount)
         {
@@ -731,6 +733,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public IEnumerable<SettleData_PG> GetUnsettledList_PG()
+        {
+            return settledService.GetUnsettledList_PG();
+        }
+        public int SetSettleFlag_PG( string ParentBetId)
+        {
+            return settledService.SetSettleFlag_PG(ParentBetId);
+        }
+
+        #endregion
+
         public int CancelBetLC_Sexy(BettingDataLC_Sexy_CancelBet cancelBetTxn, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, cancelBetTxn.userId);
