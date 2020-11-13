@@ -530,27 +530,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     GameType gameType = GameType.PP_RNG;
 
-                    //if (bettingDataRNG_PP.gameId.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
-                    //{
-                    //    gameType = GameType.PP_LiveCasino;
-                    //}
+                    if (bettingDataRNG_PP.gameId.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
+                    {
+                        gameType = GameType.PP_LiveCasino;
+                    }
 
                     int bonusId;
 
                     GetTpBonus((int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), (int)gameType, TpCategory.Slots, out int custId, out bonusId);
                     decimal validBet = stake;
 
-                    //if (gameType == GameType.PP_LiveCasino)
-                    //{
-                    //    if (winLostAmount >= 0 && winLostAmount < stake)
-                    //    {
-                    //        validBet = winLostAmount;
-                    //    }
-                    //    else if (winLostAmount < 0)
-                    //    {
-                    //        validBet = Math.Abs(winLostAmount);
-                    //    }
-                    //}
+                    if (gameType == GameType.PP_LiveCasino)
+                    {
+                        if (winLostAmount >= 0 && winLostAmount < stake)
+                        {
+                            validBet = winLostAmount;
+                        }
+                        else if (winLostAmount < 0)
+                        {
+                            validBet = Math.Abs(winLostAmount);
+                        }
+                    }
 
                     BetRecordInfo betRecordInfo = new BetRecordInfo
                     {
