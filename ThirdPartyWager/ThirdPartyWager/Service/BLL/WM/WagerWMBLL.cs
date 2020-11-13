@@ -44,8 +44,9 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     currencyList.Add("THB");
                     currencyList.Add("MYR");
-                    currencyList.Add("IDR");
-                    currencyList.Add("VND");
+                    currencyList.Add("IDRK");
+                    currencyList.Add("VNDK");
+                    currencyList.Add("USD");
                 }
 
                 foreach (var curr in currencyList)
