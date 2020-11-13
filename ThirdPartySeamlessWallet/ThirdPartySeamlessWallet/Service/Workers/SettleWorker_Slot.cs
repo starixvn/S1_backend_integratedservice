@@ -272,7 +272,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_PG(unsettled.ParentBetId);
+                            settledBLL.SetSettleFlag_PG(unsettled.TransactionIdList);
                         }
                         catch (Exception ex1)
                         {

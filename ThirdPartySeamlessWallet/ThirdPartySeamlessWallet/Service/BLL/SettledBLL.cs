@@ -737,9 +737,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledList_PG();
         }
-        public int SetSettleFlag_PG( string ParentBetId)
+        public int SetSettleFlag_PG(string TransactionIdList)
         {
-            return settledService.SetSettleFlag_PG(ParentBetId);
+            return settledService.SetSettleFlag_PG(TransactionIdList);
         }
 
         #endregion

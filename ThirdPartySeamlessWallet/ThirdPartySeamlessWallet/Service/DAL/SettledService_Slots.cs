@@ -1162,10 +1162,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<SettleData_PG>("Service_UnsettledListRng_PG_Get", commandType: CommandType.StoredProcedure);
         }
-        public int SetSettleFlag_PG(string ParentBetId)
+        public int SetSettleFlag_PG(string TransactionIdList)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_BettransRng_PG_Settle_Set", new { ParentBetId = ParentBetId }, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_BettransRng_PG_Settle_Set", new { TransactionIdList = TransactionIdList }, commandType: CommandType.StoredProcedure);
             return result;
         }
 

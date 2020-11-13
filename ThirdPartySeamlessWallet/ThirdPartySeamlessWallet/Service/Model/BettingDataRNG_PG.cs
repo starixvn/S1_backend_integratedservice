@@ -46,6 +46,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class SettleData_PG
     {
+        public string TransactionIdList { get; set; }
         public string ParentBetId { get; set; }
         public decimal Stake { get; set; }
         public decimal WinLostAmount { get; set; }
