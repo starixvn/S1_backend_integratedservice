@@ -255,11 +255,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_PG.UpdatedTime /= 1000;
             bettingDataRNG_PG.CreateTime /= 1000;
             var p = new DynamicParameters(bettingDataRNG_PG);
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            //p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            //p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             try
             {
-                result = conn.Execute("Service_BettransRng_PG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PGV2_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
                 {
