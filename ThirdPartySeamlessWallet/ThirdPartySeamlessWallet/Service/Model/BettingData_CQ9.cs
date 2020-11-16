@@ -61,6 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string mtcode { get; set; }
         public string roundid { get; set; }
+        public string gamecode { get; set; }
         public decimal amount { get; set; }
         public decimal Before { get; set; }
         public decimal Balance { get; set; }
@@ -97,11 +98,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class RefundDataRNG_CQ9
     {
         public string mtcode { get; set; }
+        public string account { get; set; }
+        public string roundid { get; set; }
+        public decimal amount { get; set; }
     }
 
     public class SettleDataRNG_CQ9
     {
         public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
         public decimal WinLostAmount { get; set; }
         public string account { get; set; }
         public string roundid { get; set; }
@@ -116,5 +121,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string mtcode { get; set; }
         public string remark { get; set; }
         public long? eventUnix { get; set; }
+    }
+
+    public class RollinDataFish_CQ9
+    {
+        public string account { get; set; }
+        public string eventTime { get; set; }
+        public string gamehall { get; set; }
+        public string gamecode { get; set; }
+        public string roundid { get; set; }
+        public decimal validbet { get; set; }
+        public decimal bet { get; set; }
+        public decimal win { get; set; }
+        public decimal roomfee { get; set; }
+        public decimal amount { get; set; }
+        public string mtcode { get; set; }
+        public string createTime { get; set; }
+        public decimal rake { get; set; }
+        public string gametype { get; set; }
+        public long? eventUnix { get; set; }
+        public long? createUnix { get; set; }
     }
 }
