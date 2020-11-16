@@ -320,6 +320,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string status { get; set; }
             public string msg { get; set; }
+            public decimal balance { get; set; }
+            public long balanceTs { get; set; }
         }
         public class PromotionReq
         {
@@ -351,11 +353,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var sexy_TreatList = JsonConvert.DeserializeObject<IEnumerable<Sexy_Treat>>(req.message);
 
-                    int result = settledBLL.PrizeLC_Sexy(sexy_TreatList);
+                    int result = settledBLL.PrizeLC_Sexy(sexy_TreatList, out decimal afterAmount);
 
                     if (result > 0 || result == -1)
                     {
+                        if(result == -1)
+                        {
+                            afterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, sexy_TreatList.FirstOrDefault()?.userId, gameType).Balance;
+                        }
+
                         resp.status = "0000";
+                        resp.balance = afterAmount;
+                        resp.balanceTs = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
                     }
                     else
                     {

@@ -1077,9 +1077,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats)
+        public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats, out decimal afterAmount)
         {
             int result = 0;
+            afterAmount = 0;
 
             foreach (var sexy_Treat in sexy_Treats)
             {
@@ -1097,7 +1098,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (sexy_Treat.amount > 0)
                         {
                             //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.Sexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
-                            result = PayoutV2(sexy_Treat.tpCustInfo, sexy_Treat.amount, (int)Tp.Sexy, sexy_Treat.txId, (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino, sexy_Treat.txId, TransType.Prize, null, out _, $"{sexy_Treat.treatId} Prize", out _, conn, trans);
+                            result = PayoutV2(sexy_Treat.tpCustInfo, sexy_Treat.amount, (int)Tp.Sexy, sexy_Treat.txId, (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino, sexy_Treat.txId, TransType.Prize, null, out afterAmount, $"{sexy_Treat.treatId} Prize", out _, conn, trans);
                         }
 
                         if (result > 0)

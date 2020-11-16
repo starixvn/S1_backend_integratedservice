@@ -709,7 +709,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        
+
         #region PG
 
         public int SettledRNG_PG(BettingDataRNG_PG bettingDataRNG_PG, out decimal afterAmount)
@@ -826,23 +826,26 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats)
+        public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats, out decimal afterAmount)
         {
+            var sexy_Treat = sexy_Treats.FirstOrDefault();
 
-            foreach (var sexy_Treat in sexy_Treats)
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, sexy_Treat.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+            sexy_Treat.tpCustInfo = tpCustInfo;
+
+            if (tpCurrency.ExchangeRate > 0)
             {
-
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, sexy_Treat.userId);
-                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
-                sexy_Treat.tpCustInfo = tpCustInfo;
-
-                if (tpCurrency.ExchangeRate > 0)
-                {
-                    sexy_Treat.amount *= tpCurrency.ExchangeRate;
-                }
+                sexy_Treat.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.PrizeLC_Sexy(sexy_Treats);
+            var result = settledService.PrizeLC_Sexy(sexy_Treats, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
 
             return result;
         }
