@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -318,7 +320,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string status { get; set; }
             public string msg { get; set; }
-            public string balance { get; set; }
         }
         public class PromotionReq
         {
@@ -334,143 +335,27 @@ namespace ThirdPartySeamlessWallet.Controllers
             PromotionResp resp = new PromotionResp();
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
 
-            if (req.key != thirdPartySetting.TpSetting["cert"] || true)
+            string key = GetSha1($"{thirdPartySetting.TpSetting["cert"]}{new DateTimeOffset(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0)).ToUnixTimeMilliseconds()}");
+
+            if (req.key != key)
             {
                 resp.status = "500";
                 resp.msg = "system busy";
+                log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{req.action}");
                 return resp;
             }
 
-            ReqAction reqAction = JsonConvert.DeserializeObject<ReqAction>(req.message);
-            if (string.Equals(reqAction.action, "GetBalance", StringComparison.OrdinalIgnoreCase))
-            {
-                GetBalanceReq getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(req.message);
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.userId);
-                if (tpCheck == null)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    return resp;
-                }
-                else if (tpCheck.Locked)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    return resp;
-                }
-
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.userId, gameType);
-
-                if (tpCustBalance != null)
-                {
-                    resp.balance = tpCustBalance.Balance.ToString("0.##");
-                    resp.status = "200";
-                }
-                else
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                }
-
-                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-            }
-            else if (string.Equals(reqAction.action, "bet", StringComparison.OrdinalIgnoreCase))
-            {
-                Bet bet = JsonConvert.DeserializeObject<Bet>(req.message);
-
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, bet.UserId);
-                if (tpCheck == null)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    return resp;
-                }
-                else if (tpCheck.Locked)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    return resp;
-                }
-
-                try
-                {
-                    int result = bettingBLL.PlaceBetLC_Sexy(bet, out decimal tpAffterAmount);
-                    //Task.Delay(70000).Wait();
-                    if (result > 0)
-                    {
-                        resp.balance = tpAffterAmount.ToString("0.00");
-                        resp.status = "200";
-                    }
-                    else if (result == -1)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, bet.UserId, gameType);
-                        resp.balance = tpCustBalance.Balance.ToString("0.00");
-                        resp.status = "200";
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, bet.UserId, gameType);
-                        resp.balance = tpCustBalance.Balance.ToString("0.00");
-                        resp.status = "500";
-                        resp.msg = "code:9001";
-                    }
-
-                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
-                }
-            }
-            else if (string.Equals(reqAction.action, "cancelBet", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(req.action, "treat", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
-                    BettingDataLC_Sexy_CancelBet cancelBetTxn = JsonConvert.DeserializeObject<BettingDataLC_Sexy_CancelBet>(req.message);
+                    var sexy_TreatList = JsonConvert.DeserializeObject<IEnumerable<Sexy_Treat>>(req.message);
 
-                    int result = settledBLL.CancelBetLC_Sexy(cancelBetTxn, out decimal tpAffterAmount);
+                    int result = settledBLL.PrizeLC_Sexy(sexy_TreatList);
 
-                    if (result > 0)
+                    if (result > 0 || result == -1)
                     {
-                        resp.balance = tpAffterAmount.ToString("0.00");
-                        resp.status = "200";
-                    }
-                    else if (result == -1)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, cancelBetTxn.userId, gameType);
-                        resp.balance = tpCustBalance.Balance.ToString("0.00");
-                        resp.status = "200";
-                    }
-                    else if (tpAffterAmount < 0 || result == 0)
-                    {
-                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, voidFishBetReq.userId, gameType);
-                        //resp.balance = tpCustBalance.Balance.ToString("0.00");
-                        resp.status = "500";
-                        resp.msg = "system busy";
-                    }
-
-                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
-                }
-            }
-            else if (string.Equals(reqAction.action, "settle", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    Settle settle = JsonConvert.DeserializeObject<Settle>(req.message);
-
-                    int result = settledBLL.SettledLC_Sexy(settle, out decimal tpAffterAmount);
-
-                    if (result > 0)
-                    {
-                        resp.status = "200";
+                        resp.status = "0000";
                     }
                     else
                     {
@@ -478,95 +363,30 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.msg = "system busy";
                     }
 
-                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
+                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{req.action}");
                 }
                 catch (Exception ex)
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{req.action}");
                 }
-            }
-            else if (string.Equals(reqAction.action, "unsettle", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    Unsettle_VoidRound unsettle = JsonConvert.DeserializeObject<Unsettle_VoidRound>(req.message);
-                    int result = settledBLL.UnsettledLC_Sexy(unsettle, out decimal tpAffterAmount);
 
-                    if (result > 0)
-                    {
-                        resp.status = "200";
-                    }
-                    else
-                    {
-                        resp.status = "500";
-                        resp.msg = "system busy";
-                    }
-
-                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
-                }
-            }
-            else if (string.Equals(reqAction.action, "voidRound", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    Unsettle_VoidRound voidRound = JsonConvert.DeserializeObject<Unsettle_VoidRound>(req.message);
-                    int result = settledBLL.VoidRoundLC_Sexy(voidRound, out decimal tpAffterAmount);
-
-                    if (result > 0)
-                    {
-                        resp.status = "200";
-                    }
-                    else
-                    {
-                        resp.status = "500";
-                        resp.msg = "system busy";
-                    }
-
-                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
-                }
-            }
-            else if (string.Equals(reqAction.action, "voidTxn", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    VoidTxn voidTxn = JsonConvert.DeserializeObject<VoidTxn>(req.message);
-                    int result = settledBLL.VoidTxnLC_Sexy(voidTxn, out decimal tpAffterAmount);
-
-                    if (result > 0)
-                    {
-                        resp.status = "200";
-                    }
-                    else
-                    {
-                        resp.status = "500";
-                        resp.msg = "system busy";
-                    }
-
-                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{reqAction.action}");
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "500";
-                    resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
-                }
+                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{req.action}");
             }
 
             return resp;
+        }
+        public string GetSha1(string value)
+        {
+            var data = Encoding.UTF8.GetBytes(value);
+            var hashData = new SHA1Managed().ComputeHash(data);
+            var hash = string.Empty;
+            foreach (var b in hashData)
+            {
+                hash += b.ToString("X2");
+            }
+            return hash;
         }
     }
 }

@@ -385,6 +385,75 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return resp;
         }
+
+        [HttpPost]
+        [Produces("application/xml")]
+        public async Task<requestReturn> PlaceBetCancelFixAsync()
+        {
+            string Content = "";
+            string uriQuery = "";
+            var resp = new requestReturn();
+
+            if (tools.GetClientIP(HttpContext) != "211.75.236.133" && tools.GetClientIP(HttpContext) != "220.130.219.4")
+            {
+                resp.error = (int)Error.Error;
+                return resp;
+            }
+
+            try
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                Content = await reader.ReadToEndAsync();
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting(thisTp);
+                var p = QueryHelpers.ParseQuery(Content).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+                var bettingDataLC_SA = JsonConvert.DeserializeObject<BettingDataLC_SA>(JsonConvert.SerializeObject(p));
+                //
+                decimal tpAffterAmount = 0;
+                if (bettingDataLC_SA.amount > 0)
+                {
+                    var result = settledBLL.CancelBetLC_SA(bettingDataLC_SA, out tpAffterAmount);
+                    if (result > 0)
+                    {
+                        resp.error = (int)Error.Success;
+                        resp.currency = bettingDataLC_SA.currency;
+                        resp.amount = tpAffterAmount;
+                        resp.username = bettingDataLC_SA.username;
+                    }
+                    else if (result == -1)
+                    {
+                        resp.error = (int)Error.Success;
+                        resp.currency = bettingDataLC_SA.currency;
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, bettingDataLC_SA.username, gameType);
+                        resp.amount = tpCustBalance.Balance;
+                        resp.username = bettingDataLC_SA.username;
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, bettingDataLC_SA.username, gameType);
+                        resp.amount = tpCustBalance.Balance;
+                        resp.error = (int)Error.BalanceNotEnough;
+                    }
+                    else
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache(thisTp, bettingDataLC_SA.username, gameType);
+                        resp.amount = tpCustBalance.Balance;
+                        resp.error = (int)Error.Error;
+                    }
+                }
+                else
+                {
+                    resp.error = (int)Error.AmountInvaild;
+                }
+
+                log2File.Info($"{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}", $"SA_PlaceBetCancel");
+            }
+            catch (Exception ex)
+            {
+                resp.error = (int)Error.SystemError;
+                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBetCancel");
+            }
+            return resp;
+        }
         public enum Error
         {
             Success = 0,

@@ -826,6 +826,26 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats)
+        {
+
+            foreach (var sexy_Treat in sexy_Treats)
+            {
+
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, sexy_Treat.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                sexy_Treat.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    sexy_Treat.amount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.PrizeLC_Sexy(sexy_Treats);
+
+            return result;
+        }
 
         #region EBet
         public int PayoutLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)

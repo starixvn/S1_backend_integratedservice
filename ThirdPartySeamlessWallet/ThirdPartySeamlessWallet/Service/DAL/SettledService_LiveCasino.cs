@@ -1076,6 +1076,53 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return 1;
             }
         }
+
+        public int PrizeLC_Sexy(IEnumerable<Sexy_Treat> sexy_Treats)
+        {
+            int result = 0;
+
+            foreach (var sexy_Treat in sexy_Treats)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                long transferTime = tools.ConvertLocTime(sexy_Treat.transferTime, 8);
+
+                try
+                {
+                    result = conn.Execute("Service_BettransLC_Sexy_Prize_Ins", new { txId = sexy_Treat.txId, treatId = sexy_Treat.treatId, userId = sexy_Treat.userId, amount = sexy_Treat.amount, transferTime = transferTime }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        if (sexy_Treat.amount > 0)
+                        {
+                            //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.Sexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
+                            result = PayoutV2(sexy_Treat.tpCustInfo, sexy_Treat.amount, (int)Tp.Sexy, sexy_Treat.txId, (int)GameType.Sexy_LiveCasino, TpCategory.LiveCasino, sexy_Treat.txId, TransType.Prize, null, out _, $"{sexy_Treat.treatId} Prize", out _, conn, trans);
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                    {
+                        result = -1;
+                        log2File.Error($"{JsonConvert.SerializeObject(sexy_Treat)}", $"Sexy_Duplicate_Treat");
+                        continue;
+                    }
+                    else
+                    {
+                        throw mySqlEx;
+                    }
+                }
+            }
+
+            return result;
+        }
         #endregion
 
         #region EBet

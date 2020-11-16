@@ -175,4 +175,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long validBetTime { get; set; }
         public IList<VoidTxnTxn> txns { get; set; }
     }
+    public class Sexy_Treat
+    {
+        public string treatId { get; set; }
+        public decimal amount { get; set; }
+        public string userId { get; set; }
+        public string txId { get; set; }
+        public string remark { get; set; }
+        public DateTime transferTime { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
 }
