@@ -322,6 +322,11 @@ namespace ThirdParty.Kiss918
 
             long current = GetTimestemp1();
             string sign = authcode + tpCustInfo.TpUserName + current + secretkey;
+            
+            if(direction == Direction.ToMain)
+            {
+                Amount = Amount * - 1;
+            }
 
             var Transfer = new
             {
