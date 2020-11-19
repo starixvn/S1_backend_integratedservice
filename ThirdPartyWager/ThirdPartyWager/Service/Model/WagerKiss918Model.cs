@@ -41,6 +41,7 @@ namespace ThirdPartyWager.Service.Model
         public int id { get; set; }
         public string uuid { get; set; }
         public string Currency { get; set; }
+        public string Account { get; set; }
         public long createUnix
         {
             get
@@ -63,5 +64,13 @@ namespace ThirdPartyWager.Service.Model
     {
         public string Account { get; set; }
         public string win { get; set; }
+    }
+
+
+    public class WagerKiss918Total
+
+    {
+        public string Account { get; set; }
+        public int wagerCount { get; set; }
     }
 }

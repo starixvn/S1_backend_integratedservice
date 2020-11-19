@@ -38,11 +38,13 @@ namespace ThirdPartyWager.Service.BLL
                 // get api info
                 var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                DateTime getAheadStartTime = DateTime.Parse(startTime);
-                string aheadStartTime = getAheadStartTime.AddMinutes(-30).ToString("yyyy-MM-dd HH:mm:ss");
+                DateTime getReportStartTime = DateTime.Parse(startTime);
+                string ReportStartTime = getReportStartTime.ToString("yyyy-MM-dd");
+                DateTime getReportEndTime = DateTime.Parse(endTime);
+                string ReportEndTime = getReportEndTime.ToString("yyyy-MM-dd");
 
                 // get report player
-                var dataReportPlayer = await apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], startTime, endTime);
+                var dataReportPlayer = await apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], ReportStartTime, ReportEndTime);
 
                 if (dataReportPlayer.success != true)
                 {
@@ -54,18 +56,19 @@ namespace ThirdPartyWager.Service.BLL
                 if (dataReportPlayer.success == true && dataReportPlayer.results.Count() == 0)
                 {
                     logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
-                    //continue;
                     return true;
                 }
+
                 int perPage = 100;
                 foreach (var reportList in dataReportPlayer.results)
                 {
                     int page = 1;
                     int totalPage = 1;
+                    var Account = reportList.Account;
                     while (page <= totalPage)
                     {
                         // get wager
-                        var dataWager = await apiKiss918BLL.GetBetListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], reportList.Account, aheadStartTime, endTime, page, perPage);
+                        var dataWager = await apiKiss918BLL.GetBetListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], Account, startTime, endTime, page, perPage);
 
                         // error condition
                         var errorCode = dataWager.code;
@@ -74,7 +77,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (errorCode == 0 && dataWager.total == 0)
                         {
                             logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
-                            continue;
+                            break;
                         }
 
                         if (errorCode != 0)
@@ -89,10 +92,11 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             try
                             {
-                                if (bet.LogDataType != 2)
-                                {
-                                    continue;
-                                }
+                                //if (bet.LogDataType != 2)
+                                //{
+                                //    continue;
+                                //}
+                                bet.Account = Account;
                                 bet.Currency = currency;
                                 wagerKiss918Service.InsertWager(bet);
                             }
@@ -107,7 +111,7 @@ namespace ThirdPartyWager.Service.BLL
                         page++;
                     }
                 }
-                logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} CURRENCY: {currency} ACTUAL START: {aheadStartTime} )");
+                logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
                 return true;
             }
             catch (Exception ex)

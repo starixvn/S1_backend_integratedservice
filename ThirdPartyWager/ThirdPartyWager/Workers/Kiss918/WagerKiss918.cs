@@ -21,7 +21,6 @@ namespace ThirdPartyWager.Workers
         private Timer timerTHB;
         private Timer timerMYR;
         private Timer timerIDR;
-        private Timer timerVND;
         private int intervalMins = 3;
         private int iRangMins = 20;
         private int tpId = (int)Tp.Kiss918;
@@ -29,7 +28,6 @@ namespace ThirdPartyWager.Workers
         private int quickTHB = 0;
         private int quickMYR = 0;
         private int quickIDR = 0;
-        private int quickVND = 0;
 
         public WagerKiss918(
             ILogger<WagerKiss918> logger,
@@ -50,7 +48,6 @@ namespace ThirdPartyWager.Workers
             timerTHB = new Timer(DoTaskTHB, null, TimeSpan.Zero, TimeSpan.Zero);
             timerMYR = new Timer(DoTaskMYR, null, TimeSpan.Zero, TimeSpan.Zero);
             timerIDR = new Timer(DoTaskIDR, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerVND = new Timer(DoTaskVND, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -222,69 +219,12 @@ namespace ThirdPartyWager.Workers
             }
         }
 
-        private async void DoTaskVND(object state)
-        {
-            try
-            {
-                var currency = "VND";
-                quickVND = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
-                {
-                    last = iRangMins - 1;
-                    timerTime = DateTime.Now.AddMinutes(-1 * last);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime;
-                    last = iRangMins - 1;
-                }
-
-                if (timerTime < DateTime.Now)
-                {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    bool result = await wagerKiss918BLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                    if (result == true)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                    }
-                }
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
-                {
-                    quickVND = 1;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex.Message);
-            }
-            finally
-            {
-                if (quickVND == 1)
-                {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
-                    timerVND.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerVND.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-            }
-        }
-
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             //WriteToFile("WriteToFileHostedService: Process Stopped");
             timerTHB?.Change(Timeout.Infinite, 0);
             timerMYR?.Change(Timeout.Infinite, 0);
             timerIDR?.Change(Timeout.Infinite, 0);
-            timerVND?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

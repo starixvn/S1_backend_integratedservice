@@ -39,6 +39,7 @@ namespace ThirdPartyWager
                     //services.AddHostedService<WagerWM>();
                     //services.AddHostedService<WagerRedoWM>();
                     services.AddHostedService<WagerKiss918>();
+                    services.AddHostedService<WagerRedoKiss918>();
                 });
     }
 }

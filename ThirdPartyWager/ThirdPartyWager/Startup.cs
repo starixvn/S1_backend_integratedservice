@@ -94,6 +94,7 @@ namespace ThirdPartyWager
             // Kiss918
             services.AddSingleton<WagerKiss918BLL>();
             services.AddSingleton<ApiKiss918BLL>();
+            services.AddSingleton<WagerRedoKiss918BLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
