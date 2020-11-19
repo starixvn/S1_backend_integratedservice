@@ -82,5 +82,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return tpCustInfoService.GetCustGotoGameType(custId, tpId);
         }
+        public int SetTpPwd(int tpId, string tpUserName, string tpPwd)
+        {
+            return tpCustInfoService.SetTpPwd(tpId, tpUserName, tpPwd);
+        }
     }
 }
