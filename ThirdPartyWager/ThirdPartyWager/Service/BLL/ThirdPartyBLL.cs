@@ -47,5 +47,16 @@ namespace ThirdPartyWager.Service.BLL
         {
             return thirdPartyHelper.SetThirdPartyTimer(tpId, type, start);
         }
+
+        public ThirdPartyTimerModel GetThirdPartyTimerByCurrency(int tpId, int type, string currency)
+        {
+            var dataTpTimer = thirdPartyHelper.GetThirdPartyTimerByCurrency(tpId, type, currency);
+            return dataTpTimer;
+        }
+
+        public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency)
+        {
+            return thirdPartyHelper.SetThirdPartyTimerByCurrency(tpId, type, start, currency);
+        }
     }
 }

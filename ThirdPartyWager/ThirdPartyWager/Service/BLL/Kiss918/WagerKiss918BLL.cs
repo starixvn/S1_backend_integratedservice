@@ -31,91 +31,83 @@ namespace ThirdPartyWager.Service.BLL
             this.environment = environment;
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, string currency)
         {
             try
             {
                 // get api info
                 var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                var currencyList = new List<string>();
-                currencyList.Add("THB");
-                currencyList.Add("MYR");
-                currencyList.Add("IDR");
-                currencyList.Add("VND");
-
                 DateTime getAheadStartTime = DateTime.Parse(startTime);
                 string aheadStartTime = getAheadStartTime.AddMinutes(-30).ToString("yyyy-MM-dd HH:mm:ss");
 
-                foreach (var curr in currencyList)
+                // get report player
+                var dataReportPlayer = await apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], startTime, endTime);
+
+                if (dataReportPlayer.success != true)
                 {
-                    // get report player
-                    var dataReportPlayer = await apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{curr}"], setting[$"secretkey_{curr}"], setting[$"userName_{curr}"], startTime, endTime);
+                    logger.LogError("", dataReportPlayer.msg);
+                    logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime}  CURRENCY: {currency} )");
+                    return false;
+                }
 
-                    if (dataReportPlayer.success != true)
+                if (dataReportPlayer.success == true && dataReportPlayer.results.Count() == 0)
+                {
+                    logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
+                    //continue;
+                    return true;
+                }
+                int perPage = 100;
+                foreach (var reportList in dataReportPlayer.results)
+                {
+                    int page = 1;
+                    int totalPage = 1;
+                    while (page <= totalPage)
                     {
-                        logger.LogError("", dataReportPlayer.msg);
-                        logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime}  CURRENCY: {curr} )");
-                        return false;
-                    }
+                        // get wager
+                        var dataWager = await apiKiss918BLL.GetBetListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], reportList.Account, aheadStartTime, endTime, page, perPage);
 
-                    if (dataReportPlayer.success == true && dataReportPlayer.results.Count() == 0)
-                    {
-                        logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {curr} )");
-                        continue;
-                    }
-                    int perPage = 100;
-                    foreach (var reportList in dataReportPlayer.results)
-                    {
-                        int page = 1;
-                        int totalPage = 1;
-                        while (page <= totalPage)
+                        // error condition
+                        var errorCode = dataWager.code;
+                        var errorMsg = dataWager.msg;
+
+                        if (errorCode == 0 && dataWager.total == 0)
                         {
-                            // get wager
-                            var dataWager = await apiKiss918BLL.GetBetListByTime(setting["WagerUrl"], setting[$"authcode_{curr}"], setting[$"secretkey_{curr}"], setting[$"userName_{curr}"], reportList.Account, aheadStartTime, endTime, page, perPage);
+                            logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
+                            continue;
+                        }
 
-                            // error condition
-                            var errorCode = dataWager.code;
-                            var errorMsg = dataWager.msg;
+                        if (errorCode != 0)
+                        {
+                            logger.LogError(errorCode, errorMsg);
+                            logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime}  CURRENCY: {currency} )");
+                            return false;
+                        }
 
-                            if (errorCode == 0 && dataWager.total == 0)
+                        totalPage = (int)((dataWager.total / perPage) + 1);
+                        foreach (var bet in dataWager.results)
+                        {
+                            try
                             {
-                                logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {curr} )");
-                                continue;
-                            }
-
-                            if (errorCode != 0)
-                            {
-                                logger.LogError(errorCode, errorMsg);
-                                logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime}  CURRENCY: {curr} )");
-                                return false;
-                            }
-
-                            totalPage = (int)((dataWager.total / perPage) + 1);
-                            foreach (var bet in dataWager.results)
-                            {
-                                try
+                                if (bet.LogDataType != 2)
                                 {
-                                    if (bet.LogDataType != 2)
-                                    {
-                                        continue;
-                                    }
-                                    bet.Currency = curr;
-                                    wagerKiss918Service.InsertWager(bet);
-                                }
-                                catch (Exception ex)
-                                {
-                                    var wagerId = bet.uuid;
-                                    logger.LogError(ex, ex.Message);
-                                    logger.LogInformation($"INSERT_WAGER ( WAGERID: {wagerId} )");
                                     continue;
                                 }
+                                bet.Currency = currency;
+                                wagerKiss918Service.InsertWager(bet);
                             }
-                            page++;
+                            catch (Exception ex)
+                            {
+                                var wagerId = bet.uuid;
+                                logger.LogError(ex, ex.Message);
+                                logger.LogInformation($"INSERT_WAGER ( WAGERID: {wagerId} )");
+                                continue;
+                            }
                         }
+                        page++;
                     }
-                    logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} CURRENCY: {curr} ACTUAL START: {aheadStartTime} )");
                 }
+                logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} CURRENCY: {currency} ACTUAL START: {aheadStartTime} )");
                 return true;
             }
             catch (Exception ex)
