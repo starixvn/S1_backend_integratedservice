@@ -25,19 +25,20 @@ namespace ThirdPartyWager
                     webBuilder.UseStartup<Startup>();
                 }).ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<WagerDG>();
-                    services.AddHostedService<WagerRedoDG>();
-                    services.AddHostedService<WagerAllBet>();
-                    services.AddHostedService<WagerRedoAllBet>();
-                    services.AddHostedService<WagerSA>();
-                    services.AddHostedService<WagerRedoSA>();
-                    services.AddHostedService<WagerAG>();
-                    services.AddHostedService<WagerRedoAG>();
-                    //services.AddHostedService<CheckTicketAG>();
-                    services.AddHostedService<WagerCF>();
-                    services.AddHostedService<WagerSG>();
-                    services.AddHostedService<WagerWM>();
-                    services.AddHostedService<WagerRedoWM>();
+                    //services.AddHostedService<WagerDG>();
+                    //services.AddHostedService<WagerRedoDG>();
+                    //services.AddHostedService<WagerAllBet>();
+                    //services.AddHostedService<WagerRedoAllBet>();
+                    //services.AddHostedService<WagerSA>();
+                    //services.AddHostedService<WagerRedoSA>();
+                    //services.AddHostedService<WagerAG>();
+                    //services.AddHostedService<WagerRedoAG>();
+                    ////services.AddHostedService<CheckTicketAG>();
+                    //services.AddHostedService<WagerCF>();
+                    //services.AddHostedService<WagerSG>();
+                    //services.AddHostedService<WagerWM>();
+                    //services.AddHostedService<WagerRedoWM>();
+                    services.AddHostedService<WagerKiss918>();
                 });
     }
 }
