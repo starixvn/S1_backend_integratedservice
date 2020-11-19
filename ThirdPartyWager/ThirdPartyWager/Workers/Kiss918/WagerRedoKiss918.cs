@@ -151,7 +151,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickMYR == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(10);
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(120);
                     timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
