@@ -1641,5 +1641,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.QueryFirstOrDefault<Record_CQ9>($"{sp}", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
         }
         #endregion
+
+        #region Kiss918
+
+        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerKiss918(string uuid)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerKiss918_Settle_Set", new { uuid = uuid }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }
