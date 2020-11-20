@@ -196,7 +196,7 @@ namespace ThirdParty.Kiss918
                     PassWd = tpCustInfo.TpPwd,
                     pwdtype = 1,
                     agent = userName,
-                    Name = tpCustInfo.UserName,
+                    Name = tpCustInfo.TpUserName,
                     UserType = 1,
                     UserAreaId = UserAreaId,
                     sign = ToMD5(sign.ToLower()).ToUpper()

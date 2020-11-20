@@ -495,7 +495,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP(int gameType)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            if (gameType == (int)GameType.PG_RNG)
+            if (gameType == (int)GameType.PP_RNG)
             {
                 return conn.Query<BettingDataRNG_PP>("Service_UnsettledListRng_PP_Get", commandType: CommandType.StoredProcedure);
             }
