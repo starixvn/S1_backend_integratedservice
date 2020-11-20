@@ -100,5 +100,9 @@ namespace ThirdPartyWager.Service.Library
                 NullValueHandling = NullValueHandling.Ignore
             });
         }
+        public long GetTimestemp1()
+        {
+            return Convert.ToInt64((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds);
+        }
     }
 }

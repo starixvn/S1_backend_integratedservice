@@ -22,6 +22,7 @@ namespace ThirdPartyWager.Service.Model.enums
         PG = 14,
         Sexy = 15,
         CF = 17,
-        WM = 20
+        WM = 20,
+        Kiss918 = 21
     }
 }

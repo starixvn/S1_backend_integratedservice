@@ -1207,5 +1207,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region Kiss918
+
+        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
+        {
+            return settledService.GetUnsettledList_Kiss918();
+        }
+
+        public int SetSettleFlag_TpWagerKiss918(string uuid)
+        {
+            return settledService.SetSettleFlag_TpWagerKiss918(uuid);
+        }
+
+        #endregion
     }
 }
