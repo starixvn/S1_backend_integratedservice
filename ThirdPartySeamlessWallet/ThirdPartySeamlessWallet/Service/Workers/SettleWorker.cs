@@ -27,6 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleSGFish;
         private Timer timerSettleAWC;
         private Timer timerSettlePG;
+        private Timer timerSettleKiss918;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -57,6 +58,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSGFish = new Timer(DoSettleSGFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePG = new Timer(DoSettlePGWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleKiss918 = new Timer(DoSettleKiss918Work, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -594,6 +596,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSGFish?.Change(Timeout.Infinite, 0);
             timerSettleAWC?.Change(Timeout.Infinite, 0);
             timerSettlePG?.Change(Timeout.Infinite, 0);
+            timerSettleKiss918?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
