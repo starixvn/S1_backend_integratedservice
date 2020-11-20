@@ -28,8 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (configuration.GetValue<bool>("RunWorkerService"))
-                timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerPPLC = new Timer(DoPPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -65,7 +64,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(30);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
 
                 if (forContinue)
                 {
@@ -112,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(30);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
 
                 if (forContinue)
                 {
