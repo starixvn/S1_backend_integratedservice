@@ -637,9 +637,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
 
-            Thread.Sleep(5000);
-
             var result = settledService.CancelBetLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
+            if (result == -3)
+            {
+                Thread.Sleep(5000);
+                result = settledService.CancelBetLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
+            }
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
