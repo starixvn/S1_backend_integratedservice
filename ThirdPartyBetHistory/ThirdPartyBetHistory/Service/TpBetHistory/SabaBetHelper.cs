@@ -464,13 +464,13 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 betRecordInfo.TicketStatus = TicketStatus.Win;
 
-                if (isEBV)
-                {
-                    if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
-                    {
-                        betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
-                    }
-                }
+                //if (isEBV)
+                //{
+                //    if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
+                //    {
+                //        betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
+                //    }
+                //}
             }
             else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
             {
