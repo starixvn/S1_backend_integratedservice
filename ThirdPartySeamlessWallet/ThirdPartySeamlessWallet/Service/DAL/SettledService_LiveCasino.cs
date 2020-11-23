@@ -499,6 +499,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
+                log2File.Error($"{bettingDataLC_Allbet.Details.Count}={result}", "CancelBetLC_Allbet");
                 result = -3;
             }
 
