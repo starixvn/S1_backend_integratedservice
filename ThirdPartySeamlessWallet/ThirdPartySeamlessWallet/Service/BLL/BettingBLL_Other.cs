@@ -64,7 +64,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     item.gameInfo.realBetAmount *= tpCurrency.ExchangeRate;
                 }
             }
-            
+
             var result = bettingService.PlaceBetCF_AWC(tpCustInfo, betCF_AWC, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -135,6 +135,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 item.tpCustInfo = tpCustInfo;
             }
             var result = bettingService.UnvoidBetCF_AWC(unVoidBetCF_AWC);
+            return result;
+        }
+
+        #endregion
+
+        #region One789
+
+        public int PlaceBetLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetLT_One789(tpCustInfo, bettingDataLT_One789, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount /= tpCurrency.ExchangeRate;
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
             return result;
         }
 

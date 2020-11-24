@@ -59,7 +59,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         AWC_Rooster = 30,
         SG_Fish = 31,
         WM_LiveCasino = 32,
-        Kiss918_RNG = 33
+        Kiss918_RNG = 33,
+        One789_Lottery = 34,
+        One789_Lottery_789 = 35,
+        One789_LiveCasino = 36
     }
     public enum Tp
     {
@@ -82,7 +85,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         EBet = 18,
         AWC = 19,
         WM = 20,
-        Kiss918 = 21
+        Kiss918 = 21,
+        One789 = 23
     }
     public enum TransferType : int
     {
@@ -110,6 +114,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         Slots,
         LiveCasino,
-        Fish
+        Fish,
+        Lottery
     }
 }

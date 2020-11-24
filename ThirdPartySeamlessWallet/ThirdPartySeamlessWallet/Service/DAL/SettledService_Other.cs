@@ -575,5 +575,356 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region One789
+
+        public int PayoutLT_One789(TpCustInfo tpCustInfo, BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            var gameParseTmp = bettingDataLT_One789.Source.Split("_");
+            var gameParse = gameParseTmp[0];
+            var p = new DynamicParameters(new
+            {
+                Username = bettingDataLT_One789.Username,
+                Tx = bettingDataLT_One789.Tx,
+                Amount = bettingDataLT_One789.Amount,
+                Description = bettingDataLT_One789.Description,
+                CreatedAt = bettingDataLT_One789.CreatedAt,
+                Source = bettingDataLT_One789.Source,
+                Type = bettingDataLT_One789.Type,
+                GameType = gameParse,
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = (bettingDataLT_One789.Amount > 0) ? (int)TicketStatus.Win : (int)TicketStatus.Lost,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var category = TpCategory.Lottery;
+                if (gameType == (int)GameType.One789_Lottery)
+                {
+                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    result = conn.Execute("Service_BettransLT_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else if (gameType == (int)GameType.One789_Lottery_789)
+                {
+                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    result = conn.Execute("Service_BettransLT_One789_789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    p.Add("TransId", $"{gameParseTmp[2]}_{gameParseTmp[3]}_{gameParseTmp[4]}_{bettingDataLT_One789.Username}");
+                    category = TpCategory.LiveCasino;
+                    result = conn.Execute("Service_BettransLC_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (result > 0)
+                {
+                    if (bettingDataLT_One789.Amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataLT_One789.Amount,
+                            (int)Tp.One789,
+                            bettingDataLT_One789.Tx,
+                            gameType,
+                            category,
+                            bettingDataLT_One789.Tx,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int RefundLT_One789(TpCustInfo tpCustInfo, BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            var gameParseTmp = bettingDataLT_One789.RefSource.Split("_");
+            var gameParse = gameParseTmp[0];
+            var p = new DynamicParameters(new
+            {
+                RefTx = bettingDataLT_One789.Tx,
+                Tx = bettingDataLT_One789.Source,
+                TicketStatus = (int)TicketStatus.Refund,
+                SettleFlag = 1
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var category = TpCategory.Lottery;
+            if (gameType == (int)GameType.One789_Lottery)
+            {
+                result = conn.Execute("Service_BettransLT_One789_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            }
+            else if (gameType == (int)GameType.One789_Lottery_789)
+            {
+                result = conn.Execute("Service_BettransLT_One789_789_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            }
+            else
+            {
+                category = TpCategory.LiveCasino;
+                result = conn.Execute("Service_BettransLC_One789_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            }
+
+            if (result > 0)
+            {
+                if (bettingDataLT_One789.Amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataLT_One789.Amount,
+                        (int)Tp.One789,
+                        bettingDataLT_One789.Tx,
+                        gameType,
+                        category,
+                        bettingDataLT_One789.Tx,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                     );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else
+            {
+                result = -1;
+            }
+
+            return result;
+        }
+
+        public int ResettleLT_One789(TpCustInfo tpCustInfo, BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            var gameParseTmp = bettingDataLT_One789.RefSource.Split("_");
+            var gameParse = gameParseTmp[0];
+            var p = new DynamicParameters(new
+            {
+                Username = bettingDataLT_One789.Username,
+                Tx = bettingDataLT_One789.Tx,
+                Amount = bettingDataLT_One789.Amount,
+                Description = bettingDataLT_One789.Description,
+                CreatedAt = bettingDataLT_One789.CreatedAt,
+                Source = bettingDataLT_One789.Source,
+                Type = bettingDataLT_One789.Type,
+                GameType = gameParse,
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.Refund,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var category = TpCategory.Lottery;
+                if (gameType == (int)GameType.One789_Lottery)
+                {
+                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    result = conn.Execute("Service_BettransLT_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else if (gameType == (int)GameType.One789_Lottery_789)
+                {
+                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    result = conn.Execute("Service_BettransLT_One789_789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    p.Add("TransId", $"{gameParseTmp[2]}_{gameParseTmp[3]}_{gameParseTmp[4]}_{bettingDataLT_One789.Username}");
+                    category = TpCategory.LiveCasino;
+                    result = conn.Execute("Service_BettransLC_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (result > 0)
+                {
+                    if (bettingDataLT_One789.Amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataLT_One789.Amount,
+                            (int)Tp.One789,
+                            bettingDataLT_One789.Tx,
+                            gameType,
+                            category,
+                            bettingDataLT_One789.Tx,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Resettle",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public BettingDataLT_One789 GetRecordLT_One789(string source)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var data = conn.QueryFirstOrDefault<BettingDataLT_One789>("Service_BettransLT_One789_Get", new { Source = source }, commandType: CommandType.StoredProcedure);
+            if (data == null)
+            {
+                data = conn.QueryFirstOrDefault<BettingDataLT_One789>("Service_BettransLT_One789_789_Get", new { Source = source }, commandType: CommandType.StoredProcedure);
+            }
+            if (data == null)
+            {
+                data = conn.QueryFirstOrDefault<BettingDataLT_One789>("Service_BettransLC_One789_Get", new { Source = source }, commandType: CommandType.StoredProcedure);
+            }
+            return data;
+        }
+
+        public IEnumerable<SettleLT_One789> GetUnsettledList_One789(int gameType)
+        {
+            string sp = "";
+            switch (gameType)
+            {
+                case (int)GameType.One789_Lottery:
+                    sp = "Service_BettransLT_One789_Unsettle_Get";
+                    break;
+                case (int)GameType.One789_Lottery_789:
+                    sp = "Service_BettransLT_One789_789_Unsettle_Get";
+                    break;
+                case (int)GameType.One789_LiveCasino:
+                    sp = "Service_BettransLC_One789_Unsettle_Get";
+                    break;
+                default:
+                    break;
+            }
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleLT_One789>($"{sp}", commandType: CommandType.StoredProcedure);
+        }
+
+        public SettleLT_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
+        {
+            string sp = "";
+            switch (gameType)
+            {
+                case (int)GameType.One789_Lottery:
+                    sp = "Service_TpWagerOne789_LT_Settle_Get";
+                    break;
+                case (int)GameType.One789_Lottery_789:
+                    sp = "Service_TpWagerOne789_LT_789_Settle_Get";
+                    break;
+                case (int)GameType.One789_LiveCasino:
+                    sp = "Service_TpWagerOne789_LC_Settle_Get";
+                    break;
+                default:
+                    break;
+            }
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleLT_One789>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerOne789(int gameType, string TransId)
+        {
+            string sp = "";
+            switch (gameType)
+            {
+                case (int)GameType.One789_Lottery:
+                    sp = "Service_TpWagerOne789_LT_Settle_Set";
+                    break;
+                case (int)GameType.One789_Lottery_789:
+                    sp = "Service_TpWagerOne789_LT_789_Settle_Set";
+                    break;
+                case (int)GameType.One789_LiveCasino:
+                    sp = "Service_TpWagerOne789_LC_Settle_Set";
+                    break;
+                default:
+                    break;
+            }
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_Bettrans_One789(int gameType, string TransId)
+        {
+            string sp = "";
+            switch (gameType)
+            {
+                case (int)GameType.One789_Lottery:
+                    sp = "Service_BettransLT_One789_Settle_Set";
+                    break;
+                case (int)GameType.One789_Lottery_789:
+                    sp = "Service_BettransLT_One789_789_Settle_Set";
+                    break;
+                case (int)GameType.One789_LiveCasino:
+                    sp = "Service_BettransLC_One789_Settle_Set";
+                    break;
+                default:
+                    break;
+            }
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }

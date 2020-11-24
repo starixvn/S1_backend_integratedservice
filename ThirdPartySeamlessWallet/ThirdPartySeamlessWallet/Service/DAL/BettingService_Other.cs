@@ -422,5 +422,111 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region One789
+        public int PlaceBetLT_One789(TpCustInfo tpCustInfo, BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var gameParseTmp = bettingDataLT_One789.Source.Split("_");
+            var gameParse = gameParseTmp[0];
+            var p = new DynamicParameters(new
+            {
+                Username = bettingDataLT_One789.Username,
+                Tx = bettingDataLT_One789.Tx,
+                Amount = bettingDataLT_One789.Amount,
+                Description = bettingDataLT_One789.Description,
+                CreatedAt = bettingDataLT_One789.CreatedAt,
+                Source = bettingDataLT_One789.Source,
+                Type = bettingDataLT_One789.Type,
+                GameType = gameParse,
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 2
+            });
+
+            try
+            {
+                var category = TpCategory.Lottery;
+                if (gameType == (int)GameType.One789_Lottery)
+                {
+                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    result = conn.Execute("Service_BettransLT_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else if (gameType == (int)GameType.One789_Lottery_789)
+                {
+                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    result = conn.Execute("Service_BettransLT_One789_789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    p.Add("TransId", $"{gameParseTmp[2]}_{gameParseTmp[3]}_{gameParseTmp[4]}_{bettingDataLT_One789.Username}");
+                    category = TpCategory.LiveCasino;
+                    result = conn.Execute("Service_BettransLC_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (result > 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bettingDataLT_One789.Amount) * -1,
+                        (int)Tp.One789,
+                        bettingDataLT_One789.Tx,
+                        gameType,
+                        bettingDataLT_One789.Tx,
+                        null,
+                        category,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (bonusId > 0 && result > 0)
+                    {
+                        AddTpBonus(
+                            (int)Tp.One789,
+                            bettingDataLT_One789.Tx,
+                            gameType,
+                            tpCustInfo.CustId,
+                            tpCustInfo.UserName,
+                            tpCustInfo.CurrencyId,
+                            tpCustInfo.SiteId,
+                            Math.Abs(bettingDataLT_One789.Amount),
+                            bonusId,
+                            category,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+
+        }
+
+        #endregion
     }
 }

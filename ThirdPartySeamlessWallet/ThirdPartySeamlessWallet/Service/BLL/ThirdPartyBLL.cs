@@ -141,7 +141,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 gameType = GameType.SG_Fish;
             }
-            
+
+            return gameType;
+        }
+        public GameType GetGameType(int tpId, string gameId)
+        {
+            GameType gameType = 0;
+            switch (tpId)
+            {
+                case (int)Tp.One789:
+                    if (gameId.StartsWith("0_", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.One789_Lottery;
+                    }
+                    else if (gameId.StartsWith("1_", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.One789_Lottery_789;
+                    }
+                    else if (gameId.StartsWith("2_", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.One789_LiveCasino;
+                    }
+                    break;
+                default:
+                    break;
+            }
             return gameType;
         }
     }

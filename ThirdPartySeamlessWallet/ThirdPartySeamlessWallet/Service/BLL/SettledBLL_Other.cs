@@ -163,5 +163,94 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region One789
+
+        public int PayoutLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutLT_One789(tpCustInfo, bettingDataLT_One789, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount /= tpCurrency.ExchangeRate;
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int RefundLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RefundLT_One789(tpCustInfo, bettingDataLT_One789, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount /= tpCurrency.ExchangeRate;
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int ResettleLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.ResettleLT_One789(tpCustInfo, bettingDataLT_One789, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLT_One789.Amount /= tpCurrency.ExchangeRate;
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public BettingDataLT_One789 GetRecordLT_One789(string source)
+        {
+            return settledService.GetRecordLT_One789(source);
+        }
+
+        public IEnumerable<SettleLT_One789> GetUnsettledList_One789(int gameType)
+        {
+            return settledService.GetUnsettledList_One789(gameType);
+        }
+
+        public SettleLT_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
+        {
+            return settledService.GetSettle_TpWagerOne789(gameType, TransId);
+        }
+
+        public int SetSettleFlag_TpWagerOne789(int gameType, string TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerOne789(gameType, TransId);
+        }
+
+        public int SetSettleFlag_Bettrans_One789(int gameType, string TransId)
+        {
+            return settledService.SetSettleFlag_Bettrans_One789(gameType, TransId);
+        }
+
+        #endregion
     }
 }

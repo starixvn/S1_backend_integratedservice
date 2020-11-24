@@ -28,6 +28,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleAWC;
         private Timer timerSettlePG;
         private Timer timerSettleKiss918;
+        private Timer timerSettleOne789LT;
+        private Timer timerSettleOne789LT_789;
+        private Timer timerSettleOne789LC;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -59,6 +62,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePG = new Timer(DoSettlePGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKiss918 = new Timer(DoSettleKiss918Work, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -581,6 +587,88 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
+        private void DoSettleOne789LCWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.One789;
+            var gameType = (int)GameType.One789_LiveCasino;
+            string logName = "Settle_One789_LC";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledList_One789(gameType);
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        var wager = settledBLL.GetSettle_TpWagerOne789(gameType, unsettled.TransId);
+                        if (wager != null)
+                        {
+                            try
+                            {
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, wager.Account);
+                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                                if (tpCurrency.ExchangeRate > 1)
+                                {
+                                    wager.Stake *= tpCurrency.ExchangeRate;
+                                    wager.ValidBet *= tpCurrency.ExchangeRate;
+                                    wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                                }
+                                if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
+                                {
+                                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                                    {
+                                        TpId = thisTp,
+                                        Stake = wager.Stake,
+                                        ValidBet = wager.ValidBet,
+                                        WinlostAmount = wager.WinLostAmount,
+                                        TransId = wager.TransId,
+                                        GameType = (GameType)gameType,
+                                        TpUserName = wager.Account,
+                                        SettledTime = unsettled.SettleTime,
+                                        SettlementType = SettlementType.SettledForValid
+                                    };
+
+                                    var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+
+                                    settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
+                                    settledBLL.SetSettleFlag_Bettrans_One789(gameType, unsettled.TransId);
+                                }
+
+                            }
+                            catch (Exception ex1)
+                            {
+                                isError = true;
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleWM.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             //WriteToFile("WriteToFileHostedService: Process Stopped");
@@ -597,6 +685,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAWC?.Change(Timeout.Infinite, 0);
             timerSettlePG?.Change(Timeout.Infinite, 0);
             timerSettleKiss918?.Change(Timeout.Infinite, 0);
+            timerSettleOne789LT?.Change(Timeout.Infinite, 0);
+            timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
+            timerSettleOne789LC?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
