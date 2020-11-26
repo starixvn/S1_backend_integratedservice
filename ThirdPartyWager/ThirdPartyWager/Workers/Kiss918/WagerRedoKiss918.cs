@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Workers
             {
                 var currency = "THB";
                 quickTHB = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByCurrency(tpId, tpType, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByReference(tpId, tpType, currency);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -76,7 +76,7 @@ namespace ThirdPartyWager.Workers
                     bool result = await wagerRedoKiss918BLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix, currency);
                     if (result == true)
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        thirdPartyBLL.SetThirdPartyTimerByReference(tpId, tpType, time.endUnix, currency);
                     }
                 }
                 TimeSpan ts = DateTime.Now - timerTime;
@@ -112,7 +112,7 @@ namespace ThirdPartyWager.Workers
             {
                 var currency = "MYR";
                 quickMYR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByCurrency(tpId, tpType, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByReference(tpId, tpType, currency);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -132,7 +132,7 @@ namespace ThirdPartyWager.Workers
                     bool result = await wagerRedoKiss918BLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix, currency);
                     if (result == true)
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        thirdPartyBLL.SetThirdPartyTimerByReference(tpId, tpType, time.endUnix, currency);
                     }
                 }
                 TimeSpan ts = DateTime.Now - timerTime;
@@ -168,7 +168,7 @@ namespace ThirdPartyWager.Workers
             {
                 var currency = "IDR";
                 quickIDR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByCurrency(tpId, tpType, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerByReference(tpId, tpType, currency);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -188,7 +188,7 @@ namespace ThirdPartyWager.Workers
                     bool result = await wagerRedoKiss918BLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix, currency);
                     if (result == true)
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        thirdPartyBLL.SetThirdPartyTimerByReference(tpId, tpType, time.endUnix, currency);
                     }
                 }
                 TimeSpan ts = DateTime.Now - timerTime;
