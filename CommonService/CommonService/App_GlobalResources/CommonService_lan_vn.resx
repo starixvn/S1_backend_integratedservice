@@ -118,6 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="lbl_OTP" xml:space="preserve">
-    <value>Số OTP là</value>
+    <value>Ung dung xin thong bao ma OTP cua ban la</value>
   </data>
 </root>

@@ -30,7 +30,7 @@ namespace CommonService.Service.DAL
             conn.Execute("Service_OTPVerifyinfo_Get", p, commandType: CommandType.StoredProcedure);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
-            result.Request_id = p.Get<string?>("Request_id") ?? null;
+            result.Request_id = p.Get<string>("Request_id");
 
             return result;
         }
@@ -48,7 +48,7 @@ namespace CommonService.Service.DAL
             conn.Execute("Service_OTPVerifyinfo_Ins", p, commandType: CommandType.StoredProcedure);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
-            result.Request_id = p.Get<string?>("Request_id") ?? null;
+            result.Request_id = p.Get<string>("Request_id");
 
             return result;
         }
@@ -66,7 +66,7 @@ namespace CommonService.Service.DAL
              conn.Execute("Service_OTPVerifyinfo_Ins", p, commandType: CommandType.StoredProcedure);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
-            result.Request_id = p.Get<string?>("Request_id") ?? null;
+            result.Request_id = p.Get<string>("Request_id");
 
             return result;
         }
