@@ -24,6 +24,7 @@ namespace CommonService.Service.BLL
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
         private readonly Log2File log2File;
+        private readonly Dictionary<string, string> MessageText;
 
         public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
         {
@@ -34,6 +35,15 @@ namespace CommonService.Service.BLL
             this.selLangBLL = selLangBLL;
             this.logger = logger;
             this.log2File = log2File;
+            Dictionary<string, string> MessageText = new Dictionary<string, string>
+            {
+                { "61", "Hello, your verification code is" },
+                { "60", "Hello, kod pengesahan anda adalah"}, //馬來
+                { "62", "Halo, kode verifikasi Anda adalah"}, //印尼
+                { "66", "สวัสดีรหัสการตรวจสอบของคุณคือ" },//泰國
+                { "84", "Ung dung xin thong bao ma OTP cua ban la"},//越南
+            };
+            this.MessageText = MessageText;
 
         }
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfoAsync(int custId)
@@ -69,11 +79,11 @@ namespace CommonService.Service.BLL
             return tools.ToMD5(tmpstr);
 
         }
-        public async Task<ApiResult<SendOTPSMSResult>> SendSkyLineOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId)
+        public async Task<ApiResult<SendOTPSMSResult>> SendSkyLineOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId,string areaCode)
         {
             string OTPNum = tools.GetRandomNumString(6);
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo);
+            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo, areaCode);
             var apiResultSendOTP = apiResult1;
             //if send SMS Success
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
@@ -92,7 +102,7 @@ namespace CommonService.Service.BLL
         }
 
 
-        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo)
+        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string areaCode)
         {
             var apiResult = new ApiResult();
             string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
@@ -101,9 +111,14 @@ namespace CommonService.Service.BLL
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
             //String smsMessage = $"{selLangBLL.GetResourceValue("lbl_OTP", langId)} {OTPNum}";
-
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
-            String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
+            // String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
+
+            string msg = MessageText["61"]; //預設英文
+            if(MessageText.ContainsKey(areaCode))
+                MessageText.TryGetValue(areaCode, out msg);
+            String smsMessage = $"{msg} {OTPNum}";
+
             String siteName = custInfo.SiteName;
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
