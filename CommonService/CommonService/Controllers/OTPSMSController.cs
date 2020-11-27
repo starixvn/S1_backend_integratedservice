@@ -43,7 +43,7 @@ namespace CommonService.Controllers
                 apiResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(req.CustId);
                 if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
                 {
-                    apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, areacode);
+                    apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
                     //if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
                     //{
                     //    apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId);
@@ -75,7 +75,7 @@ namespace CommonService.Controllers
             return apiResult;
         }
         [HttpPost]
-        public async Task<ApiResult> VerifyOTPAsync(VerifyOTPReq verifyOTPReq)
+        public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
             ApiResult apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
