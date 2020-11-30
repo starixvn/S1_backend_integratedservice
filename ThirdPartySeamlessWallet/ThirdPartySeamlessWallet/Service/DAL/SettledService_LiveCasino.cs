@@ -798,7 +798,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.TransId = txn.TxId;
                         betRecordInfo.GameType = GameType.Sexy_LiveCasino;
                         betRecordInfo.TpUserName = txn.UserId;
-                        betRecordInfo.SettledTime = betTime;
+                        betRecordInfo.SettledTime = updateTime;
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         betRecordInfo.BonusId = bonusId;
 
