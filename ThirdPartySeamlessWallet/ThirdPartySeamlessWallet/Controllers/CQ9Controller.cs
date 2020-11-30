@@ -94,7 +94,19 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class BalanceData
         {
-            public decimal balance { get; set; }
+            private decimal _balance = 0m;
+            public decimal balance
+            {
+                get
+                {
+                    decimal.TryParse(_balance.ToString("#.0000"), out _balance);
+                    return _balance;
+                }
+                set
+                {
+                    _balance = value;
+                }
+            }
             public string currency { get; set; }
         }
 
@@ -128,7 +140,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             public Target target { get; set; }
             public DetailStatus status { get; set; }
             public decimal before { get; set; }
-            public decimal balance { get; set; }
+            private decimal _balance = 0m;
+            public decimal balance
+            {
+                get
+                {
+                    decimal.TryParse(_balance.ToString("#.0000"), out _balance);
+                    return _balance;
+                }
+                set
+                {
+                    _balance = value;
+                }
+            }
             public string currency { get; set; }
             [JsonProperty("event")]
             public List<RecordEvent> Event { get; set; }
