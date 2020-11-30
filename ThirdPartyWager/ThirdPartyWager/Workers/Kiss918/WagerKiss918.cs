@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Workers
             {
                 var currency = "THB";
                 quickTHB = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReference(tpId, tpType, 1, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -113,7 +113,7 @@ namespace ThirdPartyWager.Workers
             {
                 var currency = "MYR";
                 quickMYR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReference(tpId, tpType, 1, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -169,7 +169,7 @@ namespace ThirdPartyWager.Workers
             {
                 var currency = "IDR";
                 quickIDR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReference(tpId, tpType, 1, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
