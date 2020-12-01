@@ -1629,7 +1629,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
+        public IEnumerable<Record_CQ9> GetRecordRNG_CQ9(string mtcode)
         {
             string sp = "Service_BettransRng_CQ9_Get";
             string[] sType = mtcode.Split("-");
@@ -1637,9 +1637,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 sp = "Service_RewardRNG_CQ9_Get";
             }
+            string mtcodeType = $"{sType[0]}-{sType[1]}";
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<Record_CQ9>($"{sp}", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
+            return conn.Query<Record_CQ9>($"{sp}", new { mtcode = mtcode, mtcodeType = mtcodeType }, commandType: CommandType.StoredProcedure);
         }
+
         #endregion
 
         #region Kiss918

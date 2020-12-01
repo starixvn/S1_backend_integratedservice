@@ -1005,16 +1005,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 return -2;
             }
-            if (data.TicketStatus == (int)TicketStatus.Refund)
+            if (data.First().TicketStatus == (int)TicketStatus.Refund)
             {
                 return -3;
             }
 
-            account = data.account;
+            account = data.First().account;
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, account);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
-            var result = settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9, data.amount, data.roundid, out afterAmount);
+            var result = settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9, data.First().amount, data.First().roundid, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -1108,22 +1108,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlagRNG_CQ9(roundid, SettleFlag);
         }
 
-        public Record_CQ9 GetRecordRNG_CQ9(string mtcode)
+        public IEnumerable<Record_CQ9> GetRecordRNG_CQ9(string mtcode)
         {
             var data = settledService.GetRecordRNG_CQ9(mtcode);
 
             if (data != null)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, data.account);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, data.ElementAt(0).account);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
                 if (tpCurrency.ExchangeRate > 0)
                 {
-                    data.amount /= tpCurrency.ExchangeRate;
-                    data.Before /= tpCurrency.ExchangeRate;
-                    data.Balance /= tpCurrency.ExchangeRate;
+                    foreach (var item in data)
+                    {
+                        item.amount /= tpCurrency.ExchangeRate;
+                        item.Before /= tpCurrency.ExchangeRate;
+                        item.Balance /= tpCurrency.ExchangeRate;
+                    }
                 }
-                data.currency = tpCurrency.TpCurrencyId;
+                data.ElementAt(0).currency = tpCurrency.TpCurrencyId;
             }
             return data;
         }
