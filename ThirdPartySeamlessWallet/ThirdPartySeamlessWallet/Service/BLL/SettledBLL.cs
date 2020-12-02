@@ -1001,11 +1001,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             account = "";
             afterAmount = 0;
             var data = settledService.GetRecordRNG_CQ9(refundDataRNG_CQ9.mtcode);
-            if (data == null)
+            if (data == null || data.Count() == 0)
             {
                 return -2;
             }
-            if (data.First().TicketStatus == (int)TicketStatus.Refund)
+            else if (data.FirstOrDefault()?.TicketStatus == (int)TicketStatus.Refund)
             {
                 return -3;
             }
