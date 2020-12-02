@@ -1112,7 +1112,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var data = settledService.GetRecordRNG_CQ9(mtcode);
 
-            if (data != null)
+            if (data.Count() > 0)
             {
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, data.ElementAt(0).account);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);

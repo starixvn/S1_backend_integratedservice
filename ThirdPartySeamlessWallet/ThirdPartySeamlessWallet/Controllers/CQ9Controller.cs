@@ -580,9 +580,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
                 return getRecordResp;
             }
+            string[] sType = mtcode.Split("-");
+            if (sType.Count() == 1)
+            {
+                getRecordResp.status.code = "1014";
+                getRecordResp.status.message = "Error : mtcode format invalid";
+                log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+                return getRecordResp;
+            }
 
             var data = settledBLL.GetRecordRNG_CQ9(mtcode);
-            if (data == null)
+            if (data.Count() == 0)
             {
                 // 當未查詢到紀錄時回傳該錯誤編碼1014
                 getRecordResp.data = null;
@@ -603,7 +611,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getRecordResp.data.before = data.First().Before;
                 getRecordResp.data.balance = data.Last().Balance;
                 getRecordResp.data.Event = new List<RecordEvent>();
-                
+
                 foreach (var item in data)
                 {
                     RecordEvent refRecordEvent = new RecordEvent();
@@ -612,7 +620,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     refRecordEvent.eventtime = item.eventFormat;
                     getRecordResp.data.Event.Add(refRecordEvent);
                 }
-               
+
                 getRecordResp.status.code = "0";
                 getRecordResp.status.message = "Success";
                 getRecordResp.status.datetime = getCurrentGameTime();
