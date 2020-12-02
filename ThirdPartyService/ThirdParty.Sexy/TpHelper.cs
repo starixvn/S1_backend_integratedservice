@@ -99,6 +99,7 @@ namespace ThirdParty.Sexy
             public string language { get; set; }
             public string mb { get; set; }
             public string extension1 { get; set; }
+            public string extension2 { get; set; }
             public string lobbyURL { get; set; }
         }
 
@@ -137,6 +138,7 @@ namespace ThirdParty.Sexy
                     loginReq.user = getKeyReq.user;
                     loginReq.userName = getKeyReq.user;
                     loginReq.extension1 = inputs[agentIdKey];
+                    loginReq.extension2 = loginReq.extension1;
                     loginReq.language = TpLangId;
                     loginReq.lobbyURL = lobbyUrl;
                     loginReq.mb = appType == AppType.Desktop ? null : "1";
