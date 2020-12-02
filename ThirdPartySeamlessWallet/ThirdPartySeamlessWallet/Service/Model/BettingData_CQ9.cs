@@ -59,6 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class Record_CQ9
     {
+        public string mtcode { get; set; }
         public string roundid { get; set; }
         public decimal amount { get; set; }
         public decimal Before { get; set; }

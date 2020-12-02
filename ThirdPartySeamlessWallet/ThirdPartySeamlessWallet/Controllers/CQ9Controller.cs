@@ -593,21 +593,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             else
             {
                 getRecordResp.data._id = mtcode;
-                getRecordResp.data.action = data.Actions;
-                getRecordResp.data.target.account = data.account;
-                getRecordResp.data.status.createtime = data.CreateFormat;
-                getRecordResp.data.status.endtime = data.UpdateFormat;
-                getRecordResp.data.status.status = (data.TicketStatus == (int)TicketStatus.Refund) ? "refund" : "success";
+                getRecordResp.data.action = data.ElementAt(0).Actions;
+                getRecordResp.data.target.account = data.ElementAt(0).account;
+                getRecordResp.data.status.createtime = data.ElementAt(0).CreateFormat;
+                getRecordResp.data.status.endtime = data.ElementAt(0).UpdateFormat;
+                getRecordResp.data.status.status = (data.ElementAt(0).TicketStatus == (int)TicketStatus.Refund) ? "refund" : "success";
                 getRecordResp.data.status.message = "success";
-                getRecordResp.data.currency = data.currency;
-                getRecordResp.data.before = data.Before;
-                getRecordResp.data.balance = data.Balance;
+                getRecordResp.data.currency = data.ElementAt(0).currency;
+                getRecordResp.data.before = data.First().Before;
+                getRecordResp.data.balance = data.Last().Balance;
                 getRecordResp.data.Event = new List<RecordEvent>();
-                RecordEvent refRecordEvent = new RecordEvent();
-                getRecordResp.data.Event.Add(refRecordEvent);
-                refRecordEvent.mtcode = mtcode;
-                refRecordEvent.amount = Math.Abs(data.amount);
-                refRecordEvent.eventtime = data.eventFormat;
+                
+                foreach (var item in data)
+                {
+                    RecordEvent refRecordEvent = new RecordEvent();
+                    refRecordEvent.mtcode = item.mtcode;
+                    refRecordEvent.amount = Math.Abs(item.amount);
+                    refRecordEvent.eventtime = item.eventFormat;
+                    getRecordResp.data.Event.Add(refRecordEvent);
+                }
+               
                 getRecordResp.status.code = "0";
                 getRecordResp.status.message = "Success";
                 getRecordResp.status.datetime = getCurrentGameTime();
