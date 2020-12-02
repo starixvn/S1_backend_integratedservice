@@ -54,7 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;
-            tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 2);
+            tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 4);
             tpCustBalance.ExchangeRate = tpCurrency.ExchangeRate;
             tpCustBalance.TpCurrencyId = tpCurrency.TpCurrencyId;
             return tpCustBalance;
