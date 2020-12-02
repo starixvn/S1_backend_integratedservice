@@ -1637,9 +1637,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 sp = "Service_RewardRNG_CQ9_Get";
             }
-            //string mtcodeType = $"{sType[0]}-{sType[1]}";
+            string mtcodeType = null;
+
+            if (sType.Count() > 1)
+                mtcodeType = $"{sType[0]}-{sType[1]}";
+
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<Record_CQ9>(sp, new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
+            return conn.Query<Record_CQ9>(sp, new { mtcode = mtcode, mtcodeType }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
