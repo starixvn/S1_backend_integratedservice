@@ -362,7 +362,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 }
                 else
                 {
-                    isEBV = true;
+                    isEBV = false;/*Switch EBV*/
                     betRecordInfo.ValidBet = betRecordInfo.Stake;
 
                     if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
@@ -371,7 +371,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
                     else if ((betDetial.odds_type ?? 0) == 1)
                     {
-                        if (betDetial.odds < 0)
+                        if (betDetial.odds < 0 && isEBV)
                         {
                             betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
                         }
@@ -409,7 +409,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
                     else if ((betDetial.odds_type ?? 0) == 4)
                     {
-                        if (betDetial.odds < 0)
+                        if (betDetial.odds < 0 && isEBV)
                         {
                             betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
                         }
@@ -464,13 +464,13 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 betRecordInfo.TicketStatus = TicketStatus.Win;
 
-                //if (isEBV)
-                //{
-                //    if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
-                //    {
-                //        betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
-                //    }
-                //}
+                if (isEBV)
+                {
+                    if (Math.Abs(betRecordInfo.ValidBet) > Math.Abs(betRecordInfo.WinlostAmount))
+                    {
+                        betRecordInfo.ValidBet = Math.Abs(betRecordInfo.WinlostAmount);
+                    }
+                }
             }
             else if (betDetial.ticket_status.EndsWith("lose", StringComparison.OrdinalIgnoreCase))
             {

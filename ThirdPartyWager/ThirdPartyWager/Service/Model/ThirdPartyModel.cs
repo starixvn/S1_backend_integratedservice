@@ -20,6 +20,17 @@ namespace ThirdPartyWager.Service.Model
         public DateTime StartTime { set; get; }
     }
 
+    public class TpWagerTimerReferenceModel
+    {
+        public int TpId { set; get; }
+        public int Type { set; get; }
+        public string Currency { set; get; }
+        public string Reference { set; get; }
+        public int GameType { set; get; }
+        public DateTime StartTime { set; get; }
+    }
+
+
     public class Setting
     {
         public string APIkey { get; set; }

@@ -24,7 +24,6 @@ namespace CommonService.Service.BLL
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
         private readonly Log2File log2File;
-        private readonly Dictionary<string, string> MessageText;
 
         public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, OTPSMSServiceConfig>> OTPSMSServiceConfigList, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
         {
@@ -35,8 +34,6 @@ namespace CommonService.Service.BLL
             this.selLangBLL = selLangBLL;
             this.logger = logger;
             this.log2File = log2File;
-            this.MessageText = MessageText;
-
         }
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfoAsync(int custId)
         {
@@ -121,28 +118,37 @@ namespace CommonService.Service.BLL
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
             var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
-            var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
-            log2File.Info($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTPLog");
-            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.status == 0)
+            log2File.Info(result.Content.ReadAsStringAsync().Result, $"{siteName}_OTP");
+
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                apiResult.ErrorCode = ErrorCode.Success;
-            }
-            else
-            {
-                log2File.Info($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTPErrorLog");
-                if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
+                var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
+                
+
+                if (resultResp.status == 0)
                 {
-                    apiResult.ErrorCode = ErrorCode.PhoneError;
+                    log2File.Info($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    apiResult.ErrorCode = ErrorCode.Success;
                 }
                 else
                 {
-                    logger.LogError($"Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
-                    apiResult.ErrorCode = ErrorCode.Fail;
-                    //apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
+                    log2File.Error($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
+                    {
+                        apiResult.ErrorCode = ErrorCode.PhoneError;
+                    }
+                    else
+                    {
+                        logger.LogError($"Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        //apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
+                    }
                 }
-
             }
-
+            else
+            {
+                log2File.Error(result.Content.ReadAsStringAsync().Result, $"{siteName}_OTP");
+            }
 
             return apiResult;
         }
