@@ -339,11 +339,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             string key = GetSha1($"{thirdPartySetting.TpSetting["cert"]}{new DateTimeOffset(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0)).ToUnixTimeMilliseconds()}");
 
-            if (req.key != key)
+            if (!req.key.Equals(key, StringComparison.OrdinalIgnoreCase))
             {
                 resp.status = "500";
                 resp.msg = "system busy";
-                log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{req.action}");
+
+                log2File.Error($"Req key={req.key}, key={key}, {new DateTimeOffset(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0)).ToUnixTimeMilliseconds()} \r\nreq={JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{req.action}");
                 return resp;
             }
 
