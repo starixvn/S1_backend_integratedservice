@@ -100,10 +100,10 @@ namespace CommonService.Service.BLL
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
             
             String siteName = custInfo.SiteName;
-            String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
-            if (custInfo.SiteName.Equals("Nova88", StringComparison.OrdinalIgnoreCase))
+            String smsMessage =  $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
             {
-                smsMessage = $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+                smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
             }
                            
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
