@@ -787,6 +787,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, txn.SettleWinLoss, (int)Tp.Sexy, TransType.Payout, $"Payout: {Math.Abs(txn.SettleWinLoss).ToString("#,##0.##")}", txn.TxId, out afterAmount, conn, trans, AllowNegative.Allow);
                         result = PayoutV2(txn.tpCustInfo, txn.SettleWinLoss, (int)Tp.Sexy, txn.TxId, gameType, TpCategory.LiveCasino, txn.TxId, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
                     }
+                    else
+                    {
+                        GetTpBonus((int)Tp.Sexy, txn.TxId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
+                    }
 
                     if (result > 0)
                     {
@@ -867,6 +871,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, settleWinLoss * -1, (int)Tp.Sexy, TransType.Payout, $"Unsettle: {(settleWinLoss * -1).ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
                         result = PayoutV2(txn.tpCustInfo, settleWinLoss * -1, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Undo, null, out afterAmount, "Unsettle", out bonusId, conn, trans, AllowNegative.Allow);
+                    }
+                    else
+                    {
+                        GetTpBonus((int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
                     }
 
                     if (result > 0)
@@ -961,6 +969,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, betAmount, (int)Tp.Sexy, TransType.Refunds, $"VoidRound: {betAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
                             result = PayoutV2(txn.tpCustInfo, betAmount, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "VoidRound", out bonusId, conn, trans, AllowNegative.Allow);
                         }
+                        else
+                        {
+                            GetTpBonus((int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
+                        }
 
                         if (result > 0)
                         {
@@ -1029,6 +1041,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         //result = walletService.SetBalance(txn.tpCustInfo.CustId, txn.tpCustInfo.SiteId, txn.tpCustInfo.UserName, fixAmount, (int)Tp.Sexy, TransType.Refunds, $"VoidTxn: {fixAmount.ToString("#,##0.##")}", txn.txId, out afterAmount, conn, trans, AllowNegative.Allow);
                         result = PayoutV2(txn.tpCustInfo, fixAmount, (int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, txn.txId, TransType.Refunds, null, out afterAmount, "VoidTxn", out bonusId, conn, trans, AllowNegative.Allow);
+                    }
+                    else
+                    {
+                        GetTpBonus((int)Tp.Sexy, txn.txId, gameType, TpCategory.LiveCasino, out int custId, out bonusId);
                     }
 
                     if (result > 0)
