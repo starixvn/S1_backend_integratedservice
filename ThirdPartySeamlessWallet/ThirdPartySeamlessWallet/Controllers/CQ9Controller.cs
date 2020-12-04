@@ -59,6 +59,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public class Payload
         {
             public string currency { get; set; }
+            public string account { get; set; }
         }
 
         public class GetHeader
@@ -949,6 +950,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(payload));
             var payloadData = JObject.Parse(payloadJson);
             var tokenData = JsonConvert.DeserializeObject<Payload>(payloadJson);
+            if (tokenData.account.EndsWith("_test", StringComparison.OrdinalIgnoreCase))
+            {
+                tokenData.currency = "TEST";
+            }
             return tokenData.currency;
         }
 
