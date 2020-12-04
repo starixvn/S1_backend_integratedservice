@@ -125,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
-                                    var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                                    var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Lottery);
 
                                     settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
                                     settledBLL.SetSettleFlag_Bettrans_One789(gameType, unsettled.TransId);
@@ -159,7 +159,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleWM.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleOne789LT.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
-                                    var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                                    var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Lottery);
 
                                     settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
                                     settledBLL.SetSettleFlag_Bettrans_One789(gameType, unsettled.TransId);
@@ -242,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleWM.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleOne789LT_789.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

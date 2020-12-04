@@ -666,7 +666,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleWM.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleOne789LC.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
         public override Task StopAsync(CancellationToken cancellationToken)
