@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -98,7 +99,7 @@ namespace ThirdParty.Mega
                     sn = sn,
                     loginId = tpCustInfo.TpUserName,
                     agentLoginId = agentLoginId,
-                    bizId = TransID
+                    bizId = ThirdPartyTransID
                 },
                 jsonrpc = "2.0",
             };
@@ -313,7 +314,17 @@ namespace ThirdParty.Mega
             var uuid = Guid.NewGuid();
 
             string sign = uuid + sn + tpCustInfo.TpUserName + Amount + secretCode;
-            
+
+            long bizId = 0;
+
+            Match m = Regex.Match(TransID, @"\d+");
+            long.TryParse(m.Value, out bizId);
+
+            if (TransID.StartsWith("td", StringComparison.OrdinalIgnoreCase))
+            {
+                bizId *= -1;
+            }
+
             var Transfer = new
             {
                 id = uuid,
@@ -325,7 +336,7 @@ namespace ThirdParty.Mega
                     sn = sn,
                     loginId = tpCustInfo.TpUserName,
                     amount = Amount,
-                    bizId = TransID,
+                    bizId = bizId.ToString(),
                     checkBizId = "1",
                 },
                 jsonrpc = "2.0",
@@ -342,6 +353,7 @@ namespace ThirdParty.Mega
             apiResult.RawErrorCode = "1";
             apiResult.ErrorCode = ErrorCode.TransferPending;
             apiResult.Data.Status = TransferStatus.Pending;
+            apiResult.Data.ThirdId = bizId.ToString();
 
             if (IsJSON(result))
             {
