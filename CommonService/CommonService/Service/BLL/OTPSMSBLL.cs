@@ -98,12 +98,17 @@ namespace CommonService.Service.BLL
             var Config = OTPSMSServiceConfigList.Value[custInfo.SiteName];
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
-
-            String smsMessage = $"{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            
+            String siteName = custInfo.SiteName;
+            String smsMessage =  $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
+            {
+                smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
+            }
+                           
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
             // String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
 
-            String siteName = custInfo.SiteName;
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
