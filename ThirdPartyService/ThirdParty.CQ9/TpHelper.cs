@@ -75,11 +75,31 @@ namespace ThirdParty.CQ9
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
+                if (!char.IsDigit(gameId[0]))
+                {
+                    throw new Exception("the free game not support");
+                }
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.Message = $"{FunGameUrl}/{gameId}?language={TpLangId}&token=guest_{tpCustInfo.TpUserName}";
             }
             else
             {
+                List<long> testHierarchyCustId = new List<long>();
+                if (IsDevelopment == true)
+                {
+                    testHierarchyCustId.Add(1481);
+                }
+                else
+                {
+                    testHierarchyCustId.Add(90);
+                    testHierarchyCustId.Add(31909);
+                }
+                bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
+                if (isTestHierarchy == true)
+                {
+                    API_Token = inputs.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(inputs["API_Token_TEST"]) ? inputs["API_Token_TEST"] : throw new Exception("API_Token_TEST");
+                }
+
                 // Header
                 Dictionary<string, string> headerReq = new Dictionary<string, string>();
                 headerReq.Add("Authorization", API_Token);
