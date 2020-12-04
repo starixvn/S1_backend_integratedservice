@@ -51,67 +51,6 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<dynamic> GetBetList(string apiUrl, string apiKey, int gameType, string date, string lastId = null)
-        {
-            // param
-            var uri = "";
-            switch (gameType)
-            {
-                case (int)GameType.One789_Lottery:
-                    uri = "/report/lottery/date-report";
-                    break;
-                case (int)GameType.One789_Lottery_789:
-                    uri = "/report/lottery789/date-report";
-                    break;
-                case (int)GameType.One789_LiveCasino:
-                    uri = "/report/789-casino/sedie/date-report";
-                    break;
-                default:
-                    break;
-            }
-
-            string url = $"{apiUrl}{uri}";
-            string param = "?limit=100";
-
-            if (!string.IsNullOrEmpty(date))
-            {
-                param = $"{param}&date={date}";
-            }
-            else
-            {
-                param = $"{param}&lastId={lastId}";
-            }
-
-            // request
-            var r = await DoHttpClientAsync(url, param, apiKey);
-            dynamic result = JsonConvert.DeserializeObject(r);
-
-            return result;
-        }
-
-        public async Task<dynamic> GetBetListCancelled(string apiUrl, string apiKey, int gameType, string date, string lastId = null)
-        {
-            // param
-            var uri = "/report/789-casino/sedie/cancelled-date-report";
-            string url = $"{apiUrl}{uri}";
-            string param = "?limit=100";
-
-            if (!string.IsNullOrEmpty(date))
-            {
-                param = $"{param}&date={date}";
-            }
-            else
-            {
-                param = $"{param}&lastId={lastId}";
-            }
-
-            // request
-            var r = await DoHttpClientAsync(url, param, apiKey);
-            dynamic result = JsonConvert.DeserializeObject(r);
-
-            return result;
-        }
-
         private async Task<string> DoHttpClientAsync(string url, string param, string apiKey)
         {
             var path = url + param;

@@ -55,9 +55,4 @@ namespace ThirdPartyWager.Service
         }
     }
 
-    public class ResponseOne789Model
-    {
-        public bool result { get; set; }
-        public string lastId { get; set; }
-    }
 }

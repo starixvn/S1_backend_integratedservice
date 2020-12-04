@@ -99,7 +99,6 @@ namespace ThirdPartyWager
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
-            services.AddSingleton<WagerCancelledOne789BLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
