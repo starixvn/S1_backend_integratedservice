@@ -60,10 +60,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SG_Fish = 31,
         WM_LiveCasino = 32,
         Kiss918_RNG = 33,
-        One789_Lottery = 34,
-        One789_Lottery_789 = 35,
-        One789_LiveCasino = 36,
-        Mega_RNG = 37
+        Mega_RNG = 34,
+        One789_Lottery = 35,
+        One789_Lottery_789 = 36,
+        One789_LiveCasino = 37
     }
     public enum Tp
     {

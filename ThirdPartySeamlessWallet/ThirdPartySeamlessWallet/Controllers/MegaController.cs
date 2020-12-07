@@ -15,7 +15,6 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class MegaController : ControllerBase
     {
@@ -25,18 +24,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly AuthBLL authBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly IHostEnvironment environment;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly int gameType = 0;
 
         public MegaController(
             IHostEnvironment environment,
             Log2File log2File,
             ThirdPartyBLL thirdPartyBLL,
             AuthBLL authBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL
+            TpCustInfoBLL tpCustInfoBLL
         )
         {
             this.log2File = log2File;
@@ -44,10 +38,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.authBLL = authBLL;
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.environment = environment;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
             thisTp = Tp.Mega;
-            gameType = (int)GameType.Mega_RNG;
         }
 
         #region Request
@@ -98,8 +89,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
+            log2File.Info(Content, $"{thisTp}_open.operator.user.login");
+            var reqData = Content.TrimStart("json=".ToArray());
 
-            GetLoginReq getLoginReq = JsonConvert.DeserializeObject<GetLoginReq>(Content);
+            GetLoginReq getLoginReq = JsonConvert.DeserializeObject<GetLoginReq>(reqData);
             GetSeamlessWalletResp resp = new GetSeamlessWalletResp
             {
                 id = getLoginReq.id,
@@ -155,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             else
             {
                 resp.error = "404 failed";
-                log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             }
             return resp;
         }

@@ -11,7 +11,7 @@ namespace ThirdParty.Mega
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        
+
         private class CreateMemberResponse
         {
             public string id { get; set; }
@@ -88,6 +88,16 @@ namespace ThirdParty.Mega
 
             string sign = uuid + sn + secretCode;
 
+            long bizId = 0;
+
+            Match m = Regex.Match(TransID, @"\d+");
+            long.TryParse(m.Value, out bizId);
+
+            if (TransID.StartsWith("td", StringComparison.OrdinalIgnoreCase))
+            {
+                bizId *= -1;
+            }
+
             var CheckTransfer = new
             {
                 id = uuid,
@@ -99,7 +109,7 @@ namespace ThirdParty.Mega
                     sn = sn,
                     loginId = tpCustInfo.TpUserName,
                     agentLoginId = agentLoginId,
-                    bizId = ThirdPartyTransID
+                    bizId = bizId
                 },
                 jsonrpc = "2.0",
             };
@@ -124,16 +134,16 @@ namespace ThirdParty.Mega
                 else
                 {
                     var json = JsonConvert.DeserializeObject<CheckTransferResponse>(result);
-                    if (json.result.total != 0 && json.result.items.First().bizId == TransID)
+                    if (json.result.total != 0 && json.result.items.First().bizId == ThirdPartyTransID && json.result.items.First().loginId == tpCustInfo.TpUserName)
                     {
                         apiResult.ErrorCode = ErrorCode.Success;
                         apiResult.Data.Status = TransferStatus.Success;
-                        //apiResult.Data.ThirdId = TransID;
+                        apiResult.Data.ThirdId = bizId.ToString();
                     }
                     else
                     {
                         apiResult.RawMessage = json.error ?? "";
-                        apiResult.RawErrorCode = json.error.ToString();
+                        apiResult.RawErrorCode = json.error ?? "";
                         apiResult.ErrorCode = ErrorCode.Fail;
                         apiResult.Data.Status = TransferStatus.Fail;
                     }
@@ -305,12 +315,12 @@ namespace ThirdParty.Mega
             string agentLoginId = inputs.ContainsKey($"agentLoginId_{currency}") && !string.IsNullOrEmpty(inputs[$"agentLoginId_{currency}"]) ? inputs[$"agentLoginId_{currency}"] : throw new Exception($"agentLoginId_{currency}");
             string secretCode = inputs.ContainsKey($"secretCode_{currency}") && !string.IsNullOrEmpty(inputs[$"secretCode_{currency}"]) ? inputs[$"secretCode_{currency}"] : throw new Exception($"secretCode_{currency}");
             string sn = inputs.ContainsKey("sn") && !string.IsNullOrEmpty("sn") ? inputs["sn"] : throw new Exception("sn");
-            
+
             if (direction == Direction.ToMain)
             {
                 Amount = Amount * -1;
             }
-            
+
             var uuid = Guid.NewGuid();
 
             string sign = uuid + sn + tpCustInfo.TpUserName + Amount + secretCode;
@@ -335,9 +345,9 @@ namespace ThirdParty.Mega
                     digest = ToMD5(sign).ToUpper(),
                     sn = sn,
                     loginId = tpCustInfo.TpUserName,
-                    amount = Amount,
-                    bizId = bizId.ToString(),
-                    checkBizId = "1",
+                    amount = Amount.ToString(),
+                    bizId = bizId,
+                    checkBizId = "1"
                 },
                 jsonrpc = "2.0",
             };
@@ -398,6 +408,12 @@ namespace ThirdParty.Mega
                         apiResult.ErrorCode = ErrorCode.Fail;
                         apiResult.Data.Status = TransferStatus.Fail;
                     }
+                    else if (error.error.code == "37131")
+                    {
+                        // 玩家正在游戏中，不能下分
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.Data.Status = TransferStatus.Fail;
+                    }
                     else
                     {
                         /* 
@@ -417,7 +433,6 @@ namespace ThirdParty.Mega
                         apiResult.Data.Status = TransferStatus.Success;
                         apiResult.RawMessage = "";
                         apiResult.RawErrorCode = "";
-                        // apiResult.Data.ThirdId = TransID;
                     }
                 }
             }
