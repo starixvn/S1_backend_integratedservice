@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.One789;
         private int tpType = 1;
         private int intervalMins = 3;
+        private int overlap = 5;
         private int iRangMins = 20;
         private int quickLT = 0;
         private int quickLT_789 = 0;
@@ -67,8 +68,8 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
-                    last = iRangMins - 1;
+                    timerTime = dataTpTimer.StartTime.AddMinutes(-1 * overlap);
+                    last = 45;
                 }
                 if (timerTime < DateTime.Now)
                 {
@@ -81,7 +82,7 @@ namespace ThirdPartyWager.Workers
                 }
                 TimeSpan ts = DateTime.Now - timerTime;
                 int diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
+                if (diffMin > 8)
                 {
                     quickLT = 1;
                 }
@@ -100,7 +101,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(30);
                     timerLT.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -122,7 +123,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddMinutes(-1 * overlap);
                     last = iRangMins - 1;
                 }
 
@@ -137,7 +138,7 @@ namespace ThirdPartyWager.Workers
                 }
                 TimeSpan ts = DateTime.Now - timerTime;
                 int diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
+                if (diffMin > 8)
                 {
                     quickLT_789 = 1;
                 }
@@ -156,7 +157,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(8);
                     timerLT_789.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -178,7 +179,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddMinutes(-1 * overlap);
                     last = iRangMins - 1;
                 }
 
@@ -193,7 +194,7 @@ namespace ThirdPartyWager.Workers
                 }
                 TimeSpan ts = DateTime.Now - timerTime;
                 int diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
+                if (diffMin > 8)
                 {
                     quickLC = 1;
                 }
