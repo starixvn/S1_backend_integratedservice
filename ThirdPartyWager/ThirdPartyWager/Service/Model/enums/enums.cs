@@ -29,8 +29,8 @@ namespace ThirdPartyWager.Service.Model.enums
 
     public enum GameType
     {
-        One789_Lottery = 34,
-        One789_Lottery_789 = 35,
-        One789_LiveCasino = 36
+        One789_Lottery = 35,
+        One789_Lottery_789 = 36,
+        One789_LiveCasino = 37
     }
 }
