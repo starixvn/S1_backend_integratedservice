@@ -1271,6 +1271,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     else
                     {
+                        afterAmount = -1;
                         result = 1;
                     }
 

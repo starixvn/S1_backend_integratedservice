@@ -450,6 +450,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result = settledBLL.PayoutRNG_CQ9(endRoundReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
+                    if (tpAffterAmount == -1)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, endRoundReq.account, gameType);
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+
                     getEndRoundResp.data.balance = tpAffterAmount;
                     getEndRoundResp.data.currency = tokenCurrency;
                     getEndRoundResp.status.code = "0";
