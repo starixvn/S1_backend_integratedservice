@@ -1234,11 +1234,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #region CQ9
-        public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, out decimal afterAmount)
+        public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, ref decimal afterAmount)
         {
             int bonusId = 0;
             int gameType = (int)GameType.CQ9_RNG;
-            afterAmount = 0;
             var result = 0;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -1271,7 +1270,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     else
                     {
-                        afterAmount = -1;
                         result = 1;
                     }
 

@@ -968,7 +968,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region CQ9
-        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, out decimal afterAmount)
+        public int PayoutRNG_CQ9(EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, int gameType, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, endRoundDataRNG_CQ9.account);
             if (tpCustInfo == null)
@@ -986,7 +986,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
 
-            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, out afterAmount);
+            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.CQ9, endRoundDataRNG_CQ9.account, gameType);
+            afterAmount = tpCustBalance.Balance;
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_CQ9(tpCustInfo, endRoundDataRNG_CQ9, ref afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
