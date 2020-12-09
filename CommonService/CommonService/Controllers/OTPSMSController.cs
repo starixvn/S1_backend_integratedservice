@@ -78,6 +78,11 @@ namespace CommonService.Controllers
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
             ApiResult apiResult = new ApiResult();
+            if (verifyOTPReq.InputOTP.Length >= 10)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                return apiResult;
+            }
             var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
             var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(verifyOTPReq.CustId);
             if (GetOTPVerifyResult.ErrorCode == 0)
