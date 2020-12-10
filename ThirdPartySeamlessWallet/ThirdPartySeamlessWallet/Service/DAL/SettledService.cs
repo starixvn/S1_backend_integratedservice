@@ -62,13 +62,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {"bjma",false },
                     {"rla",false },
                 }
-            },
-            {
-                GameType.CQ9_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
-                {
-                    {"BT02",false },
-                    {"BT03",false }
-                }
             }
         };
         public SettlementType GetSettlementType(GameType gameType, string gameId)
