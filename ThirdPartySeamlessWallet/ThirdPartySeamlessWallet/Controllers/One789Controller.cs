@@ -114,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, username);
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, production);
+            var gameType = thirdPartyBLL.GetGameType((int)thisTp, $"{production}_");
             tpCustInfoBLL.SetCustGotoGame(tpCustInfo.CustId, (int)thisTp, (int)gameType);
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, username, (int)gameType);
             if (tpCustBalance != null)

@@ -150,15 +150,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             switch (tpId)
             {
                 case (int)Tp.One789:
-                    if (gameId.StartsWith("0", StringComparison.OrdinalIgnoreCase))
+                    if (gameId.StartsWith("0_", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = GameType.One789_Lottery;
                     }
-                    else if (gameId.StartsWith("1", StringComparison.OrdinalIgnoreCase))
+                    else if (gameId.StartsWith("1_", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = GameType.One789_Lottery_789;
                     }
-                    else if (gameId.StartsWith("2", StringComparison.OrdinalIgnoreCase))
+                    else if (gameId.StartsWith("2_", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = GameType.One789_LiveCasino;
                     }
