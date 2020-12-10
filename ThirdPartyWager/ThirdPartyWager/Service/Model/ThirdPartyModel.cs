@@ -30,7 +30,6 @@ namespace ThirdPartyWager.Service.Model
         public DateTime StartTime { set; get; }
     }
 
-
     public class Setting
     {
         public string APIkey { get; set; }

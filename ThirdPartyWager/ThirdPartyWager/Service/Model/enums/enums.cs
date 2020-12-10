@@ -23,6 +23,14 @@ namespace ThirdPartyWager.Service.Model.enums
         Sexy = 15,
         CF = 17,
         WM = 20,
-        Kiss918 = 21
+        Kiss918 = 21,
+        One789 = 23
+    }
+
+    public enum GameType
+    {
+        One789_Lottery = 35,
+        One789_Lottery_789 = 36,
+        One789_LiveCasino = 37
     }
 }
