@@ -89,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpGet]
-        public dynamic balance(string username)
+        public dynamic balance(string username, string production)
         {
             string logName = $"{thisTp}_balance";
             Response.StatusCode = (int)Error.INVALID_DATA;
@@ -101,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.ErrorCode = "ValidationException";
                 getApiResponse.ErrorMessage = "Invalid user Id";
-                log2File.Info($"account={username}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -109,18 +109,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.ErrorCode = "ValidationException";
                 getApiResponse.ErrorMessage = "Account is Lock";
-                log2File.Info($"account={username}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, username, gameType);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, username);
+            var gameType = thirdPartyBLL.GetGameType((int)thisTp, production);
+            tpCustInfoBLL.SetCustGotoGame(tpCustInfo.CustId, (int)thisTp, (int)gameType);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, username, (int)gameType);
             if (tpCustBalance != null)
             {
                 Response.StatusCode = (int)Error.OK;
                 getBalanceResp.Balance = tpCustBalance.Balance;
             }
 
-            log2File.Info($"account={username}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+            log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
             return getBalanceResp;
         }
 
@@ -161,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         Response.StatusCode = (int)Error.OK;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
                         getBalanceTransactionsResp.Tx = getReq.Tx;
                         getBalanceTransactionsResp.Amount = getReq.Amount;
                         getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
@@ -204,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (result == -1)
                         {
                             Response.StatusCode = (int)Error.OK;
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
                             getBalanceTransactionsResp.Tx = getReq.Tx;
                             getBalanceTransactionsResp.Amount = getReq.Amount;
                             getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
@@ -248,7 +251,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         Response.StatusCode = (int)Error.OK;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
                         getBalanceTransactionsResp.Tx = getReq.Tx;
                         getBalanceTransactionsResp.Amount = getReq.Amount;
                         getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
@@ -280,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         Response.StatusCode = (int)Error.OK;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username);
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
                         getBalanceTransactionsResp.Tx = getReq.Tx;
                         getBalanceTransactionsResp.Amount = getReq.Amount;
                         getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
