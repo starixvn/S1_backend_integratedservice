@@ -35,7 +35,7 @@ namespace CommonService.Service.BLL
             this.logger = logger;
             this.log2File = log2File;
         }
-        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfoAsync(int custId)
+        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
             SendOTPSMSResult result = sOTPSMSService.GetOTPVerifyinfo(custId);

@@ -43,7 +43,7 @@ namespace CommonService.Controllers
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areacode}{phoneNo}";
-                apiResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(req.CustId);
+                apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
                 if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
                 {
                     apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
@@ -80,34 +80,44 @@ namespace CommonService.Controllers
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
-            var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
-            log2File.Info($"Verify,{custInfo.UserName},UserInput:{verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_OTP");
             ApiResult apiResult = new ApiResult();
-            if (verifyOTPReq.InputOTP.Length >= 10)
+            try
             {
-                apiResult.ErrorCode = ErrorCode.Fail;
-                return apiResult;
+                var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
+                log2File.Info($"Verify,{custInfo.UserName},UserInput:{verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_OTP");
+
+                if (verifyOTPReq.InputOTP.Length >= 10)
+                {
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    return apiResult;
+                }
+                var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
+                if (GetOTPVerifyResult.ErrorCode == 0)
+                {
+                    apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
+                    //if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
+                    //{
+                    //    apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
+                    //}
+                    //else
+                    //{
+                    //    var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(custInfo.SiteName, GetOTPVerifyResult.Data.Request_id, verifyOTPReq.InputOTP);
+                    //    apiResult.ErrorCode = resultResp.ErrorCode;
+                    //    apiResult.Message = resultResp.Message;
+                    //    apiResult.RawMessage = resultResp.RawMessage;
+                    //}
+                }
+                else
+                {
+                    apiResult.ErrorCode = GetOTPVerifyResult.ErrorCode;
+                }
             }
-            var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(verifyOTPReq.CustId);
-            if (GetOTPVerifyResult.ErrorCode == 0)
+            catch(Exception ex)
             {
-                apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
-                //if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
-                //{
-                //    apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
-                //}
-                //else
-                //{
-                //    var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(custInfo.SiteName, GetOTPVerifyResult.Data.Request_id, verifyOTPReq.InputOTP);
-                //    apiResult.ErrorCode = resultResp.ErrorCode;
-                //    apiResult.Message = resultResp.Message;
-                //    apiResult.RawMessage = resultResp.RawMessage;
-                //}
+                apiResult.RawMessage = ex.ToString();
+                log2File.Error(ex.ToString(), "VerifyOTP");
             }
-            else
-            {
-                apiResult.ErrorCode = GetOTPVerifyResult.ErrorCode;
-            }
+
             return apiResult;
         }
     }
