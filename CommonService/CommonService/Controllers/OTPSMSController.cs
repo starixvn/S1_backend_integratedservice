@@ -3,6 +3,7 @@ using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
+using PaymentService.Service.Library;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +17,14 @@ namespace CommonService.Controllers
     {
         private readonly OTPSMSBLL sOTPSMSBLL;
         private readonly MoviderSMSBLL moviderSMSBLL;
+        private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, MoviderSMSBLL moviderSMSBLL)
+        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, MoviderSMSBLL moviderSMSBLL, Log2File log2File)
         {
             this.sOTPSMSBLL = sOTPSMSBLL;
             this.custInfoBLL = custInfoBLL;
             this.moviderSMSBLL = moviderSMSBLL;
+            this.log2File = log2File;
         }
         
         public class Req
@@ -77,13 +80,14 @@ namespace CommonService.Controllers
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
+            var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
+            log2File.Info($"Verify,{custInfo.UserName},UserInput:{verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_OTP");
             ApiResult apiResult = new ApiResult();
             if (verifyOTPReq.InputOTP.Length >= 10)
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
                 return apiResult;
             }
-            var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
             var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfoAsync(verifyOTPReq.CustId);
             if (GetOTPVerifyResult.ErrorCode == 0)
             {
