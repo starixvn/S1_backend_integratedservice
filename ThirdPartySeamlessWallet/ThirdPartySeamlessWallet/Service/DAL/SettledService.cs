@@ -66,14 +66,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 GameType.CQ9_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
                 {
-                    {"BT03",false },
-                    {"AD14",false },
                     {"BT02",false },
-                    {"AD11",false },
-                    {"AD12",false },
-                    {"AD10",false },
-                    {"AD13",false },
-                    {"AD09",false },
+                    {"BT03",false }
                 }
             }
         };
