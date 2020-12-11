@@ -54,7 +54,7 @@ namespace CommonService.Service.BLL
             return apiResult;
         }
 
-        public ApiResult VerifyOPTAsync(VerifyOTPReq verifyOTPReq)
+        public ApiResult VerifyOPT(VerifyOTPReq verifyOTPReq)
         {
             var apiResult = new ApiResult();
             int result = sOTPSMSService.VerifyOPT(verifyOTPReq);
