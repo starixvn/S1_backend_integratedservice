@@ -12,6 +12,8 @@ namespace ThirdParty.Iconic
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private static JwtToken jwtToken1 = null;
+
         private class ApiErrorResponse
         {
             public Error error { get; set; }
@@ -45,6 +47,7 @@ namespace ThirdParty.Iconic
         {
             public int status { get; set; }
             public string token { get; set; }
+            public DateTime ExpiredTime { get; set; }
         }
 
         private class SignupResult
@@ -76,8 +79,10 @@ namespace ThirdParty.Iconic
             oApiResult.RawErrorCode = "1";
             oApiResult.ErrorCode = ErrorCode.Fail;
 
-            var jwtToken = GetJwtTokenWithCache(tpCustInfo.TpId, ApiUrl, currency, password);
-            if (jwtToken != null)
+            if (jwtToken1 == null || jwtToken1?.ExpiredTime < DateTime.Now)
+                jwtToken1 = GetJwtTokenWithCache(tpCustInfo.TpId, ApiUrl, currency, password);
+
+            if (jwtToken1 != null)
             {
                 var param = new
                 {
@@ -89,7 +94,7 @@ namespace ThirdParty.Iconic
                 var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
                 Dictionary<string, string> header = new Dictionary<string, string>();
-                header.Add("Authorization", $"Bearer {jwtToken.token}");
+                header.Add("Authorization", $"Bearer {jwtToken1.token}");
 
                 var result = HttpPost(
                     SignupUrl,
@@ -200,9 +205,12 @@ namespace ThirdParty.Iconic
                 "application/json"
             );
 
-            JwtToken resp = new JwtToken();
-            resp.status = 400;
-            resp.token = "";
+            JwtToken resp = new JwtToken
+            {
+                status = 400,
+                token = ""
+            };
+
             if (IsJSON(result))
             {
                 var err = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
@@ -215,6 +223,7 @@ namespace ThirdParty.Iconic
                     var succ = JsonConvert.DeserializeObject<JwtResponse>(result);
                     resp.status = 200;
                     resp.token = HttpUtility.UrlEncode(succ.token);
+                    resp.ExpiredTime = DateTime.Now.AddDays(1);/*Expired Time*/
                 }
             }
 
