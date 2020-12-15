@@ -167,21 +167,6 @@ namespace ThirdParty.Iconic
         private JwtToken GetJwtTokenWithCache(int tpId, string url, string currency, string password)
         {
             var jwtCheck = GetJwtToken(url, currency, password);
-            //string key = $"JwtToken_{tpId}";
-            //var jwtCheck = cache.Get<JwtToken>(key);
-            //if (jwtCheck == null)
-            //{
-            //    jwtCheck = GetJwtToken(url, currency, password);
-            //    if (jwtCheck.status == 200)
-            //    {
-            //        cache.Set(key, jwtCheck, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(86400)));
-            //    }
-            //    else
-            //    {
-            //        jwtCheck = null;
-            //    }
-            //}
-
             return jwtCheck;
         }
 
