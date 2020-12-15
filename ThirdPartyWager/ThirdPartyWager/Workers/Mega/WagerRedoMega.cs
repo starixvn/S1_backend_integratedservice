@@ -1,0 +1,220 @@
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Workers
+{
+    public class WagerRedoMega : BackgroundService
+    {
+        private readonly ILogger<WagerRedoMega> logger;
+        private readonly WagerMegaBLL wagerMegaBLL;
+        private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly DateTimeHelper dateTimeHelper;
+        private readonly IHostEnvironment environment;
+        private Timer timerTHB;
+        private Timer timerMYR;
+        private Timer timerIDR;
+        private int intervalDays = 1;
+        private int iRangMins = 1440;
+        private int tpId = (int)Tp.Mega;
+        private int tpType = 2;
+        private int quickTHB = 0;
+        private int quickMYR = 0;
+        private int quickIDR = 0;
+        private int iDays = 7;
+
+        public WagerRedoMega(
+            ILogger<WagerRedoMega> logger,
+            WagerMegaBLL wagerMegaBLL,
+            ThirdPartyBLL thirdPartyBLL,
+            DateTimeHelper dateTimeHelper,
+            IHostEnvironment environment
+        )
+        {
+            this.logger = logger;
+            this.wagerMegaBLL = wagerMegaBLL;
+            this.thirdPartyBLL = thirdPartyBLL;
+            this.dateTimeHelper = dateTimeHelper;
+            this.environment = environment;
+        }
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            timerTHB = new Timer(DoTaskTHB, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerMYR = new Timer(DoTaskMYR, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerIDR = new Timer(DoTaskIDR, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+
+        private async void DoTaskTHB(object state)
+        {
+            try
+            {
+                var currency = "THB";
+                quickTHB = 0;
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                DateTime timerTime;
+                if (dataTpTimer == null)
+                {
+                    timerTime = DateTime.Now.AddDays(iDays * -1);
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
+                }
+
+                if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                {
+                    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    bool result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                    if (result == true)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                    }
+                }
+                int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                if (diffDay >= (iDays + 1))
+                {
+                    quickTHB = 1;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+            finally
+            {
+                if (quickTHB == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+            }
+        }
+
+        private async void DoTaskMYR(object state)
+        {
+            try
+            {
+                var currency = "MYR";
+                quickMYR = 0;
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                DateTime timerTime;
+                if (dataTpTimer == null)
+                {
+                    timerTime = DateTime.Now.AddDays(iDays * -1);
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
+                }
+
+                if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                {
+                    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    bool result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                    if (result == true)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                    }
+                }
+                int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                if (diffDay >= (iDays + 1))
+                {
+                    quickMYR = 1;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+            finally
+            {
+                if (quickMYR == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+            }
+        }
+
+        private async void DoTaskIDR(object state)
+        {
+            try
+            {
+                var currency = "IDR";
+                quickIDR = 0;
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                DateTime timerTime;
+                if (dataTpTimer == null)
+                {
+                    timerTime = DateTime.Now.AddDays(iDays * -1);
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
+                }
+
+                if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                {
+                    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    bool result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                    if (result == true)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                    }
+                }
+                int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                if (diffDay >= (iDays + 1))
+                {
+                    quickIDR = 1;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
+            finally
+            {
+                if (quickIDR == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+            }
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            //WriteToFile("WriteToFileHostedService: Process Stopped");
+            timerTHB?.Change(Timeout.Infinite, 0);
+            timerMYR?.Change(Timeout.Infinite, 0);
+            timerIDR?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+    }
+}

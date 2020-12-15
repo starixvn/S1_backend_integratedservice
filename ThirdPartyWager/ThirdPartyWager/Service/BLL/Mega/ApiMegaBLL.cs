@@ -38,46 +38,6 @@ namespace ThirdPartyWager.Service.BLL
             this.common = common;
         }
 
-        //public async Task<WagerMegaModel> GetBetListByTime(string apiUrl, string sn, string secretCode, string player, string startTime, string endTime, int page, int perPage)
-        //{
-        //    // param
-        //    var uuid = Guid.NewGuid();
-
-        //    string sign = uuid + sn + player + secretCode;
-
-        //    var param = new
-        //    {
-        //        id = uuid,
-        //        method = "open.mega.player.game.log.url.get",
-        //        @params = new
-        //        {
-        //            random = uuid,
-        //            digest = this.common.ToMD5(sign).ToUpper(),
-        //            sn = sn,
-        //            loginId = player,
-        //            startTime = startTime,
-        //            endTime = endTime
-        //        },
-        //        jsonrpc = "2.0",
-        //    };
-
-        //    // request
-        //    string r = await DoHttpClientAsync(apiUrl, param);
-        //    var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
-        //    if (error.error != null)
-        //    {
-        //        var result = new WagerMegaModel();
-        //        result.code = error.error.code;
-        //        result.message = error.error.message;
-        //        return result;
-        //    }
-        //    else
-        //    {
-        //        var result = JsonConvert.DeserializeObject<WagerMegaModel>(r);
-        //        return result;
-        //    }
-        //}
-
         public async Task<WagerMegaReport> GetReportPlayerListByTime(string apiUrl, string sn, string secretCode, string agentLoginId, string startTime, string endTime)
         {
             // param

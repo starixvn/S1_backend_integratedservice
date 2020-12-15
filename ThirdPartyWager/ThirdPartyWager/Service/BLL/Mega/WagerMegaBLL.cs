@@ -55,13 +55,13 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
-                //int perPage = 100;
                 foreach (var reportList in dataReportPlayer.result)
                 {
                     try
                     {
                         reportList.win = reportList.win * -1;
                         reportList.Currency = currency;
+                        reportList.WagerDate = Convert.ToDateTime(startTime);
                         wagerMegaService.InsertWager(reportList);
                     }
                     catch (Exception ex)
@@ -70,55 +70,6 @@ namespace ThirdPartyWager.Service.BLL
                         logger.LogInformation($"INSERT_WAGER ( START: {startTime} END: {endTime} CURRENCY: {currency} loginId: {reportList.loginId} )");
                         return false;
                     }
-
-                    //int page = 1;
-                    //int totalPage = 1;
-                    //var Account = reportList.loginId;
-                    //while (page <= totalPage)
-                    //{
-                    //    // get wager
-                    //    var dataWager = await apiMegaBLL.GetBetListByTime(setting["ApiUrl"], setting["sn"], setting[$"secretCode_{currency}"], Account, startTime, endTime, page, perPage);
-
-                    //    // error condition
-                    //    var errorCode = dataWager.code;
-                    //    var errorMsg = dataWager.message;
-
-                    //    if (errorCode != null)
-                    //    {
-                    //        logger.LogError(errorCode, errorMsg);
-                    //        logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime}  CURRENCY: {currency} )");
-                    //        return false;
-                    //    }
-
-                    //    if (/*errorCode == 0 &&*/ dataWager.total == 0)
-                    //    {
-                    //        logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
-                    //        break;
-                    //    }
-
-                    //    totalPage = (int)((dataWager.total / perPage) + 1);
-                    //    foreach (var bet in dataWager.result)
-                    //    {
-                    //        try
-                    //        {
-                    //            //if (bet.LogDataType != 2)
-                    //            //{
-                    //            //    continue;
-                    //            //}
-                    //            bet.Account = Account;
-                    //            bet.Currency = currency;
-                    //            wagerMegaService.InsertWager(bet);
-                    //        }
-                    //        catch (Exception ex)
-                    //        {
-                    //            var wagerId = bet.uuid;
-                    //            logger.LogError(ex, ex.Message);
-                    //            logger.LogInformation($"INSERT_WAGER ( WAGERID: {wagerId} )");
-                    //            continue;
-                    //        }
-                    //    }
-                    //    page++;
-                    //}
                 }
                 logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} CURRENCY: {currency} )");
                 return true;

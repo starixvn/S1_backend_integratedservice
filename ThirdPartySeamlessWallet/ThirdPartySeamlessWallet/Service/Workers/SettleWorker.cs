@@ -31,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
         private Timer timerSettleOne789LC;
+        private Timer timerSettleMega;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -65,6 +66,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleMega = new Timer(DoSettleMegaWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -688,6 +690,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleOne789LT?.Change(Timeout.Infinite, 0);
             timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
             timerSettleOne789LC?.Change(Timeout.Infinite, 0);
+            timerSettleMega?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
