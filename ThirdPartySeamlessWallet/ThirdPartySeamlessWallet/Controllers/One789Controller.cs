@@ -142,6 +142,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             GameType gameType = 0;
             var result = 0;
+            logName = $"{thisTp}_balance_transactions_{getReq.Type}";
             switch (getReq.Type)
             {
                 case "payout":
