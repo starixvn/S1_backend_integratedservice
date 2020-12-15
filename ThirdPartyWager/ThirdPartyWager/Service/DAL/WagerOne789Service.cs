@@ -39,14 +39,5 @@ namespace ThirdPartyWager.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute($"{sp}", bet, commandType: CommandType.StoredProcedure);
         }
-
-        public int UpdateWagerOne789(BetOne789 bet, int gameType)
-        {
-            var p = new DynamicParameters(new { Id = bet.Id });
-            p.Add("out_result", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            conn.Execute("Service_TpWagerOne789_LC_Cancel_Set", p, commandType: CommandType.StoredProcedure);
-            return p.Get<Int32>("out_result");
-        }
     }
 }
