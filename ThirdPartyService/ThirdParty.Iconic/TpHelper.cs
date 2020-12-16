@@ -148,14 +148,14 @@ namespace ThirdParty.Iconic
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
             var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token };
-            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            string sessionKey = Convert.ToBase64String(bytes);
+            //inputs.TryGetValue("Token", out string token);
+            //var sessionKeyArr = new string[] { key, token };
+            //byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            //string sessionKey = Convert.ToBase64String(bytes);
 
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(sessionKey)}&lang={TpLangId}";
+            oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(key)}&lang={TpLangId}";
             return oApiResult;
         }
 

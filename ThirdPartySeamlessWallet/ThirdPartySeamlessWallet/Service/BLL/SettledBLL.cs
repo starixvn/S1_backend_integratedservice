@@ -1257,5 +1257,45 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region Iconic
+
+        public int CancelBetRNG_Iconic(BettingDataRNG_Iconic bettingDataRNG_Iconic, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataRNG_Iconic.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Iconic, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_Iconic.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetRNG_Iconic(tpCustInfo, bettingDataRNG_Iconic, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PayoutRNG_Iconic(BettingDataRNG_Iconic bettingDataRNG_Iconic, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataRNG_Iconic.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Iconic, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_Iconic.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_Iconic(tpCustInfo, bettingDataRNG_Iconic, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
     }
 }

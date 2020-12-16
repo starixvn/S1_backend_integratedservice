@@ -1678,5 +1678,213 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region Iconic
+
+        public int CancelBetRNG_Iconic(TpCustInfo tpCustInfo, BettingDataRNG_Iconic bettingDataRNG_Iconic, int gameType, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    transactionId = bettingDataRNG_Iconic.transactionId,
+                    username = bettingDataRNG_Iconic.username,
+                    roundId = bettingDataRNG_Iconic.roundId,
+                    gameId = bettingDataRNG_Iconic.gameId,
+                    productId = bettingDataRNG_Iconic.productId,
+                    amount = bettingDataRNG_Iconic.amount,
+                    roundCreatedAt = bettingDataRNG_Iconic.roundCreatedAt,
+                    roundUpdatedAt = bettingDataRNG_Iconic.roundUpdatedAt,
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = 1
+                });
+
+                bool cash = false;
+                var category = TpCategory.Slots;
+                if (gameType == (int)GameType.Iconic_RNG)
+                {
+                    result = conn.Execute("Service_BettransRng_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    cash = true;
+                    category = TpCategory.Fish;
+                    result = conn.Execute("Service_BettransFish_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (bettingDataRNG_Iconic.amount != 0)
+                    {
+                        if (cash == false)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                bettingDataRNG_Iconic.amount,
+                                (int)Tp.Iconic,
+                                bettingDataRNG_Iconic.transactionId.ToString(),
+                                gameType,
+                                category,
+                                bettingDataRNG_Iconic.transactionId.ToString(),
+                                TransType.Refunds,
+                                null,
+                                out afterAmount,
+                                "Cancel",
+                                out bonusId,
+                                conn,
+                                trans
+                            );
+                        }
+                        else
+                        {
+                            result = walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                Math.Abs(bettingDataRNG_Iconic.amount),
+                                gameType,
+                                TransType.Refunds,
+                                $"Cancel: {Math.Abs(bettingDataRNG_Iconic.amount):#,##0.##}",
+                                bettingDataRNG_Iconic.transactionId.ToString(),
+                                out afterAmount,
+                                conn,
+                                trans
+                            );
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int PayoutRNG_Iconic(TpCustInfo tpCustInfo, BettingDataRNG_Iconic bettingDataRNG_Iconic, int gameType, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    transactionId = bettingDataRNG_Iconic.transactionId,
+                    username = bettingDataRNG_Iconic.username,
+                    roundId = bettingDataRNG_Iconic.roundId,
+                    gameId = bettingDataRNG_Iconic.gameId,
+                    productId = bettingDataRNG_Iconic.productId,
+                    amount = bettingDataRNG_Iconic.amount,
+                    roundCreatedAt = bettingDataRNG_Iconic.roundCreatedAt,
+                    roundUpdatedAt = bettingDataRNG_Iconic.roundUpdatedAt,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = bettingDataRNG_Iconic.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost,
+                    SettleFlag = 2
+                });
+
+                bool cash = false;
+                var category = TpCategory.Slots;
+                if (gameType == (int)GameType.Iconic_RNG)
+                {
+                    result = conn.Execute("Service_BettransRng_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    cash = true;
+                    category = TpCategory.Fish;
+                    result = conn.Execute("Service_BettransFish_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (bettingDataRNG_Iconic.amount != 0)
+                    {
+                        if (cash == false)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                bettingDataRNG_Iconic.amount,
+                                (int)Tp.Iconic,
+                                bettingDataRNG_Iconic.transactionId.ToString(),
+                                gameType,
+                                category,
+                                bettingDataRNG_Iconic.transactionId.ToString(),
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                "Cancel",
+                                out bonusId,
+                                conn,
+                                trans
+                            );
+                        }
+                        else
+                        {
+                            result = walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                Math.Abs(bettingDataRNG_Iconic.amount),
+                                gameType,
+                                TransType.Payout,
+                                $"Cancel: {Math.Abs(bettingDataRNG_Iconic.amount):#,##0.##}",
+                                bettingDataRNG_Iconic.transactionId.ToString(),
+                                out afterAmount,
+                                conn,
+                                trans
+                            );
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+
+        #endregion
+
     }
 }

@@ -360,5 +360,101 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int PlaceBetRNG_Iconic(TpCustInfo tpCustInfo, BettingDataRNG_Iconic bettingDataRNG_Iconic, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                transactionId = bettingDataRNG_Iconic.transactionId,
+                username = bettingDataRNG_Iconic.username,
+                roundId = bettingDataRNG_Iconic.roundId,
+                gameId = bettingDataRNG_Iconic.gameId,
+                productId = bettingDataRNG_Iconic.productId,
+                amount = bettingDataRNG_Iconic.amount,
+                roundCreatedAt = bettingDataRNG_Iconic.roundCreatedAt,
+                roundUpdatedAt = bettingDataRNG_Iconic.roundUpdatedAt,
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 0
+            });
+            try
+            {
+                bool cash = false;
+                var category = TpCategory.Slots;
+                if (gameType == (int)GameType.Iconic_RNG)
+                {
+                    result = conn.Execute("Service_BettransRng_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    cash = true;
+                    category = TpCategory.Fish;
+                    result = conn.Execute("Service_BettransFish_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+
+                if (result > 0 && bettingDataRNG_Iconic.amount != 0)
+                {
+                    if (cash == false)
+                    {
+                        result = PlaceBetV2(
+                            tpCustInfo,
+                            bettingDataRNG_Iconic.amount,
+                            (int)Tp.Iconic,
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            gameType,
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            null,
+                            category,
+                            out afterAmount,
+                            ref bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+                    else
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            bettingDataRNG_Iconic.amount,
+                            gameType,
+                            TransType.Wagers,
+                            $"Stake: {Math.Abs(bettingDataRNG_Iconic.amount):#,##0.##}",
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
     }
 }
