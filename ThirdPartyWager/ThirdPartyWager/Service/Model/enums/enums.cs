@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Service.Model.enums
         CF = 17,
         WM = 20,
         Kiss918 = 21,
+        Mega = 22,
         One789 = 23
     }
 

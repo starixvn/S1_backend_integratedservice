@@ -38,5 +38,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = conn.Execute("Service_CustGotoGameType_Get", p, commandType: CommandType.StoredProcedure);
             return p.Get<int>("GameType");
         }
+        public int SetTpPwd(int tpId, string tpUserName, string tpPwd)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_TpPwd_Set", new { TpId = tpId, TpUserName = tpUserName, TpPwd = tpPwd }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

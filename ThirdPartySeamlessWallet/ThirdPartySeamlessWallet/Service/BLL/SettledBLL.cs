@@ -1243,5 +1243,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region Mega
+
+        public IEnumerable<SettleData_Mega> GetUnsettledList_Mega()
+        {
+            return settledService.GetUnsettledList_Mega();
+        }
+
+        public int SetSettleFlag_TpWagerMega(long TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerMega(TransId);
+        }
+
+        #endregion
     }
 }
