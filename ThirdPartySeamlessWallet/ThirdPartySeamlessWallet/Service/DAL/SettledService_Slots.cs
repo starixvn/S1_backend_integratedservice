@@ -1678,5 +1678,289 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region Iconic
+
+        public int CancelBetRNG_Iconic(TpCustInfo tpCustInfo, BettingDataRNG_Iconic bettingDataRNG_Iconic, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    transactionId = bettingDataRNG_Iconic.transactionId,
+                    amount = bettingDataRNG_Iconic.amount,
+                    UpdateUnix = new DateTimeOffset(bettingDataRNG_Iconic.roundUpdatedAt).ToUnixTimeSeconds(),
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = 1
+                });
+
+                var category = TpCategory.Slots;
+                var gameType = (int)GameType.Iconic_RNG;
+                result = conn.Execute("Service_BettransRng_Iconic_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (bettingDataRNG_Iconic.amount != 0)
+                    {
+
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_Iconic.amount,
+                            (int)Tp.Iconic,
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            gameType,
+                            category,
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Cancel",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int PayoutRNG_Iconic(TpCustInfo tpCustInfo, BettingDataRNG_Iconic bettingDataRNG_Iconic, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    transactionId = bettingDataRNG_Iconic.transactionId,
+                    payout = bettingDataRNG_Iconic.amount,
+                    UpdateUnix = new DateTimeOffset(bettingDataRNG_Iconic.roundUpdatedAt).ToUnixTimeSeconds(),
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = bettingDataRNG_Iconic.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost,
+                    SettleFlag = 2
+                });
+
+                var category = TpCategory.Slots;
+                var gameType = (int)GameType.Iconic_RNG;
+                result = conn.Execute("Service_BettransRng_Iconic_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (bettingDataRNG_Iconic.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_Iconic.amount,
+                            (int)Tp.Iconic,
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            gameType,
+                            category,
+                            bettingDataRNG_Iconic.transactionId.ToString(),
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleDataRng_Iconic> GetUnsettledListRng_Iconic()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleDataRng_Iconic>("Service_BettransRng_Iconic_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_BettransRng_Iconic(long transactionId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransRng_Iconic_Settle_Set", new { transactionId = transactionId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int CancelBetFish_Iconic(TpCustInfo tpCustInfo, BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    transactionId = bettingDataFish_Iconic.transactionId,
+                    amount = bettingDataFish_Iconic.amount,
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = 1
+                });
+
+                var gameType = (int)GameType.Iconic_Fish;
+                result = conn.Execute("Service_BettransFish_Iconic_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataFish_Iconic.amount != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            Math.Abs(bettingDataFish_Iconic.amount),
+                            gameType,
+                            TransType.Refunds,
+                            $"Cancel: {Math.Abs(bettingDataFish_Iconic.amount):#,##0.##}",
+                            bettingDataFish_Iconic.transactionId.ToString(),
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+        
+        public int PayoutFish_Iconic(TpCustInfo tpCustInfo, BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    transactionId = bettingDataFish_Iconic.transactionId,
+                    username = bettingDataFish_Iconic.username,
+                    amount = bettingDataFish_Iconic.amount,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = bettingDataFish_Iconic.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost,
+                    SettleFlag = 2
+                });
+
+
+                var gameType = (int)GameType.Iconic_Fish;
+                result = conn.Execute("Service_BettransFish_Iconic_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataFish_Iconic.amount != 0)
+                    {
+
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            Math.Abs(bettingDataFish_Iconic.amount),
+                            gameType,
+                            TransType.Payout,
+                            $"Payout: {Math.Abs(bettingDataFish_Iconic.amount):#,##0.##}",
+                            bettingDataFish_Iconic.transactionId.ToString(),
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleDataFish_Iconic> GetUnsettledListFish_Iconic()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleDataFish_Iconic>("Service_TpWagerFish_Iconic_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerFish_Iconic(string transactionId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerFish_Iconic_Settle_Set", new { transactionId = transactionId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
+
     }
 }

@@ -19,6 +19,7 @@
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
     <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
+    <ProjectReference Include="..\ThirdParty.Iconic\ThirdParty.Iconic.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
     <ProjectReference Include="..\ThirdParty.One789\ThirdParty.One789.csproj" />

@@ -63,7 +63,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Mega_RNG = 34,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
-        One789_LiveCasino = 37
+        One789_LiveCasino = 37,
+        Iconic_RNG = 39,
+        Iconic_Fish = 40
     }
     public enum Tp
     {
@@ -88,7 +90,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
-        One789 = 23
+        One789 = 23,
+        Iconic = 24
     }
     public enum TransferType : int
     {

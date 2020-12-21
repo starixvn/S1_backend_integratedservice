@@ -25,7 +25,8 @@ namespace ThirdPartyWager.Service.Model.enums
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
-        One789 = 23
+        One789 = 23,
+        Iconic = 24
     }
 
     public enum GameType

@@ -289,5 +289,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int PlaceBetRNG_Iconic(BettingDataRNG_Iconic bettingDataRNG_Iconic, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataRNG_Iconic.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Iconic, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_Iconic.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_Iconic(tpCustInfo, bettingDataRNG_Iconic, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PlaceBetFish_Iconic(BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataFish_Iconic.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Iconic, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Iconic.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetFish_Iconic(tpCustInfo, bettingDataFish_Iconic, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
     }
 }

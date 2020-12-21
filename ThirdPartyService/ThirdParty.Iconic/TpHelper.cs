@@ -1,0 +1,141 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Web;
+using ThirdPartyCore;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+
+namespace ThirdParty.Iconic
+{
+    public class TpHelper : ThirdPartyHelperBase
+    {
+
+        private class ApiErrorResponse
+        {
+            public Error error { get; set; }
+        }
+
+        private class Error
+        {
+            public int status { get; set; }
+            public string message { get; set; }
+            public string ip { get; set; }
+        }
+
+        private class SignupResult
+        {
+            public Signup data { get; set; }
+
+        }
+
+        private class Signup
+        {
+            public string username { get; set; }
+
+        }
+
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            string currency = tpCustInfo.TpCurrencyId;
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            string password = inputs.ContainsKey("password") && !string.IsNullOrEmpty(inputs["password"]) ? inputs["password"] : throw new Exception("password");
+            string token = inputs.ContainsKey($"token_{currency}") && !string.IsNullOrEmpty(inputs[$"token_{currency}"]) ? inputs[$"token_{currency}"] : throw new Exception($"token_{currency}");
+
+            var SignupUrl = $"{ApiUrl}/api/v1/players";
+
+            ApiResult oApiResult = new ApiResult();
+            oApiResult.RawMessage = "No Result";
+            oApiResult.RawErrorCode = "1";
+            oApiResult.ErrorCode = ErrorCode.Fail;
+
+            var param = new
+            {
+                username = tpCustInfo.TpUserName
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            Dictionary<string, string> header = new Dictionary<string, string>();
+            header.Add("Authorization", $"Bearer {token}");
+
+            var result = HttpPost(
+                SignupUrl,
+                JsonConvert.SerializeObject(param),
+                "application/json",
+                header
+            );
+
+            if (IsJSON(result))
+            {
+                var err = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                if (err.error != null)
+                {
+                    oApiResult.RawMessage = err.error.message;
+                    oApiResult.RawErrorCode = err.error.status.ToString();
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+                else
+                {
+                    var succ = JsonConvert.DeserializeObject<SignupResult>(result);
+                    if (succ.data.username == tpCustInfo.TpUserName)
+                    {
+                        oApiResult.RawMessage = "";
+                        oApiResult.RawErrorCode = "";
+                        oApiResult.ErrorCode = ErrorCode.Success;
+                    }
+                }
+            }
+
+            return oApiResult;
+        }
+
+        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        {
+            string currency = tpCustInfo.TpCurrencyId;
+            string platformId = inputs.ContainsKey($"platform_{currency}") && !string.IsNullOrEmpty(inputs[$"platform_{currency}"]) ? inputs[$"platform_{currency}"] : throw new Exception($"platform_{currency}");
+            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
+            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+
+            ApiResult oApiResult = new ApiResult();
+
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{FunGameUrl}/{gameId}?language={TpLangId}&openExternalBrowser=1";
+            }
+            else
+            {
+                var key = ApplyToken(tpCustInfo);
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(key)}&lang={TpLangId}";
+            }
+            return oApiResult;
+        }
+
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
