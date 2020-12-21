@@ -37,6 +37,18 @@ namespace ThirdPartyWager.Service.BLL
             return setting;
         }
 
+        public int SetThirdPartySetting(int tpId, Dictionary<string, string> setting)
+        {
+            string key = $"Setting_{tpId}";
+            var result = thirdPartyHelper.SetThirdPartySetting(tpId, JsonConvert.SerializeObject(setting));
+            if (result > 0)
+            {
+                cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+            }
+
+            return result;
+        }
+
         public ThirdPartyTimerModel GetThirdPartyTimer(int tpId, int type)
         {
             var dataTpTimer = thirdPartyHelper.GetThirdPartyTimer(tpId, type);

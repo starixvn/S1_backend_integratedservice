@@ -211,8 +211,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     GetApiResp getBalanceResp = new GetApiResp();
                     getBalanceResp.data.statusCode = 0;
                     getBalanceResp.data.username = tpCustInfoAuth.TpUserName;
-                    getBalanceResp.data.balance = tpCustBalance.Balance;
-                    getBalanceResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpCustBalance.Balance).ToLower();
+                    getBalanceResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                    getBalanceResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpCustBalance.Balance)).ToLower();
                     log2File.Info($"token={token}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                     return getBalanceResp;
                 }
@@ -292,8 +292,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.OK;
                         getBetResp.data.statusCode = 0;
                         getBetResp.data.username = tpCustInfoAuth.TpUserName;
-                        getBetResp.data.balance = tpAffterAmount;
-                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpAffterAmount).ToLower();
+                        getBetResp.data.balance = Math.Truncate(tpAffterAmount);
+                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpAffterAmount)).ToLower();
                         log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                         return getBetResp;
                     }
@@ -303,8 +303,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.OK;
                         getBetResp.data.statusCode = 0;
                         getBetResp.data.username = tpCustInfoAuth.TpUserName;
-                        getBetResp.data.balance = tpCustBalance.Balance;
-                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpCustBalance.Balance).ToLower();
+                        getBetResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpCustBalance.Balance)).ToLower();
                         log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                         return getBetResp;
                     }
@@ -314,8 +314,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.INVALID_DATA;
                         getBetResp.data.statusCode = 2;
                         getBetResp.data.username = tpCustInfoAuth.TpUserName;
-                        getBetResp.data.balance = tpAffterAmount;
-                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpAffterAmount).ToLower();
+                        getBetResp.data.balance = Math.Truncate(tpAffterAmount);
+                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpAffterAmount)).ToLower();
                         getBetResp.error.title = "Not Enough Balance";
                         getBetResp.error.description = "Not Enough Balance";
                         log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
@@ -383,8 +383,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     GetApiResp getCancelBetResp = new GetApiResp();
                     getCancelBetResp.data.statusCode = 0;
                     getCancelBetResp.data.username = tpCustInfoAuth.TpUserName;
-                    getCancelBetResp.data.balance = tpCustBalance.Balance;
-                    getCancelBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpCustBalance.Balance).ToLower();
+                    getCancelBetResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                    getCancelBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpCustBalance.Balance)).ToLower();
                     log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getCancelBetResp)}", logName);
                     return getCancelBetResp;
                 }
@@ -444,8 +444,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Response.StatusCode = (int)Error.OK;
                     getPayoutResp.data.statusCode = 0;
                     getPayoutResp.data.username = tpCustInfoAuth.TpUserName;
-                    getPayoutResp.data.balance = tpCustBalance.Balance;
-                    getPayoutResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpCustBalance.Balance).ToLower();
+                    getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                    getPayoutResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpCustBalance.Balance)).ToLower();
                     log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                     return getPayoutResp;
                 }
@@ -526,8 +526,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.OK;
                         getBetResp.data.statusCode = 0;
                         getBetResp.data.username = tpCustInfoAuth.TpUserName;
-                        getBetResp.data.balance = tpAffterAmount;
-                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpAffterAmount).ToLower();
+                        getBetResp.data.balance = Math.Truncate(tpAffterAmount);
+                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpAffterAmount)).ToLower();
                         log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                         return getBetResp;
                     }
@@ -537,8 +537,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.OK;
                         getBetResp.data.statusCode = 0;
                         getBetResp.data.username = tpCustInfoAuth.TpUserName;
-                        getBetResp.data.balance = tpCustBalance.Balance;
-                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpCustBalance.Balance).ToLower();
+                        getBetResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpCustBalance.Balance)).ToLower();
                         log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                         return getBetResp;
                     }
@@ -548,8 +548,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.INVALID_DATA;
                         getBetResp.data.statusCode = 2;
                         getBetResp.data.username = tpCustInfoAuth.TpUserName;
-                        getBetResp.data.balance = tpAffterAmount;
-                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpAffterAmount).ToLower();
+                        getBetResp.data.balance = Math.Truncate(tpAffterAmount);
+                        getBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpAffterAmount)).ToLower();
                         getBetResp.error.title = "Not Enough Balance";
                         getBetResp.error.description = "Not Enough Balance";
                         log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
@@ -617,8 +617,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     GetApiResp getCancelBetResp = new GetApiResp();
                     getCancelBetResp.data.statusCode = 0;
                     getCancelBetResp.data.username = tpCustInfoAuth.TpUserName;
-                    getCancelBetResp.data.balance = tpAffterAmount;
-                    getCancelBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpAffterAmount).ToLower();
+                    getCancelBetResp.data.balance = Math.Truncate(tpAffterAmount);
+                    getCancelBetResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpAffterAmount)).ToLower();
                     log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getCancelBetResp)}", logName);
                     return getCancelBetResp;
                 }
@@ -677,8 +677,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Response.StatusCode = (int)Error.OK;
                     getPayoutResp.data.statusCode = 0;
                     getPayoutResp.data.username = tpCustInfoAuth.TpUserName;
-                    getPayoutResp.data.balance = tpAffterAmount;
-                    getPayoutResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpAffterAmount).ToLower();
+                    getPayoutResp.data.balance = Math.Truncate(tpAffterAmount);
+                    getPayoutResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpAffterAmount)).ToLower();
                     log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                     return getPayoutResp;
                 }
@@ -688,8 +688,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Response.StatusCode = (int)Error.OK;
                     getPayoutResp.data.statusCode = 0;
                     getPayoutResp.data.username = tpCustInfoAuth.TpUserName;
-                    getPayoutResp.data.balance = tpCustBalance.Balance;
-                    getPayoutResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + tpCustBalance.Balance).ToLower();
+                    getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                    getPayoutResp.data.hash = tools.ToMD5(thirdPartySetting.TpSetting["secure_code"] + tpCustInfoAuth.TpUserName + Math.Truncate(tpCustBalance.Balance)).ToLower();
                     log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                     return getPayoutResp;
                 }

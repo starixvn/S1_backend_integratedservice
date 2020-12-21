@@ -27,4 +27,24 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string hash { get; set; }
         public string username { get; set; }
     }
+
+    public class SettleDataRng_Iconic
+    {
+        public long transactionId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public string Account { get; set; }
+        public long SettleTime { get; set; }
+    }
+
+    public class SettleDataFish_Iconic
+    {
+        public string transactionId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public string Account { get; set; }
+        public long SettleTime { get; set; }
+    }
 }

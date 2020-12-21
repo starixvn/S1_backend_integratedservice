@@ -26,6 +26,12 @@ namespace ThirdPartyWager.Service.DAL
             return conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
 
+        public int SetThirdPartySetting(int tpId, string setting)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
+            return conn.Execute("Tp_Set", new { TpId = tpId, Setting = setting }, commandType: CommandType.StoredProcedure);
+        }
+
         public ThirdPartyTimerModel GetThirdPartyTimer(int tpId, int type)
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));

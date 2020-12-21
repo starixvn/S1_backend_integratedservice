@@ -168,6 +168,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     {
                         gameType = GameType.Iconic_Fish;
                     }
+                    else if (gameId.StartsWith("cmt", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.Iconic_Fish;
+                    }
                     else if (gameId.StartsWith("cm", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = GameType.Iconic_RNG;

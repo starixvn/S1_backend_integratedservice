@@ -1296,6 +1296,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleDataRng_Iconic> GetUnsettledListRng_Iconic()
+        {
+            return settledService.GetUnsettledListRng_Iconic();
+        }
+
+        public int SetSettleFlag_BettransRng_Iconic(long transactionId)
+        {
+            return settledService.SetSettleFlag_BettransRng_Iconic(transactionId);
+        }
+
         public int CancelBetFish_Iconic(BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataFish_Iconic.username);
@@ -1330,6 +1340,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
+        }
+
+        public IEnumerable<SettleDataFish_Iconic> GetUnsettledListFish_Iconic()
+        {
+            return settledService.GetUnsettledListFish_Iconic();
+        }
+
+        public int SetSettleFlag_TpWagerFish_Iconic(string transactionId)
+        {
+            return settledService.SetSettleFlag_TpWagerFish_Iconic(transactionId);
         }
 
         #endregion
