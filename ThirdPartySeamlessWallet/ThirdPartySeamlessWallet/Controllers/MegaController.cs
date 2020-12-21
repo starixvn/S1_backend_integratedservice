@@ -131,8 +131,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
 
-                var result = tpCustInfoBLL.SetTpPwd((int)thisTp, getLoginReq.Params.loginId, getLoginReq.Params.password);
-                if (result >= 0)
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
+
+                if (tpCustInfo.TpPwd == getLoginReq.Params.password)
                 {
                     resp.result.success = "1";
                     resp.result.sessionId = tpCheck.Token;

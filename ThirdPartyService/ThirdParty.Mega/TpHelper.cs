@@ -86,12 +86,10 @@ namespace ThirdParty.Mega
 
             var uuid = Guid.NewGuid();
 
-            string sign = uuid + sn + secretCode;
-
-            long bizId = 0;
+            string sign = $"{uuid}{sn}{secretCode}";
 
             Match m = Regex.Match(TransID, @"\d+");
-            long.TryParse(m.Value, out bizId);
+            long.TryParse(m.Value, out long bizId);
 
             if (TransID.StartsWith("td", StringComparison.OrdinalIgnoreCase))
             {
@@ -171,7 +169,7 @@ namespace ThirdParty.Mega
 
             var uuid = Guid.NewGuid();
 
-            string sign = uuid + sn + secretCode;
+            string sign = $"{uuid}{sn}{secretCode}";
 
             var SignUp = new
             {
@@ -234,7 +232,7 @@ namespace ThirdParty.Mega
 
             var uuid = Guid.NewGuid();
 
-            string sign = uuid + sn + tpCustInfo.TpUserName + secretCode;
+            string sign = $"{uuid}{sn}{tpCustInfo.TpUserName}{secretCode}";
 
             var Balance = new
             {
@@ -323,7 +321,7 @@ namespace ThirdParty.Mega
 
             var uuid = Guid.NewGuid();
 
-            string sign = uuid + sn + tpCustInfo.TpUserName + Amount + secretCode;
+            string sign = $"{uuid}{sn}{tpCustInfo.TpUserName}{Amount}{secretCode}";
 
             long bizId = 0;
 
