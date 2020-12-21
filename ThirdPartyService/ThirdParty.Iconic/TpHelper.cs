@@ -113,14 +113,23 @@ namespace ThirdParty.Iconic
             string currency = tpCustInfo.TpCurrencyId;
             string platformId = inputs.ContainsKey($"platform_{currency}") && !string.IsNullOrEmpty(inputs[$"platform_{currency}"]) ? inputs[$"platform_{currency}"] : throw new Exception($"platform_{currency}");
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
+            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
-            var key = ApplyToken(tpCustInfo);
-
             ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(key)}&lang={TpLangId}";
+
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{FunGameUrl}/{gameId}?language={TpLangId}&openExternalBrowser=1";
+            }
+            else
+            {
+                var key = ApplyToken(tpCustInfo);
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(key)}&lang={TpLangId}";
+            }
             return oApiResult;
         }
 
