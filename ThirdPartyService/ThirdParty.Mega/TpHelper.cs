@@ -293,16 +293,16 @@ namespace ThirdParty.Mega
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            ApiResult<dynamic> oApiResult = new ApiResult<dynamic>
+            ApiResult oApiResult = new ApiResult
             {
                 ErrorCode = ErrorCode.Success,
+                Message = JsonConvert.SerializeObject(new
+                {
+                    account = tpCustInfo.TpUserName,
+                    password = tpCustInfo.TpPwd
+                })
+            };
 
-            };
-            oApiResult.Data = new
-            {
-                account = tpCustInfo.TpUserName,
-                password = tpCustInfo.TpPwd
-            };
             return oApiResult;
         }
 
