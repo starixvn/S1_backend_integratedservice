@@ -24,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int Payout_CF(PayoutData_CF payoutData_CF, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, payoutData_CF.login_id);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.CF, payoutData_CF.login_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CF, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int Settled_CF(SettleData_CF settleData_CF, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, settleData_CF.login_id);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.CF, settleData_CF.login_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CF, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -73,7 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             foreach (var item in payoutCF_AWC.txns)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
 
@@ -92,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             foreach (var item in unPayoutCF_AWC.txns)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
 
@@ -109,7 +109,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             foreach (var item in voidSettleCF_AWC.txns)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
 
@@ -126,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             foreach (var item in unVoidSettleCF_AWC.txns)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
             }
@@ -136,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int RefundCF_AWC(RefundCF_AWC refundCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, refundCF_AWC.txns.ElementAt(0).userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, refundCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
 
             foreach (var item in refundCF_AWC.txns)
@@ -168,7 +168,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PayoutLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.One789, bettingDataLT_One789.Username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -188,7 +188,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int RefundLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.One789, bettingDataLT_One789.Username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int ResettleLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.One789, bettingDataLT_One789.Username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)

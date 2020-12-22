@@ -196,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, tpCustInfoAuth.TpUserName);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
                 if (tpCustBalance != null)
                 {

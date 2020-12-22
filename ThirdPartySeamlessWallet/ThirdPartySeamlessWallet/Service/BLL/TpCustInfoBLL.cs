@@ -42,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustBalance GetBalance(int tpId, string tpUserName, int gameType = 0)
         {
             var tpCustBalance = new TpCustBalance();
-            var tpCustInfo = GetTpCustInfo(tpId, tpUserName);
+            var tpCustInfo = GetTpCustInfoWithCache(tpId, tpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
             var balance = walletService.GetBalance(tpCustInfo.CustId);
             var bonusCategoryId = thirdPartyBLL.GetBonusCategoryId(gameType);
@@ -59,19 +59,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             tpCustBalance.TpCurrencyId = tpCurrency.TpCurrencyId;
             return tpCustBalance;
         }
-        public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             string key = $"TpCustInfo_{tpId}_{tpUserName}";
             var tpCustInfo = cache.Get<TpCustInfo>(key);
             if (tpCustInfo == null)
             {
-                tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
+                tpCustInfo = GetTpCustInfo(tpId, tpUserName);
                 if (tpCustInfo != null)
                 {
                     cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
                 }
             }
 
+            return tpCustInfo;
+        }
+        public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
+        {
+            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
             return tpCustInfo;
         }
         public int SetCustGotoGame(int custId, int tpId, int gameType)

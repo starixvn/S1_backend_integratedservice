@@ -130,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, transferReq.Client);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, transferReq.Client);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)thisTp, tpCustInfo.CurrencyId);
 
             if (!(tpCurrency.TpCurrencyId.Equals(transferReq.Currency, StringComparison.OrdinalIgnoreCase) || (environment.IsDevelopment() && transferReq.Currency.Equals("CNY", StringComparison.OrdinalIgnoreCase))))
@@ -477,7 +477,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, transferReq.Client);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, transferReq.Client);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)thisTp, tpCustInfo.CurrencyId);
 
             if (!(tpCurrency.TpCurrencyId.Equals(transferReq.Currency, StringComparison.OrdinalIgnoreCase) || (environment.IsDevelopment() && transferReq.Currency.Equals("CNY", StringComparison.OrdinalIgnoreCase))))

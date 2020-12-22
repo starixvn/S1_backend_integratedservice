@@ -115,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     {
                                         string username = unsettled.Playname.Substring(unsettled.AgentCode.Length);
 
-                                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AG, username);
+                                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AG, username);
                                         var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AG, tpCustInfo.CurrencyId);
 
                                         if (tpCurrency.ExchangeRate > 1)
@@ -211,7 +211,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             if (result > 0)
                             {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.Username);
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Username);
                                 var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
 
                                 if (tpCurrency.ExchangeRate > 1)
@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             if (result > 0)
                             {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.Client);
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Client);
                                 var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
 
                                 if (tpCurrency.ExchangeRate > 1)
@@ -377,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             if (result > 0)
                             {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.username);
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.username);
                                 var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
 
                                 if (tpCurrency.ExchangeRate > 1)
@@ -456,7 +456,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, unsettled.username);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.username);
 
                             decimal stake = unsettled.totalBet;
                             decimal validBet = unsettled.validBet;
@@ -532,7 +532,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             try
                             {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, wager.Account);
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, wager.Account);
                                 var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
                                 if (tpCurrency.ExchangeRate > 1)
                                 {
@@ -615,7 +615,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             try
                             {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo(thisTp, wager.Account);
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, wager.Account);
                                 var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
                                 if (tpCurrency.ExchangeRate > 1)
                                 {

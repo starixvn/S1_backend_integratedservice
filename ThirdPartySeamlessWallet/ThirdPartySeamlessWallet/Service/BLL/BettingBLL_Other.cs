@@ -14,7 +14,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBet_CF(BettingData_CF bettingData_CF, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, bettingData_CF.login_id);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.CF, bettingData_CF.login_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CF, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             int result = 0;
             if (betrecord != null)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CF, betrecord.login_id);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.CF, betrecord.login_id);
                 result = bettingService.CancelBet_CF(tpCustInfo, cancelBetData_CF);
             }
             else
@@ -54,7 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetCF_AWC(BetCF_AWC betCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, betCF_AWC.txns.ElementAt(0).userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, betCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
             foreach (var item in betCF_AWC.txns)
             {
@@ -75,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int CancelBetCF_AWC(CancelCF_AWC cancelCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, cancelCF_AWC.txns.ElementAt(0).userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, cancelCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
 
             var result = bettingService.CancelBetCF_AWC(tpCustInfo, cancelCF_AWC, out afterAmount);
@@ -88,7 +88,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int AdjustBetCF_AWC(AdjustBetCF_AWC adjustBetCF_AWC, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, adjustBetCF_AWC.txns.ElementAt(0).userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, adjustBetCF_AWC.txns.ElementAt(0).userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
 
             foreach (var item in adjustBetCF_AWC.txns)
@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             foreach (var item in voidBetCF_AWC.txns)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
 
@@ -130,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             foreach (var item in unVoidBetCF_AWC.txns)
             {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AWC, item.userId);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
                 item.tpCustInfo = tpCustInfo;
             }
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetLT_One789(BettingDataLT_One789 bettingDataLT_One789, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.One789, bettingDataLT_One789.Username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.One789, bettingDataLT_One789.Username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.One789, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)

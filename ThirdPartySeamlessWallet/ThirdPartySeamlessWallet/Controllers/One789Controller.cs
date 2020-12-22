@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, username);
             var gameType = thirdPartyBLL.GetGameType((int)thisTp, $"{production}_");
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, username, (int)gameType);
             if (tpCustBalance != null)

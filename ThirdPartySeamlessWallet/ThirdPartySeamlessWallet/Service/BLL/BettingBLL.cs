@@ -24,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int PlaceBetLC_AG(BettingDataLC_AG bettingDataLC_AG, out decimal afterAmount)
         {
             string username = bettingDataLC_AG.Playname.Substring(bettingDataLC_AG.AgentCode.Length);
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.AG, username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AG, username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AG, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -42,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SA, bettingDataLC_SA.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.SA, bettingDataLC_SA.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SA, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -59,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetLC_DG(BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.DG, bettingDataLC_DG.Username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.DG, bettingDataLC_DG.Username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.DG, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -76,7 +76,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetRNG_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -96,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetRNG_Joker(BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Joker, bettingDataRNG_Joker.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataRNG_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -115,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.YGG, bettingDataRNG_YGG.playerid);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -134,7 +134,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetRNG_SG(BettingDataRNG_SG bettingDataRNG_SG, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.SG, bettingDataRNG_SG.acctId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.SG, bettingDataRNG_SG.acctId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SG, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -151,7 +151,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.PP, bettingDataRNG_PP.userId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -168,7 +168,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Allbet, bettingDataLC_Allbet.Client);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Allbet, bettingDataLC_Allbet.Client);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -194,7 +194,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetRNG_PG(BettingDataRNG_PG bettingDataRNG_PG, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.PG, bettingDataRNG_PG.PlayerName);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, bettingDataRNG_PG.PlayerName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -211,7 +211,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetLC_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Sexy, bettingDataLC_Sexy_Bet.UserId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, bettingDataLC_Sexy_Bet.UserId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -232,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.EBet, bettingData_EBet.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.EBet, bettingData_EBet.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -256,7 +256,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetRNG_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.CQ9, bettingDataRNG_CQ9.account);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -274,7 +274,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetLC_WM(BettingDataLC_WM bettingDataLC_WM, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.WM, bettingDataLC_WM.user);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.WM, bettingDataLC_WM.user);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.WM, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -292,7 +292,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetRNG_Iconic(BettingDataRNG_Iconic bettingDataRNG_Iconic, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataRNG_Iconic.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Iconic, bettingDataRNG_Iconic.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Iconic, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -310,7 +310,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetFish_Iconic(BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.Iconic, bettingDataFish_Iconic.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Iconic, bettingDataFish_Iconic.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Iconic, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
