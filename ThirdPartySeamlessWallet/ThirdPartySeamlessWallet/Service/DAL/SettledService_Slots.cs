@@ -1651,7 +1651,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
@@ -1667,7 +1667,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_Mega> GetUnsettledList_Mega()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Query<SettleData_Mega>("Service_TpWagerMega_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
