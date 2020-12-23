@@ -1104,7 +1104,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                long transferTime = tools.ConvertLocTime(sexy_Treat.transferTime, 8);
+
+                DateTime _transferTime = DateTime.ParseExact(sexy_Treat.transferTime, "dd-MM-yyyy HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
+                long transferTime = tools.ConvertLocTime(_transferTime, 8);
 
                 try
                 {

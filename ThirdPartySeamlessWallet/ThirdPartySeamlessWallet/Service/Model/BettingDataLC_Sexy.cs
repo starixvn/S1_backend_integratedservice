@@ -182,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string userId { get; set; }
         public string txId { get; set; }
         public string remark { get; set; }
-        public DateTime transferTime { get; set; }
+        public string transferTime { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }
 }
