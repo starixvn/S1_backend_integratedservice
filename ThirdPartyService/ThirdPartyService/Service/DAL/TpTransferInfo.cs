@@ -114,7 +114,7 @@ namespace ThirdPartyService.Service.DAL
                         if (res > 0)
                         {
                             decimal rollover = p.Get<decimal>("WithdrawalLimit");
-                            conn.Execute("Service_BonusAmount_Set", new { BonusId = bonusId, LockedAmount = tpTransfer.Amount, Rollover = rollover }, trans, commandType: CommandType.StoredProcedure);
+                            conn.Execute("Service_BonusAmount_Set", new { BonusId = bonusId, LockedAmount = tpTransfer.Amount, Rollover = Math.Abs(rollover) }, trans, commandType: CommandType.StoredProcedure);
                         }
                     }
                 }
