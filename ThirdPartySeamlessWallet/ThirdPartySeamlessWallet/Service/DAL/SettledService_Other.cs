@@ -926,5 +926,176 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region OneGaming
+
+        public int PayoutPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            var transactionId = bettingDataPK_OneGaming.transaction_id;
+            var ticketStatus = (int)TicketStatus.UnSettled;
+            var settleFlag = 2;
+            if (!string.IsNullOrEmpty(bettingDataPK_OneGaming.ref_tx_id) && string.Equals(bettingDataPK_OneGaming.game_key, "Refund", StringComparison.OrdinalIgnoreCase))
+            {
+                transactionId = bettingDataPK_OneGaming.ref_tx_id;
+                ticketStatus = (int)TicketStatus.Refund;
+                settleFlag = 1;
+            }
+
+            var p = new DynamicParameters(new
+            {
+                amount = bettingDataPK_OneGaming.amount,
+                transaction_id = transactionId,
+                game_key = bettingDataPK_OneGaming.game_key,
+                game_name = bettingDataPK_OneGaming.game_name,
+                bcode = bettingDataPK_OneGaming.bcode,
+                player_id = bettingDataPK_OneGaming.player_id,
+                ref_tx_id = bettingDataPK_OneGaming.ref_tx_id,
+                dateUnix = bettingDataPK_OneGaming.dateUnix,
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = ticketStatus,
+                SettleFlag = settleFlag
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransPK_OneGaming_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataPK_OneGaming.amount != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            Math.Abs(bettingDataPK_OneGaming.amount),
+                            (int)GameType.OneGaming_Poker,
+                            TransType.Payout,
+                            $"Payout: {Math.Abs(bettingDataPK_OneGaming.amount):#,##0.##}",
+                            transactionId,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int RefundPK_OneGaming(TpCustInfo tpCustInfo, RefundDataPK_OneGaming refundDataPK_OneGaming, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            var transactionId = refundDataPK_OneGaming.transaction_id.Replace("TimeOut_", "");
+            var p = new DynamicParameters(new
+            {
+                transaction_id = transactionId,
+                type = refundDataPK_OneGaming.type,
+                dateUnix = refundDataPK_OneGaming.dateUnix,
+                TicketStatus = (int)TicketStatus.Refund,
+                SettleFlag = 1
+            });
+            var amount = Math.Abs(refundDataPK_OneGaming.amount);
+            if (string.Equals(refundDataPK_OneGaming.type, "MoneyIn", StringComparison.OrdinalIgnoreCase))
+            {
+                amount *= -1;
+            }
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            result = conn.Execute("Service_BettransPK_OneGaming_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                if (refundDataPK_OneGaming.amount != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        amount,
+                        (int)GameType.OneGaming_Poker,
+                        TransType.Refunds,
+                        $"Refund: {Math.Abs(refundDataPK_OneGaming.amount):#,##0.##}",
+                        transactionId,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleDataPK_OneGaming> GetUnsettledListPK_OneGaming()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleDataPK_OneGaming>("Service_TpWagerPK_OneGaming_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerPK_OneGaming(string ticket)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerPK_OneGaming_Settle_Set", new { ticket = ticket }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int Settled_OneGaming(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = 0;
+            result = SettleTicket(
+                tpCustInfo,
+                betRecordInfo,
+                0,
+                out _,
+                conn,
+                trans,
+                false/*Don't need Payout*/
+            );
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

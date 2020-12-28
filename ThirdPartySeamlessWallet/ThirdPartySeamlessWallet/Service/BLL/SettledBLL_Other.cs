@@ -252,5 +252,60 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region OneGaming
+
+        public int PayoutPK_OneGaming(BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, bettingDataPK_OneGaming.player_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutPK_OneGaming(tpCustInfo, bettingDataPK_OneGaming, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int RefundPK_OneGaming(RefundDataPK_OneGaming refundDataPK_OneGaming, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, refundDataPK_OneGaming.player_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                refundDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RefundPK_OneGaming(tpCustInfo, refundDataPK_OneGaming, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public IEnumerable<SettleDataPK_OneGaming> GetUnsettledListPK_OneGaming()
+        {
+            return settledService.GetUnsettledListPK_OneGaming();
+        }
+
+        public int SetSettleFlag_TpWagerPK_OneGaming(string ticket)
+        {
+            return settledService.SetSettleFlag_TpWagerPK_OneGaming(ticket);
+        }
+
+        public int Settled_OneGaming(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            return settledService.Settled_OneGaming(tpCustInfo, betRecordInfo);
+        }
+
+        #endregion
     }
 }

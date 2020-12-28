@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Service.Model.enums
         Joker = 9,
         SG = 10,
         Allbet = 12,
+        OneGaming = 13,
         PG = 14,
         Sexy = 15,
         CF = 17,

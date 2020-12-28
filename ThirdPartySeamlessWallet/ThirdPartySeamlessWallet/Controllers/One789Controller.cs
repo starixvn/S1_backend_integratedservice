@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment environment;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
-        private readonly int gameType = 0;
+        //private readonly int gameType = 0;
 
         public One789Controller(
             IHostEnvironment environment,

@@ -65,7 +65,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
         Iconic_RNG = 39,
-        Iconic_Fish = 40
+        Iconic_Fish = 40,
+        OneGaming_Poker = 41
     }
     public enum Tp
     {
@@ -81,6 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Joker = 9,
         SG = 10,
         Allbet = 12,
+        OneGaming = 13,
         PG = 14,
         Sexy = 15,
         CQ9 = 16,
@@ -120,6 +122,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Slots,
         LiveCasino,
         Fish,
-        Lottery
+        Lottery,
+        Poker
     }
 }
