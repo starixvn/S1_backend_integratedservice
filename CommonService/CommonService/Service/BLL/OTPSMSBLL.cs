@@ -98,12 +98,17 @@ namespace CommonService.Service.BLL
             var Config = OTPSMSServiceConfigList.Value[custInfo.SiteName];
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
-            
-            String siteName = custInfo.SiteName;
-            String smsMessage =  $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+
+            string siteName = custInfo.SiteName;
+            string smsMessage =  $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
             {
                 smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
+            }
+            else if (userLang.Equals("id", StringComparison.OrdinalIgnoreCase) || PhoneNo.StartsWith("+62"))
+            {
+                smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", "id"), OTPNum);
             }
                            
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
