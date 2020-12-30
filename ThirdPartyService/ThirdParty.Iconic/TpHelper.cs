@@ -58,7 +58,7 @@ namespace ThirdParty.Iconic
                 string jwtUserName = $"novax{currency}";
                 if (string.IsNullOrWhiteSpace(jwtTokens[currency].token))
                 {
-                    var jwtToken = GetJwtToken($"{ApiUrl}/login", jwtUserName, password);
+                    var jwtToken = GetJwtToken(ApiUrl, jwtUserName, password);
 
                     if (!string.IsNullOrWhiteSpace(jwtToken.token))
                     {
@@ -69,7 +69,7 @@ namespace ThirdParty.Iconic
                 {
                     Task.Run(() =>
                     {
-                        var jwtToken = GetJwtToken($"{ApiUrl}/login", jwtUserName, password);
+                        var jwtToken = GetJwtToken(ApiUrl, jwtUserName, password);
 
                         if (!string.IsNullOrWhiteSpace(jwtToken.token))
                         {
