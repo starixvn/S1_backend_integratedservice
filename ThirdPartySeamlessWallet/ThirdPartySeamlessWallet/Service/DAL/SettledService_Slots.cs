@@ -420,63 +420,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int BonusWinRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
+        public int BonusWinRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
         {
-            int gameType = (int)GameType.PP_RNG;
-
-            int bonusId = 0;
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            bettingDataRNG_PP.TicketStatus = bettingDataRNG_PP.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-            var p = new DynamicParameters(new { reference = bettingDataRNG_PP.reference, roundId = bettingDataRNG_PP.roundId, gameId = bettingDataRNG_PP.gameId ?? "", amount = bettingDataRNG_PP.amount, userId = bettingDataRNG_PP.userId, roundDetails = bettingDataRNG_PP.roundDetails, timestamp = bettingDataRNG_PP.timestamp, bonusCode = bettingDataRNG_PP.bonusCode, jackpotId = bettingDataRNG_PP.jackpotId, jackpotContribution = bettingDataRNG_PP.jackpotContribution, type = (int)bettingDataRNG_PP.type, TicketStatus = (int)bettingDataRNG_PP.TicketStatus, promoWinAmount = bettingDataRNG_PP.promoWinAmount, promoWinReference = bettingDataRNG_PP.promoWinReference, promoCampaignID = bettingDataRNG_PP.promoCampaignID, promoCampaignType = bettingDataRNG_PP.promoCampaignType });
             int result = 0;
             try
             {
-                result = conn.Execute("Service_BettransRng_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
-                {
-                    if (bettingDataRNG_PP.amount > 0)
-                    {
-                        //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PP.amount, (int)Tp.PP, TransType.Settled, $"{bettingDataRNG_PP.type}: {Math.Abs(bettingDataRNG_PP.amount).ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, bettingDataRNG_PP.amount, (int)Tp.PP, bettingDataRNG_PP.reference, gameType, TpCategory.Slots, bettingDataRNG_PP.reference, TransType.Prize, null, out afterAmount, "BonusWin", out bonusId, conn, trans);
-                        if (result > 0)
-                        {
-                            var winLostAmount = bettingDataRNG_PP.amount;
-
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = (int)Tp.PP,
-                                Stake = 0,
-                                ValidBet = 0,
-                                WinlostAmount = winLostAmount,
-                                TransId = bettingDataRNG_PP.reference,
-                                GameType = GameType.PP_RNG,
-                                TpUserName = bettingDataRNG_PP.userId,
-                                SettledTime = bettingDataRNG_PP.timestamp / 1000,
-                                SettlementType = SettlementType.SettledForValid,
-                                TicketStatus = TicketStatus.Win,
-                                BonusId = bonusId
-                            };
-
-                            if (betRecordInfo.WinlostAmount == 0)
-                                betRecordInfo.TicketStatus = TicketStatus.Draw;
-
-                            result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                            if (result > 0)
-                            {
-                                trans.Commit();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    result = -1;
-                }
+                result = conn.Execute("Service_BettransRng_PP_BonusWin_Ins", new { reference = bettingDataRNG_PP.reference, amount = bettingDataRNG_PP.amount, userId = bettingDataRNG_PP.userId, timestamp = bettingDataRNG_PP.timestamp, bonusCode = bettingDataRNG_PP.bonusCode }, transaction: trans, commandType: CommandType.StoredProcedure);
+                trans.Commit();
             }
             catch (MySqlException mySqlEx)
             {

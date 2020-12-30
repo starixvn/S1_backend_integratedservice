@@ -405,47 +405,17 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (hashCheck(bonusWinReqq, secureKey))
                 {
-                    //string Content = @"{""amount"":""9.0"",""gameId"":""vs7776aztec"",""hash"":""672028d15e2191c3050000f0f8a6b62a"",""ipAddress"":""218.211.34.185"",""language"":""zh"",""platform"":""WEB"",""providerId"":""PragmaticPlay"",""reference"":""5e9ed802005c8e0008a65f62"",""roundDetails"":""spin"",""roundId"":""2360710356"",""timestamp"":""1587468290666"",""userId"":""DNova88_157""}";
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(bonusWinReqq));
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Bonus;
                     var gameType = (int)GameType.PP_RNG;
-                    if (settledBLL.BonusWinRNG_PP(betReq, out decimal tpAffterAmount) > 0)
-                    {
-                        if (betReq.amount == 0)
-                        {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
-                            payoutResp.cash = tpCustBalance.Balance;
-                            payoutResp.currency = tpCustBalance.TpCurrencyId;
-                        }
-                        else
-                        {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
-                            payoutResp.cash = tpAffterAmount;
-                            payoutResp.currency = tpCustBalance.TpCurrencyId;
-                        }
-                        payoutResp.bonus = 0;
-                        payoutResp.error = 0;
-                        payoutResp.description = "Success.";
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
-                        payoutResp.cash = tpCustBalance.Balance;
-                        payoutResp.currency = tpCustBalance.TpCurrencyId;
-                        payoutResp.bonus = 0;
-                        payoutResp.error = 1;
-                        payoutResp.description = "Insufficient balance.";
-                    }
-                    else
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
-                        payoutResp.cash = tpCustBalance.Balance;
-                        payoutResp.currency = tpCustBalance.TpCurrencyId;
-                        payoutResp.bonus = 0;
-                        payoutResp.error = 0;
-                        payoutResp.description = "Success.";
-                    }
+                    settledBLL.BonusWinRNG_PP(betReq, out decimal tpAffterAmount);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
+                    payoutResp.cash = tpAffterAmount;
+                    payoutResp.currency = tpCustBalance.TpCurrencyId;
+                    payoutResp.bonus = 0;
+                    payoutResp.error = 0;
+                    payoutResp.description = "Success.";
                 }
                 else
                 {

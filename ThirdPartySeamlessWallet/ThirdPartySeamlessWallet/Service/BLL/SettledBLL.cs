@@ -458,14 +458,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataRNG_PP.amount *= tpCurrency.ExchangeRate;
-                bettingDataRNG_PP.promoWinAmount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.BonusWinRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
+            var result = settledService.BonusWinRNG_PP(bettingDataRNG_PP, out afterAmount);
+
             return result;
         }
 
