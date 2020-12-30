@@ -1,18 +1,20 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using System.Threading.Tasks;
 
 namespace ThirdParty.Iconic
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-
+        private static ConcurrentDictionary<string, JwtToken> jwtTokens = new ConcurrentDictionary<string, JwtToken>();
         private class ApiErrorResponse
         {
             public Error error { get; set; }
@@ -28,26 +30,57 @@ namespace ThirdParty.Iconic
         private class SignupResult
         {
             public Signup data { get; set; }
-
         }
 
         private class Signup
         {
             public string username { get; set; }
-
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
         }
-
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string password = inputs.ContainsKey("password") && !string.IsNullOrEmpty(inputs["password"]) ? inputs["password"] : throw new Exception("password");
-            string token = inputs.ContainsKey($"token_{currency}") && !string.IsNullOrEmpty(inputs[$"token_{currency}"]) ? inputs[$"token_{currency}"] : throw new Exception($"token_{currency}");
+            string token = null;
+
+            if (!jwtTokens.ContainsKey(currency))
+            {
+                jwtTokens.TryAdd(currency, new JwtToken());
+            }
+
+            if (jwtTokens[currency].ExpiredTime <= DateTime.Now)
+            {
+                string jwtUserName = $"novax{currency}";
+                if (string.IsNullOrWhiteSpace(jwtTokens[currency].token))
+                {
+                    var jwtToken = GetJwtToken(ApiUrl, jwtUserName, password);
+
+                    if (!string.IsNullOrWhiteSpace(jwtToken.token))
+                    {
+                        jwtTokens[currency] = jwtToken;
+                    }
+                }
+                else
+                {
+                    Task.Run(() =>
+                    {
+                        var jwtToken = GetJwtToken(ApiUrl, jwtUserName, password);
+
+                        if (!string.IsNullOrWhiteSpace(jwtToken.token))
+                        {
+                            var c = jwtTokens[currency];
+                            jwtTokens.TryUpdate(currency, jwtToken, c);
+                        }
+                    });
+                }
+            }
+
+            token = jwtTokens[currency].token;
 
             var SignupUrl = $"{ApiUrl}/api/v1/players";
 
@@ -127,15 +160,46 @@ namespace ThirdParty.Iconic
             else
             {
                 var key = ApplyToken(tpCustInfo);
+                inputs.TryGetValue("Token", out string token);
+                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
+                byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+                string sessionKey = Convert.ToBase64String(bytes);
+
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(key)}&lang={TpLangId}";
+                oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(sessionKey)}&lang={TpLangId}";
             }
             return oApiResult;
         }
-
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+        private JwtToken GetJwtToken(string apiUrl, string username, string password)
+        {
+            // param
+            string url = $"{apiUrl}/login";
+            // request
+            string r = HttpPost(url, $"username={username}&password={password}", "application/x-www-form-urlencoded");
+            var result = JsonConvert.DeserializeObject<JwtToken>(r);
+            if (!string.IsNullOrWhiteSpace(result.token))
+            {
+                result.ExpiredTime = DateTime.Now.AddDays(1);
+            }
+
+            return result;
+        }
+        public class JwtToken
+        {
+            public int status { get; set; }
+            public string token { get; set; }
+            public DateTime ExpiredTime { get; set; }
+            public ErrorIconic error { get; set; }
+        }
+        public class ErrorIconic
+        {
+            public int status { get; set; }
+            public string message { get; set; }
+            public string ip { get; set; }
         }
     }
 }

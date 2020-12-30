@@ -16,30 +16,31 @@ namespace ThirdParty.Saba
             {"3","football" },
             {"4","icehockey" },
             {"5","tennis" },
+            {"6","volleyball" },
             {"8","baseball" } ,
             {"9","badminton" } ,
             {"43","esports" },
+            {"4319","95039,94797,87294,92197,95090,94867,95076,95068,95067" },
+            {"4320","89616,94371,94561,94978,94826,91285,93197" },
+            {"4324","92834,67693" },
+            {"4325","esports" },
+            {"50", "indiancricket" },
             {"161","numbergame" },
-            {"180","virtualsports" },
+            {"164","164" }, 
+            {"180","180" },
+            {"190","190" }, 
+            {"192","192" }, 
+            {"193","193" },
+            {"194","194" }, 
+            {"197","197" }, 
             {"200","sabaclub" },
             {"202","keno" },
             {"208","casino" },
-            {"211","allbet" },
             {"220","KenoLottery" },
+            {"222","tablegame" },
             {"223","indo4d" },
-            {"245","virtualgame" }
-        };
-
-        Dictionary<string, string> AllbetlangTypeDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
-            {"cs","zh_CN" },
-            {"ch","zh_TW" },
-            {"vn","vi" },
-            {"en","en" },
-            {"jp","ja" },
-            {"ru","ru" },
-            {"id","id" },
-            {"ko","ko" },
-            {"th","th" }
+            {"245","virtualgame" },
+            {"997","90088,89692,89697,93062" }
         };
 
         private class Result
@@ -312,24 +313,12 @@ namespace ThirdParty.Saba
                     inputs.TryGetValue("matchid", out matchId);
                     inputs.TryGetValue("bettype", out betType);
 
-                    if (SportType == "211")
-                    {
-                        if (AllbetlangTypeDic.ContainsKey(langid))
-                        {
-                            langid = AllbetlangTypeDic[langid];
-                        }
-                        else
-                        {
-                            langid = "en";
-                        }
-                    }
-
                     if (appType == AppType.Native)
                     {
                         if (matchId != null)
                         {
                             oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
-                            
+
                         }
                         else if (betType != null)
                         {
@@ -358,24 +347,17 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
 
-                        if (SportType == "211")
+                        if (matchId != null)
                         {
-                            oApiResult.Message = $"{url}?types=AllBet&token={json.Data}&lang={langid}";
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
+                        }
+                        else if (betType != null)
+                        {
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&gameid={betType}";
                         }
                         else
                         {
-                            if (matchId != null)
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
-                            }
-                            else if(betType != null)
-                            { 
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&gameid={betType}";
-                            }
-                            else
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
-                            }
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
                         }
                     }
                     else
@@ -389,14 +371,26 @@ namespace ThirdParty.Saba
                         }
 
                         if (act == "keno" || SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223")
+                        {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
+                        }
                         else if (matchId != null)
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
                         }
-                        else if(betType != null)
+                        else if (betType != null)
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}";
+                        }
+                        else if (SportType == "997")
+                        {
+                            // Saba Soccer deeplink
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=1&leaguekey={act}";
+                        }
+                        else if (SportType == "4319" || SportType == "4320" || SportType == "4324" || SportType == "4325")
+                        {
+                            // Esprot deeplink
+                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=43&leaguekey={act}";
                         }
                         else
                         {

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -89,6 +90,33 @@ namespace ThirdPartyService.Service.DAL
                 if (tpTransfer.direction == Direction.ToMain && isSuccess)
                 {
                     rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
+                }
+                else if (tpTransfer.direction == Direction.ToTp)
+                {
+                    var custBonus = conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { CustId = tpCustInfo.CustId, TpId = tpTransfer.TpId }, trans, commandType: CommandType.StoredProcedure);
+                    if (custBonus != null)
+                    {
+                        int bonusId = custBonus.BonusId;
+                        string memo = null;
+                        var withdrawalLimit = tpTransfer.Amount * -1;
+                        var p = new DynamicParameters(new
+                        {
+                            CustId = tpCustInfo.CustId,
+                            UserName = tpCustInfo.UserName,
+                            SiteId = tpCustInfo.SiteId,
+                            Memo = memo,
+                            RefTransId = transId
+                        });
+
+                        p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                        p.Add("WithdrawalLimit", withdrawalLimit, dbType: DbType.Decimal, direction: ParameterDirection.InputOutput);
+                        var res = conn.Execute("Service_WithdrawalLimit_Set", p, trans, commandType: CommandType.StoredProcedure);
+                        if (res > 0)
+                        {
+                            decimal rollover = p.Get<decimal>("WithdrawalLimit");
+                            conn.Execute("Service_BonusAmount_Set", new { BonusId = bonusId, LockedAmount = tpTransfer.Amount, Rollover = Math.Abs(rollover) }, trans, commandType: CommandType.StoredProcedure);
+                        }
+                    }
                 }
 
                 if (rwalletServiceResult == 0)

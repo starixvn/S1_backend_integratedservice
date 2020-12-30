@@ -28,8 +28,8 @@ namespace ThirdPartyWager.Service.DAL
 
         public int SetThirdPartySetting(int tpId, string setting)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.Execute("Tp_Set", new { TpId = tpId, Setting = setting }, commandType: CommandType.StoredProcedure);
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_Tp_Set", new { TpId = tpId, Setting = setting }, commandType: CommandType.StoredProcedure);
         }
 
         public ThirdPartyTimerModel GetThirdPartyTimer(int tpId, int type)

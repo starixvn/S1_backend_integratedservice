@@ -41,10 +41,10 @@ namespace ThirdPartyWager
                     /*services.AddHostedService<WagerKiss918>();
                     services.AddHostedService<WagerRedoKiss918>();*/
                     services.AddHostedService<WagerOne789>();
-                    services.AddHostedService<WagerMega>();
-                    services.AddHostedService<WagerRedoMega>();
-                    //services.AddHostedService<JwtIconic>();
-                    //services.AddHostedService<WagerIconic>();
+                    //services.AddHostedService<WagerMega>();
+                    //services.AddHostedService<WagerRedoMega>();
+                    services.AddHostedService<JwtIconic>();
+                    services.AddHostedService<WagerIconic>();
                 });
     }
 }
