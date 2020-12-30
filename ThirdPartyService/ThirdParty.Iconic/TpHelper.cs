@@ -46,7 +46,7 @@ namespace ThirdParty.Iconic
             string currency = tpCustInfo.TpCurrencyId;
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string password = inputs.ContainsKey("password") && !string.IsNullOrEmpty(inputs["password"]) ? inputs["password"] : throw new Exception("password");
-            string token = inputs.ContainsKey($"token_{currency}") && !string.IsNullOrEmpty(inputs[$"token_{currency}"]) ? inputs[$"token_{currency}"] : throw new Exception($"token_{currency}");
+            string token = null;
 
             if (!jwtTokens.ContainsKey(currency))
             {
