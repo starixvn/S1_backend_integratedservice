@@ -159,9 +159,24 @@ namespace ThirdParty.Iconic
             }
             else
             {
+                string gameType = "39";
+
+                if (gameId.StartsWith("cmf", StringComparison.OrdinalIgnoreCase))
+                {
+                    gameType = "40";
+                }
+                else if (gameId.StartsWith("cmt", StringComparison.OrdinalIgnoreCase))
+                {
+                    gameType = "40";
+                }
+                else if (gameId.StartsWith("cm", StringComparison.OrdinalIgnoreCase))
+                {
+                    gameType = "39";
+                }
+
                 var key = ApplyToken(tpCustInfo);
                 inputs.TryGetValue("Token", out string token);
-                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
+                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType };
                 byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
                 string sessionKey = Convert.ToBase64String(bytes);
 

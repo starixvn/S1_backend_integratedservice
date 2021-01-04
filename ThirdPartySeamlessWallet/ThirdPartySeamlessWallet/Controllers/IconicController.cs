@@ -233,7 +233,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                string sGameType = sessionKeyArr[3];/*Game Type*/
+                int.TryParse(sGameType, out int gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
                 if (tpCustBalance != null)
                 {
                     var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -282,7 +284,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName);
+                string sGameType = sessionKeyArr[3];/*Game Type*/
+                int.TryParse(sGameType, out int gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, gameType);
                 if (tpCustBalance != null)
                 {
                     var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
