@@ -150,6 +150,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (tpCheck.Token != sessionToken)
                 {
                     /*User has Log out*/
+                    getApiResponse.data.statusCode = 1;
+                    getApiResponse.error.title = "Wrong_Token";
+                    getApiResponse.error.description = "Wrong Token";
+                    log2File.Info($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
                 }
                 else if (tpCheck.Locked)
                 {
@@ -219,8 +224,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
-
-                if (tpCheck.Locked)
+                else if (tpCheck.Locked)
                 {
                     getApiResponse.data.statusCode = 3;
                     getApiResponse.error.title = "USER_IS_LOCKED";
@@ -229,7 +233,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
                 if (tpCustBalance != null)
                 {
@@ -246,6 +249,55 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getBalanceResp.data.username = tpCustInfoAuth.TpUserName;
                     getBalanceResp.data.balance = Math.Truncate(tpCustBalance.Balance);
                     getBalanceResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpCustInfoAuth.TpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                    return getBalanceResp;
+                }
+            }
+            else
+            {
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
+                if (tpCheck == null)
+                {
+                    getApiResponse.data.statusCode = 3;
+                    getApiResponse.error.title = "INVALID_USER";
+                    getApiResponse.error.description = "Invalid user Id";
+                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+                else if (tpCheck.Token != sessionToken)
+                {
+                    /*User has Log out*/
+                    getApiResponse.data.statusCode = 1;
+                    getApiResponse.error.title = "Wrong_Token";
+                    getApiResponse.error.description = "Wrong Token";
+                    log2File.Info($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+                else if (tpCheck.Locked)
+                {
+                    getApiResponse.data.statusCode = 3;
+                    getApiResponse.error.title = "USER_IS_LOCKED";
+                    getApiResponse.error.description = "Account is Locked";
+                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName);
+                if (tpCustBalance != null)
+                {
+                    var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                    if (string.IsNullOrEmpty(thirdPartySetting.TpSetting["secure_code"]))
+                    {
+                        log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        return getApiResponse;
+                    }
+
+                    Response.StatusCode = (int)Error.OK;
+                    GetApiResp getBalanceResp = new GetApiResp();
+                    getBalanceResp.data.statusCode = 0;
+                    getBalanceResp.data.username = tpUserName;
+                    getBalanceResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                    getBalanceResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
                     log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                     return getBalanceResp;
                 }
@@ -310,6 +362,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (tpCheck.Token != sessionToken)
             {
                 /*User has Log out*/
+                getApiResponse.data.statusCode = 1;
+                getApiResponse.error.title = "Wrong_Token";
+                getApiResponse.error.description = "Wrong Token";
+                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
             }
             else if (tpCheck.Locked)
             {
@@ -555,6 +612,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (tpCheck.Token != sessionToken)
             {
                 /*User has Log out*/
+                getApiResponse.data.statusCode = 1;
+                getApiResponse.error.title = "Wrong_Token";
+                getApiResponse.error.description = "Wrong Token";
+                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+                return getApiResponse;
             }
             else if (tpCheck.Locked)
             {
