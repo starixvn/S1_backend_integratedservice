@@ -1344,7 +1344,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-
         public int RefundBatchLC_EBet(TpCustInfo tpCustInfo, BatchRefundList batchRefundList, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -1391,6 +1390,79 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             else
             {
                 return -1;
+            }
+
+            return result;
+        }
+
+        public int RewardLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                username = bettingData_EBet.username,
+                channelId = bettingData_EBet.channelId,
+                money = bettingData_EBet.money,
+                type = bettingData_EBet.type,
+                platform = bettingData_EBet.platform,
+                currency = bettingData_EBet.currency,
+                seqNo = bettingData_EBet.seqNo,
+                Event = bettingData_EBet.Event,
+                timestamp = bettingData_EBet.timestamp,
+                detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
+                TicketStatus = (int)TicketStatus.Win,
+                TicketType = (int)BettransType.Payout,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_RewardLC_EBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingData_EBet.money != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingData_EBet.money,
+                            (int)Tp.EBet,
+                            bettingData_EBet.seqNo,
+                            (int)GameType.EBet_LiveCasino,
+                            TpCategory.LiveCasino,
+                            bettingData_EBet.seqNo,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"{bettingData_EBet.seqNo} Prize",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
             }
 
             return result;
