@@ -31,13 +31,6 @@ namespace ThirdPartyWager.Service.Model
         public string status { get; set; }
         public decimal amount { get; set; }
         public DateTime datetime { get; set; }
-        public string TransId
-        {
-            get
-            {
-                return $"{period}_{player}";
-            }
-        }
         public long dateUnix
         {
             get
