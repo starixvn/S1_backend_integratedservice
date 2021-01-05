@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
                             var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-                            if (tpCurrency.ExchangeRate > 1)
+                            if (tpCurrency.ExchangeRate > 0)
                             {
                                 unsettled.Stake *= tpCurrency.ExchangeRate;
                                 unsettled.ValidBet *= tpCurrency.ExchangeRate;

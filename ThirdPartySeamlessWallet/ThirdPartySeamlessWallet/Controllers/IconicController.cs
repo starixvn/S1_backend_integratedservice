@@ -619,7 +619,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.error.description = "Wrong Token";
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
-                return getApiResponse;
             }
             else if (tpCheck.Locked)
             {
