@@ -212,6 +212,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             string authToken = sessionKeyArr[0]; /* 1 Time*/
             string sessionToken = sessionKeyArr[1];/* Long Time*/
             string tpUserName = sessionKeyArr[2];/* User Name*/
+            string sGameType = sessionKeyArr[3];/*Game Type*/
+            int.TryParse(sGameType, out int gameType);
 
             if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
             {
@@ -233,8 +235,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                string sGameType = sessionKeyArr[3];/*Game Type*/
-                int.TryParse(sGameType, out int gameType);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
                 if (tpCustBalance != null)
                 {
@@ -255,7 +255,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getBalanceResp;
                 }
             }
-            else
+            else if (gameType == (int)GameType.Iconic_Fish)
             {
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
                 if (tpCheck == null)
@@ -284,8 +284,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                string sGameType = sessionKeyArr[3];/*Game Type*/
-                int.TryParse(sGameType, out int gameType);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, gameType);
                 if (tpCustBalance != null)
                 {
