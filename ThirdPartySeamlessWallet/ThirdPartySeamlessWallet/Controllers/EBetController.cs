@@ -387,6 +387,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                         log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Cancel_Bet");
 
                         break;
+                    case 38:
+                        // 宝箱奖金
+                        result = settledBLL.RewardLC_EBet(getBetReq, out tpAffterAmount);
+                        if (result > 0 || result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 200;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 201;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 500;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Reward");
+
+                        break;
                     default:
                         break;
                 }

@@ -938,6 +938,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RewardLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.EBet, bettingData_EBet.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RewardLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
         {
             return settledService.GetUnsettledListLC_EBet();
@@ -961,6 +982,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return data;
         }
+        
         #endregion
 
         #region CQ9
