@@ -35,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleIconicRng;
         private Timer timerSettleIconicFish;
         private Timer timerSettleOneGaming;
+        private Timer timerSettleV8;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -73,6 +74,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleIconicRng = new Timer(DoSettleIconicRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleIconicFish = new Timer(DoSettleIconicFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOneGaming = new Timer(DoSettleOneGamingWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleV8 = new Timer(DoSettleV8Work, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -700,6 +702,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleIconicRng?.Change(Timeout.Infinite, 0);
             timerSettleIconicFish?.Change(Timeout.Infinite, 0);
             timerSettleOneGaming?.Change(Timeout.Infinite, 0);
+            timerSettleV8?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
