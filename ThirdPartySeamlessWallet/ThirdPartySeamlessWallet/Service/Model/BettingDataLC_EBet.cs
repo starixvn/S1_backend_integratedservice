@@ -77,6 +77,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? payoutTime { get; set; }
+        public long betStopTime { get; set; }
     }
 
     public class BetListEbet
