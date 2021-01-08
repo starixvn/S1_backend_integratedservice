@@ -127,4 +127,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Lottery,
         Poker
     }
+    public enum Direction
+    {
+        ToTp = 1,
+        ToMain = 2
+    }
 }

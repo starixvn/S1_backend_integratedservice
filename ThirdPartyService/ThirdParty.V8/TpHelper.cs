@@ -213,7 +213,7 @@ namespace ThirdParty.V8
                 if (json.d.code == 0)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data.balance = json.d.totalMoney;
+                    oApiResult.Data.balance = json.d.freeMoney; // 可下分余额
                 }
                 else
                 {

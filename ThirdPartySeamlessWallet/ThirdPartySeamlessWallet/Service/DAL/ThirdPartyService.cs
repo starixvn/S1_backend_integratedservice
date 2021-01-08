@@ -49,5 +49,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BonusMinBet>("Service_BonusMinBet_Get", commandType: CommandType.StoredProcedure);
         }
+        public int SetThirdPartyTransferUserList(int tpId, long custId, int direction)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_TpTransferUserList_Ins", new { TpId = tpId, CustId = custId, Direction = direction }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
