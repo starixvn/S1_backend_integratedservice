@@ -111,7 +111,7 @@ namespace ThirdParty.OneGaming
             string agentCode = inputs.ContainsKey($"agent_code_{currency}") && !string.IsNullOrEmpty(inputs[$"agent_code_{currency}"]) ? inputs[$"agent_code_{currency}"] : throw new Exception($"agent_code_{currency}");
             string secret_key = inputs.ContainsKey($"secret_key_{currency}") && !string.IsNullOrEmpty(inputs[$"secret_key_{currency}"]) ? inputs[$"secret_key_{currency}"] : throw new Exception($"secret_key_{currency}");
 
-            if (appType != AppType.Desktop)
+            if (appType == AppType.Desktop)
             {
                 ApiUrl = $"{ApiUrl}/gameLobby_URL";
             }
