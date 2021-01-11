@@ -610,5 +610,75 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region V8
+        public int PlaceBetPK_V8(TpCustInfo tpCustInfo, BettingDataPK_V8 bettingDataPK_V8, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            var TransId = $"{bettingDataPK_V8.timestamp / 1000}_{bettingDataPK_V8.account}";
+            var money = bettingDataPK_V8.money * -1;
+
+            var p = new DynamicParameters(new
+            {
+                TransId = TransId,
+                account = bettingDataPK_V8.account,
+                money = money,
+                timestamp = bettingDataPK_V8.timestamp / 1000,
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 2
+            });
+
+            try
+            {
+                result = conn.Execute("Service_BettransPK_V8_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        money,
+                        (int)GameType.V8_Poker,
+                        TransType.Wagers,
+                        $"Stake: {Math.Abs(bettingDataPK_V8.money):#,##0.##}",
+                        TransId,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+
+        }
+
+
+        #endregion
+
     }
 }

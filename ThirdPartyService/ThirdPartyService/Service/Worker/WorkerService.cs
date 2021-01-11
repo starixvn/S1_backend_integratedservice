@@ -87,11 +87,20 @@ namespace ThirdPartyService.Service.Worker
                                 TpId = tpTransfer.TpId,
                                 CustId = tpTransfer.CustId,
                             };
-                            var tpBalanceData = thirdPartyBLL.GetBalance(tpInfo);
 
-                            tpTransfer.Amount = tpBalanceData.Data.balance;
-                            var tpTransferData = thirdPartyBLL.Transfer(tpTransfer);
-                            if (tpTransferData.ErrorCode == ErrorCode.Success)
+                            var tpBalanceData = thirdPartyBLL.GetBalance(tpInfo);
+                            if (tpBalanceData.Data.balance > 0)
+                            {
+                                tpTransfer.Amount = tpBalanceData.Data.balance;
+
+                                var tpTransferData = thirdPartyBLL.Transfer(tpTransfer);
+                                if (tpTransferData.ErrorCode == ErrorCode.Success)
+                                {
+                                    // set status to finished
+                                    tpTransferInfo.TpTransferWaitingSet(tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 2);
+                                }
+                            }
+                            else if (tpBalanceData.Data.balance == 0)
                             {
                                 // set status to finished
                                 tpTransferInfo.TpTransferWaitingSet(tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 2);

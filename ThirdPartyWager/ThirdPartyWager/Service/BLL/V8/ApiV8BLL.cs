@@ -33,8 +33,6 @@ namespace ThirdPartyWager.Service.BLL
                 s = 6,
                 startTime = startUnix * 1000,
                 endTime = endUnix * 1000
-                //startTime = 1609990200000,
-                //endTime = 1609993799000
             };
             var dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());

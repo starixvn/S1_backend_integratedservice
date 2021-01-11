@@ -7,6 +7,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataPK_V8
     {
+        public string account { get; set; }
+        public decimal money { get; set; }
+        public long timestamp { get; set; }
     }
 
     public class SettleDataPK_V8
