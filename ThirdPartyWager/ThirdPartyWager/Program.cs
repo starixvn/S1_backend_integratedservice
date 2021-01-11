@@ -45,6 +45,7 @@ namespace ThirdPartyWager
                     //services.AddHostedService<WagerRedoMega>();
                     services.AddHostedService<JwtIconic>();
                     services.AddHostedService<WagerIconic>();
+                    services.AddHostedService<WagerOneGaming>();
                 });
     }
 }

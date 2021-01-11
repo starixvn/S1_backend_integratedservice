@@ -104,5 +104,17 @@ namespace ThirdPartyWager.Service.Library
         {
             return Convert.ToInt64((DateTime.Now.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds);
         }
+
+        public string HMACSHA256(string message, string key)
+        {
+            var encoding = new System.Text.UTF8Encoding();
+            byte[] keyByte = encoding.GetBytes(key);
+            byte[] messageBytes = encoding.GetBytes(message);
+            using (var hmacSHA256 = new HMACSHA256(keyByte))
+            {
+                byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
+                return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
+            }
+        }
     }
 }
