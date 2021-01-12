@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddMinutes(1);
                     last = intervalMins;
                 }
 

@@ -620,7 +620,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var result = 0;
 
-            var TransId = $"{bettingDataPK_V8.timestamp / 1000}_{bettingDataPK_V8.account}";
+            var TransId = $"{bettingDataPK_V8.timestamp / 1000}_{(int)Direction.ToTp}_{bettingDataPK_V8.account}";
             var money = bettingDataPK_V8.money * -1;
 
             var p = new DynamicParameters(new
@@ -634,25 +634,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettleFlag = 2
             });
 
+            var pList = new DynamicParameters(new
+            {
+                TransId = TransId,
+                TpId = (int)Tp.V8,
+                CustId = tpCustInfo.CustId,
+                Direction = (int)Direction.ToTp,
+                Amount = bettingDataPK_V8.money
+            });
+
             try
             {
                 result = conn.Execute("Service_BettransPK_V8_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
-                    result = walletService.SetBalance(
-                        tpCustInfo.CustId,
-                        tpCustInfo.SiteId,
-                        tpCustInfo.UserName,
-                        money,
-                        (int)GameType.V8_Poker,
-                        TransType.Wagers,
-                        $"Stake: {Math.Abs(bettingDataPK_V8.money):#,##0.##}",
-                        TransId,
-                        out afterAmount,
-                        conn,
-                        trans
-                    );
+                    //result = walletService.SetBalance(
+                    //    tpCustInfo.CustId,
+                    //    tpCustInfo.SiteId,
+                    //    tpCustInfo.UserName,
+                    //    money,
+                    //    (int)GameType.V8_Poker,
+                    //    TransType.Wagers,
+                    //    $"Stake: {Math.Abs(bettingDataPK_V8.money):#,##0.##}",
+                    //    TransId,
+                    //    out afterAmount,
+                    //    conn,
+                    //    trans
+                    //);
+
+                    result = conn.Execute("Service_TpTransferUserList_Ins", pList, transaction: trans, commandType: CommandType.StoredProcedure);
 
                     if (result > 0)
                     {

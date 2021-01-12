@@ -80,30 +80,45 @@ namespace ThirdPartyService.Service.Worker
                         try
                         {
                             // set status to processing
-                            tpTransferInfo.TpTransferWaitingSet(tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 1);
+                            tpTransferInfo.TpTransferWaitingSet(tpTransfer.TransId, tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 1);
 
                             TpInfo tpInfo = new TpInfo
                             {
                                 TpId = tpTransfer.TpId,
                                 CustId = tpTransfer.CustId,
                             };
-
-                            var tpBalanceData = thirdPartyBLL.GetBalance(tpInfo);
-                            if (tpBalanceData.Data.balance > 0)
+                            TpTransfer transData = new TpTransfer
                             {
-                                tpTransfer.Amount = tpBalanceData.Data.balance;
+                                TpId = tpTransfer.TpId,
+                                CustId = tpTransfer.CustId,
+                                direction = tpTransfer.direction
+                            };
 
-                                var tpTransferData = thirdPartyBLL.Transfer(tpTransfer);
-                                if (tpTransferData.ErrorCode == ErrorCode.Success)
+                            // set transfer amount
+                            transData.Amount = tpTransfer.Amount;
+                            if (tpTransfer.direction == Direction.ToMain)
+                            {
+                                // get withdraw amount
+                                if (transData.Amount == 0)
                                 {
-                                    // set status to finished
-                                    tpTransferInfo.TpTransferWaitingSet(tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 2);
+                                    var tpBalanceData = thirdPartyBLL.GetBalance(tpInfo);
+                                    transData.Amount = tpBalanceData.Data.balance;
                                 }
                             }
-                            else if (tpBalanceData.Data.balance == 0)
+
+                            // set status to finished
+                            if (transData.Amount > 0)
                             {
-                                // set status to finished
-                                tpTransferInfo.TpTransferWaitingSet(tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 2);
+                                // do transfer
+                                var tpTransferData = thirdPartyBLL.Transfer(transData);
+                                if (tpTransferData.ErrorCode == ErrorCode.Success)
+                                {
+                                    tpTransferInfo.TpTransferWaitingSet(tpTransfer.TransId, tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 2);
+                                }
+                            }
+                            else if (transData.Amount == 0)
+                            {
+                                tpTransferInfo.TpTransferWaitingSet(tpTransfer.TransId, tpTransfer.TpId, tpTransfer.CustId, (int)tpTransfer.direction, 2);
                             }
                         }
                         catch (Exception ex)

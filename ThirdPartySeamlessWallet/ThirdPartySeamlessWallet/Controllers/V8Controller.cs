@@ -105,8 +105,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var accountTmp = HttpUtility.ParseQueryString(param).Get("account");
                 string[] temp = accountTmp.Split('_');
                 var account = $"{temp[1]}_{temp[2]}";
+                var TransId = $"{apiReq.timestamp / 1000}_{(int)Direction.ToMain}_{account}";
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-                var result = thirdPartyBLL.SetThirdPartyTransferUserList((int)thisTp, tpCustInfo.CustId, (int)Direction.ToMain);
+                var result = thirdPartyBLL.SetThirdPartyTransferUserList(TransId, (int)thisTp, tpCustInfo.CustId, (int)Direction.ToMain);
                 if (result > 0)
                 {
                     getApiResponse.d.code = 0;
@@ -158,6 +159,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getBalanceResponse.money = tpCustBalance.Balance;
                 }
 
+                log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                 return getBalanceResponse;
             }
             else if (s == "13")
@@ -191,27 +193,27 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         getBalanceResponse.code = 0;
                         getBalanceResponse.money = tpAffterAmount;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                     }
                     else if (result == -1)
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account);
                         getBalanceResponse.code = 0;
                         getBalanceResponse.money = tpCustBalance.Balance;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                     }
                     else if (tpAffterAmount < 0)
                     {
                         var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account);
                         getBalanceResponse.code = 1005;
                         getBalanceResponse.money = tpCustBalance.Balance;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                     }
                 }
                 catch (Exception ex)
                 {
                     log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{ex}", $"{logName}_{subName}");
+                    return getBalanceResponse;
                 }
+
+                log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                 return getBalanceResponse;
             }
             return getBalanceResponse;
