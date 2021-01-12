@@ -245,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleOne789LT_789.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
+        
         private void DoSettleOneGamingWork(object state)
         {
             bool forContinue = false;
@@ -314,6 +314,81 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleOneGaming.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+        
+        private void DoSettleV8Work(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.V8;
+            string logName = "Settle_V8_PK";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListPK_V8();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            string[] temp = unsettled.Account.Split('_');
+                            var account = $"{temp[1]}_{temp[2]}";
+
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, account);
+                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                            if (tpCurrency.ExchangeRate > 1)
+                            {
+                                unsettled.Stake *= tpCurrency.ExchangeRate;
+                                unsettled.ValidBet *= tpCurrency.ExchangeRate;
+                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            }
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = unsettled.Stake,
+                                ValidBet = unsettled.ValidBet,
+                                WinlostAmount = unsettled.WinLostAmount,
+                                TransId = unsettled.GameID,
+                                GameType = GameType.V8_Poker,
+                                TpUserName = account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValidNotRollover
+                            };
+                            var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                            settledBLL.SetSettleFlag_TpWagerPK_V8(unsettled.GameID);
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleV8.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

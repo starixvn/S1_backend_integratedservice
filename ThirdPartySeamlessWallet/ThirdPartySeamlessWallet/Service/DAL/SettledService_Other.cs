@@ -14,6 +14,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class SettledService
     {
+        public int Settled_Without_Bonus(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = 0;
+            result = SettleTicket(
+                tpCustInfo,
+                betRecordInfo,
+                0,
+                out _,
+                conn,
+                trans,
+                false/*Don't need Payout*/
+            );
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+
+        }
+
         #region CF
 
         public int Payout_CF(TpCustInfo tpCustInfo, PayoutData_CF payoutData_CF, out decimal afterAmount)
@@ -1097,5 +1123,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region V8
+
+        public IEnumerable<SettleDataPK_V8> GetUnsettledListPK_V8()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleDataPK_V8>("Service_TpWagerPK_V8_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerPK_V8(string gameId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerPK_V8_Settle_Set", new { GameID = gameId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
+
     }
 }

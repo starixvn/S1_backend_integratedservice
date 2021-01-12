@@ -161,6 +161,22 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
+        public IEnumerable<TpTransferUserList> TpTransferWaitingGet()
+        {
+            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            {
+                return conn.Query<TpTransferUserList>("Service_TpTransferUserList_Waiting_Get", commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public int TpTransferWaitingSet(string transId, int tpId, long custId, int direction, int status)
+        {
+            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            {
+                return conn.Execute("Service_TpTransferUserList_Waiting_Set", new { TransId = transId, TpId = tpId, CustId = custId, Direction = direction, Status = status }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
         public bool SetTransferFail(string transId)
         {
             int transferId = 0;
