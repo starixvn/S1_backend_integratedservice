@@ -9,6 +9,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 {
     public partial class SettledBLL
     {
+        public int Settled_Without_Bonus(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            return settledService.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+        }
 
         #region CF
 
@@ -304,6 +308,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int Settled_OneGaming(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
         {
             return settledService.Settled_OneGaming(tpCustInfo, betRecordInfo);
+        }
+
+        #endregion
+
+        #region V8
+
+        public IEnumerable<SettleDataPK_V8> GetUnsettledListPK_V8()
+        {
+            return settledService.GetUnsettledListPK_V8();
+        }
+
+        public int SetSettleFlag_TpWagerPK_V8(string gameId)
+        {
+            return settledService.SetSettleFlag_TpWagerPK_V8(gameId);
         }
 
         #endregion

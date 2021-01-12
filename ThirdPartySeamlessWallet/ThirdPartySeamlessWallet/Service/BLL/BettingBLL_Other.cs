@@ -184,5 +184,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region V8
+
+        public int PlaceBetPK_V8(BettingDataPK_V8 bettingDataPK_V8, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.V8, bettingDataPK_V8.account);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.V8, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataPK_V8.money *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetPK_V8(tpCustInfo, bettingDataPK_V8, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+    
     }
 }

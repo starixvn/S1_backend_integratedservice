@@ -87,4 +87,12 @@ namespace ThirdPartyCore.Model
         public long ExpiryTime { set; get; }
         public Dictionary<string, string> inputs { set; get; }
     }
+    public class TpTransferUserList
+    {
+        public string TransId { set; get; }
+        public int TpId { set; get; }
+        public int CustId { set; get; }
+        public decimal Amount { set; get; }
+        public Direction direction { set; get; }
+    }
 }

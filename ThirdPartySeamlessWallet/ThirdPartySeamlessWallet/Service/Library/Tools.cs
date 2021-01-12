@@ -64,6 +64,27 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return md5;
         }
 
+        public string AesDecrypt(string str, string key, bool isDecodeUrl = true)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            if (isDecodeUrl)
+                str = System.Web.HttpUtility.UrlDecode(str);
+
+            byte[] toEncryptArray = Convert.FromBase64String(str);
+
+            RijndaelManaged rm = new RijndaelManaged
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
+            };
+
+            ICryptoTransform cTransform = rm.CreateDecryptor();
+            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+            return Encoding.UTF8.GetString(resultArray);
+        }
+
         #region GetClientIP
         /// <summary>
         /// 获取客户端IP

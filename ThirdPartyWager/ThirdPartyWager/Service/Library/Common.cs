@@ -116,5 +116,25 @@ namespace ThirdPartyWager.Service.Library
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
         }
+
+        public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+
+            RijndaelManaged rm = new RijndaelManaged
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
+            };
+
+            ICryptoTransform cTransform = rm.CreateEncryptor();
+            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+            var base64Str = Convert.ToBase64String(resultArray, 0, resultArray.Length);
+
+            return isEncodeUrl ? System.Web.HttpUtility.UrlEncode(base64Str) : base64Str;
+        }
     }
 }

@@ -20,13 +20,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly WalletService walletService;
         private readonly Tools tools;
         private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly ThirdPartyService thirdPartyService;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools)
+        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService)
         {
             this.configuration = configuration;
             this.walletService = walletService;
             this.tools = tools;
             this.thirdPartyBLL = thirdPartyBLL;
+            this.thirdPartyService = thirdPartyService;
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
