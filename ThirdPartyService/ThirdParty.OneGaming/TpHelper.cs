@@ -131,7 +131,8 @@ namespace ThirdParty.OneGaming
                 agent_code = agentCode,
                 player_id = tpCustInfo.TpUserName,
                 l_token = HttpUtility.UrlEncode(sessionKey),
-                bcode = HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{HttpUtility.UrlEncode(sessionKey)}", secret_key)
+                bcode = HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{HttpUtility.UrlEncode(sessionKey)}", secret_key),
+                lang = TpLangId
             };
 
             var result = HttpPost(
