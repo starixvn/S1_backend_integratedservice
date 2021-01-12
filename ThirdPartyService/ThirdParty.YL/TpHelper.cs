@@ -141,6 +141,11 @@ namespace ThirdParty.YL
 
                     dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
                     sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={System.Web.HttpUtility.UrlEncode(kp.Value)}").ToArray());
+                    if (appType == AppType.Native)
+                    {
+                        sParam = $"{sParam}&fullscreen=0";
+                    }
+
                     oApiResult.Message = $"{ApiUrl}loginV2?{sParam}";
                 }
                 else
