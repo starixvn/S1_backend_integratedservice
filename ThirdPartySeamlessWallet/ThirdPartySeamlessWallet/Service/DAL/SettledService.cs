@@ -17,14 +17,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
         private readonly Tools tools;
-        private readonly BettingService bettingService;
         private readonly Log2File log2File;
-        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, BettingService bettingService, Log2File log2File)
+        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools,  Log2File log2File)
         {
             this.configuration = configuration;
             this.walletService = walletService;
             this.tools = tools;
-            this.bettingService = bettingService;
             this.log2File = log2File;
         }
 
