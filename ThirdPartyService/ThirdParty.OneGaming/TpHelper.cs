@@ -110,8 +110,19 @@ namespace ThirdParty.OneGaming
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string agentCode = inputs.ContainsKey($"agent_code_{currency}") && !string.IsNullOrEmpty(inputs[$"agent_code_{currency}"]) ? inputs[$"agent_code_{currency}"] : throw new Exception($"agent_code_{currency}");
             string secret_key = inputs.ContainsKey($"secret_key_{currency}") && !string.IsNullOrEmpty(inputs[$"secret_key_{currency}"]) ? inputs[$"secret_key_{currency}"] : throw new Exception($"secret_key_{currency}");
+            ApiResult oApiResult = new ApiResult();
 
-            if (appType == AppType.Desktop)
+            if (appType == AppType.Native)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = JsonConvert.SerializeObject(new
+                {
+                    account = tpCustInfo.TpUserName,
+                    password = tpCustInfo.TpPwd
+                });
+                return oApiResult;
+            }
+            else if (appType == AppType.Desktop)
             {
                 ApiUrl = $"{ApiUrl}/gameLobby_URL";
             }
@@ -141,7 +152,6 @@ namespace ThirdParty.OneGaming
                 "application/json"
             );
 
-            ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<LoginResponse>(result);

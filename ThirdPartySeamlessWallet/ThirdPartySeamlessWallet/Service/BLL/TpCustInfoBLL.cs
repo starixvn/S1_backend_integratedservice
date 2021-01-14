@@ -91,5 +91,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return tpCustInfoService.SetTpPwd(tpId, tpUserName, tpPwd);
         }
+        public void AddLoginRecord(int custId, int siteId, string ip, out string token)
+        {
+            tpCustInfoService.AddLoginRecord(custId, siteId, ip, out token);
+        }
+        public void AddUserLoginLog(int custId, string userName, int siteId, string loginIp, string fromUrl, string userAgent)
+        {
+            tpCustInfoService.AddUserLoginLog(custId, userName, siteId, loginIp, fromUrl, userAgent);
+        }
     }
 }

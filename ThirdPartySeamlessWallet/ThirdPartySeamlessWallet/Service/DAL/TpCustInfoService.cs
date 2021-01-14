@@ -43,5 +43,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("Service_TpPwd_Set", new { TpId = tpId, TpUserName = tpUserName, TpPwd = tpPwd }, commandType: CommandType.StoredProcedure);
         }
+        public void AddLoginRecord(int custId, int siteId, string ip, out string token)
+        {
+            token = GetToken();
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using MySqlTransaction trans = conn.BeginTransaction();
+            conn.Execute("LoginRecord_Set", new { CustId = custId, SiteId = siteId, IP = ip, Token = token }, trans, commandType: CommandType.StoredProcedure);
+            trans.Commit();
+        }
+        public void AddUserLoginLog(int custId, string userName, int siteId, string loginIp, string fromUrl, string userAgent)
+        {
+            Task.Run(() =>
+            {
+                using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Execute("LoginLog_Ins", new { CustId = custId, UserName = userName, SiteId = siteId, LoginIp = loginIp, FromUrl = fromUrl, UserAgent = userAgent }, commandType: CommandType.StoredProcedure);
+            });
+        }
+        private string GetToken()
+        {
+            Guid g = Guid.NewGuid();
+            string GuidString = Convert.ToBase64String(g.ToByteArray());
+            GuidString = GuidString.Replace("=", "");
+            GuidString = GuidString.Replace("+", "");
+
+            return GuidString;
+        }
     }
 }

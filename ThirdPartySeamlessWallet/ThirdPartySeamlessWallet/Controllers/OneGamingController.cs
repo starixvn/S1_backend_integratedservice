@@ -139,7 +139,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (string.IsNullOrEmpty(verifyReq.l_token))
             {
                 getApiResponse.status_code = "1";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -152,15 +152,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     getApiResponse.status_code = "1";
                     getApiResponse.message = "Invalid user Id";
-                    log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
-
-                if (tpCheck.Locked)
+                else if (tpCheck.Token != tokenInfo.longTimeToken)
+                {
+                    getApiResponse.status_code = "1";
+                    getApiResponse.error_code = "320";
+                    getApiResponse.message = $"Validation not verify";
+                    log2File.Error($"{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+                else if (tpCheck.Locked)
                 {
                     getApiResponse.status_code = "1";
                     getApiResponse.message = "Account is Locked";
-                    log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
@@ -193,7 +200,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Token is null";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -204,15 +211,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Invalid user Id";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
-
-            if (tpCheck.Locked)
+            else if (tpCheck.Token != tokenInfo.longTimeToken)
+            {
+                getApiResponse.status_code = "1";
+                getApiResponse.error_code = "320";
+                getApiResponse.message = "Validation not verify";
+                log2File.Error($"{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            else if (tpCheck.Locked)
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Account is Locked";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -224,7 +238,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.status_code = "1";
                 getApiResponse.error_code = "315";
                 getApiResponse.message = "Invalid bcode";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -256,7 +270,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
 
-            //if (transferReq.amount < 5000)
+            //if (environment.IsDevelopment() && transferReq.amount < 5000)
             //{
             //    System.Threading.Thread.Sleep(15000);
             //    log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -267,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Token is null";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -278,21 +292,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Invalid user Id";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
-            if (tpCheck.Token != tokenInfo.longTimeToken)
+            else if (tpCheck.Token != tokenInfo.longTimeToken)
             {
                 getApiResponse.status_code = "1";
-                getApiResponse.message = "Account is offline";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                getApiResponse.error_code = "320";
+                getApiResponse.message = $"Validation not verify";
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
-            if (tpCheck.Locked)
+            else if (tpCheck.Locked)
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Account is Locked";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -303,7 +318,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.status_code = "1";
                 getApiResponse.error_code = "315";
                 getApiResponse.message = "Invalid bcode";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -335,7 +350,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     getApiResponse.status_code = "1";
                     getApiResponse.error_code = "302";
-                    getApiResponse.message = "Not Enough Balance";
+                    getApiResponse.message = "Insufficient Balance";
                 }
             }
             catch (Exception ex)
@@ -361,7 +376,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
 
-            //if (transferReq.amount < 10000)
+            //if (environment.IsDevelopment() && transferReq.amount < 10000)
             //{
             //    System.Threading.Thread.Sleep(15000);
             //    log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -372,7 +387,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Token is null";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -386,7 +401,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.status_code = "1";
                 getApiResponse.error_code = "315";
                 getApiResponse.message = "Invalid bcode";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -433,7 +448,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Token is null";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -467,34 +482,41 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status_code = "1";
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
-
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, mobileReq.username);
-            if (tpCheck == null)
-            {
-                getApiResponse.status_code = "1";
-                getApiResponse.message = "Invalid user Id";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
-            if (tpCheck.Locked)
-            {
-                getApiResponse.status_code = "1";
-                getApiResponse.message = "Account is Locked";
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, mobileReq.username);
 
-            if (!string.IsNullOrEmpty(mobileReq.password) && tpCustInfo.TpPwd == mobileReq.password)
+            if (!string.IsNullOrEmpty(mobileReq.password) && tpCustInfo?.TpPwd == mobileReq.password)
             {
+                string token = null;
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+                if (tpCheck == null)
+                {
+                    string clientIp = "";
+                    tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
+                    tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "App", "App");
+                    tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+                }
+
+                if (tpCheck.Locked)
+                {
+                    getApiResponse.status_code = "1";
+                    getApiResponse.message = "Account is Locked";
+                    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, mobileReq.username);
                 getApiResponse.status_code = "0";
                 getApiResponse.message = "";
                 getApiResponse.player_id = mobileReq.username;
                 getApiResponse.balance = tpCustBalance.Balance;
                 getApiResponse.agent_code = mobileReq.agent_code;
+
+                var key = authBLL.ApplyToken(tpCustInfo);
+                var sessionKeyArr = new string[] { key, token, mobileReq.username, tpCustBalance.TpCurrencyId };
+                byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
+                string sessionKey = Convert.ToBase64String(bytes);
+
+                getApiResponse.l_token = HttpUtility.UrlEncode(sessionKey);
             }
             else
             {
