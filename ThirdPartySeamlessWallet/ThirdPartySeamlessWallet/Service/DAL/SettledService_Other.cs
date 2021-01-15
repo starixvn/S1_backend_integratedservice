@@ -996,7 +996,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             (int)GameType.OneGaming_Poker,
                             TransType.Payout,
                             $"Payout: {Math.Abs(bettingDataPK_OneGaming.amount):#,##0.##}",
-                            bettingDataPK_OneGaming.transaction_id,
+                            bettingDataPK_OneGaming.ref_tx_id ?? bettingDataPK_OneGaming.transaction_id,
                             out afterAmount,
                             conn,
                             trans
@@ -1057,7 +1057,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             conn.Execute("Service_BettransPK_OneGaming_Rollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (rollbackDataPK_OneGaming.amount != 0 && p.Get<int>("result") == 1)
+            if (amount != 0 && p.Get<int>("result") == 1)
             {
                 walletService.SetBalance(
                     tpCustInfo.CustId,
@@ -1065,8 +1065,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo.UserName,
                     amount,
                     (int)GameType.OneGaming_Poker,
-                    TransType.Refunds,
-                    $"Refund: {Math.Abs(rollbackDataPK_OneGaming.amount):#,##0.##}",
+                    TransType.Undo,
+                    $"Rollback: {Math.Abs(rollbackDataPK_OneGaming.amount):#,##0.##}",
                     transactionId,
                     out afterAmount,
                     conn,

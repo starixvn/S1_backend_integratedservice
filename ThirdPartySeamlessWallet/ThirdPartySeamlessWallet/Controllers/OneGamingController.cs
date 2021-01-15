@@ -270,12 +270,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
 
-            if (environment.IsDevelopment())
-            {
-                System.Threading.Thread.Sleep(15000);
-                log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                //return getApiResponse;
-            }
+            //if (environment.IsDevelopment())
+            //{
+            //    System.Threading.Thread.Sleep(15000);
+            //    log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //    //return getApiResponse;
+            //}
 
             if (string.IsNullOrEmpty(transferReq.l_token))
             {
@@ -333,6 +333,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.transaction_id = transferReq.transaction_id;
                     getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
                     getApiResponse.player_id = tokenInfo.tpUserName;
+
+                    if (tpAffterAmount == 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+
                     getApiResponse.balance = tpAffterAmount;
                 }
                 else if (result == -1)
@@ -375,8 +382,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (environment.IsDevelopment())
             {
-                System.Threading.Thread.Sleep(15000);
-                log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                //System.Threading.Thread.Sleep(15000);
+                //log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 //return getApiResponse;
             }
 
@@ -413,11 +420,28 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.transaction_id = transferReq.transaction_id;
                     getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
                     getApiResponse.player_id = tokenInfo.tpUserName;
+
+                    if (tpAffterAmount == 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+
                     getApiResponse.balance = tpAffterAmount;
+
+                    if (environment.IsDevelopment() && !transferReq.game_key.Equals("Refund", comparisonType: StringComparison.OrdinalIgnoreCase))
+                    {
+                        //getApiResponse.status_code = "1";
+                        //getApiResponse.message = "Error";
+                        //return getApiResponse;
+                        //System.Threading.Thread.Sleep(15000);
+                    }
                 }
                 else if (result == -1)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
+                    getApiResponse.status_code = "0";
+                    getApiResponse.message = "";
                     getApiResponse.transaction_id = transferReq.transaction_id;
                     getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
                     getApiResponse.player_id = tokenInfo.tpUserName;

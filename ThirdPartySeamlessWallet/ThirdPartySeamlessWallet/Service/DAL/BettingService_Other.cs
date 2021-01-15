@@ -571,7 +571,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)GameType.OneGaming_Poker,
                         TransType.Wagers,
                         $"Stake: {Math.Abs(bettingDataPK_OneGaming.amount):#,##0.##}",
-                        bettingDataPK_OneGaming.transaction_id,
+                        bettingDataPK_OneGaming.ref_tx_id ?? bettingDataPK_OneGaming.transaction_id,
                         out afterAmount,
                         conn,
                         trans
