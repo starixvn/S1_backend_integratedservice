@@ -270,12 +270,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
 
-            //if (environment.IsDevelopment() && transferReq.amount < 5000)
-            //{
-            //    System.Threading.Thread.Sleep(15000);
-            //    log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-            //    return getApiResponse;
-            //}
+            if (environment.IsDevelopment())
+            {
+                System.Threading.Thread.Sleep(15000);
+                log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                //return getApiResponse;
+            }
 
             if (string.IsNullOrEmpty(transferReq.l_token))
             {
@@ -325,7 +325,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 transferReq.player_id = tokenInfo.tpUserName;
-                var result = bettingBLL.PlaceBetPK_OneGaming(transferReq, out decimal tpAffterAmount);
+                var result = bettingBLL.MoneyOutPK_OneGaming(transferReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     getApiResponse.status_code = "0";
@@ -338,13 +338,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (result == -1)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
-                    getApiResponse.status_code = "0";
-                    getApiResponse.message = "";
                     getApiResponse.transaction_id = transferReq.transaction_id;
                     getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
                     getApiResponse.player_id = tokenInfo.tpUserName;
                     getApiResponse.balance = tpCustBalance.Balance;
-
                 }
                 else if (tpAffterAmount < 0)
                 {
@@ -356,7 +353,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
-                return getApiResponse;
+                throw;
             }
 
             log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -376,12 +373,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
 
-            //if (environment.IsDevelopment() && transferReq.amount < 10000)
-            //{
-            //    System.Threading.Thread.Sleep(15000);
-            //    log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-            //    return getApiResponse;
-            //}
+            if (environment.IsDevelopment())
+            {
+                System.Threading.Thread.Sleep(15000);
+                log2File.Info($"SLEEP:\r\n{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                //return getApiResponse;
+            }
 
             if (string.IsNullOrEmpty(transferReq.l_token))
             {
@@ -406,27 +403,36 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             transferReq.player_id = tokenInfo.tpUserName;
-            var result = settledBLL.PayoutPK_OneGaming(transferReq, out decimal tpAffterAmount);
-            if (result > 0)
+            try
             {
-                getApiResponse.status_code = "0";
-                getApiResponse.message = "";
-                getApiResponse.transaction_id = transferReq.transaction_id;
-                getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
-                getApiResponse.player_id = tokenInfo.tpUserName;
-                getApiResponse.balance = tpAffterAmount;
-            }
-            else if (result == -1)
-            {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
-                getApiResponse.status_code = "0";
-                getApiResponse.message = "";
-                getApiResponse.transaction_id = transferReq.transaction_id;
-                getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
-                getApiResponse.player_id = tokenInfo.tpUserName;
-                getApiResponse.balance = tpCustBalance.Balance;
+                var result = settledBLL.MoneyInPK_OneGaming(transferReq, out decimal tpAffterAmount);
+                if (result > 0)
+                {
+                    getApiResponse.status_code = "0";
+                    getApiResponse.message = "";
+                    getApiResponse.transaction_id = transferReq.transaction_id;
+                    getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
+                    getApiResponse.player_id = tokenInfo.tpUserName;
+                    getApiResponse.balance = tpAffterAmount;
+                }
+                else if (result == -1)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
+                    getApiResponse.status_code = "0";
+                    getApiResponse.message = "";
+                    getApiResponse.transaction_id = transferReq.transaction_id;
+                    getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
+                    getApiResponse.player_id = tokenInfo.tpUserName;
+                    getApiResponse.balance = tpCustBalance.Balance;
 
+                }
             }
+            catch (Exception ex)
+            {
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
+                throw;
+            }
+
             log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
         }
@@ -437,14 +443,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{thisTp}_IG_playerFailedTransaction";
             var json = JsonConvert.SerializeObject(getReq);
-            var refundReq = JsonConvert.DeserializeObject<RefundDataPK_OneGaming>(json);
+            var rollbackReq = JsonConvert.DeserializeObject<RollbackDataPK_OneGaming>(json);
 
             TransferResp getApiResponse = new TransferResp();
             getApiResponse.status_code = "1";
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
 
-            if (string.IsNullOrEmpty(refundReq.l_token))
+            if (string.IsNullOrEmpty(rollbackReq.l_token))
             {
                 getApiResponse.status_code = "1";
                 getApiResponse.message = "Token is null";
@@ -452,17 +458,25 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tokenInfo = getTokenInfo(refundReq.l_token);
+            var tokenInfo = getTokenInfo(rollbackReq.l_token);
 
-            refundReq.player_id = tokenInfo.tpUserName;
-            var result = settledBLL.RefundPK_OneGaming(refundReq, out decimal tpAffterAmount);
-            if (result > 0)
+            rollbackReq.player_id = tokenInfo.tpUserName;
+            try
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
-                getApiResponse.status_code = "0";
-                getApiResponse.message = "";
-                getApiResponse.player_id = tokenInfo.tpUserName;
-                getApiResponse.balance = tpCustBalance.Balance;
+                var result = settledBLL.RollbackPK_OneGaming(rollbackReq, out decimal tpAffterAmount);
+                if (result > 0)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
+                    getApiResponse.status_code = "0";
+                    getApiResponse.message = "";
+                    getApiResponse.player_id = tokenInfo.tpUserName;
+                    getApiResponse.balance = tpCustBalance.Balance;
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
+                throw;
             }
 
             log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);

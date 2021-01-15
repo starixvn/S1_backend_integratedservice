@@ -531,7 +531,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region OneGaming
 
-        public int PlaceBetPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
+        public int MoneyOutPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -540,14 +540,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             var transactionId = bettingDataPK_OneGaming.transaction_id;
-            var ticketStatus = (int)TicketStatus.UnSettled;
-            var settleFlag = 2;
             var amount = bettingDataPK_OneGaming.amount * -1;
+            var ticketType = (int)BettransType.Bet;
             if (!string.IsNullOrEmpty(bettingDataPK_OneGaming.ref_tx_id) && string.Equals(bettingDataPK_OneGaming.game_key, "Refund", StringComparison.OrdinalIgnoreCase))
             {
                 transactionId = bettingDataPK_OneGaming.ref_tx_id;
-                ticketStatus = (int)TicketStatus.Refund;
-                settleFlag = 1;
+                ticketType = (int)BettransType.CancelBet;
                 amount = Math.Abs(bettingDataPK_OneGaming.amount);
             }
 
@@ -561,16 +559,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 player_id = bettingDataPK_OneGaming.player_id,
                 ref_tx_id = bettingDataPK_OneGaming.ref_tx_id,
                 dateUnix = bettingDataPK_OneGaming.dateUnix,
-                TicketType = (int)BettransType.Bet,
-                TicketStatus = ticketStatus,
-                SettleFlag = settleFlag
+                TicketType = ticketType
             });
 
             try
             {
                 result = conn.Execute("Service_BettransPK_OneGaming_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                if (result > 0)
+                if (result > 0 && ticketType == (int)BettransType.Bet)
                 {
                     result = walletService.SetBalance(
                         tpCustInfo.CustId,
@@ -586,10 +582,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans
                     );
 
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
+                    trans.Commit();
                 }
             }
             catch (MySqlException mySqlEx)

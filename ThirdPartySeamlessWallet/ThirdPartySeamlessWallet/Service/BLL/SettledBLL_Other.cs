@@ -259,7 +259,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region OneGaming
 
-        public int PayoutPK_OneGaming(BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
+        public int MoneyInPK_OneGaming(BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, bettingDataPK_OneGaming.player_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
@@ -269,7 +269,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.PayoutPK_OneGaming(tpCustInfo, bettingDataPK_OneGaming, out afterAmount);
+            var result = settledService.MoneyInPK_OneGaming(tpCustInfo, bettingDataPK_OneGaming, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -277,17 +277,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int RefundPK_OneGaming(RefundDataPK_OneGaming refundDataPK_OneGaming, out decimal afterAmount)
+        public int RollbackPK_OneGaming(RollbackDataPK_OneGaming rollbackDataPK_OneGaming, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, refundDataPK_OneGaming.player_id);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, rollbackDataPK_OneGaming.player_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                refundDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
+                rollbackDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.RefundPK_OneGaming(tpCustInfo, refundDataPK_OneGaming, out afterAmount);
+            var result = settledService.RollbackPK_OneGaming(tpCustInfo, rollbackDataPK_OneGaming, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

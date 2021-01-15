@@ -30,7 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         }
     }
 
-    public class RefundDataPK_OneGaming
+    public class RollbackDataPK_OneGaming
     {
         public decimal amount { get; set; }
         public string transaction_id { get; set; }

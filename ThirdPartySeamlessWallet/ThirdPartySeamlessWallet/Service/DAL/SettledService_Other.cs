@@ -955,7 +955,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region OneGaming
 
-        public int PayoutPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
+        public int MoneyInPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -1032,22 +1032,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int RefundPK_OneGaming(TpCustInfo tpCustInfo, RefundDataPK_OneGaming refundDataPK_OneGaming, out decimal afterAmount)
+        public int RollbackPK_OneGaming(TpCustInfo tpCustInfo, RollbackDataPK_OneGaming rollbackDataPK_OneGaming, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = 0;
-            var transactionId = refundDataPK_OneGaming.transaction_id.Replace("TimeOut_", "");
+            var result = 1;
+            var transactionId = rollbackDataPK_OneGaming.transaction_id.Replace("TimeOut_", "");
             var p = new DynamicParameters(new
             {
+                type = rollbackDataPK_OneGaming.type,
+                amount = rollbackDataPK_OneGaming.amount,
                 transaction_id = transactionId,
-                type = refundDataPK_OneGaming.type,
-                dateUnix = refundDataPK_OneGaming.dateUnix,
-                TicketStatus = (int)TicketStatus.Refund,
-                SettleFlag = 1
+                game_key = rollbackDataPK_OneGaming.game_key,
+                game_name = rollbackDataPK_OneGaming.game_name,
+                bcode = rollbackDataPK_OneGaming.bcode,
+                player_id = rollbackDataPK_OneGaming.player_id,
+                ref_tx_id = (string)null,
+                dateUnix = rollbackDataPK_OneGaming.dateUnix
             });
-            var amount = Math.Abs(refundDataPK_OneGaming.amount);
-            if (string.Equals(refundDataPK_OneGaming.type, "MoneyIn", StringComparison.OrdinalIgnoreCase))
+
+            p.Add("result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+            var amount = Math.Abs(rollbackDataPK_OneGaming.amount);
+            if (string.Equals(rollbackDataPK_OneGaming.type, "MoneyIn", StringComparison.OrdinalIgnoreCase))
             {
                 amount *= -1;
             }
@@ -1055,33 +1062,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            result = conn.Execute("Service_BettransPK_OneGaming_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            conn.Execute("Service_BettransPK_OneGaming_Rollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+            if (rollbackDataPK_OneGaming.amount != 0 && p.Get<int>("result") == 1)
             {
-                if (refundDataPK_OneGaming.amount != 0)
-                {
-                    result = walletService.SetBalance(
-                        tpCustInfo.CustId,
-                        tpCustInfo.SiteId,
-                        tpCustInfo.UserName,
-                        amount,
-                        (int)GameType.OneGaming_Poker,
-                        TransType.Refunds,
-                        $"Refund: {Math.Abs(refundDataPK_OneGaming.amount):#,##0.##}",
-                        transactionId,
-                        out afterAmount,
-                        conn,
-                        trans
-                    );
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
+                walletService.SetBalance(
+                    tpCustInfo.CustId,
+                    tpCustInfo.SiteId,
+                    tpCustInfo.UserName,
+                    amount,
+                    (int)GameType.OneGaming_Poker,
+                    TransType.Refunds,
+                    $"Refund: {Math.Abs(rollbackDataPK_OneGaming.amount):#,##0.##}",
+                    transactionId,
+                    out afterAmount,
+                    conn,
+                    trans
+                );
             }
 
+            trans.Commit();
             return result;
         }
 

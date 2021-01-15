@@ -165,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region OneGaming
 
-        public int PlaceBetPK_OneGaming(BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
+        public int MoneyOutPK_OneGaming(BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, bettingDataPK_OneGaming.player_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
@@ -175,7 +175,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = bettingService.PlaceBetPK_OneGaming(tpCustInfo, bettingDataPK_OneGaming, out afterAmount);
+            var result = bettingService.MoneyOutPK_OneGaming(tpCustInfo, bettingDataPK_OneGaming, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
