@@ -958,34 +958,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int MoneyInPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
 
-            var transactionId = bettingDataPK_OneGaming.transaction_id;
-            var ticketStatus = (int)TicketStatus.UnSettled;
-            var settleFlag = 2;
-            if (!string.IsNullOrEmpty(bettingDataPK_OneGaming.ref_tx_id) && string.Equals(bettingDataPK_OneGaming.game_key, "Refund", StringComparison.OrdinalIgnoreCase))
-            {
-                transactionId = bettingDataPK_OneGaming.ref_tx_id;
-                ticketStatus = (int)TicketStatus.Refund;
-                settleFlag = 1;
-            }
+            var ticketType = (int)BettransType.Payout;
 
             var p = new DynamicParameters(new
             {
                 amount = bettingDataPK_OneGaming.amount,
-                transaction_id = transactionId,
+                transaction_id = bettingDataPK_OneGaming.transaction_id,
                 game_key = bettingDataPK_OneGaming.game_key,
                 game_name = bettingDataPK_OneGaming.game_name,
                 bcode = bettingDataPK_OneGaming.bcode,
                 player_id = bettingDataPK_OneGaming.player_id,
                 ref_tx_id = bettingDataPK_OneGaming.ref_tx_id,
                 dateUnix = bettingDataPK_OneGaming.dateUnix,
-                TicketType = (int)BettransType.Payout,
-                TicketStatus = ticketStatus,
-                SettleFlag = settleFlag
+                TicketType = ticketType
             });
 
+            p.Add("result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
@@ -994,7 +986,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    if (bettingDataPK_OneGaming.amount != 0)
+                    if (bettingDataPK_OneGaming.amount != 0 && p.Get<int>("result") == 1)
                     {
                         result = walletService.SetBalance(
                             tpCustInfo.CustId,
@@ -1004,7 +996,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             (int)GameType.OneGaming_Poker,
                             TransType.Payout,
                             $"Payout: {Math.Abs(bettingDataPK_OneGaming.amount):#,##0.##}",
-                            transactionId,
+                            bettingDataPK_OneGaming.transaction_id,
                             out afterAmount,
                             conn,
                             trans
@@ -1035,9 +1027,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int RollbackPK_OneGaming(TpCustInfo tpCustInfo, RollbackDataPK_OneGaming rollbackDataPK_OneGaming, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 1;
             var transactionId = rollbackDataPK_OneGaming.transaction_id.Replace("TimeOut_", "");
+
             var p = new DynamicParameters(new
             {
                 type = rollbackDataPK_OneGaming.type,
@@ -1059,6 +1051,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 amount *= -1;
             }
 
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
 
@@ -1077,7 +1070,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     transactionId,
                     out afterAmount,
                     conn,
-                    trans
+                    trans, AllowNegative.Allow
                 );
             }
 

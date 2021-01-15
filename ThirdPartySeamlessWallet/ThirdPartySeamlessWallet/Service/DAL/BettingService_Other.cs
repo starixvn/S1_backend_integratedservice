@@ -534,25 +534,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int MoneyOutPK_OneGaming(TpCustInfo tpCustInfo, BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
             var result = 0;
 
-            var transactionId = bettingDataPK_OneGaming.transaction_id;
             var amount = bettingDataPK_OneGaming.amount * -1;
             var ticketType = (int)BettransType.Bet;
-            if (!string.IsNullOrEmpty(bettingDataPK_OneGaming.ref_tx_id) && string.Equals(bettingDataPK_OneGaming.game_key, "Refund", StringComparison.OrdinalIgnoreCase))
-            {
-                transactionId = bettingDataPK_OneGaming.ref_tx_id;
-                ticketType = (int)BettransType.CancelBet;
-                amount = Math.Abs(bettingDataPK_OneGaming.amount);
-            }
 
             var p = new DynamicParameters(new
             {
                 amount = amount,
-                transaction_id = transactionId,
+                transaction_id = bettingDataPK_OneGaming.transaction_id,
                 game_key = bettingDataPK_OneGaming.game_key,
                 game_name = bettingDataPK_OneGaming.game_name,
                 bcode = bettingDataPK_OneGaming.bcode,
@@ -562,11 +552,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketType = ticketType
             });
 
+            p.Add("result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
             try
             {
                 result = conn.Execute("Service_BettransPK_OneGaming_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                if (result > 0 && ticketType == (int)BettransType.Bet)
+                if (p.Get<int>("result") == 1)
                 {
                     result = walletService.SetBalance(
                         tpCustInfo.CustId,
@@ -576,14 +571,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)GameType.OneGaming_Poker,
                         TransType.Wagers,
                         $"Stake: {Math.Abs(bettingDataPK_OneGaming.amount):#,##0.##}",
-                        transactionId,
+                        bettingDataPK_OneGaming.transaction_id,
                         out afterAmount,
                         conn,
                         trans
                     );
-
-                    trans.Commit();
                 }
+
+                trans.Commit();
             }
             catch (MySqlException mySqlEx)
             {

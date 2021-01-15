@@ -418,13 +418,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (result == -1)
                 {
                     var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tokenInfo.tpUserName);
-                    getApiResponse.status_code = "0";
-                    getApiResponse.message = "";
                     getApiResponse.transaction_id = transferReq.transaction_id;
                     getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tokenInfo.tpCurrency}"];
                     getApiResponse.player_id = tokenInfo.tpUserName;
                     getApiResponse.balance = tpCustBalance.Balance;
-
                 }
             }
             catch (Exception ex)
