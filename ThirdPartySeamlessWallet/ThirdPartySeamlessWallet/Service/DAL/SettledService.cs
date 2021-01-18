@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.GameType = GameType.YL_Fish;
                         betRecordInfo.TpUserName = bettingDataFish_YL.userId;
                         betRecordInfo.SettledTime = 0;
-                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
 
                         result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 

@@ -266,7 +266,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
                             var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-                            if (tpCurrency.ExchangeRate > 1)
+                            if (tpCurrency.ExchangeRate != 1)
                             {
                                 unsettled.Stake *= tpCurrency.ExchangeRate;
                                 unsettled.ValidBet *= tpCurrency.ExchangeRate;
@@ -282,7 +282,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.OneGaming_Poker,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValidNotRollover
+                                SettlementType = SettlementType.SettledForValid
                             };
                             var result = settledBLL.Settled_OneGaming(tpCustInfo, betRecordInfo);
                             settledBLL.SetSettleFlag_TpWagerPK_OneGaming(unsettled.ticket);
@@ -357,7 +357,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.V8_Poker,
                                 TpUserName = account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValidNotRollover
+                                SettlementType = SettlementType.SettledForValid
                             };
                             var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                             settledBLL.SetSettleFlag_TpWagerPK_V8(unsettled.GameID);

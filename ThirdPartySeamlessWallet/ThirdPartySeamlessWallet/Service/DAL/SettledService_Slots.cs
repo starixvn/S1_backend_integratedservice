@@ -996,7 +996,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 GameType = GameType.SG_Fish,
                 TpUserName = settleData_SG.Account,
                 SettledTime = settleData_SG.SettleTime,
-                SettlementType = SettlementType.SettledForValidNotRollover
+                SettlementType = SettlementType.SettledForValid
             };
 
             conn.Open();
