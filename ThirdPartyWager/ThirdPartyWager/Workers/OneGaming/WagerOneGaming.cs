@@ -18,10 +18,12 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
+        private readonly Log2File log2File;
         private Timer timerTHB;
         private Timer timerMYR;
         private Timer timerIDR;
         private Timer timerCNY;
+        private Timer timerVND;
         private Timer timerUSD;
         private int intervalMins = 3;
         private int iRangMins = 20;
@@ -39,7 +41,8 @@ namespace ThirdPartyWager.Workers
             WagerOneGamingBLL wagerOneGamingBLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
+            IHostEnvironment environment,
+            Log2File log2File
         )
         {
             this.logger = logger;
@@ -47,6 +50,7 @@ namespace ThirdPartyWager.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
+            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -54,6 +58,7 @@ namespace ThirdPartyWager.Workers
             timerMYR = new Timer(DoTaskMYR, null, TimeSpan.Zero, TimeSpan.Zero);
             timerIDR = new Timer(DoTaskIDR, null, TimeSpan.Zero, TimeSpan.Zero);
             timerCNY = new Timer(DoTaskCNY, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerVND = new Timer(DoTaskVND, null, TimeSpan.Zero, TimeSpan.Zero);
             timerUSD = new Timer(DoTaskUSD, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -100,6 +105,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
+                    log2File.Error(ex.ToString(), "WagerOneGaming");
                 }
                 finally
                 {
@@ -159,6 +165,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
+                    log2File.Error(ex.ToString(), "WagerOneGaming");
                 }
                 finally
                 {
@@ -216,6 +223,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), "WagerOneGaming");
             }
             finally
             {
@@ -274,6 +282,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
+                    log2File.Error(ex.ToString(), "WagerOneGaming");
                 }
                 finally
                 {
@@ -290,7 +299,65 @@ namespace ThirdPartyWager.Workers
                 }
             }
         }
+        private async void DoTaskVND(object state)
+        {
+            int quick = 0;
+            if (environment.IsProduction())
+            {
+                try
+                {
+                    var currency = "VND";
 
+                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                    DateTime timerTime;
+                    int last;
+                    if (dataTpTimer == null)
+                    {
+                        last = iRangMins - 1;
+                        timerTime = DateTime.Now.AddMinutes(-1 * last);
+                    }
+                    else
+                    {
+                        timerTime = dataTpTimer.StartTime;
+                        last = iRangMins - 1;
+                    }
+
+                    if (timerTime < DateTime.Now)
+                    {
+                        var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyyMMddHHmmss", timerTime);
+                        bool result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                        if (result == true)
+                        {
+                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        }
+                    }
+                    TimeSpan ts = DateTime.Now - timerTime;
+                    int diffMin = (int)ts.TotalMinutes;
+                    if (diffMin > beyond)
+                    {
+                        quick = 1;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex.Message);
+                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                }
+                finally
+                {
+                    if (quick == 1)
+                    {
+                        TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                        timerVND.Change(dueTimeSpan, TimeSpan.Zero);
+                    }
+                    else
+                    {
+                        TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                        timerVND.Change(dueTimeSpan, TimeSpan.Zero);
+                    }
+                }
+            }
+        }
         private async void DoTaskUSD(object state)
         {
             if (environment.IsProduction())
@@ -333,6 +400,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
+                    log2File.Error(ex.ToString(), "WagerOneGaming");
                 }
                 finally
                 {
@@ -357,6 +425,7 @@ namespace ThirdPartyWager.Workers
             timerMYR?.Change(Timeout.Infinite, 0);
             timerIDR?.Change(Timeout.Infinite, 0);
             timerCNY?.Change(Timeout.Infinite, 0);
+            timerVND?.Change(Timeout.Infinite, 0);
             timerUSD?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }

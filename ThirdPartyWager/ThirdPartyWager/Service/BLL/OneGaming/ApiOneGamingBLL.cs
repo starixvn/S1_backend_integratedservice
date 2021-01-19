@@ -24,7 +24,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerOneGamingModel> GetBetListByTime(string apiUrl, string agentCode, string secretKey, string startTime, string endTime)
         {
             // param
-            string uri = "/allPlayerRecord";
+            string uri = "/allPlayerRecord_Currency";
             string url = $"{apiUrl}{uri}";
             var param = new
             {
