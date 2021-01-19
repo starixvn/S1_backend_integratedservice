@@ -43,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleYLFish;
         private Timer timerSettleN2Live;
         private Timer timerSettleN2LiveLC_Smart;
+        private Timer timerSettlePTRng;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -99,6 +100,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleYLFish = new Timer(DoSettleYLFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -907,6 +909,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleYLFish?.Change(Timeout.Infinite, 0);
             timerSettleN2Live?.Change(Timeout.Infinite, 0);
             timerSettleN2LiveLC_Smart?.Change(Timeout.Infinite, 0);
+            timerSettlePTRng?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

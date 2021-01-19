@@ -63,8 +63,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
+            services.AddSingleton<WagerPTService>();
             services.AddSingleton<LiveStreamingService>();
-
+            
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             // DG
@@ -117,6 +118,9 @@ namespace ThirdPartyWager
             // N2Live
             services.AddSingleton<WagerN2LiveBLL>();
             services.AddSingleton<ApiN2LiveBLL>();
+            // PT
+            services.AddSingleton<WagerPTBLL>();
+            services.AddSingleton<ApiPTBLL>();
             // LiveStreaming
             services.AddSingleton<LiveStreamingBLL>();
 
@@ -145,6 +149,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
+            services.AddHostedService<WagerPT>();
+            services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
         }
 
