@@ -140,8 +140,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string[] temp = accountTmp.Split('_');
                 var account = $"{temp[1]}_{temp[2]}";
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-                /*Transfer Out*/
-
+                /*Transfer In*/
                 var client = clientFactory.CreateClient();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 Dictionary<string, string> input = new Dictionary<string, string>();
@@ -182,7 +181,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]")]
-        public GetBalanceResp SeamlessWallet([FromQuery] Dictionary<string, string> getReq)
+        public async Task<GetBalanceResp> SeamlessWalletAsync([FromQuery] Dictionary<string, string> getReq)
         {
             string logName = $"{thisTp}";
             var subName = "";
@@ -226,7 +225,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (s == "13")
             {
-                subName = "deposit";
+                subName = "TransferOut";
                 var account = HttpUtility.ParseQueryString(param).Get("account");
                 var money = HttpUtility.ParseQueryString(param).Get("money");
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
@@ -245,26 +244,41 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 try
                 {
-                    BettingDataPK_V8 deposit = new BettingDataPK_V8();
-                    deposit.account = account;
-                    deposit.money = Convert.ToDecimal(money);
-                    deposit.timestamp = apiReq.timestamp;
-                    /*Transfer In*/
-                    var result = bettingBLL.PlaceBetPK_V8(deposit, out decimal tpAffterAmount);
-                    if (result > 0)
+                    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+                    /*Transfer Out*/
+
+                    var client = clientFactory.CreateClient();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    //input.Add("Host", $"{Request.Scheme}://{Request.Host}{Request.PathBase}");
+                    //input.Add("ClientIP", tools.GetClientIP());
+                    var fooJSON = JsonConvert.SerializeObject(new
                     {
-                        getBalanceResponse.code = 0;
-                        getBalanceResponse.money = tpAffterAmount;
+                        TpId = (int)thisTp,
+                        CustId = tpCustInfo.CustId,
+                        Amount = Convert.ToDecimal(money),
+                        direction = 1
+                    });
+
+                    var fooContent = new StringContent(fooJSON, Encoding.UTF8, "application/json");
+                    var myUrl = $"{apiUrl}Transfer";
+                    HttpResponseMessage response = await client.PostAsync(myUrl, fooContent);
+                    ApiResult<TransferResult> oApiResult = new ApiResult<TransferResult>();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        oApiResult = JsonConvert.DeserializeObject<ApiResult<TransferResult>>(responseBody);
                     }
-                    else if (result == -1)
+
+                    if (oApiResult.ErrorCode == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account);
                         getBalanceResponse.code = 0;
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
                         getBalanceResponse.money = tpCustBalance.Balance;
                     }
-                    else if (tpAffterAmount < 0)
+                    else if (oApiResult.Data.Difference != 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
                         getBalanceResponse.code = 1005;
                         getBalanceResponse.money = tpCustBalance.Balance;
                     }
