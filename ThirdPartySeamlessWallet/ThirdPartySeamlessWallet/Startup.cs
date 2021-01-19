@@ -40,11 +40,9 @@ namespace ThirdPartySeamlessWallet
 
                 services.AddHttpClient("with_proxy")
                 .ConfigurePrimaryHttpMessageHandler(() => proxy);
+                //services.AddHttpClient();
             }
-            else
-            {
-                services.AddHttpClient();
-            }
+            services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
             /*Library*/
             services.AddSingleton<Tools>();

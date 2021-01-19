@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -57,6 +61,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly Tools tools;
         private readonly Tp thisTp;
+        private readonly IHttpClientFactory clientFactory;
+        private readonly string apiUrl;
 
         public V8Controller(
             ILogger<V8Controller> logger,
@@ -64,7 +70,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             TpCustInfoBLL tpCustInfoBLL,
             BettingBLL bettingBLL,
             Log2File log2File,
-            Tools tools
+            Tools tools,
+            IHttpClientFactory clientFactory,
+            IConfiguration configuration
         )
         {
             this.logger = logger;
@@ -73,12 +81,38 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.log2File = log2File;
             this.tools = tools;
-            this.thisTp = Tp.V8;
+            thisTp = Tp.V8;
+            this.clientFactory = clientFactory;
+            apiUrl = configuration.GetValue<string>("TpService");
+        }
+        public class ApiResult<TData>
+        {
+            public ApiResult()
+            {
+                ErrorCode = 9000;
+            }
+            public int ErrorCode { get; set; }
+            public string Message { get; set; }
+            public TData Data { get; set; }
+        }
+        public class TransferResult
+        {
+            public TransferResult()
+            {
+                Status = 2;
+            }
+            public int Status { get; set; }
+            public string ThirdId { get; set; }
+            public decimal Difference { get; set; }
+            public decimal Bonus { get; set; }
+            public decimal Rollover { get; set; }
+            public decimal Turnover { get; set; }
+            public int BonusStatus { get; set; }
         }
 
         [HttpGet]
         [Route("[controller]/channelHandle")]
-        public GetApiResp channelHandle([FromQuery] Dictionary<string, string> getReq)
+        public async Task<GetApiResp> channelHandleAsync([FromQuery] Dictionary<string, string> getReq)
         {
             string logName = $"{thisTp}";
             var subName = "";
@@ -105,14 +139,42 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var accountTmp = HttpUtility.ParseQueryString(param).Get("account");
                 string[] temp = accountTmp.Split('_');
                 var account = $"{temp[1]}_{temp[2]}";
-                var TransId = $"{apiReq.timestamp / 1000}_{(int)Direction.ToMain}_{account}";
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-                var result = thirdPartyBLL.SetThirdPartyTransferUserList(TransId, (int)thisTp, tpCustInfo.CustId, (int)Direction.ToMain);
-                if (result > 0)
+                /*Transfer Out*/
+
+                var client = clientFactory.CreateClient();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                Dictionary<string, string> input = new Dictionary<string, string>();
+                //input.Add("Host", $"{Request.Scheme}://{Request.Host}{Request.PathBase}");
+                //input.Add("ClientIP", tools.GetClientIP());
+                input.Add("AllOut", null);
+
+                var fooJSON = JsonConvert.SerializeObject(new
+                {
+                    TpId = (int)thisTp,
+                    CustId = tpCustInfo.CustId,
+                    Amount = 1,
+                    direction = 2,
+                    inputs = input
+                });
+
+                var fooContent = new StringContent(fooJSON, Encoding.UTF8, "application/json");
+                var myUrl = $"{apiUrl}Transfer";
+                HttpResponseMessage response = await client.PostAsync(myUrl, fooContent);
+                ApiResult<TransferResult> oApiResult = new ApiResult<TransferResult>();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    oApiResult = JsonConvert.DeserializeObject<ApiResult<TransferResult>>(responseBody);
+                }
+
+                if (oApiResult.ErrorCode == 0)
                 {
                     getApiResponse.d.code = 0;
                 }
-                log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
+
+                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
                 return getApiResponse;
             }
             return getApiResponse;
@@ -187,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     deposit.account = account;
                     deposit.money = Convert.ToDecimal(money);
                     deposit.timestamp = apiReq.timestamp;
-
+                    /*Transfer In*/
                     var result = bettingBLL.PlaceBetPK_V8(deposit, out decimal tpAffterAmount);
                     if (result > 0)
                     {

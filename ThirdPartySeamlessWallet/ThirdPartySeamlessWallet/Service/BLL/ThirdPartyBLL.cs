@@ -182,10 +182,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return gameType;
         }
-
-        public int SetThirdPartyTransferUserList(string transId, int tpId, long custId, int direction, decimal amount = 0)
-        {
-            return thirdPartyService.SetThirdPartyTransferUserList(transId, tpId, custId, direction, amount);
-        }
     }
 }

@@ -132,6 +132,18 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
+            if (inputs.ContainsKey("AllOut"))
+            {
+                decimal _Amount = balanceApiResult.Data.balance;
+                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                {
+                    _Amount = tpTransfer.Amount * tpCustInfoResult.Data.ExchangeRate;
+                }
+
+                tpTransfer.direction = Direction.ToMain;
+                tpTransfer.Amount = Math.Abs(_Amount);
+            }
+
             string transId = null;
             var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
             string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
