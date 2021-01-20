@@ -132,7 +132,7 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
-            if (inputs.ContainsKey("AllOut"))
+            if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("AllOut"))
             {
                 decimal _Amount = balanceApiResult.Data.balance;
                 if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
