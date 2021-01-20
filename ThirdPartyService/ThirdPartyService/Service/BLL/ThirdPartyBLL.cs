@@ -137,7 +137,7 @@ namespace ThirdPartyService.Service.BLL
                 decimal _Amount = balanceApiResult.Data.balance;
                 if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
                 {
-                    _Amount = tpTransfer.Amount * tpCustInfoResult.Data.ExchangeRate;
+                    _Amount *= tpCustInfoResult.Data.ExchangeRate;
                 }
 
                 tpTransfer.direction = Direction.ToMain;
