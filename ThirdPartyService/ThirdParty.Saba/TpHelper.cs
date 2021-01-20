@@ -20,10 +20,6 @@ namespace ThirdParty.Saba
             {"8","baseball" } ,
             {"9","badminton" } ,
             {"43","esports" },
-            {"4319","95039,94797,87294,92197,95090,94867,95076,95068,95067" },
-            {"4320","89616,94371,94561,94978,94826,91285,93197" },
-            {"4324","92834,67693" },
-            {"4325","esports" },
             {"50", "indiancricket" },
             {"161","numbergame" },
             {"164","164" }, 
@@ -342,7 +338,7 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        else if (SportType == "200" || SportType == "245" || SportType == "43" || SportType == "220" || SportType == "223")
+                        else if (SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223" || SportType == "245")
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
@@ -370,7 +366,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (act == "keno" || SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223")
+                        if (SportType == "43" ||  SportType == "200" || SportType == "202" || SportType == "220" || SportType == "223" || SportType == "245")
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
                         }
@@ -386,11 +382,6 @@ namespace ThirdParty.Saba
                         {
                             // Saba Soccer deeplink
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=1&leaguekey={act}";
-                        }
-                        else if (SportType == "4319" || SportType == "4320" || SportType == "4324" || SportType == "4325")
-                        {
-                            // Esprot deeplink
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=43&leaguekey={act}";
                         }
                         else
                         {
