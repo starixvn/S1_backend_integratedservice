@@ -343,17 +343,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var betReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
 
-            /*****/
-            if (environment.IsDevelopment() && getBetReq.ContainsKey("gamecode"))
-            {
-                var gameTypeDev = thirdPartyBLL.GetGameType((int)thisTp, betReq.gamecode);
-                if (gameTypeDev == GameType.CQ9_Fish)
-                {
-                    return Rollout(wtoken, getBetReq);
-                }
-            }
-            /*****/
-
             GetApiResp getBetResp = new GetApiResp();
             getBetResp.status.code = "1100";
             getBetResp.status.message = "Error";
@@ -410,16 +399,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBetResp;
             }
 
-            // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, betReq.gamecode);
-            if (gameType == GameType.CQ9_Fish)
-            {
-                getBetResp.status.code = "1100";
-                getBetResp.status.message = "Error : gamecode is not slot";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                return getBetResp;
-            }
-
             try
             {
                 int result = bettingBLL.PlaceBetRNG_CQ9(betReq, out decimal tpAffterAmount);
@@ -465,16 +444,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var endRoundReq = JsonConvert.DeserializeObject<EndRoundDataRNG_CQ9>(json);
 
-            /*****/
-            if (environment.IsDevelopment() && getEndRoundReq.ContainsKey("gamecode"))
-            {
-                var gameTypeDev = thirdPartyBLL.GetGameType((int)thisTp, endRoundReq.gamecode);
-                if (gameTypeDev == GameType.CQ9_Fish)
-                {
-                    return Rollin(wtoken, getEndRoundReq);
-                }
-            }
-            /*****/
+            ///*****/
+            //if (environment.IsDevelopment() && getEndRoundReq.ContainsKey("gametype"))
+            //{
+            //    var reqGameType = getEndRoundReq["gametype"];
+            //    if (reqGameType == "fish")
+            //    {
+            //        return Rollin(wtoken, getEndRoundReq);
+            //    }
+            //}
+            ///*****/
 
             GetApiResp getEndRoundResp = new GetApiResp();
             getEndRoundResp.status.code = "1100";
@@ -499,16 +478,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     getEndRoundResp.status.code = "1100";
                     getEndRoundResp.status.message = "Error : wtoken";
-                    log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
-                    return getEndRoundResp;
-                }
-
-                // check gametype
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, endRoundReq.gamecode);
-                if (gameType == GameType.CQ9_Fish)
-                {
-                    getEndRoundResp.status.code = "1100";
-                    getEndRoundResp.status.message = "Error : gamecode is not slot";
                     log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                     return getEndRoundResp;
                 }
@@ -541,6 +510,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 long chkCreateTimeParse = checkTimeParse(endRoundReq.createTime);
                 endRoundReq.createUnix = chkCreateTimeParse;
 
+                var gameType = GameType.CQ9_RNG;
                 result = settledBLL.PayoutRNG_CQ9(endRoundReq, (int)gameType, out decimal tpAffterAmount);
 
                 if (result > 0)
@@ -637,7 +607,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 refundReq.amount = record.First().amount;
                 refundReq.roundid = record.First().roundid;
 
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, record.First().gamecode);
+                var gameType = record.First().TableType;
                 var result = settledBLL.RefundRNG_CQ9(refundReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -797,7 +767,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, debitReq.gamecode);
+                var gameType = thirdPartyBLL.GetGameType((int)thisTp, debitReq.gamecode); 
                 int result = settledBLL.DebitRNG_CQ9(debitReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -894,7 +864,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, creditReq.gamecode);
+                var gameType = thirdPartyBLL.GetGameType((int)thisTp, creditReq.gamecode); 
                 var result = settledBLL.CreditRNG_CQ9(creditReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -1022,22 +992,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/rollout")]
         public GetApiResp Rollout([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRolloutReq)
         {
-            
             string logName = $"{tpGameName}_Rollout";
             var json = JsonConvert.SerializeObject(getRolloutReq);
             log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var rolloutReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
-
-            /*****/
-            if (environment.IsDevelopment() && getRolloutReq.ContainsKey("gamecode"))
-            {
-                var gameTypeDev = thirdPartyBLL.GetGameType((int)thisTp, rolloutReq.gamecode);
-                if (gameTypeDev == GameType.CQ9_RNG)
-                {
-                    return Bet(wtoken, getRolloutReq);
-                }
-            }
-            /*****/
 
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
@@ -1095,18 +1053,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return apiResponse;
             }
 
-            // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, rolloutReq.gamecode);
-            if (gameType == GameType.CQ9_RNG)
-            {
-                apiResponse.status.code = "1100";
-                apiResponse.status.message = "Error : gamecode is not fish";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                return apiResponse;
-            }
-
             try
             {
+                var gameType = GameType.CQ9_Fish;
                 int result = bettingBLL.RolloutFish_CQ9(rolloutReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -1196,18 +1145,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return apiResponse;
             }
 
-            // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, takeAllReq.gamecode);
-            if (gameType == GameType.CQ9_RNG)
-            {
-                apiResponse.status.code = "1100";
-                apiResponse.status.message = "Error : gamecode is not fish";
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
-                return apiResponse;
-            }
-
             try
             {
+                var gameType = GameType.CQ9_Fish;
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, takeAllReq.account, (int)gameType);
                 takeAllReq.amount = tpCustBalance.Balance;
                 if (takeAllReq.amount <= 0)
@@ -1271,17 +1211,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var rollinReq = JsonConvert.DeserializeObject<RollinDataFish_CQ9>(json);
 
-            /*****/
-            if (environment.IsDevelopment() && getRollinReq.ContainsKey("gamecode"))
-            {
-                var gameTypeDev = thirdPartyBLL.GetGameType((int)thisTp, rollinReq.gamecode);
-                if (gameTypeDev == GameType.CQ9_RNG)
-                {
-                    return EndRound(wtoken, getRollinReq);
-                }
-            }
-            /*****/
-
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
@@ -1341,7 +1270,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, rollinReq.gamecode);
+                var gameType = GameType.CQ9_Fish;
                 var result = settledBLL.RollinFish_CQ9(rollinReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {

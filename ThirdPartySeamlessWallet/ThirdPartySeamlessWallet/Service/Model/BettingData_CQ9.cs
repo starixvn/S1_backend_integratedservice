@@ -72,6 +72,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime CreateTimes { get; set; }
         public DateTime UpdateTime { get; set; }
         public int TicketStatus { get; set; }
+        public int TableType { get; set; }
         public string CreateFormat
         {
             get

@@ -1820,7 +1820,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                    );
                 }
 
-                if (result > 0 || rollinDataFish_CQ9.amount == 0 )
+                if (result > 0 || rollinDataFish_CQ9.amount == 0)
                 {
                     decimal winlose = rollinDataFish_CQ9.bet - rollinDataFish_CQ9.win;
                     var ticketStatus = (int)TicketStatus.Win;
@@ -1917,26 +1917,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<Record_CQ9> GetRecordRNG_CQ9(string mtcode)
         {
-            //string sp = "Service_BettransRng_CQ9_Get";
-            string[] sType = mtcode.Split("-");
-            //if (sType.Count() > 1 && sType[1] == "payoff")
-            //{
-            //    sp = "Service_RewardRNG_CQ9_Get";
-            //}
-            string mtcodeType = null;
-
-            if (sType.Count() > 1)
-                mtcodeType = $"{sType[0]}-{sType[1]}";
-
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var data = conn.Query<Record_CQ9>("Service_BettransRng_CQ9_Get_V2", new { mtcode = mtcode, mtcodeType }, commandType: CommandType.StoredProcedure);
-            if (data == null || data.Count() == 0)
+            var data = conn.Query<Record_CQ9>("Service_BettransRng_CQ9_Get_V2", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
+            if (data.Count() > 0)
             {
-                data = conn.Query<Record_CQ9>("Service_BettransFish_CQ9_Get_V2", new { mtcode = mtcode, mtcodeType }, commandType: CommandType.StoredProcedure);
+                data.ElementAt(0).TableType = (int)GameType.CQ9_RNG;
+                return data;
             }
+
             if (data == null || data.Count() == 0)
             {
-                data = conn.Query<Record_CQ9>("Service_RewardRNG_CQ9_Get", new { mtcode = mtcode, mtcodeType }, commandType: CommandType.StoredProcedure);
+                data = conn.Query<Record_CQ9>("Service_BettransFish_CQ9_Get_V2", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
+                if (data.Count() > 0)
+                {
+                    data.ElementAt(0).TableType = (int)GameType.CQ9_Fish;
+                    return data;
+                }
+            }
+
+            if (data == null || data.Count() == 0)
+            {
+                data = conn.Query<Record_CQ9>("Service_RewardRNG_CQ9_Get", new { mtcode = mtcode }, commandType: CommandType.StoredProcedure);
             }
             return data;
         }
