@@ -320,7 +320,7 @@ namespace ThirdParty.V8
                 s = transType,
                 account = tpCustInfo.TpUserName,
                 money = Amount,
-                orderid = $"{Agent}{timecnv}{tpCustInfo.TpUserName}"
+                orderid = $"{Agent}{TransID}"
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
