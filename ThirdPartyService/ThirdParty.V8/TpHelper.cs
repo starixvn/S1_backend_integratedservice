@@ -260,6 +260,7 @@ namespace ThirdParty.V8
                 KindID = gameId
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
+
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var Login = new
@@ -270,17 +271,6 @@ namespace ThirdParty.V8
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
             dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
-
-            //lang
-            if (!TpLangId.Equals("vn", StringComparison.OrdinalIgnoreCase))
-            {
-                dicP.Add("lang", TpLangId);
-            }
-
-            if (!TpLangId.Equals("vn", StringComparison.OrdinalIgnoreCase) && !TpLangId.StartsWith("c", StringComparison.OrdinalIgnoreCase))
-            {
-                dicP.Add("skin", "2");
-            }
 
             var sLogin = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
