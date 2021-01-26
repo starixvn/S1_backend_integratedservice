@@ -167,6 +167,8 @@ namespace ThirdParty.V8
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
+
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
