@@ -523,12 +523,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 string token = null;
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+
                 if (tpCheck == null)
                 {
                     string clientIp = "";
                     tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
                     tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "App", "App");
                     tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+                }
+                else
+                {
+                    token = tpCheck.Token;
                 }
 
                 if (tpCheck.Locked)
