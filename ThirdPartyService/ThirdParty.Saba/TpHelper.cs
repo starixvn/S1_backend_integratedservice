@@ -366,26 +366,36 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (SportType == "43" ||  SportType == "200" || SportType == "202" || SportType == "220" || SportType == "223" || SportType == "245")
+                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "223" || SportType == "245")
                         {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
-                        }
-                        else if (matchId != null)
-                        {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
-                        }
-                        else if (betType != null)
-                        {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}";
-                        }
-                        else if (SportType == "997")
-                        {
-                            // Saba Soccer deeplink
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=1&leaguekey={act}";
+                            if (betType != null)
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}&gameid={betType}";
+                            }
+                            else
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
+                            }
                         }
                         else
                         {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                            if (matchId != null)
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
+                            }
+                            else if (betType != null)
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}";
+                            }
+                            else if (SportType == "997")
+                            {
+                                // Saba Soccer deeplink
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=1&leaguekey={act}";
+                            }
+                            else
+                            {
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                            }
                         }
                     }
                 }
