@@ -547,7 +547,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.agent_code = mobileReq.agent_code;
 
                 var key = authBLL.ApplyToken(tpCustInfo);
-                var sessionKeyArr = new string[] { key, token, mobileReq.username, tpCustBalance.TpCurrencyId };
+                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustBalance.TpCurrencyId };
                 byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
                 string sessionKey = Convert.ToBase64String(bytes);
 
