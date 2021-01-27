@@ -122,6 +122,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
                         betRecordInfo.TpId = (int)Tp.YL;
                         betRecordInfo.Stake = bettingDataFish_YL.validBet;
+                        betRecordInfo.ValidBet = bettingDataFish_YL.validBet;
                         betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
                         betRecordInfo.TransId = bettingDataFish_YL.txId;
                         betRecordInfo.GameType = GameType.YL_Fish;
@@ -184,6 +185,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BetRecordInfo betRecordInfo = new BetRecordInfo();
                         betRecordInfo.TpId = (int)Tp.YL;
                         betRecordInfo.Stake = bettingDataFish_YL.validBet;
+                        betRecordInfo.ValidBet = 0;
                         betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
                         betRecordInfo.TransId = bettingDataFish_YL.txId;
                         betRecordInfo.GameType = GameType.YL_Fish;
