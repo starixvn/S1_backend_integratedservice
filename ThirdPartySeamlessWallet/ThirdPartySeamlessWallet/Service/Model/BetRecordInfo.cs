@@ -24,4 +24,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketKey { get; set; }
         public int BonusId { get; set; }
     }
+
+    public class SettleData
+    {
+        public string TransId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public string Account { get; set; }
+        public long SettleTime { get; set; }
+    }
 }

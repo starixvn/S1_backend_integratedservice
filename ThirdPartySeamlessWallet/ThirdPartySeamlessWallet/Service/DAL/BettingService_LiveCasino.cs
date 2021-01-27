@@ -407,5 +407,154 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region N2Live
+
+        public int PlaceBetLC_N2Live(TpCustInfo tpCustInfo, BettingDataLC_N2Live bettingDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+            afterAmount = 0;
+
+            var p = new DynamicParameters(new
+            {
+                tradeid = bettingDataLC_N2Live.request.tradeid,
+                userid = bettingDataLC_N2Live.request.userid,
+                vendorid = bettingDataLC_N2Live.request.vendorid,
+                gameid = bettingDataLC_N2Live.request.gameid,
+                gamecode = bettingDataLC_N2Live.request.gamecode,
+                Stake = bettingDataLC_N2Live.request.totalamount,
+                StakeTrades = JsonConvert.SerializeObject(bettingDataLC_N2Live.request.trades),
+                //totalamount = bettingDataLC_N2Live.request.totalamount,
+                //trades = JsonConvert.SerializeObject(bettingDataLC_N2Live.request.trades),
+                timeUnix = new DateTimeOffset(DateTime.Parse(bettingDataLC_N2Live.request.timestamp), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 0
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            result = conn.Execute("Service_BettransLC_N2Live_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+
+                result = PlaceBetV2(
+                    tpCustInfo,
+                    Math.Abs(bettingDataLC_N2Live.request.totalamount) * -1,
+                    (int)Tp.N2Live,
+                    bettingDataLC_N2Live.request.tradeid,
+                    gameType,
+                    bettingDataLC_N2Live.request.tradeid,
+                    null,
+                    TpCategory.LiveCasino,
+                    out afterAmount,
+                    ref bonusId,
+                    conn,
+                    trans
+                );
+
+                if (bonusId > 0 && result > 0)
+                {
+                    AddTpBonus(
+                        (int)Tp.N2Live,
+                        bettingDataLC_N2Live.request.tradeid,
+                        gameType,
+                        tpCustInfo.CustId,
+                        tpCustInfo.UserName,
+                        tpCustInfo.CurrencyId,
+                        tpCustInfo.SiteId,
+                        Math.Abs(bettingDataLC_N2Live.request.totalamount),
+                        bonusId,
+                        TpCategory.LiveCasino,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        public int SmartPlaceBetLC_N2Live(TpCustInfo tpCustInfo, SmartBettingDataLC_N2Live smartBettingDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+            afterAmount = 0;
+
+            var p = new DynamicParameters(new
+            {
+                schemeid = smartBettingDataLC_N2Live.request.schemeid,
+                userid = smartBettingDataLC_N2Live.request.userid,
+                vendorid = smartBettingDataLC_N2Live.request.vendorid,
+                Stake = smartBettingDataLC_N2Live.request.amount,
+                startUnix = smartBettingDataLC_N2Live.request.startUnix,
+                endUnix = smartBettingDataLC_N2Live.request.endUnix,
+                timeUnix = smartBettingDataLC_N2Live.request.timeUnix,
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 0
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            result = conn.Execute("Service_SmartBettransLC_N2Live_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+
+                result = PlaceBetV2(
+                    tpCustInfo,
+                    Math.Abs(smartBettingDataLC_N2Live.request.amount) * -1,
+                    (int)Tp.N2Live,
+                    smartBettingDataLC_N2Live.request.schemeid,
+                    gameType,
+                    smartBettingDataLC_N2Live.request.schemeid,
+                    null,
+                    TpCategory.LiveCasino,
+                    out afterAmount,
+                    ref bonusId,
+                    conn,
+                    trans
+                );
+
+                if (bonusId > 0 && result > 0)
+                {
+                    AddTpBonus(
+                        (int)Tp.N2Live,
+                        smartBettingDataLC_N2Live.request.schemeid,
+                        gameType,
+                        tpCustInfo.CustId,
+                        tpCustInfo.UserName,
+                        tpCustInfo.CurrencyId,
+                        tpCustInfo.SiteId,
+                        Math.Abs(smartBettingDataLC_N2Live.request.amount),
+                        bonusId,
+                        TpCategory.LiveCasino,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

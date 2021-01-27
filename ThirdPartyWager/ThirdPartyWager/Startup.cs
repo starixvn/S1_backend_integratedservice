@@ -67,6 +67,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerIconicService>();
             services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
+            services.AddSingleton<WagerN2LiveService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -117,31 +118,35 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
             services.AddSingleton<WagerRedoV8BLL>();
+            // N2Live
+            services.AddSingleton<WagerN2LiveBLL>();
+            services.AddSingleton<ApiN2LiveBLL>();
 
             //Worker
-            services.AddHostedService<WagerDG>();
-            services.AddHostedService<WagerRedoDG>();
-            services.AddHostedService<WagerAllBet>();
-            services.AddHostedService<WagerRedoAllBet>();
-            services.AddHostedService<WagerSA>();
-            services.AddHostedService<WagerRedoSA>();
-            services.AddHostedService<WagerAG>();
-            services.AddHostedService<WagerRedoAG>();
-            //services.AddHostedService<CheckTicketAG>();
-            services.AddHostedService<WagerCF>();
-            services.AddHostedService<WagerSG>();
-            services.AddHostedService<WagerWM>();
-            services.AddHostedService<WagerRedoWM>();
-            /*services.AddHostedService<WagerKiss918>();
-            services.AddHostedService<WagerRedoKiss918>();*/
-            services.AddHostedService<WagerOne789>();
-            //services.AddHostedService<WagerMega>();
-            //services.AddHostedService<WagerRedoMega>();
-            services.AddHostedService<JwtIconic>();
-            services.AddHostedService<WagerIconic>();
-            services.AddHostedService<WagerOneGaming>();
-            services.AddHostedService<WagerV8>();
-            services.AddHostedService<WagerRedoV8>();
+            //services.AddHostedService<WagerDG>();
+            //services.AddHostedService<WagerRedoDG>();
+            //services.AddHostedService<WagerAllBet>();
+            //services.AddHostedService<WagerRedoAllBet>();
+            //services.AddHostedService<WagerSA>();
+            //services.AddHostedService<WagerRedoSA>();
+            //services.AddHostedService<WagerAG>();
+            //services.AddHostedService<WagerRedoAG>();
+            ////services.AddHostedService<CheckTicketAG>();
+            //services.AddHostedService<WagerCF>();
+            //services.AddHostedService<WagerSG>();
+            //services.AddHostedService<WagerWM>();
+            //services.AddHostedService<WagerRedoWM>();
+            ///*services.AddHostedService<WagerKiss918>();
+            //services.AddHostedService<WagerRedoKiss918>();*/
+            //services.AddHostedService<WagerOne789>();
+            ////services.AddHostedService<WagerMega>();
+            ////services.AddHostedService<WagerRedoMega>();
+            //services.AddHostedService<JwtIconic>();
+            //services.AddHostedService<WagerIconic>();
+            //services.AddHostedService<WagerOneGaming>();
+            //services.AddHostedService<WagerV8>();
+            //services.AddHostedService<WagerRedoV8>();
+            services.AddHostedService<WagerN2Live>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
