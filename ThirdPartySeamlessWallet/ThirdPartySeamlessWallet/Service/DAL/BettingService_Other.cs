@@ -318,7 +318,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     platformTxId = item.platformTxId,
-                    txId = item.txId,
+                    //txId = item.txId,
                     gameInfo = JsonConvert.SerializeObject(item.gameInfo),
                     updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
 
@@ -374,7 +374,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     platformTxId = item.platformTxId,
-                    txId = item.txId,
+                    //txId = item.txId,
                     updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds()
                 });
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);

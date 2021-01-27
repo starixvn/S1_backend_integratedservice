@@ -248,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     var p = new DynamicParameters(new
                     {
                         platformTxId = item.platformTxId,
-                        txId = item.txId,
+                        //txId = item.txId,
                         winAmount = item.winAmount,
                         turnover = item.turnover,
                         roundId = item.roundId,
@@ -307,7 +307,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     platformTxId = item.platformTxId,
-                    txId = item.txId,
+                    //txId = item.txId,
                     gameInfo = JsonConvert.SerializeObject(item.gameInfo),
                     updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds()
                 });
@@ -372,7 +372,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     platformTxId = item.platformTxId,
-                    txId = item.txId,
+                    //txId = item.txId,
                     voidType = item.voidType,
                     updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
                 });
@@ -527,7 +527,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betUnix = new DateTimeOffset(after.betTime).ToUnixTimeSeconds(),
                 updateUnix = new DateTimeOffset(after.updateTime).ToUnixTimeSeconds(),
                 RefPlatformTxId = after.platformTxId,
-                RefTxId = after.txId,
+                //RefTxId = after.txId,
                 TicketStatus = ticketStatus
             });
 
