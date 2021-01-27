@@ -397,24 +397,44 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int SettledRNG_YGG(SettledDataRNG_YGG settledDataRNG_YGG, out decimal afterAmount)
+        public int SettledRNG_YGG(SettledDataRNG_YGG settledDataRNG_YGG, out decimal afterAmount, SettleFlag settleFlag)
         {
-
+            var result = 0;
+            afterAmount = 0;
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, settledDataRNG_YGG.playerid);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
 
-            if (tpCurrency.ExchangeRate > 0)
+            if (tpCustInfo != null)
             {
-                settledDataRNG_YGG.bonusprize *= tpCurrency.ExchangeRate;
-                settledDataRNG_YGG.amount *= tpCurrency.ExchangeRate;
-            }
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
 
-            var result = settledService.SettledRNG_YGG(tpCustInfo, settledDataRNG_YGG, out afterAmount);
+                var insertData = new SettledDataRNG_YGG()
+                {
+                    playerid = settledDataRNG_YGG.playerid,
+                    amount = tpCurrency.ExchangeRate > 0 ? settledDataRNG_YGG.amount * tpCurrency.ExchangeRate : settledDataRNG_YGG.amount,
+                    currency = settledDataRNG_YGG.currency,
+                    reference = settledDataRNG_YGG.reference,
+                    subreference = settledDataRNG_YGG.subreference,
+                    description = settledDataRNG_YGG.description,
+                    cat1 = settledDataRNG_YGG.cat1,
+                    cat2 = settledDataRNG_YGG.cat2,
+                    cat3 = settledDataRNG_YGG.cat3,
+                    cat4 = settledDataRNG_YGG.cat4,
+                    cat5 = settledDataRNG_YGG.cat5,
+                    tag1 = settledDataRNG_YGG.tag1,
+                    tag2 = settledDataRNG_YGG.tag2,
+                    tag3 = settledDataRNG_YGG.tag3,
+                    TicketStatus = settledDataRNG_YGG.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost,
+                    SettleFlag = (int)settleFlag,
+                    bonusprize = tpCurrency.ExchangeRate > 0 ? settledDataRNG_YGG.bonusprize * tpCurrency.ExchangeRate : settledDataRNG_YGG.bonusprize,
+                    tickets = settledDataRNG_YGG.tickets
+                };
 
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-                settledDataRNG_YGG.amount /= tpCurrency.ExchangeRate;
+                result = settledService.SettledRNG_YGG(tpCustInfo, insertData, out afterAmount);
+
+                if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+                {
+                    afterAmount /= tpCurrency.ExchangeRate;
+                }
             }
 
             return result;
@@ -982,7 +1002,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return data;
         }
-        
+
         #endregion
 
         #region CQ9

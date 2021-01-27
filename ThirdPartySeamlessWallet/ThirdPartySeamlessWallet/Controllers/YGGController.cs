@@ -18,6 +18,8 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class YGGController : ControllerBase
     {
+        #region Fields
+
         private readonly AuthBLL authBLL;
         private readonly ILogger<JokerController> logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
@@ -26,10 +28,22 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
         private readonly IHostEnvironment environment;
+
         private readonly Tp thisTp;
         private readonly int gameType = 0;
 
-        public YGGController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
+        #endregion
+
+        #region Constructors
+
+        public YGGController(IHostEnvironment environment,
+                             ILogger<JokerController> logger,
+                             AuthBLL authBLL,
+                             ThirdPartyBLL thirdPartyBLL,
+                             TpCustInfoBLL tpCustInfoBLL,
+                             BettingBLL bettingBLL,
+                             SettledBLL settledBLL,
+                             Log2File log2File)
         {
             this.authBLL = authBLL;
             this.logger = logger;
@@ -39,10 +53,29 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.settledBLL = settledBLL;
             this.log2File = log2File;
             this.environment = environment;
-            this.thisTp = Tp.YGG;
+
+            thisTp = Tp.YGG;
             gameType = (int)GameType.YGG_RNG;
         }
 
+        #endregion
+
+        #region Models
+
+        #region PlayerInfo
+
+        /// <summary>
+        /// Player Info Reply Model
+        /// </summary>
+        public class PlayerInfoRep
+        {
+            public int code { get; set; }
+            public PlayerInfoData data { get; set; }
+        }
+
+        /// <summary>
+        /// Player Info Reply Data
+        /// </summary>
         public class PlayerInfoData
         {
             public string playerId { get; set; }
@@ -54,19 +87,112 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string homeCurrency { get; set; }
         }
 
-        public class PlayerInfoRep
+        #endregion
+
+        #region Wager、EndWager、AppendWager、CampaignPayout
+
+        /// <summary>
+        /// Wager Request Model
+        /// </summary>
+        public class WagerReq : BettingDataRNG_YGG
         {
-            public int code { get; set; }
-            public PlayerInfoData data { get; set; }
+            public string org { get; set; }
+            public string sessiontoken { get; set; }
+            public string service { get; set; }
+            public string lang { get; set; }
+            public int version { get; set; }
         }
 
-        public class PlayerInfoReq
+        /// <summary>
+        /// Wager Reply Model
+        /// </summary>
+        public class WagerRep
         {
+            public int code { get; set; }
+            public WagerData data { get; set; }
+        }
+
+        /// <summary>
+        /// Wager Reply Data
+        /// </summary>
+        public class WagerData
+        {
+            public string organization { get; set; }
+            public string playerId { get; set; }
+            public decimal balance { get; set; }
+            public decimal applicableBonus { get; set; }
+            public string currency { get; set; }
+            public string homeCurrency { get; set; }
+        }
+
+        #endregion
+
+        #region CancelWager
+
+        /// <summary>
+        /// Cancel Wager Reply Model
+        /// </summary>
+        public class CancelwagerRep
+        {
+            public int code { get; set; }
+            public CancelwagerData data { get; set; }
+        }
+
+        /// <summary>
+        /// Cancel Wager Reply Data
+        /// </summary>
+        public class CancelwagerData
+        {
+            public string playerId { get; set; }
+            public string organization { get; set; }
+            public decimal balance { get; set; }
+            public string currency { get; set; }
+        }
+
+        #endregion
+
+        #region GetBalance
+
+        /// <summary>
+        /// Get Balance Request Model
+        /// </summary>
+        public class GetbalanceReq
+        {
+            public string org { get; set; }
+            public string playerid { get; set; }
             public string sessiontoken { get; set; }
         }
 
+        /// <summary>
+        /// Get Balance Reply Model
+        /// </summary>
+        public class GetbalanceRep
+        {
+            public int code { get; set; }
+            public GetbalanceData data { get; set; }
+        }
+
+        /// <summary>
+        /// Get Balance Reply Data
+        /// </summary>
+        public class GetbalanceData
+        {
+            public string currency { get; set; }
+            public decimal applicableBonus { get; set; }
+            public string homeCurrency { get; set; }
+            public string organization { get; set; }
+            public decimal balance { get; set; }
+            public string nickName { get; set; }
+            public string playerId { get; set; }
+            public decimal bonus { get; set; }
+        }
+
+        #endregion
+
+        #endregion
+
         [Route("[controller]/playerinfo.json")]
-        public PlayerInfoRep playerinfo([FromForm]Dictionary<string, string> PlayerInfoReq)
+        public PlayerInfoRep playerinfo([FromForm] Dictionary<string, string> PlayerInfoReq)
         {
             PlayerInfoRep playerInfoRep = new PlayerInfoRep();
             playerInfoRep.code = 1;
@@ -98,14 +224,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
-                            PlayerInfoData playerInfoData = new PlayerInfoData();
+                            PlayerInfoData playerInfoData = new PlayerInfoData()
+                            {
+                                balance = tpCustBalance.Balance,
+                                playerId = tpCustInfoAuth.TpUserName,
+                                organization = thirdPartySetting.TpSetting["org"],
+                                currency = tpCustInfoAuth.TpCurrencyId,
+                                homeCurrency = tpCustInfoAuth.TpCurrencyId,
+                                applicableBonus = 0
+                            };
                             playerInfoRep.data = playerInfoData;
-                            playerInfoData.balance = tpCustBalance.Balance;
-                            playerInfoData.playerId = tpCustInfoAuth.TpUserName;
-                            playerInfoData.organization = thirdPartySetting.TpSetting["org"];
-                            playerInfoData.currency = tpCustInfoAuth.TpCurrencyId;
-                            playerInfoData.homeCurrency = playerInfoData.currency;
-                            playerInfoData.applicableBonus = 0;
                             playerInfoRep.code = 0;
                         }
                     }
@@ -129,34 +257,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             return playerInfoRep;
         }
 
-        public class WagerReq : BettingDataRNG_YGG
-        {
-            public string org { get; set; }
-            public string sessiontoken { get; set; }
-            public string service { get; set; }
-            public string lang { get; set; }
-            public int version { get; set; }
-        }
-        public class WagerData
-        {
-            public string organization { get; set; }
-            public string playerId { get; set; }
-            public decimal balance { get; set; }
-            public decimal applicableBonus { get; set; }
-            public string currency { get; set; }
-            public string homeCurrency { get; set; }
-        }
-        public class WagerRep
-        {
-            public int code { get; set; }
-            public WagerData data { get; set; }
-        }
         [Route("[controller]/wager.json")]
-        public WagerRep Wager([FromForm]Dictionary<string, string> wagerReqq)
+        public WagerRep Wager([FromForm] Dictionary<string, string> wagerReqq)
         {
             if (environment.IsDevelopment())
             {
-                //var s = @"{""org"":""nova88"",""sessiontoken"":""WyJ3b2pXd0pSTFcwYXQ3Q2o0V0FEczd3IiwieXVxT0JIMmxVeXNDTldnVk9KVlhRIl0="",""playerid"":""DNova88_156"",""amount"":""5.00"",""currency"":""THB"",""service"":""Mir"",""reference"":""2004051357040100001"",""subreference"":""w2004051357040100000"",""description"":""Start Game"",""cat1"":""Casino"",""cat2"":""Slot"",""cat3"":""5reel"",""cat4"":""Jokerizer"",""cat5"":""7301"",""tag1"":""GameName.Jokerizer"",""tag2"":""Model.M1"",""tag3"":""Channel.pc"",""lang"":""zh_hant"",""version"":""4""}";
+                //var s = @"{""org"":""nova88"",""sessiontoken"":""WyJ3b2pXd0pSTFcwYXQ3Q2o0V0FEczd3IiwieXVxT0JIMmxVeXNDTldnVk9KVlhRIl0="",""playerid"":""DNova88_156"",""amount"":""5.00"",""currency"":""THB"",""service"":""Mir"",""reference"":""2004051357040100001"",""subreference"":""w2004051357040100005"",""description"":""Start Game"",""cat1"":""Casino"",""cat2"":""Slot"",""cat3"":""5reel"",""cat4"":""Jokerizer"",""cat5"":""7301"",""tag1"":""GameName.Jokerizer"",""tag2"":""Model.M1"",""tag3"":""Channel.pc"",""lang"":""zh_hant"",""version"":""4""}";
                 //wagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
             }
 
@@ -185,15 +291,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    WagerData wagerData = new WagerData();
+                    WagerData wagerData = new WagerData()
+                    {
+                        playerId = wagerReq.playerid,
+                        organization = wagerReq.org,
+                        currency = wagerReq.currency,
+                        homeCurrency = wagerReq.currency,
+                        applicableBonus = 0
+                    };
                     wagerRep.data = wagerData;
-                    //wagerData.balance = tpCustBalance.Balance;
-                    wagerData.playerId = wagerReq.playerid;
-                    wagerData.organization = wagerReq.org;
-                    wagerData.currency = wagerReq.currency;
-                    wagerData.homeCurrency = wagerData.currency;
-                    wagerData.applicableBonus = 0;
-                    //wagerRep.code = 0;
+
                     try
                     {
                         if (bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAffterAmount) > 0)
@@ -238,7 +345,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/endwager.json")]
-        public WagerRep Endwager([FromForm]Dictionary<string, string> endwagerReqq)
+        public WagerRep Endwager([FromForm] Dictionary<string, string> endwagerReqq)
         {
             if (environment.IsDevelopment())
             {
@@ -252,7 +359,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 SettledDataRNG_YGG settledDataRNG_YGG = JsonConvert.DeserializeObject<SettledDataRNG_YGG>(JsonConvert.SerializeObject(endwagerReqq));
 
-                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount);
+                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount,SettleFlag.ReadyToReach);
 
                 WagerData wagerData = new WagerData();
                 wagerRep.data = wagerData;
@@ -295,22 +402,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             return wagerRep;
         }
 
-        public class CancelwagerData
-        {
-            public string playerId { get; set; }
-            public string organization { get; set; }
-            public decimal balance { get; set; }
-            public string currency { get; set; }
-        }
-
-        public class CancelwagerRep
-        {
-            public int code { get; set; }
-            public CancelwagerData data { get; set; }
-        }
-
         [Route("[controller]/cancelwager.json")]
-        public CancelwagerRep Cancelwager([FromForm]Dictionary<string, string> cancelwagerReqq)
+        public CancelwagerRep Cancelwager([FromForm] Dictionary<string, string> cancelwagerReqq)
         {
             CancelwagerRep cancelwagerRep = new CancelwagerRep();
             cancelwagerRep.code = 1;
@@ -358,7 +451,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/appendwagerresult.json")]
-        public WagerRep Appendwagerresult([FromForm]Dictionary<string, string> appendwagerresultReqq)
+        public WagerRep Appendwagerresult([FromForm] Dictionary<string, string> appendwagerresultReqq)
         {
             if (environment.IsDevelopment())
             {
@@ -374,7 +467,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 SettledDataRNG_YGG settledDataRNG_YGG = JsonConvert.DeserializeObject<SettledDataRNG_YGG>(JsonConvert.SerializeObject(appendwagerresultReqq));
 
-                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount);
+                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount, SettleFlag.Running);
 
                 WagerData wagerData = new WagerData();
                 wagerRep.data = wagerData;
@@ -416,7 +509,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/campaignpayout.json")]
-        public WagerRep Campaignpayout([FromForm]Dictionary<string, string> campaignpayoutReqq)
+        public WagerRep Campaignpayout([FromForm] Dictionary<string, string> campaignpayoutReqq)
         {
             if (environment.IsDevelopment())
             {
@@ -481,33 +574,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             return wagerRep;
         }
 
-        public class GetbalanceReq
-        {
-            public string org { get; set; }
-            public string playerid { get; set; }
-            public string sessiontoken { get; set; }
-        }
-
-        public class GetbalanceData
-        {
-            public string currency { get; set; }
-            public decimal applicableBonus { get; set; }
-            public string homeCurrency { get; set; }
-            public string organization { get; set; }
-            public decimal balance { get; set; }
-            public string nickName { get; set; }
-            public string playerId { get; set; }
-            public decimal bonus { get; set; }
-        }
-
-        public class GetbalanceRep
-        {
-            public int code { get; set; }
-            public GetbalanceData data { get; set; }
-        }
-
         [Route("[controller]/getbalance.json")]
-        public GetbalanceRep Getbalance([FromForm]Dictionary<string, string> getbalanceReqq)
+        public GetbalanceRep Getbalance([FromForm] Dictionary<string, string> getbalanceReqq)
         {
             GetbalanceRep getbalanceRep = new GetbalanceRep();
             getbalanceRep.code = 1;

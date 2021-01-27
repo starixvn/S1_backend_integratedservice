@@ -14,6 +14,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class SettledService
     {
+        #region GPI
+
         public int PayoutRNG_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
             int bonusId = 0;
@@ -73,11 +75,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<SettleDataRNG_GPI>("Service_BettransRNG_GPI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
+
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -91,6 +95,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = conn.Execute("Service_BettransRNG_GPI_Settle_Set", p, commandType: CommandType.StoredProcedure);
             return result;
         }
+
+        #endregion
+
+        #region Joker
+
         public int SettledRNG_Joker(TpCustInfo tpCustInfo, BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -167,6 +176,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int CancelBetRNG_Joker(TpCustInfo tpCustInfo, CancelBetDataRNG_Joker cancelBetDataRNG_Joker, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -211,72 +221,59 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int SettledRNG_YGG(TpCustInfo tpCustInfo, SettledDataRNG_YGG settledDataRNG_YGG, out decimal afterAmount)
+
+        #endregion
+
+        #region YGG
+
+        public int SettledRNG_YGG(TpCustInfo tpCustInfo, SettledDataRNG_YGG insertData, out decimal afterAmount)
         {
+            var result = 0;
+            afterAmount = 0;
             int bonusId = 0;
             int gameType = (int)GameType.YGG_RNG;
 
-            afterAmount = 0;
-            var result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            settledDataRNG_YGG.TicketStatus = settledDataRNG_YGG.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-            var p = new DynamicParameters(settledDataRNG_YGG);
-            p.Add("type", (int)BettransType.Payout);
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             try
             {
-                result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
+                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
-                    if (settledDataRNG_YGG.amount > 0)
+                    using (var trans = conn.BeginTransaction())
                     {
-                        //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_YGG.amount, (int)Tp.YGG, TransType.Settled, $"Payout: {Math.Abs(settledDataRNG_YGG.amount).ToString("#,##0.##")}", settledDataRNG_YGG.subreference, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, settledDataRNG_YGG.amount, (int)Tp.YGG, settledDataRNG_YGG.reference, gameType, TpCategory.Slots, settledDataRNG_YGG.subreference, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
-                    }
-                    else if (settledDataRNG_YGG.bonusprize == 0)
-                    {
-                        GetTpBonus((int)Tp.YGG, settledDataRNG_YGG.reference, gameType, TpCategory.Slots, out int custId, out bonusId);
-                    }
+                        var parameters = new DynamicParameters(insertData);
+                        parameters.Add("type", (int)BettransType.Payout);
 
-                    if (settledDataRNG_YGG.bonusprize > 0)
-                    {
-                        //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_YGG.bonusprize, (int)Tp.YGG, TransType.Settled, $"Bonus: {Math.Abs(settledDataRNG_YGG.bonusprize).ToString("#,##0.##")}", settledDataRNG_YGG.subreference, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, settledDataRNG_YGG.bonusprize, (int)Tp.YGG, settledDataRNG_YGG.reference, gameType, TpCategory.Slots, settledDataRNG_YGG.subreference, TransType.Prize, null, out afterAmount, "Bonus", out bonusId, conn, trans);
-                    }
+                        string SpName = "Service_BettransRng_YGG_Ins";
+                        result = conn.Execute(SpName, parameters, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                    if (result > 0)
-                    {
-                        decimal Stake = p.Get<decimal>("Stake");
-                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp.YGG,
-                            Stake = Stake,
-                            ValidBet = Stake,
-                            WinlostAmount = WinLostAmount,
-                            TransId = settledDataRNG_YGG.reference,
-                            GameType = GameType.YGG_RNG,
-                            TpUserName = settledDataRNG_YGG.playerid,
-                            SettledTime = 0,
-                            SettlementType = SettlementType.SettledForValid,
-                            BonusId = bonusId
-                        };
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            if (insertData.amount > 0)
+                            {
+                                result = PayoutV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, TpCategory.Slots, insertData.subreference, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
+                            }
+                            else if (insertData.bonusprize == 0)
+                            {
+                                GetTpBonus((int)Tp.YGG, insertData.reference, gameType, TpCategory.Slots, out int custId, out bonusId);
+                            }
+
+                            if (insertData.bonusprize > 0)
+                            {
+                                result = PayoutV2(tpCustInfo, insertData.bonusprize, (int)Tp.YGG, insertData.reference, gameType, TpCategory.Slots, insertData.subreference, TransType.Prize, null, out afterAmount, "Bonus", out bonusId, conn, trans);
+                            }
+
+                            if (result > 0)
+                            {
+                                trans.Commit();
+                            }
+
                         }
+                        else
+                        {
+                            result = -1;
+                        }
+
                     }
-                }
-                else
-                {
-                    result = -1;
                 }
             }
             catch (MySqlException mySqlEx)
@@ -293,6 +290,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int CancelBetRNG_YGG(TpCustInfo tpCustInfo, BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -304,13 +302,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var result = 0;
             var p = new DynamicParameters(new { bettingDataRNG_YGG.reference, bettingDataRNG_YGG.subreference });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             result = conn.Execute("Service_CancelBetRng_YGG_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
-                decimal Stake = p.Get<decimal>("Stake");
                 decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
                 if (WinLostAmount != 0)
                 {
@@ -320,27 +316,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    BetRecordInfo betRecordInfo = new BetRecordInfo
-                    {
-                        TpId = (int)Tp.YGG,
-                        Stake = Stake,
-                        ValidBet = 0,
-                        WinlostAmount = WinLostAmount,
-                        TransId = bettingDataRNG_YGG.reference,
-                        GameType = GameType.YGG_RNG,
-                        TpUserName = bettingDataRNG_YGG.playerid,
-                        SettledTime = 0,
-                        SettlementType = SettlementType.SettledForInvalid,
-                        TicketStatus = TicketStatus.Refund
-                    };
-
-                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
+                    trans.Commit();
                 }
+
             }
             else
             {
@@ -349,6 +327,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        #endregion
 
         #region PP
 
@@ -1837,7 +1817,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        
+
         public int PayoutFish_Iconic(TpCustInfo tpCustInfo, BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
             var result = 0;

@@ -22,6 +22,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string tag2 { get; set; }
         public string tag3 { get; set; }
         public int TicketStatus { get; set; }
+
+        public int SettleFlag { get; set; }
     }
 
     public class SettledDataRNG_YGG : BettingDataRNG_YGG
