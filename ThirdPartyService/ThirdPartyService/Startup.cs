@@ -34,6 +34,7 @@ namespace ThirdPartyService
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<Common>();
+            services.AddSingleton<Log2File>();
             //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/

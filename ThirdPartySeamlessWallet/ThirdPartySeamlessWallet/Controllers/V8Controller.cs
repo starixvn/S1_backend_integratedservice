@@ -171,9 +171,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (oApiResult.ErrorCode == 0)
                 {
                     getApiResponse.d.code = 0;
+                    log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
+                }
+                else
+                {
+                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
                 }
 
-                log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
                 return getApiResponse;
             }
             return getApiResponse;
@@ -281,6 +285,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                         var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
                         getBalanceResponse.code = 1005;
                         getBalanceResponse.money = tpCustBalance.Balance;
+                    }
+                    else
+                    {
+                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
                     }
                 }
                 catch (Exception ex)
