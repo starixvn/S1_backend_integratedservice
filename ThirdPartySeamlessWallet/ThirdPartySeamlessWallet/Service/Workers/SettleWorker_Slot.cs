@@ -541,7 +541,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledList_PG();
+                var unsettledList = settledBLL.GetUnsettledList_YGG();
 
                 if (unsettledList != null)
                 {
@@ -562,7 +562,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 Stake = stake,
                                 ValidBet = validBet,
                                 WinlostAmount = winLostAmount,
-                                TransId = unsettled.ParentBetId,
+                                TransId = unsettled.reference,
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
@@ -570,19 +570,19 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_PG(unsettled.TransactionIdList);
+                            settledBLL.SetSettleFlag_YGG(unsettled.subreference);
                         }
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", "SettlePG");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", "SettleYGG");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "SettlePG");
+                log2File.Error(ex.ToString(), "SettleYGG");
                 isError = true;
             }
             finally

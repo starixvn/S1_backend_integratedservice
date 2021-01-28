@@ -123,30 +123,40 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int PlaceBetRNG_YGG(TpCustInfo tpCustInfo, BettingDataRNG_YGG insertData, out decimal afterAmount)
         {
+            var result = 0;
+            afterAmount = 0;
             int bonusId = 0;
             int gameType = (int)GameType.YGG_RNG;
 
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            var result = 0;
-            var p = new DynamicParameters(insertData);
-            p.Add("tickets", (int?)null);
-            p.Add("bonusprize", (decimal?)null);
-            p.Add("type", (int)BettransType.Bet);
             try
             {
-                result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0 && insertData.amount < 0)
+                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
-                    result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
-                }
 
-                if (result > 0)
-                {
-                    trans.Commit();
+                    var p = new DynamicParameters(insertData);
+                    p.Add("tickets", (int?)null);
+                    p.Add("bonusprize", (decimal?)null);
+                    p.Add("type", (int)BettransType.Bet);
+
+                    using (var trans = conn.BeginTransaction())
+                    {
+                        result = conn.Execute("Service_BettransRngV2_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                        if (result > 0 && insertData.amount < 0)
+                        {
+                            result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                        else
+                        {
+                            result = -1;
+                            trans.Rollback();
+                        }
+                    }
                 }
             }
             catch (MySqlException mySqlEx)

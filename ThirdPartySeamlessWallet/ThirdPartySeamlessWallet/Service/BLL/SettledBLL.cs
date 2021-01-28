@@ -397,10 +397,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        #region YGG
+
         public int SettledRNG_YGG(SettledDataRNG_YGG settledDataRNG_YGG, out decimal afterAmount, SettleFlag settleFlag)
         {
             var result = 0;
             afterAmount = 0;
+
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, settledDataRNG_YGG.playerid);
 
             if (tpCustInfo != null)
@@ -439,19 +442,40 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int CancelBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
+            int result = 0;
+            afterAmount = 0;
 
-            var result = settledService.CancelBetRNG_YGG(tpCustInfo, bettingDataRNG_YGG, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
+
+            if(tpCustInfo != null)
             {
-                afterAmount /= tpCurrency.ExchangeRate;
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
+
+                result = settledService.CancelBetRNG_YGG(tpCustInfo, bettingDataRNG_YGG, out afterAmount);
+                if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+                {
+                    afterAmount /= tpCurrency.ExchangeRate;
+                }
             }
 
             return result;
         }
+
+        public IEnumerable<SettleData_YGG> GetUnsettledList_YGG()
+        {
+            return settledService.GetUnsettledList_YGG();
+        }
+
+        public int SetSettleFlag_YGG(string TransactionIdList)
+        {
+            return settledService.SetSettleFlag_YGG(TransactionIdList);
+        }
+
+        #endregion
+
         public int PayoutRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);

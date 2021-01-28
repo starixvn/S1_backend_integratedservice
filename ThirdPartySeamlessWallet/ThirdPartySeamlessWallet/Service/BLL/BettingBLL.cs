@@ -117,6 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var result = 0;
             afterAmount = 0;
+
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
 
             if(tpCustInfo != null)
