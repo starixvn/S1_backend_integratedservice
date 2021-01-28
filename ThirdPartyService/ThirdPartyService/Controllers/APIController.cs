@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -27,8 +28,9 @@ namespace ThirdPartyService.Controllers
         private readonly TpCustInfoService tpCustInfoService;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ILogger<APIController> logger;
+        private readonly Log2File log2File;
 
-        public APIController(IHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL)
+        public APIController(IHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL, Log2File log2File)
         {
             this.env = env;
             ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
@@ -38,6 +40,7 @@ namespace ThirdPartyService.Controllers
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyBLL = thirdPartyBLL;
             this.logger = logger;
+            this.log2File = log2File;
         }
 
         [HttpGet]
@@ -53,7 +56,7 @@ namespace ThirdPartyService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ApiResult> GotoGame([FromBody]TpInfo tpInfo)
+        public ActionResult<ApiResult> GotoGame([FromBody] TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
 
@@ -73,7 +76,7 @@ namespace ThirdPartyService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ApiResult<TransferResult>> Transfer([FromBody]TpTransfer tpTransfer)
+        public ActionResult<ApiResult<TransferResult>> Transfer([FromBody] TpTransfer tpTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
             apiResult.ErrorCode = ErrorCode.SystemError;
@@ -82,18 +85,24 @@ namespace ThirdPartyService.Controllers
             try
             {
                 apiResult = thirdPartyBLL.Transfer(tpTransfer);
+
+                if (apiResult.ErrorCode != 0)
+                {
+                    log2File.Error(JsonConvert.SerializeObject(apiResult), $"{tpTransfer.TpId}_Transfer");
+                }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
+                log2File.Error(ex.ToString(), $"{tpTransfer.TpId}_Transfer");
             }
 
             return apiResult;
         }
         [HttpPost]
-        public ActionResult<ApiResult<UserBalance>> GetBalance([FromBody]TpInfo tpInfo)
+        public ActionResult<ApiResult<UserBalance>> GetBalance([FromBody] TpInfo tpInfo)
         {
             var apiResult = new ApiResult<UserBalance>();
             apiResult.ErrorCode = ErrorCode.SystemError;
@@ -113,7 +122,7 @@ namespace ThirdPartyService.Controllers
             return apiResult;
         }
         [HttpPost]
-        public ActionResult<ApiResult> Logout([FromBody]TpInfo tpInfo)
+        public ActionResult<ApiResult> Logout([FromBody] TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
             apiResult.ErrorCode = ErrorCode.SystemError;
@@ -155,7 +164,7 @@ namespace ThirdPartyService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ApiResult> FixNegative([FromBody]TpInfo tpInfo)
+        public ActionResult<ApiResult> FixNegative([FromBody] TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
             apiResult.ErrorCode = ErrorCode.SystemError;

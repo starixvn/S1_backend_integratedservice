@@ -167,6 +167,8 @@ namespace ThirdParty.V8
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
+
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
@@ -260,6 +262,7 @@ namespace ThirdParty.V8
                 KindID = gameId
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
+
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var Login = new
@@ -270,6 +273,7 @@ namespace ThirdParty.V8
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
             dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
+
             var sLogin = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpGet(
@@ -320,7 +324,7 @@ namespace ThirdParty.V8
                 s = transType,
                 account = tpCustInfo.TpUserName,
                 money = Amount,
-                orderid = $"{Agent}{timecnv}{tpCustInfo.TpUserName}"
+                orderid = $"{Agent}{TransID}"
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());

@@ -30,18 +30,18 @@ namespace ThirdPartySeamlessWallet
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
-            if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
-            {
-                var proxy = new HttpClientHandler
-                {
-                    Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
-                    UseProxy = true
-                };
+            ////if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
+            ////{
+            ////    var proxy = new HttpClientHandler
+            ////    {
+            ////        Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
+            ////        UseProxy = true
+            ////    };
 
-                services.AddHttpClient("with_proxy")
-                .ConfigurePrimaryHttpMessageHandler(() => proxy);
-                //services.AddHttpClient();
-            }
+            ////    services.AddHttpClient("with_proxy")
+            ////    .ConfigurePrimaryHttpMessageHandler(() => proxy);
+            ////    //services.AddHttpClient();
+            ////}
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
             /*Library*/

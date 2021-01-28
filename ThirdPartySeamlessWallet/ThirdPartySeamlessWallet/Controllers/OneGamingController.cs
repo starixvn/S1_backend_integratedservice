@@ -523,12 +523,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 string token = null;
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+
                 if (tpCheck == null)
                 {
                     string clientIp = "";
                     tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
                     tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "App", "App");
                     tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+                }
+                else
+                {
+                    token = tpCheck.Token;
                 }
 
                 if (tpCheck.Locked)
@@ -547,7 +552,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.agent_code = mobileReq.agent_code;
 
                 var key = authBLL.ApplyToken(tpCustInfo);
-                var sessionKeyArr = new string[] { key, token, mobileReq.username, tpCustBalance.TpCurrencyId };
+                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustBalance.TpCurrencyId };
                 byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
                 string sessionKey = Convert.ToBase64String(bytes);
 
