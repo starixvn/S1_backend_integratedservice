@@ -136,10 +136,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (s == "11")
             {
                 subName = "notify";
+                log2File.Info($"{json}\r\n{param}", $"{logName}_{subName}");
+
                 var accountTmp = HttpUtility.ParseQueryString(param).Get("account");
-                string[] temp = accountTmp.Split('_');
-                var account = $"{temp[1]}_{temp[2]}";
+                string account = accountTmp.Replace($"{thirdPartySetting.TpSetting["Agent"]}_", "");
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+
                 /*Transfer In*/
                 var client = clientFactory.CreateClient();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
