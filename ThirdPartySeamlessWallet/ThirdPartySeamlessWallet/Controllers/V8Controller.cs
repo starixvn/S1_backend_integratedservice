@@ -139,7 +139,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{json}\r\n{param}", $"{logName}_{subName}");
 
                 var accountTmp = HttpUtility.ParseQueryString(param).Get("account");
-                string account = accountTmp.Replace($"{thirdPartySetting.TpSetting["Agent"]}_", "");
+                string account = accountTmp;
+
+                if (accountTmp.IndexOf("_") > -1)
+                {
+                    accountTmp.Substring(accountTmp.IndexOf("_") + 1);
+                }
+
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
 
                 /*Transfer In*/
