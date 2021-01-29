@@ -138,12 +138,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 subName = "notify";
                 log2File.Info($"{json}\r\n{param}", $"{logName}_{subName}");
 
-                var accountTmp = HttpUtility.ParseQueryString(param).Get("account");
-                string account = accountTmp;
+                string account = HttpUtility.ParseQueryString(param).Get("account");
 
-                if (accountTmp.IndexOf("_") > -1)
+                if (account.IndexOf("_") > -1)
                 {
-                    accountTmp.Substring(accountTmp.IndexOf("_") + 1);
+                    account = account[(account.IndexOf("_") + 1)..];
                 }
 
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);

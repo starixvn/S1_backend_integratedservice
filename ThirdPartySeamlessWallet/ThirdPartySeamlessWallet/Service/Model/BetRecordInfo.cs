@@ -16,6 +16,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long TransTime { get; set; }
         public decimal Stake { get; set; }
         public decimal? ValidBet { get; set; }
+        public decimal? Revenue { get; set; }
         public decimal WinlostAmount { get; set; }
         public SettlementType SettlementType { get; set; }
         public TicketStatus TicketStatus { get; set; }

@@ -335,8 +335,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            string[] temp = unsettled.Account.Split('_');
-                            var account = $"{temp[1]}_{temp[2]}";
+                            var account = unsettled.Account;
+
+                            if (account.IndexOf("_") > -1)
+                            {
+                                account = account[(account.IndexOf("_") + 1)..];
+                            }
 
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, account);
                             var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
@@ -352,6 +356,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 TpId = thisTp,
                                 Stake = unsettled.Stake,
                                 ValidBet = unsettled.ValidBet,
+                                Revenue= unsettled.Revenue,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.GameID,
                                 GameType = GameType.V8_Poker,
