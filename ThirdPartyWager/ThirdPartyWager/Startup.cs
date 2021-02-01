@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager
 {
@@ -116,6 +117,31 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
             services.AddSingleton<WagerRedoV8BLL>();
+
+            //Worker
+            services.AddHostedService<WagerDG>();
+            services.AddHostedService<WagerRedoDG>();
+            services.AddHostedService<WagerAllBet>();
+            services.AddHostedService<WagerRedoAllBet>();
+            services.AddHostedService<WagerSA>();
+            services.AddHostedService<WagerRedoSA>();
+            services.AddHostedService<WagerAG>();
+            services.AddHostedService<WagerRedoAG>();
+            //services.AddHostedService<CheckTicketAG>();
+            services.AddHostedService<WagerCF>();
+            services.AddHostedService<WagerSG>();
+            services.AddHostedService<WagerWM>();
+            services.AddHostedService<WagerRedoWM>();
+            /*services.AddHostedService<WagerKiss918>();
+            services.AddHostedService<WagerRedoKiss918>();*/
+            services.AddHostedService<WagerOne789>();
+            //services.AddHostedService<WagerMega>();
+            //services.AddHostedService<WagerRedoMega>();
+            services.AddHostedService<JwtIconic>();
+            services.AddHostedService<WagerIconic>();
+            services.AddHostedService<WagerOneGaming>();
+            services.AddHostedService<WagerV8>();
+            services.AddHostedService<WagerRedoV8>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
