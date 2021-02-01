@@ -121,37 +121,43 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int PlaceBetRNG_YGG(TpCustInfo tpCustInfo, BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
+        public int PlaceBetRNG_YGG(TpCustInfo tpCustInfo, BettingDataRNG_YGG insertData, out decimal afterAmount)
         {
+            var result = 0;
+            afterAmount = 0;
             int bonusId = 0;
             int gameType = (int)GameType.YGG_RNG;
 
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            var result = 0;
-            bettingDataRNG_YGG.amount *= -1;
-            bettingDataRNG_YGG.TicketStatus = (int)TicketStatus.UnSettled;
-            var p = new DynamicParameters(bettingDataRNG_YGG);
-            p.Add("tickets", (int?)null);
-            p.Add("bonusprize", (decimal?)null);
-            p.Add("type", (int)BettransType.Bet);
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             try
             {
-                result = conn.Execute("Service_BettransRng_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0 && bettingDataRNG_YGG.amount < 0)
+                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
-                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_YGG.amount, (int)Tp.YGG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_YGG.amount).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
-                    result = PlaceBetV2(tpCustInfo, bettingDataRNG_YGG.amount, (int)Tp.YGG, bettingDataRNG_YGG.reference, gameType, bettingDataRNG_YGG.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
-                }
+                    conn.Open();
+                    var p = new DynamicParameters(insertData);
+                    p.Add("tickets", (int?)null);
+                    p.Add("bonusprize", (decimal?)null);
+                    p.Add("type", (int)BettransType.Bet);
 
-                if (result > 0)
-                {
-                    trans.Commit();
+                    using (var trans = conn.BeginTransaction())
+                    {
+                        result = conn.Execute("Service_BettransRngV2_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                        if (result > 0 && insertData.amount < 0)
+                        {
+                            result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                        else
+                        {
+                            result = -1;
+                            trans.Rollback();
+                        }
+                    }
+                    conn.Close();
                 }
             }
             catch (MySqlException mySqlEx)

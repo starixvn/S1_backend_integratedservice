@@ -15,6 +15,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 {
     public partial class SettleWorker : BackgroundService
     {
+        #region Fields
+
         private Timer timerSettleAG;
         private Timer timerSettleDG;
         private Timer timerSettleAllbet;
@@ -27,6 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleSGFish;
         private Timer timerSettleAWC;
         private Timer timerSettlePG;
+        private Timer timerSettleYGG;
         private Timer timerSettleKiss918;
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
@@ -43,7 +46,16 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
 
-        public SettleWorker(IConfiguration configuration, IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, SettledBLL settledBLL, TpCustInfoBLL tpCustInfoBLL)
+        #endregion
+
+        #region Constructors
+
+        public SettleWorker(IConfiguration configuration,
+                            IHostEnvironment environment, 
+                            Log2File log2File, 
+                            ThirdPartyBLL thirdPartyBLL, 
+                            SettledBLL settledBLL, 
+                            TpCustInfoBLL tpCustInfoBLL)
         {
             this.configuration = configuration;
             this.environment = environment;
@@ -52,6 +64,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.tpCustInfoBLL = tpCustInfoBLL;
         }
+
+        #endregion
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerSettleAG = new Timer(DoSettleAGWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -75,8 +90,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleIconicFish = new Timer(DoSettleIconicFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOneGaming = new Timer(DoSettleOneGamingWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleV8 = new Timer(DoSettleV8Work, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleYGG = new Timer(DoSettleYGGWork, null, TimeSpan.Zero, TimeSpan.Zero);
+
             return Task.CompletedTask;
         }
+
+        #region Methods
 
         private void DoSettleAGWork(object state)
         {
@@ -679,6 +698,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleOne789LC.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        #endregion
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             //WriteToFile("WriteToFileHostedService: Process Stopped");
@@ -703,6 +725,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleIconicFish?.Change(Timeout.Infinite, 0);
             timerSettleOneGaming?.Change(Timeout.Infinite, 0);
             timerSettleV8?.Change(Timeout.Infinite, 0);
+            timerSettleYGG?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
