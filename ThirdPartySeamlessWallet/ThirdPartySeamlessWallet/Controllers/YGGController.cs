@@ -439,8 +439,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (environment.IsDevelopment())
             {
-                /*var s = @"{""org"":""nova88"",""playerid"":""DNova88_156"",""reference"":""2004061422520100001"",""subreference"":""w2004061422520100000"",""version"":""4""}";
-                cancelwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);*/
+                //var s = @"{""org"":""nova88"",""playerid"":""DNova88_127586"",""reference"":""2101291333560100000"",""subreference"":""w2101291333560100001"",""version"":""3""}";
+                //cancelwagerReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(s);
             }
 
             WagerReq wagerReq = JsonConvert.DeserializeObject<WagerReq>(JsonConvert.SerializeObject(cancelwagerReqq));
@@ -448,7 +448,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (result > 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YGG, wagerReq.playerid, gameType);
+                var tpCustBalance = new TpCustBalance();
+                if (environment.IsDevelopment())
+                {
+                    //Because YGG Testing will Keep Send Request.So Can't Get Cache Data.
+                    tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid, gameType);
+                }
+                else
+                {
+                    tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YGG, wagerReq.playerid, gameType);
+                }
 
                 statusCode = 0;
                 cancelwagerData = new CancelwagerData()
@@ -479,7 +488,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     balance = tpCustBalance.Balance
                 };
             }
-
             cancelwagerRep = new CancelwagerRep()
             {
                 code = statusCode,

@@ -132,7 +132,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
-
+                    conn.Open();
                     var p = new DynamicParameters(insertData);
                     p.Add("tickets", (int?)null);
                     p.Add("bonusprize", (decimal?)null);
@@ -157,6 +157,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans.Rollback();
                         }
                     }
+                    conn.Close();
                 }
             }
             catch (MySqlException mySqlEx)

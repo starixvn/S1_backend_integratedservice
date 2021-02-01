@@ -237,6 +237,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
+
+                    conn.Open();
+
                     using (var trans = conn.BeginTransaction())
                     {
                         var parameters = new DynamicParameters(insertData);
@@ -280,6 +283,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         }
 
                     }
+
+                    conn.Close();
                 }
             }
             catch (MySqlException mySqlEx)
@@ -299,48 +304,56 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int CancelBetRNG_YGG(TpCustInfo tpCustInfo, BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
         {
-            var result = 0;
-            afterAmount = 0;
-
             int bonusId = 0;
             int gameType = (int)GameType.YGG_RNG;
 
-            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                var p = new DynamicParameters(new { bettingDataRNG_YGG.reference, bettingDataRNG_YGG.subreference });
-                p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            var p = new DynamicParameters(new { bettingDataRNG_YGG.reference, bettingDataRNG_YGG.subreference });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_CancelBetRng_YGG_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                using (var trans = conn.BeginTransaction())
+            if (result > 0)
+            {
+                decimal Stake = p.Get<decimal>("Stake");
+                decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
+                if (WinLostAmount != 0)
                 {
-                    result = conn.Execute("Service_CancelBetRng_YGG_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, WinLostAmount * -1, (int)Tp.YGG, TransType.Refunds, $"Refund: {(WinLostAmount * -1).ToString("#,##0.##")}", bettingDataRNG_YGG.subreference, out afterAmount, conn, trans);
+                    result = PayoutV2(tpCustInfo, WinLostAmount * -1, (int)Tp.YGG, bettingDataRNG_YGG.reference, gameType, TpCategory.Slots, bettingDataRNG_YGG.subreference, TransType.Refunds, null, out afterAmount, "Refund", out bonusId, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp.YGG,
+                        Stake = Stake,
+                        ValidBet = 0,
+                        WinlostAmount = 0,
+                        TransId = bettingDataRNG_YGG.reference,
+                        GameType = GameType.YGG_RNG,
+                        TpUserName = bettingDataRNG_YGG.playerid,
+                        SettledTime = 0,
+                        SettlementType = SettlementType.SettledForInvalid,
+                        TicketStatus = TicketStatus.Refund
+                    };
+
+                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
                     if (result > 0)
                     {
-                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-
-                        if (WinLostAmount != 0)
-                        {
-                            result = PayoutV2(tpCustInfo, WinLostAmount, (int)Tp.YGG, bettingDataRNG_YGG.reference, gameType, TpCategory.Slots, bettingDataRNG_YGG.subreference, TransType.Refunds, null, out afterAmount, "Refund", out bonusId, conn, trans);
-                        }
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                        else
-                        {
-                            result = - 1;
-                            trans.Rollback();
-                        }
-
-                    }
-                    else
-                    {
-                        result = - 1;
-                        trans.Rollback();
+                        trans.Commit();
                     }
                 }
+            }
+            else
+            {
+                return -1;
             }
 
             return result;
@@ -355,7 +368,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int SetSettleFlag_YGG(string TransactionIdList)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_BettransRng_YGG_Settle_Set", new { TransactionIdList = TransactionIdList }, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_BettransRng_YGG_Settle_Set", new { RefrenceList = TransactionIdList }, commandType: CommandType.StoredProcedure);
             return result;
         }
 
