@@ -13,6 +13,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
         {
             decimal odds { get; set; }
             decimal stake { get; set; }
+            public decimal? discount_stake { get; set; }
             public int? odds_type { get; set; }
             public int? bet_type { get; set; }
             public string ticket_status { get; set; }
@@ -49,6 +50,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public long? parlay_ref_no { get; set; }
             public decimal odds { get; set; }
             public decimal stake { get; set; }
+            public decimal? discount_stake { get; set; }
             public DateTime transaction_time { get; set; }
             public string ticket_status { get; set; }
             public decimal winlost_amount { get; set; }
@@ -86,6 +88,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public DateTime transaction_time { get; set; }
             public decimal odds { get; set; }
             public decimal stake { get; set; }
+            public decimal? discount_stake { get; set; }
             public string ticket_status { get; set; }
             public string betfrom { get; set; }
             public string islive { get; set; }
@@ -121,6 +124,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public long? parlay_ref_no { get; set; }
             public decimal odds { get; set; }
             public decimal stake { get; set; }
+            public decimal? discount_stake { get; set; }
             public DateTime transaction_time { get; set; }
             public string ticket_status { get; set; }
             public decimal winlost_amount { get; set; }
@@ -368,6 +372,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     isEBV = false;/*Switch EBV*/
                     betRecordInfo.ValidBet = betRecordInfo.Stake;
+                    if (betDetial.discount_stake != null && betDetial.discount_stake > 0)
+                    {
+                        betRecordInfo.ValidBet = betDetial.discount_stake ?? 0;
+                    }
 
                     if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
                     {
