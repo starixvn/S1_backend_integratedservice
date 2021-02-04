@@ -32,6 +32,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Related = 5,
         FreeBetWin = 6
     }
+    public enum SettleFlag
+    {
+        Running = 0, /* Status means StartGame(Bet) Or Running */
+        Reached = 1, /* When Worker done */
+        ReadyToReach = 2 /* For Worker Condiction To Reach */
+    }
 
     public enum GameType
     {

@@ -22,11 +22,23 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string tag2 { get; set; }
         public string tag3 { get; set; }
         public int TicketStatus { get; set; }
+
+        public int SettleFlag { get; set; }
     }
 
     public class SettledDataRNG_YGG : BettingDataRNG_YGG
     {
         public decimal bonusprize { get; set; }
         public int tickets { get; set; }
+    }
+
+    public class SettleData_YGG
+    {
+        public string subreference { get; set; }
+        public string reference { get; set; }
+        public string Account { get; set; }
+        public decimal Stake { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public long SettleTime { get; set; }
     }
 }

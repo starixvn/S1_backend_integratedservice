@@ -115,19 +115,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int PlaceBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
         {
+            var result = 0;
+            afterAmount = 0;
+
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
 
-            if (tpCurrency.ExchangeRate > 0)
+            if(tpCustInfo != null)
             {
-                bettingDataRNG_YGG.amount *= tpCurrency.ExchangeRate;
-            }
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
 
-            var result = bettingService.PlaceBetRNG_YGG(tpCustInfo, bettingDataRNG_YGG, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-                bettingDataRNG_YGG.amount /= tpCurrency.ExchangeRate;
+                var insertData = new BettingDataRNG_YGG()
+                {
+                    playerid = bettingDataRNG_YGG.playerid,
+                    amount = tpCurrency.ExchangeRate > 0 ? bettingDataRNG_YGG.amount * tpCurrency.ExchangeRate * -1 : bettingDataRNG_YGG.amount,
+                    currency = bettingDataRNG_YGG.currency,
+                    reference = bettingDataRNG_YGG.reference,
+                    subreference = bettingDataRNG_YGG.subreference,
+                    description = bettingDataRNG_YGG.description,
+                    cat1 = bettingDataRNG_YGG.cat1,
+                    cat2 = bettingDataRNG_YGG.cat2,
+                    cat3 = bettingDataRNG_YGG.cat3,
+                    cat4 = bettingDataRNG_YGG.cat4,
+                    cat5 = bettingDataRNG_YGG.cat5,
+                    tag1 = bettingDataRNG_YGG.tag1,
+                    tag2 = bettingDataRNG_YGG.tag2,
+                    tag3 = bettingDataRNG_YGG.tag3,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettlementType.UnSettled
+                };
+
+                result = bettingService.PlaceBetRNG_YGG(tpCustInfo, insertData, out afterAmount);
+
+                if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+                {
+                    afterAmount /= tpCurrency.ExchangeRate;
+                }
             }
 
             return result;
