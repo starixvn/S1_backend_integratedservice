@@ -73,7 +73,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Iconic_RNG = 39,
         Iconic_Fish = 40,
         OneGaming_Poker = 41,
-        V8_Poker = 42
+        V8_Poker = 42,
+        CQ9_Fish = 44
     }
     public enum Tp
     {

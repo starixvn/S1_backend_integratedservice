@@ -177,6 +177,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.Iconic_RNG;
                     }
                     break;
+                case (int)Tp.CQ9:
+                    gameType = GameType.CQ9_RNG;
+                    if (gameId == "AB3" || gameId == "AT01" || gameId == "AT04" || gameId == "AT05" || gameId == "AT06")
+                    {
+                        gameType = GameType.CQ9_Fish;
+                    }
+                    break;
                 default:
                     break;
             }
