@@ -372,37 +372,37 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                SettledDataRNG_YGG settledDataRNG_YGG = JsonConvert.DeserializeObject<SettledDataRNG_YGG>(JsonConvert.SerializeObject(endwagerReqq));
+                PayoutDataRNG_YGG payoutDataRNG_YGG = JsonConvert.DeserializeObject<PayoutDataRNG_YGG>(JsonConvert.SerializeObject(endwagerReqq));
 
-                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount, SettleFlag.ReadyToReach);
+                int result = settledBLL.PayoutRNG_YGG(payoutDataRNG_YGG, out decimal tpAffterAmount, SettleFlag.EndGame);
 
                 wagerData = new WagerData()
                 {
-                    playerId = settledDataRNG_YGG.playerid,
+                    playerId = payoutDataRNG_YGG.playerid,
                     organization = endwagerReqq["org"],
-                    currency = settledDataRNG_YGG.currency,
-                    homeCurrency = settledDataRNG_YGG.currency,
+                    currency = payoutDataRNG_YGG.currency,
+                    homeCurrency = payoutDataRNG_YGG.currency,
                     applicableBonus = 0
                 };
 
                 if (result > 0)
                 {
 
-                    if (settledDataRNG_YGG.amount > 0)
+                    if (payoutDataRNG_YGG.amount > 0)
                     {
                         wagerData.balance = tpAffterAmount;
                         statusCode = 0;
                     }
-                    else if (settledDataRNG_YGG.amount == 0)
+                    else if (payoutDataRNG_YGG.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, payoutDataRNG_YGG.playerid, gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 0;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, payoutDataRNG_YGG.playerid, gameType);
                     wagerData.balance = tpCustBalance.Balance;
                     statusCode = 0;
                 }
@@ -515,36 +515,36 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                SettledDataRNG_YGG settledDataRNG_YGG = JsonConvert.DeserializeObject<SettledDataRNG_YGG>(JsonConvert.SerializeObject(appendwagerresultReqq));
+                PayoutDataRNG_YGG payoutDataRNG_YGG = JsonConvert.DeserializeObject<PayoutDataRNG_YGG>(JsonConvert.SerializeObject(appendwagerresultReqq));
 
-                int result = settledBLL.SettledRNG_YGG(settledDataRNG_YGG, out decimal tpAffterAmount, SettleFlag.Running);
+                int result = settledBLL.PayoutRNG_YGG(payoutDataRNG_YGG, out decimal tpAffterAmount, SettleFlag.Running);
 
                 wagerData = new WagerData()
                 {
-                    playerId = settledDataRNG_YGG.playerid,
+                    playerId = payoutDataRNG_YGG.playerid,
                     organization = appendwagerresultReqq["org"],
-                    currency = settledDataRNG_YGG.currency,
-                    homeCurrency = settledDataRNG_YGG.currency,
+                    currency = payoutDataRNG_YGG.currency,
+                    homeCurrency = payoutDataRNG_YGG.currency,
                     applicableBonus = 0
                 };
 
                 if (result > 0)
                 {
-                    if (settledDataRNG_YGG.amount > 0)
+                    if (payoutDataRNG_YGG.amount > 0)
                     {
                         wagerData.balance = tpAffterAmount;
                         statusCode = 0;
                     }
-                    else if (settledDataRNG_YGG.amount == 0)
+                    else if (payoutDataRNG_YGG.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
+                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, payoutDataRNG_YGG.playerid, gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 0;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, settledDataRNG_YGG.playerid, gameType);
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, payoutDataRNG_YGG.playerid, gameType);
                     wagerData.balance = tpCustBalance.Balance;
                     statusCode = 0;
                 }

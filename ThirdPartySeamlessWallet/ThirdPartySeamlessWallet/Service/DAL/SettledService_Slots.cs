@@ -226,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region YGG
 
-        public int SettledRNG_YGG(TpCustInfo tpCustInfo, SettledDataRNG_YGG insertData, out decimal afterAmount)
+        public int PayoutRNG_YGG(TpCustInfo tpCustInfo, PayoutDataRNG_YGG insertData, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
