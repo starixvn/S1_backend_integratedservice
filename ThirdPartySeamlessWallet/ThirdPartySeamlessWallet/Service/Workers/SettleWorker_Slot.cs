@@ -570,7 +570,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_YGG(unsettled.subreference);
+                            settledBLL.SetSettleFlag_YGG(unsettled.reference,unsettled.subreference);
                         }
                         catch (Exception ex1)
                         {
