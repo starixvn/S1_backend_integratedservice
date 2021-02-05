@@ -368,7 +368,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int SetSettleFlag_YGG(string reference,string subReference)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_BettransRng_YGG_Settle_Set", new { Reference = reference, SubReference = subReference }, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_BettransRng_YGG_Settle_Set_V2", new { Reference = reference, SubReference = subReference }, commandType: CommandType.StoredProcedure);
             return result;
         }
 
