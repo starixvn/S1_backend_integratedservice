@@ -469,9 +469,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_YGG();
         }
 
-        public int SetSettleFlag_YGG(string TransactionIdList)
+        public int SetSettleFlag_YGG(string reference,string subReference)
         {
-            return settledService.SetSettleFlag_YGG(TransactionIdList);
+            return settledService.SetSettleFlag_YGG(reference, subReference);
         }
 
         #endregion

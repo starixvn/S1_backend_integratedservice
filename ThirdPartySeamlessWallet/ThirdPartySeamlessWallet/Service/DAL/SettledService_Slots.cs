@@ -365,10 +365,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData_YGG>("Service_UnsettledListRng_YGG_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public int SetSettleFlag_YGG(string TransactionIdList)
+        public int SetSettleFlag_YGG(string reference,string subReference)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_BettransRng_YGG_Settle_Set", new { RefrenceList = TransactionIdList }, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_BettransRng_YGG_SettleV2_Set", new { Reference = reference, SubReference = subReference }, commandType: CommandType.StoredProcedure);
             return result;
         }
 
