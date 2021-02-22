@@ -1640,9 +1640,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public SettleData GetSettle_TpWagerLC_N2Live(long TransId)
+        public SettleData GetSettle_TpWagerLC_N2Live(string TransId)
         {
             return settledService.GetSettle_TpWagerLC_N2Live(TransId);
+        }
+
+        public SettleData GetSettle_TpSmartWagerLC_N2Live(string TransId)
+        {
+            return settledService.GetSettle_TpSmartWagerLC_N2Live(TransId);
         }
 
         public IEnumerable<SettleData> GetUnsettledList_BettransLC_N2Live()
@@ -1655,17 +1660,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_TpSmartWagerLC_N2Live();
         }
 
-        public int SetSettleFlag_BettransLC_N2Live(long TransId)
+        public int SetSettleFlag_BettransLC_N2Live(string TransId, int SettleFlag)
         {
-            return settledService.SetSettleFlag_BettransLC_N2Live(TransId);
+            return settledService.SetSettleFlag_BettransLC_N2Live(TransId, SettleFlag);
         }
 
-        public int SetSettleFlag_TpWagerLC_N2Live(long TransId)
+        public int SetSettleFlag_TpWagerLC_N2Live(string TransId)
         {
             return settledService.SetSettleFlag_TpWagerLC_N2Live(TransId);
         }
 
-        public int SetSettleFlag_TpSmartWagerLC_N2Live(long TransId)
+        public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
         {
             return settledService.SetSettleFlag_TpSmartWagerLC_N2Live(TransId);
         }

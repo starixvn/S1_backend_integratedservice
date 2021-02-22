@@ -140,6 +140,7 @@ namespace ThirdPartyWager.Service.Model
 
     public class BetN2Live
     {
+
         public int gamecode { get; set; }
         public long id { get; set; }
         public DateTime startdate { get; set; }
@@ -158,6 +159,14 @@ namespace ThirdPartyWager.Service.Model
         public string betdetail { get; set; }
         public string dealdetail { get; set; }
         public string result { get; set; }
+
+        public string TransId
+        {
+            get
+            {
+                return $"{gameid}_{login}";
+            }
+        }
 
         public long startUnix
         {

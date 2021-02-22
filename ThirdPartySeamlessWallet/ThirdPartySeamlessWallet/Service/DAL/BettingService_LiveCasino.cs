@@ -415,9 +415,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             int gameType = (int)GameType.N2Live_LiveCasino;
             afterAmount = 0;
-
+            string TransId = $"{bettingDataLC_N2Live.request.gameid}_{bettingDataLC_N2Live.request.userid}";
             var p = new DynamicParameters(new
             {
+                TransId = TransId,
                 tradeid = bettingDataLC_N2Live.request.tradeid,
                 userid = bettingDataLC_N2Live.request.userid,
                 vendorid = bettingDataLC_N2Live.request.vendorid,
@@ -461,7 +462,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     AddTpBonus(
                         (int)Tp.N2Live,
-                        bettingDataLC_N2Live.request.tradeid,
+                        TransId,
                         gameType,
                         tpCustInfo.CustId,
                         tpCustInfo.UserName,

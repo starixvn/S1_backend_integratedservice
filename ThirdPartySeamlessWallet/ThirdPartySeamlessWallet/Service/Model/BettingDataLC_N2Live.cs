@@ -189,6 +189,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class BettransData_N2Live
     {
+        public long tradeid { get; set; }
         public decimal Stake { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }

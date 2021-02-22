@@ -724,7 +724,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     forContinue = unsettledList.Count() == 200;
                     foreach (var unsettled in unsettledList)
                     {
-                        long TransId = Int64.Parse(unsettled.TransId);
+                        string TransId = unsettled.TransId;
                         var wager = settledBLL.GetSettle_TpWagerLC_N2Live(TransId);
                         if (wager != null)
                         {
@@ -756,13 +756,22 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                     settledBLL.SetSettleFlag_TpWagerLC_N2Live(TransId);
-                                    settledBLL.SetSettleFlag_BettransLC_N2Live(TransId);
+                                    settledBLL.SetSettleFlag_BettransLC_N2Live(TransId, 1);
                                 }
                             }
                             catch (Exception ex1)
                             {
                                 isError = true;
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                            }
+                        }
+                        else
+                        {
+                            // smart and player bet 
+                            var smart = settledBLL.GetSettle_TpSmartWagerLC_N2Live(TransId);
+                            if (smart != null)
+                            {
+                                settledBLL.SetSettleFlag_BettransLC_N2Live(TransId, 0);
                             }
                         }
                     }
@@ -809,7 +818,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            long TransId = Int64.Parse(unsettled.TransId);
+                            string TransId = unsettled.TransId;
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
                             var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
                             if (tpCurrency.ExchangeRate > 1)
