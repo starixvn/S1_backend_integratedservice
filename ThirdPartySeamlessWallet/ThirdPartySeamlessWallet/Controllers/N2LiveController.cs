@@ -466,196 +466,338 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
 
-            // xml to json
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml(Content);
-            var eleTag = xmlDoc.GetElementsByTagName("trade");
-            if (eleTag.Count == 1)
-            {
-                var attribute = xmlDoc.CreateAttribute("json", "Array", "http://james.newtonking.com/projects/json");
-                attribute.InnerText = "true";
-                var node = eleTag.Item(0) as XmlElement;
-                node.Attributes.Append(attribute);
-            }
-            string json = JsonConvert.SerializeXmlNode(xmlDoc.DocumentElement.FirstChild, Newtonsoft.Json.Formatting.Indented, false);
-
-            log2File.Info(Content, logName);
-
-            var commReq = JsonConvert.DeserializeObject<CommRequest>(json);
-            string action = commReq.request.action;
-            string id = commReq.request.id;
-            logName = $"{logName}_{action}";
-
             ErrorResponse commResp = new ErrorResponse();
             commResp.status = "101";
             commResp.n2xsd = "urn:n2ns";
             commResp.source = "";
-            commResp.exception.action = action;
-            commResp.exception.id = id;
+            commResp.exception.action = "";
+            commResp.exception.id = "";
             commResp.exception.desc = "ERROR_SYSTEM_EXCEPTION";
 
             var xml = toXml(typeof(ErrorResponse), commResp);
 
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            var tokenInfo = getTokenInfo(commReq.request.sessiontoken);
-
-            bool error = false;
-
-            if (string.Equals(action, "swebsinglelogin", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                var getLoginReq = JsonConvert.DeserializeObject<LoginRequest>(json);
+                // xml to json
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(Content);
+                var eleTag = xmlDoc.GetElementsByTagName("trade");
+                if (eleTag.Count == 1)
+                {
+                    var attribute = xmlDoc.CreateAttribute("json", "Array", "http://james.newtonking.com/projects/json");
+                    attribute.InnerText = "true";
+                    var node = eleTag.Item(0) as XmlElement;
+                    node.Attributes.Append(attribute);
+                }
+                string json = JsonConvert.SerializeXmlNode(xmlDoc.DocumentElement.FirstChild, Newtonsoft.Json.Formatting.Indented, false);
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.request.userid);
-                if (tpCheck == null)
-                {
-                    error = true;
-                    commResp.status = "105";
-                    commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                }
-                else if (tpCheck.Token != tokenInfo.longTimeToken)
-                {
-                    error = true;
-                    commResp.status = "118";
-                    commResp.exception.desc = "ERROR_INVALID_SESSION_TOKEN";
-                }
-                else if (tpCheck.Locked)
-                {
-                    error = true;
-                    commResp.status = "105";
-                    commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                }
+                log2File.Info(Content, logName);
 
-                if (error == false)
+                var commReq = JsonConvert.DeserializeObject<CommRequest>(json);
+                string action = commReq.request.action;
+                string id = commReq.request.id;
+                logName = $"{logName}_{action}";
+
+                commResp.exception.action = action;
+                commResp.exception.id = id;
+
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var tokenInfo = getTokenInfo(commReq.request.sessiontoken);
+
+                bool error = false;
+
+                if (string.Equals(action, "swebsinglelogin", StringComparison.OrdinalIgnoreCase))
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginReq.request.userid);
-                    if (tpCustBalance != null)
+                    var getLoginReq = JsonConvert.DeserializeObject<LoginRequest>(json);
+
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.request.userid);
+                    if (tpCheck == null)
                     {
-                        LoginResponse getApiResp = new LoginResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getLoginReq.request.userid;
-                        getApiResp.result.username = getLoginReq.request.userid;
-                        getApiResp.result.acode = "";
-                        getApiResp.result.currencyid = getTestHierarchy(getLoginReq.request.userid, tpCustBalance.TpCurrencyId);
-                        getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.sessiontoken = getLoginReq.request.sessiontoken;
-                        getApiResp.result.clientip = tpCheck.IP;
-
-                        xml = toXml(typeof(LoginResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
+                        error = true;
+                        commResp.status = "105";
+                        commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
                     }
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "sgetbalance", StringComparison.OrdinalIgnoreCase))
-            {
-                var getBalanceReq = JsonConvert.DeserializeObject<BalanceRequest>(json);
-
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.request.userid);
-                if (tpCheck == null)
-                {
-                    error = true;
-                    commResp.status = "105";
-                    commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-
-                }
-                else if (tpCheck.Token != tokenInfo.longTimeToken)
-                {
-                    error = true;
-                    commResp.status = "118";
-                    commResp.exception.desc = "ERROR_INVALID_SESSION_TOKEN";
-                }
-                else if (tpCheck.Locked)
-                {
-                    error = true;
-                    commResp.status = "105";
-                    commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                }
-
-                if (error == false)
-                {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.request.userid);
-                    if (tpCustBalance != null)
+                    else if (tpCheck.Token != tokenInfo.longTimeToken)
                     {
-                        BalanceResponse getApiResp = new BalanceResponse();
-                        getApiResp.result = new BalanceRes();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getBalanceReq.request.userid;
-                        getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.currencyid = getTestHierarchy(getBalanceReq.request.userid, tpCustBalance.TpCurrencyId);
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(BalanceResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
+                        error = true;
+                        commResp.status = "118";
+                        commResp.exception.desc = "ERROR_INVALID_SESSION_TOKEN";
                     }
-                }
+                    else if (tpCheck.Locked)
+                    {
+                        error = true;
+                        commResp.status = "105";
+                        commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
+                    }
 
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "splacetrade", StringComparison.OrdinalIgnoreCase))
-            {
-                var getBetReq = JsonConvert.DeserializeObject<BettingDataLC_N2Live>(json);
+                    if (error == false)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginReq.request.userid);
+                        if (tpCustBalance != null)
+                        {
+                            LoginResponse getApiResp = new LoginResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getLoginReq.request.userid;
+                            getApiResp.result.username = getLoginReq.request.userid;
+                            getApiResp.result.acode = "";
+                            getApiResp.result.currencyid = getTestHierarchy(getLoginReq.request.userid, tpCustBalance.TpCurrencyId);
+                            getApiResp.result.balance = tpCustBalance.Balance;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.sessiontoken = getLoginReq.request.sessiontoken;
+                            getApiResp.result.clientip = tpCheck.IP;
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.request.userid);
-                if (tpCheck == null)
-                {
-                    error = true;
-                    commResp.status = "105";
-                    commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                }
-                else if (tpCheck.Token != tokenInfo.longTimeToken)
-                {
-                    error = true;
-                    commResp.status = "118";
-                    commResp.exception.desc = "ERROR_INVALID_SESSION_TOKEN";
-                }
-                else if (tpCheck.Locked)
-                {
-                    error = true;
-                    commResp.status = "105";
-                    commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                }
+                            xml = toXml(typeof(LoginResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                    }
 
-                if (error == false)
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "sgetbalance", StringComparison.OrdinalIgnoreCase))
                 {
+                    var getBalanceReq = JsonConvert.DeserializeObject<BalanceRequest>(json);
+
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.request.userid);
+                    if (tpCheck == null)
+                    {
+                        error = true;
+                        commResp.status = "105";
+                        commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
+
+                    }
+                    else if (tpCheck.Token != tokenInfo.longTimeToken)
+                    {
+                        error = true;
+                        commResp.status = "118";
+                        commResp.exception.desc = "ERROR_INVALID_SESSION_TOKEN";
+                    }
+                    else if (tpCheck.Locked)
+                    {
+                        error = true;
+                        commResp.status = "105";
+                        commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
+                    }
+
+                    if (error == false)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.request.userid);
+                        if (tpCustBalance != null)
+                        {
+                            BalanceResponse getApiResp = new BalanceResponse();
+                            getApiResp.result = new BalanceRes();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getBalanceReq.request.userid;
+                            getApiResp.result.balance = tpCustBalance.Balance;
+                            getApiResp.result.currencyid = getTestHierarchy(getBalanceReq.request.userid, tpCustBalance.TpCurrencyId);
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
+
+                            xml = toXml(typeof(BalanceResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "splacetrade", StringComparison.OrdinalIgnoreCase))
+                {
+                    var getBetReq = JsonConvert.DeserializeObject<BettingDataLC_N2Live>(json);
+
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.request.userid);
+                    if (tpCheck == null)
+                    {
+                        error = true;
+                        commResp.status = "105";
+                        commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
+                    }
+                    else if (tpCheck.Token != tokenInfo.longTimeToken)
+                    {
+                        error = true;
+                        commResp.status = "118";
+                        commResp.exception.desc = "ERROR_INVALID_SESSION_TOKEN";
+                    }
+                    else if (tpCheck.Locked)
+                    {
+                        error = true;
+                        commResp.status = "105";
+                        commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
+                    }
+
+                    if (error == false)
+                    {
+                        try
+                        {
+                            var result = bettingBLL.PlaceBetLC_N2Live(getBetReq, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                BetResponse getApiResp = new BetResponse();
+                                getApiResp.status = "0";
+                                getApiResp.n2xsd = "urn:n2ns";
+                                getApiResp.source = "";
+                                getApiResp.result.action = action;
+                                getApiResp.result.id = id;
+                                getApiResp.result.userid = getBetReq.request.userid;
+                                getApiResp.result.currencyid = getTestHierarchy(getBetReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.balance = tpAffterAmount;
+                                getApiResp.result.tradeid = getBetReq.request.tradeid;
+                                getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                                getApiResp.result.timestamp = getCurrentGameTime();
+
+                                xml = toXml(typeof(BetResponse), getApiResp);
+                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                return xml;
+                            }
+                            else if (result == -1)
+                            {
+                                commResp.status = "116";
+                                commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                            }
+                            else if (tpAffterAmount < 0)
+                            {
+                                commResp.status = "113";
+                                commResp.exception.desc = "ERROR_INVALID_AMOUNT";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            return xml;
+                        }
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "spushtrade", StringComparison.OrdinalIgnoreCase))
+                {
+                    var getCancelBetReq = JsonConvert.DeserializeObject<CancelBetDataLC_N2Live>(json);
                     try
                     {
-                        var result = bettingBLL.PlaceBetLC_N2Live(getBetReq, out decimal tpAffterAmount);
-                        if (result > 0)
+                        var result = settledBLL.CancelBetLC_N2Live(getCancelBetReq, out decimal tpAffterAmount);
+                        if (result > 0 || result == -2)
                         {
+                            // your side should response success to the push trade since the trade placement is failed
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getCancelBetReq.request.userid);
                             BetResponse getApiResp = new BetResponse();
                             getApiResp.status = "0";
                             getApiResp.n2xsd = "urn:n2ns";
                             getApiResp.source = "";
                             getApiResp.result.action = action;
                             getApiResp.result.id = id;
-                            getApiResp.result.userid = getBetReq.request.userid;
-                            getApiResp.result.currencyid = getTestHierarchy(getBetReq.request.userid, tokenInfo.tpCurrency);
-                            getApiResp.result.balance = tpAffterAmount;
-                            getApiResp.result.tradeid = getBetReq.request.tradeid;
+                            getApiResp.result.userid = getCancelBetReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getCancelBetReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpCustBalance.Balance;
+                            getApiResp.result.tradeid = getCancelBetReq.request.tradeid;
                             getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
                             getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
                             getApiResp.result.timestamp = getCurrentGameTime();
 
                             xml = toXml(typeof(BetResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                        else if (result == -1)
+                        {
+                            commResp.status = "116";
+                            commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                        return xml;
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "straderesult", StringComparison.OrdinalIgnoreCase))
+                {
+                    var getPayoutReq = JsonConvert.DeserializeObject<PayoutDataLC_N2Live>(json);
+
+                    try
+                    {
+                        var result = settledBLL.PayoutLC_N2Live(getPayoutReq, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPayoutReq.request.userid);
+                            BetResponse getApiResp = new BetResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getPayoutReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getPayoutReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpCustBalance.Balance;
+                            getApiResp.result.tradeid = getPayoutReq.request.tradeid;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
+
+                            xml = toXml(typeof(BetResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                        else if (result == -1)
+                        {
+                            commResp.status = "116";
+                            commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                        return xml;
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "ssmartbetcreate", StringComparison.OrdinalIgnoreCase))
+                {
+                    var getSmartBetReq = JsonConvert.DeserializeObject<SmartBettingDataLC_N2Live>(json);
+
+                    try
+                    {
+                        var result = bettingBLL.SmartPlaceBetLC_N2Live(getSmartBetReq, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            SmartBetResponse getApiResp = new SmartBetResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getSmartBetReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getSmartBetReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpAffterAmount;
+                            getApiResp.result.schemeid = getSmartBetReq.request.schemeid;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
+
+                            xml = toXml(typeof(SmartBetResponse), getApiResp);
                             log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                             return xml;
                         }
@@ -675,330 +817,199 @@ namespace ThirdPartySeamlessWallet.Controllers
                         log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
                         return xml;
                     }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
                 }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "spushtrade", StringComparison.OrdinalIgnoreCase))
-            {
-                var getCancelBetReq = JsonConvert.DeserializeObject<CancelBetDataLC_N2Live>(json);
-                try
+                else if (string.Equals(action, "spushsmartbet", StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = settledBLL.CancelBetLC_N2Live(getCancelBetReq, out decimal tpAffterAmount);
-                    if (result > 0 || result == -2)
+                    var getSmartCancelBetReq = JsonConvert.DeserializeObject<SmartCancelBetDataLC_N2Live>(json);
+                    try
                     {
-                        // your side should response success to the push trade since the trade placement is failed
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getCancelBetReq.request.userid);
-                        BetResponse getApiResp = new BetResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getCancelBetReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getCancelBetReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.tradeid = getCancelBetReq.request.tradeid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
+                        var result = settledBLL.SmartCancelBetLC_N2Live(getSmartCancelBetReq, out decimal tpAffterAmount);
+                        if (result > 0 || result == -2)
+                        {
+                            // your side should response success to the push trade since the trade placement is failed
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartCancelBetReq.request.userid);
+                            SmartBetResponse getApiResp = new SmartBetResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getSmartCancelBetReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getSmartCancelBetReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpCustBalance.Balance;
+                            getApiResp.result.schemeid = getSmartCancelBetReq.request.schemeid;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
 
-                        xml = toXml(typeof(BetResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            xml = toXml(typeof(SmartBetResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                        else if (result == -1)
+                        {
+                            commResp.status = "116";
+                            commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
                         return xml;
                     }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
                 }
-                catch (Exception ex)
+                else if (string.Equals(action, "ssmartbetclose", StringComparison.OrdinalIgnoreCase))
                 {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                    var getSmartPayoutReq = JsonConvert.DeserializeObject<SmartPayoutDataLC_N2Live>(json);
+
+                    try
+                    {
+                        var result = settledBLL.SmartPayoutLC_N2Live(getSmartPayoutReq, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartPayoutReq.request.userid);
+                            SmartBetResponse getApiResp = new SmartBetResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getSmartPayoutReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getSmartPayoutReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpCustBalance.Balance;
+                            getApiResp.result.schemeid = getSmartPayoutReq.request.schemeid;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
+
+                            xml = toXml(typeof(SmartBetResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                        else if (result == -1)
+                        {
+                            commResp.status = "116";
+                            commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                        return xml;
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "screditbonus", StringComparison.OrdinalIgnoreCase))
+                {
+                    var getBonusReq = JsonConvert.DeserializeObject<BonusDataLC_N2Live>(json);
+
+                    try
+                    {
+                        var result = settledBLL.BonusLC_N2Live(getBonusReq, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            BonusResponse getApiResp = new BonusResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getBonusReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getBonusReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpAffterAmount;
+                            getApiResp.result.bonusid = getBonusReq.request.bonusid;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
+
+                            xml = toXml(typeof(BonusResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                        else if (result == -1)
+                        {
+                            commResp.status = "116";
+                            commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                        return xml;
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    return xml;
+                }
+                else if (string.Equals(action, "seventtransaction", StringComparison.OrdinalIgnoreCase))
+                {
+                    var getEventReq = JsonConvert.DeserializeObject<EventDataLC_N2Live>(json);
+
+                    try
+                    {
+                        var result = settledBLL.EventLC_N2Live(getEventReq, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            EventResponse getApiResp = new EventResponse();
+                            getApiResp.status = "0";
+                            getApiResp.n2xsd = "urn:n2ns";
+                            getApiResp.source = "";
+                            getApiResp.result.action = action;
+                            getApiResp.result.id = id;
+                            getApiResp.result.userid = getEventReq.request.userid;
+                            getApiResp.result.currencyid = getTestHierarchy(getEventReq.request.userid, tokenInfo.tpCurrency);
+                            getApiResp.result.balance = tpAffterAmount;
+                            getApiResp.result.eventtrxid = getEventReq.request.eventtrxid;
+                            getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
+                            getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
+                            getApiResp.result.timestamp = getCurrentGameTime();
+
+                            xml = toXml(typeof(EventResponse), getApiResp);
+                            log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                            return xml;
+                        }
+                        else if (result == -1)
+                        {
+                            commResp.status = "116";
+                            commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
+                        }
+                        else if (tpAffterAmount < 0)
+                        {
+                            commResp.status = "113";
+                            commResp.exception.desc = "ERROR_INVALID_AMOUNT";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                        return xml;
+                    }
+
+                    xml = toXml(typeof(ErrorResponse), commResp);
+                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                     return xml;
                 }
 
-                xml = toXml(typeof(ErrorResponse), commResp);
                 log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                 return xml;
             }
-            else if (string.Equals(action, "straderesult", StringComparison.OrdinalIgnoreCase))
+            catch (Exception ex)
             {
-                var getPayoutReq = JsonConvert.DeserializeObject<PayoutDataLC_N2Live>(json);
-
-                try
-                {
-                    var result = settledBLL.PayoutLC_N2Live(getPayoutReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPayoutReq.request.userid);
-                        BetResponse getApiResp = new BetResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getPayoutReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getPayoutReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.tradeid = getPayoutReq.request.tradeid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(BetResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
-                    }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
-                    return xml;
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
                 return xml;
             }
-            else if (string.Equals(action, "ssmartbetcreate", StringComparison.OrdinalIgnoreCase))
-            {
-                var getSmartBetReq = JsonConvert.DeserializeObject<SmartBettingDataLC_N2Live>(json);
-
-                try
-                {
-                    var result = bettingBLL.SmartPlaceBetLC_N2Live(getSmartBetReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        SmartBetResponse getApiResp = new SmartBetResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getSmartBetReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getSmartBetReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpAffterAmount;
-                        getApiResp.result.schemeid = getSmartBetReq.request.schemeid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(SmartBetResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
-                    }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        commResp.status = "113";
-                        commResp.exception.desc = "ERROR_INVALID_AMOUNT";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
-                    return xml;
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "spushsmartbet", StringComparison.OrdinalIgnoreCase))
-            {
-                var getSmartCancelBetReq = JsonConvert.DeserializeObject<SmartCancelBetDataLC_N2Live>(json);
-                try
-                {
-                    var result = settledBLL.SmartCancelBetLC_N2Live(getSmartCancelBetReq, out decimal tpAffterAmount);
-                    if (result > 0 || result == -2)
-                    {
-                        // your side should response success to the push trade since the trade placement is failed
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartCancelBetReq.request.userid);
-                        SmartBetResponse getApiResp = new SmartBetResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getSmartCancelBetReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getSmartCancelBetReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.schemeid = getSmartCancelBetReq.request.schemeid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(SmartBetResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
-                    }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
-                    return xml;
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "ssmartbetclose", StringComparison.OrdinalIgnoreCase))
-            {
-                var getSmartPayoutReq = JsonConvert.DeserializeObject<SmartPayoutDataLC_N2Live>(json);
-
-                try
-                {
-                    var result = settledBLL.SmartPayoutLC_N2Live(getSmartPayoutReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartPayoutReq.request.userid);
-                        SmartBetResponse getApiResp = new SmartBetResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getSmartPayoutReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getSmartPayoutReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.schemeid = getSmartPayoutReq.request.schemeid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(SmartBetResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
-                    }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
-                    return xml;
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "screditbonus", StringComparison.OrdinalIgnoreCase))
-            {
-                var getBonusReq = JsonConvert.DeserializeObject<BonusDataLC_N2Live>(json);
-
-                try
-                {
-                    var result = settledBLL.BonusLC_N2Live(getBonusReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        BonusResponse getApiResp = new BonusResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getBonusReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getBonusReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpAffterAmount;
-                        getApiResp.result.bonusid = getBonusReq.request.bonusid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(BonusResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
-                    }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
-                    return xml;
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-            else if (string.Equals(action, "seventtransaction", StringComparison.OrdinalIgnoreCase))
-            {
-                var getEventReq = JsonConvert.DeserializeObject<EventDataLC_N2Live>(json);
-
-                try
-                {
-                    var result = settledBLL.EventLC_N2Live(getEventReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        EventResponse getApiResp = new EventResponse();
-                        getApiResp.status = "0";
-                        getApiResp.n2xsd = "urn:n2ns";
-                        getApiResp.source = "";
-                        getApiResp.result.action = action;
-                        getApiResp.result.id = id;
-                        getApiResp.result.userid = getEventReq.request.userid;
-                        getApiResp.result.currencyid = getTestHierarchy(getEventReq.request.userid, tokenInfo.tpCurrency);
-                        getApiResp.result.balance = tpAffterAmount;
-                        getApiResp.result.eventtrxid = getEventReq.request.eventtrxid;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
-                        getApiResp.result.timestamp = getCurrentGameTime();
-
-                        xml = toXml(typeof(EventResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                        return xml;
-                    }
-                    else if (result == -1)
-                    {
-                        commResp.status = "116";
-                        commResp.exception.desc = "ERROR_DUPLICATE_TRANSACTION";
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        commResp.status = "113";
-                        commResp.exception.desc = "ERROR_INVALID_AMOUNT";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
-                    return xml;
-                }
-
-                xml = toXml(typeof(ErrorResponse), commResp);
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-                return xml;
-            }
-
-            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
-            return xml;
         }
 
         private string getCurrentGameTime()
@@ -1062,52 +1073,5 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return tpCurrencyId;
         }
-        /*
-                private dynamic toXmlV3(string action, string id, string stat, object response)
-                {
-                    XmlDocument doc = new XmlDocument();
-                    //doc.PrependChild(doc.CreateXmlDeclaration("1.0", "utf-16", null));
-
-                    // root
-                    XmlElement root = doc.CreateElement("n2xsd:n2root", "n2root");
-                    root.SetAttribute("xmlns:n2xsd", "urn:n2ns");
-                    root.SetAttribute("source", "");
-
-                    // status
-                    XmlElement status = doc.CreateElement("status");
-                    status.InnerText = stat;
-
-                    // append
-                    doc.AppendChild(root);
-                    root.AppendChild(status);
-
-                    if (stat == "0")
-                    {
-                        // result
-                        string jsonText = JsonConvert.SerializeObject(response);
-                        XmlDocument resultXml = JsonConvert.DeserializeXmlNode(jsonText, "result", true);
-
-                        XmlElement result = doc.CreateElement("result");
-                        result.SetAttribute("action", action);
-                        result.SetAttribute("id", id);
-                        result.InnerXml = resultXml.FirstChild.FirstChild.InnerXml;
-                        root.AppendChild(result);
-                    }
-                    else
-                    {
-                        // exception
-                        XmlElement exception = doc.CreateElement("exception");
-                        exception.SetAttribute("action", action);
-                        exception.SetAttribute("id", id);
-                        XmlElement desc = doc.CreateElement("desc");
-                        desc.InnerText = stat;
-                        exception.AppendChild(desc);
-                        root.AppendChild(exception);
-                    }
-
-                    doc.LoadXml(doc.InnerXml);
-                    return doc;
-                }
-        */
     }
 }
