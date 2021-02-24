@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -429,6 +431,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly Tools tools;
         private readonly Tp thisTp;
+        private readonly IHostEnvironment environment;
 
         public N2LiveController(
             ILogger<N2LiveController> logger,
@@ -437,7 +440,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             BettingBLL bettingBLL,
             SettledBLL settledBLL,
             Log2File log2File,
-            Tools tools
+            Tools tools,
+            IHostEnvironment environment
         )
         {
             this.logger = logger;
@@ -448,6 +452,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.log2File = log2File;
             this.tools = tools;
             thisTp = Tp.N2Live;
+            this.environment = environment;
         }
 
         [Route("[controller]")]
@@ -534,7 +539,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.userid = getLoginReq.request.userid;
                         getApiResp.result.username = getLoginReq.request.userid;
                         getApiResp.result.acode = "";
-                        getApiResp.result.currencyid = tpCustBalance.TpCurrencyId;
+                        getApiResp.result.currencyid = getTestHierarchy(getLoginReq.request.userid, tpCustBalance.TpCurrencyId);
                         getApiResp.result.balance = tpCustBalance.Balance;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
                         getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
@@ -590,7 +595,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getBalanceReq.request.userid;
                         getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.currencyid = tpCustBalance.TpCurrencyId;
+                        getApiResp.result.currencyid = getTestHierarchy(getBalanceReq.request.userid, tpCustBalance.TpCurrencyId);
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
                         getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting[$"MerchantPassCode_{tokenInfo.siteId}"];
                         getApiResp.result.timestamp = getCurrentGameTime();
@@ -643,7 +648,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getApiResp.result.action = action;
                             getApiResp.result.id = id;
                             getApiResp.result.userid = getBetReq.request.userid;
-                            getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                            getApiResp.result.currencyid = getTestHierarchy(getBetReq.request.userid, tokenInfo.tpCurrency);
                             getApiResp.result.balance = tpAffterAmount;
                             getApiResp.result.tradeid = getBetReq.request.tradeid;
                             getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -693,7 +698,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getCancelBetReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getCancelBetReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpCustBalance.Balance;
                         getApiResp.result.tradeid = getCancelBetReq.request.tradeid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -737,7 +742,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getPayoutReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getPayoutReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpCustBalance.Balance;
                         getApiResp.result.tradeid = getPayoutReq.request.tradeid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -780,7 +785,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getSmartBetReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getSmartBetReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpAffterAmount;
                         getApiResp.result.schemeid = getSmartBetReq.request.schemeid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -829,7 +834,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getSmartCancelBetReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getSmartCancelBetReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpCustBalance.Balance;
                         getApiResp.result.schemeid = getSmartCancelBetReq.request.schemeid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -873,7 +878,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getSmartPayoutReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getSmartPayoutReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpCustBalance.Balance;
                         getApiResp.result.schemeid = getSmartPayoutReq.request.schemeid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -916,7 +921,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getBonusReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getBonusReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpAffterAmount;
                         getApiResp.result.bonusid = getBonusReq.request.bonusid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -959,7 +964,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.action = action;
                         getApiResp.result.id = id;
                         getApiResp.result.userid = getEventReq.request.userid;
-                        getApiResp.result.currencyid = tokenInfo.tpCurrency;
+                        getApiResp.result.currencyid = getTestHierarchy(getEventReq.request.userid, tokenInfo.tpCurrency);
                         getApiResp.result.balance = tpAffterAmount;
                         getApiResp.result.eventtrxid = getEventReq.request.eventtrxid;
                         getApiResp.result.vendorid = thirdPartySetting.TpSetting[$"VendorId_{tokenInfo.siteId}"];
@@ -1035,6 +1040,27 @@ namespace ThirdPartySeamlessWallet.Controllers
             doc.LoadXml(xml2);
 
             return doc;
+        }
+
+        private string getTestHierarchy(string account, string tpCurrencyId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+            List<long> testHierarchyCustId = new List<long>();
+            if (environment.IsDevelopment())
+            {
+                testHierarchyCustId.Add(1481);
+            }
+            else
+            {
+                testHierarchyCustId.Add(90);
+                testHierarchyCustId.Add(31909);
+            }
+            bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
+            if (isTestHierarchy == true)
+            {
+                tpCurrencyId = "1111";
+            }
+            return tpCurrencyId;
         }
         /*
                 private dynamic toXmlV3(string action, string id, string stat, object response)
