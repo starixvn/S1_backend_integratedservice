@@ -56,7 +56,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]")]
         [HttpPost]
-        public Resp SeamlessWallet([FromForm]Req req)
+        public Resp SeamlessWallet([FromForm] Req req)
         {
             Resp resp = new Resp();
             logger.LogCritical(JsonConvert.SerializeObject(req));
@@ -171,7 +171,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "YL_VoidFishBet");
                 }
             }
-
+            else
+            {
+                log2File.Error($"{reqAction}\r\n{JsonConvert.SerializeObject(req)}", "YL_Action");
+            }
             logger.LogCritical(JsonConvert.SerializeObject(resp));
             return resp;
         }
@@ -193,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/[action]")]
         [HttpPost]
-        public Resp Bet([FromForm]Req req)
+        public Resp Bet([FromForm] Req req)
         {
             logger.LogCritical(JsonConvert.SerializeObject(req));
             BetReq betReq = JsonConvert.DeserializeObject<BetReq>(req.message);
@@ -236,7 +239,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         [Route("[controller]/[action]")]
         [HttpPost]
-        public Resp VoidFishBet([FromForm]Req req)
+        public Resp VoidFishBet([FromForm] Req req)
         {
             //logger.LogCritical(JsonConvert.SerializeObject(req));
             VoidFishBetReq voidFishBetReq = JsonConvert.DeserializeObject<VoidFishBetReq>(req.message);
