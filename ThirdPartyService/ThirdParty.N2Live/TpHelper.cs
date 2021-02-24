@@ -13,33 +13,6 @@ namespace ThirdParty.N2Live
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        //[XmlRoot(ElementName = "n2root", Namespace = "urn:n2ns")]
-        //public class N2root
-        //{
-        //    [XmlElement(ElementName = "request")]
-        //    public Request Request { get; set; }
-        //    [XmlAttribute(AttributeName = "n2xsd", Namespace = "http://www.w3.org/2000/xmlns/")]
-        //    public string N2xsd { get; set; }
-        //}
-
-        //[XmlRoot(ElementName = "request")]
-        //public class Request
-        //{
-        //    [XmlElement(ElementName = "userid")]
-        //    public string Userid { get; set; }
-        //    [XmlElement(ElementName = "vendorid")]
-        //    public string Vendorid { get; set; }
-        //    [XmlElement(ElementName = "sessiontoken")]
-        //    public string Sessiontoken { get; set; }
-        //    [XmlElement(ElementName = "clientip")]
-        //    public string Clientip { get; set; }
-        //    [XmlElement(ElementName = "timestamp")]
-        //    public string Timestamp { get; set; }
-        //    [XmlAttribute(AttributeName = "action")]
-        //    public string Action { get; set; }
-        //    [XmlAttribute(AttributeName = "id")]
-        //    public string Id { get; set; }
-        //}
 
         public class LoginRequest
         {
@@ -109,8 +82,8 @@ namespace ThirdParty.N2Live
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var SiteId = tpCustInfo.SiteId;
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
-            string MobileUrl = inputs.ContainsKey("MobileUrl") && !string.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception("MobileUrl");
+            string GameUrl = inputs.ContainsKey($"GameUrl_{SiteId}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{SiteId}"]) ? inputs[$"GameUrl_{SiteId}"] : throw new Exception($"GameUrl_{SiteId}");
+            string MobileUrl = inputs.ContainsKey($"MobileUrl_{SiteId}") && !string.IsNullOrEmpty(inputs[$"MobileUrl_{SiteId}"]) ? inputs[$"MobileUrl_{SiteId}"] : throw new Exception($"MobileUrl_{SiteId}");
             string MerchantCode = inputs.ContainsKey($"MerchantCode_{SiteId}") && !string.IsNullOrEmpty(inputs[$"MerchantCode_{SiteId}"]) ? inputs[$"MerchantCode_{SiteId}"] : throw new Exception($"MerchantCode_{SiteId}");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "homeUrl";
 
