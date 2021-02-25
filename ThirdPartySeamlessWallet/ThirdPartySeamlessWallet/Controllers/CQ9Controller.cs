@@ -315,20 +315,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
             if (tpCheck == null)
             {
-                getBalanceResp.status.code = "1006";
-                getBalanceResp.status.message = "Error : account not found";
-                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
-                return getBalanceResp;
+                // check player account exist
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+                if (tpCustInfo == null)
+                {
+                    getBalanceResp.status.code = "1006";
+                    getBalanceResp.status.message = "Error : account not found";
+                    log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                    return getBalanceResp;
+                }
             }
 
-            // player suspend return balance 0 others return cache balance
+            // player offline return balance 0 others return cache balance
             var gameType = thirdPartyBLL.GetGameType((int)thisTp, balanceReq.gamecode);
             var tpCustBalance = (environment.IsDevelopment()) ? tpCustInfoBLL.GetBalance((int)thisTp, account, (int)gameType) : tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account, (int)gameType);
             getBalanceResp.data = new BalanceData();
             getBalanceResp.status.code = "0";
             getBalanceResp.status.message = "Success";
             getBalanceResp.status.datetime = getCurrentGameTime();
-            getBalanceResp.data.balance = (tpCheck.Locked) ? 0 : tpCustBalance.Balance;
+            getBalanceResp.data.balance = (tpCheck == null) ? 0 : tpCustBalance.Balance;
             getBalanceResp.data.currency = tpCustBalance.TpCurrencyId;
 
             log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
