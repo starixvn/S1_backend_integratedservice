@@ -18,7 +18,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly WalletService walletService;
         private readonly Tools tools;
         private readonly Log2File log2File;
-        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools,  Log2File log2File)
+        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, Log2File log2File)
         {
             this.configuration = configuration;
             this.walletService = walletService;
@@ -92,125 +92,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (result > 0)
             {
                 trans.Commit();
-            }
-
-            return result;
-        }
-        public int SettledFish_YL(TpCustInfo tpCustInfo, BettingDataFish_YL bettingDataFish_YL, out decimal afterAmount)
-        {
-            afterAmount = 0;
-            int result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            long transTime = 0;
-            DateTime.TryParse(bettingDataFish_YL.transTime, out DateTime dtTransTime);
-            transTime = tools.ConvertLocTime(dtTransTime, 8);
-            try
-            {
-                result = conn.Execute("Service_BettransFish_YL_Ins", new { bettingDataFish_YL.txId, bettingDataFish_YL.userId, gameNumier = bettingDataFish_YL.gameNumber, bettingDataFish_YL.gameId, bettingDataFish_YL.chair, bettingDataFish_YL.roomId, bettingDataFish_YL.roomLevel, bettingDataFish_YL.currency, transTime, bettingDataFish_YL.betAmount, bettingDataFish_YL.payAmount, bettingDataFish_YL.commission, bettingDataFish_YL.profit, bettingDataFish_YL.validBet }, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
-                {
-                    if (bettingDataFish_YL.profit != 0)
-                    {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit, (int)Tp.YL, TransType.Payout, $"Settled: {Math.Abs(bettingDataFish_YL.profit).ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans);
-                    }
-
-                    if (result > 0)
-                    {
-                        BetRecordInfo betRecordInfo = new BetRecordInfo();
-                        betRecordInfo.TpId = (int)Tp.YL;
-                        betRecordInfo.Stake = bettingDataFish_YL.validBet;
-                        betRecordInfo.ValidBet = bettingDataFish_YL.validBet;
-                        betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
-                        betRecordInfo.TransId = bettingDataFish_YL.txId;
-                        betRecordInfo.GameType = GameType.YL_Fish;
-                        betRecordInfo.TpUserName = bettingDataFish_YL.userId;
-                        betRecordInfo.SettledTime = 0;
-                        betRecordInfo.SettlementType = SettlementType.SettledForValid;
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                    }
-                }
-                else
-                {
-                    result = -1;
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
-            }
-
-            return result;
-        }
-        public int RefundFish_YL(TpCustInfo tpCustInfo, RefundDataFish_YL refundDataFish_YL, out decimal afterAmount)
-        {
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            int result = 0;
-            long updateTime = 0;
-            DateTime.TryParse(refundDataFish_YL.updateTime, out DateTime dtUpdateTime);
-            updateTime = tools.ConvertLocTime(dtUpdateTime, 8);
-            BettingDataFish_YL bettingDataFish_YL = conn.QueryFirstOrDefault<BettingDataFish_YL>("Service_BettransFish_YL_Get", new { refundDataFish_YL.txId }, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (bettingDataFish_YL != null && bettingDataFish_YL.TicketStatus != TicketStatus.Refund)
-            {
-                if (bettingDataFish_YL.profit != 0)
-                {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit * -1, (int)Tp.YL, TransType.Refunds, $"Void: {bettingDataFish_YL.profit.ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans);
-                }
-
-                if (result > 0)
-                {
-                    result = conn.Execute("Service_BettransFish_YL_Set", new { refundDataFish_YL.txId, updateTime = updateTime }, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                    if (result > 0)
-                    {
-                        BetRecordInfo betRecordInfo = new BetRecordInfo();
-                        betRecordInfo.TpId = (int)Tp.YL;
-                        betRecordInfo.Stake = bettingDataFish_YL.validBet;
-                        betRecordInfo.ValidBet = 0;
-                        betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
-                        betRecordInfo.TransId = bettingDataFish_YL.txId;
-                        betRecordInfo.GameType = GameType.YL_Fish;
-                        betRecordInfo.TpUserName = bettingDataFish_YL.userId;
-                        betRecordInfo.SettledTime = updateTime;
-                        betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                        betRecordInfo.TicketStatus = TicketStatus.Refund;
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                    }
-                }
-
-                if (result > 0 && bettingDataFish_YL.profit == 0)
-                {
-                    result = -1;
-                }
-            }
-            else
-            {
-                result = -1;
             }
 
             return result;

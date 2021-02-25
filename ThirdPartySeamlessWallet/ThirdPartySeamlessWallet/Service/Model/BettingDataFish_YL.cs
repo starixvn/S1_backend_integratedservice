@@ -33,4 +33,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameNumier { get; set; }
         public string updateTime { get; set; }
     }
+
+    public class SettleDataFish_YL
+    {
+        public string TransId { get; set; }
+        public string Account { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public long SettleTime { get; set; }
+        public int TicketStatus { get; set; }
+    }
+
 }

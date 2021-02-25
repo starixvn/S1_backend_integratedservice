@@ -349,6 +349,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 unsettled.Stake *= tpCurrency.ExchangeRate;
                                 unsettled.ValidBet *= tpCurrency.ExchangeRate;
                                 unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                                unsettled.Revenue *= tpCurrency.ExchangeRate;
                             }
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
