@@ -74,7 +74,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Iconic_Fish = 40,
         OneGaming_Poker = 41,
         V8_Poker = 42,
-        CQ9_Fish = 44
+        CQ9_Fish = 44,
+        N2Live_LiveCasino = 45
     }
     public enum Tp
     {
@@ -102,7 +103,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Mega = 22,
         One789 = 23,
         Iconic = 24,
-        V8 = 25
+        V8 = 25,
+        N2Live = 28
     }
     public enum TransferType : int
     {

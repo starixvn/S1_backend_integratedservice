@@ -120,7 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
 
-            if(tpCustInfo != null)
+            if (tpCustInfo != null)
             {
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
 
@@ -381,6 +381,46 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = bettingService.PlaceBetFish_Iconic(tpCustInfo, bettingDataFish_Iconic, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PlaceBetLC_N2Live(BettingDataLC_N2Live bettingDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, bettingDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_N2Live.request.totalamount *= tpCurrency.ExchangeRate;
+                foreach (var item in bettingDataLC_N2Live.request.trades.trade)
+                {
+                    item.amount *= tpCurrency.ExchangeRate;
+                    if (item.hand != null)
+                    {
+                        item.hand.text *= tpCurrency.ExchangeRate;
+                    }
+                }
+            }
+            var result = bettingService.PlaceBetLC_N2Live(tpCustInfo, bettingDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int SmartPlaceBetLC_N2Live(SmartBettingDataLC_N2Live smartBettingDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, smartBettingDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                smartBettingDataLC_N2Live.request.amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.SmartPlaceBetLC_N2Live(tpCustInfo, smartBettingDataLC_N2Live, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
