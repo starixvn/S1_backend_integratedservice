@@ -1754,5 +1754,484 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region N2Live
+
+        public int CancelBetLC_N2Live(TpCustInfo tpCustInfo, CancelBetDataLC_N2Live cancelBetDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+
+            afterAmount = 0;
+            int result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                tradeid = cancelBetDataLC_N2Live.request.tradeid
+            });
+            //p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get", new { tradeid = cancelBetDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            if (check == null)
+            {
+                // no record
+                return -2;
+            }
+            else if (check.TicketStatus == 3)
+            {
+                // already canceled 
+                return -1;
+            }
+
+            result = conn.Execute("Service_BettransLC_N2Live_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                //decimal stake = p.Get<decimal>("out_stake");
+                decimal stake = check.Stake;
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(stake),
+                    (int)Tp.N2Live,
+                    cancelBetDataLC_N2Live.request.tradeid,
+                    gameType, TpCategory.LiveCasino,
+                    cancelBetDataLC_N2Live.request.tradeid,
+                    TransType.Refunds,
+                    null,
+                    out afterAmount,
+                    "CancelBet",
+                    out bonusId,
+                    conn,
+                    trans,
+                    AllowNegative.Allow
+                );
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        public int PayoutLC_N2Live(TpCustInfo tpCustInfo, PayoutDataLC_N2Live payoutDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            string TransId = $"{payoutDataLC_N2Live.request.gameid}_{payoutDataLC_N2Live.request.userid}";
+
+            var p = new DynamicParameters(new
+            {
+                TransId = TransId,
+                tradeid = payoutDataLC_N2Live.request.tradeid,
+                userid = payoutDataLC_N2Live.request.userid,
+                vendorid = payoutDataLC_N2Live.request.vendorid,
+                gameid = payoutDataLC_N2Live.request.gameid,
+                gamecode = payoutDataLC_N2Live.request.gamecode,
+                Payout = payoutDataLC_N2Live.request.totalamount,
+                PayoutTrades = JsonConvert.SerializeObject(payoutDataLC_N2Live.request.trades),
+                //totalamount = payoutDataLC_N2Live.request.totalamount,
+                //trades = JsonConvert.SerializeObject(payoutDataLC_N2Live.request.trades),
+                timeUnix = new DateTimeOffset(DateTime.Parse(payoutDataLC_N2Live.request.timestamp), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get", new { tradeid = payoutDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check != null && check.TicketType == 4)
+                {
+                    // already payout 
+                    return -1;
+                }
+
+                result = conn.Execute("Service_BettransLC_N2Live_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (payoutDataLC_N2Live.request.totalamount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            payoutDataLC_N2Live.request.totalamount,
+                            (int)Tp.N2Live,
+                            payoutDataLC_N2Live.request.tradeid,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            payoutDataLC_N2Live.request.tradeid,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int SmartCancelBetLC_N2Live(TpCustInfo tpCustInfo, SmartCancelBetDataLC_N2Live smartCancelBetDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+
+            afterAmount = 0;
+            int result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                schemeid = smartCancelBetDataLC_N2Live.request.schemeid
+            });
+            //p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_SmartBettransLC_N2Live_Get", new { schemeid = smartCancelBetDataLC_N2Live.request.schemeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            if (check == null)
+            {
+                // no record
+                return -2;
+            }
+            else if (check.TicketStatus == 3)
+            {
+                // already canceled 
+                return -1;
+            }
+
+            result = conn.Execute("Service_SmartBettransLC_N2Live_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                //decimal stake = p.Get<decimal>("out_stake");
+                decimal stake = check.Stake;
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(stake),
+                    (int)Tp.N2Live,
+                    smartCancelBetDataLC_N2Live.request.schemeid,
+                    gameType, TpCategory.LiveCasino,
+                    smartCancelBetDataLC_N2Live.request.schemeid,
+                    TransType.Refunds,
+                    null,
+                    out afterAmount,
+                    "CancelBet",
+                    out bonusId,
+                    conn,
+                    trans,
+                    AllowNegative.Allow
+                );
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        public int SmartPayoutLC_N2Live(TpCustInfo tpCustInfo, SmartPayoutDataLC_N2Live smartPayoutDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                schemeid = smartPayoutDataLC_N2Live.request.schemeid,
+                userid = smartPayoutDataLC_N2Live.request.userid,
+                vendorid = smartPayoutDataLC_N2Live.request.vendorid,
+                Payout = smartPayoutDataLC_N2Live.request.amount,
+                reason = smartPayoutDataLC_N2Live.request.reason,
+                timeUnix = smartPayoutDataLC_N2Live.request.timeUnix,
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_SmartBettransLC_N2Live_Get", new { schemeid = smartPayoutDataLC_N2Live.request.schemeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check == null && check.TicketType == 4)
+                {
+                    // already payout 
+                    return -1;
+                }
+
+                result = conn.Execute("Service_SmartBettransLC_N2Live_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (smartPayoutDataLC_N2Live.request.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            smartPayoutDataLC_N2Live.request.amount,
+                            (int)Tp.N2Live,
+                            smartPayoutDataLC_N2Live.request.schemeid,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            smartPayoutDataLC_N2Live.request.schemeid,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int BonusLC_N2Live(TpCustInfo tpCustInfo, BonusDataLC_N2Live bonusDataLC_N2Live, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.N2Live_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                userid = bonusDataLC_N2Live.request.userid,
+                vendorid = bonusDataLC_N2Live.request.vendorid,
+                bonusid = bonusDataLC_N2Live.request.bonusid,
+                creditdate = bonusDataLC_N2Live.request.creditdate,
+                amount = bonusDataLC_N2Live.request.amount,
+                desc = bonusDataLC_N2Live.request.desc,
+                creditUnix = new DateTimeOffset(DateTime.Parse(bonusDataLC_N2Live.request.creditdate), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
+                timeUnix = new DateTimeOffset(DateTime.Parse(bonusDataLC_N2Live.request.timestamp), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BonusLC_N2Live_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bonusDataLC_N2Live.request.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bonusDataLC_N2Live.request.amount,
+                            (int)Tp.N2Live,
+                            bonusDataLC_N2Live.request.bonusid,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            bonusDataLC_N2Live.request.bonusid,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"{bonusDataLC_N2Live.request.bonusid} Prize",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int EventLC_N2Live(TpCustInfo tpCustInfo, EventDataLC_N2Live eventDataLC_N2Live, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+            decimal amount = 0;
+            var ticketStatus = (int)TicketStatus.Refund;
+
+            if (string.Equals(eventDataLC_N2Live.request.trxtype, "deposit", StringComparison.OrdinalIgnoreCase))
+            {
+                amount = Math.Abs(eventDataLC_N2Live.request.amount);
+                ticketStatus = (int)TicketStatus.Win;
+            }
+            else if (string.Equals(eventDataLC_N2Live.request.trxtype, "withdraw", StringComparison.OrdinalIgnoreCase))
+            {
+                amount = Math.Abs(eventDataLC_N2Live.request.amount) * -1;
+                ticketStatus = (int)TicketStatus.Lost;
+            }
+            else if (string.Equals(eventDataLC_N2Live.request.trxtype, "canceldeposit", StringComparison.OrdinalIgnoreCase))
+            {
+                amount = Math.Abs(eventDataLC_N2Live.request.amount) * -1;
+                ticketStatus = (int)TicketStatus.Refund;
+            }
+            else if (string.Equals(eventDataLC_N2Live.request.trxtype, "cancelwithdraw", StringComparison.OrdinalIgnoreCase))
+            {
+                amount = Math.Abs(eventDataLC_N2Live.request.amount);
+                ticketStatus = (int)TicketStatus.Refund;
+            }
+
+            var p = new DynamicParameters(new
+            {
+                userid = eventDataLC_N2Live.request.userid,
+                vendorid = eventDataLC_N2Live.request.vendorid,
+                eventtrxid = eventDataLC_N2Live.request.eventtrxid,
+                eventtype = eventDataLC_N2Live.request.eventtype,
+                trxtype = eventDataLC_N2Live.request.trxtype,
+                amount = eventDataLC_N2Live.request.amount,
+                desc = eventDataLC_N2Live.request.desc,
+                timeUnix = new DateTimeOffset(DateTime.Parse(eventDataLC_N2Live.request.timestamp), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
+                TicketType = (int)BettransType.Tip,
+                TicketStatus = ticketStatus,
+                SettleFlag = 2
+            });
+
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_RewardLC_N2Live_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (amount != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            amount,
+                            (int)Tp.N2Live,
+                            TransType.Tip,
+                            $"Tip: {Math.Abs(amount):#,##0.##}",
+                            eventDataLC_N2Live.request.eventtrxid,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public SettleData GetSettle_TpWagerLC_N2Live(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData>("Service_TpWagerLC_N2Live_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public SettleData GetSettle_TpSmartWagerLC_N2Live(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData>("Service_TpSmartWagerLC_N2Live_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public IEnumerable<SettleData> GetUnsettledList_BettransLC_N2Live()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData>("Service_BettransLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public IEnumerable<SettleData> GetUnsettledList_TpSmartWagerLC_N2Live()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleData>("Service_TpSmartWagerLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_BettransLC_N2Live(string TransId, int SettleFlag)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_N2Live_Settle_Set", new { TransId = TransId, SettleFlag = SettleFlag }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerLC_N2Live(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerLC_N2Live_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpSmartWagerLC_N2Live_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }

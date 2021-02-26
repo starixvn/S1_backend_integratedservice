@@ -67,6 +67,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerIconicService>();
             services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
+            services.AddSingleton<WagerN2LiveService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -117,6 +118,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
             services.AddSingleton<WagerRedoV8BLL>();
+            // N2Live
+            services.AddSingleton<WagerN2LiveBLL>();
+            services.AddSingleton<ApiN2LiveBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -142,6 +146,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerOneGaming>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
+            services.AddHostedService<WagerN2Live>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
