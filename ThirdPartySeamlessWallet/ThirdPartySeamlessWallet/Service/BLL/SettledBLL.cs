@@ -1531,5 +1531,150 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region N2Live
+
+        public int CancelBetLC_N2Live(CancelBetDataLC_N2Live cancelBetDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, cancelBetDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+
+            var result = settledService.CancelBetLC_N2Live(tpCustInfo, cancelBetDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PayoutLC_N2Live(PayoutDataLC_N2Live payoutDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, payoutDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoutDataLC_N2Live.request.totalamount *= tpCurrency.ExchangeRate;
+                foreach (var item in payoutDataLC_N2Live.request.trades.trade)
+                {
+                    item.amount *= tpCurrency.ExchangeRate;
+                    if (item.hand != null)
+                    {
+                        item.hand.text *= tpCurrency.ExchangeRate;
+                    }
+                }
+            }
+
+            var result = settledService.PayoutLC_N2Live(tpCustInfo, payoutDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int SmartCancelBetLC_N2Live(SmartCancelBetDataLC_N2Live smartCancelBetDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, smartCancelBetDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+
+            var result = settledService.SmartCancelBetLC_N2Live(tpCustInfo, smartCancelBetDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int SmartPayoutLC_N2Live(SmartPayoutDataLC_N2Live smartPayoutDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, smartPayoutDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                smartPayoutDataLC_N2Live.request.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SmartPayoutLC_N2Live(tpCustInfo, smartPayoutDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int BonusLC_N2Live(BonusDataLC_N2Live bonusDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, bonusDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bonusDataLC_N2Live.request.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.BonusLC_N2Live(tpCustInfo, bonusDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int EventLC_N2Live(EventDataLC_N2Live eventDataLC_N2Live, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, eventDataLC_N2Live.request.userid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                eventDataLC_N2Live.request.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.EventLC_N2Live(tpCustInfo, eventDataLC_N2Live, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public SettleData GetSettle_TpWagerLC_N2Live(string TransId)
+        {
+            return settledService.GetSettle_TpWagerLC_N2Live(TransId);
+        }
+
+        public SettleData GetSettle_TpSmartWagerLC_N2Live(string TransId)
+        {
+            return settledService.GetSettle_TpSmartWagerLC_N2Live(TransId);
+        }
+
+        public IEnumerable<SettleData> GetUnsettledList_BettransLC_N2Live()
+        {
+            return settledService.GetUnsettledList_BettransLC_N2Live();
+        }
+
+        public IEnumerable<SettleData> GetUnsettledList_TpSmartWagerLC_N2Live()
+        {
+            return settledService.GetUnsettledList_TpSmartWagerLC_N2Live();
+        }
+
+        public int SetSettleFlag_BettransLC_N2Live(string TransId, int SettleFlag)
+        {
+            return settledService.SetSettleFlag_BettransLC_N2Live(TransId, SettleFlag);
+        }
+
+        public int SetSettleFlag_TpWagerLC_N2Live(string TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerLC_N2Live(TransId);
+        }
+
+        public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
+        {
+            return settledService.SetSettleFlag_TpSmartWagerLC_N2Live(TransId);
+        }
+
+        #endregion
     }
 }
