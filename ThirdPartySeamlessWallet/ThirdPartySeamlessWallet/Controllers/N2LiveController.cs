@@ -1148,6 +1148,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 testHierarchyCustId.Add(90);
                 testHierarchyCustId.Add(31909);
+                //aliceidr for n2 test account
+                testHierarchyCustId.Add(240129);
+                //alicethb for n2 test account
+                testHierarchyCustId.Add(236358);
             }
             bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
             if (isTestHierarchy == true)
