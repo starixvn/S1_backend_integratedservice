@@ -28,7 +28,7 @@ namespace ThirdPartyWager.Service
         public decimal Point { get; set; }
         public decimal Amount { get; set; }
         public decimal NetAmount { get; set; }
-        public int GameResult { get; set; }
+        public int? GameResult { get; set; }
         public decimal Payouts { get; set; }
         public decimal WinLose { get; set; }
         public decimal Result { get; set; }
