@@ -60,6 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string ticket { get; set; }
         public decimal Stake { get; set; }
         public decimal ValidBet { get; set; }
+        public decimal Revenue { get; set; }
         public decimal WinLostAmount { get; set; }
         public string Account { get; set; }
         public long SettleTime { get; set; }

@@ -28,6 +28,7 @@ namespace ThirdPartyWager.Service.Model
         public string type { get; set; }
         public decimal bet { get; set; }
         public decimal realbet { get; set; }
+        public decimal comm { get; set; }
         public string status { get; set; }
         public decimal amount { get; set; }
         public DateTime datetime { get; set; }
