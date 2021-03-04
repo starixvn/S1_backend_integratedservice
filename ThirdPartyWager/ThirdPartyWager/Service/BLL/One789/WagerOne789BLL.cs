@@ -70,6 +70,7 @@ namespace ThirdPartyWager.Service.BLL
                             if (gameType == (int)GameType.One789_LiveCasino)
                             {
                                 record.TransId = $"{record.AreaNumber}_{record.GameNumber}_{record.GameRound}_{record.Username}";
+                                record.GameResult = (record.Status == 0) ? -1 : record.GameResult;
                             }
                             else
                             {

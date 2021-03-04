@@ -271,12 +271,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 unsettled.Stake *= tpCurrency.ExchangeRate;
                                 unsettled.ValidBet *= tpCurrency.ExchangeRate;
                                 unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                                unsettled.Revenue *= tpCurrency.ExchangeRate;
                             }
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = unsettled.Stake,
                                 ValidBet = unsettled.ValidBet,
+                                Revenue = unsettled.Revenue,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.ticket,
                                 GameType = GameType.OneGaming_Poker,
