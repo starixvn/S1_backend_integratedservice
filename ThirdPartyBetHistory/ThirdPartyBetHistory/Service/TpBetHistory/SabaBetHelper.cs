@@ -366,7 +366,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     betRecordInfo.GameType == GameType.Saba_VirtualGames)
                 {
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                    betRecordInfo.ValidBet = betRecordInfo.Stake;
+                    betRecordInfo.ValidBet = (betDetial.bet_type == 1613) ? 0 : betRecordInfo.Stake;
                 }
                 else
                 {
