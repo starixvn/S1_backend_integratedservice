@@ -84,7 +84,7 @@ namespace ThirdParty.N2Live
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
             string MobileUrl = inputs.ContainsKey("MobileUrl") && !string.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception("MobileUrl");
             string MerchantCode = inputs.ContainsKey("MerchantCode") && !string.IsNullOrEmpty(inputs["MerchantCode"]) ? inputs["MerchantCode"] : throw new Exception("MerchantCode");
-            string errorUrl = inputs.ContainsKey("errorUrl") && !string.IsNullOrEmpty(inputs["errorUrl"]) ? inputs["errorUrl"] : "errorUrl";
+            //string errorUrl = inputs.ContainsKey("errorUrl") && !string.IsNullOrEmpty(inputs["errorUrl"]) ? inputs["errorUrl"] : "errorUrl";
 
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
@@ -100,8 +100,8 @@ namespace ThirdParty.N2Live
 
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{LoginUrl}/SingleLogin?merchantcode={MerchantCode}&lang={TpLangId}&userId={tpCustInfo.TpUserName}&uuId={HttpUtility.UrlEncode(sessionKey)}&redirectURL={errorUrl}";
-
+            //oApiResult.Message = $"{LoginUrl}/SingleLogin?merchantcode={MerchantCode}&lang={TpLangId}&userId={tpCustInfo.TpUserName}&uuId={HttpUtility.UrlEncode(sessionKey)}&redirectURL={errorUrl}";
+            oApiResult.Message = $"{LoginUrl}/SingleLogin?merchantcode={MerchantCode}&lang={TpLangId}&userId={tpCustInfo.TpUserName}&uuId={HttpUtility.UrlEncode(sessionKey)}";
             return oApiResult;
         }
 
