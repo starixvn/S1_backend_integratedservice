@@ -81,10 +81,9 @@ namespace ThirdParty.N2Live
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var SiteId = tpCustInfo.SiteId;
-            string GameUrl = inputs.ContainsKey($"GameUrl_{SiteId}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{SiteId}"]) ? inputs[$"GameUrl_{SiteId}"] : throw new Exception($"GameUrl_{SiteId}");
-            string MobileUrl = inputs.ContainsKey($"MobileUrl_{SiteId}") && !string.IsNullOrEmpty(inputs[$"MobileUrl_{SiteId}"]) ? inputs[$"MobileUrl_{SiteId}"] : throw new Exception($"MobileUrl_{SiteId}");
-            string MerchantCode = inputs.ContainsKey($"MerchantCode_{SiteId}") && !string.IsNullOrEmpty(inputs[$"MerchantCode_{SiteId}"]) ? inputs[$"MerchantCode_{SiteId}"] : throw new Exception($"MerchantCode_{SiteId}");
+            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
+            string MobileUrl = inputs.ContainsKey("MobileUrl") && !string.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception("MobileUrl");
+            string MerchantCode = inputs.ContainsKey("MerchantCode") && !string.IsNullOrEmpty(inputs["MerchantCode"]) ? inputs["MerchantCode"] : throw new Exception("MerchantCode");
             string errorUrl = inputs.ContainsKey("errorUrl") && !string.IsNullOrEmpty(inputs["errorUrl"]) ? inputs["errorUrl"] : "errorUrl";
 
             var key = ApplyToken(tpCustInfo);
