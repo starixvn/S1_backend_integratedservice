@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
         }
         public Dictionary<string, string> GetThirdPartyBySite(int tpId, int siteId)
         {
-            string key = $"{tpId}_{siteId}";
+            string key = $"Setting_{tpId}_{siteId}";
             var setting = cache.Get<Dictionary<string, string>>(key);
             if (setting == null)
             {
