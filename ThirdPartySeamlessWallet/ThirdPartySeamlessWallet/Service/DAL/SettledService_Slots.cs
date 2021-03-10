@@ -124,7 +124,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (bettingDataRNG_Joker.amount > 0)
                     {
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_Joker.amount, (int)Tp.Joker, TransType.Settled, $"Payout: {Math.Abs(bettingDataRNG_Joker.amount).ToString("#,##0.##")}", bettingDataRNG_Joker.id, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.roundid, gameType, TpCategory.Slots, bettingDataRNG_Joker.id, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_Joker.amount,
+                            (int)Tp.Joker,
+                            bettingDataRNG_Joker.roundid,
+                            gameType,
+                            TpCategory.Slots,
+                            bettingDataRNG_Joker.id,
+                            (bettingDataRNG_Joker.type == "bonus") ? TransType.Prize : TransType.Payout,
+                            null,
+                            out afterAmount,
+                            (bettingDataRNG_Joker.type == "bonus") ? $"{bettingDataRNG_Joker.id} Bonus Prize" : "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
                     }
                     else
                     {
