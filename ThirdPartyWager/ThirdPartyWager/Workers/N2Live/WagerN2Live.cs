@@ -50,51 +50,47 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
-                // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
-                if (!string.IsNullOrEmpty(setting["SiteIds"]))
+                quick = 0;
+                string siteIds = "1,2,3";
+                var site = siteIds.Split(",");
+                foreach (var siteId in site)
                 {
-                    quick = 0;
-                    // SiteIds = "1,2,3"
-                    var site = setting["SiteIds"].Split(",");
-                    foreach (var siteId in site)
+                    var setting = thirdPartyBLL.GetThirdPartyBySite(tpId, Convert.ToInt32(siteId));
+                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, Convert.ToInt32(siteId));
+                    DateTime timerTime;
+                    int last;
+                    if (dataTpTimer == null)
                     {
-                        var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, Convert.ToInt32(siteId));
-                        DateTime timerTime;
-                        int last;
-                        if (dataTpTimer == null)
-                        {
-                            last = iRangMins - 1;
-                            timerTime = DateTime.Now.AddMinutes(-1 * last);
-                        }
-                        else
-                        {
-                            timerTime = dataTpTimer.StartTime;
-                            last = iRangMins - 1;
-                        }
+                        last = iRangMins - 1;
+                        timerTime = DateTime.Now.AddMinutes(-1 * last);
+                    }
+                    else
+                    {
+                        timerTime = dataTpTimer.StartTime;
+                        last = iRangMins - 1;
+                    }
 
-                        if (timerTime < DateTime.Now)
+                    if (timerTime < DateTime.Now)
+                    {
+                        var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
+                        TimeSpan timeLimit = DateTime.UtcNow - DateTime.Parse(time.endTime);
+                        if (timeLimit.TotalMinutes < 5)
                         {
-                            var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
-                            TimeSpan timeLimit = DateTime.UtcNow - DateTime.Parse(time.endTime);
-                            if (timeLimit.TotalMinutes < 5)
-                            {
-                                // 日期值不能为未来日期 时间必须是当前时间的15分钟之前
-                                time.endTime = DateTime.Parse(time.endTime).AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss");
-                                time.endUnix -= 300;
-                            }
-                            bool result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting[$"VendorId_{siteId}"], setting[$"MerchantPassCode_{siteId}"], time.startTime, time.endTime);
-                            if (result == true)
-                            {
-                                thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, Convert.ToInt32(siteId));
-                            }
+                            // 日期值不能为未来日期 时间必须是当前时间的15分钟之前
+                            time.endTime = DateTime.Parse(time.endTime).AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss");
+                            time.endUnix -= 300;
                         }
-                        TimeSpan ts = DateTime.Now - timerTime;
-                        int diffMin = (int)ts.TotalMinutes;
-                        if (diffMin > beyond)
+                        bool result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
+                        if (result)
                         {
-                            quick = 1;
+                            thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, Convert.ToInt32(siteId));
                         }
+                    }
+                    TimeSpan ts = DateTime.Now - timerTime;
+                    int diffMin = (int)ts.TotalMinutes;
+                    if (diffMin > beyond)
+                    {
+                        quick = 1;
                     }
                 }
             }
@@ -119,7 +115,6 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }

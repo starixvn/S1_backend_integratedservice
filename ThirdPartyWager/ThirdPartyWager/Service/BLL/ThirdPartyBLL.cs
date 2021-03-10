@@ -36,6 +36,22 @@ namespace ThirdPartyWager.Service.BLL
 
             return setting;
         }
+        public Dictionary<string, string> GetThirdPartyBySite(int tpId, int siteId)
+        {
+            string key = $"Setting_{tpId}_{siteId}";
+            var setting = cache.Get<Dictionary<string, string>>(key);
+            if (setting == null)
+            {
+                var dataTpList = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
+                if (dataTpList != null)
+                {
+                    setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(dataTpList.Setting);
+                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return setting;
+        }
 
         public int SetThirdPartySetting(int tpId, Dictionary<string, string> setting)
         {
