@@ -20,6 +20,7 @@ namespace ThirdPartyBetHistory.Service.Model
         public SettlementType SettlementType { get; set; }
         public TicketStatus TicketStatus { get; set; }
         public string OriginalState { get; set; }
+        public string tokenmoney { get; set; }
         public long TicketKey { get; set; }
         public int BonusId { get; set; }
     }

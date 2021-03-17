@@ -17,6 +17,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public int? odds_type { get; set; }
             public int? bet_type { get; set; }
             public string ticket_status { get; set; }
+            string tokenmoney { get; }
         }
         private class Req
         {
@@ -74,6 +75,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string customInfo4 { get; set; }
             public string customInfo5 { get; set; }
             public string ba_status { get; set; }
+            public string tokenmoney { get; set; }
             public int version_key { get; set; }
             public object ParlayData { get; set; }
             public decimal? original_stake { get; set; }
@@ -107,6 +109,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string customInfo4 { get; set; }
             public string customInfo5 { get; set; }
             public string ba_status { get; set; }
+            public string tokenmoney { get; set; }
             public long version_key { get; set; }
         }
         public class BetVirtualSportDetail : ISabaBet
@@ -144,6 +147,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public string customInfo4 { get; set; }
             public string customInfo5 { get; set; }
             public string ba_status { get; set; }
+            public string tokenmoney { get; set; }
             public long version_key { get; set; }
             public dynamic ParlayData { get; set; }
             public string race_number { get; set; }
@@ -261,6 +265,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.Stake = betDetial.stake;
                             betRecordInfo.TpUserName = betDetial.vendor_member_id;
                             betRecordInfo.TicketKey = betDetial.version_key;
+                            betRecordInfo.tokenmoney = betDetial.tokenmoney;
 
                             CalculateAvailableBet(betDetial, betRecordInfo);
 
@@ -365,8 +370,16 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     betRecordInfo.GameType == GameType.Saba_Lottery || betRecordInfo.GameType == GameType.Saba_MacauGame || betRecordInfo.GameType == GameType.Saba_SabaClub ||
                     betRecordInfo.GameType == GameType.Saba_VirtualGames)
                 {
+
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                    betRecordInfo.ValidBet = (betDetial.bet_type == 1613) ? 0 : betRecordInfo.Stake;
+                    if (betDetial.bet_type==1613 && betDetial.tokenmoney =="freebet")
+                    { 
+                        betRecordInfo.ValidBet = 0; 
+                    }
+                    else
+                    { 
+                        betRecordInfo.ValidBet = betRecordInfo.Stake; 
+                    }
                 }
                 else
                 {
