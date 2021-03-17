@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -68,6 +63,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
+            services.AddSingleton<LiveStreamingService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -121,6 +117,8 @@ namespace ThirdPartyWager
             // N2Live
             services.AddSingleton<WagerN2LiveBLL>();
             services.AddSingleton<ApiN2LiveBLL>();
+            // LiveStreaming
+            services.AddSingleton<LiveStreamingBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -148,6 +146,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
+            services.AddHostedService<LiveStreaming>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
