@@ -75,7 +75,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         OneGaming_Poker = 41,
         V8_Poker = 42,
         CQ9_Fish = 44,
-        N2Live_LiveCasino = 45
+        N2Live_LiveCasino = 45,
+        V8_Poker_None = 47 // without revenue games
     }
     public enum Tp
     {
