@@ -71,11 +71,11 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(5);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (environment.IsDevelopment())
                 {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                    //dueTimeSpan = TimeSpan.FromSeconds(10);
+                    //dueTimeSpan = TimeSpan.FromMinutes(1);
+                    dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
                 if (isError)
