@@ -3,15 +3,14 @@ using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyCore;
 using ThirdPartyService.Service.Model;
 using Dapper;
 using System.Reflection;
 using System.Data;
 using Microsoft.Extensions.Logging;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -22,12 +21,14 @@ namespace ThirdPartyService.Service.DAL
         private readonly IWebHostEnvironment environment;
         private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyHelper> logger;
+        private readonly Log2File _log2File;
 
-        public ThirdPartyHelper(ILogger<ThirdPartyHelper> logger,IWebHostEnvironment environment, IConfiguration configuration)
+        public ThirdPartyHelper(ILogger<ThirdPartyHelper> logger,IWebHostEnvironment environment, IConfiguration configuration, Log2File log2File)
         {
             this.environment = environment;
             this.configuration = configuration;
             this.logger = logger;
+            _log2File = log2File;
         }
 
         public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
@@ -67,8 +68,12 @@ namespace ThirdPartyService.Service.DAL
         }
         public void InsertLog(string url, string input, string output)
         {
-            logger.LogInformation($"Url={url}, Input={input}, Output={output}");
+            var content = $"Url={url}, Input={input}, Output={output}";
+            logger.LogInformation(content);
+            var action = url.Split('/').LastOrDefault(x => !string.IsNullOrWhiteSpace(x));
+            _log2File.Info(content, action);
         }
+
         public string GetTpLanId(int tpId, string langId)
         {
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
