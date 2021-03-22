@@ -245,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleOne789LT_789.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private void DoSettleOneGamingWork(object state)
         {
             bool forContinue = false;
@@ -318,7 +318,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleOneGaming.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private void DoSettleV8Work(object state)
         {
             bool forContinue = false;
@@ -354,15 +354,27 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 unsettled.Revenue *= tpCurrency.ExchangeRate;
                             }
 
+                            // revenue games
+                            GameType gameType;
+                            int[] kindId = { 220, 600, 610, 630, 830, 860, 890, 930, 8100, 8540, 8600 };
+                            if (kindId.Contains(unsettled.KindID))
+                            {
+                                gameType = GameType.V8_Poker;
+                            }
+                            else
+                            {
+                                gameType = GameType.V8_Poker_None;
+                            }
+
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = unsettled.Stake,
                                 ValidBet = unsettled.ValidBet,
-                                Revenue= unsettled.Revenue,
+                                Revenue = unsettled.Revenue,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.GameID,
-                                GameType = GameType.V8_Poker,
+                                GameType = gameType,
                                 TpUserName = account,
                                 SettledTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid
