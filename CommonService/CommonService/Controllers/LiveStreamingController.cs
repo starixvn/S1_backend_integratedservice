@@ -20,7 +20,7 @@ namespace CommonService.Controllers
         {
             ApiResult apiResult = new ApiResult();
 
-            if (liveStreamingLinkReq.Ch != 0 && !string.IsNullOrEmpty(liveStreamingLinkReq.SiteName.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.SiteName.Trim()))
+            if (liveStreamingLinkReq.Ch != 0 && !string.IsNullOrEmpty(liveStreamingLinkReq.SiteName.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.Uid.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.Ip.Trim()))
             {
                 var resultResp = await liveStreamingBLL.GetLiveStreamingLink(liveStreamingLinkReq);
                 apiResult.ErrorCode = resultResp.ErrorCode;
