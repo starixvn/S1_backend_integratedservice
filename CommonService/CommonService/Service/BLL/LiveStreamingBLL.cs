@@ -21,7 +21,7 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> GetLiveStreamingLink(LiveStreamingLinkReq liveStreamingLinkReq)
         {
             var apiResult = new ApiResult();
-            var config = liveStreamingConfig.Value[liveStreamingLinkReq.SiteName];
+            var config = liveStreamingConfig.Value[liveStreamingLinkReq.SiteName.Trim()];
             string url = config.ApiURL;
             Dictionary<string, string> liveStreaming = new Dictionary<string, string>
             {
@@ -29,8 +29,9 @@ namespace CommonService.Service.BLL
                 { "apiuser", config.Apiuser},
                 { "key", config.Key},
                 { "ch", liveStreamingLinkReq.Ch.ToString()},
-                { "ip", config.Ip },
-                { "uid", liveStreamingLinkReq.Uid.Trim()}
+                { "uid", liveStreamingLinkReq.Uid.Trim()},
+                { "ip", liveStreamingLinkReq.Ip.Trim()}
+
             };
 
             var result = await httpHelper.HttpGetAsync(url, null, liveStreaming, null);
