@@ -451,20 +451,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+                string mixUniqueId = "";
                 var category = TpCategory.Lottery;
                 if (gameType == (int)GameType.One789_Lottery)
                 {
-                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    mixUniqueId = $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}";
+                    p.Add("TransId", mixUniqueId);
                     result = conn.Execute("Service_BettransLT_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 }
                 else if (gameType == (int)GameType.One789_Lottery_789)
                 {
-                    p.Add("TransId", $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}");
+                    mixUniqueId = $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}";
+                    p.Add("TransId", mixUniqueId);
                     result = conn.Execute("Service_BettransLT_One789_789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 }
                 else
                 {
-                    p.Add("TransId", $"{gameParseTmp[2]}_{gameParseTmp[3]}_{gameParseTmp[4]}_{bettingDataLT_One789.Username}");
+                    mixUniqueId = $"{gameParseTmp[2]}_{gameParseTmp[3]}_{gameParseTmp[4]}_{bettingDataLT_One789.Username}";
+                    p.Add("TransId", mixUniqueId);
                     category = TpCategory.LiveCasino;
                     result = conn.Execute("Service_BettransLC_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 }
@@ -475,7 +479,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         Math.Abs(bettingDataLT_One789.Amount) * -1,
                         (int)Tp.One789,
-                        bettingDataLT_One789.Tx,
+                        mixUniqueId,
                         gameType,
                         bettingDataLT_One789.Tx,
                         null,
@@ -486,23 +490,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans
                     );
 
-                    if (bonusId > 0 && result > 0)
-                    {
-                        AddTpBonus(
-                            (int)Tp.One789,
-                            bettingDataLT_One789.Tx,
-                            gameType,
-                            tpCustInfo.CustId,
-                            tpCustInfo.UserName,
-                            tpCustInfo.CurrencyId,
-                            tpCustInfo.SiteId,
-                            Math.Abs(bettingDataLT_One789.Amount),
-                            bonusId,
-                            category,
-                            conn,
-                            trans
-                        );
-                    }
+                    //if (bonusId > 0 && result > 0)
+                    //{
+                    //    AddTpBonus(
+                    //        (int)Tp.One789,
+                    //        bettingDataLT_One789.Tx,
+                    //        gameType,
+                    //        tpCustInfo.CustId,
+                    //        tpCustInfo.UserName,
+                    //        tpCustInfo.CurrencyId,
+                    //        tpCustInfo.SiteId,
+                    //        Math.Abs(bettingDataLT_One789.Amount),
+                    //        bonusId,
+                    //        category,
+                    //        conn,
+                    //        trans
+                    //    );
+                    //}
 
                     if (result > 0)
                     {
