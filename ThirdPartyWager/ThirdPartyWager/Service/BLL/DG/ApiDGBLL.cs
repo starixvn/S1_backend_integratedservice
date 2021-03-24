@@ -19,11 +19,13 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
 
-        public ApiDGBLL(HttpHelper httpHelper, Common common)
+        public ApiDGBLL(HttpHelper httpHelper, Common common, Log2File log2File)
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
         }
         public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
         {
@@ -87,11 +89,12 @@ namespace ThirdPartyWager.Service.BLL
             };
             // request
             var r = await DoHttpClientAsync(url, param);
+            log2File.Error($"Info:\r\n{r}\r\n", "DG");
             var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
-            if (result.data == null)
-            {
-                throw new Exception("No Data.");
-            }
+            //if (result.data == null)
+            //{
+            //    throw new Exception("No Data.");
+            //}
             return result;
         }
         private async Task<string> DoHttpClientAsync(string url, object param)
@@ -102,11 +105,14 @@ namespace ThirdPartyWager.Service.BLL
             var response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
+                log2File.Error($"Success:\r\n{response}\r\n{response.Content.ReadAsStringAsync().Result}\r\n", "DG");
                 return response.Content.ReadAsStringAsync().Result;
             }
             else
             {
-                return null;
+                log2File.Error($"Error:\r\n{response}\r\n{response.Content.ReadAsStringAsync().Result}\r\n", "DG");
+                return response.Content.ReadAsStringAsync().Result;
+                //return null;
             }
         }
     }
