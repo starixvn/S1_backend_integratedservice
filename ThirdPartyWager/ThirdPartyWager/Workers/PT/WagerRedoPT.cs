@@ -104,12 +104,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
@@ -220,12 +220,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
@@ -238,7 +238,7 @@ namespace ThirdPartyWager.Workers
             int gmt = 7;
             try
             {
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency, siteId);
                 DateTime timerTime;
                 int last;
                 last = intervalMins - 1;
@@ -260,7 +260,7 @@ namespace ThirdPartyWager.Workers
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency, siteId);
                     }
                 }
 
@@ -278,12 +278,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerVNDGoal.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerVNDGoal.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
@@ -296,7 +296,7 @@ namespace ThirdPartyWager.Workers
             int gmt = 7;
             try
             {
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency, siteId);
                 DateTime timerTime;
                 int last;
                 last = intervalMins - 1;
@@ -318,7 +318,7 @@ namespace ThirdPartyWager.Workers
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency, siteId);
                     }
                 }
 
@@ -336,12 +336,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerVNDBwing.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerVNDBwing.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
@@ -394,12 +394,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerUSD.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerUSD.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
@@ -452,12 +452,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerCNY.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timerCNY.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }

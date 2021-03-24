@@ -67,14 +67,14 @@ namespace ThirdPartyWager.Service.BLL
                         var errorCode = dataWager.errorcode;
                         var errorMsg = dataWager.error;
 
-                        if (errorCode != 0)
-                        {
-                            logger.LogError(errorCode, errorMsg);
-                            logInfo = $"THIRD_PARTY_ERROR {logMsg}";
-                            logger.LogInformation(logInfo);
-                            log2File.Error($"Info:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
-                            return false;
-                        }
+                        //if (errorCode != 0)
+                        //{
+                        logger.LogError(errorCode, errorMsg);
+                        logInfo = $"THIRD_PARTY_ERROR {logMsg}";
+                        logger.LogInformation(logInfo);
+                        log2File.Error($"Info:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
+                        return false;
+                        //}
                     }
 
                     if (dataWager.pagination.totalCount == 0)

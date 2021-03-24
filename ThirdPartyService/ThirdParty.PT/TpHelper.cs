@@ -335,54 +335,33 @@ namespace ThirdParty.PT
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            ApiUrl = $"{ApiUrl}/entity/brokengames";
 
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
-            certificate.Add("password", Pass);
-
-            // get broken games
-            var Broken = new
+            string client = "";
+            if (gameId == "0")
             {
-                playername = tpCustInfo.TpUserName,
-                status = "waiting",
-                last = 1
-            };
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Broken));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var result = HttpPostWithX509(
-                ApiUrl,
-                sParam,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
-
-            if (IsJSON(result))
-            {
-
-                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-                if (error.error == null && result.Contains("TOTALCOUNT"))
+                gameId = "";
+                // live casino
+                if (appType == AppType.Desktop)
                 {
-                    var obj = (JObject)JsonConvert.DeserializeObject(result);
-                    int cnt = (int)obj["result"]["TOTALCOUNT"];
-                    if (cnt > 0)
-                    {
-                        // if there is broken game then replace gameId
-                        var json = JsonConvert.DeserializeObject<BrokenGamesResponse>(result);
-                        gameId = json.result.First().BROKENGAMECODE;
-                    }
+                    client = "live_desk";
+                }
+                else
+                {
+                    client = "live_mob";
+                }
+            }
+            else
+            {
+                // slot
+                if (appType == AppType.Desktop)
+                {
+                    client = "ngm_desktop";
+                }
+                else
+                {
+                    client = "ngm_mobile";
                 }
             }
 
@@ -395,7 +374,7 @@ namespace ThirdParty.PT
                     password = tpCustInfo.TpPwd,
                     game = gameId,
                     lang = TpLangId,
-                    client = (appType == AppType.Desktop) ? "ngm_desktop" : "ngm_mobile",
+                    client = client,
                     mode = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "offline" : "real"
                 })
             };

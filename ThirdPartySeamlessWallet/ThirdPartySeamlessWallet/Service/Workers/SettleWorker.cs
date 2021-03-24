@@ -44,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleN2Live;
         private Timer timerSettleN2LiveLC_Smart;
         private Timer timerSettlePTRng;
+        private Timer timerSettlePTLC;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -101,6 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettlePTLC = new Timer(DoSettlePTLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -878,6 +880,88 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
+        private void DoSettlePTLCWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.PT;
+            var gameType = GameType.PT_LiveCasino;
+            var category = TpCategory.LiveCasino;
+            string logName = "Settle_PT_LC";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListLC_PT();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                            if (tpCurrency.ExchangeRate > 0)
+                            {
+                                unsettled.Stake *= tpCurrency.ExchangeRate;
+                                unsettled.ValidBet *= tpCurrency.ExchangeRate;
+                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            }
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.ValidBet;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId,
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValidNotRollover
+                            };
+
+                            if (stake != 0 && validBet != 0 && winLostAmount != 0)
+                            {
+                                settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            }
+                            settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettlePTLC.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
         #endregion
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -910,6 +994,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleN2Live?.Change(Timeout.Infinite, 0);
             timerSettleN2LiveLC_Smart?.Change(Timeout.Infinite, 0);
             timerSettlePTRng?.Change(Timeout.Infinite, 0);
+            timerSettlePTLC?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
