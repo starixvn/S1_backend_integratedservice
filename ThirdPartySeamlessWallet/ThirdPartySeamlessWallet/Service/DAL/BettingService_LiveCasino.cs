@@ -458,23 +458,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans
                 );
 
-                if (bonusId > 0 && result > 0)
-                {
-                    AddTpBonus(
-                        (int)Tp.N2Live,
-                        TransId,
-                        gameType,
-                        tpCustInfo.CustId,
-                        tpCustInfo.UserName,
-                        tpCustInfo.CurrencyId,
-                        tpCustInfo.SiteId,
-                        Math.Abs(bettingDataLC_N2Live.request.totalamount),
-                        bonusId,
-                        TpCategory.LiveCasino,
-                        conn,
-                        trans
-                    );
-                }
+                //if (bonusId > 0 && result > 0)
+                //{
+                //    AddTpBonus(
+                //        (int)Tp.N2Live,
+                //        TransId,
+                //        gameType,
+                //        tpCustInfo.CustId,
+                //        tpCustInfo.UserName,
+                //        tpCustInfo.CurrencyId,
+                //        tpCustInfo.SiteId,
+                //        Math.Abs(bettingDataLC_N2Live.request.totalamount),
+                //        bonusId,
+                //        TpCategory.LiveCasino,
+                //        conn,
+                //        trans
+                //    );
+                //}
 
                 if (result > 0)
                 {
@@ -529,23 +529,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans
                 );
 
-                if (bonusId > 0 && result > 0)
-                {
-                    AddTpBonus(
-                        (int)Tp.N2Live,
-                        smartBettingDataLC_N2Live.request.schemeid,
-                        gameType,
-                        tpCustInfo.CustId,
-                        tpCustInfo.UserName,
-                        tpCustInfo.CurrencyId,
-                        tpCustInfo.SiteId,
-                        Math.Abs(smartBettingDataLC_N2Live.request.amount),
-                        bonusId,
-                        TpCategory.LiveCasino,
-                        conn,
-                        trans
-                    );
-                }
+                //if (bonusId > 0 && result > 0)
+                //{
+                //    AddTpBonus(
+                //        (int)Tp.N2Live,
+                //        smartBettingDataLC_N2Live.request.schemeid,
+                //        gameType,
+                //        tpCustInfo.CustId,
+                //        tpCustInfo.UserName,
+                //        tpCustInfo.CurrencyId,
+                //        tpCustInfo.SiteId,
+                //        Math.Abs(smartBettingDataLC_N2Live.request.amount),
+                //        bonusId,
+                //        TpCategory.LiveCasino,
+                //        conn,
+                //        trans
+                //    );
+                //}
 
                 if (result > 0)
                 {
