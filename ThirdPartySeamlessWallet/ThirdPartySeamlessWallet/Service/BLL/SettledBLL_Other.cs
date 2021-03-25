@@ -156,6 +156,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RewardCF_AWC(RewardCF_AWC rewardCF_AWC, out decimal afterAmount)
+        {
+            foreach (var item in rewardCF_AWC.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AWC, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AWC, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.amount *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.RewardCF_AWC(rewardCF_AWC, out afterAmount);
+            return result;
+        }
+
         public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
         {
             return settledService.GetUnsettledListCF_AWC();

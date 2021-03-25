@@ -242,6 +242,23 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public GameInfoRefund gameInfo { get; set; }
     }
 
+    public class RewardCF_AWC
+    {
+        public IList<RewardDataCF_AWC> txns { get; set; }
+    }
+
+    public class RewardDataCF_AWC
+    {
+        public string promotionTxId { get; set; }
+        public string promotionId { get; set; }
+        public string promotionTypeId { get; set; }
+        public string platform { get; set; }
+        public string userId { get; set; }
+        public decimal amount { get; set; }
+        public DateTime txTime { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
     public class GameInfoRefund
     {
         public string arenaCode { get; set; }
