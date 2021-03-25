@@ -565,6 +565,75 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int RewardCF_AWC(RewardCF_AWC rewardCF_AWC, out decimal afterAmount)
+        {
+            bool isError = false;
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in rewardCF_AWC.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                try
+                {
+                    var p = new DynamicParameters(new
+                    {
+                        promotionTxId = item.promotionTxId,
+                        promotionId = item.promotionId,
+                        promotionTypeId = item.promotionTypeId,
+                        platform = item.platform,
+                        userId = item.userId,
+                        amount = item.amount,
+                        txUnix = new DateTimeOffset(item.txTime).ToUnixTimeSeconds()
+                    });
+                    result = conn.Execute("Service_RewardCF_AWC_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    decimal amount = item.amount;
+                    if (result > 0)
+                    {
+                        if (amount != 0)
+                        {
+                            result = walletService.SetBalance(
+                                item.tpCustInfo.CustId,
+                                item.tpCustInfo.SiteId,
+                                item.tpCustInfo.UserName,
+                                amount,
+                                (int)Tp.AWC,
+                                TransType.Prize,
+                                $"Prize: {Math.Abs(amount):#,##0.##}",
+                                item.promotionTxId,
+                                out afterAmount,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    if (mySqlEx.Number == 1062)
+                    {
+                        result = -1;
+                        continue;
+                    }
+                    else
+                    {
+                        isError = true;
+                        log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_give");
+                    }
+                }
+            }
+
+            return isError ? 0 : result;
+        }
+
         public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

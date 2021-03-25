@@ -497,6 +497,41 @@ namespace ThirdPartySeamlessWallet.Controllers
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
+            else if (string.Equals(reqAction.action, "give", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    RewardCF_AWC reward = JsonConvert.DeserializeObject<RewardCF_AWC>(req.message);
+
+                    int result = settledBLL.RewardCF_AWC(reward, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        resp.status = "0000";
+                        resp.balance = tpAffterAmount;
+                        resp.balanceTs = getCurrentGameTime();
+                    }
+                    else if (result == -1)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, reward.txns.ElementAt(0).userId);
+                        resp.status = "0000";
+                        resp.balance = tpCustBalance.Balance;
+                        resp.balanceTs = getCurrentGameTime();
+                    }
+                    else
+                    {
+                        resp.status = "9999";
+                        resp.desc = "fail";
+                    }
+
+                    log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                }
+                catch (Exception ex)
+                {
+                    resp.status = "9999";
+                    resp.desc = "fail";
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                }
+            }
 
             return resp;
         }
