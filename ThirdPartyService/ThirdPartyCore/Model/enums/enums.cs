@@ -81,4 +81,14 @@ namespace ThirdPartyCore.Model.enums
         Mobile = 2,
         Native = 3,
     }
+    public enum AutoType
+    {
+        Auto = 1,
+        Manual = 2
+    }
+    public enum WalletType
+    {
+        Transfer = 0,
+        Seamless = 1,
+    }
 }

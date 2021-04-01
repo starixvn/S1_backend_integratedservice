@@ -60,11 +60,25 @@ namespace ThirdPartyService.Controllers
         public ActionResult<ApiResult> GotoGame([FromBody] TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
+            var autoTransfer = new ApiResult<AutoTransferResult>();
 
             try
             {
                 apiResult = thirdPartyBLL.GotoGame(tpInfo);
                 logger.LogInformation(apiResult.Message);
+
+                if (apiResult.ErrorCode == ErrorCode.Success)
+                {
+                    autoTransfer = thirdPartyBLL.AutoTransfer(tpInfo);
+                    logger.LogInformation(autoTransfer.Message);
+                    
+                    if (autoTransfer.ErrorCode == ErrorCode.Success)
+                    {
+                        // update InGame field
+                        tpCustInfoService.SetCustWallet(tpInfo.CustId, autoTransfer.Data.ToTpId);
+                    }
+                }
+
             }
             catch (Exception ex)
             {

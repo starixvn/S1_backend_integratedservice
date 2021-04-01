@@ -37,6 +37,10 @@ namespace ThirdPartyCore.Model
         public string ThirdId { get; set; }
         public decimal Difference { get; set; }
     }
+    public class AutoTransferResult
+    {
+        public int ToTpId { get; set; }
+    }
     public class UserBalance
     {
         public decimal balance { get; set; }
