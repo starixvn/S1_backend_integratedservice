@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Data;
 using Microsoft.Extensions.Logging;
 using ThirdPartyService.Service.Library;
+using System.Collections.Generic;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -79,6 +80,14 @@ namespace ThirdPartyService.Service.DAL
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
                 return conn.QueryFirstOrDefault<string>("TpLangId_Get", new { TpId = tpId, LangId = langId }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletType(int walletType)
+        {
+            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            {
+                return conn.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType }, commandType: CommandType.StoredProcedure);
             }
         }
     }

@@ -60,7 +60,6 @@ namespace ThirdPartyService.Controllers
         public ActionResult<ApiResult> GotoGame([FromBody] TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
-            var autoTransfer = new ApiResult<AutoTransferResult>();
 
             try
             {
@@ -69,14 +68,8 @@ namespace ThirdPartyService.Controllers
 
                 if (apiResult.ErrorCode == ErrorCode.Success)
                 {
-                    autoTransfer = thirdPartyBLL.AutoTransfer(tpInfo);
-                    logger.LogInformation(autoTransfer.Message);
-                    
-                    if (autoTransfer.ErrorCode == ErrorCode.Success)
-                    {
-                        // update InGame field
-                        tpCustInfoService.SetCustWallet(tpInfo.CustId, autoTransfer.Data.ToTpId);
-                    }
+                    ApiResult<AutoTransferResult>  autoResult = thirdPartyBLL.AutoTransfer(tpInfo);
+                    log2File.Info(JsonConvert.SerializeObject(autoResult), "AutoTransfer_GotoGame");
                 }
 
             }
@@ -208,6 +201,26 @@ namespace ThirdPartyService.Controllers
             try
             {
                 apiResult = thirdPartyBLL.AdjustWallet(adminTpTransfer);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+            }
+
+            return apiResult;
+        }
+
+        [HttpPost]
+        public ActionResult<ApiResult> AutoTransfer([FromBody] TpInfo tpInfo)
+        {
+            var apiResult = new ApiResult();
+
+            try
+            {
+                apiResult = thirdPartyBLL.AutoTransfer(tpInfo);
+                log2File.Info(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
             }
             catch (Exception ex)
             {

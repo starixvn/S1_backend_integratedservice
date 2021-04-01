@@ -402,123 +402,102 @@ namespace ThirdPartyService.Service.BLL
         {
             var apiResult = new ApiResult<AutoTransferResult>();
 
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
-            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            // get cust auto transfer status
+            var custWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
+            if (custWallet == null)
             {
-                // get auto transfer status
-                var custWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
-                if (custWallet == null)
+                apiResult.ErrorCode = ErrorCode.UserNotExist;
+                apiResult.Message = "This Account Cust Wallet Not Found";
+                return apiResult;
+            }
+
+            if (custWallet.AutoTransfer != (int)AutoType.Auto)
+            {
+                apiResult.ErrorCode = ErrorCode.AutoTransferIsOff;
+                apiResult.Message = "This Account Auto Transfer Is Off";
+                return apiResult;
+            }
+
+            TpTransfer transfer = new TpTransfer();
+
+            // get all transfer games and status is on
+            var transferGames = thirdPartyHelper.GetThirdPartyByWalletType((int)WalletType.Transfer);
+            if (transferGames.Any())
+            {
+                int alphaTpId = tpInfo.TpId;
+                string errorTpId = "";
+                bool toTransferGame = false;
+                Dictionary<string, string> preInput = new Dictionary<string, string>();
+                preInput.Add("AllOut", "Y");
+
+                // transfer balance to main wallet
+                foreach (var item in transferGames)
                 {
-                    apiResult.ErrorCode = ErrorCode.UserNotExist;
-                    apiResult.Message = "This Account Cust Wallet Not Found";
-                    return apiResult;
-                }
-
-                // check auto transfer condition
-                if (custWallet.AutoTransfer == (int)AutoType.Auto && tpInfo.TpId != custWallet.InGame)
-                {
-                    var tpCustInfo = tpCustInfoResult.Data;
-                    var tpBySite = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfo.SiteId);
-                    var walletType = tpBySite.WalletType;
-                    int fromTpId = custWallet.InGame;
-                    int toTpId = tpInfo.TpId;
-
-                    TpTransfer transfer = new TpTransfer();
-                    Dictionary<string, string> input = new Dictionary<string, string>();
-
-                    if (walletType == (int)WalletType.Transfer)
+                    int betaTpId = item.Id;
+                    var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, betaTpId);
+                    if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                     {
-                        if (custWallet.Balance <= 0)
+                        // get each games third-party of balance
+                        var preTpInfo = tpInfo;
+                        preTpInfo.TpId = betaTpId;
+                        var preBalance = GetBalance(preTpInfo);
+                        if (preBalance.ErrorCode == ErrorCode.Success && preBalance.Data.balance > 0)
                         {
-                            // transfer game to transfer game need trasfer to main wallet first
-                            if (custWallet.InGame > 0 && tpInfo.TpId > 0)
-                            {
-                                // get third-party balance
-                                var preTpInfo = tpInfo;
-                                preTpInfo.TpId = custWallet.InGame;
-                                var preBalance = GetBalance(preTpInfo);
-                                tpInfo.TpId = toTpId;
-                                if (preBalance.Data.balance <= 0)
-                                {
-                                    apiResult.ErrorCode = ErrorCode.Success;
-                                    apiResult.Message = "Balance In Is No Need To Transfer(3)";
-                                    apiResult.Data.ToTpId = tpInfo.TpId;
-                                    return apiResult;
-                                }
+                            // prepare transfer param
+                            transfer.TpId = preTpInfo.TpId;
+                            transfer.Amount = 1; // temporary use 1 for pass validation
+                            transfer.direction = Direction.ToMain;
+                            transfer.CustId = tpInfo.CustId;
+                            transfer.inputs = preInput;
 
-                                Dictionary<string, string> preInput = new Dictionary<string, string>();
-                                transfer.TpId = custWallet.InGame;
-                                transfer.Amount = 1; // temporary use 1 for pass validation
-                                transfer.direction = Direction.ToMain;
-                                transfer.CustId = tpInfo.CustId;
-                                preInput.Add("AllOut", "Y");
-                                transfer.inputs = preInput;
-                                int preTpId = 0;
-
-                                var preTransfer = Transfer(transfer);
-                                if (preTransfer.ErrorCode == ErrorCode.Success)
-                                {
-                                    tpCustInfoService.SetCustWallet(tpInfo.CustId, preTpId);
-                                    var preCustWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
-                                    custWallet.Balance = preCustWallet.Balance;
-                                }
-                            }
-                            else
+                            //var preTransfer = Transfer(transfer);
+                            Task.Run(() =>
                             {
-                                apiResult.ErrorCode = ErrorCode.Success;
-                                apiResult.Message = "Balance In Is No Need To Transfer";
-                                apiResult.Data.ToTpId = tpInfo.TpId;
-                                return apiResult;
-                            }
+                                Transfer(transfer);
+                            });
                         }
 
-                        transfer.TpId = tpInfo.TpId;
-                        transfer.Amount = custWallet.Balance;
-                        transfer.direction = Direction.ToTp;
-                        transfer.CustId = tpInfo.CustId;
-                        input.Add("AllIn", "Y");
-                        transfer.inputs = input;
-                        toTpId = tpInfo.TpId;
                     }
                     else
                     {
-                        if (custWallet.InGame == 0)
-                        {
-                            apiResult.ErrorCode = ErrorCode.OTHER_ERROR;
-                            apiResult.Message = "Balance Out Is No Need To Transfer";
-                            apiResult.Data.ToTpId = custWallet.InGame;
-                            return apiResult;
-                        }
-
-                        transfer.TpId = custWallet.InGame;
-                        transfer.Amount = 1; // temporary use 1 for pass validation
-                        transfer.direction = Direction.ToMain;
-                        transfer.CustId = tpInfo.CustId;
-                        input.Add("AllOut", "Y");
-                        transfer.inputs = input;
-                        toTpId = 0;
+                        errorTpId = $"{errorTpId} ( {betaTpId} )";
+                        continue;
                     }
+
+                    if (betaTpId == alphaTpId)
+                    {
+                        toTransferGame = true;
+                    }
+                }
+
+                if (toTransferGame == true)
+                {
+                    Dictionary<string, string> input = new Dictionary<string, string>();
+                    custWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
+                    transfer.TpId = alphaTpId;
+                    transfer.Amount = custWallet.Balance;
+                    transfer.direction = Direction.ToTp;
+                    transfer.CustId = tpInfo.CustId;
+                    input.Add("AllIn", "Y");
+                    transfer.inputs = input;
 
                     var doTransfer = Transfer(transfer);
                     apiResult.ErrorCode = doTransfer.ErrorCode;
-                    apiResult.Message = (doTransfer.ErrorCode == ErrorCode.Success) ? $"From {fromTpId} To {toTpId}" : doTransfer.Message;
+                    apiResult.Message = doTransfer.Message;
                     apiResult.RawErrorCode = doTransfer.RawErrorCode;
                     apiResult.RawMessage = doTransfer.RawMessage;
-                    apiResult.Data.ToTpId = toTpId;
                 }
                 else
                 {
-                    apiResult.ErrorCode = ErrorCode.OTHER_ERROR;
-                    apiResult.Message = "This Account Not Allow Auto Transfer";
+                    apiResult.ErrorCode = ErrorCode.AutoTransferIsSeamless;
+                    apiResult.Message = $"Go To Seamless Game Is No Need To Transfer {errorTpId}";
                 }
             }
             else
             {
-                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.Message = tpCustInfoResult.Message;
+                apiResult.ErrorCode = ErrorCode.AutoTransferFail;
+                apiResult.Message = "Get Transfer Games Failed";
             }
-
             return apiResult;
         }
-    }
 }

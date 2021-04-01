@@ -28,6 +28,10 @@ namespace ThirdPartyCore.Model.enums
         TransferNotExist = 1204,// Check Transfer
         TransferPending = 1205,// Check Transfer
         TransferWaitManualCheck = 1206,// Check Transfer
+        // auto transfer (13xxx)
+        AutoTransferFail = 1300,
+        AutoTransferIsOff = 1301,
+        AutoTransferIsSeamless = 1302,
         #endregion
         #region invalid parameter  (2xxxx)
         InvalidParameter = 2000,
