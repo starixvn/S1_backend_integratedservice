@@ -9,6 +9,6 @@ namespace ThirdPartyService.Service.Model
     {
         public decimal Balance { set; get; }
         public int AutoTransfer { set; get; }
-        public int InGame { set; get; }
+        public int SiteId { set; get; }
     }
 }

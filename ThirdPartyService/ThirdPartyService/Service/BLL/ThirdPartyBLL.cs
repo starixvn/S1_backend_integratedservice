@@ -421,7 +421,7 @@ namespace ThirdPartyService.Service.BLL
             TpTransfer transfer = new TpTransfer();
 
             // get all transfer games and status is on
-            var transferGames = thirdPartyHelper.GetThirdPartyByWalletType((int)WalletType.Transfer);
+            var transferGames = thirdPartyHelper.GetThirdPartyByWalletType((int)WalletType.Transfer, custWallet.SiteId);
             if (transferGames.Any())
             {
                 int alphaTpId = tpInfo.TpId;
@@ -443,21 +443,33 @@ namespace ThirdPartyService.Service.BLL
                         var preBalance = GetBalance(preTpInfo);
                         if (preBalance.ErrorCode == ErrorCode.Success && preBalance.Data.balance > 0)
                         {
+                            //Task.Run(() =>
+                            //{
+                            //    // prepare transfer param
+                            //    transfer.TpId = preTpInfo.TpId;
+                            //    transfer.Amount = 1; // temporary use 1 for pass validation
+                            //    transfer.direction = Direction.ToMain;
+                            //    transfer.CustId = tpInfo.CustId;
+                            //    transfer.inputs = preInput;
+
+                            //    //var preTransfer = Transfer(transfer);
+
+                            //    var taskTransfer = Transfer(transfer);
+                            //    Console.WriteLine(taskTransfer);
+                            //});
+
+
                             // prepare transfer param
                             transfer.TpId = preTpInfo.TpId;
                             transfer.Amount = 1; // temporary use 1 for pass validation
                             transfer.direction = Direction.ToMain;
                             transfer.CustId = tpInfo.CustId;
                             transfer.inputs = preInput;
-
-                            //var preTransfer = Transfer(transfer);
-                            Task.Run(() =>
-                            {
-                                Transfer(transfer);
-                            });
+                            Transfer(transfer);
                         }
 
                     }
+
                     else
                     {
                         errorTpId = $"{errorTpId} ( {betaTpId} )";
@@ -468,9 +480,10 @@ namespace ThirdPartyService.Service.BLL
                     {
                         toTransferGame = true;
                     }
+
                 }
 
-                if (toTransferGame == true)
+                if (toTransferGame)
                 {
                     Dictionary<string, string> input = new Dictionary<string, string>();
                     custWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
@@ -500,4 +513,5 @@ namespace ThirdPartyService.Service.BLL
             }
             return apiResult;
         }
+    }
 }

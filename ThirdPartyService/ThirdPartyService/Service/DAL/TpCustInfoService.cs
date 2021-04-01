@@ -176,11 +176,5 @@ namespace ThirdPartyService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<CustWalletModel>("Service_CustWallet_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
         }
-
-        //public int SetCustWallet(int custId, int inGame)
-        //{
-        //    using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-        //    return conn.Execute("Service_CustWallet_Set", new { CustId = custId, InGame = inGame }, commandType: CommandType.StoredProcedure);
-        //}
     }
 }
