@@ -39,7 +39,14 @@ namespace ThirdPartyCore.Model
     }
     public class AutoTransferResult
     {
+        public string Guid { get; set; }
+        public int FromTpId { get; set; }
         public int ToTpId { get; set; }
+        public int CustId { get; set; }
+        public string MainBalanceBefore { get; set; }
+        public string MainBalanceAfter { get; set; }
+        public string GameBalance { get; set; }
+        public int AutoTransfer { get; set; }
     }
     public class UserBalance
     {

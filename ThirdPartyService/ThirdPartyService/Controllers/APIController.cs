@@ -68,8 +68,7 @@ namespace ThirdPartyService.Controllers
 
                 if (apiResult.ErrorCode == ErrorCode.Success)
                 {
-                    ApiResult<AutoTransferResult>  autoResult = thirdPartyBLL.AutoTransfer(tpInfo);
-                    log2File.Info(JsonConvert.SerializeObject(autoResult), "AutoTransfer_GotoGame");
+                    thirdPartyBLL.AutoTransfer(tpInfo);
                 }
 
             }
@@ -220,7 +219,6 @@ namespace ThirdPartyService.Controllers
             try
             {
                 apiResult = thirdPartyBLL.AutoTransfer(tpInfo);
-                log2File.Info(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
             }
             catch (Exception ex)
             {

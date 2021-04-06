@@ -46,7 +46,7 @@ namespace ThirdParty.Mega
 
         private class CheckTransferItems
         {
-            public int amount { get; set; }
+            public decimal amount { get; set; }
             public string loginId { get; set; }
             public string bizId { get; set; }
         }
@@ -119,6 +119,8 @@ namespace ThirdParty.Mega
             );
 
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            apiResult.Data.ThirdId = bizId.ToString();
+
             if (IsJSON(result))
             {
                 var error = JsonConvert.DeserializeObject<ErrorResponse>(result);
@@ -131,6 +133,11 @@ namespace ThirdParty.Mega
                 }
                 else
                 {
+                    if (ThirdPartyTransID == null)
+                    {
+                        ThirdPartyTransID = bizId.ToString();
+                    }
+
                     var json = JsonConvert.DeserializeObject<CheckTransferResponse>(result);
                     if (json.result.total != 0 && json.result.items.First().bizId == ThirdPartyTransID && json.result.items.First().loginId == tpCustInfo.TpUserName)
                     {
