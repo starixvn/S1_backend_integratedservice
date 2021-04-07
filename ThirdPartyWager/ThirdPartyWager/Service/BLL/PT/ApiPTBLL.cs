@@ -20,19 +20,22 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper httpHelper;
         private readonly Common common;
         private readonly IConfiguration configuration;
+        private readonly Log2File log2File;
 
         public ApiPTBLL(
             HttpHelper httpHelper,
             Common common,
-            IConfiguration configuration
+            IConfiguration configuration,
+            Log2File log2File
         )
         {
             this.httpHelper = httpHelper;
             this.common = common;
             this.configuration = configuration;
+            this.log2File = log2File;
         }
 
-        public async Task<WagerPTModel> GetBetListByTime(string apiUrl, string entityKey, Dictionary<string, string> certificate, string startTime, string endTime, int page, int perPage)
+        public async Task<WagerPTModel> GetBetListByTime(string apiUrl, string entityKey, Dictionary<string, string> certificate, string startTime, string endTime, int page, int perPage, string guid)
         {
             // param
             string url = $"{apiUrl}/game/flow";
@@ -52,6 +55,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", "PT");
             string r = await DoHttpClientAsync(url, param, entityKey, certificate);
             var result = JsonConvert.DeserializeObject<WagerPTModel>(r);
             return result;

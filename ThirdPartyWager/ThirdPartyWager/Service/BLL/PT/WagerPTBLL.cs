@@ -41,6 +41,7 @@ namespace ThirdPartyWager.Service.BLL
             string logName = Tp.PT.ToString();
             string logInfo = "";
             string logMsg = $"( START: {startUnix} END: {endUnix}  CURRENCY: {currency} )";
+            string guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -59,7 +60,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await apiPTBLL.GetBetListByTime(apiUrl, entityKey, certificate, startUnix, endUnix, page, perPage);
+                    var dataWager = await apiPTBLL.GetBetListByTime(apiUrl, entityKey, certificate, startUnix, endUnix, page, perPage, guid);
 
                     // error condition
                     if (dataWager.error != null)
@@ -72,7 +73,7 @@ namespace ThirdPartyWager.Service.BLL
                         logger.LogError(errorCode, errorMsg);
                         logInfo = $"THIRD_PARTY_ERROR {logMsg}";
                         logger.LogInformation(logInfo);
-                        log2File.Error($"Info:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
+                        log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
                         return false;
                         //}
                     }
@@ -103,7 +104,7 @@ namespace ThirdPartyWager.Service.BLL
                             logger.LogError(ex, ex.Message);
                             logInfo = $"INSERT_WAGER ( WAGERID: {wagerId} )";
                             logger.LogInformation(logInfo);
-                            log2File.Error($"Info:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(bet)}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(bet)}\r\nException:\r\n{ex}", logName);
                             return false;
                         }
                     }
