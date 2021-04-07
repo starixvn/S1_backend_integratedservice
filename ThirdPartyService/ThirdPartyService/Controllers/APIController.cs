@@ -210,24 +210,5 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
-
-        [HttpPost]
-        public ActionResult<ApiResult> AutoTransfer([FromBody] TpInfo tpInfo)
-        {
-            var apiResult = new ApiResult();
-
-            try
-            {
-                apiResult = thirdPartyBLL.AutoTransfer(tpInfo);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex.Message);
-                apiResult.ErrorCode = ErrorCode.SystemError;
-                apiResult.RawMessage = ex.Message;
-            }
-
-            return apiResult;
-        }
     }
 }
