@@ -55,7 +55,7 @@ namespace ThirdPartySeamlessWallet
                 .ConfigureServices((hostContext, services) =>
                 {
                     //services.AddHostedService<AG_EnquireWorkerService>();
-                    services.AddHostedService<PP_EndRoundWorkerService>();
+                    //services.AddHostedService<PP_EndRoundWorkerService>();
                     services.AddHostedService<BonusWorker>();
                     services.AddHostedService<SettleWorker>();
                     //services.AddHostedService<CF_SettleWorker>();

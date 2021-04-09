@@ -46,6 +46,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettlePTRng;
         private Timer timerSettlePTLC;
         private Timer timerSettleBTI;
+        private Timer timerSettlePPRng;
+        private Timer timerSettlePPLC;
+
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -105,6 +108,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTLC = new Timer(DoSettlePTLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettlePPRng = new Timer(DoSettlePPRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettlePPLC = new Timer(DoSettlePPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
+
             return Task.CompletedTask;
         }
 
@@ -772,7 +778,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         else
                         {
-                            // smart and player bet 
+                            // smart and player bet
                             var smart = settledBLL.GetSettle_TpSmartWagerLC_N2Live(TransId);
                             if (smart != null)
                             {
@@ -963,6 +969,93 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
+        private void DoSettlePPLCWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.PP;
+            var gameType = GameType.PP_LiveCasino;
+            var category = TpCategory.LiveCasino;
+            string logName = "Settle_PP_LC";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListLC_PP();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            if (winLostAmount >= 0 && winLostAmount < stake)
+                            {
+                                validBet = winLostAmount;
+                            }
+                            else if (winLostAmount < 0)
+                            {
+                                validBet = Math.Abs(winLostAmount);
+                            }
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId.ToString(),
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime / 1000,
+                                SettlementType = SettlementType.SettledForValid,
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            };
+
+                            if (betRecordInfo.WinlostAmount == 0)
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Draw;
+                            }
+
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettlePPLC.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
         #endregion
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -997,6 +1090,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePTRng?.Change(Timeout.Infinite, 0);
             timerSettlePTLC?.Change(Timeout.Infinite, 0);
             timerSettleBTI?.Change(Timeout.Infinite, 0);
+            timerSettlePPRng?.Change(Timeout.Infinite, 0);
+            timerSettlePPLC?.Change(Timeout.Infinite, 0);
+
             return Task.CompletedTask;
         }
     }

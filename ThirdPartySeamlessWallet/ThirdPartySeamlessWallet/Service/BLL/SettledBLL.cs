@@ -562,30 +562,63 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int SettledRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
+
+        public int SetSettleFlag_BettransRng_PP_Payout(long roundId, int gameType)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
-            var result = 0;
             if (gameType == (int)GameType.PP_RNG)
             {
-                result = settledService.SettledRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
+                return settledService.SetSettleFlag_BettransRng_PP_Payout(roundId);
             }
             else
             {
-                result = settledService.SettledLC_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
+                return settledService.SetSettleFlag_BettransLC_PP_Payout(roundId);
             }
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
+        }
 
-            return result;
-        }
-        public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP(int gameType)
+        public int SetSettleFlag_BettransRng_PP(long TransId, string Account)
         {
-            return settledService.GetUnsettledListRNG_PP(gameType);
+            return settledService.SetSettleFlag_BettransRng_PP(TransId, Account);
         }
+
+        public IEnumerable<SettleData_PP> GetUnsettledListRng_PP()
+        {
+            return settledService.GetUnsettledListRng_PP();
+        }
+
+        public int SetSettleFlag_BettransLC_PP(long TransId, string Account)
+        {
+            return settledService.SetSettleFlag_BettransLC_PP(TransId, Account);
+        }
+
+        public IEnumerable<SettleData_PP> GetUnsettledListLC_PP()
+        {
+            return settledService.GetUnsettledListLC_PP();
+        }
+
+        //public int SettledRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
+        //{
+        //    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
+        //    var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
+        //    var result = 0;
+        //    if (gameType == (int)GameType.PP_RNG)
+        //    {
+        //        result = settledService.SettledRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
+        //    }
+        //    else
+        //    {
+        //        result = settledService.SettledLC_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
+        //    }
+        //    if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+        //    {
+        //        afterAmount /= tpCurrency.ExchangeRate;
+        //    }
+
+        //    return result;
+        //}
+        //public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP(int gameType)
+        //{
+        //    return settledService.GetUnsettledListRNG_PP(gameType);
+        //}
         public int PromoBonus_PP(PromoBonus promoBonus, out decimal afterAmount)
         {
 
