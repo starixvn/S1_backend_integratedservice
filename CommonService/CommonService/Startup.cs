@@ -33,6 +33,7 @@ namespace CommonService
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
             services.Configure<Dictionary<string, OTPSMSServiceConfig>>(Configuration.GetSection("OTPSMSServiceConfig"));
             services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
+            services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
 
 
             services.AddMemoryCache();
@@ -58,6 +59,7 @@ namespace CommonService
             services.AddSingleton<OTPSMSBLL>();
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
+            services.AddSingleton<LiveStreamingBLL>();
 
             services.AddSingleton<Tools>();
 

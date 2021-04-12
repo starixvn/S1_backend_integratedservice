@@ -50,10 +50,10 @@ namespace ThirdPartyWager.Service.DAL
             return conn.Execute("Service_TpWagerTimer_Ins", new { TpId = tpId, Type = type, StartUnix = start }, commandType: CommandType.StoredProcedure);
         }
 
-        public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByCurrency(int tpId, int type, string currency)
+        public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByCurrency(int tpId, int type, string currency, int gameType = 0)
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByCurrency_Get", new { TpId = tpId, Type = type, Currency = currency }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByCurrency_Get", new { TpId = tpId, Type = type, Currency = currency, GameType = gameType }, commandType: CommandType.StoredProcedure);
         }
 
         public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByGameType(int tpId, int type, int gameType)
@@ -62,10 +62,10 @@ namespace ThirdPartyWager.Service.DAL
             return conn.QueryFirstOrDefault<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByGameType_Get", new { TpId = tpId, Type = type, GameType = gameType }, commandType: CommandType.StoredProcedure);
         }
 
-        public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency)
+        public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency, int gameType = 0)
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerTimerReference_Currency_Set", new { TpId = tpId, Type = type, StartUnix = start, Currency = currency }, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_TpWagerTimerReference_Currency_Set", new { TpId = tpId, Type = type, StartUnix = start, Currency = currency, GameType = gameType }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetThirdPartyTimerByGameType(int tpId, int type, long start, int gameType)
