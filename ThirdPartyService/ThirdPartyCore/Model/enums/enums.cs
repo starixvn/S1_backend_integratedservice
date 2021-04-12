@@ -37,6 +37,7 @@ namespace ThirdPartyCore.Model.enums
         #endregion
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
+        Not_allowed_environment = 5003,
         #region System Error(9xxxx)
         ConnectionTimeOut = 9002,
         ServerIsBusy = 9003,

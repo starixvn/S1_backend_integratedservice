@@ -2233,5 +2233,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region PT
+
+        public IEnumerable<SettleData> GetUnsettledListLC_PT()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleData>("Service_TpWagerLC_PT_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerLC_PT(long TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerLC_PT_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }

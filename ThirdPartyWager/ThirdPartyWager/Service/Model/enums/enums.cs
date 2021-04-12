@@ -29,6 +29,7 @@ namespace ThirdPartyWager.Service.Model.enums
         One789 = 23,
         Iconic = 24,
         V8 = 25,
+        PT = 27,
         N2Live = 28
     }
 
