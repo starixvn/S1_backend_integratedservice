@@ -49,6 +49,7 @@ namespace ThirdPartyWager
 
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
+            services.AddSingleton<CommonService>();
             services.AddSingleton<WagerDGService>();
             services.AddSingleton<WagerAllBetService>();
             services.AddSingleton<WagerSAService>();
@@ -65,9 +66,11 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerN2LiveService>();
             services.AddSingleton<WagerPTService>();
             services.AddSingleton<LiveStreamingService>();
-            
+            services.AddSingleton<LatestHighlightVideoService>();
+
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
+            services.AddSingleton<CommonBLL>();
             // DG
             services.AddSingleton<WagerDGBLL>();
             services.AddSingleton<ApiDGBLL>();
@@ -123,8 +126,11 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiPTBLL>();
             // LiveStreaming
             services.AddSingleton<LiveStreamingBLL>();
+            // LatestHighlightVideo
+            services.AddSingleton<LatestHighlightVideoBLL>();
 
             //Worker
+
             services.AddHostedService<WagerDG>();
             services.AddHostedService<WagerRedoDG>();
             services.AddHostedService<WagerAllBet>();
@@ -152,6 +158,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
+            services.AddHostedService<LatestHighlightVideo>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
