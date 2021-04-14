@@ -104,7 +104,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromHours(12);
+                TimeSpan dueTimeSpan = TimeSpan.FromHours(1);
                 if (environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);
