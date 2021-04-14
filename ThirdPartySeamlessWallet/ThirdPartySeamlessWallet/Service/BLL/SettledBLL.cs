@@ -1676,5 +1676,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region PT
+
+        public IEnumerable<SettleData> GetUnsettledListRng_PT()
+        {
+            return settledService.GetUnsettledListRng_PT();
+        }
+
+        public int SetSettleFlag_TpWagerRng_PT(long TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerRng_PT(TransId);
+        }
+
+        public IEnumerable<SettleData> GetUnsettledListLC_PT()
+        {
+            return settledService.GetUnsettledListLC_PT();
+        }
+
+        public int SetSettleFlag_TpWagerLC_PT(long TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerLC_PT(TransId);
+        }
+
+        #endregion
     }
 }

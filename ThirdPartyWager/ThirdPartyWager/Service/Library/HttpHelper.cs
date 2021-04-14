@@ -23,5 +23,7 @@ namespace ThirdPartyWager.Service.Library
         }
 
         public HttpClient GetClient() => client;
+
+        public HttpClient GetClientWithHandler(HttpClientHandler handler) => new HttpClient(handler);
     }
 }

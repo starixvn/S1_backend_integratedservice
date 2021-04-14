@@ -47,6 +47,12 @@ namespace ThirdPartyService.Service.DAL
             tpCustInfo = cache.Get<TpCustInfo>(sTpCustInfoKey);
             if (tpCustInfo == null)
             {
+                // pt development not available
+                if (environment.EnvironmentName != "Production" && tpId == 27)
+                {
+                    apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
+                    return apiResult;
+                }
                 using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {
                     conn.Open();
