@@ -2309,6 +2309,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+
                     if (bettingDataFish_YL.betAmount != 0)
                     {
                         // stake
@@ -2325,29 +2326,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
+                    }
 
-                        if (result > 0 && bettingDataFish_YL.payAmount != 0)
-                        {
-                            // payout
-                            result = walletService.SetBalance(
-                                tpCustInfo.CustId,
-                                tpCustInfo.SiteId,
-                                tpCustInfo.UserName,
-                                bettingDataFish_YL.payAmount,
-                                (int)Tp.YL,
-                                TransType.Payout,
-                                $"Payout: {Math.Abs(bettingDataFish_YL.payAmount).ToString("#,##0.##")}",
-                                bettingDataFish_YL.txId,
-                                out afterAmount,
-                                conn,
-                                trans
-                            );
-                        }
+                    if (result > 0 && bettingDataFish_YL.payAmount != 0)
+                    {
+                        // payout
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            bettingDataFish_YL.payAmount,
+                            (int)Tp.YL,
+                            TransType.Payout,
+                            $"Payout: {Math.Abs(bettingDataFish_YL.payAmount).ToString("#,##0.##")}",
+                            bettingDataFish_YL.txId,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
 
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
+                    if (result > 0)
+                    {
+                        trans.Commit();
                     }
                 }
             }
