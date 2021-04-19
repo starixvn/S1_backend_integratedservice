@@ -36,7 +36,7 @@ namespace ThirdParty.Saba
             {"222","tablegame" },
             {"223","indo4d" },
             {"245","virtualgame" },
-            {"997","90088,89692,89697,93062" }
+            {"997","90088,89692,89697,93062,95730,96666,95731" }
         };
 
         private class Result
@@ -372,6 +372,11 @@ namespace ThirdParty.Saba
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}&gameid={betType}";
                             }
+                            else if (SportType == "997")
+                            {
+                                // Saba Soccer deeplink
+                                oApiResult.Message = $"{url}?token={json.Data}&menutype=0&lang={langid}&sportid=1&leaguekey={act}";
+                            }
                             else
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
@@ -390,7 +395,7 @@ namespace ThirdParty.Saba
                             else if (SportType == "997")
                             {
                                 // Saba Soccer deeplink
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=1&leaguekey={act}";
+                                oApiResult.Message = $"{url}?token={json.Data}&menutype=0&lang={langid}&act=1&leaguekey={act}";
                             }
                             else
                             {
