@@ -422,12 +422,22 @@ namespace ThirdParty.Saba
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
+            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             TransferReg input = new TransferReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
             input.vendor_trans_id = TransID;
             input.amount = Amount;
+
+            if (input.amount <= 0)
+            {
+                apiResult.RawMessage = "Please submit amount granter than 0";
+                apiResult.RawErrorCode = "Please submit amount granter than 0";
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Data.Status = TransferStatus.Fail;
+            }
+
             if (tpCustInfo.IsTest)
                 input.currency = 20;
             else
@@ -441,7 +451,6 @@ namespace ThirdParty.Saba
             ApiUrl = $"{ApiUrl}/FundTransfer";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<TransResult>(result);

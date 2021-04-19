@@ -59,10 +59,9 @@ namespace ThirdPartyWager.Workers
                 query["v"] = timestamp;
                 builder.Query = query.ToString();
                 string newurl = builder.ToString();
-
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 var result = await httpHelper.GetClient().SendAsync(data);
-                var LatestHighlightVideoData = new List<LatestHighlightVideoData>();
+                
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     IEnumerable<ServerInfo> siteList = commonBLL.GetSiteList().Where(x => x.SiteId == SiteId);
@@ -77,6 +76,8 @@ namespace ThirdPartyWager.Workers
 
                             if (check == 0)
                             {
+                                var LatestHighlightVideoData = new List<LatestHighlightVideoData>();
+
                                 foreach (var siteListInfoDetail in JsonSerializer.Deserialize<IEnumerable<string>>(siteListInfo.LangList))
                                 {
                                     string title = siteListInfoDetail == "cs" ? LatestHighlightVideo.title.cs : LatestHighlightVideo.title.en;
@@ -90,9 +91,14 @@ namespace ThirdPartyWager.Workers
                                         Operator = "Service Auto Create"
                                     }); ;
                                 }
+
+                                latestHighlightVideoBLL.SetLatestHighlightVideo(JsonSerializer.Serialize(LatestHighlightVideoData));
+                            }
+                            else
+                            {
+                                log2File.Error($"{siteListInfo.SiteId}, {LatestHighlightVideo.date}, {LatestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
                             }
                         }
-                        latestHighlightVideoBLL.SetLatestHighlightVideo(JsonSerializer.Serialize(LatestHighlightVideoData));
                     }
                 }
             }
@@ -104,7 +110,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromHours(1);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(10);
                 if (environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);
