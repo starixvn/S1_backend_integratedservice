@@ -21,9 +21,7 @@ namespace ThirdPartyWager.Service.DAL
         public int GetLatestHighlightVideo(int siteId, string date, string title)
         {
             using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionStringReport"));
-            var a = conn.QueryFirstOrDefault<int>("Service_LatestHighlightVideo_Get", new { SiteId = siteId, Date = date, Title = title }, commandType: CommandType.StoredProcedure);
-            return a;
+            return conn.QueryFirstOrDefault<int>("Service_LatestHighlightVideo_Get", new { SiteId = siteId, Date = date, Title = title }, commandType: CommandType.StoredProcedure);
         }
-
     }
 }
