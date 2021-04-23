@@ -38,26 +38,29 @@ namespace ThirdParty.SG
             //throw new NotImplementedException();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
             string merchantCode = inputs.ContainsKey("merchantCode") && !string.IsNullOrEmpty(inputs["merchantCode"]) ? inputs["merchantCode"] : throw new Exception();
-
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
+
+            ApiResult oApiResult = new ApiResult();
+            string mobile = (appType == AppType.Mobile) ? "true" : "false";
+
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{FunGameUrl}?language={TpLangId}&game={gameId}&menumode=off&mobile={mobile}";
+                return oApiResult;
+            }
+
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token };
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
-            string Param = $"acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off";
-            Param = (appType == AppType.Mobile) ? $"{Param}&mobile=true" : $"{Param}&mobile=false";
-            Param = (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? $"{Param}&fun=true" : $"{Param}";
-
-            ApiResult oApiResult = new ApiResult
-            {
-                ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}?{Param}"
-            };
-
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = $"{GameUrl}?acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off&mobile={mobile}";
             return oApiResult;
         }
 
