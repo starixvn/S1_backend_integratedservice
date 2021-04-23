@@ -1212,5 +1212,155 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region BTI
+
+        public int CancelReserve_BTI(TpCustInfo tpCustInfo, BettingDataBTIReserve request, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            try
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    request.cust_id,
+                    request.reserve_id,
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = (int)SettleFlag.Settled
+                });
+                p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                result = conn.Execute("Service_BettransSports_BTI_CancelReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var returnAmount = p.Get<decimal?>("returnAmount") ?? 0;
+
+                if (result < 1)
+                {
+                    trans.Rollback();
+                    return result;
+                }
+
+                result = PayoutV2(
+                        tpCustInfo: tpCustInfo,
+                        amount: returnAmount,
+                        tpId: (int)Tp.BTI,
+                        tpTransId: request.reserve_id,
+                        gameType: (int)GameType.BTI_Sports,
+                        tpCategory: TpCategory.Sports,
+                        refId: request.reserve_id,
+                        TransType.Refunds,
+                        betData: null,
+                        out afterAmount,
+                        "Refund",
+                        out int bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow);
+
+                if (result < 1)
+                {
+                    trans.Rollback();
+                    return result;
+                }
+
+                trans.Commit();
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+
+        }
+
+        public int CommitReserve(TpCustInfo tpCustInfo, BettingDataBTIReserve request, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            try
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    request.cust_id,
+                    request.reserve_id,
+                    request.amount,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+                p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                result = conn.Execute("Service_BettransSports_BTI_CommitReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var returnAmount = p.Get<decimal?>("returnAmount") ?? 0;
+
+                if (result < 1)
+                {
+                    trans.Rollback();
+                    return result;
+                }
+
+                result = PayoutV2(
+                        tpCustInfo: tpCustInfo,
+                        amount: returnAmount,
+                        tpId: (int)Tp.BTI,
+                        tpTransId: request.reserve_id,
+                        gameType: (int)GameType.BTI_Sports,
+                        tpCategory: TpCategory.Sports,
+                        refId: request.reserve_id,
+                        TransType.Refunds,
+                        betData: null,
+                        out afterAmount,
+                        "Refund",
+                        out int bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow);
+
+                if (result < 1)
+                {
+                    trans.Rollback();
+                    return result;
+                }
+
+                trans.Commit();
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+
+        }
+
+
+
+
+        #endregion
+
     }
 }

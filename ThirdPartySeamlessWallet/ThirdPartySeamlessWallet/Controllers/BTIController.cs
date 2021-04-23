@@ -73,6 +73,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                         { "error_message", $"authToken invalid." },
                     });
                 }
+                if (tpCustInfoAuth.TpCurrencyId == null)
+                {
+                    throw new NotSupportedException();
+                }
 
                 // check tp status and sessionToken
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
@@ -106,7 +110,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
-                    { "cust_id", tpCustInfoAuth.CustId.ToString()},
+                    { "cust_id", tpCustInfoAuth.TpUserName},
                     { "balance", tpCustBalance.Balance.ToString()},
                     { "cust_login", tpCustInfoAuth.TpUserName },
                     { "city", "" },
@@ -137,11 +141,47 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                
+                if (string.IsNullOrEmpty(cust_id) || string.IsNullOrEmpty(reserve_id) || amount <= 0)
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-10" },
+                        { "error_message", $"Wrong Request." },
+                    });
+                }
+
+                var request = new BettingDataBTIReserve()
+                {
+                    cust_id = cust_id,
+                    reserve_id = reserve_id,
+                    amount = amount,
+                };
+                var result = bettingBLL.Reserve_BTI(request, out decimal tpAffterAmount, out long trx_id);
+
+                if (result < 1)
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-4" },
+                        { "error_message", "InsufficientFunds" },
+                    });
+                }
+
+                if (tpAffterAmount < 0)
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-4" },
+                        { "error_message", "InsufficientFunds" },
+                    });
+                }
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
+                    { "balance", tpAffterAmount.ToString() },
+                    { "trx_id", trx_id.ToString()},
                 });
             }
             catch (Exception ex)
@@ -159,7 +199,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                using var requestBody = new StreamReader(HttpContext.Request.Body, Encoding.UTF8, true, 1024, true);
+                using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
                 var content = await requestBody.ReadToEndAsync();
                 return ReturnBTI(new Dictionary<string, string>
                 {
@@ -182,10 +222,36 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
+                if (string.IsNullOrEmpty(cust_id) || string.IsNullOrEmpty(reserve_id))
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-10" },
+                        { "error_message", $"Wrong Request." },
+                    });
+                }
+
+                var request = new BettingDataBTIReserve()
+                {
+                    cust_id = cust_id,
+                    reserve_id = reserve_id,
+                };
+                var result = settledBLL.CancelReserve_BTI(request, out decimal tpAffterAmount);
+
+                if (result < 1)
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-4" },
+                        { "error_message", "InsufficientFunds" },
+                    });
+                }
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
+                    { "balance", tpAffterAmount.ToString() },
                 });
             }
             catch (Exception ex)
@@ -224,7 +290,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                using var requestBody = new StreamReader(HttpContext.Request.Body, Encoding.UTF8, true, 1024, true);
+                using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
                 var content = await requestBody.ReadToEndAsync();
                 return ReturnBTI(new Dictionary<string, string>
                 {
@@ -247,7 +313,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                using var requestBody = new StreamReader(HttpContext.Request.Body, Encoding.UTF8, true, 1024, true);
+                using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
                 var content = await requestBody.ReadToEndAsync();
                 return ReturnBTI(new Dictionary<string, string>
                 {

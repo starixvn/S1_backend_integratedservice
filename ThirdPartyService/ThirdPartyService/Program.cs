@@ -35,7 +35,8 @@ namespace ThirdPartyService
             "Executed action {ActionName}",
             "Executed endpoint '{EndpointName}'",
             "{HostingRequestFinishedLog:l}",
-            "Executing ContentResult with HTTP Response ContentType of {ContentType}"
+            "Executing ContentResult with HTTP Response ContentType of {ContentType}",
+            "Worker running at: {time}"
         };
 
         public static void Main(string[] args)

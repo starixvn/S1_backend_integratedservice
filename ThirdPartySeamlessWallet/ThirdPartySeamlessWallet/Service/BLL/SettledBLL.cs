@@ -21,6 +21,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.thirdPartyBLL = thirdPartyBLL;
         }
+        private (TpCustInfo, TpCurrency) GetTPInfo(Tp tp, string tpUserName)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)tp, tpUserName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)tp, tpCustInfo.CurrencyId);
+            return (tpCustInfo, tpCurrency);
+        }
 
         public int Refund(int tpId, string TransId, string tpUserName, decimal backAmount, long SettledTime, GameType gameType, out decimal tpAfterAmount)
         {

@@ -122,6 +122,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     }
     public enum BettransType : int/*Ticket Type*/
     {
+        Reserve = 0,
         Bet = 1,
         CancelBet = 2,
         Payout = 4,
@@ -140,7 +141,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         LiveCasino,
         Fish,
         Lottery,
-        Poker
+        Poker,
+        Sports
     }
     public enum Direction
     {

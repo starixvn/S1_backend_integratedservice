@@ -602,5 +602,82 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region BTI
+
+        public int Reserve_BTI(TpCustInfo tpCustInfo, BettingDataBTIReserve request, out decimal afterAmount, out long trx_id)
+        {
+            var bonusId = 0;
+            afterAmount = 0;
+            trx_id = 0;
+            var result = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(new
+            {
+                request.cust_id,
+                request.reserve_id,
+                request.amount,
+                TicketType = (int)BettransType.Reserve,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = (int)SettleFlag.Running
+            });
+            p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
+
+            try
+            {
+                result = conn.Execute("Service_BettransSports_BTI_Reserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                trx_id = p.Get<long?>("trx_id") ?? 0;
+
+                if (result < 1)
+                {
+                    return result;
+                }
+
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(request.amount) * -1,
+                    tpId: (int)Tp.BTI,
+                    tpTransId: request.reserve_id,
+                    gameType:(int)GameType.BTI_Sports,
+                    refId: request.reserve_id,
+                    betData: null,
+                    tpCategory: TpCategory.Sports,
+                    afterAmount: out afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans
+                );
+
+                if (result < 1)
+                {
+                    return result;
+                }
+
+                trans.Commit();       
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+
+        }
+
+
+
+
+        #endregion
     }
 }

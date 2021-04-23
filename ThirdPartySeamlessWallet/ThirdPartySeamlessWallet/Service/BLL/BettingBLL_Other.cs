@@ -184,5 +184,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region BTI
+
+        public int Reserve_BTI(BettingDataBTIReserve request, out decimal afterAmount, out long trx_id)
+        {
+            var (tpCustInfo, tpCurrency) = GetTPInfo(Tp.BTI, request.cust_id);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                request.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.Reserve_BTI(tpCustInfo, request, out afterAmount, out trx_id);
+            
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
+
     }
 }
