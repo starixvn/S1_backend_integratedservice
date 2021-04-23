@@ -28,6 +28,10 @@ namespace ThirdPartyCore.Model.enums
         TransferNotExist = 1204,// Check Transfer
         TransferPending = 1205,// Check Transfer
         TransferWaitManualCheck = 1206,// Check Transfer
+        // auto transfer (13xxx)
+        AutoTransferFail = 1300,
+        AutoTransferIsOff = 1301,
+        AutoTransferIsSeamless = 1302,
         #endregion
         #region invalid parameter  (2xxxx)
         InvalidParameter = 2000,
@@ -80,5 +84,15 @@ namespace ThirdPartyCore.Model.enums
         Desktop = 1,
         Mobile = 2,
         Native = 3,
+    }
+    public enum AutoType
+    {
+        Auto = 1,
+        Manual = 2
+    }
+    public enum WalletType
+    {
+        Transfer = 0,
+        Seamless = 1,
     }
 }

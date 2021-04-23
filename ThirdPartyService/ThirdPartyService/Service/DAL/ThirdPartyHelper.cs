@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Data;
 using Microsoft.Extensions.Logging;
 using ThirdPartyService.Service.Library;
+using System.Collections.Generic;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -23,7 +24,7 @@ namespace ThirdPartyService.Service.DAL
         private readonly ILogger<ThirdPartyHelper> logger;
         private readonly Log2File _log2File;
 
-        public ThirdPartyHelper(ILogger<ThirdPartyHelper> logger,IWebHostEnvironment environment, IConfiguration configuration, Log2File log2File)
+        public ThirdPartyHelper(ILogger<ThirdPartyHelper> logger, IWebHostEnvironment environment, IConfiguration configuration, Log2File log2File)
         {
             this.environment = environment;
             this.configuration = configuration;
@@ -79,6 +80,14 @@ namespace ThirdPartyService.Service.DAL
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
                 return conn.QueryFirstOrDefault<string>("TpLangId_Get", new { TpId = tpId, LangId = langId }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletType(int walletType, int siteId)
+        {
+            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            {
+                return conn.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType, SiteId = siteId }, commandType: CommandType.StoredProcedure);
             }
         }
     }

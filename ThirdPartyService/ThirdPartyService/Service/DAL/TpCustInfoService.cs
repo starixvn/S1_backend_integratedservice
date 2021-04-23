@@ -170,5 +170,11 @@ namespace ThirdPartyService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Execute("TpLastTradingTime_Set", new { TpId = tpId, CustId = custId }, commandType: CommandType.StoredProcedure);
         }
+
+        public CustWalletModel GetCustWallet(int custId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<CustWalletModel>("Service_CustWallet_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

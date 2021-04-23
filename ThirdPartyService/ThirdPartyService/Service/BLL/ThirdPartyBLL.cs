@@ -9,6 +9,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.DAL;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.BLL
 {
@@ -20,8 +21,9 @@ namespace ThirdPartyService.Service.BLL
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpTransferInfo tpTransferInfo;
         private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
+        private readonly Log2File log2File;
 
-        public ThirdPartyBLL(IConfiguration configuration, IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, TpTransferBonusInfoService tpTransferBonusInfoService, AuthBLL authBLL)
+        public ThirdPartyBLL(IConfiguration configuration, IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, TpTransferBonusInfoService tpTransferBonusInfoService, AuthBLL authBLL, Log2File log2File)
         {
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyHelper = thirdPartyHelper;
@@ -30,6 +32,7 @@ namespace ThirdPartyService.Service.BLL
             this.configuration = configuration;
             ThirdPartyHelperBase.AuthProvider = authBLL;
             this.tpTransferBonusInfoService = tpTransferBonusInfoService;
+            this.log2File = log2File;
         }
         public ApiResult GotoGame(TpInfo tpInfo)
         {
@@ -395,6 +398,138 @@ namespace ThirdPartyService.Service.BLL
             apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId, thirdId);
             tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
 
+            return apiResult;
+        }
+
+        public ApiResult<AutoTransferResult> AutoTransfer(TpInfo tpInfo)
+        {
+            var apiResult = new ApiResult<AutoTransferResult>();
+            apiResult.Data.Guid = Guid.NewGuid().ToString();
+            apiResult.Data.FromTpId = 0;
+            apiResult.Data.ToTpId = tpInfo.TpId;
+            apiResult.Data.CustId = tpInfo.CustId;
+            apiResult.Data.MainBalanceBefore = "--";
+            apiResult.Data.MainBalanceAfter = "--";
+            apiResult.Data.GameBalance = "--";
+
+            // get cust auto transfer status
+            var custWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
+            if (custWallet == null)
+            {
+                apiResult.ErrorCode = ErrorCode.UserNotExist;
+                apiResult.Message = "This Account Cust Wallet Not Found";
+                log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
+                return apiResult;
+            }
+            apiResult.Data.MainBalanceBefore = custWallet.Balance.ToString();
+
+            if (custWallet.AutoTransfer != (int)AutoType.Auto)
+            {
+                apiResult.ErrorCode = ErrorCode.AutoTransferIsOff;
+                apiResult.Message = "This Account Auto Transfer Is Off";
+                log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
+                return apiResult;
+            }
+            apiResult.Data.AutoTransfer = custWallet.AutoTransfer;
+            log2File.Info($"Main Before : \r\n{JsonConvert.SerializeObject(apiResult)}", "AutoTransfer");
+
+            TpTransfer transfer = new TpTransfer();
+            var subResult = new ApiResult<AutoTransferResult>();
+            subResult = apiResult;
+
+            // get all transfer games and status is on
+            var transferGames = thirdPartyHelper.GetThirdPartyByWalletType((int)WalletType.Transfer, custWallet.SiteId);
+            if (transferGames.Any())
+            {
+
+                int alphaTpId = tpInfo.TpId;
+                bool toTransferGame = false;
+                Dictionary<string, string> preInput = new Dictionary<string, string>();
+                preInput.Add("AllOut", "Y");
+
+                // transfer balance to main wallet
+                foreach (var item in transferGames)
+                {
+                    int betaTpId = item.Id;
+                    if (betaTpId == alphaTpId)
+                    {
+                        toTransferGame = true;
+                        //continue;
+                    }
+
+                    var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, betaTpId);
+                    if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+                    {
+                        // get each games third-party of balance
+                        var preTpInfo = tpInfo;
+                        preTpInfo.TpId = betaTpId;
+                        var preBalance = GetBalance(preTpInfo);
+                        if (preBalance.ErrorCode == ErrorCode.Success && preBalance.Data.balance > 0)
+                        {
+                            // prepare transfer param
+                            transfer.TpId = preTpInfo.TpId;
+                            transfer.Amount = 1; // temporary use 1 for pass validation
+                            transfer.direction = Direction.ToMain;
+                            transfer.CustId = tpInfo.CustId;
+                            transfer.inputs = preInput;
+
+                            // 同步
+                            var subTrans = Transfer(transfer);
+
+                            /*
+                            // 非同步
+                            var taskTransfer = Task.Run(() => Transfer(transfer));
+                            taskTransfer.Wait(1000);
+                            */
+                            subResult.Data.FromTpId = preTpInfo.TpId;
+                            subResult.Data.ToTpId = 0;
+                            subResult.Data.MainBalanceBefore = "--";
+                            subResult.Data.MainBalanceAfter = "--";
+                            subResult.Data.GameBalance = (subTrans.ErrorCode == ErrorCode.Success) ? preBalance.Data.balance.ToString() : "--";
+                            subResult.ErrorCode = subTrans.ErrorCode;
+                            subResult.RawErrorCode = subTrans.RawErrorCode ?? "";
+                            subResult.RawMessage = subTrans.RawMessage ?? "";
+                            log2File.Info($"Game To Main : \r\n{JsonConvert.SerializeObject(subResult)}", "AutoTransfer");
+                        }
+                    }
+                }
+
+                if (toTransferGame)
+                {
+                    Dictionary<string, string> input = new Dictionary<string, string>();
+                    custWallet = tpCustInfoService.GetCustWallet(tpInfo.CustId);
+                    transfer.TpId = alphaTpId;
+                    transfer.Amount = custWallet.Balance;
+                    transfer.direction = Direction.ToTp;
+                    transfer.CustId = tpInfo.CustId;
+                    input.Add("AllIn", "Y");
+                    transfer.inputs = input;
+
+                    var doTransfer = Transfer(transfer);
+                    apiResult.Data.FromTpId = 0;
+                    apiResult.Data.ToTpId = tpInfo.TpId;
+                    subResult.Data.MainBalanceBefore = "--";
+                    apiResult.Data.MainBalanceAfter = (doTransfer.ErrorCode == ErrorCode.Success) ? custWallet.Balance.ToString() : "--";
+                    apiResult.Data.GameBalance = "--";
+                    apiResult.ErrorCode = doTransfer.ErrorCode;
+                    apiResult.Message = doTransfer.Message;
+                    apiResult.RawErrorCode = doTransfer.RawErrorCode;
+                    apiResult.RawMessage = doTransfer.RawMessage;
+                    log2File.Info($"Main After : \r\n{JsonConvert.SerializeObject(apiResult)}", "AutoTransfer");
+                }
+                else
+                {
+                    apiResult.ErrorCode = ErrorCode.AutoTransferIsSeamless;
+                    apiResult.Message = "Go To Seamless Game Is No Need To Transfer";
+                    log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
+                }
+            }
+            else
+            {
+                apiResult.ErrorCode = ErrorCode.AutoTransferFail;
+                apiResult.Message = "Get Transfer Games Failed";
+                log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
+            }
             return apiResult;
         }
     }
