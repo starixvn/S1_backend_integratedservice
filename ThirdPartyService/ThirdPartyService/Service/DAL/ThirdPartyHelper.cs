@@ -12,6 +12,7 @@ using System.Data;
 using Microsoft.Extensions.Logging;
 using ThirdPartyService.Service.Library;
 using System.Collections.Generic;
+using Serilog.Context;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -57,6 +58,7 @@ namespace ThirdPartyService.Service.DAL
             if (!ThirdPartyHelperContainer.ContainsKey(tpId))
             {
                 var oThirdPartyModel = GetThirdPartyBySite(tpId, siteId);
+                LogContext.PushProperty("TP", oThirdPartyModel.TpName);
                 var assembly = Assembly.Load($"ThirdParty.{oThirdPartyModel.TpName}");
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
                 //var oThirdPartyHelper = new Lazy<IThirdPartyHelper>(() => (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
