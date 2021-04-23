@@ -205,6 +205,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int DebitReserve_BTI(BettingDataBTIReserve request, out decimal afterAmount, out long trx_id)
+        {
+            var (tpCustInfo, tpCurrency) = GetTPInfo(Tp.BTI, request.cust_id);
+            afterAmount = 0;
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                request.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.DebitReserve_BTI(tpCustInfo, new BTiDebitReserveRequest(request), out trx_id);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.BTI, tpCustInfo.TpUserName, (int)GameType.BTI_Sports);
+
+            if (result > 0 )
+            {
+               afterAmount = tpCustBalance.Balance;
+            }
+            return result;
+        }
+
         #endregion
 
 

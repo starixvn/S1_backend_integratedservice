@@ -675,6 +675,43 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         }
 
+        public int DebitReserve_BTI(TpCustInfo tpCustInfo, BTiDebitReserveRequest debitReserve, out long trx_id)
+        {
+            trx_id = 0;
+            var result = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                trx_id = conn.QueryFirst<long>("Service_BettransSports_BTI_DebitReserve_Ins", debitReserve, transaction: trans, commandType: CommandType.StoredProcedure);
+ 
+                if (trx_id == 0)
+                {
+                    return result;
+                }
+
+                result = 1;
+                trans.Commit();
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+
+        }
+
 
 
 

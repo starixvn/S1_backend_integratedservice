@@ -26,6 +26,11 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
             var requestBodyStream = new MemoryStream();
             var originalRequestBody = context.Request.Body;
             var content = string.Empty;
+            if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+            {
+                await _next(context);
+            }
+
 
             if (context.Request.ContentType?.StartsWith("application/x-www-form-urlencoded") ?? false)
             {

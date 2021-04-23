@@ -1240,7 +1240,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result < 1)
                 {
-                    trans.Rollback();
                     return result;
                 }
 
@@ -1255,7 +1254,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TransType.Refunds,
                         betData: null,
                         out afterAmount,
-                        "Refund",
+                        "Cancel",
                         out int bonusId,
                         conn,
                         trans,
@@ -1285,9 +1284,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         }
 
-        public int CommitReserve(TpCustInfo tpCustInfo, BettingDataBTIReserve request, out decimal afterAmount)
+        public int CommitReserve_BTI(TpCustInfo tpCustInfo, BettingDataBTIReserve request, out decimal afterAmount, out long trx_id)
         {
             afterAmount = 0;
+            trx_id = 0;
             var result = 0;
 
             try
@@ -1300,23 +1300,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     request.cust_id,
                     request.reserve_id,
-                    request.amount,
                     TicketType = (int)BettransType.Bet,
                     TicketStatus = (int)TicketStatus.UnSettled,
                     SettleFlag = (int)SettleFlag.Running
                 });
+                p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
                 result = conn.Execute("Service_BettransSports_BTI_CommitReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var returnAmount = p.Get<decimal?>("returnAmount") ?? 0;
-
+                trx_id = p.Get<long?>("trx_id") ?? 0;
                 if (result < 1)
                 {
-                    trans.Rollback();
                     return result;
                 }
 
-                result = PayoutV2(
+                //Commit金額跟Reserve金額不同需退回部分下注金額
+                if (returnAmount > 0) 
+                {
+                    result = PayoutV2(
                         tpCustInfo: tpCustInfo,
                         amount: returnAmount,
                         tpId: (int)Tp.BTI,
@@ -1333,12 +1335,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow);
 
-                if (result < 1)
-                {
-                    trans.Rollback();
-                    return result;
+                    if (result < 1)
+                    {
+                        return result;
+                    }
                 }
-
+                
                 trans.Commit();
             }
             catch (MySqlException mySqlEx)

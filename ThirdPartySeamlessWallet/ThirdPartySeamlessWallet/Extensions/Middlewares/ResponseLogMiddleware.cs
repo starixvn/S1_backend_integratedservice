@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,11 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
         {
             var sw = Stopwatch.StartNew();
             var path = context.Request.Path.Value;
+            if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+            {
+                await _next(context);
+            }
+
             if (path.EndsWith("home.html"))
             {
                 await _next(context);
