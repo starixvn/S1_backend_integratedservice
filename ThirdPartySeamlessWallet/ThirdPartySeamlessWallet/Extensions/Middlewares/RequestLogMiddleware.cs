@@ -23,42 +23,43 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
         public async Task Invoke(HttpContext context)
         {
             var url = context.Request.GetDisplayUrl();
-            var requestBodyStream = new MemoryStream();
-            var originalRequestBody = context.Request.Body;
-            var content = string.Empty;
-            if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+            var path = context.Request.Path.Value;
+            if (path.EndsWith("home.html") || context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);
             }
+            else
+            {                      
+                var originalRequestBody = context.Request.Body;
+                var content = string.Empty;
+                if (context.Request.ContentType?.StartsWith("application/x-www-form-urlencoded") ?? false)
+                {
+                    var formData = await context.Request.ReadFormAsync();
+                    content = JsonConvert.SerializeObject(formData);
+                }
+                var requestBodyStream = new MemoryStream();
+                await context.Request.Body.CopyToAsync(requestBodyStream);
+                requestBodyStream.Seek(0, SeekOrigin.Begin);
 
-
-            if (context.Request.ContentType?.StartsWith("application/x-www-form-urlencoded") ?? false)
-            {
-                var formData = await context.Request.ReadFormAsync();
-                content = JsonConvert.SerializeObject(formData);
-            }
-
-            await context.Request.Body.CopyToAsync(requestBodyStream);
-            requestBodyStream.Seek(0, SeekOrigin.Begin);
-
-            using (var requestBody = new StreamReader(requestBodyStream, Encoding.UTF8, true, 1024, true))
-            {
-                var codePage = requestBody.CurrentEncoding.CodePage;
+                using (var requestBody = new StreamReader(requestBodyStream, Encoding.UTF8, true, 1024, true))
+                {
+                    var codePage = requestBody.CurrentEncoding.CodePage;
                 
-                content = !context.Request.Method.Equals("GET",StringComparison.OrdinalIgnoreCase)
-                          && string.IsNullOrEmpty(content)
-                    ? await requestBody.ReadToEndAsync()
-                    : content;
+                    content = !context.Request.Method.Equals("GET",StringComparison.OrdinalIgnoreCase)
+                              && string.IsNullOrEmpty(content)
+                        ? await requestBody.ReadToEndAsync()
+                        : content;
 
-                _logger.LogInformation(
-                    $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST BODY: {content}, REQUEST URL: {url}");
+                    _logger.LogInformation(
+                        $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST BODY: {content}, REQUEST URL: {url}");
+                }
+
+                requestBodyStream.Seek(0, SeekOrigin.Begin);
+                context.Request.Body = requestBodyStream;
+
+                await _next(context);
+                context.Request.Body = originalRequestBody;
             }
-
-            requestBodyStream.Seek(0, SeekOrigin.Begin);
-            context.Request.Body = requestBodyStream;
-
-            await _next(context);
-            context.Request.Body = originalRequestBody;
         }
     }
 }

@@ -23,19 +23,13 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
         {
             var sw = Stopwatch.StartNew();
             var path = context.Request.Path.Value;
-            if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
-            {
-                await _next(context);
-            }
-
-            if (path.EndsWith("home.html"))
+            if (path.EndsWith("home.html") || context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);
             }
             else
             {
                 var bodyStream = context.Response.Body;
-
                 var responseBodyStream = new MemoryStream();
                 context.Response.Body = responseBodyStream;
 
