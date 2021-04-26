@@ -57,7 +57,7 @@ namespace ThirdPartySeamlessWallet
                             .Filter.ByExcluding(c => c.Properties.Any(p => p.Value.ToString().Contains("/health")
                                 || Excludes.Any(item => c.MessageTemplate.ToString().Contains(item))))
                             .Enrich.WithExceptionDetails()
-                            .MinimumLevel.Warning().WriteTo.Console(new JsonFormatter());
+                            .MinimumLevel.Information().WriteTo.Console(new JsonFormatter());
                     })
                     .UseStartup<Startup>();
                 })
