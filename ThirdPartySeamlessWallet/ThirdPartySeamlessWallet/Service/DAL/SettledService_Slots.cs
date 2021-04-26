@@ -1163,69 +1163,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-
-        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
-        {
-            afterAmount = 0;
-            bonusId = 0;
-            int result = 0;
-            bool bHasBonusWallet = true;
-            if (bHasBonusWallet)
-            {
-                result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out int custId, out bonusId);
-
-                if (bonusId > 0 || transType == TransType.Prize)
-                {
-                    if (bonusId > 0 && custId != tpCustInfo.CustId)
-                    {
-                        return 0;
-                    }
-
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
-
-                    //var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
-
-                    if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
-                    {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
-                    }
-                    else
-                    {
-                        afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
-                    }
-                }
-                else
-                {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
-                }
-            }
-            else
-            {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
-            }
-
-            return result;
-        }
-        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
-        {
-            CustId = 0;
-            BonusId = 0;
-
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
-            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute($"Service_Tp{tpCategory}Bonus_Get", p, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
-            {
-                CustId = p.Get<int>("CustId");
-                BonusId = p.Get<int>("BonusId");
-            }
-
-            return result;
-        }
-
+        
         #region CQ9
 
         public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, ref decimal afterAmount)
