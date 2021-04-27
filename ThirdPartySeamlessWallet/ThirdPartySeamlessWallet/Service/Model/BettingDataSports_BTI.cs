@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
-    public class BTIRequestObj
+    public class BtiRequestObj
     {
         public string cust_id { get; set; }
 
@@ -20,7 +18,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string requestBody { get; set; }
     }
 
-    public class BTIResult
+    public class BtiResult
     {
         public int SPResult { get; set; } = -1;
 
@@ -33,9 +31,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal RetrunAmount { get; set; }
     }
 
-    public class BTiDebitRequest
+    public class BtiDebitRequest
     {
-        public BTiDebitRequest(BTIRequestObj request)
+        public BtiDebitRequest(BtiRequestObj request)
         {
             cust_id = request.cust_id;
             reserve_id = request.reserve_id;
@@ -73,9 +71,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string BodyData { get; set; }
     }
 
-    public class BTiCreditRequest
+    public class BtiCreditRequest
     {
-        public BTiCreditRequest(BTIRequestObj request)
+        public BtiCreditRequest(BtiRequestObj request)
         {
             cust_id = request.cust_id;
             amount = request.amount;
