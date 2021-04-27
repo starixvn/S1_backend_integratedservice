@@ -21,12 +21,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             this.thirdPartyBLL = thirdPartyBLL;
         }
 
-        private (TpCustInfo, TpCurrency) GetTPInfo(Tp tp, string tpUserName)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)tp, tpUserName);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)tp, tpCustInfo.CurrencyId);
-            return (tpCustInfo, tpCurrency);
-        }
 
         public int PlaceBetLC_AG(BettingDataLC_AG bettingDataLC_AG, out decimal afterAmount)
         {

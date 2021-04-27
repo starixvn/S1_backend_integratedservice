@@ -605,39 +605,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region BTI
 
-        public int Reserve_BTI(TpCustInfo tpCustInfo, BettingDataBTIReserve request, out decimal afterAmount, out long trx_id)
-        {
-            var bonusId = 0;
-            afterAmount = 0;
-            trx_id = 0;
-            var result = 0;
-
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-
-            var p = new DynamicParameters(new
-            {
-                request.cust_id,
-                request.reserve_id,
-                request.amount,
-                TicketType = (int)BettransType.Reserve,
-                TicketStatus = (int)TicketStatus.UnSettled,
-                SettleFlag = (int)SettleFlag.Running
-            });
-            p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
-
+        public async Task<BTIResult> Reserve_BTIAsync(TpCustInfo tpCustInfo, BTIRequestObj request)
+        {         
             try
             {
-                result = conn.Execute("Service_BettransSports_BTI_Reserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                trx_id = p.Get<long?>("trx_id") ?? 0;
+                var bonusId = 0;
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
 
-                if (result < 1)
+                var p = new DynamicParameters(new
                 {
-                    return result;
+                    request.cust_id,
+                    request.reserve_id,
+                    request.amount,
+                    TicketType = (int)BettransType.Reserve,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+                p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
+                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Reserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                var btiResult = new BTIResult()
+                {
+                    SPResult = p.Get<short>("SPResult"),
+                    Trx_id = p.Get<long>("trx_id"),
+                };
+                if (btiResult.SPResult < 1)
+                {
+                    return btiResult;
                 }
 
-                result = PlaceBetV2(
+                btiResult.SetBalanceResult = PlaceBetV2(
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(request.amount) * -1,
                     tpId: (int)Tp.BTI,
@@ -646,74 +646,71 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     refId: request.reserve_id,
                     betData: null,
                     tpCategory: TpCategory.Sports,
-                    afterAmount: out afterAmount,
+                    afterAmount: out decimal afterAmount,
                     bonusId: ref bonusId,
                     conn: conn,
                     trans: trans
                 );
 
-                if (result < 1)
-                {
-                    return result;
+                btiResult.AffterAmount = afterAmount;
+                if (btiResult.SetBalanceResult == 1)
+                {                  
+                    trans.Commit();    
                 }
 
-                trans.Commit();       
+                return btiResult;
             }
             catch (MySqlException mySqlEx)
             {
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    result = -1;
+                    return default;
                 }
                 else
                 {
                     throw mySqlEx;
                 }
             }
-            return result;
-
         }
 
-        public int DebitReserve_BTI(TpCustInfo tpCustInfo, BTiDebitReserveRequest debitReserve, out long trx_id)
-        {
-            trx_id = 0;
-            var result = 0;
-
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-
+        public async Task<BTIResult> DebitReserve_BTIAsync(TpCustInfo tpCustInfo, BTiDebitRequest debitReserve)
+        {     
             try
             {
-                trx_id = conn.QueryFirst<long>("Service_BettransSports_BTI_DebitReserve_Ins", debitReserve, transaction: trans, commandType: CommandType.StoredProcedure);
- 
-                if (trx_id == 0)
-                {
-                    return result;
-                }
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                
+                var p = new DynamicParameters(debitReserve);
+                p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", p , transaction: trans, commandType: CommandType.StoredProcedure);
 
-                result = 1;
-                trans.Commit();
+                var btiResult = new BTIResult()
+                {
+                    Trx_id = p.Get<long>("trx_id"),
+                };
+
+                if (btiResult.Trx_id > 0)
+                {
+                    trans.Commit();
+                    btiResult.SPResult = 1;
+                }
+                return btiResult;
             }
             catch (MySqlException mySqlEx)
             {
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    result = -1;
+                    return default;
                 }
                 else
                 {
                     throw mySqlEx;
                 }
             }
-            return result;
-
         }
-
-
-
 
         #endregion
     }

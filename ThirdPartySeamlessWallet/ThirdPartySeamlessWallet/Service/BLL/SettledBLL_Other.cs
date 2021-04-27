@@ -342,41 +342,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
-
-        public int CancelReserve_BTI(BettingDataBTIReserve request, out decimal afterAmount)
-        {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(Tp.BTI, request.cust_id);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                request.amount *= tpCurrency.ExchangeRate;
-            }
-
-            var result = settledService.CancelReserve_BTI(tpCustInfo, request, out afterAmount);
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
-
-        public int CommitReserve_BTI(BettingDataBTIReserve request, out decimal afterAmount, out long trx_id)
-        {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(Tp.BTI, request.cust_id);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                request.amount *= tpCurrency.ExchangeRate;
-            }
-
-            var result = settledService.CommitReserve_BTI(tpCustInfo, request, out afterAmount, out trx_id);
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
     }
 }

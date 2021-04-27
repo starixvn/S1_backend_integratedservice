@@ -7,8 +7,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
-
-    public class BettingDataBTIReserve
+    public class BTIRequestObj
     {
         public string cust_id { get; set; }
 
@@ -21,9 +20,22 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string requestBody { get; set; }
     }
 
-    public class BTiDebitReserveRequest
+    public class BTIResult
     {
-        public BTiDebitReserveRequest(BettingDataBTIReserve request)
+        public int SPResult { get; set; } = -1;
+
+        public int SetBalanceResult { get; set; } = -1;
+
+        public long Trx_id { get; set; }
+
+        public decimal AffterAmount { get; set; }
+
+        public decimal RetrunAmount { get; set; }
+    }
+
+    public class BTiDebitRequest
+    {
+        public BTiDebitRequest(BTIRequestObj request)
         {
             cust_id = request.cust_id;
             reserve_id = request.reserve_id;
@@ -59,5 +71,61 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string PurchaseBetID { get; set; }
         public string Gain { get; set; }
         public string BodyData { get; set; }
+    }
+
+    public class BTiCreditRequest
+    {
+        public BTiCreditRequest(BTIRequestObj request)
+        {
+            cust_id = request.cust_id;
+            amount = request.amount;
+            req_id = request.req_id;
+            var xd = XDocument.Parse(request.requestBody);
+            BetID = FindSettleBetID(xd);
+            var purchase = xd.Descendants("Purchase").FirstOrDefault();
+            reserve_id = purchase.Attribute("ReserveID").Value;
+            PurchaseID = purchase.Attribute("PurchaseID").Value;
+            CurrentStatus = purchase.Attribute("CurrentStatus").Value;
+            seq_num = purchase.Attribute("seq_num").Value;
+            BodyData = request.requestBody;
+            TicketType = (int)BettransType.Payout;
+            TicketStatus = (int)enums.TicketStatus.UnSettled;
+            SettleFlag = CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ?
+                (int)enums.SettleFlag.EndGame : (int)enums.SettleFlag.Running;
+        }
+        public string cust_id { get; set; }
+        public string reserve_id { get; set; }
+        public decimal amount { get; set; }
+        public string req_id { get; set; }
+        public string BetID { get; set; }
+        public string PurchaseID { get; set; }
+        public string CurrentStatus { get; set; }
+        public string seq_num { get; set; }
+        public string BodyData { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+
+        private string FindSettleBetID(XDocument XD)
+        {
+            try
+            {
+                foreach (XElement item in XD.Descendants("Bet"))
+                {
+                    //比對狀態不同的回傳ID
+                    if (item.Attribute("OldStatus").Value != item.Attribute("NewStatus").Value)
+                    {
+                        return item.Attribute("ID").Value;
+                    }
+                }
+                //都沒找到使用第一筆找到的
+                return XD.Descendants("Bet").FirstOrDefault().Attribute("ID").Value;
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+
+        }
     }
 }
