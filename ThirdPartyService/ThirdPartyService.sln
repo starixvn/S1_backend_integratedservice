@@ -67,6 +67,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.NineW", "ThirdPa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartyService.IntegrationTest", "ThirdPartyService.IntegrationTest\ThirdPartyService.IntegrationTest.csproj", "{AD46D87E-E114-4036-AC17-77A3FB52723A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.AMB", "ThirdParty.AMB\ThirdParty.AMB.csproj", "{4FA2C031-5081-432A-A8FE-D33A7086A0DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -197,6 +199,10 @@ Global
 		{AD46D87E-E114-4036-AC17-77A3FB52723A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD46D87E-E114-4036-AC17-77A3FB52723A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD46D87E-E114-4036-AC17-77A3FB52723A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
