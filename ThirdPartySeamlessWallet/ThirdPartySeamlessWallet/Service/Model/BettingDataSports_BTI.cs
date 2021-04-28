@@ -5,6 +5,41 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
+    public class BtiRefreshObj
+    {
+        public string status { get; set; }
+        public string message { get; set; }
+        public string balance { get; set; }
+
+        public BtiRefreshObj(bool result)
+        {          
+            status = "failure";
+            message = "fail.";
+            balance = "0";
+        }
+        public BtiRefreshObj() { }
+
+    }
+    public class BtiStatusObj 
+    {
+        public string status { get; set; }
+        public string message { get; set; }
+        public string balance { get; set; }
+        public string uid { get; set; }
+        public string token { get; set; }
+
+        public BtiStatusObj(string token) 
+        {
+            this.token = token;
+            uid = Guid.NewGuid().ToString();
+            status = "anon";
+            message = "fail.";
+            balance = "0";
+        }
+
+        public BtiStatusObj() { }
+    }
+
     public class BtiRequestObj
     {
         public string cust_id { get; set; }

@@ -431,7 +431,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         try
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-                            var  betRecordInfo = new BetRecordInfo
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = unsettled.Stake,
@@ -441,7 +441,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.BTI_Sports,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);

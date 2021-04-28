@@ -1,21 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
-using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
-using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.ThirdParty;
 using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
@@ -33,6 +25,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.logger = logger; 
             btiService = new BtiService(provider);
             LogContext.PushProperty("TP", btiService.ThirdParty);
+        }
+
+        [HttpGet]
+        public async Task<BtiStatusObj> Status([FromQuery] string token)
+        {
+            return btiService.Staus(token);
+        }
+        
+        [HttpGet]
+        public async Task<BtiRefreshObj> Refresh([FromQuery] string token)
+        {
+            return btiService.Refresh(token);
         }
 
         [HttpGet]

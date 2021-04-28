@@ -33,17 +33,84 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             settledService = provider.GetRequiredService<SettledService>();
         }
 
+        public BtiStatusObj Staus(string token)
+        {
+            try
+            {      
+                var (authToken, sessionToken) = GetToken(token);
+                if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    return new BtiStatusObj(token);
+                }
+
+                if (tpCustInfoAuth.TpCurrencyId == null)
+                {
+                    return new BtiStatusObj(token);
+                }
+
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
+                if (tpCheck == null || tpCheck.Locked || tpCheck.Token != sessionToken)
+                {
+                    return new BtiStatusObj(token);
+                }
+           
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
+                return new BtiStatusObj()
+                {
+                    token = token,
+                    uid = Guid.NewGuid().ToString(),
+                    status = "real",
+                    message = "Success",
+                    balance = $"{tpCustBalance.Balance} {tpCustBalance.TpCurrencyId}"
+                };
+            }
+            catch (Exception)
+            {
+                return new BtiStatusObj(token);
+            }
+        }
+
+        public BtiRefreshObj Refresh(string token)
+        {
+            try
+            {
+                var (authToken, sessionToken) = GetToken(token);
+                if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    return new BtiRefreshObj(false);
+                }
+
+                if (tpCustInfoAuth.TpCurrencyId == null)
+                {
+                    return new BtiRefreshObj(false);
+                }
+
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
+                if (tpCheck == null || tpCheck.Locked || tpCheck.Token != sessionToken)
+                {
+                    return new BtiRefreshObj(false);
+                }
+
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
+                return new BtiRefreshObj()
+                {
+                    status = "success",
+                    message = "Success",
+                    balance = $"{tpCustBalance.Balance} {tpCustBalance.TpCurrencyId}"
+                };
+            }
+            catch (Exception)
+            {
+                return new BtiRefreshObj(false);
+            }
+        }
+
         public string ValidateToken(string auth_token)
         {
             try
             {
-                // get token
-                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(auth_token));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                var authToken = sessionKeyArr[0]; /* 1 Time*/
-                var sessionToken = sessionKeyArr[1];/* Long Time*/
+                var (authToken, sessionToken) = GetToken(auth_token);
 
-                // check token
                 if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
                     return ReturnBTI(new Dictionary<string, string>
@@ -85,6 +152,8 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 }
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
+                var countryCode = GetCountryCode(tpCustInfoAuth.TpCurrencyId);
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
@@ -92,8 +161,8 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     { "cust_id", tpCustInfoAuth.TpUserName},
                     { "balance", tpCustBalance.Balance.ToString()},
                     { "cust_login", tpCustInfoAuth.TpUserName },
-                    { "city", "" },
-                    { "country", GetCountryCode(tpCustInfoAuth.TpCurrencyId)},
+                    { "city", countryCode },
+                    { "country", countryCode},
                     { "currency_code", tpCustBalance.TpCurrencyId},
                 });
             }
@@ -251,6 +320,13 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 { "balance", btiResult.AffterAmount.ToString() },
                 { "trx_id", btiResult.Trx_id.ToString()},
             });
+        }
+
+        private (string authToken, string sessionToken) GetToken(string auth_token)
+        {
+            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(auth_token));
+            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+            return (sessionKeyArr[0], sessionKeyArr[1]);
         }
 
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
