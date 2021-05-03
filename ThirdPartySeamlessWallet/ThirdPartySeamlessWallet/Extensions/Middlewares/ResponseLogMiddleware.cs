@@ -22,8 +22,7 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
         public async Task Invoke(HttpContext context)
         {
             var sw = Stopwatch.StartNew();
-            var path = context.Request.Path.Value;
-            if (path.EndsWith("home.html") || context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+            if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);
             }

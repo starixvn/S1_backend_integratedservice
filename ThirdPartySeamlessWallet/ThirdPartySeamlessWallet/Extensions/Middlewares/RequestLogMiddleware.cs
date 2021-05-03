@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Extensions.Middlewares
 {
@@ -23,13 +24,12 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
         public async Task Invoke(HttpContext context)
         {
             var url = context.Request.GetDisplayUrl();
-            var path = context.Request.Path.Value;
-            if (path.EndsWith("home.html") || context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+            if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context);
             }
             else
-            {                      
+            {               
                 var originalRequestBody = context.Request.Body;
                 var content = string.Empty;
                 if (context.Request.ContentType?.StartsWith("application/x-www-form-urlencoded") ?? false)
@@ -49,6 +49,15 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
                               && string.IsNullOrEmpty(content)
                         ? await requestBody.ReadToEndAsync()
                         : content;
+                    if (context.Request.RouteValues.TryGetValue("controller", out var controller))
+                    {
+                        LogContext.PushProperty("TP", controller.ToString());
+                    }
+
+                    if (context.Request.RouteValues.TryGetValue("action", out var action))
+                    {
+                        LogContext.PushProperty("Action", action.ToString());
+                    }
 
                     _logger.LogInformation(
                         $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST BODY: {content}, REQUEST URL: {url}");
