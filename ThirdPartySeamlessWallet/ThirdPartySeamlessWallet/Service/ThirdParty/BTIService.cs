@@ -248,6 +248,8 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 {
                     { "error_code", "0" },
                     { "error_message", ex.Message },
+                    { "balance", "0" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                 });
             }
         }
@@ -286,6 +288,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 {
                     { "error_code", "0" },
                     { "error_message", ex.Message },
+                    { "balance", "0" },
                 });
             }
         }
@@ -305,6 +308,8 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     {
                         { "error_code", "0" },
                         { "error_message", $"reserve_id:{request.reserve_id} was not found." },
+                        { "balance", "0" },
+                        { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                     });
                 }
 
@@ -335,6 +340,8 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 {
                     { "error_code", "0" },
                     { "error_message", ex.Message },
+                    { "balance", "0" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                 });
             }
         }
@@ -375,6 +382,8 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 {
                     { "error_code", "0" },
                     { "error_message", ex.Message },
+                    { "balance", "0" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                 });
             }
         }
