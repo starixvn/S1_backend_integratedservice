@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> Reserve([FromQuery] string cust_id, [FromQuery] string reserve_id, [FromQuery] decimal amount)
         {
             try
