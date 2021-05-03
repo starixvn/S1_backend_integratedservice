@@ -129,11 +129,11 @@ namespace ThirdParty.AG
             string SessionUrl = inputs.ContainsKey("SessionUrl") && !string.IsNullOrEmpty(inputs["SessionUrl"]) ? inputs["SessionUrl"] : throw new Exception();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
 
-            //string _oddtype = null;
-            //oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
-            //string oddtype = _oddtype;
+            string _oddtype = null;
+            oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
+            string oddtype = _oddtype;
 
-            string oddtype = "";
+            //string oddtype = "";
             string balance = "";
             string token = "";
             inputs.TryGetValue("Balance", out balance);
