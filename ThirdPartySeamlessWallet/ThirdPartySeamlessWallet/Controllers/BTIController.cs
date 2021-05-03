@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(cust_id) || string.IsNullOrEmpty(reserve_id) || amount <= 0)
+                if (string.IsNullOrEmpty(cust_id) || string.IsNullOrEmpty(reserve_id) || amount < 0)
                 {
                     return ReturnBTI(new Dictionary<string, string>
                     {

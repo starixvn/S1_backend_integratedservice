@@ -161,4 +161,35 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         }
     }
+
+
+    public class InvalidTokenException : Exception
+    {
+        public InvalidTokenException()
+        {
+        }
+        public InvalidTokenException(string message) : base(message)
+        {
+        }
+    }
+
+    public class CustomerNotFoundException : Exception
+    {
+        public CustomerNotFoundException()
+        {
+        }
+        public CustomerNotFoundException(string message) : base(message)
+        {
+        }
+    }
+
+    public class RestrictedCustomerException : Exception
+    {
+        public RestrictedCustomerException()
+        {
+        }
+        public RestrictedCustomerException(string message) : base(message)
+        {
+        }
+    }
 }

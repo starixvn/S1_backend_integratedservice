@@ -36,7 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
         public BtiStatusObj Staus(string token)
         {
             try
-            {      
+            {
                 var (authToken, sessionToken) = GetToken(token);
                 if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
@@ -53,7 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 {
                     return new BtiStatusObj(token);
                 }
-           
+
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
                 return new BtiStatusObj()
                 {
@@ -113,42 +113,26 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
 
                 if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
-                    return ReturnBTI(new Dictionary<string, string>
-                    {
-                        { "error_code", "-3" },
-                        { "error_message", $"authToken invalid." },
-                    });
+                    throw new InvalidTokenException("authToken invalid.");
                 }
                 if (tpCustInfoAuth.TpCurrencyId == null)
                 {
-                    throw new NotSupportedException();
+                    throw new RestrictedCustomerException("Restricted customer.");
                 }
 
                 // check tp status and sessionToken
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
                 if (tpCheck == null)
                 {
-                    return ReturnBTI(new Dictionary<string, string>
-                    {
-                        { "error_code", "-3" },
-                        { "error_message", "tpCheck fail." },
-                    });
+                    throw new InvalidTokenException("tpCheck fail.");
                 }
                 if (tpCheck.Locked)
                 {
-                    return ReturnBTI(new Dictionary<string, string>
-                    {
-                        { "error_code", "-6" },
-                        { "error_message", "Restricted customer." },
-                    });
+                    throw new RestrictedCustomerException("tpuser is locked.");
                 }
                 if (tpCheck.Token != sessionToken)
                 {
-                    return ReturnBTI(new Dictionary<string, string>
-                    {
-                        { "error_code", "-3" },
-                        { "error_message", "sessionToken expire." },
-                    });
+                    throw new InvalidTokenException("sessionToken expire.");
                 }
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
@@ -166,26 +150,55 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     { "currency_code", tpCustBalance.TpCurrencyId},
                 });
             }
-            catch (NotSupportedException)
+            catch (InvalidTokenException ex)
+            {
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "-3" },
+                    { "error_message", ex.Message },
+                });
+            }
+            catch (RestrictedCustomerException ex)
             {
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-6" },
-                    { "error_message", "Restricted customer." },
+                    { "error_message", ex.Message },
                 });
             }
         }
 
         public async Task<string> ReserveAsync(BtiRequestObj request)
         {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
-            request.amount *= tpCurrency.ExchangeRate;
-
-            var btiResult = await bettingService.Reserve_BTIAsync(tpCustInfo, request);
-
-            if (btiResult.SPResult == 0)
+            try
             {
-                btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
+                request.amount *= tpCurrency.ExchangeRate;
+
+                var btiResult = await bettingService.Reserve_BTIAsync(tpCustInfo, request);
+
+                if (btiResult.SPResult == 0)
+                {
+                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "0" },
+                        { "error_message", "OK" },
+                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "trx_id", btiResult.Trx_id.ToString()},
+                    });
+                }
+
+                if (btiResult.SetBalanceResult < 1 || btiResult.AffterAmount < 0)
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-4" },
+                        { "error_message", "InsufficientFunds" },
+                    });
+                }
+
+                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
@@ -194,86 +207,120 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }
-
-            if (btiResult.SetBalanceResult < 1 || btiResult.AffterAmount < 0)
+            catch (CustomerNotFoundException ex)
             {
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-4" },
-                    { "error_message", "InsufficientFunds" },
+                    { "error_code", "-2" },
+                    { "error_message", ex.Message },
                 });
             }
-
-            btiResult.AffterAmount /= tpCurrency.ExchangeRate;
-            return ReturnBTI(new Dictionary<string, string>
+            catch (RestrictedCustomerException ex)
             {
-                { "error_code", "0" },
-                { "error_message", "OK" },
-                { "balance", btiResult.AffterAmount.ToString() },
-                { "trx_id", btiResult.Trx_id.ToString()},
-            });
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "-6" },
+                    { "error_message", ex.Message },
+                });
+            }
         }
 
         public async Task<string> DebitReserveAsync(BtiRequestObj request)
         {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
-            request.amount *= tpCurrency.ExchangeRate;
-
-
-            var btiResult = await bettingService.DebitReserve_BTIAsync(tpCustInfo, new BtiDebitRequest(request));
-            btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
-            return ReturnBTI(new Dictionary<string, string>
+            try
             {
-                { "error_code", "0" },
-                { "error_message", "OK" },
-                { "trx_id", btiResult.Trx_id.ToString()},
-                { "balance", btiResult.AffterAmount.ToString() },
-            });
+                var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
+                request.amount *= tpCurrency.ExchangeRate;
+
+                var btiResult = await bettingService.DebitReserve_BTIAsync(tpCustInfo, new BtiDebitRequest(request));
+                btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "0" },
+                    { "error_message", "OK" },
+                    { "trx_id", btiResult.Trx_id.ToString()},
+                    { "balance", btiResult.AffterAmount.ToString() },
+                });
+            }
+            catch (Exception ex)
+            {
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "0" },
+                    { "error_message", ex.Message },
+                });
+            }
         }
 
         public async Task<string> CancelReserveAsync(BtiRequestObj request)
         {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
-            request.amount *= tpCurrency.ExchangeRate;
+            try
+            {
+                var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
+                request.amount *= tpCurrency.ExchangeRate;
 
-            var btiResult = await settledService.CancelReserve_BTIAsync(tpCustInfo, request);
-            if (btiResult.SPResult < 1)
+                var btiResult = await settledService.CancelReserve_BTIAsync(tpCustInfo, request);
+                if (btiResult.SPResult < 1)
+                {
+                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "0" },
+                        { "error_message", btiResult.SPResult == 0 ?
+                        $"reserve_id:{request.reserve_id} is cancel done." : $"reserve_id:{request.reserve_id} was not found." },
+                        { "balance", btiResult.AffterAmount.ToString() },
+                    });
+                }
+
+                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "0" },
+                    { "error_message", "OK" },
+                    { "balance", btiResult.AffterAmount.ToString() },
+                });
+            }
+            catch (Exception ex)
             {
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
-                    { "error_message", "Reserve was not found." },
+                    { "error_message", ex.Message },
                 });
             }
-
-            btiResult.AffterAmount /= tpCurrency.ExchangeRate;
-            return ReturnBTI(new Dictionary<string, string>
-            {
-                { "error_code", "0" },
-                { "error_message", "OK" },
-                { "balance", btiResult.AffterAmount.ToString() },
-            });
         }
 
         public async Task<string> CommitReserve(BtiRequestObj request)
         {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
-            request.amount *= tpCurrency.ExchangeRate;
-
-            var btiResult = await settledService.CommitReserve_BTIAsync(tpCustInfo, request);
-
-            if (btiResult.SPResult < 0)
+            try
             {
-                return ReturnBTI(new Dictionary<string, string>
+                var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
+                request.amount *= tpCurrency.ExchangeRate;
+
+                var btiResult = await settledService.CommitReserve_BTIAsync(tpCustInfo, request);
+
+                if (btiResult.SPResult < 0)
                 {
-                    { "error_code", "0" },
-                    { "error_message", "Reserve was not found." },
-                });
-            }
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "0" },
+                        { "error_message", $"reserve_id:{request.reserve_id} was not found." },
+                    });
+                }
 
-            if (btiResult.RetrunAmount <= 0 && btiResult.AffterAmount == 0)
-            {
-                btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                if (btiResult.RetrunAmount <= 0 && btiResult.AffterAmount == 0)
+                {
+                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "0" },
+                        { "error_message", "OK" },
+                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "trx_id", btiResult.Trx_id.ToString()},
+                    });
+                }
+
+                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
@@ -282,27 +329,38 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }
-
-            btiResult.AffterAmount /= tpCurrency.ExchangeRate;
-            return ReturnBTI(new Dictionary<string, string>
+            catch (Exception ex)
             {
-                { "error_code", "0" },
-                { "error_message", "OK" },
-                { "balance", btiResult.AffterAmount.ToString() },
-                { "trx_id", btiResult.Trx_id.ToString()},
-            });
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "0" },
+                    { "error_message", ex.Message },
+                });
+            }
         }
 
         public async Task<string> Credit(BtiRequestObj request)
         {
-            var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
-            request.amount *= tpCurrency.ExchangeRate;
-
-            var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BtiCreditRequest(request));
-
-            if (btiResult.SPResult == 0)
+            try
             {
-                btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
+                request.amount *= tpCurrency.ExchangeRate;
+
+                var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BtiCreditRequest(request));
+
+                if (btiResult.SPResult == 0)
+                {
+                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "0" },
+                        { "error_message", "OK" },
+                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "trx_id", btiResult.Trx_id.ToString()},
+                    });
+                }
+
+                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
@@ -311,31 +369,41 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }
-
-            btiResult.AffterAmount /= tpCurrency.ExchangeRate;
-            return ReturnBTI(new Dictionary<string, string>
+            catch (Exception ex)
             {
-                { "error_code", "0" },
-                { "error_message", "OK" },         
-                { "balance", btiResult.AffterAmount.ToString() },
-                { "trx_id", btiResult.Trx_id.ToString()},
-            });
+                return ReturnBTI(new Dictionary<string, string>
+                {
+                    { "error_code", "0" },
+                    { "error_message", ex.Message },
+                });
+            }
         }
 
         private (string authToken, string sessionToken) GetToken(string auth_token)
         {
-            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(auth_token));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            return (sessionKeyArr[0], sessionKeyArr[1]);
+            try
+            {
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(auth_token));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                return (sessionKeyArr[0], sessionKeyArr[1]);
+            }
+            catch
+            {
+                throw new InvalidTokenException($"auth_token:{auth_token} is invalid token.");
+            }
         }
 
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
+            if (tpCustInfo == null)
+            {
+                throw new CustomerNotFoundException($"Customer:{tpUserName} not found.");
+            }
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
             if (tpCurrency.ExchangeRate < 0)
             {
-                throw new NotSupportedException();
+                throw new RestrictedCustomerException($"CurrencyId:{tpCustInfo.CurrencyId} not supported.");
             }
             return (tpCustInfo, tpCurrency);
         }
@@ -355,7 +423,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             return TpCurrencyId switch
             {
                 "VND" => "VN",
-                _ => throw new NotSupportedException()
+                _ => throw new RestrictedCustomerException($"CurrencyId:{TpCurrencyId} not supported.")
             };
 
         }
