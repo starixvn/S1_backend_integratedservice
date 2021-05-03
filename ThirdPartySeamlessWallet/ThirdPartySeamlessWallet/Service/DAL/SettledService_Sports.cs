@@ -117,7 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return btiResult;
                 }
 
-                if (btiResult.SPResult == 1 || btiResult.RetrunAmount <= 0)
+                if (btiResult.SPResult == 1 && btiResult.RetrunAmount <= 0)
                 {
                     trans.Commit();
                     return btiResult;
@@ -230,10 +230,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public int SetSettleFlag_BTI(string Account, string TransId)
+        public int SetSettleFlag_BTI(string account, string transId ,bool isSuccess)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransSports_BTI_Settle_Set", new { Account, TransId }, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_BettransSports_BTI_Settle_Set", new { account, transId , isSuccess }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion

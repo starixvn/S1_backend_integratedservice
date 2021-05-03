@@ -262,7 +262,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
 
             var btiResult = await settledService.CommitReserve_BTIAsync(tpCustInfo, request);
 
-            if (btiResult.SPResult < 1)
+            if (btiResult.SPResult < 0)
             {
                 return ReturnBTI(new Dictionary<string, string>
                 {
@@ -271,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 });
             }
 
-            if (btiResult.SPResult == 1 && btiResult.RetrunAmount <= 0 && btiResult.AffterAmount == 0)
+            if (btiResult.RetrunAmount <= 0 && btiResult.AffterAmount == 0)
             {
                 btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                 return ReturnBTI(new Dictionary<string, string>

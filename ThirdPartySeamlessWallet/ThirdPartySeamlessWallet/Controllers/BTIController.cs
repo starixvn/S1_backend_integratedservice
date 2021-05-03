@@ -24,7 +24,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             this.logger = logger; 
             btiService = new BtiService(provider);
-            LogContext.PushProperty("TP", btiService.ThirdParty);
         }
 
         [HttpGet]

@@ -350,9 +350,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_BTI();
         }
 
-        public int SetSettleFlag_BTI(string Account, string TransId)
+        public int SetSettleFlag_BTI(string account, string transId , bool isSuccess = true)
         {
-            return settledService.SetSettleFlag_BTI(Account, TransId);
+            return settledService.SetSettleFlag_BTI(account, transId , isSuccess);
         }
 
         #endregion

@@ -446,17 +446,21 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
-                            if (result == 1 )
+                            if (result == 1)
                             {
                                 Task.Run(() =>
                                 {
                                     settledBLL.SetSettleFlag_BTI(unsettled.Account, unsettled.TransId);
                                 });
                             }
-                           
+
                         }
                         catch (Exception ex1)
                         {
+                            Task.Run(() =>
+                            {
+                                settledBLL.SetSettleFlag_BTI(unsettled.Account, unsettled.TransId, isSuccess: false);
+                            });
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                         }
