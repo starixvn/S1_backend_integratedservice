@@ -25,20 +25,6 @@ namespace ThirdPartyService
             .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", false, true)
             .Build();
 
-        private static readonly List<string> Excludes = new List<string>()
-        {
-            "/health",
-            "{HostingRequestStartingLog:l}",
-            "Executing endpoint '{EndpointName}'",
-            "Route matched with {RouteData}.",
-            "Executing ObjectResult, writing value of type '{Type}'",
-            "Executed action {ActionName}",
-            "Executed endpoint '{EndpointName}'",
-            "{HostingRequestFinishedLog:l}",
-            "Executing ContentResult with HTTP Response ContentType of {ContentType}",
-            "Worker running at: {time}"
-        };
-
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build().Run();
@@ -48,14 +34,18 @@ namespace ThirdPartyService
             => Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder
-                    .UseSerilog((hostContext, loggerConfiguration) =>
+                    var excludesMessage = Configuration.GetSection("ExcludesMessage").Get<string[]>();
+                    var excludesApiEndpoints = Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+
+                    webBuilder.UseSerilog((hostContext, loggerConfiguration) =>
                     {
                         loggerConfiguration
                             .ReadFrom.Configuration(Configuration)
                             .Enrich.FromLogContext()
-                            .Filter.ByExcluding(c => c.Properties.Any(p => p.Value.ToString().Contains("/health")
-                                || Excludes.Any(item => c.MessageTemplate.ToString().Contains(item))))
+                            .Filter.ByExcluding(c =>
+                                c.Properties.Any(p =>
+                                    excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
+                                    || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
                             .Enrich.WithExceptionDetails()
                             .MinimumLevel.Information().WriteTo.Console(new JsonFormatter());
                     })
