@@ -37,17 +37,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var btiResult = new BtiResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
-                    RetrunAmount = p.Get<decimal>("returnAmount"),
+                    ReturnAmount = p.Get<decimal>("returnAmount"),
                 };
 
-                if (btiResult.SPResult < 1 || btiResult.RetrunAmount == 0)
+                if (btiResult.SPResult < 1 || btiResult.ReturnAmount == 0)
                 {
                     return btiResult;
                 }
 
                 btiResult.SetBalanceResult = PayoutV2(
                         tpCustInfo: tpCustInfo,
-                        amount: btiResult.RetrunAmount,
+                        amount: btiResult.ReturnAmount,
                         tpId: (int)Tp.BTI,
                         tpTransId: request.reserve_id,
                         gameType: (int)GameType.BTI_Sports,
@@ -64,7 +64,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (btiResult.SetBalanceResult == 1)
                 {
-                    btiResult.AffterAmount = afterAmount;
+                    btiResult.AfterAmount = afterAmount;
                     trans.Commit();                    
                 }
 
@@ -108,7 +108,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var btiResult = new BtiResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
-                    RetrunAmount = p.Get<decimal>("returnAmount"),
+                    ReturnAmount = p.Get<decimal>("returnAmount"),
                     Trx_id = p.Get<long>("trx_id"),
                 };
 
@@ -117,7 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return btiResult;
                 }
 
-                if (btiResult.SPResult == 1 && btiResult.RetrunAmount <= 0)
+                if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
                     trans.Commit();
                     return btiResult;
@@ -126,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //Commit金額跟Reserve金額不同需退回部分下注金額
                 btiResult.SetBalanceResult = PayoutV2(
                         tpCustInfo: tpCustInfo,
-                        amount: btiResult.RetrunAmount,
+                        amount: btiResult.ReturnAmount,
                         tpId: (int)Tp.BTI,
                         tpTransId: request.reserve_id,
                         gameType: (int)GameType.BTI_Sports,
@@ -141,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow);
 
-                btiResult.AffterAmount = afterAmount;
+                btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {                  
                     trans.Commit();
@@ -203,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow);
 
-                btiResult.AffterAmount = afterAmount;
+                btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {
                     trans.Commit();

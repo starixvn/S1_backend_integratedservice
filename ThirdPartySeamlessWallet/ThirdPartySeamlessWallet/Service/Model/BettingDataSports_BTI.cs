@@ -61,9 +61,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public long Trx_id { get; set; }
 
-        public decimal AffterAmount { get; set; }
+        public decimal AfterAmount { get; set; }
 
-        public decimal RetrunAmount { get; set; }
+        public decimal ReturnAmount { get; set; }
     }
 
     public class BtiDebitRequest

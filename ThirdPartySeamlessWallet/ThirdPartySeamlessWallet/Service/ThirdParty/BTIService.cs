@@ -179,17 +179,17 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
 
                 if (btiResult.SPResult == 0)
                 {
-                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "0" },
                         { "error_message", "OK" },
-                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "balance", btiResult.AfterAmount.ToString() },
                         { "trx_id", btiResult.Trx_id.ToString()},
                     });
                 }
 
-                if (btiResult.SetBalanceResult < 1 || btiResult.AffterAmount < 0)
+                if (btiResult.SetBalanceResult < 1 || btiResult.AfterAmount < 0)
                 {
                     return ReturnBTI(new Dictionary<string, string>
                     {
@@ -198,12 +198,12 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     });
                 }
 
-                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
+                btiResult.AfterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
-                    { "balance", btiResult.AffterAmount.ToString() },
+                    { "balance", btiResult.AfterAmount.ToString() },
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }
@@ -233,13 +233,13 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 request.amount *= tpCurrency.ExchangeRate;
 
                 var btiResult = await bettingService.DebitReserve_BTIAsync(tpCustInfo, new BtiDebitRequest(request));
-                btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
                     { "trx_id", btiResult.Trx_id.ToString()},
-                    { "balance", btiResult.AffterAmount.ToString() },
+                    { "balance", btiResult.AfterAmount.ToString() },
                 });
             }
             catch (Exception ex)
@@ -264,22 +264,22 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                 var btiResult = await settledService.CancelReserve_BTIAsync(tpCustInfo, request);
                 if (btiResult.SPResult < 1)
                 {
-                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "0" },
                         { "error_message", btiResult.SPResult == 0 ?
                         $"reserve_id:{request.reserve_id} is cancel done." : $"reserve_id:{request.reserve_id} was not found." },
-                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "balance", btiResult.AfterAmount.ToString() },
                     });
                 }
 
-                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
+                btiResult.AfterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
-                    { "balance", btiResult.AffterAmount.ToString() },
+                    { "balance", btiResult.AfterAmount.ToString() },
                 });
             }
             catch (Exception ex)
@@ -313,24 +313,24 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
                     });
                 }
 
-                if (btiResult.RetrunAmount <= 0 && btiResult.AffterAmount == 0)
+                if (btiResult.ReturnAmount <= 0 && btiResult.AfterAmount == 0)
                 {
-                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "0" },
                         { "error_message", "OK" },
-                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "balance", btiResult.AfterAmount.ToString() },
                         { "trx_id", btiResult.Trx_id.ToString()},
                     });
                 }
 
-                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
+                btiResult.AfterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
-                    { "balance", btiResult.AffterAmount.ToString() },
+                    { "balance", btiResult.AfterAmount.ToString() },
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }
@@ -357,22 +357,22 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
 
                 if (btiResult.SPResult == 0)
                 {
-                    btiResult.AffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "0" },
                         { "error_message", "OK" },
-                        { "balance", btiResult.AffterAmount.ToString() },
+                        { "balance", btiResult.AfterAmount.ToString() },
                         { "trx_id", btiResult.Trx_id.ToString()},
                     });
                 }
 
-                btiResult.AffterAmount /= tpCurrency.ExchangeRate;
+                btiResult.AfterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
-                    { "balance", btiResult.AffterAmount.ToString() },
+                    { "balance", btiResult.AfterAmount.ToString() },
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }

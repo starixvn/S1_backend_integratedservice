@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans: trans
                 );
 
-                btiResult.AffterAmount = afterAmount;
+                btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {                  
                     trans.Commit();    
