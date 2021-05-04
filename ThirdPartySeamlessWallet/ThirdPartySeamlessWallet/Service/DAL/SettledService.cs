@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                LogContext.PushProperty("Tag", $"Exception:{MethodBase.GetCurrentMethod().Name}");
+                LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
                 var parameter = new
                 {
                     tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
@@ -471,7 +471,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                LogContext.PushProperty("Tag", $"Exception:{MethodBase.GetCurrentMethod().Name}");
+                LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
                 var parameter = new
                 {
                     tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
