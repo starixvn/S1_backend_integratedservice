@@ -176,6 +176,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.amount *= tpCurrency.ExchangeRate;
 
                 var btiResult = await bettingService.Reserve_BTIAsync(tpCustInfo, request);
+               
+                if (btiResult.SPResult == -1)
+                {
+                    return ReturnBTI(new Dictionary<string, string>
+                    {
+                        { "error_code", "-1" },
+                        { "error_message", "general error." },
+                    });
+                }
 
                 if (btiResult.SPResult == 0)
                 {
