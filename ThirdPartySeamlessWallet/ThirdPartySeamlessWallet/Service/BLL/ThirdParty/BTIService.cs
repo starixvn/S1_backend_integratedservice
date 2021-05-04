@@ -61,7 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     uid = Guid.NewGuid().ToString(),
                     status = "real",
                     message = "Success",
-                    balance = $"{tpCustBalance.Balance} {tpCustBalance.TpCurrencyId}"
+                    balance = $"{tpCustBalance.Balance}"
                 };
             }
             catch (Exception)
@@ -96,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     status = "success",
                     message = "Success",
-                    balance = $"{tpCustBalance.Balance} {tpCustBalance.TpCurrencyId}"
+                    balance = $"{tpCustBalance.Balance}"
                 };
             }
             catch (Exception)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -26,12 +27,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             btiService = new BTIService(provider);
         }
 
+        [EnableCors("BTIPolicy")]
         [HttpGet]
         public async Task<BTIStatusObj> Status([FromQuery] string token)
         {
             return btiService.Staus(token);
         }
-        
+
+        [EnableCors("BTIPolicy")]
         [HttpGet]
         public async Task<BTIRefreshObj> Refresh([FromQuery] string token)
         {
