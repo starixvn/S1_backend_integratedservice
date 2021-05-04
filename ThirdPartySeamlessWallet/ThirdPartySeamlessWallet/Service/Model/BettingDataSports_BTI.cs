@@ -5,22 +5,23 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
-    public class BtiRefreshObj
+    public class BTIRefreshObj
     {
         public string status { get; set; }
         public string message { get; set; }
         public string balance { get; set; }
 
-        public BtiRefreshObj(bool result)
+        public BTIRefreshObj(bool result)
         {          
             status = "failure";
             message = "fail.";
             balance = "0";
         }
-        public BtiRefreshObj() { }
+        public BTIRefreshObj() { }
 
     }
-    public class BtiStatusObj 
+
+    public class BTIStatusObj 
     {
         public string status { get; set; }
         public string message { get; set; }
@@ -28,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string uid { get; set; }
         public string token { get; set; }
 
-        public BtiStatusObj(string token) 
+        public BTIStatusObj(string token) 
         {
             this.token = token;
             uid = Guid.NewGuid().ToString();
@@ -37,10 +38,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
             balance = "0";
         }
 
-        public BtiStatusObj() { }
+        public BTIStatusObj() { }
     }
 
-    public class BtiRequestObj
+    public class BTIRequestObj
     {
         public string cust_id { get; set; }
 
@@ -53,7 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string requestBody { get; set; }
     }
 
-    public class BtiResult
+    public class BTIResult
     {
         public int SPResult { get; set; } = -1;
 
@@ -66,9 +67,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ReturnAmount { get; set; }
     }
 
-    public class BtiDebitRequest
+    public class BTIDebitRequest
     {
-        public BtiDebitRequest(BtiRequestObj request)
+        public BTIDebitRequest(BTIRequestObj request)
         {
             cust_id = request.cust_id;
             reserve_id = request.reserve_id;
@@ -106,9 +107,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string BodyData { get; set; }
     }
 
-    public class BtiCreditRequest
+    public class BTICreditRequest
     {
-        public BtiCreditRequest(BtiRequestObj request)
+        public BTICreditRequest(BTIRequestObj request)
         {
             cust_id = request.cust_id;
             amount = request.amount;
@@ -162,34 +163,4 @@ namespace ThirdPartySeamlessWallet.Service.Model
         }
     }
 
-
-    public class InvalidTokenException : Exception
-    {
-        public InvalidTokenException()
-        {
-        }
-        public InvalidTokenException(string message) : base(message)
-        {
-        }
-    }
-
-    public class CustomerNotFoundException : Exception
-    {
-        public CustomerNotFoundException()
-        {
-        }
-        public CustomerNotFoundException(string message) : base(message)
-        {
-        }
-    }
-
-    public class RestrictedCustomerException : Exception
-    {
-        public RestrictedCustomerException()
-        {
-        }
-        public RestrictedCustomerException(string message) : base(message)
-        {
-        }
-    }
 }

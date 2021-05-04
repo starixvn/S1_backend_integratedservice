@@ -13,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         #region BTI
 
-        public async Task<BtiResult> CancelReserve_BTIAsync(TpCustInfo tpCustInfo, BtiRequestObj request)
+        public async Task<BTIResult> CancelReserve_BTIAsync(TpCustInfo tpCustInfo, BTIRequestObj request)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 _ = await conn.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                var btiResult = new BtiResult()
+                var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
                     ReturnAmount = p.Get<decimal>("returnAmount"),
@@ -75,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    return new BtiResult();
+                    return new BTIResult();
                 }
                 else
                 {
@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<BtiResult> CommitReserve_BTIAsync(TpCustInfo tpCustInfo, BtiRequestObj request)
+        public async Task<BTIResult> CommitReserve_BTIAsync(TpCustInfo tpCustInfo, BTIRequestObj request)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
                 _ = await conn.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                var btiResult = new BtiResult()
+                var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
                     ReturnAmount = p.Get<decimal>("returnAmount"),
@@ -153,7 +153,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    return new BtiResult();
+                    return new BTIResult();
                 }
                 else
                 {
@@ -162,7 +162,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<BtiResult> Credit_BTIAsync(TpCustInfo tpCustInfo, BtiCreditRequest credit)
+        public async Task<BTIResult> Credit_BTIAsync(TpCustInfo tpCustInfo, BTICreditRequest credit)
         {
             try
             {
@@ -175,7 +175,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
                 _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                var btiResult = new BtiResult()
+                var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
                     Trx_id = p.Get<long>("trx_id"),
@@ -215,7 +215,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    return new BtiResult();
+                    return new BTIResult();
                 }
                 else
                 {

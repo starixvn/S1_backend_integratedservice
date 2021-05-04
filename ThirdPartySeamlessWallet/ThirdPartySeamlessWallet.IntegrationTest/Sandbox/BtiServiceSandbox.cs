@@ -9,13 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
-using ThirdPartySeamlessWallet.Service.ThirdParty;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
@@ -35,7 +34,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         private Dictionary<Type, Lazy<string>> _exceptSqlMapping;
 
-        private readonly BtiService _target;
+        private readonly BTIService _target;
 
 
         public BtiServiceSandbox(string reserveId)
@@ -56,7 +55,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             startUp.ConfigureServices(_serviceCollection);
             _serviceProvider = _serviceCollection.BuildServiceProvider();
             _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
-            _target = new BtiService(_serviceProvider);
+            _target = new BTIService(_serviceProvider);
 
             _exceptSqlMapping = new Dictionary<Type, Lazy<string>>
             {
@@ -69,7 +68,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public BtiServiceSandbox CreateReserve(string reserve_id, decimal amount)
         {
-            var request = new BtiRequestObj()
+            var request = new BTIRequestObj()
             {
                 cust_id = TpUserName,
                 reserve_id = reserve_id,

@@ -4,15 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
-namespace ThirdPartySeamlessWallet.Service.ThirdParty
+namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class BtiService : IThirdPartyService
+    public class BTIService : IThirdPartyService
     {
         private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
-        public BtiService(IServiceProvider provider)
+        public BTIService(IServiceProvider provider)
         {
             ThirdParty = Tp.BTI;
             GameType = GameType.BTI_Sports;
@@ -33,29 +33,29 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             settledService = provider.GetRequiredService<SettledService>();
         }
 
-        public BtiStatusObj Staus(string token)
+        public BTIStatusObj Staus(string token)
         {
             try
             {
                 var (authToken, sessionToken) = GetToken(token);
                 if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
-                    return new BtiStatusObj(token);
+                    return new BTIStatusObj(token);
                 }
 
                 if (tpCustInfoAuth.TpCurrencyId == null)
                 {
-                    return new BtiStatusObj(token);
+                    return new BTIStatusObj(token);
                 }
 
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
                 if (tpCheck == null || tpCheck.Locked || tpCheck.Token != sessionToken)
                 {
-                    return new BtiStatusObj(token);
+                    return new BTIStatusObj(token);
                 }
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
-                return new BtiStatusObj()
+                return new BTIStatusObj()
                 {
                     token = token,
                     uid = Guid.NewGuid().ToString(),
@@ -66,33 +66,33 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
             catch (Exception)
             {
-                return new BtiStatusObj(token);
+                return new BTIStatusObj(token);
             }
         }
 
-        public BtiRefreshObj Refresh(string token)
+        public BTIRefreshObj Refresh(string token)
         {
             try
             {
                 var (authToken, sessionToken) = GetToken(token);
                 if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
-                    return new BtiRefreshObj(false);
+                    return new BTIRefreshObj(false);
                 }
 
                 if (tpCustInfoAuth.TpCurrencyId == null)
                 {
-                    return new BtiRefreshObj(false);
+                    return new BTIRefreshObj(false);
                 }
 
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
                 if (tpCheck == null || tpCheck.Locked || tpCheck.Token != sessionToken)
                 {
-                    return new BtiRefreshObj(false);
+                    return new BTIRefreshObj(false);
                 }
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
-                return new BtiRefreshObj()
+                return new BTIRefreshObj()
                 {
                     status = "success",
                     message = "Success",
@@ -101,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
             catch (Exception)
             {
-                return new BtiRefreshObj(false);
+                return new BTIRefreshObj(false);
             }
         }
 
@@ -168,7 +168,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
         }
 
-        public async Task<string> ReserveAsync(BtiRequestObj request)
+        public async Task<string> ReserveAsync(BTIRequestObj request)
         {
             try
             {
@@ -225,14 +225,14 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
         }
 
-        public async Task<string> DebitReserveAsync(BtiRequestObj request)
+        public async Task<string> DebitReserveAsync(BTIRequestObj request)
         {
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
                 request.amount *= tpCurrency.ExchangeRate;
 
-                var btiResult = await bettingService.DebitReserve_BTIAsync(tpCustInfo, new BtiDebitRequest(request));
+                var btiResult = await bettingService.DebitReserve_BTIAsync(tpCustInfo, new BTIDebitRequest(request));
                 btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                 return ReturnBTI(new Dictionary<string, string>
                 {
@@ -254,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
         }
 
-        public async Task<string> CancelReserveAsync(BtiRequestObj request)
+        public async Task<string> CancelReserveAsync(BTIRequestObj request)
         {
             try
             {
@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
         }
 
-        public async Task<string> CommitReserve(BtiRequestObj request)
+        public async Task<string> CommitReserve(BTIRequestObj request)
         {
             try
             {
@@ -346,14 +346,14 @@ namespace ThirdPartySeamlessWallet.Service.ThirdParty
             }
         }
 
-        public async Task<string> Credit(BtiRequestObj request)
+        public async Task<string> Credit(BTIRequestObj request)
         {
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
                 request.amount *= tpCurrency.ExchangeRate;
 
-                var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BtiCreditRequest(request));
+                var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BTICreditRequest(request));
 
                 if (btiResult.SPResult == 0)
                 {

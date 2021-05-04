@@ -13,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         #region BTI
 
-        public async Task<BtiResult> Reserve_BTIAsync(TpCustInfo tpCustInfo, BtiRequestObj request)
+        public async Task<BTIResult> Reserve_BTIAsync(TpCustInfo tpCustInfo, BTIRequestObj request)
         {         
             try
             {
@@ -35,7 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
                 _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Reserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 
-                var btiResult = new BtiResult()
+                var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
                     Trx_id = p.Get<long>("trx_id"),
@@ -73,7 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    return new BtiResult();
+                    return new BTIResult();
                 }
                 else
                 {
@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<BtiResult> DebitReserve_BTIAsync(TpCustInfo tpCustInfo, BtiDebitRequest debitReserve)
+        public async Task<BTIResult> DebitReserve_BTIAsync(TpCustInfo tpCustInfo, BTIDebitRequest debitReserve)
         {     
             try
             {
@@ -94,7 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 _ = await conn.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", p , transaction: trans, commandType: CommandType.StoredProcedure);
 
-                var btiResult = new BtiResult()
+                var btiResult = new BTIResult()
                 {
                     Trx_id = p.Get<long>("trx_id"),
                 };
@@ -111,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 /*Duplicate for key 'PRIMARY'*/
                 if (mySqlEx.Number == 1062)
                 {
-                    return new BtiResult();
+                    return new BTIResult();
                 }
                 else
                 {
