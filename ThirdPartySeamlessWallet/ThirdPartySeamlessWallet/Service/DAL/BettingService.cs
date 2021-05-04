@@ -25,8 +25,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ThirdPartyService thirdPartyService;
         private readonly ILogger<BettingService> logger;
+        private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger)
+        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File)
         {
             this.configuration = configuration;
             this.walletService = walletService;
@@ -34,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.thirdPartyBLL = thirdPartyBLL;
             this.thirdPartyService = thirdPartyService;
             this.logger = logger;
+            this.log2File = log2File;
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -109,6 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     bonusId = bonusId,
                 };
                 logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
 
             return result;
