@@ -50,9 +50,8 @@ namespace ThirdPartyService.Service.BLL
             // free game no need to login
             if (tpInfo.inputs.ContainsKey("fun") && tpInfo.inputs["fun"].Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                // use nova for free game
-                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, 1);
-                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, 1).Setting);
+                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpInfo.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpInfo.SiteId).Setting);
                 if (tpInfo.inputs != null)
                 {
                     foreach (var infoI in tpInfo.inputs)
