@@ -601,6 +601,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         }
 
-        #endregion
+        #endregion   
     }
 }

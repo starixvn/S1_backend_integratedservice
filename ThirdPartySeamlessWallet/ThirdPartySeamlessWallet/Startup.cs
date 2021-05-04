@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -76,7 +77,8 @@ namespace ThirdPartySeamlessWallet
             }
 
             app.UseRouting();
-
+            app.UseRequestLogMiddleware();
+            app.UseResponseLogMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>

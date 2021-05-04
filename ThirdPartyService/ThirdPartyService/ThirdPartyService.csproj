@@ -9,11 +9,14 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />
     <PackageReference Include="MySql.Data" Version="8.0.19" />
+    <PackageReference Include="Serilog.AspNetCore" Version="4.0.0" />
+    <PackageReference Include="Serilog.Exceptions" Version="6.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Allbet\ThirdParty.Allbet.csproj" />
     <ProjectReference Include="..\ThirdParty.AWC\ThirdParty.AWC.csproj" />
+    <ProjectReference Include="..\ThirdParty.BTI\ThirdParty.BTI.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />
     <ProjectReference Include="..\ThirdParty.CQ9\ThirdParty.CQ9.csproj" />
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />

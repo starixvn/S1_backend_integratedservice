@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -71,7 +72,8 @@ namespace ThirdPartyService
             //app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseRequestLogMiddleware();
+            app.UseResponseLogMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>
