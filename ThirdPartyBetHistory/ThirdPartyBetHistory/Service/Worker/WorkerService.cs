@@ -32,7 +32,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             tpList = thirdPartyBLL.GetTpList();
-            foreach (var tp in tpList)
+            foreach (var tp in tpList.Where(item => item.Id == 1))
             {
                 try
                 {
