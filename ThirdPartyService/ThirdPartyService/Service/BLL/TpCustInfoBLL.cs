@@ -24,6 +24,5 @@ namespace ThirdPartyService.Service.BLL
         {
             tpCustInfoService.SetTpLastTradingTime(custId, tpId);
         }
-
     }
 }
