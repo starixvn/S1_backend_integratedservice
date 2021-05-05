@@ -1,11 +1,14 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -21,14 +24,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ThirdPartyService thirdPartyService;
+        private readonly ILogger<BettingService> logger;
+        private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService)
+        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File)
         {
             this.configuration = configuration;
             this.walletService = walletService;
             this.tools = tools;
             this.thirdPartyBLL = thirdPartyBLL;
             this.thirdPartyService = thirdPartyService;
+            this.logger = logger;
+            this.log2File = log2File;
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -44,49 +51,72 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             bool bHasBonusWallet = true;
 
-            if (bHasBonusWallet)
+            try
             {
-                result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
-                if (bonusId > 0)
+                if (bHasBonusWallet)
                 {
-                    var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
-                    if (afterAmount >= 0 && bonusMinBet?.MinBet > (Math.Abs(amount) + afterAmount))
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
+                    if (bonusId > 0)
                     {
-                        bonusId = 0;
-                    }
-                    else if (afterAmount < 0 && bonusMinBet?.MinBet > (Math.Abs(amount) - Math.Abs(afterAmount)))
-                    {
-                        bonusId = 0;
-                    }
-                    else
-                    {
-                        if (tpTransId != null)
+                        var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
+                        if (afterAmount >= 0 && bonusMinBet?.MinBet > (Math.Abs(amount) + afterAmount))
                         {
-                            AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans);
+                            bonusId = 0;
+                        }
+                        else if (afterAmount < 0 && bonusMinBet?.MinBet > (Math.Abs(amount) - Math.Abs(afterAmount)))
+                        {
+                            bonusId = 0;
+                        }
+                        else
+                        {
+                            if (tpTransId != null)
+                            {
+                                AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans);
+                            }
+                        }
+
+                        if (afterAmount < 0)
+                        {
+                            amount = afterAmount;
+                            result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                        }
+                        else
+                        {
+                            afterAmount += walletService.GetBalance(tpCustInfo.CustId);
                         }
                     }
-
-                    if (afterAmount < 0)
+                    else if (bonusId == 0)
                     {
-                        amount = afterAmount;
                         result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                     }
-                    else
-                    {
-                        afterAmount += walletService.GetBalance(tpCustInfo.CustId);
-                    }
                 }
-                else if (bonusId == 0)
+                else
                 {
                     result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
+                var parameter = new
+                {
+                    tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
+                    amount = amount,
+                    tpId = tpId,
+                    tpTransId = tpTransId,
+                    gameType = gameType,
+                    refId = refId,
+                    tpCategory = tpCategory,
+                    afterAmount = afterAmount,
+                    bonusId = bonusId,
+                };
+                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
 
             return result;
         }
+
+
     }
 }

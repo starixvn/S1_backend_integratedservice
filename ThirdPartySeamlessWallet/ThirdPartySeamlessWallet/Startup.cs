@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -29,6 +30,14 @@ namespace ThirdPartySeamlessWallet
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options => options.AddPolicy("BTIPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyHeader()
+                       .WithMethods("GET")
+                       .SetIsOriginAllowedToAllowWildcardSubdomains();
+            }));
+
             services.AddMemoryCache();
             ////if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
             ////{
@@ -74,9 +83,11 @@ namespace ThirdPartySeamlessWallet
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseForwardedHeaders();
             app.UseRouting();
-
+            app.UseCors("BTIPolicy");
+            app.UseRequestLogMiddleware();
+            app.UseResponseLogMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>

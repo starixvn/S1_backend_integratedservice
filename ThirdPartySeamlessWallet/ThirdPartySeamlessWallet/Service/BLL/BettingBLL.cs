@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             this.thirdPartyBLL = thirdPartyBLL;
         }
 
+
         public int PlaceBetLC_AG(BettingDataLC_AG bettingDataLC_AG, out decimal afterAmount)
         {
             string username = bettingDataLC_AG.Playname.Substring(bettingDataLC_AG.AgentCode.Length);

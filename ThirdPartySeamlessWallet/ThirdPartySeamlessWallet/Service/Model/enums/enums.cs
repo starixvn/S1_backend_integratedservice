@@ -79,6 +79,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PT_RNG = 46,
         V8_Poker_None = 47, // without revenue games
         PT_LiveCasino = 48,
+        BTI_Sports = 49,
     }
     public enum Tp
     {
@@ -108,7 +109,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Iconic = 24,
         V8 = 25,
         PT = 27,
-        N2Live = 28
+        N2Live = 28,
+        BTI = 29,
     }
     public enum TransferType : int
     {
@@ -120,6 +122,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     }
     public enum BettransType : int/*Ticket Type*/
     {
+        Reserve = 0,
         Bet = 1,
         CancelBet = 2,
         Payout = 4,
@@ -138,7 +141,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         LiveCasino,
         Fish,
         Lottery,
-        Poker
+        Poker,
+        Sports
     }
     public enum Direction
     {
