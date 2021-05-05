@@ -105,6 +105,17 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
+            // saba running bonus failed
+            if(tpTransfer.direction == Direction.ToMain && tpTransfer.TpId == 1)
+            {
+                var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
+                if(custBonus != null)
+                {
+                    apiResult.ErrorCode = ErrorCode.AutoTransferSabaBonusFail;
+                    return apiResult;
+                }
+            }
+
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
 
             // Test account create 3rd party only for saba
