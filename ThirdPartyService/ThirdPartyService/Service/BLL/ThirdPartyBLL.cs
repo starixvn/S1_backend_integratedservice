@@ -105,13 +105,13 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
-            // saba running bonus failed
-            if(tpTransfer.direction == Direction.ToMain && tpTransfer.TpId == 1)
+            // source autotransfer running bonus failed
+            if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("Source") && tpTransfer.inputs["Source"] == "Auto")
             {
                 var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
                 if(custBonus != null)
                 {
-                    apiResult.ErrorCode = ErrorCode.AutoTransferSabaBonusFail;
+                    apiResult.ErrorCode = ErrorCode.AutoTransferBonusFail;
                     return apiResult;
                 }
             }
@@ -452,11 +452,11 @@ namespace ThirdPartyService.Service.BLL
             var transferGames = thirdPartyHelper.GetThirdPartyByWalletType((int)WalletType.Transfer, custWallet.SiteId);
             if (transferGames.Any())
             {
-
                 int alphaTpId = tpInfo.TpId;
                 bool toTransferGame = false;
                 Dictionary<string, string> preInput = new Dictionary<string, string>();
                 preInput.Add("AllOut", "Y");
+                preInput.Add("Source", "Auto");
 
                 // transfer balance to main wallet
                 foreach (var item in transferGames)
@@ -514,6 +514,7 @@ namespace ThirdPartyService.Service.BLL
                     transfer.direction = Direction.ToTp;
                     transfer.CustId = tpInfo.CustId;
                     input.Add("AllIn", "Y");
+                    input.Add("Source", "Auto");
                     transfer.inputs = input;
 
                     var doTransfer = Transfer(transfer);

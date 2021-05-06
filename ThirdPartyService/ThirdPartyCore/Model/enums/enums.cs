@@ -32,7 +32,7 @@ namespace ThirdPartyCore.Model.enums
         AutoTransferFail = 1300,
         AutoTransferIsOff = 1301,
         AutoTransferIsSeamless = 1302,
-        AutoTransferSabaBonusFail = 1303,
+        AutoTransferBonusFail = 1303,
         #endregion
         #region invalid parameter  (2xxxx)
         InvalidParameter = 2000,
