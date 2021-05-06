@@ -44,9 +44,16 @@ namespace ThirdParty.YGG
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"]) ? inputs["org"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+
+            ApiResult oApiResult = new ApiResult();
+
+            string channel = (appType == AppType.Desktop ? "pc" : "mobile");
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
                 GameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception();
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{GameUrl}?lang={TpLangId}&gameid={gameId}&org={org}&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+                return oApiResult;
             }
 
             var key = ApplyToken(tpCustInfo);
@@ -55,17 +62,8 @@ namespace ThirdParty.YGG
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
-            ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-            {
-                oApiResult.Message = $"{GameUrl}?currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={(appType == AppType.Desktop ? "pc" : "mobile")}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
-            }
-            else
-            {
-                oApiResult.Message = $"{GameUrl}?key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={(appType == AppType.Desktop ? "pc" : "mobile")}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
-            }
-
+            oApiResult.Message = $"{GameUrl}?key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
             return oApiResult;
         }
 

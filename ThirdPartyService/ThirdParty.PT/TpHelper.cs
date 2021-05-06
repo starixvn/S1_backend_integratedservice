@@ -365,20 +365,17 @@ namespace ThirdParty.PT
                 }
             }
 
-            ApiResult oApiResult = new ApiResult
+            ApiResult oApiResult = new ApiResult();
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = JsonConvert.SerializeObject(new
             {
-                ErrorCode = ErrorCode.Success,
-                Message = JsonConvert.SerializeObject(new
-                {
-                    account = tpCustInfo.TpUserName,
-                    password = tpCustInfo.TpPwd,
-                    game = gameId,
-                    lang = TpLangId,
-                    client = client,
-                    mode = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "offline" : "real"
-                })
-            };
-
+                account = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "guest" : tpCustInfo.TpUserName,
+                password = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "guest" : tpCustInfo.TpPwd,
+                game = gameId,
+                lang = TpLangId,
+                client = client,
+                mode = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "offline" : "real"
+            });
             return oApiResult;
         }
 
