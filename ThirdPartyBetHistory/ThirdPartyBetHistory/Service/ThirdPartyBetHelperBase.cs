@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Serilog.Core;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 
@@ -31,30 +33,37 @@ namespace ThirdPartyBetHistory.Service
         public ThirdPartyModel thirdPartyModel { set; get; }
         public abstract Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
         public abstract SyncParams InitialSyncParams();
+
         protected async Task<string> HttpPostAsync(string url, string parameters, string contentType)
         {
-            var data = new StringContent(parameters, Encoding.UTF8, contentType);
-            HttpClientHandler handler = null;
-            if (!string.IsNullOrEmpty(proxyHost))
+            try
             {
-                handler = new HttpClientHandler()
+                var data = new StringContent(parameters, Encoding.UTF8, contentType);
+                HttpClientHandler handler = null;
+                if (!string.IsNullOrEmpty(proxyHost))
                 {
-                    Proxy = new WebProxy(proxyHost, proxyPort),
-                    UseProxy = true,
-                };
+                    handler = new HttpClientHandler()
+                    {
+                        Proxy = new WebProxy(proxyHost, proxyPort),
+                        UseProxy = true,
+                    };
+                }
+                else
+                {
+                    handler = new HttpClientHandler();
+                }
+
+                using var client = new HttpClient(handler);
+
+                var response = await client.PostAsync(url, data);
+
+                return response.Content.ReadAsStringAsync().Result;
             }
-            else
+            catch (Exception e)
             {
-                handler = new HttpClientHandler();
+                throw new Exception($"url:{url}, parameters:{parameters}, contentType:{contentType}, ex:{e.Message}");
             }
-
-            using var client = new HttpClient(handler);
-
-            var response = await client.PostAsync(url, data);
-
-            string result = response.Content.ReadAsStringAsync().Result;
-
-            return result;
+           
         }
         protected T FromJson<T>(string jsonString)
         {

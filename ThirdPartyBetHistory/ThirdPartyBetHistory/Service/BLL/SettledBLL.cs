@@ -23,7 +23,7 @@ namespace ThirdPartyBetHistory.Service.BLL
         {
             return settledService.GetBonusFulfill();
         }
-        public int BonusSettle(BonusFulfill bonusFulfill)
+        public bool BonusSettle(BonusFulfill bonusFulfill)
         {
             return settledService.BonusSettle(bonusFulfill);
         }

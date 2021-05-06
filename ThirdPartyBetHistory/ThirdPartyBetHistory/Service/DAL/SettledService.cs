@@ -1,11 +1,11 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 
 namespace ThirdPartyBetHistory.Service.DAL
@@ -13,45 +13,45 @@ namespace ThirdPartyBetHistory.Service.DAL
     public class SettledService
     {
         private readonly IConfiguration configuration;
+        private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
+        private readonly string _connectionString;
 
-        public SettledService(IConfiguration configuration)
+        public SettledService(IConfiguration configuration, ILogger<MySqlClient> logger)
         {
             this.configuration = configuration;
+            _connectionString = configuration.GetConnectionString("ConnectionString");
+            _mainDbClient = new MySqlClient(_connectionString, logger);
+            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), logger);
         }
         public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
         {
             bonusId = 0;
-
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { TpId = tpId, CustId = custId });
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute($"Service_BonusIdByTpId_Get", p, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
+            p.Add("BonusId", direction: ParameterDirection.Output);
+            var result = _reportDbClient.Execute($"Service_BonusIdByTpId_Get", p);
+            if (result)
             {
-                bonusId = p.Get<int>("BonusId");
+                bonusId = p.Get<int?>("BonusId") ?? 0;
             }
 
-            return result > 0;
+            return bonusId != 0;
         }
 
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BonusFulfill>("Service_BonusFulfill_Get", commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<BonusFulfill>("Service_BonusFulfill_Get");
         }
-        public int BonusSettle(BonusFulfill bonusFulfill)
+        public bool BonusSettle(BonusFulfill bonusFulfill)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(_connectionString);
             conn.Open();
             using var trans = conn.BeginTransaction();
-
+            
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
-            int result = conn.Execute("Service_BonusSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
+            var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, conn, trans);
+            if (result)
             {
                 trans.Commit();
             }
