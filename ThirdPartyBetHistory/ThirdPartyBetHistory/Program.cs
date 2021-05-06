@@ -45,8 +45,7 @@ namespace ThirdPartyBetHistory
                                     c.Properties.Any(p =>
                                         excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                                         || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
-                                .Enrich.WithExceptionDetails()
-                                .MinimumLevel.Information().WriteTo.Console(new JsonFormatter());
+                                .Enrich.WithExceptionDetails();
                         })
                         .UseStartup<Startup>();
                 }).ConfigureServices((hostContext, services) =>
