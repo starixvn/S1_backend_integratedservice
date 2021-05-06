@@ -4,8 +4,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
 
@@ -32,7 +34,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             tpList = thirdPartyBLL.GetTpList();
-            foreach (var tp in tpList)
+            foreach (var tp in tpList.Where(item => item.Id == 1))
             {
                 try
                 {
@@ -44,7 +46,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex.Message);
+                    logger.LogError(ex, "Error: Worker Service");
                 }
             }
 
@@ -53,6 +55,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private void DoTask(object state)
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
+            var taskProperty = $"Name:{tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.thirdPartyModel.SiteId} , key:{tpBetHelp.syncParams.key}";
 
             try
             {
@@ -61,7 +64,8 @@ namespace ThirdPartyBetHistory.Service.Worker
                     tpBetHelp.IsRunning = true;
                     _ = Task.Factory.StartNew(async () =>
                     {
-                        logger.LogTrace("AddBetRecord at: {time}", DateTimeOffset.Now);
+                        LogContext.PushProperty("WorkerId", Guid.NewGuid());
+                        logger.LogInformation("AddBetRecord at: {time}", DateTimeOffset.Now);
                         try
                         {
                             await tpBetHelp.AddBetRecord((betRecordInfos) =>
@@ -86,11 +90,11 @@ namespace ThirdPartyBetHistory.Service.Worker
                             }
 
                             tpBetHelp.syncParams.DoneTime = DateTime.Now;
-                            logger.LogInformation($"Name: {tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.thirdPartyModel.SiteId} , key: {tpBetHelp.syncParams.key}");
+                            logger.LogInformation($"Success: {taskProperty}");
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError($"{ex}");
+                            logger.LogError(ex, $"StartNew Exception: {taskProperty}");
                         }
                         finally
                         {
@@ -101,7 +105,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, $"DoTask Exception: {taskProperty}");
             }
             finally
             {
