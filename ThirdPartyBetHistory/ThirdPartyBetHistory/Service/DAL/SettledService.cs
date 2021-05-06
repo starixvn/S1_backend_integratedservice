@@ -15,11 +15,13 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly IConfiguration configuration;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
+        private readonly string _connectionString;
 
         public SettledService(IConfiguration configuration, ILogger<MySqlClient> logger)
         {
             this.configuration = configuration;
-            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), logger);
+            _connectionString = configuration.GetConnectionString("ConnectionString");
+            _mainDbClient = new MySqlClient(_connectionString, logger);
             _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), logger);
         }
         public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
@@ -30,7 +32,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             var result = _reportDbClient.Execute($"Service_BonusIdByTpId_Get", p);
             if (result)
             {
-                bonusId = p.Get<dynamic>("BonusId") ?? 0;
+                bonusId = p.Get<int?>("BonusId") ?? 0;
             }
 
             return bonusId != 0;
@@ -42,9 +44,19 @@ namespace ThirdPartyBetHistory.Service.DAL
         }
         public bool BonusSettle(BonusFulfill bonusFulfill)
         {
+            using var conn = new MySqlConnection(_connectionString);
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            return _mainDbClient.Execute("Service_BonusSettle_Set", p);
+            var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, conn, trans);
+            if (result)
+            {
+                trans.Commit();
+            }
+
+            return result;
         }
     }
 }
