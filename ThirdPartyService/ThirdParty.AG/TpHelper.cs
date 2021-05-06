@@ -102,7 +102,9 @@ namespace ThirdParty.AG
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
         }
 
         public override int GetHashCode()
