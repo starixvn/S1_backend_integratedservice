@@ -46,6 +46,24 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.Message = $"Language Id: {tpInfo.LangId} has not found.";
                 return apiResult;
             }
+            
+            // free game no need to login
+            if (tpInfo.inputs.ContainsKey("fun") && tpInfo.inputs["fun"].Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpInfo.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpInfo.SiteId).Setting);
+                if (tpInfo.inputs != null)
+                {
+                    foreach (var infoI in tpInfo.inputs)
+                    {
+                        inputs.Add(infoI.Key, infoI.Value);
+                    }
+                }
+
+                TpCustInfo freeCustInfo = new TpCustInfo();
+                apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
+                return apiResult;
+            }
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)

@@ -11,6 +11,7 @@ namespace ThirdPartyCore.Model
         public int CustId { set; get; }
         public string LangId { set; get; }
         public int AppType { set; get; }
+        public int SiteId { set; get; }
         public Dictionary<string, string> inputs { set; get; }
     }
     public class TpTransfer

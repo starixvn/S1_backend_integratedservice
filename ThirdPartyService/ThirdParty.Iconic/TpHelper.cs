@@ -145,8 +145,6 @@ namespace ThirdParty.Iconic
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string currency = tpCustInfo.TpCurrencyId;
-            string platformId = inputs.ContainsKey($"platform_{currency}") && !string.IsNullOrEmpty(inputs[$"platform_{currency}"]) ? inputs[$"platform_{currency}"] : throw new Exception($"platform_{currency}");
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
             string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
@@ -158,33 +156,34 @@ namespace ThirdParty.Iconic
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.Message = $"{FunGameUrl}/{gameId}?language={TpLangId}&openExternalBrowser=1";
+                return oApiResult;
             }
-            else
+
+            string currency = tpCustInfo.TpCurrencyId;
+            string platformId = inputs.ContainsKey($"platform_{currency}") && !string.IsNullOrEmpty(inputs[$"platform_{currency}"]) ? inputs[$"platform_{currency}"] : throw new Exception($"platform_{currency}");
+
+            string gameType = "39";
+            if (gameId.StartsWith("cmf", StringComparison.OrdinalIgnoreCase))
             {
-                string gameType = "39";
-
-                if (gameId.StartsWith("cmf", StringComparison.OrdinalIgnoreCase))
-                {
-                    gameType = "40";
-                }
-                else if (gameId.StartsWith("cmt", StringComparison.OrdinalIgnoreCase))
-                {
-                    gameType = "40";
-                }
-                else if (gameId.StartsWith("cm", StringComparison.OrdinalIgnoreCase))
-                {
-                    gameType = "39";
-                }
-
-                var key = ApplyToken(tpCustInfo);
-                inputs.TryGetValue("Token", out string token);
-                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType };
-                byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-                string sessionKey = Convert.ToBase64String(bytes);
-
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(sessionKey)}&lang={TpLangId}";
+                gameType = "40";
             }
+            else if (gameId.StartsWith("cmt", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = "40";
+            }
+            else if (gameId.StartsWith("cm", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = "39";
+            }
+
+            var key = ApplyToken(tpCustInfo);
+            inputs.TryGetValue("Token", out string token);
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType };
+            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            string sessionKey = Convert.ToBase64String(bytes);
+
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = $"{GameUrl}/{gameId}?openExternalBrowser=1&platform={platformId}&token={HttpUtility.UrlEncode(sessionKey)}&lang={TpLangId}";
             return oApiResult;
         }
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
