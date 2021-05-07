@@ -1,15 +1,18 @@
-﻿using Dapper;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
+using Dapper;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
+using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 
@@ -17,71 +20,45 @@ namespace ThirdPartyBetHistory.Service.DAL
 {
     public class ThirdPartyService
     {
-        private static ConcurrentDictionary<int, IThirdPartyBetHelper> ThirdPartyHelperContainer = new ConcurrentDictionary<int, IThirdPartyBetHelper>();
-        private static ConcurrentDictionary<int, ThirdPartyModel> ThirdPartyModelContainer = new ConcurrentDictionary<int, ThirdPartyModel>();
         private ConcurrentDictionary<string, TpCurrency> TpCurrencyList;
-        private readonly IMemoryCache cache;
-        private readonly SettledService settledService;
-        private readonly IWebHostEnvironment environment;
-        private readonly IConfiguration configuration;
-        private readonly ILogger<ThirdPartyService> logger;
-        public ThirdPartyService(IMemoryCache cache, ILogger<ThirdPartyService> logger, IWebHostEnvironment environment, IConfiguration configuration, SettledService settledService)
-        {
-            this.environment = environment;
-            this.configuration = configuration;
-            this.logger = logger;
-            TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
-            this.cache = cache;
-            this.settledService = settledService;
-        }
-        public ThirdPartyModel GetThirdPartyModel(int tpId)
-        {
-            if (!ThirdPartyModelContainer.ContainsKey(tpId))
-            {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                var thirdPartyModel = conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
-                if (thirdPartyModel != null)
-                    ThirdPartyModelContainer.TryAdd(tpId, thirdPartyModel);
-            }
+        private readonly IMemoryCache _cache;
+        private readonly SettledService _settledService;
+        private readonly ILogger<ThirdPartyService> _logger;
+        private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
+        private readonly string _connectionString;
 
-            return ThirdPartyModelContainer.ContainsKey(tpId) ? ThirdPartyModelContainer[tpId] : null;
+        public ThirdPartyService(IServiceProvider serviceProvider)
+        {
+            _cache = serviceProvider.GetRequiredService<IMemoryCache>();
+            _logger = serviceProvider.GetRequiredService<ILogger<ThirdPartyService>>();
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            _settledService = serviceProvider.GetRequiredService<SettledService>();
+            var mySqlLogger = serviceProvider.GetRequiredService<ILogger<MySqlClient>>();
+            TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
+            _connectionString = configuration.GetConnectionString("ConnectionString");
+            _mainDbClient = new MySqlClient(_connectionString, mySqlLogger);
+            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), mySqlLogger);
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var tpList = conn.Query<ThirdPartyModel>("Common_TpList_Get", commandType: CommandType.StoredProcedure);
-
-            return tpList;
+            return _reportDbClient.Query<ThirdPartyModel>("Common_TpList_Get");
         }
 
         public IEnumerable<ThirdPartyModel> GetSiteTpList()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var siteTpList = conn.Query<ThirdPartyModel>("Common_SiteTpList_Get", commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
+        }
 
-            return siteTpList;
-        }
-        public void InsertLog(string url, string input, string output)
-        {
-            logger.LogInformation($"Url={url}, Input={input}, Output={output}");
-        }
         public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
         {
-            var BetRecordInfos = betRecordInfos.OrderBy(x => x.TicketKey).ToArray();
-            int idx = 0;
-            BetRecordInfo betRecordInfo = null;
-
-            while (BetRecordInfos.Length > idx)
+            foreach (var betRecord in betRecordInfos.OrderBy(x => x.TicketKey))
             {
-                int result = 0;
-                var betRecord = Newtonsoft.Json.JsonConvert.DeserializeObject<BetRecordInfo>(Newtonsoft.Json.JsonConvert.SerializeObject(BetRecordInfos[idx]));
-                betRecordInfo = betRecord;
                 var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
 
                 if (tpCustInfo == null/* || betRecord.TicketStatus == TicketStatus.UnSettled*/)
                 {
-                    idx++;
                     continue;
                 }
 
@@ -100,11 +77,11 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                 try
                 {
-                    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                    using var conn = new MySqlConnection(_connectionString);
                     conn.Open();
                     using var trans = conn.BeginTransaction();
-                    bool hasJoinBonus = false;
-                    int bonusId = 0;
+                    bool hasJoinBonus;
+                    int bonusId;
 
                     /*Only count Sports*/
                     if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
@@ -112,7 +89,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
 
-                    var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
+                    var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType);
 
                     if (RefBetRecord != null && RefBetRecord.BonusId > 0)
                     {
@@ -122,7 +99,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = settledService.GetBonusIdByTpId(1, tpCustInfo.CustId, out bonusId);
+                        hasJoinBonus = _settledService.GetBonusIdByTpId(1, tpCustInfo.CustId, out bonusId);
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
@@ -162,11 +139,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                         {
                             if (hasJoinBonus)
                             {
-                                hasBonusRunning = SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, $"UnSettled", betRecord.TransId, conn, trans) > 0;
+                                hasBonusRunning = SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, "UnSettled", betRecord.TransId, conn, trans) > 0;
                             }
                             else
                             {
-                                isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, $"UnSettled", RefBetRecord.TransId, conn, trans) > 0;
+                                isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, "UnSettled", RefBetRecord.TransId, conn, trans) > 0;
                             }
                         }
                         else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType != SettlementType.SettledForValid)
@@ -177,7 +154,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                             }
                             else
                             {
-                                isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, $"Re-Settled", RefBetRecord.TransId, conn, trans) > 0;
+                                isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, "Re-Settled", RefBetRecord.TransId, conn, trans) > 0;
                             }
                         }
                         else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && RefBetRecord.ValidBet != betRecord.ValidBet)
@@ -205,25 +182,25 @@ namespace ThirdPartyBetHistory.Service.DAL
                         else
                         {
                             if ((RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.Draw)
-                            && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                                && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                             {
                                 SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet, "Settled", betRecord.TransId, conn, trans);
                             }
                             else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
-                                && (betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Draw))
+                                     && (betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Draw))
                             {
                                 SetWithdrawalLimitTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, betRecord.TicketStatus == TicketStatus.UnSettled ? "UnSettled" : "Re-Settled", RefBetRecord.TransId, conn, trans);
                             }
                             else if ((betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Lost)
-                                && RefBetRecord.ValidBet != betRecord.ValidBet)
+                                     && RefBetRecord.ValidBet != betRecord.ValidBet)
                             {
                                 SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, conn, trans);
                             }
                         }
                     }
 
-                    decimal Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
-                    decimal Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
+                    var Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
+                    var Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
 
                     if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
                         && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
@@ -232,19 +209,16 @@ namespace ThirdPartyBetHistory.Service.DAL
                         if (hasJoinBonus)
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
-                        if (Losses != 0)
+                        if (Losses != 0 && hasJoinBonus)
                         {
-                            if (hasJoinBonus)
-                                AutoCancelBonusV2(bonusId, conn, trans);
-                            //else
-                            //    AutoCancelBonus(tpCustInfo.CustId, conn, trans);
+                            AutoCancelBonusV2(bonusId, conn, trans);
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
-                        && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                                                  && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                     {
-                        decimal RefWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
-                        decimal RefLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
+                        var RefWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
+                        var RefLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
 
                         if (RefWinnings != Winnings || RefLosses != Losses)
                         {
@@ -252,12 +226,9 @@ namespace ThirdPartyBetHistory.Service.DAL
                             if (hasJoinBonus)
                                 SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", bonusId, betRecord.TransId, conn, trans);
 
-                            if (Losses != 0)
+                            if (Losses != 0 && hasJoinBonus)
                             {
-                                if (hasJoinBonus)
-                                    AutoCancelBonusV2(bonusId, conn, trans);
-                                //else
-                                //    AutoCancelBonus(tpCustInfo.CustId, conn, trans);
+                                AutoCancelBonusV2(bonusId, conn, trans);
                             }
                         }
                     }
@@ -268,7 +239,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                         SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, betRecord.ValidBet, conn, trans);
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
-                        && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                                                  && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                     {
                         if (RefBetRecord.ValidBet != betRecord.ValidBet)
                         {
@@ -276,12 +247,12 @@ namespace ThirdPartyBetHistory.Service.DAL
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
-                        && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.Draw))
+                                                  && (betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.Draw))
                     {
                         SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, conn, trans);
                     }
 
-                    result = SetTpBetRecord(betRecord, tpCustInfo, conn, trans);
+                    var result = SetTpBetRecord(betRecord, tpCustInfo, conn, trans);
                     if (result > 0)
                     {
                         trans.Commit();
@@ -296,27 +267,26 @@ namespace ThirdPartyBetHistory.Service.DAL
                         SiteTpTicketKey(1, tpCustInfo.SiteId, betRecord.TicketKey);
                     }
 
-                    logger.LogInformation($"{Newtonsoft.Json.JsonConvert.SerializeObject(betRecord)}");
-
-                    idx++;
+                    _logger.LogInformation(JsonConvert.SerializeObject(betRecord));
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError($"{Newtonsoft.Json.JsonConvert.SerializeObject(betRecordInfo)}\r\n{ex}");
-                    System.Threading.Thread.Sleep(1);
+                    _logger.LogError(ex, JsonConvert.SerializeObject(betRecord));
+                    Thread.Sleep(1);
                 }
             }
         }
-        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+
+        private TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
-            string key = $"TpCustInfo_{tpId}_{tpUserName}";
-            var tpCustInfo = cache.Get<TpCustInfo>(key);
+            var key = $"TpCustInfo_{tpId}_{tpUserName}";
+            var tpCustInfo = _cache.Get<TpCustInfo>(key);
             if (tpCustInfo == null)
             {
                 tpCustInfo = GetTpCustInfo(tpId, tpUserName);
                 if (tpCustInfo != null)
                 {
-                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
+                    _cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
                 }
             }
 
@@ -324,13 +294,13 @@ namespace ThirdPartyBetHistory.Service.DAL
         }
         public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
         {
-            string key = $"BonusId_{tpId}_{custId}";
-            bonusId = cache.Get<int?>(key) ?? 0;
+            var key = $"BonusId_{tpId}_{custId}";
+            bonusId = _cache.Get<int?>(key) ?? 0;
             if (bonusId == 0)
             {
-                if (settledService.GetBonusIdByTpId(tpId, custId, out bonusId))
+                if (_settledService.GetBonusIdByTpId(tpId, custId, out bonusId))
                 {
-                    cache.Set(key, bonusId, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(3)));
+                    _cache.Set(key, bonusId, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(3)));
                     return true;
                 }
             }
@@ -341,88 +311,119 @@ namespace ThirdPartyBetHistory.Service.DAL
 
             return false;
         }
-        public TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
+
+        private TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCustInfo>("Common_TpCustInfoByTpUserName_Get", new { TpId = TpId, TpUserName = TpUserName }, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, TpUserName});
+            return _reportDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get", parameters);
         }
-        public BetRecordInfo GetTpBetRecord(int TpId, string TransId, int GameType, MySqlConnection conn, MySqlTransaction trans)
+
+        private BetRecordInfo GetTpBetRecord(int TpId, string TransId, int GameType)
         {
-            return conn.QueryFirstOrDefault<BetRecordInfo>("Service_TpBetRecord_Get", new { TpId = TpId, TransId = TransId, GameType = GameType }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, TransId, GameType});
+            return _reportDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters);
         }
-        public int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
+
+        private int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn,
+            MySqlTransaction trans)
         {
-            return conn.Execute("Service_TpBetRecord_Set", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, TransTime = betRecordInfo.TransTime, SettledTime = betRecordInfo.SettledTime, Stake = betRecordInfo.Stake, betRecordInfo.ValidBet, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus, OriginalState = betRecordInfo.OriginalState, TicketKey = betRecordInfo.TicketKey, BonusId = betRecordInfo.BonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new
+            {
+                betRecordInfo.TpId, betRecordInfo.TransId, GameType = (int) betRecordInfo.GameType, tpCustInfo.CustId,
+                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, betRecordInfo.TpUserName,
+                betRecordInfo.TransTime, betRecordInfo.SettledTime, betRecordInfo.Stake, betRecordInfo.ValidBet,
+                betRecordInfo.WinlostAmount, SettlementType = (int) betRecordInfo.SettlementType,
+                TicketStatus = (int) betRecordInfo.TicketStatus, betRecordInfo.OriginalState, betRecordInfo.TicketKey,
+                betRecordInfo.BonusId
+            });
+            return _mainDbClient.Execute("Service_TpBetRecord_Set", parameters, conn, trans) ? 1 : 0;
         }
-        public int SetRollOverTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
+
+        private int SetRollOverTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            if (TurnOver == 0)
+                return 0;
+            
+            var parameters = new DynamicParameters(new {TpId, CustId, UserName, SiteId, TurnOver, Memo, RefTransId});
+            return _mainDbClient.Execute("Common_RollOverTurnOver_Set", parameters, conn, trans) ? 1 : 0;
+        }
+
+        private int SetWithdrawalLimitTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (TurnOver == 0)
                 return 0;
 
-            return conn.Execute("Common_RollOverTurnOver_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, CustId, UserName, SiteId, TurnOver, Memo, RefTransId });
+            return _mainDbClient.Execute("Common_WithdrawalLimitTurnOver_Set", parameters, conn, trans) ? 1 : 0;
         }
-        public int SetWithdrawalLimitTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
-        {
-            if (TurnOver == 0)
-                return 0;
 
-            return conn.Execute("Common_WithdrawalLimitTurnOver_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
-        }
-        public int SetWinLostAmount(int TpId, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
+        private int SetWinLostAmount(int TpId, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (Winnings == 0 && Losses == 0)
                 return 0;
 
-            return conn.Execute("Common_WinLostAmount_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, CustId, UserName, SiteId, Winnings, Losses, Memo, RefTransId });
+            return _mainDbClient.Execute("Common_WinLostAmount_Set", parameters, conn, trans) ? 1 : 0;
         }
-        public int SetEffectiveBetSum(int CustId, int SiteId, decimal validBet, MySqlConnection conn, MySqlTransaction trans)
+
+        private int SetEffectiveBetSum(int CustId, int SiteId, decimal validBet, MySqlConnection conn, MySqlTransaction trans)
         {
             if (validBet == 0)
                 return 0;
-
-            return conn.Execute("Service_EffectiveBetSum_Set", new { CustId = CustId, SiteId = SiteId, Stake = validBet }, transaction: trans, commandType: CommandType.StoredProcedure);
+            
+            var parameters = new DynamicParameters(new {CustId, SiteId, Stake = validBet });
+            return _mainDbClient.Execute("Service_EffectiveBetSum_Set", parameters, conn, trans) ? 1 : 0;
         }
         public int AutoCancelBonus(int CustId, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {CustId });
+            return _mainDbClient.Execute("Service_AutoCancelBonus_Set", parameters, conn, trans) ? 1 : 0;
         }
         public int SetTicketKey(int TpId, long TicketKey)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_TpTicketKey_Set", new { TpId = TpId, TicketKey = TicketKey }, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, TicketKey });
+            return _mainDbClient.Execute("Service_TpTicketKey_Set", parameters) ? 1 : 0;
         }
         public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_SiteTpTicketKey_Set", new { TpId = TpId, SiteId = SiteId, TicketKey = TicketKey }, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, SiteId, TicketKey });
+            return _mainDbClient.Execute("Service_SiteTpTicketKey_Set", parameters) ? 1 : 0;
         }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId }, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new { TpId = tpId, CurrencyId = currencyId });
+            return _reportDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", parameters);
         }
 
-        public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
+        private int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
+            BonusId = 0;
             if (Turnover == 0)
                 return 0;
 
-            var p = new DynamicParameters(new { TpId = TpId, GameType = GameType, CustId = CustId, UserName = UserName, SiteId = SiteId, Turnover = Turnover, Memo, RefTransId });
-            p.Add("BonusId", value: BonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
-            var result = conn.Execute("Service_RolloverTurnover_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-            BonusId = p.Get<int>("BonusId");
-            return result;
+            var parameters = new DynamicParameters(new {TpId, GameType, CustId, UserName, SiteId, Turnover, Memo, RefTransId });
+            parameters.Add("BonusId", BonusId, direction: ParameterDirection.InputOutput);
+            var result = _mainDbClient.Execute("Service_RolloverTurnover_Set", parameters, conn, trans);
+            if (result)
+            {
+                BonusId = parameters.Get<int?>("BonusId") ?? 0;
+            }
+
+            return BonusId != 0 ? 1 : 0;
         }
-        public int SetBonusWinLost(int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, int BonusId, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
+
+        private int SetBonusWinLost(int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, int BonusId, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (Winnings == 0 && Losses == 0)
                 return 0;
-
-            return conn.Execute("Service_BonusWinLost_Set", new { TpId = TpId, GameType = GameType, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, BonusId = BonusId, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new {TpId, GameType, CustId, UserName, SiteId, Winnings, Losses, Memo, BonusId, RefTransId });
+            return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, conn, trans) ? 1 : 0; 
         }
-        public int AutoCancelBonusV2(int bonusId, MySqlConnection conn, MySqlTransaction trans)
+
+        private int AutoCancelBonusV2(int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_AutoCancelBonusV2_Set", new { BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new { BonusId = bonusId });
+            return _mainDbClient.Execute("Service_AutoCancelBonusV2_Set", parameters, conn, trans) ? 1 : 0;
         }
     }
 }

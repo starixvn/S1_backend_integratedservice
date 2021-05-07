@@ -49,7 +49,9 @@ namespace ThirdParty.GPI
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -68,17 +70,25 @@ namespace ThirdParty.GPI
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
+
 
             ApiResult oApiResult = new ApiResult();
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{RslotUrl}{gameId}?fun={fun}&op={OperatorId}&lang={TpLangId}&fundsURL={cashierUrl}&homeURL={homeUrl}&lobbyURL={lobbyUrl}";
+                return oApiResult;
+            }
+
             var applyTokenInputs = FromJson<Dictionary<string, string>>(ToJson(tpCustInfo));
             applyTokenInputs.Add("TpLangId", TpLangId);
             applyTokenInputs.Add("ClientIP", inputs["ClientIP"]);
 
             string token = ApplyToken(applyTokenInputs);
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string gameType = inputs.ContainsKey("gameType") && !string.IsNullOrEmpty(inputs["gameType"]) ? inputs["gameType"] : "slots";
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-
+            
             oApiResult.ErrorCode = ErrorCode.Success;
             switch (gameType.ToLower())
             {

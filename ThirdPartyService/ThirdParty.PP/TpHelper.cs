@@ -70,7 +70,9 @@ namespace ThirdParty.PP
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -80,7 +82,6 @@ namespace ThirdParty.PP
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
             string ProviderId = inputs.ContainsKey("ProviderId") && !string.IsNullOrEmpty(inputs["ProviderId"]) ? inputs["ProviderId"] : throw new Exception();
@@ -90,6 +91,14 @@ namespace ThirdParty.PP
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
             string funGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : "";
+
+            ApiResult oApiResult = new ApiResult();
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{funGameUrl}?lang={TpLangId}&gameSymbol={System.Web.HttpUtility.UrlEncode(gameId)}&lobbyURL={System.Web.HttpUtility.UrlEncode(lobbyUrl)}&stylename={SecureLogin}";
+                return oApiResult;
+            }
 
             string sParam = "";
             LoginReq loginReq = new LoginReq();
@@ -109,17 +118,8 @@ namespace ThirdParty.PP
             sParam = System.Web.HttpUtility.UrlEncode(string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()));
             sParam = $"{sParam}&stylename={SecureLogin}";
 
-            ApiResult oApiResult = new ApiResult
-            {
-                ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}?key={sParam}"
-            };
-
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-            {
-                oApiResult.Message = $"{funGameUrl}?lang={TpLangId}&cur={tpCustInfo.TpCurrencyId}&gameSymbol={System.Web.HttpUtility.UrlEncode(gameId)}&lobbyURL={System.Web.HttpUtility.UrlEncode(lobbyUrl)}&stylename={SecureLogin}";
-            }
-
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = $"{GameUrl}?key={sParam}";
             return oApiResult;
         }
 

@@ -24,7 +24,9 @@ namespace ThirdParty.PG
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -39,10 +41,19 @@ namespace ThirdParty.PG
             string operator_token = inputs.ContainsKey("operator_token") && !string.IsNullOrEmpty(inputs["operator_token"]) ? inputs["operator_token"] : throw new Exception("operator_token");
             string secret_key = inputs.ContainsKey("secret_key") && !string.IsNullOrEmpty(inputs["secret_key"]) ? inputs["secret_key"] : throw new Exception("secret_key");
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+
+            ApiResult oApiResult = new ApiResult();
+
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = string.Format(FunGameUrl, gameId, TpLangId, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(lobbyUrl));
+                return oApiResult;
+            }
+
             string bet_type = "1";
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
@@ -50,12 +61,8 @@ namespace ThirdParty.PG
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
-            ApiResult oApiResult = new ApiResult
-            {
-                ErrorCode = ErrorCode.Success,
-                Message = fun == "0" ? string.Format(GameUrl, gameId, TpLangId, bet_type, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(sessionKey), HttpUtility.UrlEncode(lobbyUrl)) : string.Format(FunGameUrl, gameId, TpLangId, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(lobbyUrl))
-            };
-
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = string.Format(GameUrl, gameId, TpLangId, bet_type, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(sessionKey), HttpUtility.UrlEncode(lobbyUrl));
             return oApiResult;
         }
 
