@@ -110,6 +110,7 @@ namespace ThirdPartyService.Service.BLL
 
         public ApiResult<TransferResult> Transfer(TpTransfer tpTransfer)
         {
+            string prefix = "T";
             var apiResult = new ApiResult<TransferResult>();
 
             if (tpTransfer.direction != Direction.ToMain && tpTransfer.direction != Direction.ToTp)
@@ -126,6 +127,7 @@ namespace ThirdPartyService.Service.BLL
             // source autotransfer running bonus failed
             if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("Source") && tpTransfer.inputs["Source"] == "Auto")
             {
+                prefix = "AT";
                 var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
                 if(custBonus != null)
                 {
@@ -179,7 +181,7 @@ namespace ThirdPartyService.Service.BLL
             string transId = null;
             var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
             string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
-            var tpTransferReqResult = tpTransferInfo.TpTransferReq(tpTransfer, tpCustInfoResult.Data, thirdId, out transId);
+            var tpTransferReqResult = tpTransferInfo.TpTransferReqV2(tpTransfer, tpCustInfoResult.Data, thirdId, prefix, out transId);
             if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
             {
                 return tpTransferReqResult;
