@@ -19,12 +19,15 @@ namespace ThirdParty.NineW
             var user = GetUser(tpCustInfo);
 
             var apiUrl = $"https://{config.ApiHost}/apiWallet/{config.WebSite}/checkBalanceOperation";
-            var sParam = $"cert={config.Cert}&userId={user}&tsCode={Guid.NewGuid()}";
+            var sParam = $"cert={config.Cert}&userId={user}&tsCode={TransID}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
-            var result = FromJson<NineWResult<NineWTransfer>>(json);
+            var result = FromJson<NineWResult>(json);
 
-            if (result.status != "1012"  || !result.results.Any(d => d.tscode == TransID && d.userId == user))
+            if (result.status != "1012"
+                || !result.TransferResult.Any(d => d.tscode == TransID
+                && d.userId.Equals(user, StringComparison.OrdinalIgnoreCase)
+                && Math.Abs(d.balance) == Amount))
             {
                 return new ApiResult<TransferResult>()
                 {
@@ -37,7 +40,7 @@ namespace ThirdParty.NineW
                     }
                 };
             }
-            
+
             return new ApiResult<TransferResult>()
             {
                 ErrorCode = ErrorCode.Success,
@@ -50,6 +53,10 @@ namespace ThirdParty.NineW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var config = new NineWConfig(inputs);
+            var user = GetUser(tpCustInfo);
+
+            _ = GetKey(user, tpCustInfo.TpCurrencyId, config);
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
@@ -61,10 +68,10 @@ namespace ThirdParty.NineW
             var config = new NineWConfig(inputs);
             var apiUrl = $"https://{config.ApiHost}/apiWallet/{config.WebSite}/getBalance";
             var sParam = $"cert={config.Cert}&alluser=0&userIds={GetUser(tpCustInfo)}";
-            
+
             var json = HttpPost(apiUrl, sParam, ContentType);
-            var result = FromJson<NineWResult<NineWBalance>>(json);
-            
+            var result = FromJson<NineWResult>(json);
+
             if (result.status != "1")
             {
                 return new ApiResult<UserBalance>()
@@ -80,7 +87,7 @@ namespace ThirdParty.NineW
                 Message = "ok",
                 Data = new UserBalance()
                 {
-                    balance = result.results[0].balance,
+                    balance = result.BalaceResult[0].balance,
                 }
             };
         }
@@ -103,15 +110,15 @@ namespace ThirdParty.NineW
 
             var config = new NineWConfig(inputs);
             var user = GetUser(tpCustInfo);
+            var key = GetKey(user, tpCustInfo.TpCurrencyId, config);
 
-            var key = HttpUtility.UrlEncode(GetKey(user, tpCustInfo.TpCurrencyId, config));
             var apiUrl = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/login";
             var sParam = $"key={key}&userId={user}";
             var html = HttpPost(apiUrl, sParam, ContentType);
 
             if (IsJSON(html))//回傳json代表有錯誤
             {
-                var result = FromJson<NineWResult<NineWTransfer>>(html);
+                var result = FromJson<NineWResult>(html);
                 return new ApiResult()
                 {
                     RawErrorCode = result.status,
@@ -141,7 +148,7 @@ namespace ThirdParty.NineW
             }
 
             var json = HttpPost(apiUrl, sParam, ContentType);
-            var result = FromJson<NineWResult<NineWTransfer>>(json);
+            var result = FromJson<NineWResult>(json);
             if (result.status != "1")
             {
                 return new ApiResult<TransferResult>()
@@ -166,7 +173,6 @@ namespace ThirdParty.NineW
             };
         }
 
-
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
@@ -174,7 +180,7 @@ namespace ThirdParty.NineW
             var sParam = $"cert={config.Cert}&userIds={GetUser(tpCustInfo)}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
-            var result = FromJson<NineWResult<string>>(json);
+            var result = FromJson<NineWResult>(json);
 
             if (result.status != "1")
             {
@@ -196,8 +202,9 @@ namespace ThirdParty.NineW
             var apiUrl = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/getKey";
             var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
-            var result = FromJson<NineWResult<string>>(json);
-            return result.status == "1" ? result.key : throw new Exception($"9w get key error status is : {result.status}");
+            var result = FromJson<NineWResult>(json);
+            return result.status == "1"
+                ? HttpUtility.UrlEncode(result.key) : throw new Exception($"9w get key error status is : {result.status}");
         }
 
         private string GetUser(TpCustInfo tpCustInfo)
@@ -225,11 +232,16 @@ namespace ThirdParty.NineW
             }
         }
 
-        private class NineWResult<T>
+        private class NineWResult
         {
             public string status { get; set; }
             public string key { get; set; }
-            public List<T> results { get; set; }
+
+            [JsonProperty("results")]
+            public List<NineWBalance> BalaceResult { get; set; }
+
+            [JsonProperty("result")]
+            public List<NineWTransfer> TransferResult { get; set; }
         }
 
         private class NineWBalance
@@ -243,7 +255,7 @@ namespace ThirdParty.NineW
         {
             public string tscode { get; set; }
             public string userId { get; set; }
-            public int balance { get; set; }
+            public decimal balance { get; set; }
             public string createdate { get; set; }
         }
 
