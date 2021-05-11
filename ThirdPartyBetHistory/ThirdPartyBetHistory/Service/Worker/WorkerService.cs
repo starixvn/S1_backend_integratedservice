@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Serilog.Context;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
+using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Worker
 {
@@ -34,7 +35,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             tpList = thirdPartyBLL.GetTpList();
-            foreach (var tp in tpList.Where(item => item.Id == 1))
+            foreach (var tp in tpList.Where(item => item.Id == (int)TpId.Saba))
             {
                 try
                 {

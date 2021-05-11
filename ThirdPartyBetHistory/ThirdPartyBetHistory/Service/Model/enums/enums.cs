@@ -41,4 +41,9 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba_MacauGame = 26,
         Saba_ChinaLottery = 38
     }
+
+    public enum TpId
+    {
+        Saba = 1
+    }
 }
