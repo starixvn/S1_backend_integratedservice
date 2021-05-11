@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -39,7 +40,6 @@ namespace ThirdParty.BTI
             var GameUrl = inputs.ContainsKey($"GameUrl") && !string.IsNullOrEmpty(inputs[$"GameUrl"]) 
                 ? inputs[$"GameUrl"] : throw new Exception($"GameUrl is empty");
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
                 return new ApiResult()
@@ -48,17 +48,19 @@ namespace ThirdParty.BTI
                     Message = GameUrl,
                 };
             }
-
+            
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = Convert.ToBase64String(bytes);
-
+            var host = inputs.ContainsKey($"Host") && !string.IsNullOrEmpty(inputs[$"Host"])
+               ? inputs[$"Host"] : throw new Exception($"host is empty");
+            var api = HttpUtility.UrlEncode($"{host}/btisport.js");
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}/?operatorToken={sessionKey}",
+                Message = $"{GameUrl}/?operatorToken={sessionKey}&api={api}",
                 RawMessage = sessionKey
             };
         }
