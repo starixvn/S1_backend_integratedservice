@@ -109,27 +109,18 @@ namespace ThirdParty.NineW
             }
 
             var config = new NineWConfig(inputs);
-            var user = GetUser(tpCustInfo);
-            var key = GetKey(user, tpCustInfo.TpCurrencyId, config);
-
-            var apiUrl = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/login";
-            var sParam = $"key={key}&userId={user}";
-            var html = HttpPost(apiUrl, sParam, ContentType);
-
-            if (IsJSON(html))//回傳json代表有錯誤
-            {
-                var result = FromJson<NineWResult>(html);
-                return new ApiResult()
-                {
-                    RawErrorCode = result.status,
-                    RawMessage = html,
-                };
-            }
+            var userId = GetUser(tpCustInfo);
+            var key = GetKey(userId, tpCustInfo.TpCurrencyId, config);
 
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = html
+                Message = JsonConvert.SerializeObject(new
+                {
+                    url = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/login",
+                    key,
+                    userId,
+                })
             };
         }
 
