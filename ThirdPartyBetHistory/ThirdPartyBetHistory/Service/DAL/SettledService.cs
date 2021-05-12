@@ -30,12 +30,12 @@ namespace ThirdPartyBetHistory.Service.DAL
             var p = new DynamicParameters(new { TpId = tpId, CustId = custId });
             p.Add("BonusId", direction: ParameterDirection.Output);
             var result = _reportDbClient.Execute($"Service_BonusIdByTpId_Get", p);
-            if (result)
+            if (result > 0)
             {
                 bonusId = p.Get<int?>("BonusId") ?? 0;
             }
 
-            return bonusId != 0;
+            return result > 0 && bonusId != 0;
         }
 
         public IEnumerable<BonusFulfill> GetBonusFulfill()
@@ -51,12 +51,12 @@ namespace ThirdPartyBetHistory.Service.DAL
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, conn, trans);
-            if (result)
+            if (result > 0)
             {
                 trans.Commit();
             }
 
-            return result;
+            return result > 0;
         }
     }
 }
