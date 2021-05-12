@@ -41,9 +41,9 @@ namespace ThirdParty.NineW.Tests
 
             _inputs = new Dictionary<string, string>
             {
+                { "ApiUrl", "https://test81.cckk77.net/apiWallet" },
                 { "cert", "wkVwQ8sMVr252EA9" },
-                { "agent", "testnvccricma" },
-                { "apihost", "test81.cckk77.net" },
+                { "agent", "testnvccricma" },             
                 { "website", "WICKETSPRO" },
             };
         }
@@ -83,7 +83,6 @@ namespace ThirdParty.NineW.Tests
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
 
-        [TestCase(10)]
         [TestCase(100)]
         public void TransferTest(decimal amount)
         {
@@ -101,7 +100,6 @@ namespace ThirdParty.NineW.Tests
         }
 
         [TestCase(1000)]
-        [TestCase(5000)]
         public void TransferFlowTest(decimal amount)
         {
             //先檢查第三方餘額
@@ -155,7 +153,7 @@ namespace ThirdParty.NineW.Tests
         }
 
         [Test()]
-        public void LooutTest()
+        public void LogoutTest()
         {
             //Act
             var actual = _tpHelper.Logout(_tpCustInfo, _inputs);

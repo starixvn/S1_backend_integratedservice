@@ -34,7 +34,7 @@ namespace ThirdPartyService.Controllers
         {
             this.env = env;
             ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
-            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
+            ThirdPartyHelperBase.IsDevelopment = !env.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase);
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
             this.configuration = configuration;
             this.common = common;

@@ -18,7 +18,7 @@ namespace ThirdParty.NineW
             var config = new NineWConfig(inputs);
             var user = GetUser(tpCustInfo);
 
-            var apiUrl = $"https://{config.ApiHost}/apiWallet/{config.WebSite}/checkBalanceOperation";
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/checkBalanceOperation";
             var sParam = $"cert={config.Cert}&userId={user}&tsCode={TransID}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
@@ -66,7 +66,7 @@ namespace ThirdParty.NineW
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
-            var apiUrl = $"https://{config.ApiHost}/apiWallet/{config.WebSite}/getBalance";
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getBalance";
             var sParam = $"cert={config.Cert}&alluser=0&userIds={GetUser(tpCustInfo)}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
@@ -76,6 +76,7 @@ namespace ThirdParty.NineW
             {
                 return new ApiResult<UserBalance>()
                 {
+                    ErrorCode = ErrorCode.Fail,
                     RawErrorCode = result.status,
                     RawMessage = json,
                 };
@@ -105,7 +106,11 @@ namespace ThirdParty.NineW
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                throw new NotImplementedException();
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.UserNotLogin,
+                    Message = "Not support fun game.",
+                };
             }
 
             var config = new NineWConfig(inputs);
@@ -117,7 +122,7 @@ namespace ThirdParty.NineW
                 ErrorCode = ErrorCode.Success,
                 Message = JsonConvert.SerializeObject(new
                 {
-                    url = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/login",
+                    url = $"{config.ApiUrl}/player/{config.WebSite}/login",
                     key,
                     userId,
                 })
@@ -129,12 +134,12 @@ namespace ThirdParty.NineW
             var config = new NineWConfig(inputs);
             var user = GetUser(tpCustInfo);
 
-            var apiUrl = $"https://{config.ApiHost}/apiWallet/{config.WebSite}/deposit";
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/deposit";
             var sParam = $"cert={config.Cert}&userId={user}&balance={Amount}&tsCode={TransID}";
 
             if (direction == Direction.ToMain)
             {
-                apiUrl = $"https://{config.ApiHost}/apiWallet/{config.WebSite}/withdraw";
+                apiUrl = $"{config.ApiUrl}/{config.WebSite}/withdraw";
                 sParam = $"cert={config.Cert}&userId={user}&withdrawtype=0&balance={Amount}&tsCode={TransID}";
             }
 
@@ -167,7 +172,7 @@ namespace ThirdParty.NineW
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
-            var apiUrl = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/logout";
+            var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/logout";
             var sParam = $"cert={config.Cert}&userIds={GetUser(tpCustInfo)}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
@@ -177,6 +182,7 @@ namespace ThirdParty.NineW
             {
                 return new ApiResult()
                 {
+                    ErrorCode = ErrorCode.Fail,
                     RawErrorCode = result.status,
                     RawMessage = json,
                 };
@@ -190,7 +196,7 @@ namespace ThirdParty.NineW
 
         private string GetKey(string user, string currency, NineWConfig config)
         {
-            var apiUrl = $"https://{config.ApiHost}/apiWallet/player/{config.WebSite}/getKey";
+            var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/getKey";
             var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -205,15 +211,15 @@ namespace ThirdParty.NineW
 
         private class NineWConfig
         {
-            public string ApiHost { get; set; }
+            public string ApiUrl { get; set; }
             public string WebSite { get; set; }
             public string Cert { get; set; }
             public string Agent { get; set; }
 
             public NineWConfig(Dictionary<string, string> inputs)
             {
-                ApiHost = inputs.ContainsKey($"apihost") && !string.IsNullOrEmpty(inputs[$"apihost"])
-                ? inputs[$"apihost"] : throw new Exception($"apihost is empty");
+                ApiUrl = inputs.ContainsKey($"ApiUrl") && !string.IsNullOrEmpty(inputs[$"ApiUrl"])
+                ? inputs[$"ApiUrl"] : throw new Exception($"apihost is empty");
                 WebSite = inputs.ContainsKey($"website") && !string.IsNullOrEmpty(inputs[$"website"])
                 ? inputs[$"website"] : throw new Exception($"website is empty");
                 Cert = inputs.ContainsKey($"cert") && !string.IsNullOrEmpty(inputs[$"cert"])
