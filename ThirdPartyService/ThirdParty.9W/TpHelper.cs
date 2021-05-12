@@ -16,17 +16,16 @@ namespace ThirdParty.NineW
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             var config = new NineWConfig(inputs);
-            var user = GetUser(tpCustInfo);
 
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/checkBalanceOperation";
-            var sParam = $"cert={config.Cert}&userId={user}&tsCode={TransID}";
+            var sParam = $"cert={config.Cert}&userId={tpCustInfo.TpUserName}&tsCode={TransID}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
 
             if (result.status != "1012"
                 || !result.TransferResult.Any(d => d.tscode == TransID
-                && d.userId.Equals(user, StringComparison.OrdinalIgnoreCase)
+                && d.userId.Equals(tpCustInfo.TpUserName, StringComparison.OrdinalIgnoreCase)
                 && Math.Abs(d.balance) == Amount))
             {
                 return new ApiResult<TransferResult>()
@@ -54,9 +53,7 @@ namespace ThirdParty.NineW
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
-            var user = GetUser(tpCustInfo);
-
-            _ = GetKey(user, tpCustInfo.TpCurrencyId, config);
+            _ = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config);
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
@@ -67,7 +64,7 @@ namespace ThirdParty.NineW
         {
             var config = new NineWConfig(inputs);
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getBalance";
-            var sParam = $"cert={config.Cert}&alluser=0&userIds={GetUser(tpCustInfo)}";
+            var sParam = $"cert={config.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -114,8 +111,6 @@ namespace ThirdParty.NineW
             }
 
             var config = new NineWConfig(inputs);
-            var userId = GetUser(tpCustInfo);
-            var key = GetKey(userId, tpCustInfo.TpCurrencyId, config);
 
             return new ApiResult()
             {
@@ -123,8 +118,8 @@ namespace ThirdParty.NineW
                 Message = JsonConvert.SerializeObject(new
                 {
                     url = $"{config.ApiUrl}/player/{config.WebSite}/login",
-                    key,
-                    userId,
+                    key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config),
+                    userId = tpCustInfo.TpUserName,
                 })
             };
         }
@@ -132,15 +127,13 @@ namespace ThirdParty.NineW
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             var config = new NineWConfig(inputs);
-            var user = GetUser(tpCustInfo);
-
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/deposit";
-            var sParam = $"cert={config.Cert}&userId={user}&balance={Amount}&tsCode={TransID}";
+            var sParam = $"cert={config.Cert}&userId={tpCustInfo.TpUserName}&balance={Amount}&tsCode={TransID}";
 
             if (direction == Direction.ToMain)
             {
                 apiUrl = $"{config.ApiUrl}/{config.WebSite}/withdraw";
-                sParam = $"cert={config.Cert}&userId={user}&withdrawtype=0&balance={Amount}&tsCode={TransID}";
+                sParam = $"cert={config.Cert}&userId={tpCustInfo.TpUserName}&withdrawtype=0&balance={Amount}&tsCode={TransID}";
             }
 
             var json = HttpPost(apiUrl, sParam, ContentType);
@@ -173,7 +166,7 @@ namespace ThirdParty.NineW
         {
             var config = new NineWConfig(inputs);
             var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/logout";
-            var sParam = $"cert={config.Cert}&userIds={GetUser(tpCustInfo)}";
+            var sParam = $"cert={config.Cert}&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -202,11 +195,6 @@ namespace ThirdParty.NineW
             var result = FromJson<NineWResult>(json);
             return result.status == "1"
                 ? HttpUtility.UrlEncode(result.key) : throw new Exception($"9w get key error status is : {result.status}");
-        }
-
-        private string GetUser(TpCustInfo tpCustInfo)
-        {
-            return tpCustInfo.TpUserName.Replace("_", "");
         }
 
         private class NineWConfig

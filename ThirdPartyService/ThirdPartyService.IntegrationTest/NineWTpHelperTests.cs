@@ -29,7 +29,7 @@ namespace ThirdParty.NineW.Tests
                 CustId = 249951,
                 SiteId = 1,
                 UserName = "hanstest01",
-                TpUserName = "XNova88_249951",
+                TpUserName = "XNova88249951",
                 TpPwd = "h5N3Bjn",
                 TpCurrencyId = "2",
                 ExchangeRate = 1.0000m,
