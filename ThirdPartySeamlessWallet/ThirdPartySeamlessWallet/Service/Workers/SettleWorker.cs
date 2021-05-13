@@ -104,7 +104,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTLC = new Timer(DoSettlePTLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 

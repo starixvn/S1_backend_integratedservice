@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             var configBuilder = new ConfigurationBuilder();
             configBuilder.SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Development.json", false, false);
+                .AddJsonFile("appsettings.Local.json", false, false);
             _configuration = configBuilder.Build();
             services.AddSingleton(_configuration);
             return services;
