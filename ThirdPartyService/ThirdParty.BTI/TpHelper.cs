@@ -51,7 +51,7 @@ namespace ThirdParty.BTI
             
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token };
+            var sessionKeyArr = new string[] { key, token , tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = Convert.ToBase64String(bytes);
             var host = inputs.ContainsKey($"Host") && !string.IsNullOrEmpty(inputs[$"Host"])
