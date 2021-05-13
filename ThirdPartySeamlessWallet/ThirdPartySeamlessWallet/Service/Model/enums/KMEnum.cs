@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model.enums
+﻿using System.ComponentModel;
+
+namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
     /// <summary>
     /// 交易类型
@@ -66,19 +68,33 @@
 
     public enum KMErrorCode
     {
+        [Description("Invalid or expired token")]
         ExpiredToken = 10,
+        [Description("Invalid token scope")]
         InvalidTokenScope = 19,
+        [Description("User blocked")]
         UserBlocked = 20,
+        [Description("Invalid Credential")]
         InvalidCredential = 30,
+        [Description("Currency Mismatch")]
         CurrencyMismatch = 50,
+        [Description("Insufficient funds to perform the operation")]
         InsufficientFunds = 100,
+        [Description("Invalid arguments")]
         InvalidArguments = 300,
+        [Description("Missing token")]
         MissingToken = 400,
+        [Description("Incorrect format")]
         IncorrectFormat = 500,
+        [Description("Transaction does not exist")]
         TransactionDoesNotExist = 600,
+        [Description("Transaction already cancelled")]
         TransactionAlreadyCancelled = 610,
+        [Description("Operation Failed Deterministically")]
         OperationFailedDeterministically = 800,
+        [Description("System Error")]
         SystemError = 900,
+        [Description("Configured Timeout Exceeded")]
         ConfiguredTimeout = 903
     }
 }

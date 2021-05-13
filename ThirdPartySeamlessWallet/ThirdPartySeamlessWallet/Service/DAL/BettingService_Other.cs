@@ -7,8 +7,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -601,6 +603,105 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         }
 
-        #endregion   
+        #endregion  
+        
+        public async Task<KmDbResult> PlaceBetPK_KM(TpCustInfo tpCustInfo, KMDebitRequestTransaction debitTransaction, int tpId, int gameType)
+        {
+            var result = 0;
+            try
+            {
+                var bonusId = 0;
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    ptxid = debitTransaction.PtxId,
+                    userId = debitTransaction.UserId,
+                    amount = debitTransaction.Amount,
+                    currency = debitTransaction.Currency,
+                    ipaddress = debitTransaction.IpAddress,
+                    refptxid = debitTransaction.RefPtxId,
+                    txtype = debitTransaction.TxType,
+                    timestamp = DateTime.Parse(debitTransaction.Timestamp),
+                    platformtype = debitTransaction.PlatformType,
+                    gpcode = debitTransaction.GpCode,
+                    gamecode = debitTransaction.GameCode,
+                    gamename = debitTransaction.GameName,
+                    gametype = debitTransaction.GameType,
+                    roundid = debitTransaction.RoundId,
+                    betid = debitTransaction.BetId,
+                    senton = DateTime.Parse(debitTransaction.Senton),
+                    isclosinground = debitTransaction.IsClosingRound,
+                    ggr = debitTransaction.Ggr,
+                    turnover = debitTransaction.Turnover,
+                    bonustype = debitTransaction.BonusType,
+                    bonuscode = debitTransaction.BonusCode,
+                    description = debitTransaction.Desc,
+                    commission = debitTransaction.Commission,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+                p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
+                await conn.ExecuteAsync("Service_BettransPK_KM_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                result = p.Get<short>("SPResult");
+                var trxId = p.Get<long>("trx_id");
+                if (result != 1)
+                {
+                    if (result == 0)
+                    {
+                        logger.LogInformation("訂單已存在");
+                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                    }
+                    
+                    logger.LogError("exec Service_BettransPK_KM_Bet_Ins error");
+                    throw new KmException(KMErrorCode.SystemError);
+                }
+                result = PlaceBetV2(
+                    tpCustInfo,
+                    Math.Abs(debitTransaction.Amount) * -1,
+                    tpId,
+                    debitTransaction.PtxId,
+                    gameType,
+                    debitTransaction.RefPtxId,
+                    null,
+                    TpCategory.Poker,
+                    out decimal afterAmount,
+                    ref bonusId,
+                    conn,
+                    trans
+                );
+                if (result != 1)
+                {
+                    logger.LogError("PlaceBetV2 error");
+                    throw new KmException(KMErrorCode.SystemError);
+                }
+                
+                trans.Commit();
+                return new KmDbResult()
+                {
+                    SPResult = result,
+                    Trx_id = trxId,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    throw new KmException(KMErrorCode.ConfiguredTimeout);
+                }
+                else
+                {
+                    logger.LogError($"exec PlaceBetPK_KM failed: {mySqlEx.Message}");
+                    throw mySqlEx;
+                }
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -33,9 +34,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("debit")]
-        public async Task<KMDebitResponse> Debit(KMDebitRequest request)
+        public async Task<BaseResult> Debit(KMDebitRequest request)
         {
-            return await _kmService.Debit(request);
+            try
+            {
+                return await _kmService.Debit(request);
+            }
+            catch (Exception ex)
+            {
+                return new ErrorResult()
+                {
+                    err = 900,
+                    errdesc = "system error"
+                };
+            }
         }
         
         /// <summary>
@@ -58,6 +70,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 return _kmService.GetBalance(request);
+            }
+            catch (KmException ex)
+            {
+                return new ErrorResult()
+                {
+                    err = (int)ex.KMErrorCode,
+                    errdesc = ex.ErrorMessage
+                };
             }
             catch (Exception e)
             {

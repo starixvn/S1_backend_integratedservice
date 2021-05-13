@@ -18,24 +18,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int err { get; set; }
         public string errdesc { get; set; }
     }
-    
-    #region token
-    public class KMTokenRequest
-    {
-        public string client_id { get; set; }
-        public string client_secret { get; set; }
-        public string grant_type { get; set; }
-        public string scope { get; set; }
-    }
-
-    public class KMTokenResponse
-    {
-        public string access_token { get; set; }
-        public string token_type { get; set; }
-        public int expires_in { get; set; }
-        public string scope { get; set; }
-    }
-    #endregion
 
     #region debit
     public class KMDebitRequest
@@ -57,6 +39,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Amount { get; set; }
         [JsonProperty("cur")]
         public string Currency { get; set; }
+        [JsonProperty("ipaddress")]
+        public string IpAddress { get; set; }
         [JsonProperty("ptxid")]
         public string PtxId { get; set; }
         [JsonProperty("refptxid")]
@@ -93,17 +77,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Ggr { get; set; }
         [JsonProperty("turnover")]
         public decimal Turnover { get; set; }
-        [JsonProperty("unsettledbets")]
-        public decimal UnSettledBets { get; set; }
         [JsonProperty("walletcode")]
         public string WalletCode { get; set; }
+        [JsonProperty("bonustype")]
+        public decimal BonusType { get; set; }
+        [JsonProperty("bonuscode")]
+        public decimal BonusCode { get; set; }
         [JsonProperty("desc")]
         public string Desc { get; set; }
         [JsonProperty("commission")]
         public double Commission { get; set; }
     }
 
-    public class KMDebitResponse
+    public class KMDebitResponse : BaseResult
     {
         public List<KMDebitTransaction> transactions { get; set; }
     }
@@ -176,4 +162,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     #endregion
     
+    public class KmDbResult
+    {
+        public int SPResult { get; set; }
+
+        public long Trx_id { get; set; }
+
+        public decimal AfterAmount { get; set; }
+
+        public decimal ReturnAmount { get; set; }
+    }
 }
