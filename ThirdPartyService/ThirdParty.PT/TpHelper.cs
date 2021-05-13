@@ -399,7 +399,7 @@ namespace ThirdParty.PT
             var Transfer = new DepositParam
             {
                 playername = tpCustInfo.TpUserName,
-                amount = Amount,
+                amount = Math.Floor(Amount * 100) / 100,
                 adminname = AdminName,
                 externaltranid = TransID
             };
@@ -410,7 +410,7 @@ namespace ThirdParty.PT
                 Transfer = new WithdrawParam
                 {
                     playername = tpCustInfo.TpUserName,
-                    amount = Amount,
+                    amount = Math.Floor(Amount * 100) / 100,
                     adminname = AdminName,
                     isForce = false,
                     externaltranid = TransID,
