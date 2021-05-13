@@ -133,34 +133,34 @@ namespace ThirdPartyWager
 
             //Worker
 
-            //services.AddHostedService<WagerDG>();
-            //services.AddHostedService<WagerRedoDG>();
-            //services.AddHostedService<WagerAllBet>();
-            //services.AddHostedService<WagerRedoAllBet>();
-            //services.AddHostedService<WagerSA>();
-            //services.AddHostedService<WagerRedoSA>();
-            //services.AddHostedService<WagerAG>();
-            //services.AddHostedService<WagerRedoAG>();
-            ////services.AddHostedService<CheckTicketAG>();
-            ////services.AddHostedService<WagerCF>();
-            //services.AddHostedService<WagerSG>();
-            //services.AddHostedService<WagerWM>();
-            //services.AddHostedService<WagerRedoWM>();
-            ///*services.AddHostedService<WagerKiss918>();
-            //services.AddHostedService<WagerRedoKiss918>();*/
-            //services.AddHostedService<WagerOne789>();
-            ////services.AddHostedService<WagerMega>();
-            ////services.AddHostedService<WagerRedoMega>();
-            //services.AddHostedService<JwtIconic>();
-            //services.AddHostedService<WagerIconic>();
-            //services.AddHostedService<WagerOneGaming>();
-            //services.AddHostedService<WagerV8>();
-            //services.AddHostedService<WagerRedoV8>();
-            //services.AddHostedService<WagerN2Live>();
-            //services.AddHostedService<WagerPT>();
-            //services.AddHostedService<WagerRedoPT>();
-            //services.AddHostedService<LiveStreaming>();
-            //services.AddHostedService<LatestHighlightVideo>();
+            services.AddHostedService<WagerDG>();
+            services.AddHostedService<WagerRedoDG>();
+            services.AddHostedService<WagerAllBet>();
+            services.AddHostedService<WagerRedoAllBet>();
+            services.AddHostedService<WagerSA>();
+            services.AddHostedService<WagerRedoSA>();
+            services.AddHostedService<WagerAG>();
+            services.AddHostedService<WagerRedoAG>();
+            //services.AddHostedService<CheckTicketAG>();
+            //services.AddHostedService<WagerCF>();
+            services.AddHostedService<WagerSG>();
+            services.AddHostedService<WagerWM>();
+            services.AddHostedService<WagerRedoWM>();
+            /*services.AddHostedService<WagerKiss918>();
+            services.AddHostedService<WagerRedoKiss918>();*/
+            services.AddHostedService<WagerOne789>();
+            //services.AddHostedService<WagerMega>();
+            //services.AddHostedService<WagerRedoMega>();
+            services.AddHostedService<JwtIconic>();
+            services.AddHostedService<WagerIconic>();
+            services.AddHostedService<WagerOneGaming>();
+            services.AddHostedService<WagerV8>();
+            services.AddHostedService<WagerRedoV8>();
+            services.AddHostedService<WagerN2Live>();
+            services.AddHostedService<WagerPT>();
+            services.AddHostedService<WagerRedoPT>();
+            services.AddHostedService<LiveStreaming>();
+            services.AddHostedService<LatestHighlightVideo>();
 
             services.AddHostedService<WagerNineW>();
         }
