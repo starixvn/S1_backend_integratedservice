@@ -453,6 +453,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tools tools;
         private readonly Tp thisTp;
         private readonly IHostEnvironment environment;
+        private readonly int gameType = 0;
 
         public N2LiveController(
             AuthBLL authBLL,
@@ -476,6 +477,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.tools = tools;
             thisTp = Tp.N2Live;
             this.environment = environment;
+            gameType = (int)GameType.N2Live_LiveCasino;
         }
 
         [Route("[controller]")]
@@ -552,7 +554,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return xml;
                     }
 
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginManualReq.request.userid);
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginManualReq.request.userid, gameType);
                     if (tpCustBalance != null)
                     {
                         var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, getLoginManualReq.request.userid);
@@ -560,7 +562,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         var sessionKeyArr = new string[] { key, tpCheck.Token, tpCustInfo.SiteId.ToString(), tpCustBalance.TpCurrencyId };
                         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
                         string sessionKey = Convert.ToBase64String(bytes);
-                        
+
                         var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId);
 
                         LoginResponse getApiResp = new LoginResponse();
@@ -612,7 +614,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         if (error == false)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginReq.request.userid);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginReq.request.userid, gameType);
                             if (tpCustBalance != null)
                             {
                                 LoginResponse getApiResp = new LoginResponse();
@@ -662,7 +664,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         if (error == false)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.request.userid);
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.request.userid, gameType);
                             if (tpCustBalance != null)
                             {
                                 BalanceResponse getApiResp = new BalanceResponse();
@@ -763,7 +765,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             if (result > 0 || result == -2)
                             {
                                 // your side should response success to the push trade since the trade placement is failed
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getCancelBetReq.request.userid);
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getCancelBetReq.request.userid, gameType);
                                 BetResponse getApiResp = new BetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -807,7 +809,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             var result = settledBLL.PayoutLC_N2Live(getPayoutReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPayoutReq.request.userid);
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPayoutReq.request.userid, gameType);
                                 BetResponse getApiResp = new BetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -915,7 +917,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             if (result > 0 || result == -2)
                             {
                                 // your side should response success to the push trade since the trade placement is failed
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartCancelBetReq.request.userid);
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartCancelBetReq.request.userid, gameType);
                                 SmartBetResponse getApiResp = new SmartBetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -959,7 +961,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             var result = settledBLL.SmartPayoutLC_N2Live(getSmartPayoutReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartPayoutReq.request.userid);
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartPayoutReq.request.userid, gameType);
                                 SmartBetResponse getApiResp = new SmartBetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
