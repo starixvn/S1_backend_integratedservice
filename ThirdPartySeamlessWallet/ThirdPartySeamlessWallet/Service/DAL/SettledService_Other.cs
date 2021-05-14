@@ -5,10 +5,12 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -1211,6 +1213,57 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-     
+
+        public async Task<KmDbResult> PayoutPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction transaction, int tpId, int gameType)
+        {
+            var result = 0;
+            var afterAmount = 0M;
+            try
+            {
+                var bonusId = 0;
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                if (transaction.amt > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        transaction.amt,
+                        tpId,
+                        transaction.ptxid,
+                        gameType,
+                        TpCategory.Poker,
+                        transaction.ptxid,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                }
+                trans.Commit();
+                return new KmDbResult()
+                {
+                    SPResult = result,
+                    Trx_id = 1,
+                    AfterAmount = afterAmount
+                };
+                
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new KmException(KMErrorCode.ConfiguredTimeout);
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+        }
     }
 }

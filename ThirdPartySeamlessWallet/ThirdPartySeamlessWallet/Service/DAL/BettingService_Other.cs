@@ -667,7 +667,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpId,
                     debitTransaction.PtxId,
                     gameType,
-                    debitTransaction.RefPtxId,
+                    debitTransaction.PtxId,
                     null,
                     TpCategory.Poker,
                     out decimal afterAmount,

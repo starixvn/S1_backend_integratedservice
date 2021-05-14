@@ -6,7 +6,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
     public interface IKMService
     {
         Task<KMDebitResponse> Debit(KMDebitRequest request);
-        void Credit();
+        Task<KMCreditResponse> Credit(KMCreditRequest request);
         KMBalanceResponse GetBalance(KMBalanceRequest request);
     }
 }

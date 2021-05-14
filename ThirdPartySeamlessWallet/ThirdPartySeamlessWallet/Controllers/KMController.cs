@@ -55,9 +55,30 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("credit")]
-        public async Task<KMCreditResponse> Credit(KMCreditRequest request)
+        public async Task<BaseResult> Credit(KMCreditRequest request)
         {
-            return new KMCreditResponse();
+            try
+            {
+                return await _kmService.Credit(request);
+            }
+            catch (KmException ke)
+            {
+                _logger.LogError(ke.ErrorMessage);
+                return new ErrorResult()
+                {
+                    err = (int)ke.KMErrorCode,
+                    errdesc = ke.ErrorMessage
+                };
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e, "balance failed");
+                return new ErrorResult()
+                {
+                    err = 900,
+                    errdesc = "system error"
+                };
+            }
         }
 
         /// <summary>
@@ -71,16 +92,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return _kmService.GetBalance(request);
             }
-            catch (KmException ex)
+            catch (KmException ke)
             {
+                _logger.LogError(ke.ErrorMessage);
                 return new ErrorResult()
                 {
-                    err = (int)ex.KMErrorCode,
-                    errdesc = ex.ErrorMessage
+                    err = (int)ke.KMErrorCode,
+                    errdesc = ke.ErrorMessage
                 };
             }
             catch (Exception e)
             {
+                _logger.LogError(e, "balance failed");
                 return new ErrorResult()
                 {
                     err = 900,

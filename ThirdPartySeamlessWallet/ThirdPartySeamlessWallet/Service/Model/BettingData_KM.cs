@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
-    public class BettingData_KM
-    {
-        
-    }
-
     public class BaseResult
     {
         
@@ -91,10 +87,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class KMDebitResponse : BaseResult
     {
-        public List<KMDebitTransaction> transactions { get; set; }
+        public List<KMDebitResponseTransaction> transactions { get; set; }
     }
 
-    public class KMDebitTransaction
+    public class KMDebitResponseTransaction
     {
         public string txid { get; set; }
         public string ptxid { get; set; }
@@ -103,17 +99,58 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bool dup { get; set; }
     }
     #endregion
-    
+
+    #region credit
 
     public class KMCreditRequest
     {
-        
+        public List<KMCreditRequestTransaction> transactions { get; set; }
+    }
+    
+    public class KMCreditRequestTransaction
+    {
+        public string userid { get; set; }
+        public string authtoken { get; set; }
+        public string brandcode { get; set; }
+        public decimal amt { get; set; }
+        public string cur { get; set; }
+        public string ipaddress { get; set; }
+        public string ptxid { get; set; }
+        public string refptxid { get; set; }
+        public int txtype { get; set; }
+        public string timestamp { get; set; }
+        public int platformtype { get; set; }
+        public string gpcode { get; set; }
+        public string gamecode { get; set; }
+        public string gamename { get; set; }
+        public int gametype { get; set; }
+        public string externalgameid { get; set; }
+        public string roundid { get; set; }
+        public string externalroundid { get; set; }
+        public string betid { get; set; }
+        public string senton { get; set; }
+        public string isclosinground { get; set; }
+        public int ggr { get; set; }
+        public int turnover { get; set; }
+        public int unsettledbets { get; set; }
+        public string walletcode { get; set; }
+        public string commission { get; set; }
+    }
+    
+    public class KMCreditResponse: BaseResult
+    {
+        public List<KMCreditResponseTransaction> transactions { get; set; }
+    }
+    public class KMCreditResponseTransaction
+    {
+        public string txid { get; set; }
+        public string ptxid { get; set; }
+        public decimal bal { get; set; }
+        public string cur { get; set; }
+        public bool dup { get; set; }
     }
 
-    public class KMCreditResponse
-    {
-        
-    }
+    #endregion
 
     #region balance
     public class KMBalanceRequest
