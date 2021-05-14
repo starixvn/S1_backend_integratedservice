@@ -55,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", "PT");
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}\r\nSiteId:{certificate["site"]}\r\nCurrency:{certificate["currency"]}", "PT");
             string r = await DoHttpClientAsync(url, param, entityKey, certificate);
             var result = JsonConvert.DeserializeObject<WagerPTModel>(r);
             return result;
