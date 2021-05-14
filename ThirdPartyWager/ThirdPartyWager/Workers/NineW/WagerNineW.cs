@@ -17,13 +17,11 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private Timer _settleTimer;
+        private Timer _settleTimerByDate;
         private Timer _reSttleTimer;
 
-        private readonly int intervalMins = 5;
-        private const int DataRangeMins = 60;
         private readonly int tpId = (int)Tp.NineW;
         private readonly int tpType = 51;
-        private readonly int beyond = 6;
         private readonly int TimeZone = 8;
 
         public WagerNineW(IServiceProvider provider)
@@ -36,7 +34,9 @@ namespace ThirdPartyWager.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _settleTimer = new Timer(DoSettle, null, TimeSpan.Zero, TimeSpan.Zero);
+            _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.Zero, TimeSpan.Zero);
             _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.Zero, TimeSpan.Zero);
+
             return Task.CompletedTask;
         }
 
@@ -44,14 +44,16 @@ namespace ThirdPartyWager.Workers
         {
             var doQuickly = false;
             var timerType = 1;
+            var dataRangeMins = 5;
+            var intervalMins = 1;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);              
-                var thisTime = lastTime?.StartTime ?? DateTime.Now.AddDays(-1);
+                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins- intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
 
                 if (thisTime < DateTime.Now)
                 {
-                    var timeCast = _dateTimeHelper.GetTimeByMinute(DataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);    
+                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
@@ -60,30 +62,102 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > beyond)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
                     doQuickly = true;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WagerNineW.Exception");
+                _logger.LogError(ex, "WagerNineW.DoSettle.Exception");
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(30) : TimeSpan.FromMinutes(intervalMins);
+                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(5) : TimeSpan.FromMinutes(intervalMins);
                 _settleTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
 
+        private async void DoSettleByDate(object state)
+        {
+            var doQuickly = false;
+            var timerType = 2;
+            var dataRangeMins = 1441;
+            var intervalDays = 1;
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
+                var thisTime = lastTime?.StartTime ?? DateTime.Now.Date.AddDays(-3);
+
+                if (thisTime < DateTime.Now)
+                {
+                    var timeCast = _dateTimeHelper.GetTimeByDay(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
+                    var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"9W Get Wagers byDate: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, timeCast.endUnix, tpType);
+                    }
+                }
+
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                {
+                    doQuickly = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WagerNineW.DoSettleByDate.Exception");
+            }
+            finally
+            {
+                var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromDays(intervalDays);
+                _settleTimerByDate.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+
         private async void DoReSettle(object state)
-        { 
-        
+        {
+            var doQuickly = false;
+            var timerType = 3;
+            var dataRangeMins = 180;
+            var intervalHours = 1;
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
+                var thisTime = lastTime?.StartTime ?? DateTime.Now.AddDays(-3);
+
+                if (thisTime < DateTime.Now)
+                {
+                    var timeCast = _dateTimeHelper.GetTimeByHour(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
+                    var isSuccess = await _nineWService.GetReSettleWagersAsync(timeCast.startTime, timeCast.endTime);
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"9W Get ReSettle Wagers : {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, timeCast.endUnix, tpType);
+                    }
+                }
+
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                {
+                    doQuickly = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WagerNineW.DoReSettle.Exception");
+            }
+            finally
+            {
+                var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromHours(intervalHours);
+                _reSttleTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _settleTimer?.Change(Timeout.Infinite, 0);
+            _settleTimerByDate?.Change(Timeout.Infinite, 0);
             _reSttleTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
