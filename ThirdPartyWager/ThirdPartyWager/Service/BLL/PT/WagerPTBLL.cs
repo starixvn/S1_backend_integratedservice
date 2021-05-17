@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             string logName = Tp.PT.ToString();
             string logInfo = "";
-            string logMsg = $"( START: {startUnix} END: {endUnix}  CURRENCY: {currency} )";
+            string logMsg = $"( START: {startUnix} END: {endUnix}  SITEID: {siteId} CURRENCY: {currency})";
             string guid = Guid.NewGuid().ToString();
             try
             {
@@ -53,6 +53,8 @@ namespace ThirdPartyWager.Service.BLL
                 Dictionary<string, string> certificate = new Dictionary<string, string>();
                 certificate.Add("path", $@"{environment.ContentRootPath}\Storage\PT\{currency}.p12");
                 certificate.Add("password", pass);
+                certificate.Add("currency", currency);
+                certificate.Add("site", siteId.ToString());
 
                 int perPage = 500;
                 int page = 1;
@@ -81,6 +83,8 @@ namespace ThirdPartyWager.Service.BLL
                     if (dataWager.pagination.totalCount == 0)
                     {
                         logger.LogInformation($"NO_DATA {logMsg}");
+                        logInfo = $"NO_DATA {logMsg}";
+                        log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager.pagination)}", logName);
                         return true;
                     }
 
@@ -109,14 +113,19 @@ namespace ThirdPartyWager.Service.BLL
                         }
                     }
                     page++;
+
+                    logger.LogInformation($"FINISH {logMsg}");
+                    logInfo = $"FINISH {logMsg}";
+                    log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager.pagination)}", logName);
                 }
 
-                logger.LogInformation($"FINISH {logMsg}");
                 return true;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                logInfo = $"FATAL_ERROR {logMsg}";
+                log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nException:\r\n{ex}", logName);
                 return false;
             }
         }
