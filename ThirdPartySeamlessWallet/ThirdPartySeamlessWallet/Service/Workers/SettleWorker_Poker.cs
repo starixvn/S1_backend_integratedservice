@@ -215,7 +215,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
                             };
 
                             var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);

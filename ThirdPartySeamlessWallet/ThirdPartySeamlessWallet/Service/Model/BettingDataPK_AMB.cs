@@ -45,4 +45,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameId { get; set; }
         public string product { get; set; }
     }
+
+    public class BettransDataPK_AMB : CommonDataPK_AMB
+    {
+        public string TransId { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+    }
 }

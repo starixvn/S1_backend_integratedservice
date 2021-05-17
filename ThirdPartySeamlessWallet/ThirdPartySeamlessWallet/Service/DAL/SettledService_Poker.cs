@@ -204,27 +204,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            //// check bet
-            //var check = conn.QueryFirstOrDefault<PayoutDataPK_AMB>("Service_BettransPK_AMB_Get", new { roundId = cancelDataPK_AMB.roundId, username = cancelDataPK_AMB.username, TicketType = (int)BettransType.Bet, TicketStatus = (int)TicketStatus.UnSettled }, transaction: trans, commandType: CommandType.StoredProcedure);
-            //if (check == null)
-            //{
-            //    // no bet
-            //    return -1;
-            //}
-
             var p = new DynamicParameters(new
             {
                 TransId = $"{cancelDataPK_AMB.roundId}_{cancelDataPK_AMB.username}",
-                username = cancelDataPK_AMB.username,
-                agent = cancelDataPK_AMB.agent,
-                game = cancelDataPK_AMB.game,
-                gameId = cancelDataPK_AMB.gameId,
-                product = cancelDataPK_AMB.product,
-                roundId = cancelDataPK_AMB.roundId,
-                amount = cancelDataPK_AMB.amount,
-                currency = cancelDataPK_AMB.currency,
                 refId = cancelDataPK_AMB.refId,
-                timeUnix = new DateTimeOffset(DateTime.Parse(cancelDataPK_AMB.timestamp.ToString()), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
                 TicketType = (int)BettransType.CancelBet,
                 TicketStatus = (int)TicketStatus.Refund,
                 SettleFlag = (int)SettleFlag.Settled
@@ -232,7 +215,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                //result = conn.Execute("Service_BettransPK_AMB_Cancel_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 result = conn.Execute("Service_BettransPK_AMB_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
@@ -265,18 +247,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = -99;
                 throw;
             }
-            //catch (MySqlException mySqlEx)
-            //{
-            //    /*Duplicate for key 'PRIMARY'*/
-            //    if (mySqlEx.Number == 1062)
-            //    {
-            //        result = -1;
-            //    }
-            //    else
-            //    {
-            //        throw;
-            //    }
-            //}
 
             return result;
 
@@ -316,8 +286,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 refId = payoutDataPK_AMB.refId,
                 timeUnix = new DateTimeOffset(DateTime.Parse(payoutDataPK_AMB.timestamp.ToString()), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
                 outStanding = payoutDataPK_AMB.outStanding,
-                TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,
+                TicketStatus = ticketStatus,
                 SettleFlag = SettleFlag.EndGame
             });
 
@@ -378,21 +348,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             var result = 0;
 
+            string TransId = $"{voidDataPK_AMB.roundId}_{voidDataPK_AMB.username}";
             DateTime fmTime = DateTime.ParseExact(voidDataPK_AMB.timestamp.ToString("yyyy-MM-ddTHH:mm:ss:fffZ"), "yyyy-MM-ddTHH:mm:ss:fffZ", CultureInfo.InvariantCulture);
             var p = new DynamicParameters(new
             {
-                username = voidDataPK_AMB.username,
-                agent = voidDataPK_AMB.agent,
-                game = voidDataPK_AMB.game,
-                gameId = voidDataPK_AMB.gameId,
-                product = voidDataPK_AMB.product,
-                roundId = voidDataPK_AMB.roundId,
-                amount = voidDataPK_AMB.amount,
-                currency = voidDataPK_AMB.currency,
+                TransId = TransId,
                 refId = voidDataPK_AMB.refId,
-                timeUnix = new DateTimeOffset(DateTime.Parse(voidDataPK_AMB.timestamp.ToString()), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
-                TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.Refund,
                 SettleFlag = SettleFlag.EndGame
             });
 
@@ -402,7 +365,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransPK_AMB_Resettle_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                // check void
+                var check = conn.QueryFirstOrDefault<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", new { TransId = TransId, TicketType = (int)BettransType.Payout }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check == null || check.TicketStatus == (int)TicketStatus.Refund)
+                {
+                    // voided
+                    return -1;
+                }
+
+                result = conn.Execute("Service_BettransPK_AMB_Resettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -429,19 +400,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                 }
             }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
-            }
             catch (Exception ex)
             {
+                result = -99;
                 throw;
             }
 

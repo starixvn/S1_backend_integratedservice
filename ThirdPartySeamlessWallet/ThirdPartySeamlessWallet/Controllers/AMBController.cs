@@ -364,18 +364,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username);
-            getApiResponse.status.code = 0;
-            getApiResponse.status.message = "Success";
-            getApiResponse.data.username = getReq.username;
-            getApiResponse.data.wallet.balance = tpCustBalance.Balance - getReq.amount;
-            getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
-            getApiResponse.data.balance.before = tpCustBalance.Balance;
-            getApiResponse.data.balance.after = tpCustBalance.Balance - getReq.amount;
-            getApiResponse.data.refId = getReq.refId;
-            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-            return getApiResponse;
-
             try
             {
                 var result = settledBLL.ResettlePK_AMB(getReq, out decimal tpAffterAmount);

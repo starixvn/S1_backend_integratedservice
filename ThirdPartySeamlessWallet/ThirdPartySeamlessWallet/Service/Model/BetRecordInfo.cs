@@ -35,5 +35,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Revenue { get; set; }
         public string Account { get; set; }
         public long SettleTime { get; set; }
+        public int TicketStatus { get; set; }
     }
 }
