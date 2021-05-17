@@ -163,7 +163,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleBTI.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettle9W.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

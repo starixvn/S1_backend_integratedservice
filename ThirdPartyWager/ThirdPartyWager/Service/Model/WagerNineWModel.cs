@@ -70,6 +70,8 @@ namespace ThirdPartyWager.Service.Model
         public decimal profitLoss { get; set; }
         public string updateDate { get; set; } = string.Empty;
 
+        public SettleBet() { }
+            
         public SettleBet(ReSettleBet reSettleBet)
         {
             //共同欄位
