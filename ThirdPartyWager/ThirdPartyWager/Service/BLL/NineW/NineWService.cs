@@ -143,7 +143,7 @@ namespace ThirdPartyWager.Service.BLL
                     throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
                 }
 
-                var betlist = queryReuslt.BetList.Where(d => d.agentId == config.Agent).Select(resettle => new SettleBet(resettle));
+                var betlist = queryReuslt.BetList.Where(d => d.agentId == config.Agent)?.Select(resettle => new SettleBet(resettle));
                 result.AddRange(betlist);
                 page++;
                 totalPage = queryReuslt.totalPage;
