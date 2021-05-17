@@ -28,103 +28,103 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerPPLC = new Timer(DoPPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerPPLC = new Timer(DoPPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
-        private void DoWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            var gameType = GameType.PP_RNG;
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListRNG_PP((int)gameType);
+        //private void DoWork(object state)
+        //{
+        //    bool forContinue = false;
+        //    bool isError = false;
+        //    var gameType = GameType.PP_RNG;
+        //    try
+        //    {
+        //        var unsettledList = settledBLL.GetUnsettledListRNG_PP((int)gameType);
 
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 500;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            settledBLL.SettledRNG_PP(unsettled, (int)gameType, out _);
-                        }
-                        catch (Exception ex1)
-                        {
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "PP_RNG_EndRoundWorkerService");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log2File.Error(ex.ToString(), "PP_RNG_EndRoundWorkerService");
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
+        //        if (unsettledList != null)
+        //        {
+        //            forContinue = unsettledList.Count() == 500;
+        //            foreach (var unsettled in unsettledList)
+        //            {
+        //                try
+        //                {
+        //                    settledBLL.SettledRNG_PP(unsettled, (int)gameType, out _);
+        //                }
+        //                catch (Exception ex1)
+        //                {
+        //                    log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "PP_RNG_EndRoundWorkerService");
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log2File.Error(ex.ToString(), "PP_RNG_EndRoundWorkerService");
+        //        isError = true;
+        //    }
+        //    finally
+        //    {
+        //        TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
 
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
+        //        if (forContinue)
+        //        {
+        //            dueTimeSpan = TimeSpan.FromSeconds(1);
+        //        }
+        //        else if (isError)
+        //        {
+        //            dueTimeSpan = TimeSpan.FromMinutes(1);
+        //        }
 
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-        private void DoPPLCWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            var gameType = GameType.PP_LiveCasino;
+        //        timer.Change(dueTimeSpan, TimeSpan.Zero);
+        //    }
+        //}
+        //private void DoPPLCWork(object state)
+        //{
+        //    bool forContinue = false;
+        //    bool isError = false;
+        //    var gameType = GameType.PP_LiveCasino;
 
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListRNG_PP((int)gameType);
+        //    try
+        //    {
+        //        var unsettledList = settledBLL.GetUnsettledListRNG_PP((int)gameType);
 
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 500;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            settledBLL.SettledRNG_PP(unsettled, (int)gameType, out _);
-                        }
-                        catch (Exception ex1)
-                        {
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "PP_LC_EndRoundWorkerService");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log2File.Error(ex.ToString(), "PP_LC_EndRoundWorkerService");
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
+        //        if (unsettledList != null)
+        //        {
+        //            forContinue = unsettledList.Count() == 500;
+        //            foreach (var unsettled in unsettledList)
+        //            {
+        //                try
+        //                {
+        //                    settledBLL.SettledRNG_PP(unsettled, (int)gameType, out _);
+        //                }
+        //                catch (Exception ex1)
+        //                {
+        //                    log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "PP_LC_EndRoundWorkerService");
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log2File.Error(ex.ToString(), "PP_LC_EndRoundWorkerService");
+        //        isError = true;
+        //    }
+        //    finally
+        //    {
+        //        TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
 
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
+        //        if (forContinue)
+        //        {
+        //            dueTimeSpan = TimeSpan.FromSeconds(1);
+        //        }
+        //        else if (isError)
+        //        {
+        //            dueTimeSpan = TimeSpan.FromMinutes(1);
+        //        }
 
-                timerPPLC.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
+        //        timerPPLC.Change(dueTimeSpan, TimeSpan.Zero);
+        //    }
+        //}
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             //WriteToFile("WriteToFileHostedService: Process Stopped");

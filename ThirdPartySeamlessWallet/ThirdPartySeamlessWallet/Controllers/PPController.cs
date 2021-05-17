@@ -606,7 +606,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(endRoundReqq));
                     var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    int result = settledBLL.SettledRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount);
+                    //int result = settledBLL.SettledRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount);
+                    int result = settledBLL.SetSettleFlag_BettransRng_PP_Payout(betReq.roundId, (int)gameType);
 
                     endRoundResp.cash = 0;
                     endRoundResp.bonus = 0;
