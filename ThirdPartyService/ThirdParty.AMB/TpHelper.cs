@@ -121,7 +121,7 @@ namespace ThirdParty.AMB
                 if (json.status.code == 0)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = json.data.url;
+                    oApiResult.Message = $"{json.data.url}&e=disable&h=disable";
                 }
                 else
                 {
