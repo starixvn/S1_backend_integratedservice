@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get wager
-                var dataWager = await apiN2LiveBLL.GetBetListByTime(apiUrl, vendorId, merchantCode, startTime, endTime);
+                var dataWager = await apiN2LiveBLL.GetBetListByTime(apiUrl, vendorId, merchantCode, startTime, endTime, guid);
 
                 // error condition
                 if (dataWager.message.status != "success")

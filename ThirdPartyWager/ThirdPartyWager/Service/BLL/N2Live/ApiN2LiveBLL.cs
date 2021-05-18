@@ -18,15 +18,18 @@ namespace ThirdPartyWager.Service.BLL
     public class ApiN2LiveBLL
     {
         private readonly HttpHelper httpHelper;
+        private readonly Log2File log2File;
 
         public ApiN2LiveBLL(
-            HttpHelper httpHelper
+            HttpHelper httpHelper,
+            Log2File log2File
         )
         {
             this.httpHelper = httpHelper;
+            this.log2File = log2File;
         }
 
-        public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime)
+        public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime, string guid)
         {
             XmlDocument doc = new XmlDocument();
 
@@ -51,7 +54,9 @@ namespace ThirdPartyWager.Service.BLL
             request.AppendChild(element);
 
             // request
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}\r\nvendorId:{vendorId}", "N2Live");
             string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nResponse:\r\n{JsonConvert.SerializeObject(r)}\r\nvendorId:{vendorId}", "N2Live");
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
         }
