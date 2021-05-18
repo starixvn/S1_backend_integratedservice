@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,6 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly WagerN2LiveService wagerN2LiveService;
         private readonly ApiN2LiveBLL apiN2LiveBLL;
+        private readonly Log2File log2File;
         private readonly ILogger<WagerN2LiveBLL> logger;
         private readonly IHostEnvironment environment;
 
@@ -23,6 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             ILogger<WagerN2LiveBLL> logger,
             WagerN2LiveService wagerN2LiveService,
             ApiN2LiveBLL apiN2LiveBLL,
+            Log2File log2File,
             ThirdPartyBLL thirdPartyBLL,
             IHostEnvironment environment
         )
@@ -30,12 +34,17 @@ namespace ThirdPartyWager.Service.BLL
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerN2LiveService = wagerN2LiveService;
             this.apiN2LiveBLL = apiN2LiveBLL;
+            this.log2File = log2File;
             this.logger = logger;
             this.environment = environment;
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string apiUrl, string vendorId, string merchantCode, string startTime, string endTime)
         {
+            string logName = Tp.N2Live.ToString();
+            string logInfo = "";
+            string logMsg = $"( START: {startTime} END: {endTime}  VENDORID: {vendorId})";
+            string guid = Guid.NewGuid().ToString();
             try
             {
                 // get wager
@@ -48,13 +57,17 @@ namespace ThirdPartyWager.Service.BLL
                     var errorMsg = dataWager.message.status;
                     // 506是有牌局未完成结算，startdate enddate这段时间的牌局结算完成就能返回
                     logger.LogError(errorCode, errorMsg);
-                    logger.LogInformation($"THIRD_PARTY_ERROR ( START: {startTime} END: {endTime} VENDORID: {vendorId} )");
+                    logInfo = $"THIRD_PARTY_ERROR {logMsg}";
+                    logger.LogInformation(logInfo);
+                    log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
                     return false;
                 }
 
                 if (dataWager.message.result.gameinfo == null)
                 {
-                    logger.LogInformation($"NO_DATA ( START: {startTime} END: {endTime} VENDORID: {vendorId} )");
+                    logger.LogInformation($"NO_DATA {logMsg}");
+                    logInfo = $"NO_DATA {logMsg}";
+                    log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
                     return true;
                 }
 
@@ -102,12 +115,16 @@ namespace ThirdPartyWager.Service.BLL
                     }
 
                 }
-                logger.LogInformation($"FINISH ( START: {startTime} END: {endTime} VENDORID: {vendorId} )");
+                logger.LogInformation($"FINISH {logMsg}");
+                logInfo = $"FINISH {logMsg}";
+                log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
                 return true;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                logInfo = $"FATAL_ERROR {logMsg}";
+                log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nException:\r\n{ex}", logName);
                 return false;
             }
         }
