@@ -215,9 +215,15 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid,
-                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                                SettlementType = SettlementType.SettledForValid
                             };
+
+                            if (unsettled.IsRefund == 1)
+                            {
+                                //betRecordInfo.WinlostAmount = 0;
+                                //betRecordInfo.Revenue = 0;
+                                betRecordInfo.TicketStatus = (TicketStatus)TicketStatus.Refund;
+                            }
 
                             var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                             settledBLL.SetSettleFlag_BettransPK_AMB(unsettled.TransId);

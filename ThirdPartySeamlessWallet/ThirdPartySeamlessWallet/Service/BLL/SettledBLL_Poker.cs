@@ -94,6 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
+                cancelDataPK_AMB.amount /= tpCurrency.ExchangeRate;
             }
             return result;
         }
@@ -117,6 +118,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
+                payoutDataPK_AMB.amount /= tpCurrency.ExchangeRate;
+                payoutDataPK_AMB.commission /= tpCurrency.ExchangeRate;
+                payoutDataPK_AMB.winlose /= tpCurrency.ExchangeRate;
+                payoutDataPK_AMB.betAmount /= tpCurrency.ExchangeRate;
+                payoutDataPK_AMB.outStanding /= tpCurrency.ExchangeRate;
             }
 
             return result;
@@ -137,12 +143,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
+                voidDataPK_AMB.amount /= tpCurrency.ExchangeRate;
             }
 
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledListPK_AMB()
+        public IEnumerable<SettleData_AMB> GetUnsettledListPK_AMB()
         {
             return settledService.GetUnsettledListPK_AMB();
         }

@@ -113,11 +113,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PT = 27,
         N2Live = 28,
         BTI = 29,
-<<<<<<< HEAD
+        AMB = 30,
         NineW = 31,
-=======
-        AMB = 30
->>>>>>> 8c6c1f1... [AMB] sw
     }
     public enum TransferType : int
     {

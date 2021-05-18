@@ -353,7 +353,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new
             {
                 TransId = TransId,
+                username = voidDataPK_AMB.username,
+                agent = voidDataPK_AMB.agent,
+                game = voidDataPK_AMB.game,
+                product = voidDataPK_AMB.product,
+                roundId = voidDataPK_AMB.roundId,
+                amount = voidDataPK_AMB.amount,
+                currency = voidDataPK_AMB.currency,
                 refId = voidDataPK_AMB.refId,
+                timeUnix = new DateTimeOffset(DateTime.Parse(voidDataPK_AMB.timestamp.ToString()), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
                 TicketType = (int)BettransType.Payout,
                 TicketStatus = (int)TicketStatus.Refund,
                 SettleFlag = SettleFlag.EndGame
@@ -366,14 +374,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // check void
-                var check = conn.QueryFirstOrDefault<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", new { TransId = TransId, TicketType = (int)BettransType.Payout }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (check == null || check.TicketStatus == (int)TicketStatus.Refund)
+                var check = conn.QueryFirstOrDefault<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", new { TransId = TransId, TicketType = (int)BettransType.Payout, TicketStatus = (int)TicketStatus.Refund }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check != null)
                 {
                     // voided
                     return -1;
                 }
 
-                result = conn.Execute("Service_BettransPK_AMB_Resettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransPK_AMB_Resettle_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -409,10 +417,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledListPK_AMB()
+        public IEnumerable<SettleData_AMB> GetUnsettledListPK_AMB()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransPK_AMB_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_AMB>("Service_BettransPK_AMB_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransPK_AMB(string TransId)

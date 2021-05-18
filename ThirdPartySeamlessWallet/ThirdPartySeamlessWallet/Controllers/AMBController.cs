@@ -206,6 +206,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
+                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -260,6 +261,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
+                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -316,12 +318,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username).Balance;
+                        tpAffterAmount = tpCustInfoBLL.GetBalance((int)thisTp, getReq.username).Balance;
                     }
                     getApiResponse.status.code = 0;
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
+                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount - getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -373,6 +376,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
+                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
