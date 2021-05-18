@@ -155,6 +155,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
+            services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
