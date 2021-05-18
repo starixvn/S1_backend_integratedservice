@@ -1214,6 +1214,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region KM
+
         public async Task<KmDbResult> PayoutPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction transaction, int tpId, int gameType)
         {
             var result = 0;
@@ -1265,5 +1267,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
         }
+        
+        public IEnumerable<SettleData> GetUnsettledList_KM()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData>("Service_BettransPK_KM_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_KM(string account, string transId ,bool isSuccess)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransPK_KM_Settle_Set", new { account, transId , isSuccess }, commandType: CommandType.StoredProcedure);
+        }        
+
+        #endregion
     }
 }

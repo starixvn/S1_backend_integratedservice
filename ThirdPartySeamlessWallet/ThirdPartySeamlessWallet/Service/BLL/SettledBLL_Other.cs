@@ -356,5 +356,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+        
+        #region KM
+
+        public IEnumerable<SettleData> GetUnsettledListPK_KM()
+        {
+            return settledService.GetUnsettledList_KM();
+        }
+
+        public int SetSettleFlag_KM(string account, string transId , bool isSuccess = true)
+        {
+            return settledService.SetSettleFlag_KM(account, transId , isSuccess);
+        }
+
+        #endregion
     }
 }

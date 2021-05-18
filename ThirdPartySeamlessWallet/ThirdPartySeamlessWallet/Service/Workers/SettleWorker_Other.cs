@@ -488,5 +488,81 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleBTI.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+        private void DoSettleKMWork(object state)
+        {
+            var forContinue = false;
+            var isError = false;
+            var thisTp = (int)Tp.KM;
+            var logName = "Settle_KM";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListPK_KM();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = unsettled.Stake,
+                                ValidBet = unsettled.ValidBet,
+                                WinlostAmount = unsettled.WinLostAmount,
+                                TransId = unsettled.TransId,
+                                GameType = GameType.KM_Poker,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValid,
+                                TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                            };
+
+                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Poker);
+                            if (result == 1)
+                            {
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlag_KM(unsettled.Account, unsettled.TransId);
+                                });
+                            }
+
+                        }
+                        catch (Exception ex1)
+                        {
+                            Task.Run(() =>
+                            {
+                                settledBLL.SetSettleFlag_KM(unsettled.Account, unsettled.TransId, isSuccess: false);
+                            });
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleBTI.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
     }
 }

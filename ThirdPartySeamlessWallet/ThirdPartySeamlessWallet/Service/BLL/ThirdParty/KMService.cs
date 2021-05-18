@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public KMService(IServiceProvider provider)
         {
             ThirdParty = Tp.KM;
-            GameType = GameType.KM_TableGame;
+            GameType = GameType.KM_Poker;
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
             _bettingService = provider.GetService<BettingService>();
