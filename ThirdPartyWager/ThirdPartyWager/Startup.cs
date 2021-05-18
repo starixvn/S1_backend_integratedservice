@@ -159,7 +159,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
