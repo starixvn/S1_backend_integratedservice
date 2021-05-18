@@ -56,11 +56,13 @@ namespace ThirdParty.BTI
             var sessionKey = Convert.ToBase64String(bytes);
             var host = inputs.ContainsKey($"Host") && !string.IsNullOrEmpty(inputs[$"Host"])
                ? inputs[$"Host"] : throw new Exception($"host is empty");
+            var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
+               ? inputs[$"homeUrl"] : "";
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}/?operatorToken={sessionKey}&api={api}",
+                Message = $"{GameUrl}/?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
                 RawMessage = sessionKey
             };
         }
