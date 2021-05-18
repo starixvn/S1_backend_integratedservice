@@ -76,79 +76,88 @@ namespace ThirdPartyWager.Service.BLL
         }
 
         private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(NineWConfig config, string startTime, string endTime)
-        {
-            var page = 1;
-            var totalPage = 1;
+        {           
             var result = new List<SettleBet>();
+            var reportType = new List<int>() { 0, 2, 3 };
+            foreach (var type in reportType)
+            {           
+                var page = 1;
+                var totalPage = 1;
+                while (page <= totalPage)
+                {
+                    _ = Task.Delay(1000);
+                    var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        { "cert", config.Cert },
+                        { "startDate", startTime },
+                        { "endDate", endTime },
+                        { "timeZone", "1"},
+                        { "pageNumber", page.ToString() },
+                        { "reportType", type.ToString() }
+                    });
+                    var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception(response.ReasonPhrase);
+                    }
 
-            while (page <= totalPage)
-            {
-                var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
-                {
-                    { "cert", config.Cert },
-                    { "startDate", startTime },
-                    { "endDate", endTime },
-                    { "timeZone", "1"},
-                    { "pageNumber", page.ToString() },
-                });
-                var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception(response.ReasonPhrase);
+                    var json = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation(json);
+                    var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<SettleBet>>(json);
+                    if (queryReuslt.status != "1")
+                    {
+                        throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
+                    }
+                    result.AddRange(queryReuslt.BetList.Where(d => d.agentId == config.Agent));
+                    page++;
+                    totalPage = queryReuslt.totalPage;
                 }
-
-                var json = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation(json);
-                var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<SettleBet>>(json);
-                if (queryReuslt.status != "1")
-                {
-                    throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
-                }
-                result.AddRange(queryReuslt.BetList.Where(d => d.agentId == config.Agent));
-                page++;
-                totalPage = queryReuslt.totalPage;
             }
-
             return result;
         }
 
         private async Task<List<SettleBet>> QueryReSettleSummaryTransactionAsync(NineWConfig config, string startTime, string endTime)
         {
-            var page = 1;
-            var totalPage = 1;
             var result = new List<SettleBet>();
-            var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";
-            while (page <= totalPage)
-            {
-                var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";          
+            var reportType = new List<int>() { 0, 2, 3 };
+            foreach (var type in reportType)
+            {     
+                var page = 1;
+                var totalPage = 1;
+                while (page <= totalPage)
                 {
-                    { "cert", config.Cert },
-                    { "startDate", startTime },
-                    { "endDate", endTime },
-                    { "timeZone", "1"},
-                    { "isTxnDetail", "1"},
-                    { "pageNumber", page.ToString() },
-                });
-                var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception(response.ReasonPhrase);
-                }
+                    _ = Task.Delay(1000);
+                    var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        { "cert", config.Cert },
+                        { "startDate", startTime },
+                        { "endDate", endTime },
+                        { "timeZone", "1"},
+                        { "isTxnDetail", "1"},
+                        { "pageNumber", page.ToString() },
+                        { "reportType", type.ToString() }
+                    });
+                    var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception(response.ReasonPhrase);
+                    }
 
-                var json = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation(json);
-                var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<ReSettleBet>>(json);
-                if (queryReuslt.status != "1")
-                {
-                    throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
-                }
+                    var json = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation(json);
+                    var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<ReSettleBet>>(json);
+                    if (queryReuslt.status != "1")
+                    {
+                        throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
+                    }
 
-                var betlist = queryReuslt.BetList.Where(d => d.agentId == config.Agent)?.Select(resettle => new SettleBet(resettle));
-                result.AddRange(betlist);
-                page++;
-                totalPage = queryReuslt.totalPage;
+                    var betlist = queryReuslt.BetList.Where(d => d.agentId == config.Agent)?.Select(resettle => new SettleBet(resettle));
+                    result.AddRange(betlist);
+                    page++;
+                    totalPage = queryReuslt.totalPage;
+                }
             }
-
             return result;
         }
 
