@@ -129,7 +129,7 @@ namespace ThirdPartyWager
             // LatestHighlightVideo
             services.AddSingleton<LatestHighlightVideoBLL>();
             //9W
-            services.AddSingleton<NineWService>();
+            services.AddSingleton<NineWBLL>();
 
             //Worker
 

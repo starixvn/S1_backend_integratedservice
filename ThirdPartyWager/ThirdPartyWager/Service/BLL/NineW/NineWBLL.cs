@@ -14,20 +14,20 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class NineWService
+    public class NineWBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly ILogger<NineWService> _logger;
+        private readonly ILogger<NineWBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly MySqlClient _dbClient;
         private readonly int _tpId = (int)Tp.NineW;
         private readonly NineWConfig _config;
 
-        public NineWService(IServiceProvider provider, IConfiguration configuration)
+        public NineWBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _logger = provider.GetRequiredService<ILogger<NineWService>>();
+            _logger = provider.GetRequiredService<ILogger<NineWBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
 

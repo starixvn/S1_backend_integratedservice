@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers
     public class WagerNineW : BackgroundService
     {
         private readonly ILogger<WagerNineW> _logger;
-        private readonly NineWService _nineWService;
+        private readonly NineWBLL _nineWService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private Timer _settleTimer;
@@ -28,7 +28,7 @@ namespace ThirdPartyWager.Workers
         {
             _logger = provider.GetRequiredService<ILogger<WagerNineW>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _nineWService = provider.GetRequiredService<NineWService>();
+            _nineWService = provider.GetRequiredService<NineWBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
