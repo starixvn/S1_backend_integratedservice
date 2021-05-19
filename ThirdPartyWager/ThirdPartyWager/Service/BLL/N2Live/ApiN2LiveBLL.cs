@@ -56,7 +56,6 @@ namespace ThirdPartyWager.Service.BLL
             // request
             log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}\r\nvendorId:{vendorId}", "N2Live");
             string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nResponse:\r\n{JsonConvert.SerializeObject(r)}\r\nvendorId:{vendorId}", "N2Live");
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
         }
@@ -78,6 +77,7 @@ namespace ThirdPartyWager.Service.BLL
                 // single data force to array
                 output = output.Replace("<deal ", "<deal xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
                 output = output.Replace("<betdetail ", "<betdetail xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
+                output = output.Replace("<clientbet ", "<clientbet xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
 
                 // xml to json
                 XmlDocument xmlDoc = new XmlDocument();
