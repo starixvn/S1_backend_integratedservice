@@ -155,11 +155,11 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
+            services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
