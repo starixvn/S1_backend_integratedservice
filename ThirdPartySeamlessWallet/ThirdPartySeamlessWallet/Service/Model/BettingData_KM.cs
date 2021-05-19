@@ -76,13 +76,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("walletcode")]
         public string WalletCode { get; set; }
         [JsonProperty("bonustype")]
-        public decimal BonusType { get; set; }
+        public int BonusType { get; set; }
         [JsonProperty("bonuscode")]
-        public decimal BonusCode { get; set; }
+        public string BonusCode { get; set; }
         [JsonProperty("desc")]
         public string Desc { get; set; }
         [JsonProperty("commission")]
-        public double Commission { get; set; }
+        public double? Commission { get; set; }
     }
 
     public class KMDebitResponse : BaseResult
@@ -129,10 +129,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string externalroundid { get; set; }
         public string betid { get; set; }
         public string senton { get; set; }
-        public string isclosinground { get; set; }
-        public int ggr { get; set; }
-        public int turnover { get; set; }
-        public int unsettledbets { get; set; }
+        public bool isclosinground { get; set; }
+        public decimal ggr { get; set; }
+        public decimal turnover { get; set; }
+        public int bonustype { get; set; }
+        public string bonuscode { get; set; }
+        public string desc { get; set; }
+        public decimal unsettledbets { get; set; }
         public string walletcode { get; set; }
         public string commission { get; set; }
     }

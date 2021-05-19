@@ -646,7 +646,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
-                await conn.ExecuteAsync("Service_BettransPK_KM_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                await conn.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
@@ -658,7 +658,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         return new KmDbResult() {SPResult = result, Trx_id = trxId};
                     }
                     
-                    logger.LogError("exec Service_BettransPK_KM_Bet_Ins error");
+                    logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
                 result = PlaceBetV2(

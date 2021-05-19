@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         YGG = 8,
         Joker = 9,
         SG = 10,
+        KM = 11,
         Allbet = 12,
         OneGaming = 13,
         PG = 14,
@@ -111,8 +112,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         V8 = 25,
         PT = 27,
         N2Live = 28,
-        BTI = 29,
-        KM = 32
+        BTI = 29
     }
     public enum TransferType : int
     {

@@ -42,7 +42,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _creditHandler = new Dictionary<KMTxType, Func<KMCreditRequestTransaction, 
                 Task<KMCreditResponseTransaction>>>()
             {
-                {KMTxType.WinBet, WinBet}
+                {KMTxType.WinBet, WinBet},
+                {KMTxType.CancelTransaction, CancelTransaction}
             };
         }
 
@@ -56,7 +57,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (Enum.IsDefined(typeof(KMTxType), transaction.TxType))
                 {
-                    var transactionResult = await _debitHandler[(KMTxType) transaction.TxType].Invoke(transaction);
+                    //var transactionResult = await _debitHandler[(KMTxType) transaction.TxType].Invoke(transaction);
+                    var transactionResult = await Bet(transaction);
                     if (request.transactional && transactionResult == null)
                     {
                         throw new KmException(KMErrorCode.IncorrectFormat);
@@ -131,10 +133,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.UserId);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
 
-            // if (tpCurrency.ExchangeRate > 0)
-            // {
-            //     request.Amount *= tpCurrency.ExchangeRate;
-            // }
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                request.Amount *= tpCurrency.ExchangeRate;
+            }
 
             var dbResult =
                 await _bettingService.PlaceBetPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
@@ -169,10 +171,43 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.userid);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
 
-            // if (tpCurrency.ExchangeRate > 0)
-            // {
-            //     request.Amount *= tpCurrency.ExchangeRate;
-            // }
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                request.amt *= tpCurrency.ExchangeRate;
+            }
+
+            var dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
+            // 訂單已存在
+            if (dbResult.SPResult == 0)
+            {
+                return new KMCreditResponseTransaction()
+                {
+                    txid = dbResult.Trx_id.ToString(),
+                    ptxid = request.ptxid,
+                    dup = true
+                };
+            }
+
+            if (dbResult.AfterAmount > 0)
+            {
+                request.amt /= tpCurrency.ExchangeRate;
+                dbResult.AfterAmount /= tpCurrency.ExchangeRate;
+            }
+            return new KMCreditResponseTransaction()
+            {
+                txid = dbResult.Trx_id.ToString(),
+                ptxid = request.ptxid,
+                bal = dbResult.AfterAmount,
+                cur = request.cur,
+                dup = false
+            };
+        }
+        private async Task<KMCreditResponseTransaction> CancelTransaction(KMCreditRequestTransaction request)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.userid);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+
+            request.amt *= tpCurrency.ExchangeRate;
 
             var dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
             // 訂單已存在
