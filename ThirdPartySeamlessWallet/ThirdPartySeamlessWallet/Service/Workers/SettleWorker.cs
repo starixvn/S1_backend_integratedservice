@@ -975,7 +975,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool isError = false;
             int thisTp = (int)Tp.PP;
             var gameType = GameType.PP_LiveCasino;
-            var category = TpCategory.LiveCasino;
             string logName = "Settle_PP_LC";
 
             try
@@ -1023,7 +1022,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
                             }
 
-                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            // PP LC 原本已存SLOTS 故使用TpCategory.Slots
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
                             settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
                         }
                         catch (Exception ex1)
