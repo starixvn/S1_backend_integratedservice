@@ -34,8 +34,8 @@ namespace ThirdPartyWager.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
-            _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(2), TimeSpan.Zero);
-            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
+            _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
+            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromSeconds(5), TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
