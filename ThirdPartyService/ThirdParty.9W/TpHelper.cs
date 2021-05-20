@@ -53,6 +53,7 @@ namespace ThirdParty.NineW
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
             _ = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config);
             return new ApiResult()
             {

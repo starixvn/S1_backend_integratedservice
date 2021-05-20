@@ -91,11 +91,6 @@ namespace ThirdPartyService.Service.DAL
                             regTpCustInfo.TpUserName = $"{common.GetEnv()}{serverInfo.SiteName}_{customer.CustId}";
                         }
 
-                        if (tpId == 31)//9w需移除底線非法字元
-                        {
-                            regTpCustInfo.TpUserName = regTpCustInfo.TpUserName.Replace("_", "");
-                        }
-
                         regTpCustInfo.TpPwd = tools.GetRandomString(7);
                         regTpCustInfo.IsTest = customer.IsTest;
                         regTpCustInfo.ActStatus = customer.ActStatus;
