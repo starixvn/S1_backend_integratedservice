@@ -62,7 +62,7 @@ namespace ThirdParty.BTI
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}/?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
+                Message = $"{GameUrl}/{TpLangId}/?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
                 RawMessage = sessionKey
             };
         }
