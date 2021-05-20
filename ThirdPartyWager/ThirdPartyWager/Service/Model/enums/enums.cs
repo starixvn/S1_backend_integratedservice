@@ -18,6 +18,7 @@ namespace ThirdPartyWager.Service.Model.enums
         YGG = 8,
         Joker = 9,
         SG = 10,
+        KM = 11,
         Allbet = 12,
         OneGaming = 13,
         PG = 14,
