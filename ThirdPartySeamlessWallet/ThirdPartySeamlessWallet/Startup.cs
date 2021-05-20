@@ -33,15 +33,14 @@ namespace ThirdPartySeamlessWallet
 
             services.AddCors(options => 
             {
-                var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
                 switch (env)
                 {
                     case "Production":
                         options.AddPolicy("BTIPolicy", builder =>
                         {
                             builder.AllowAnyHeader()
-                                   .WithMethods("GET")
-                                   .SetIsOriginAllowedToAllowWildcardSubdomains();
+                                   .WithMethods("GET");
                         });
                         break;
                     default:
