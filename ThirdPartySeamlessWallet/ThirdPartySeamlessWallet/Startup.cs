@@ -30,13 +30,31 @@ namespace ThirdPartySeamlessWallet
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => options.AddPolicy("BTIPolicy", builder =>
+
+            services.AddCors(options => 
             {
-                builder.AllowAnyOrigin()
-                       .AllowAnyHeader()
-                       .WithMethods("GET")
-                       .SetIsOriginAllowedToAllowWildcardSubdomains();
-            }));
+                var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                switch (env)
+                {
+                    case "Production":
+                        options.AddPolicy("BTIPolicy", builder =>
+                        {
+                            builder.AllowAnyHeader()
+                                   .WithMethods("GET")
+                                   .SetIsOriginAllowedToAllowWildcardSubdomains();
+                        });
+                        break;
+                    default:
+                        options.AddPolicy("BTIPolicy", builder =>
+                        {
+                            builder.AllowAnyOrigin()
+                                   .AllowAnyHeader()
+                                   .WithMethods("GET")
+                                   .SetIsOriginAllowedToAllowWildcardSubdomains();
+                        });
+                        break;
+                }               
+            });
 
             services.AddMemoryCache();
             ////if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))

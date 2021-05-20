@@ -18,15 +18,18 @@ namespace ThirdPartyWager.Service.BLL
     public class ApiN2LiveBLL
     {
         private readonly HttpHelper httpHelper;
+        private readonly Log2File log2File;
 
         public ApiN2LiveBLL(
-            HttpHelper httpHelper
+            HttpHelper httpHelper,
+            Log2File log2File
         )
         {
             this.httpHelper = httpHelper;
+            this.log2File = log2File;
         }
 
-        public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime)
+        public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime, string guid)
         {
             XmlDocument doc = new XmlDocument();
 
@@ -51,6 +54,7 @@ namespace ThirdPartyWager.Service.BLL
             request.AppendChild(element);
 
             // request
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}\r\nvendorId:{vendorId}", "N2Live");
             string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
@@ -73,6 +77,7 @@ namespace ThirdPartyWager.Service.BLL
                 // single data force to array
                 output = output.Replace("<deal ", "<deal xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
                 output = output.Replace("<betdetail ", "<betdetail xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
+                output = output.Replace("<clientbet ", "<clientbet xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
 
                 // xml to json
                 XmlDocument xmlDoc = new XmlDocument();

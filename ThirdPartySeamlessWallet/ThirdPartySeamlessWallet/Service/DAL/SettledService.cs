@@ -478,6 +478,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
+                LogContext.PushProperty("TpId", betRecord.TpId);
+                LogContext.PushProperty("GameType", betRecord.GameType);
                 var parameter = new
                 {
                     tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
@@ -486,7 +488,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     afterAmount = afterAmount,
                     doPayout = doPayout
                 };
-                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
             return result;
