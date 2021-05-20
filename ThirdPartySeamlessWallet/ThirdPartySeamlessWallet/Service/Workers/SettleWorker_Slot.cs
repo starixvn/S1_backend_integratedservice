@@ -648,7 +648,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 SettlementType = SettlementType.SettledForValidNotRollover
                             };
 
-                            if (stake != 0 && validBet != 0 && winLostAmount != 0)
+                            if (stake != 0 && validBet != 0 )
                             {
                                 settledBLL.Settled(tpCustInfo, betRecordInfo, category);
                             }
