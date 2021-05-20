@@ -38,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogTrace($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -58,7 +58,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogTrace($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
     }

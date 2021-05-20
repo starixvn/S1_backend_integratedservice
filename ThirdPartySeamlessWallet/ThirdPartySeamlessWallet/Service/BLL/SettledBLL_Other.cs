@@ -343,6 +343,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        public int SetSettleFlag_BTI(string account, string transId, bool isSuccess = true)
+        {
+            return settledService.SetSettleFlag_BTI(account, transId, isSuccess);
+        }
+
         #region 共用
 
         public IEnumerable<SettleData> GetUnsettledListBySpName(string spName)
@@ -350,9 +355,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledListBySpName(spName);
         }
 
-        public int SetSettleFlagBySpName(string spName, string account, string transId, bool isSuccess = true)
+        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true)
         {
-            return settledService.SetSettleFlagBySpName(spName, account, transId, isSuccess);
+            return settledService.SetSettleFlagBySpName(spName, transId, isSuccess);
         }
 
         #endregion

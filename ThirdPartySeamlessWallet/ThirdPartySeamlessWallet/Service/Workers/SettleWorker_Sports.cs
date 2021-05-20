@@ -50,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(spName, unsettled.Account, unsettled.TransId);
+                                    settledBLL.SetSettleFlag_BTI(unsettled.Account, unsettled.TransId);
                                 });
                             }
 
@@ -59,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                             {
-                                settledBLL.SetSettleFlagBySpName(spName, unsettled.Account, unsettled.TransId, isSuccess: false);
+                                settledBLL.SetSettleFlag_BTI(unsettled.Account, unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
@@ -128,7 +128,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(spName, unsettled.Account, unsettled.TransId);
+                                    settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId);
                                 });
                             }
 
@@ -137,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                             {
-                                settledBLL.SetSettleFlagBySpName(spName, unsettled.Account, unsettled.TransId, isSuccess: false);
+                                settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);

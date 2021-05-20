@@ -232,9 +232,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Query<SettleData>(spName);
         }
 
-        public int SetSettleFlagBySpName(string spName, string account, string transId, bool isSuccess)
+        public int SetSettleFlag_BTI(string account, string transId, bool isSuccess)
         {
             var parameters = new DynamicParameters(new { account, transId, isSuccess });
+            return _mainDbClient.Execute("Service_BettransSports_BTI_Settle_Set", parameters: parameters);
+        }
+
+        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess)
+        {
+            var parameters = new DynamicParameters(new { transId, isSuccess });
             return _mainDbClient.Execute(spName, parameters: parameters);
         }
 
