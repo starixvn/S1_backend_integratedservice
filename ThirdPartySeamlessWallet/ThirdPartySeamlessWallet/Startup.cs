@@ -30,29 +30,15 @@ namespace ThirdPartySeamlessWallet
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddCors(options => 
             {
-                var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-                switch (env)
+                options.AddPolicy("BTIPolicy", builder =>
                 {
-                    case "Production":
-                        options.AddPolicy("BTIPolicy", builder =>
-                        {
-                            builder.AllowAnyHeader()
-                                   .WithMethods("GET");
-                        });
-                        break;
-                    default:
-                        options.AddPolicy("BTIPolicy", builder =>
-                        {
-                            builder.AllowAnyOrigin()
-                                   .AllowAnyHeader()
-                                   .WithMethods("GET")
-                                   .SetIsOriginAllowedToAllowWildcardSubdomains();
-                        });
-                        break;
-                }               
+                    builder.AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .WithMethods("GET")
+                            .SetIsOriginAllowedToAllowWildcardSubdomains();
+                });                                 
             });
 
             services.AddMemoryCache();
