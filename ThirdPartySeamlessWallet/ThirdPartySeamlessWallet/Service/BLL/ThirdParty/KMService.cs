@@ -22,8 +22,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly ILogger<KMService> _logger;
-        private readonly Dictionary<KMTxType, Func<KMDebitRequestTransaction, Task<KMDebitResponseTransaction>>> _debitHandler; 
-        private readonly Dictionary<KMTxType, Func<KMCreditRequestTransaction, Task<KMCreditResponseTransaction>>> _creditHandler; 
         
         public KMService(IServiceProvider provider)
         {
@@ -34,17 +32,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
             _logger = provider.GetService<ILogger<KMService>>();
-            _debitHandler = new Dictionary<KMTxType, Func<KMDebitRequestTransaction, 
-                Task<KMDebitResponseTransaction>>>()
-            {
-                {KMTxType.PlaceBet, Bet}
-            };
-            _creditHandler = new Dictionary<KMTxType, Func<KMCreditRequestTransaction, 
-                Task<KMCreditResponseTransaction>>>()
-            {
-                {KMTxType.WinBet, WinBet},
-                {KMTxType.CancelTransaction, CancelTransaction}
-            };
         }
 
         public async Task<KMDebitResponse> Debit(KMDebitRequest request)
@@ -57,7 +44,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (Enum.IsDefined(typeof(KMTxType), transaction.TxType))
                 {
-                    //var transactionResult = await _debitHandler[(KMTxType) transaction.TxType].Invoke(transaction);
                     var transactionResult = await Bet(transaction);
                     if (request.transactional && transactionResult == null)
                     {
@@ -175,39 +161,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 request.amt *= tpCurrency.ExchangeRate;
             }
-
-            var dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
-            // 訂單已存在
-            if (dbResult.SPResult == 0)
-            {
-                return new KMCreditResponseTransaction()
-                {
-                    txid = dbResult.Trx_id.ToString(),
-                    ptxid = request.ptxid,
-                    dup = true
-                };
-            }
-
-            if (dbResult.AfterAmount > 0)
-            {
-                request.amt /= tpCurrency.ExchangeRate;
-                dbResult.AfterAmount /= tpCurrency.ExchangeRate;
-            }
-            return new KMCreditResponseTransaction()
-            {
-                txid = dbResult.Trx_id.ToString(),
-                ptxid = request.ptxid,
-                bal = dbResult.AfterAmount,
-                cur = request.cur,
-                dup = false
-            };
-        }
-        private async Task<KMCreditResponseTransaction> CancelTransaction(KMCreditRequestTransaction request)
-        {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.userid);
-            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
-
-            request.amt *= tpCurrency.ExchangeRate;
 
             var dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
             // 訂單已存在

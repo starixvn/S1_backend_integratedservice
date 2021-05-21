@@ -40,8 +40,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return await _kmService.Debit(request);
             }
-            catch (Exception ex)
+            catch (KmException ke)
             {
+                _logger.LogError(ke.ErrorMessage);
+                return new ErrorResult()
+                {
+                    err = (int)ke.KMErrorCode,
+                    errdesc = ke.ErrorMessage
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "km debit failed");
                 return new ErrorResult()
                 {
                     err = 900,
@@ -72,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch(Exception e)
             {
-                _logger.LogError(e, "balance failed");
+                _logger.LogError(e, "km credit failed");
                 return new ErrorResult()
                 {
                     err = 900,
@@ -103,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "balance failed");
+                _logger.LogError(e, "km balance failed");
                 return new ErrorResult()
                 {
                     err = 900,
