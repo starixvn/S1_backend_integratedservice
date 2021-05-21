@@ -16,5 +16,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             return commonService.GetSiteList();
         }
+        public IEnumerable<TpCurrency> GetTpCurrencyList(int tpId)
+        {
+            return commonService.GetTpCurrencyList(tpId);
+        }
     }
 }

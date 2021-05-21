@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,10 +39,11 @@ namespace ThirdPartyWager.Service.BLL
         }
         public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt)
         {
+            string msg = "FATAL_ERROR";
             string logName = Tp.PT.ToString();
-            string logInfo = "";
-            string logMsg = $"( START: {startUnix} END: {endUnix}  SITEID: {siteId} CURRENCY: {currency})";
             string guid = Guid.NewGuid().ToString();
+            LogContext.PushProperty("TpId", logName);
+
             try
             {
                 // get api info
@@ -67,24 +69,20 @@ namespace ThirdPartyWager.Service.BLL
                     // error condition
                     if (dataWager.error != null)
                     {
-                        var errorCode = dataWager.errorcode;
-                        var errorMsg = dataWager.error;
-
                         //if (errorCode != 0)
                         //{
-                        logger.LogError(errorCode, errorMsg);
-                        logInfo = $"THIRD_PARTY_ERROR {logMsg}";
-                        logger.LogInformation(logInfo);
-                        log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager)}", logName);
+                        msg = "THIRD_PARTY_ERROR";
+                        logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
+                        log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
                         return false;
                         //}
                     }
 
                     if (dataWager.pagination.totalCount == 0)
                     {
-                        logger.LogInformation($"NO_DATA {logMsg}");
-                        logInfo = $"NO_DATA {logMsg}";
-                        log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager.pagination)}", logName);
+                        msg = "NO_DATA";
+                        logger.LogInformation($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
+                        log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
                         return true;
                     }
 
@@ -104,31 +102,28 @@ namespace ThirdPartyWager.Service.BLL
                         }
                         catch (Exception ex)
                         {
-                            var wagerId = bet.GAMECODE;
-                            logger.LogError(ex, ex.Message);
-                            logInfo = $"INSERT_WAGER ( WAGERID: {wagerId} )";
-                            logger.LogInformation(logInfo);
-                            log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(bet)}\r\nException:\r\n{ex}", logName);
+                            msg = $"INSERT_WAGER(WAGERID: {bet.GAMECODE} )";
+                            logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(bet)}, EXCEPTION: {ex.Message}");
+                            log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}\r\nResponse:\r\n{JsonConvert.SerializeObject(bet)}\r\nException:\r\n{ex}", logName);
                             return false;
                         }
                     }
                     page++;
 
-                    logger.LogInformation($"FINISH {logMsg}");
-                    logInfo = $"FINISH {logMsg}";
-                    log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nResponse:\r\n{JsonConvert.SerializeObject(dataWager.pagination)}", logName);
+                    msg = "FINISH";
+                    logger.LogInformation($"MESSAGE: {msg}");
+                    log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
-                logInfo = $"FATAL_ERROR {logMsg}";
-                log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{logInfo}\r\nException:\r\n{ex}", logName);
+                msg = "FATAL_ERROR";
+                logger.LogError($"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
+                log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}\r\nException:\r\n{ex}", logName);
                 return false;
             }
         }
-
     }
 }

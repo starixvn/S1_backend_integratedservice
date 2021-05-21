@@ -299,6 +299,7 @@ namespace ThirdPartyWager.Workers
                 }
             }
         }
+        
         private async void DoTaskVND(object state)
         {
             int quick = 0;
@@ -358,6 +359,7 @@ namespace ThirdPartyWager.Workers
                 }
             }
         }
+        
         private async void DoTaskUSD(object state)
         {
             if (environment.IsProduction())
@@ -420,7 +422,6 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timerTHB?.Change(Timeout.Infinite, 0);
             timerMYR?.Change(Timeout.Infinite, 0);
             timerIDR?.Change(Timeout.Infinite, 0);

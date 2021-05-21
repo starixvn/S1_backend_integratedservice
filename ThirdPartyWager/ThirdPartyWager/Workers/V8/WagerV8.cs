@@ -61,7 +61,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddMinutes(-3);
                     last = iRangMins - 1;
                 }
 
@@ -69,7 +69,7 @@ namespace ThirdPartyWager.Workers
                 {
                     var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerV8BLL.GetWagersAsync(tpId, time.startUnix, time.endUnix);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
@@ -103,7 +103,6 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }

@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +14,7 @@ using System.Xml;
 using System.Xml.Linq;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -19,14 +22,17 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Log2File log2File;
+        private readonly ILogger<ApiN2LiveBLL> logger;
 
         public ApiN2LiveBLL(
             HttpHelper httpHelper,
-            Log2File log2File
+            Log2File log2File,
+            ILogger<ApiN2LiveBLL> logger
         )
         {
             this.httpHelper = httpHelper;
             this.log2File = log2File;
+            this.logger = logger;
         }
 
         public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime, string guid)
@@ -54,17 +60,25 @@ namespace ThirdPartyWager.Service.BLL
             request.AppendChild(element);
 
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}\r\nvendorId:{vendorId}", "N2Live");
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}", Tp.N2Live.ToString());
             string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
+            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nResponse:\r\n{r}", Tp.N2Live.ToString());
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
         }
 
         private async Task<string> DoHttpClientAsync(string url, object param)
         {
+           
+
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param.ToString(), Encoding.UTF8, "application/xml");
             request.Headers.Add("Accept-Encoding", "gzip");
+
+            LogContext.PushProperty("TpId", Tp.N2Live.ToString());
+            logger.LogInformation($"URL {url}");
+            logger.LogInformation($"REQUEST: {param.ToString()}");
+            logger.LogInformation($"HEADER: {request.Headers}");
 
             HttpResponseMessage response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
@@ -94,10 +108,12 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 string json = JsonConvert.SerializeXmlNode(xmlDoc);
+                logger.LogInformation($"RESPONSE: {xmlDoc.InnerXml}");
                 return json;
             }
             else
             {
+                logger.LogInformation($"RESPONSE: null");
                 return null;
             }
         }

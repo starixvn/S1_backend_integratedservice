@@ -14,7 +14,8 @@ namespace ThirdPartyWager.Workers
     public class WagerRedoV8 : BackgroundService
     {
         private readonly ILogger<WagerRedoV8> logger;
-        private readonly WagerRedoV8BLL wagerRedoV8BLL;
+        //private readonly WagerRedoV8BLL wagerRedoV8BLL;
+        private readonly WagerV8BLL wagerV8BLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
@@ -27,14 +28,16 @@ namespace ThirdPartyWager.Workers
 
         public WagerRedoV8(
             ILogger<WagerRedoV8> logger,
-            WagerRedoV8BLL wagerRedoV8BLL,
+            //WagerRedoV8BLL wagerRedoV8BLL,
+            WagerV8BLL wagerV8BLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
             IHostEnvironment environment
         )
         {
             this.logger = logger;
-            this.wagerRedoV8BLL = wagerRedoV8BLL;
+            //this.wagerRedoV8BLL = wagerRedoV8BLL;
+            this.wagerV8BLL = wagerV8BLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
@@ -62,21 +65,22 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime.AddMinutes(1);
+                    timerTime = dataTpTimer.StartTime.AddDays(-3).AddMinutes(1);
                     last = intervalMins;
                 }
 
                 if (timerTime < DateTime.Now)
                 {
                     var time = dateTimeHelper.GetTimeByHour(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    bool result = await wagerRedoV8BLL.RedoWagersAsync(tpId, time.startUnix, time.endUnix);
-                    if (result == true)
+                    //bool result = await wagerRedoV8BLL.RedoWagersAsync(tpId, time.startUnix, time.endUnix);
+                    bool result = await wagerV8BLL.GetWagersAsync(tpId, time.startUnix, time.endUnix);
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                     else
                     {
-                        if(first == 1)
+                        if (first == 1)
                         {
                             quick = first;
                         }
@@ -98,7 +102,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(beyond);
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(61);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
@@ -111,7 +115,6 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }

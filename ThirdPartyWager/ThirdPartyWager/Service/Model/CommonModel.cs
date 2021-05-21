@@ -10,4 +10,10 @@
         public int DefCurrency { set; get; }
     }
 
+    public class TpCurrency
+    {
+        public string TpCurrencyId { set; get; }
+        public decimal ExchangeRate { set; get; }
+    }
+
 }
