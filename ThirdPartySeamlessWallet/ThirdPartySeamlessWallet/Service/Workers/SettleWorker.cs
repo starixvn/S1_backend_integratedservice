@@ -999,6 +999,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePTRng?.Change(Timeout.Infinite, 0);
             timerSettlePTLC?.Change(Timeout.Infinite, 0);
             timerSettleBTI?.Change(Timeout.Infinite, 0);
+            timerSettleKM?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

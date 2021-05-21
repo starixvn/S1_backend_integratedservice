@@ -82,7 +82,27 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return true;
         }
+        
+        public int Execute(string name, CommandType commandType = CommandType.StoredProcedure, DynamicParameters parameters = null)
+        {
+            var sw = Stopwatch.StartNew();
+            var result = 0;
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.Execute(name, parameters, commandType: commandType);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
 
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+        
         public bool Execute(string command)
         {
             var sw = Stopwatch.StartNew();

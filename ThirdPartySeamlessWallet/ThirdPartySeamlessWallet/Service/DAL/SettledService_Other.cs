@@ -1371,16 +1371,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
         
-        public IEnumerable<SettleData> GetUnsettledList_KM()
+        public IEnumerable<SettleData> GetUnsettledList_KM(string spName)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransPK_KM_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleData>(spName); 
         }
 
-        public int SetSettleFlag_KM(string account, string transId ,bool isSuccess)
+        public int SetSettleFlag_KM(string spName, string transId ,bool isSuccess)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransPK_KM_Settle_Set", new { account, transId , isSuccess }, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new { transId, isSuccess });
+            return _mainDbClient.Execute(spName, parameters: parameters);
         }        
 
         #endregion

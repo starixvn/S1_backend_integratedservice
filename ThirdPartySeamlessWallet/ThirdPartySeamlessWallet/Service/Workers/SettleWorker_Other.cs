@@ -488,16 +488,20 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleBTI.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+        /// <summary>
+        /// TpWagerKM 投注資料做結算
+        /// </summary>
+        /// <param name="state"></param>
         private void DoSettleKMWork(object state)
         {
             var forContinue = false;
             var isError = false;
             var thisTp = (int)Tp.KM;
-            var logName = "Settle_KM";
+            var logName = "Settle_KM_PK";
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListPK_KM();
+                var unsettledList = settledBLL.GetUnsettledListPK_KM("Service_TpWagerPK_KM_Unsettle_Get");
 
                 if (unsettledList != null)
                 {
@@ -518,15 +522,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid,
-                                TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                             };
 
-                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Poker);
+                            var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                             if (result == 1)
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlag_KM(unsettled.Account, unsettled.TransId);
+                                    settledBLL.SetSettleFlag_KM("Service_TpWagerPK_KM_Settle_Set", unsettled.TransId, true);
                                 });
                             }
 
@@ -535,7 +538,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                             {
-                                settledBLL.SetSettleFlag_KM(unsettled.Account, unsettled.TransId, isSuccess: false);
+                                settledBLL.SetSettleFlag_KM("Service_TpWagerPK_KM_Settle_Set", unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
@@ -545,8 +548,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
                 isError = true;
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -561,7 +564,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleBTI.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleKM.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
