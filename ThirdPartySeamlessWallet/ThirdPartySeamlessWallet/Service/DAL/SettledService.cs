@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using Serilog.Context;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -22,14 +23,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly Log2File log2File;
         private readonly ILogger<SettledService> logger;
+        private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _wagerDbClient;
 
-        public SettledService(IConfiguration configuration, WalletService walletService, Tools tools, Log2File log2File, ILogger<SettledService> logger)
+        public SettledService(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.walletService = walletService;
-            this.tools = tools;
-            this.log2File = log2File;
-            this.logger = logger;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            walletService = provider.GetRequiredService<WalletService>();
+            tools = provider.GetRequiredService<Tools>();
+            log2File = provider.GetRequiredService<Log2File>();
+            logger = provider.GetRequiredService<ILogger<SettledService>>();
+
+            var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
+            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), mySqlLogger);
+            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), mySqlLogger);
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()

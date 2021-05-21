@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,8 +13,11 @@ namespace ThirdPartySeamlessWallet.Service.Library
     public class Log2File
     {
         private readonly string LogFolder = "";
-        public Log2File(IHostEnvironment environment)
+        private readonly ILogger<Log2File> _logger;
+        public Log2File(IServiceProvider provider)
         {
+            _logger = provider.GetRequiredService<ILogger<Log2File>>();
+            var environment = provider.GetRequiredService<IHostEnvironment>();
             LogFolder = $@"{environment.ContentRootPath}\Logs";
         }
         public void Info(string InfoContent, string PrefixName)
@@ -25,8 +30,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
                 writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{InfoContent}");
             });
         }
-        public void Error(string ErrorContent, string PrefixName)
+        public void Error(string ErrorContent, string PrefixName, Exception ex = null)
         {
+            if (ex != null)
+            {
+                _logger.LogError(ex, ErrorContent, new string[]{ PrefixName });
+            }
             var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now.ToString("yyyyMMdd")}.log";
             Task.Run(() =>
             {

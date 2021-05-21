@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
@@ -82,7 +83,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             where TRecord : class
         {
             var sqlScript = _exceptSqlMapping[typeof(TRecord)].Value;
-            var actual = _mySqlClient.Query<TRecord>(sqlScript).First();
+            var actual = _mySqlClient.Query<TRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(data.Value);
             return this;
         }

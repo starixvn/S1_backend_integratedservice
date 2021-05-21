@@ -65,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (btiResult.SetBalanceResult == 1)
                 {
                     btiResult.AfterAmount = afterAmount;
-                    trans.Commit();                    
+                    trans.Commit();
                 }
 
                 return btiResult;
@@ -112,7 +112,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Trx_id = p.Get<long>("trx_id"),
                 };
 
-                if (btiResult.SPResult < 1 )
+                if (btiResult.SPResult < 1)
                 {
                     return btiResult;
                 }
@@ -143,7 +143,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
-                {                  
+                {
                     trans.Commit();
                 }
                 return btiResult;
@@ -181,7 +181,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Trx_id = p.Get<long>("trx_id"),
                 };
 
-                if (btiResult.SPResult < 1 )
+                if (btiResult.SPResult < 1)
                 {
                     return btiResult;
                 }
@@ -224,18 +224,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+        #endregion
+
+
         public IEnumerable<SettleData> GetUnsettledList_BTI()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<SettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public int SetSettleFlag_BTI(string account, string transId ,bool isSuccess)
+        public int SetSettleFlag_BTI(string account, string transId, bool isSuccess)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransSports_BTI_Settle_Set", new { account, transId , isSuccess }, commandType: CommandType.StoredProcedure);
+            var parameters = new DynamicParameters(new { account, transId, isSuccess });
+            return _mainDbClient.Execute("Service_BettransSports_BTI_Settle_Set", parameters: parameters);
         }
 
-        #endregion
+
+        public IEnumerable<SettleData> GetUnsettledListBySpName(string spName, DataBase dataBase = DataBase.Main)
+        {
+            return dataBase switch
+            {
+                DataBase.Main => _mainDbClient.Query<SettleData>(spName),
+                DataBase.Report => _reportDbClient.Query<SettleData>(spName),
+                DataBase.Wager => _wagerDbClient.Query<SettleData>(spName),
+                _ => throw new System.NotImplementedException(),
+            };
+        }
+
+        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess, DataBase dataBase = DataBase.Main)
+        {
+            var parameters = new DynamicParameters(new { transId, isSuccess });
+            return dataBase switch
+            {
+                DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
+                DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
+                DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
+                _ => throw new System.NotImplementedException(),
+            };
+        }
+
+
     }
 }

@@ -128,6 +128,8 @@ namespace ThirdPartyWager
             services.AddSingleton<LiveStreamingBLL>();
             // LatestHighlightVideo
             services.AddSingleton<LatestHighlightVideoBLL>();
+            //9W
+            services.AddSingleton<NineWBLL>();
 
             //Worker
 
@@ -160,6 +162,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
+
+            services.AddHostedService<WagerNineW>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
