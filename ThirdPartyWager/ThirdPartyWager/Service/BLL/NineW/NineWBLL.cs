@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<NineWBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
-        private readonly MySqlClient _dbClient;
+        private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.NineW;
         private readonly NineWConfig _config;
 
@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Service.BLL
 
             var log = provider.GetRequiredService<ILogger<MySqlClient>>();
             var conn = configuration.GetConnectionString("ConnectionStringWager");
-            _dbClient = new MySqlClient(conn, log);
+            _wagerDbClient = new MySqlClient(conn, log);
 
             var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
             _config = new NineWConfig(setting);
@@ -163,7 +163,7 @@ namespace ThirdPartyWager.Service.BLL
 
         private Task<int> InsertWager(SettleBet bet)
         {
-            return _dbClient.ExecuteAsync("Service_TpWager9W_Ins", new DynamicParameters(bet));
+            return _wagerDbClient.ExecuteAsync("Service_TpWager9W_Ins", new DynamicParameters(bet));
         }
     }
 }

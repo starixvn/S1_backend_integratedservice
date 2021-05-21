@@ -20,7 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName("Service_BettransSports_BTI_Unsettle_Get");
+                var unsettledList = settledBLL.GetUnsettledListBTI();
 
                 if (unsettledList != null)
                 {
@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName("Service_TpWager9W_Unsettle_Get");
+                var unsettledList = settledBLL.GetUnsettledListBySpName("Service_TpWager9W_Unsettle_Get", DataBase.Wager);
 
                 if (unsettledList != null)
                 {
@@ -128,7 +128,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId);
+                                   settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, dataBase: DataBase.Wager);
                                 });
                             }
 
@@ -137,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                             {
-                                settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false);
+                               settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
                             });
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);

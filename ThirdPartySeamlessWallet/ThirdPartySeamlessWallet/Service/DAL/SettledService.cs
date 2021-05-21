@@ -24,6 +24,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Log2File log2File;
         private readonly ILogger<SettledService> logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _wagerDbClient;
 
         public SettledService(IServiceProvider provider)
         {
@@ -34,8 +36,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             logger = provider.GetRequiredService<ILogger<SettledService>>();
 
             var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
-            var conn = configuration.GetConnectionString("ConnectionString");
-            _mainDbClient = new MySqlClient(conn, mySqlLogger);
+            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
+            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), mySqlLogger);
+            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), mySqlLogger);
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()

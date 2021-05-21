@@ -151,4 +151,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         ToTp = 1,
         ToMain = 2
     }
+
+    public enum DataBase
+    {
+        Main, //ConnectionString
+        Report,//ConnectionStringReport
+        Wager,//ConnectionStringWager
+    }
 }

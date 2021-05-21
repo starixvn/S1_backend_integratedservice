@@ -227,9 +227,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
 
-        public IEnumerable<SettleData> GetUnsettledListBySpName(string spName)
+        public IEnumerable<SettleData> GetUnsettledList_BTI()
         {
-            return _mainDbClient.Query<SettleData>(spName);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BTI(string account, string transId, bool isSuccess)
@@ -238,10 +239,28 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransSports_BTI_Settle_Set", parameters: parameters);
         }
 
-        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess)
+
+        public IEnumerable<SettleData> GetUnsettledListBySpName(string spName, DataBase dataBase = DataBase.Main)
+        {
+            return dataBase switch
+            {
+                DataBase.Main => _mainDbClient.Query<SettleData>(spName),
+                DataBase.Report => _reportDbClient.Query<SettleData>(spName),
+                DataBase.Wager => _wagerDbClient.Query<SettleData>(spName),
+                _ => throw new System.NotImplementedException(),
+            };
+        }
+
+        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess, DataBase dataBase = DataBase.Main)
         {
             var parameters = new DynamicParameters(new { transId, isSuccess });
-            return _mainDbClient.Execute(spName, parameters: parameters);
+            return dataBase switch
+            {
+                DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
+                DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
+                DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
+                _ => throw new System.NotImplementedException(),
+            };
         }
 
 
