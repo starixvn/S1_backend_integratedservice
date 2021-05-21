@@ -111,7 +111,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePPRng = new Timer(DoSettlePPRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePPLC = new Timer(DoSettlePPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -1099,7 +1098,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleBTI?.Change(Timeout.Infinite, 0);
             timerSettlePPRng?.Change(Timeout.Infinite, 0);
             timerSettlePPLC?.Change(Timeout.Infinite, 0);
-
             timerSettle9W?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }

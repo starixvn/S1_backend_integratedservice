@@ -62,14 +62,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 settledBLL.SetSettleFlag_BTI(unsettled.Account, unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
@@ -140,14 +140,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
                             });
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
