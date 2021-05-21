@@ -45,7 +45,7 @@ namespace ThirdParty.BTI
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
-                    Message = GameUrl,
+                    Message = $"{GameUrl}/{TpLangId}/"
                 };
             }
             
