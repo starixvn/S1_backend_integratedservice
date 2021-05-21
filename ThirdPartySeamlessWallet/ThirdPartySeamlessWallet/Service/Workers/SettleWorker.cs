@@ -933,11 +933,16 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 SettlementType = SettlementType.SettledForValidNotRollover
                             };
 
-                            if (stake != 0 && validBet != 0)
+                           
+                            if (stake == 0 && validBet == 0 && winLostAmount == 0)
+                            {
+                                settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
+                            }
+                            else
                             {
                                 settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                                settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
                             }
-                            settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
                         }
                         catch (Exception ex1)
                         {
