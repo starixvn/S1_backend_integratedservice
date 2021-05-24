@@ -22,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly ILogger<KMService> _logger;
+        private Dictionary<string, string> Config;
         
         public KMService(IServiceProvider provider)
         {
@@ -32,6 +33,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
             _logger = provider.GetService<ILogger<KMService>>();
+            Config = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty).TpSetting;
+        }
+
+        public bool CheckCredentials(string clientId, string clientSecret)
+        {
+            return string.Equals(clientId, Config["X-QM-ClientId"]) &&
+                   string.Equals(clientSecret, Config["X-QM-ClientSecret"]);
         }
 
         public async Task<KMDebitResponse> Debit(KMDebitRequest request)
@@ -45,10 +53,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (Enum.IsDefined(typeof(KMTxType), transaction.TxType))
                 {
                     var transactionResult = await Bet(transaction);
-                    if (request.transactional && transactionResult == null)
-                    {
-                        throw new KmException(KMErrorCode.IncorrectFormat);
-                    }
 
                     response.transactions.Add(transactionResult);
                 }
@@ -116,13 +120,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<KMDebitResponseTransaction> Bet(KMDebitRequestTransaction request)
         {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.UserId);
-            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                request.Amount *= tpCurrency.ExchangeRate;
-            }
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.UserId);
+            request.Amount *= tpCurrency.ExchangeRate;
 
             var dbResult =
                 await _bettingService.PlaceBetPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
@@ -154,15 +153,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<KMCreditResponseTransaction> WinBet(KMCreditRequestTransaction request)
         {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.userid);
-            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.userid);
+            request.amt *= tpCurrency.ExchangeRate;
 
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                request.amt *= tpCurrency.ExchangeRate;
-            }
-
-            var dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request, (int) ThirdParty, (int) GameType);
+            var dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request);
             // 訂單已存在
             if (dbResult.SPResult == 0)
             {
@@ -187,6 +181,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 cur = request.cur,
                 dup = false
             };
+        }
+        
+        private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
+            if (tpCustInfo == null)
+            {
+                _logger.LogError($"tpCustInfo is null, tpUserName:{tpUserName}");
+                throw new KmException(KMErrorCode.UserBlocked);
+            }
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+            if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
+            {
+                _logger.LogError($"tpCurrency is null, {JsonConvert.SerializeObject(tpCustInfo)}");
+                throw new KmException(KMErrorCode.CurrencyMismatch);
+            }
+            return (tpCustInfo, tpCurrency);
         }
     }
 }

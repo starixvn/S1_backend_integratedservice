@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartySeamlessWallet.Extensions;
+using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -76,6 +77,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<AuthBLL>();
             services.AddTransient<IKMService, KMService>();
             
+            services.AddSingleton<KMHeaderFilter>();
             services.AddControllers().AddNewtonsoftJson();
         }
 

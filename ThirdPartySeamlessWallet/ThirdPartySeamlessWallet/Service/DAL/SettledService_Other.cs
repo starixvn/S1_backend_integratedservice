@@ -1217,49 +1217,50 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region KM
 
-        public async Task<KmDbResult> PayoutPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction creditTransaction, int tpId, int gameType)
+        public async Task<KmDbResult> PayoutPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction creditTransaction)
         {
             var result = 0;
+            var bonusId = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(new
+            {
+                ptxid = creditTransaction.ptxid,
+                userId = creditTransaction.userid,
+                amount = creditTransaction.amt,
+                currency = creditTransaction.cur,
+                ipaddress = creditTransaction.ipaddress,
+                refptxid = creditTransaction.refptxid,
+                txtype = creditTransaction.txtype,
+                timestamp = DateTime.Parse(creditTransaction.timestamp),
+                platformtype = creditTransaction.platformtype,
+                gpcode = creditTransaction.gpcode,
+                gamecode = creditTransaction.gamecode,
+                gamename = creditTransaction.gamename,
+                gametype = creditTransaction.gametype,
+                roundid = creditTransaction.roundid,
+                betid = creditTransaction.betid,
+                senton = DateTime.Parse(creditTransaction.senton),
+                isclosinground = creditTransaction.isclosinground,
+                ggr = creditTransaction.ggr,
+                turnover = creditTransaction.turnover,
+                bonustype = creditTransaction.bonustype,
+                bonuscode = creditTransaction.bonuscode,
+                description = creditTransaction.desc,
+                commission = creditTransaction.commission,
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.Win,
+                SettleFlag = (int)SettleFlag.Running
+            });
+            p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
+
             try
             {
-                var bonusId = 0;
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-
-                var p = new DynamicParameters(new
-                {
-                    ptxid = creditTransaction.ptxid,
-                    userId = creditTransaction.userid,
-                    amount = creditTransaction.amt,
-                    currency = creditTransaction.cur,
-                    ipaddress = creditTransaction.ipaddress,
-                    refptxid = creditTransaction.refptxid,
-                    txtype = creditTransaction.txtype,
-                    timestamp = DateTime.Parse(creditTransaction.timestamp),
-                    platformtype = creditTransaction.platformtype,
-                    gpcode = creditTransaction.gpcode,
-                    gamecode = creditTransaction.gamecode,
-                    gamename = creditTransaction.gamename,
-                    gametype = creditTransaction.gametype,
-                    roundid = creditTransaction.roundid,
-                    betid = creditTransaction.betid,
-                    senton = DateTime.Parse(creditTransaction.senton),
-                    isclosinground = creditTransaction.isclosinground,
-                    ggr = creditTransaction.ggr,
-                    turnover = creditTransaction.turnover,
-                    bonustype = creditTransaction.bonustype,
-                    bonuscode = creditTransaction.bonuscode,
-                    description = creditTransaction.desc,
-                    commission = creditTransaction.commission,
-                    TicketType = (int)BettransType.Bet,
-                    TicketStatus = (int)TicketStatus.UnSettled,
-                    SettleFlag = (int)SettleFlag.Running
-                });
-                p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
                 await conn.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                
+            
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -1269,30 +1270,40 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         logger.LogInformation("訂單已存在");
                         return new KmDbResult() {SPResult = result, Trx_id = trxId};
                     }
-                    
                     logger.LogError("exec Service_BettransPK_KM_Credit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
-                result = walletService.SetBalance(
-                    tpCustInfo.CustId,
-                    tpCustInfo.SiteId,
-                    tpCustInfo.UserName,
-                    Math.Abs(creditTransaction.amt),
-                    (int)Tp.KM,
-                    TransType.Refunds,
-                    $"{creditTransaction.amt:#,##0.##}",
-                    creditTransaction.ptxid,
-                    out var afterAmount,
-                    conn,
-                    trans
-                );
-                if (result != 1)
+                var afterAmount = 0M;
+                //假如是這三款遊戲且TxType是500不需扣錢
+                if ((creditTransaction.gamecode == KMGameCode.Gao_Gae.ToString() ||
+                     creditTransaction.gamecode == KMGameCode.Pai_Kang.ToString() ||
+                     creditTransaction.gamecode == KMGameCode.Kingmaker_Pok_Deng.ToString()) &&
+                    creditTransaction.txtype.ToString().StartsWith("5"))
                 {
-                    logger.LogError("SetBalance error");
-                    throw new KmException(KMErrorCode.SystemError);
+                    afterAmount = walletService.GetBalance(tpCustInfo.CustId);
                 }
-                
-                trans.Commit();
+                else
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(creditTransaction.amt),
+                        (int)Tp.KM,
+                        TransType.Refunds,
+                        $"{creditTransaction.amt:#,##0.##}",
+                        creditTransaction.ptxid,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                    if (result != 1)
+                    {
+                        logger.LogError("SetBalance error");
+                        throw new KmException(KMErrorCode.SystemError);
+                    }
+                }
+                trans.Commit(); 
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -1300,77 +1311,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterAmount = afterAmount
                 };
             }
-            catch (MySqlException mySqlEx)
+            catch (Exception e)
             {
-                /*Duplicate for key 'PRIMARY'*/
-                if (mySqlEx.Number == 1062)
-                {
-                    throw new KmException(KMErrorCode.ConfiguredTimeout);
-                }
-                else
-                {
-                    logger.LogError($"exec PlaceBetPK_KM failed: {mySqlEx.Message}");
-                    throw mySqlEx;
-                }
+                logger.LogError(e, $"exec PayoutPK_KM failed: {e.Message}");
+                await trans.RollbackAsync();
+                throw new KmException(KMErrorCode.SystemError);
             }
         }
 
-        public async Task<KmDbResult> CancelPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction transaction,
-            int tpId, int gameType)
-        {
-            var result = 0;
-            var afterAmount = 0M;
-            try
-            {
-                var bonusId = 0;
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-
-                result = PayoutV2(
-                    tpCustInfo,
-                    transaction.amt,
-                    tpId,
-                    transaction.ptxid,
-                    gameType,
-                    TpCategory.Poker,
-                    transaction.ptxid,
-                    TransType.Payout,
-                    null,
-                    out afterAmount,
-                    "Payout",
-                    out bonusId,
-                    conn,
-                    trans
-                );
-
-                if (result != 1)
-                {
-                    throw new KmException(KMErrorCode.TransactionAlreadyCancelled);
-                }
-
-                trans.Commit();
-                return new KmDbResult()
-                {
-                    SPResult = result,
-                    Trx_id = 10,
-                    AfterAmount = afterAmount
-                };
-                
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    throw new KmException(KMErrorCode.ConfiguredTimeout);
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
-            }
-        }
-        
         public IEnumerable<SettleData> GetUnsettledList_KM(string spName)
         {
             return _mainDbClient.Query<SettleData>(spName); 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -14,6 +15,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
     [Route("[controller]/wallet")]
+    [ServiceFilter(typeof(KMHeaderFilter))]
     public class KMController : ControllerBase
     {
         private readonly ILogger<KMController> _logger;
