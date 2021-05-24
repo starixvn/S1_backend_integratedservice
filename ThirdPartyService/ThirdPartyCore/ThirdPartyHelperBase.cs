@@ -269,9 +269,13 @@ namespace ThirdPartyCore
 
             return md5;
         }
-        protected string GetRandomString(int length)
+        protected string GetRandomString(int length, bool uppercase = false)
         {
             var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            if(uppercase)
+            {
+                str = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            }
             var next = new Random();
             var builder = new StringBuilder();
             for (var i = 0; i < length; i++)
