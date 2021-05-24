@@ -53,7 +53,7 @@ namespace ThirdParty.BTI
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token , tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            var sessionKey = Convert.ToBase64String(bytes);
+            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             var host = inputs.ContainsKey($"Host") && !string.IsNullOrEmpty(inputs[$"Host"])
                ? inputs[$"Host"] : throw new Exception($"host is empty");
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
