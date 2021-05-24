@@ -12,7 +12,7 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class BTIService : IThirdPartyService
+    public class BTIBLL : IThirdPartyBLL
     {
         private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
-        public BTIService(IServiceProvider provider)
+        public BTIBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.BTI;
             GameType = GameType.BTI_Sports;
@@ -95,17 +95,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var (authToken, sessionToken, tpUserName) = GetToken(auth_token);
 
-                if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-                {
-                    throw new InvalidTokenException("authToken invalid.");
-                }
-                if (tpCustInfoAuth.TpCurrencyId == null)
-                {
-                    throw new RestrictedCustomerException("Restricted customer.");
-                }
-
                 // check tp status and sessionToken
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
                 if (tpCheck == null)
                 {
                     throw new InvalidTokenException("tpCheck fail.");
@@ -119,16 +110,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new InvalidTokenException("sessionToken expire.");
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
-                var countryCode = GetCountryCode(tpCustInfoAuth.TpCurrencyId);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpUserName, (int)GameType);
+                var countryCode = GetCountryCode(tpCustBalance.TpCurrencyId);
 
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
                     { "error_message", "OK" },
-                    { "cust_id", tpCustInfoAuth.TpUserName},
+                    { "cust_id", tpUserName},
                     { "balance", tpCustBalance.Balance.ToString()},
-                    { "cust_login", tpCustInfoAuth.TpUserName },
+                    { "cust_login", tpUserName },
                     { "city", countryCode },
                     { "country", countryCode},
                     { "currency_code", tpCustBalance.TpCurrencyId},

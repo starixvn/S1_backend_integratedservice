@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
@@ -18,7 +19,7 @@ using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
-    public class BtiServiceSandbox
+    public class BTIBLLSandbox
     {
         private IServiceProvider _serviceProvider;
 
@@ -34,10 +35,10 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         private Dictionary<Type, Lazy<string>> _exceptSqlMapping;
 
-        private readonly BTIService _target;
+        private readonly BTIBLL _target;
 
 
-        public BtiServiceSandbox(string reserveId)
+        public BTIBLLSandbox(string reserveId)
         {
             _reserveId = reserveId;
             _serviceCollection = new ServiceCollection();
@@ -55,7 +56,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             startUp.ConfigureServices(_serviceCollection);
             _serviceProvider = _serviceCollection.BuildServiceProvider();
             _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
-            _target = new BTIService(_serviceProvider);
+            _target = new BTIBLL(_serviceProvider);
 
             _exceptSqlMapping = new Dictionary<Type, Lazy<string>>
             {
@@ -66,7 +67,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
         }
 
-        public BtiServiceSandbox CreateReserve(string reserve_id, decimal amount)
+        public BTIBLLSandbox CreateReserve(string reserve_id, decimal amount)
         {
             var request = new BTIRequestObj()
             {
@@ -78,11 +79,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public BtiServiceSandbox ShouldBeHaveRecord<TRecord>(Lazy<TRecord> data)
+        public BTIBLLSandbox ShouldBeHaveRecord<TRecord>(Lazy<TRecord> data)
             where TRecord : class
         {
             var sqlScript = _exceptSqlMapping[typeof(TRecord)].Value;
-            var actual = _mySqlClient.Query<TRecord>(sqlScript).First();
+            var actual = _mySqlClient.Query<TRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(data.Value);
             return this;
         }
