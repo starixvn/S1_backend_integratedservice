@@ -13,7 +13,7 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class KMService : IKMService, IThirdPartyService
+    public class KMService : IKMService, IThirdPartyBLL
     {
         public Tp ThirdParty  { get; set; }
         public GameType GameType { get; set; }

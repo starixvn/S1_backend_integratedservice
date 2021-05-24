@@ -19,26 +19,26 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class BTIController : ControllerBase
     {
         private readonly ILogger<BTIController> logger;
-        private static BTIService btiService { get; set; }
+        private static BTIBLL _bTIBLL { get; set; }
 
         public BTIController(IServiceProvider provider, ILogger<BTIController> logger)
         {
             this.logger = logger; 
-            btiService = new BTIService(provider);
+            _bTIBLL = new BTIBLL(provider);
         }
 
         [EnableCors("BTIPolicy")]
         [HttpGet]
         public async Task<BTIStatusObj> Status([FromQuery] string token)
         {
-            return btiService.Staus(token);
+            return _bTIBLL.Staus(token);
         }
 
         [EnableCors("BTIPolicy")]
         [HttpGet]
         public async Task<BTIRefreshObj> Refresh([FromQuery] string token)
         {
-            return btiService.Refresh(token);
+            return _bTIBLL.Refresh(token);
         }
 
         [HttpGet]
@@ -55,7 +55,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     });
                 }
 
-                return Content(btiService.ValidateToken(auth_token));
+                return Content(_bTIBLL.ValidateToken(auth_token));
             }
             catch (Exception ex)
             {
@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     });
                 }
 
-                return Content(await btiService.ReserveAsync(new BTIRequestObj()
+                return Content(await _bTIBLL.ReserveAsync(new BTIRequestObj()
                 {
                     cust_id = cust_id,
                     reserve_id = reserve_id,
@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
 
-                return Content(await btiService.DebitReserveAsync(new BTIRequestObj()
+                return Content(await _bTIBLL.DebitReserveAsync(new BTIRequestObj()
                 {
                     cust_id = cust_id,
                     reserve_id = reserve_id,
@@ -141,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     });
                 }
                 
-                return Content(await btiService.CancelReserveAsync(new BTIRequestObj()
+                return Content(await _bTIBLL.CancelReserveAsync(new BTIRequestObj()
                 {
                     cust_id = cust_id,
                     reserve_id = reserve_id,
@@ -172,7 +172,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     });
                 }
 
-                return Content(await btiService.CommitReserve(new BTIRequestObj()
+                return Content(await _bTIBLL.CommitReserve(new BTIRequestObj()
                 {
                     cust_id = cust_id,
                     reserve_id = reserve_id,
@@ -196,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
 
-                return Content(await btiService.Credit(new BTIRequestObj()
+                return Content(await _bTIBLL.Credit(new BTIRequestObj()
                 {
                     cust_id = cust_id,
                     amount = amount * -1,
@@ -221,7 +221,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
                 
-                return Content(await btiService.Credit(new BTIRequestObj()
+                return Content(await _bTIBLL.Credit(new BTIRequestObj()
                 {
                     cust_id = cust_id,
                     amount = amount,

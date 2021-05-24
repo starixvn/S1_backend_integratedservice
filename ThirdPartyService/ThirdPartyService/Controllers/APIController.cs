@@ -34,7 +34,7 @@ namespace ThirdPartyService.Controllers
         {
             this.env = env;
             ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
-            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
+            ThirdPartyHelperBase.IsDevelopment = !env.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase);
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
             this.configuration = configuration;
             this.common = common;
@@ -74,7 +74,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -100,7 +100,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 log2File.Error(ex.ToString(), $"{tpTransfer.TpId}_Transfer");
@@ -120,7 +120,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -140,7 +140,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -161,7 +161,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -182,7 +182,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -203,7 +203,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }

@@ -13,6 +13,7 @@ using Serilog.Context;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -24,6 +25,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Log2File log2File;
         private readonly ILogger<SettledService> logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _wagerDbClient;
         public SettledService(IServiceProvider provider)
         {
             configuration = provider.GetRequiredService<IConfiguration>();
@@ -33,8 +36,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             logger = provider.GetRequiredService<ILogger<SettledService>>();
 
             var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
-            var conn = configuration.GetConnectionString("ConnectionString");
-            _mainDbClient = new MySqlClient(conn, mySqlLogger);
+            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
+            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), mySqlLogger);
+            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), mySqlLogger);
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()
@@ -477,6 +481,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
+                LogContext.PushProperty("TpId", betRecord.TpId);
+                LogContext.PushProperty("GameType", betRecord.GameType);
                 var parameter = new
                 {
                     tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
@@ -485,7 +491,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     afterAmount = afterAmount,
                     doPayout = doPayout
                 };
-                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
             return result;

@@ -2,7 +2,7 @@
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
-    public interface IThirdPartyService
+    public interface IThirdPartyBLL
     {
        Tp ThirdParty { get; set; }
        GameType GameType { get; set; }

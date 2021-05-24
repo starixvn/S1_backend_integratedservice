@@ -648,11 +648,15 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 SettlementType = SettlementType.SettledForValidNotRollover
                             };
 
-                            if (stake != 0 && validBet != 0 && winLostAmount != 0)
+                            if (stake == 0 && validBet == 0 && winLostAmount == 0)
+                            {
+                                settledBLL.SetSettleFlag_TpWagerRng_PT(long.Parse(unsettled.TransId));
+                            }
+                            else
                             {
                                 settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                                settledBLL.SetSettleFlag_TpWagerRng_PT(long.Parse(unsettled.TransId));
                             }
-                            settledBLL.SetSettleFlag_TpWagerRng_PT(long.Parse(unsettled.TransId));
                         }
                         catch (Exception ex1)
                         {
@@ -681,6 +685,84 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettlePTRng.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private void DoSettlePPRngWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.PP;
+            var gameType = GameType.PP_RNG;
+            var category = TpCategory.Slots;
+            string logName = "Settle_PP_Rng";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListRng_PP();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId.ToString(),
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime / 1000,
+                                SettlementType = settledBLL.GetSettlementType(gameType, unsettled.gameId),
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            };
+
+                            if (betRecordInfo.WinlostAmount == 0)
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Draw;
+                            }
+
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            settledBLL.SetSettleFlag_BettransRng_PP(unsettled.TransId, unsettled.Account);
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettlePPRng.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

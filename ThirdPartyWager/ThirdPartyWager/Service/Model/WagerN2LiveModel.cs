@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Service.Model
     }
     public class Betinfo
     {
-        public Clientbet clientbet { get; set; }
+        public dynamic clientbet { get; set; }
 
     }
     public class Clientbet

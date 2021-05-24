@@ -33,13 +33,16 @@ namespace ThirdPartySeamlessWallet
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => options.AddPolicy("BTIPolicy", builder =>
+            services.AddCors(options => 
             {
-                builder.AllowAnyOrigin()
-                       .AllowAnyHeader()
-                       .WithMethods("GET")
-                       .SetIsOriginAllowedToAllowWildcardSubdomains();
-            }));
+                options.AddPolicy("BTIPolicy", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .WithMethods("GET")
+                            .SetIsOriginAllowedToAllowWildcardSubdomains();
+                });                                 
+            });
 
             services.AddMemoryCache();
             ////if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))

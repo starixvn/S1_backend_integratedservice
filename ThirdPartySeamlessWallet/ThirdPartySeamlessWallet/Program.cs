@@ -1,17 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Exceptions;
-using Serilog.Formatting.Json;
 using ThirdPartySeamlessWallet.Service.Workers;
 
 namespace ThirdPartySeamlessWallet
@@ -47,17 +41,23 @@ namespace ThirdPartySeamlessWallet
                                 c.Properties.Any(p =>
                                     excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                                     || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
-                            .Enrich.WithExceptionDetails()
-                            .MinimumLevel.Information().WriteTo.Console(new JsonFormatter());
+                            .Enrich.WithExceptionDetails();
                     })
                     .UseStartup<Startup>();
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
                     //services.AddHostedService<AG_EnquireWorkerService>();
-                    services.AddHostedService<PP_EndRoundWorkerService>();
-                    services.AddHostedService<BonusWorker>();
-                    services.AddHostedService<SettleWorker>();
+                    //services.AddHostedService<PP_EndRoundWorkerService>();
+                    if (Configuration.GetSection("RunBonusWorker").Get<bool>())
+                    {
+                        services.AddHostedService<BonusWorker>();
+                    }
+
+                    if (Configuration.GetSection("RunSettleWorker").Get<bool>())
+                    {
+                        services.AddHostedService<SettleWorker>();
+                    }
                     //services.AddHostedService<CF_SettleWorker>();
                 });
     }

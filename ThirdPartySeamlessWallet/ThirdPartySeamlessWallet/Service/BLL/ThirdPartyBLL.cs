@@ -126,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             GameType gameType = GameType.PP_RNG;
 
-            if (gameId.Length == 3 && int.TryParse(gameId, out int tempGameId))
+            if (int.TryParse(gameId, out int tempGameId))
             {
                 gameType = GameType.PP_LiveCasino;
             }
