@@ -12,7 +12,7 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class BTIService : IThirdPartyService
+    public class BTIBLL : IThirdPartyBLL
     {
         private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
-        public BTIService(IServiceProvider provider)
+        public BTIBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.BTI;
             GameType = GameType.BTI_Sports;

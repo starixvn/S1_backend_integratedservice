@@ -5,7 +5,7 @@ using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {
-    public class BtiServiceTest
+    public class BTIBLLTest
     {
 
         private string _reserve_id;
@@ -18,8 +18,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         [TestCase(10)]
         public void ReserveTest(decimal amount)
-            => new BtiServiceSandbox(_reserve_id)
+            => new BTIBLLSandbox(_reserve_id)
                 .CreateReserve(_reserve_id, amount)
-                .ShouldBeHaveRecord(BtiServiceSandbox.ReserveRecord(_reserve_id, amount));
+                .ShouldBeHaveRecord(BTIBLLSandbox.ReserveRecord(_reserve_id, amount));
     }
 }
