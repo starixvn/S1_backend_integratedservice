@@ -14,5 +14,6 @@ namespace ThirdPartyCore
         /// <param name="Expiry"></param>
         bool ApplyToken(string Key, string Value, int Expiry = 1);
         string Authenticate(string Key);
+        int KmUserTokenSet(string userName, string token, DateTime expiredTime);
     }
 }

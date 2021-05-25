@@ -73,4 +73,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Aff { get; set; }
         public string AffCode { get; set; }
     }
+
+    public class KmUserToken
+    {
+        public string TpUserName { get; set; }
+        public string Token { get; set; }
+        public DateTime ExpiredTime { get; set; }
+    }
 }

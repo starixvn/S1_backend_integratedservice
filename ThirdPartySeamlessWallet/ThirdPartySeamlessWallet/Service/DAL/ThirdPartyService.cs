@@ -49,5 +49,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BonusMinBet>("Service_BonusMinBet_Get", commandType: CommandType.StoredProcedure);
         }
+
+        public KmUserToken GetKmUserToken(string userName)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<KmUserToken>("Service_TpUserToken_KM_Get", new { UserName = userName }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

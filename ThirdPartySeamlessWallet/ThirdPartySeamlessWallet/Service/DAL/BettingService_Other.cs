@@ -663,42 +663,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new KmException(KMErrorCode.SystemError);
                 }
 
-                var afterAmount = 0M;
-                //假如是這三款遊戲且TxType是500不需扣錢
-                if ((debitTransaction.GameCode == KMGameCode.Gao_Gae.ToString() ||
-                     debitTransaction.GameCode == KMGameCode.Pai_Kang.ToString() ||
-                     debitTransaction.GameCode == KMGameCode.Kingmaker_Pok_Deng.ToString()) &&
-                    debitTransaction.TxType.ToString().StartsWith("5"))
+                result = PlaceBetV2(
+                    tpCustInfo,
+                    Math.Abs(debitTransaction.Amount) * -1,
+                    tpId,
+                    debitTransaction.PtxId,
+                    gameType,
+                    debitTransaction.PtxId,
+                    null,
+                    TpCategory.Poker,
+                    out var afterAmount,
+                    ref bonusId,
+                    conn,
+                    trans
+                );
+                if (result != 1)
                 {
-                    afterAmount = walletService.GetBalance(tpCustInfo.CustId);
-                }
-                else
-                {
-                    result = PlaceBetV2(
-                        tpCustInfo,
-                        Math.Abs(debitTransaction.Amount) * -1,
-                        tpId,
-                        debitTransaction.PtxId,
-                        gameType,
-                        debitTransaction.PtxId,
-                        null,
-                        TpCategory.Poker,
-                        out afterAmount,
-                        ref bonusId,
-                        conn,
-                        trans
-                    );
-                    if (result != 1)
+                    await trans.RollbackAsync();
+                    logger.LogError($"PlaceBetV2 result:{result}, afterAmount:{afterAmount}");
+                    if (result == 0 && afterAmount < 0)
                     {
-                        await trans.RollbackAsync();
-                        logger.LogError($"PlaceBetV2 result:{result}, afterAmount:{afterAmount}");
-                        if (result == 0 && afterAmount < 0)
-                        {
-                            throw new KmException(KMErrorCode.InsufficientFunds);
-                        }
-
-                        throw new KmException(KMErrorCode.SystemError);
+                        throw new KmException(KMErrorCode.InsufficientFunds);
                     }
+
+                    throw new KmException(KMErrorCode.SystemError);
                 }
                 trans.Commit();
                 return new KmDbResult()
@@ -706,6 +694,78 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SPResult = result,
                     Trx_id = trxId,
                     AfterAmount = afterAmount
+                };
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
+                await trans.RollbackAsync();
+                throw new KmException(KMErrorCode.SystemError);
+            }
+        }
+
+        public async Task<KmDbResult> PlaceBetNoSetBalance_KM(KMDebitRequestTransaction debitTransaction)
+        {
+            var result = 0;
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            var p = new DynamicParameters(new
+            {
+                ptxid = debitTransaction.PtxId,
+                userId = debitTransaction.UserId,
+                amount = debitTransaction.Amount,
+                currency = debitTransaction.Currency,
+                ipaddress = debitTransaction.IpAddress,
+                refptxid = debitTransaction.RefPtxId,
+                txtype = debitTransaction.TxType,
+                timestamp = DateTime.Parse(debitTransaction.Timestamp),
+                platformtype = debitTransaction.PlatformType,
+                gpcode = debitTransaction.GpCode,
+                gamecode = debitTransaction.GameCode,
+                gamename = debitTransaction.GameName,
+                gametype = debitTransaction.GameType,
+                roundid = debitTransaction.RoundId,
+                betid = debitTransaction.BetId,
+                senton = DateTime.Parse(debitTransaction.Senton),
+                isclosinground = debitTransaction.IsClosingRound,
+                ggr = debitTransaction.Ggr,
+                turnover = debitTransaction.Turnover,
+                bonustype = debitTransaction.BonusType,
+                bonuscode = debitTransaction.BonusCode,
+                description = debitTransaction.Desc,
+                commission = debitTransaction.Commission,
+                TicketType = (int) BettransType.Bet,
+                TicketStatus = (int) TicketStatus.UnSettled,
+                SettleFlag = (int) SettleFlag.Running
+            });
+            p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
+
+            try
+            {
+                await conn.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", p, transaction: trans,
+                    commandType: CommandType.StoredProcedure);
+                result = p.Get<short>("SPResult");
+                var trxId = p.Get<long>("trx_id");
+                if (result != 1)
+                {
+                    if (result == 0)
+                    {
+                        logger.LogInformation($"訂單已存在:{trxId}");
+                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                    }
+
+                    logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
+                    throw new KmException(KMErrorCode.SystemError);
+                }
+                
+                trans.Commit();
+                return new KmDbResult()
+                {
+                    SPResult = result,
+                    Trx_id = trxId,
                 };
             }
             catch (Exception e)

@@ -34,5 +34,11 @@ namespace ThirdPartyService.Service.DAL
             string permissionData = p.Get<string>("PermissionData");
             return permissionData;
         }
+        
+        public int KmUserTokenSet(string userName, string token, DateTime expiredTime)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return  conn.Execute("Service_TpUserToken_KM_Set", new { UserName = userName, Token = token, ExpiredTime = expiredTime }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
