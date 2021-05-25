@@ -56,7 +56,6 @@ namespace ThirdParty.KM
             }
             else
             {
-                AuthProvider.KmUserTokenSet(tpCustInfo.TpUserName, dict["authtoken"], DateTime.UtcNow.AddDays(1));
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,

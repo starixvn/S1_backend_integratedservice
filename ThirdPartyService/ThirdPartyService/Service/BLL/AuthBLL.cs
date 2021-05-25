@@ -23,10 +23,5 @@ namespace ThirdPartyService.Service.BLL
         {
             return authService.Authenticate(Key);
         }
-
-        public int KmUserTokenSet(string userName, string token, DateTime expiredTime)
-        {
-            return authService.KmUserTokenSet(userName, token, expiredTime);
-        }
     }
 }

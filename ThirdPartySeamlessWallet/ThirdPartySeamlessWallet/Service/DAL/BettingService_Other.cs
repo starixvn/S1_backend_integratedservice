@@ -688,6 +688,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     throw new KmException(KMErrorCode.SystemError);
                 }
+
                 trans.Commit();
                 return new KmDbResult()
                 {
@@ -695,6 +696,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Trx_id = trxId,
                     AfterAmount = afterAmount
                 };
+            }
+            catch (KmException ex)
+            {
+                throw;
             }
             catch (Exception e)
             {

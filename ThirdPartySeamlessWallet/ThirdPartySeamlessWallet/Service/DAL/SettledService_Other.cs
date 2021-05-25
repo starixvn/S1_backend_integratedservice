@@ -1269,6 +1269,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         logger.LogInformation("訂單已存在");
                         return new KmDbResult() {SPResult = result, Trx_id = trxId};
                     }
+                    else if (result == 2)
+                    {
+                        logger.LogInformation("交易不存在");
+                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                    }
                     logger.LogError("exec Service_BettransPK_KM_Credit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }

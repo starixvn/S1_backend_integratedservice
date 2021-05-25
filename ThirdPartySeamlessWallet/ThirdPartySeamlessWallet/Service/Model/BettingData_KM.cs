@@ -142,15 +142,27 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class KMCreditResponse: BaseResult
     {
-        public List<KMCreditResponseTransaction> transactions { get; set; }
+        public List<KMCreditBaseTransaction> transactions { get; set; }
     }
-    public class KMCreditResponseTransaction
+    public class KMCreditResponseTransaction: KMCreditBaseTransaction
     {
-        public string txid { get; set; }
-        public string ptxid { get; set; }
         public decimal bal { get; set; }
         public string cur { get; set; }
         public bool dup { get; set; }
+    }
+
+    public class KMCreditErrorTransaction: KMCreditBaseTransaction
+    {
+        public string txid { get; set; }
+        public string ptxid { get; set; }
+        public int err { get; set; }
+        public string errdesc { get; set; }
+    }
+
+    public class KMCreditBaseTransaction
+    {
+        public string txid { get; set; }
+        public string ptxid { get; set; }
     }
 
     #endregion

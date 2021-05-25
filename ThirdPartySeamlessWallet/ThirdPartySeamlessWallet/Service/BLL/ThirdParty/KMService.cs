@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -50,12 +51,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             foreach (var transaction in request.transactions)
             {
-                var token = _thirdPartyBLL.GetToken_KM((int) ThirdParty, transaction.UserId);
-                if (token == null || transaction.AuthToken != token.Token)
-                {
-                    throw new KmException(KMErrorCode.ExpiredToken);
-                }
-
                 if (Enum.IsDefined(typeof(KMTxType), transaction.TxType))
                 {
                     var transactionResult = await Bet(transaction);
@@ -70,15 +65,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var response = new KMCreditResponse()
             {
-                transactions = new List<KMCreditResponseTransaction>()
+                transactions = new List<KMCreditBaseTransaction>()
             };
             foreach (var transaction in request.transactions)
             {
-                var token = _thirdPartyBLL.GetToken_KM((int) ThirdParty, transaction.userid);
-                if (token == null || transaction.authtoken != token.Token)
-                {
-                    throw new KmException(KMErrorCode.ExpiredToken);
-                }
                 if (Enum.IsDefined(typeof(KMTxType), transaction.txtype))
                 {
                     var transactionResult = await WinBet(transaction);
@@ -96,12 +86,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             foreach (var user in request.users)
             {
-                var token = _thirdPartyBLL.GetToken_KM((int) ThirdParty, user.UserId);
-                if (token == null || user.AuthToken != token.Token)
-                {
-                    throw new KmException(KMErrorCode.ExpiredToken);
-                }
-                
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, user.UserId);
                 if (tpCheck == null || tpCheck.Locked)
                 {
@@ -154,8 +138,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             // 訂單已存在
             if (dbResult.AfterAmount == 0)
             {
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.UserId, (int)GameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.UserId, (int)GameType);
                 dbResult.AfterAmount = tpCustBalance.Balance;
+                
+                return new KMDebitResponseTransaction()
+                {
+                    txid = dbResult.Trx_id.ToString(),
+                    ptxid = request.PtxId,
+                    bal = dbResult.AfterAmount,
+                    cur = tpCurrency.TpCurrencyId,
+                    dup = dbResult.SPResult == 0
+                };
             }
 
             if (dbResult.AfterAmount > 0)
@@ -172,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<KMCreditResponseTransaction> WinBet(KMCreditRequestTransaction request)
+        private async Task<KMCreditBaseTransaction> WinBet(KMCreditRequestTransaction request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.userid);
             request.amt *= tpCurrency.ExchangeRate;
@@ -184,20 +177,38 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.txtype.ToString().StartsWith("5"))
             {
                 dbResult = await _settledService.PayoutNoSetBalance_KM(request);
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.userid, (int)GameType);
-                dbResult.AfterAmount = tpCustBalance.Balance;
             }
             else
             {
                 dbResult = await _settledService.PayoutPK_KM(tpCustInfo, request);
             }
 
-            
+            //交易不存在
+            if (dbResult.SPResult == 2)
+            {
+                return new KMCreditErrorTransaction()
+                {
+                    txid = dbResult.Trx_id.ToString(),
+                    ptxid = request.ptxid,
+                    err = (int)KMErrorCode.TransactionDoesNotExist,
+                    errdesc = KMErrorCode.TransactionDoesNotExist.GetEnumDescription()
+                };
+            }
+
             // 訂單已存在
             if (dbResult.AfterAmount == 0)
             {
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.userid, (int)GameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.userid, (int)GameType);
                 dbResult.AfterAmount = tpCustBalance.Balance;
+                
+                return new KMCreditResponseTransaction()
+                {
+                    txid = dbResult.Trx_id.ToString(),
+                    ptxid = request.ptxid,
+                    bal = dbResult.AfterAmount,
+                    cur = tpCurrency.TpCurrencyId,
+                    dup = dbResult.SPResult == 0
+                };
             }
 
             if (dbResult.AfterAmount > 0)

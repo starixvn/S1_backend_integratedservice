@@ -189,29 +189,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return gameType;
         }
-        
-        public KmUserToken GetToken_KM(int tpId, string tpUserName)
-        {
-            var key = $"TpToken_{tpId}_{tpUserName}";
-            var kmToken = cache.Get<KmUserToken>(key);
-            if (kmToken == null)
-            {
-                kmToken = thirdPartyService.GetKmUserToken(tpUserName);
-                if (kmToken != null)
-                {
-                    var ts = kmToken.ExpiredTime - DateTime.UtcNow;
-                    if (ts.Ticks > 0)
-                    {
-                        cache.Set(key, kmToken, new MemoryCacheEntryOptions().SetAbsoluteExpiration(ts));
-                    }
-                    else
-                    {
-                        kmToken = null;
-                    }
-                }
-            }
-
-            return kmToken;
-        }
     }
 }
