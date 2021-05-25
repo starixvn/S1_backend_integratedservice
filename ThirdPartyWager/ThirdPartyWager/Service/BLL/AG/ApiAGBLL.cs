@@ -1,15 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Serilog.Context;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -17,13 +15,23 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
+        private readonly ILogger<ApiAGBLL> logger;
+        private readonly string logName = Tp.AG.ToString();
 
-        public ApiAGBLL(HttpHelper httpHelper, Common common)
+        public ApiAGBLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiAGBLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
+            this.logger = logger;
         }
-        public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page)
+        public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page, string guid)
         {
             // param
             string uri = "/getorders.xml";
@@ -32,14 +40,16 @@ namespace ThirdPartyWager.Service.BLL
             string key = common.ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
 
-            // request
-            var r = await DoHttpClientAsync(url, param, "row");
-            var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
 
+            // request
+            var r = await DoHttpClientAsync(url, param, "row", guid);
+            var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
             return result;
         }
 
-        public async Task<WagerAGModel> GetBetSummaryByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime)
+        public async Task<WagerAGModel> GetBetSummaryByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, string guid)
         {
             // param
             string uri = "/getsumorders.xml";
@@ -47,8 +57,11 @@ namespace ThirdPartyWager.Service.BLL
             string key = common.ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&key={key}";
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
+
             // request
-            var r = await DoHttpClientAsync(url, param, "row");
+            var r = await DoHttpClientAsync(url, param, "row", guid);
             var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
             return result;
         }
@@ -65,7 +78,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string tagName)
+        private async Task<string> DoHttpClientAsync(string url, string param, string tagName, string guid)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
@@ -93,6 +106,11 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, url, param, response);
                 return null;
             }
         }

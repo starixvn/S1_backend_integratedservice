@@ -15,5 +15,4 @@
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
     }
-
 }

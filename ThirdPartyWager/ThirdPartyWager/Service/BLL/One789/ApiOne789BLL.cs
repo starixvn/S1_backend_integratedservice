@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,14 +17,24 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
+        private readonly ILogger<ApiOne789BLL> logger;
+        private readonly string logName = Tp.One789.ToString();
 
-        public ApiOne789BLL(HttpHelper httpHelper, Common common)
+        public ApiOne789BLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiOne789BLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
+            this.logger = logger;
         }
 
-        public async Task<dynamic> GetBetListByTime(string apiUrl, string apiKey, string startTime, string endTime, int page, int perPage, int gameType)
+        public async Task<dynamic> GetBetListByTime(string apiUrl, string apiKey, string startTime, string endTime, int page, int perPage, int gameType, string guid)
         {
             // param
             var uri = "";
@@ -44,14 +56,16 @@ namespace ThirdPartyWager.Service.BLL
             string url = $"{apiUrl}{uri}";
             string param = $"?from={startTime}&to={endTime}&type=1&size={perPage}&page={page}";
 
-            // request
-            var r = await DoHttpClientAsync(url, param, apiKey);
-            dynamic result = JsonConvert.DeserializeObject(r);
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
 
+            // request
+            var r = await DoHttpClientAsync(url, param, apiKey, guid);
+            dynamic result = JsonConvert.DeserializeObject(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string apiKey)
+        private async Task<string> DoHttpClientAsync(string url, string param, string apiKey, string guid = null)
         {
             var path = url + param;
             var request = new HttpRequestMessage(HttpMethod.Get, path);
@@ -64,9 +78,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                return $"[{response.Content.ReadAsStringAsync().Result}]";
+                var result = $"[{response.Content.ReadAsStringAsync().Result}]";
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"HEADER: {request.Headers}");
+                logger.LogError($"RESPONSE: {result}");
+                log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers);
+                return result;
             }
         }
-
     }
 }

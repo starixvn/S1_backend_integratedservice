@@ -1,17 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Ocsp;
+using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -20,14 +17,24 @@ namespace ThirdPartyWager.Service.BLL
         private byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
+        private readonly ILogger<ApiAllBetBLL> logger;
+        private readonly string logName = Tp.Allbet.ToString();
 
-        public ApiAllBetBLL(HttpHelper httpHelper, Common common)
+        public ApiAllBetBLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiAllBetBLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
+            this.logger = logger;
         }
 
-        public async Task<WagerAllBetModel> GetBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex)
+        public async Task<WagerAllBetModel> GetBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
             string uri = "/betlog_histories";
@@ -40,8 +47,11 @@ namespace ThirdPartyWager.Service.BLL
             string sign = common.base64edMd5($"{data}{md5Key}");
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, parameter, param);
+
             // request
-            var r = await DoHttpClientAsync(url, param);
+            var r = await DoHttpClientAsync(url, param, guid);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -53,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<WagerAllBetModel> GetModifiedBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex)
+        public async Task<WagerAllBetModel> GetModifiedBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
             string uri = "/betlog_modified_histories";
@@ -66,8 +76,11 @@ namespace ThirdPartyWager.Service.BLL
             string sign = common.base64edMd5($"{data}{md5Key}");
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, parameter, param);
+
             // request
-            var r = await DoHttpClientAsync(url, param);
+            var r = await DoHttpClientAsync(url, param, guid);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -79,7 +92,7 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param)
+        private async Task<string> DoHttpClientAsync(string url, string param, string guid = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
@@ -90,6 +103,11 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, url, param, response);
                 return null;
             }
         }

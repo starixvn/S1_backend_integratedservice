@@ -20,6 +20,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common common;
         private readonly Log2File log2File;
         private readonly ILogger<ApiV8BLL> logger;
+        private readonly string logName = Tp.V8.ToString();
 
         public ApiV8BLL(
             HttpHelper httpHelper,
@@ -59,20 +60,18 @@ namespace ThirdPartyWager.Service.BLL
             dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(wager));
             sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, sParam);
+
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}{JsonConvert.SerializeObject(wager)}", Tp.V8.ToString());
-            string r = await DoHttpClientAsync(url, sParam);
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.V8.ToString());
+            string r = await DoHttpClientAsync(url, sParam, guid);
             var result = JsonConvert.DeserializeObject<WagerV8Model>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param)
+        private async Task<string> DoHttpClientAsync(string url, string param, string guid = null)
         {
-            LogContext.PushProperty("TpId", Tp.V8.ToString());
-            logger.LogInformation($"URL {url}");
-            logger.LogInformation($"REQUEST: {param}");
-
+            string tmpUrl = url;
             url = $"{url}?{param}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             var response = await httpHelper.GetClient().SendAsync(request);
@@ -83,9 +82,18 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     result = sr.ReadToEnd();
                 }
+                log2File.AddResponseLog(logName, guid, tmpUrl, param, result, "Info");
+                return result;
             }
-            logger.LogInformation($"RESPONSE: {result}");
-            return result;
+            else
+            {
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {tmpUrl}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, tmpUrl, param, response, "Error");
+                return null;
+            }
         }
     }
 }

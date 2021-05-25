@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,15 +19,23 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper httpHelper;
         private readonly Common common;
         private readonly Log2File log2File;
+        private readonly ILogger<ApiSGBLL> logger;
+        private readonly string logName = Tp.SG.ToString();
 
-        public ApiSGBLL(HttpHelper httpHelper, Common common, Log2File log2File)
+        public ApiSGBLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiSGBLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
             this.log2File = log2File;
+            this.logger = logger;
         }
 
-        public async Task<WagerSGModel> GetBetListByTime(string apiUrl, string merchantCode, string startTime, string endTime, int page)
+        public async Task<WagerSGModel> GetBetListByTime(string apiUrl, string merchantCode, string startTime, string endTime, int page, string guid)
         {
             // param
             string uri = "getBetHistory";
@@ -38,14 +49,16 @@ namespace ThirdPartyWager.Service.BLL
                 serialNo = Guid.NewGuid().ToString(),
             };
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, param, uri);
+
             // request
-            string r = await DoHttpClientAsync(url, uri, param);
-            //log2File.Info($"{JsonConvert.SerializeObject(param)}\r\n{r}", "ApiSGBLL");
+            string r = await DoHttpClientAsync(url, uri, param, guid);
             var result = JsonConvert.DeserializeObject<WagerSGModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string uri, object param)
+        private async Task<string> DoHttpClientAsync(string url, string uri, object param, string guid = null)
         {
             var json = JsonConvert.SerializeObject(param);
 
@@ -61,7 +74,11 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (HttpRequestException HREx)
             {
-                log2File.Error($"{HREx}\r\n{json}\r\n{response?.Content?.ReadAsStringAsync()?.Result}", "ApiSGBLL");
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"HEADER: {request.Headers}");
+                log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers, HREx.Message);
                 return null;
             }
         }

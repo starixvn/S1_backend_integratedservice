@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common common;
         private readonly Log2File log2File;
         private readonly ILogger<ApiOneGamingBLL> logger;
+        private readonly string logName = Tp.OneGaming.ToString();
 
         public ApiOneGamingBLL(
             HttpHelper httpHelper,
@@ -46,30 +47,37 @@ namespace ThirdPartyWager.Service.BLL
                 bcode = common.HMACSHA256($"{agentCode}{startTime}{endTime}", secretKey)
             };
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
+
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.OneGaming.ToString());
-            var r = await DoHttpClientAsync(url, param);
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.OneGaming.ToString());
+            var r = await DoHttpClientAsync(url, param, guid);
             var result = JsonConvert.DeserializeObject<WagerOneGamingModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param)
+        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
         {
             var sParam = JsonConvert.SerializeObject(param);
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/json");
 
-            LogContext.PushProperty("TpId", Tp.OneGaming.ToString());
-            logger.LogInformation($"URL {url}");
-            logger.LogInformation($"REQUEST: {sParam}");
-
             var response = await httpHelper.GetClient().SendAsync(request);
-            var result = (response.IsSuccessStatusCode) ? response.Content.ReadAsStringAsync().Result : null;
-            
-            logger.LogInformation($"RESPONSE: {result}");
-            return result;
+            if (response.IsSuccessStatusCode)
+            {
+                log2File.AddResponseLog(logName, guid, url, sParam, response.Content.ReadAsStringAsync().Result, "Info");
+                return response.Content.ReadAsStringAsync().Result;
+            }
+            else
+            {
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {sParam}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error");
+                return null;
+            }
         }
     }
 }

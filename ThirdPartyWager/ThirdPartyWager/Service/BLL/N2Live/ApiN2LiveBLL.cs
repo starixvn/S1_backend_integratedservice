@@ -23,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper httpHelper;
         private readonly Log2File log2File;
         private readonly ILogger<ApiN2LiveBLL> logger;
+        private readonly string logName = Tp.N2Live.ToString();
 
         public ApiN2LiveBLL(
             HttpHelper httpHelper,
@@ -59,26 +60,20 @@ namespace ThirdPartyWager.Service.BLL
             doc.AppendChild(request);
             request.AppendChild(element);
 
+            // log
+            log2File.AddRequestLog(logName, guid, apiUrl, doc.InnerXml);
+
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}", Tp.N2Live.ToString());
-            string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nResponse:\r\n{r}", Tp.N2Live.ToString());
+            string r = await DoHttpClientAsync(apiUrl, doc.InnerXml, guid);
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param)
+        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
         {
-           
-
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param.ToString(), Encoding.UTF8, "application/xml");
             request.Headers.Add("Accept-Encoding", "gzip");
-
-            LogContext.PushProperty("TpId", Tp.N2Live.ToString());
-            logger.LogInformation($"URL {url}");
-            logger.LogInformation($"REQUEST: {param.ToString()}");
-            logger.LogInformation($"HEADER: {request.Headers}");
 
             HttpResponseMessage response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
@@ -108,12 +103,16 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 string json = JsonConvert.SerializeXmlNode(xmlDoc);
-                logger.LogInformation($"RESPONSE: {xmlDoc.InnerXml}");
                 return json;
             }
             else
             {
-                logger.LogInformation($"RESPONSE: null");
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"HEADER: {request.Headers}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers);
                 return null;
             }
         }

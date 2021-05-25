@@ -1,13 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Math;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
@@ -21,14 +17,22 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper httpHelper;
         private readonly Common common;
         private readonly Log2File log2File;
+        private readonly ILogger<ApiDGBLL> logger;
+        private readonly string logName = Tp.DG.ToString();
 
-        public ApiDGBLL(HttpHelper httpHelper, Common common, Log2File log2File)
+        public ApiDGBLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiDGBLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
             this.log2File = log2File;
+            this.logger = logger;
         }
-        public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
+        public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey, string guid)
         {
             // param
             string uri = "/game/getReport/";
@@ -41,16 +45,16 @@ namespace ThirdPartyWager.Service.BLL
                 random = random
             };
 
-            // request
-            log2File.Info($"Url:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.DG.ToString());
-            var r = await DoHttpClientAsync(url, param);
-            log2File.Info($"\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.DG.ToString());
-            var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
 
+            // request
+            var r = await DoHttpClientAsync(url, param, guid);
+            var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
             return result;
         }
 
-        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds)
+        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds, string guid)
         {
             // param
             string uri = "/game/markReport/";
@@ -64,10 +68,11 @@ namespace ThirdPartyWager.Service.BLL
                 list = wagerIds
             };
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
+
             // request
-            log2File.Info($"Url:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.DG.ToString());
-            string r = await DoHttpClientAsync(url, param);
-            log2File.Info($"\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.DG.ToString());
+            var r = await DoHttpClientAsync(url, param, guid);
             var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
             if (result.codeId != 0)
@@ -77,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
             return;
         }
 
-        public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
+        public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow, string guid)
         {
             // param
             string uri = "/game/getReport";
@@ -92,14 +97,16 @@ namespace ThirdPartyWager.Service.BLL
                 agentName = agentName,
                 pageNow = pageNow
             };
+
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
+
             // request
-            log2File.Info($"Url:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.DG.ToString());
-            var r = await DoHttpClientAsync(url, param);
-            log2File.Info($"\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.DG.ToString());
+            var r = await DoHttpClientAsync(url, param, guid);
             var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
             return result;
         }
-        private async Task<string> DoHttpClientAsync(string url, object param)
+        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = JsonConvert.SerializeObject(param);
@@ -111,8 +118,13 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                return response.Content.ReadAsStringAsync().Result;
-                //return null;
+                var result = response.Content.ReadAsStringAsync().Result;
+                LogContext.PushProperty("TpId", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {json}");
+                logger.LogError($"RESPONSE: {result}");
+                log2File.AddResponseLog(logName, guid, url, json, response);
+                return result;
             }
         }
     }

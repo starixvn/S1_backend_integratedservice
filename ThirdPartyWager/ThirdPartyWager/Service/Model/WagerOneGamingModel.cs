@@ -45,12 +45,12 @@ namespace ThirdPartyWager.Service.Model
     {
     }
 
-    public class WagerOneGamingTotal
-    {
-        public int wagerCount { get; set; }
-        public decimal bet { get; set; }
-        public decimal realbet { get; set; }
-        public decimal comm { get; set; }
-        public decimal amount { get; set; }
-    }
+    //public class WagerOneGamingTotal
+    //{
+    //    public int wagerCount { get; set; }
+    //    public decimal bet { get; set; }
+    //    public decimal realbet { get; set; }
+    //    public decimal comm { get; set; }
+    //    public decimal amount { get; set; }
+    //}
 }

@@ -1,22 +1,12 @@
-﻿using Dapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -27,17 +17,30 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly WagerDGService wagerDGService;
         private readonly ApiDGBLL apiDGBLL;
+        private readonly Log2File log2File;
         private readonly ILogger<WagerDGBLL> logger;
 
-        public WagerDGBLL(ILogger<WagerDGBLL> logger, WagerDGService wagerDGService, ApiDGBLL apiDGBLL, ThirdPartyBLL thirdPartyBLL)
+        public WagerDGBLL(
+            ThirdPartyBLL thirdPartyBLL,
+            WagerDGService wagerDGService,
+            ApiDGBLL apiDGBLL,
+            Log2File log2File,
+            ILogger<WagerDGBLL> logger
+        )
         {
             this.thirdPartyBLL = thirdPartyBLL;
             this.wagerDGService = wagerDGService;
             this.apiDGBLL = apiDGBLL;
+            this.log2File = log2File;
             this.logger = logger;
         }
         public async Task<bool> GetWagersAsync()
         {
+            string msg = "FATAL_ERROR";
+            string logName = Tp.DG.ToString();
+            string guid = Guid.NewGuid().ToString();
+            LogContext.PushProperty("TpId", logName);
+
             // get dg api info
             try
             {
@@ -45,19 +48,21 @@ namespace ThirdPartyWager.Service.BLL
 
                 List<long> wagerIds = new List<long>();
                 // get wagers
-                var dataWager = await apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"]);
+                var dataWager = await apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], guid);
 
                 var errorCode = dataWager.codeId;
                 if (errorCode != 0)
                 {
-                    logger.LogError(errorCode, null);
-                    logger.LogInformation($"THIRD_PARTY_ERROR");
+                    msg = "THIRD_PARTY_ERROR";
+                    logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
+                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
                     return false;
                 }
 
                 if (dataWager.list == null || dataWager.list.Count() == 0)
                 {
-                    logger.LogInformation($"NO_DATA");
+                    msg = "NO_DATA";
+                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
                     return true;
                 }
 
@@ -71,22 +76,26 @@ namespace ThirdPartyWager.Service.BLL
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, ex.Message);
+                        msg = $"INSERT_WAGER(WAGERID: {bet.id} )";
+                        logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(bet)}, EXCEPTION: {ex.Message}");
+                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
                         continue;
                     }
                 }
                 // mark wager
-                await apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
-                
-                logger.LogInformation($"FINISH");
+                await apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds, guid);
+
+                msg = "FINISH";
+                log2File.AddResultLog(logName, guid, msg, null, "Info");
                 return dataWager.list.Count() == 1000;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                msg = "FATAL_ERROR";
+                logger.LogError($"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
+                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
                 return true;
             }
         }
-
     }
 }

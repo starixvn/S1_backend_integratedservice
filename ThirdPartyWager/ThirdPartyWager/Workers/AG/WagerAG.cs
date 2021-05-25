@@ -52,6 +52,11 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            //if (!environment.IsProduction())
+            //{
+            //    return;
+            //}
+
             try
             {
                 quick = 0;

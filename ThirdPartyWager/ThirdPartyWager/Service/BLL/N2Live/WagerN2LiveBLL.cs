@@ -58,15 +58,14 @@ namespace ThirdPartyWager.Service.BLL
                     // 506是有牌局未完成结算，startdate enddate这段时间的牌局结算完成就能返回
                     msg = "THIRD_PARTY_ERROR";
                     logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
-                    log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
+                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
                     return false;
                 }
 
                 if (dataWager.message.result.gameinfo == null)
                 {
                     msg = "NO_DATA";
-                    logger.LogInformation($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
-                    log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
+                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
                     return true;
                 }
 
@@ -109,22 +108,21 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             msg = $"INSERT_WAGER(WAGERID: {dealItem.id} )";
                             logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dealItem)}, EXCEPTION: {ex.Message}");
-                            log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}\r\nResponse:\r\n{JsonConvert.SerializeObject(dealItem)}\r\nException:\r\n{ex}", logName);
+                            log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dealItem), "Error", ex.Message);
                             return false;
                         }
                     }
 
                 }
                 msg = "FINISH";
-                logger.LogInformation($"MESSAGE: {msg}");
-                log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
+                log2File.AddResultLog(logName, guid, msg, null, "Info");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
                 logger.LogError($"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
-                log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}\r\nException:\r\n{ex}", logName);
+                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
                 return false;
             }
         }

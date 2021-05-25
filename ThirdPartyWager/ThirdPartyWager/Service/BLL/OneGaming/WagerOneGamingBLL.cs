@@ -3,13 +3,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -60,15 +56,14 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     msg = "THIRD_PARTY_ERROR";
                     logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
-                    log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
+                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
                     return false;
                 }
 
                 if (dataWager.data.Count == 0)
                 {
                     msg = "NO_DATA";
-                    logger.LogInformation($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
-                    log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
+                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
                     return true;
                 }
 
@@ -82,28 +77,27 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         msg = $"INSERT_WAGER(WAGERID: {bet.ticket} )";
                         logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(bet)}, EXCEPTION: {ex.Message}");
-                        log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}\r\nResponse:\r\n{JsonConvert.SerializeObject(bet)}\r\nException:\r\n{ex}", logName);
+                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
                         return false;
                     }
                 }
 
                 msg = "FINISH";
-                logger.LogInformation($"MESSAGE: {msg}");
-                log2File.Info($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}", logName);
+                log2File.AddResultLog(logName, guid, msg, null, "Info");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
                 logger.LogError($"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
-                log2File.Error($"Guid:\r\n{guid}\r\nInfo:\r\n{msg}\r\nException:\r\n{ex}", logName);
+                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
                 return false;
             }
         }
 
-        public WagerOneGamingTotal GetWagerTotal(long startUnix, long endUnix)
-        {
-            return wagerOneGamingService.GetWagerTotal(startUnix, endUnix);
-        }
+        //public WagerOneGamingTotal GetWagerTotal(long startUnix, long endUnix)
+        //{
+        //    return wagerOneGamingService.GetWagerTotal(startUnix, endUnix);
+        //}
     }
 }
