@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -41,7 +42,9 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
+            log2File.Info($"Url:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.DG.ToString());
             var r = await DoHttpClientAsync(url, param);
+            log2File.Info($"\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.DG.ToString());
             var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
             return result;
@@ -62,7 +65,9 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
+            log2File.Info($"Url:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.DG.ToString());
             string r = await DoHttpClientAsync(url, param);
+            log2File.Info($"\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.DG.ToString());
             var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
             if (result.codeId != 0)
@@ -88,13 +93,10 @@ namespace ThirdPartyWager.Service.BLL
                 pageNow = pageNow
             };
             // request
+            log2File.Info($"Url:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}", Tp.DG.ToString());
             var r = await DoHttpClientAsync(url, param);
-            log2File.Error($"Info:\r\n{r}\r\n", "DG");
+            log2File.Info($"\r\nUrl:\r\n{url}\r\nResponse:\r\n{r}", Tp.DG.ToString());
             var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
-            //if (result.data == null)
-            //{
-            //    throw new Exception("No Data.");
-            //}
             return result;
         }
         private async Task<string> DoHttpClientAsync(string url, object param)
@@ -105,12 +107,10 @@ namespace ThirdPartyWager.Service.BLL
             var response = await httpHelper.GetClient().SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
-                log2File.Error($"Success:\r\n{response}\r\n{response.Content.ReadAsStringAsync().Result}\r\n", "DG");
                 return response.Content.ReadAsStringAsync().Result;
             }
             else
             {
-                log2File.Error($"Error:\r\n{response}\r\n{response.Content.ReadAsStringAsync().Result}\r\n", "DG");
                 return response.Content.ReadAsStringAsync().Result;
                 //return null;
             }

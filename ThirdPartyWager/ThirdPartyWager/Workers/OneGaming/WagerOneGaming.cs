@@ -35,6 +35,7 @@ namespace ThirdPartyWager.Workers
         private int quickCNY = 0;
         private int quickUSD = 0;
         private int beyond = 5;
+        private string logName = Tp.OneGaming.ToString();
 
         public WagerOneGaming(
             ILogger<WagerOneGaming> logger,
@@ -105,7 +106,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -165,7 +166,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -223,7 +224,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
-                log2File.Error(ex.ToString(), "WagerOneGaming");
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -282,7 +283,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -342,7 +343,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -402,7 +403,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {

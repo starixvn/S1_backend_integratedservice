@@ -19,12 +19,14 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
+        private readonly Log2File log2File;
         private Timer timer;
         private int intervalMins = 60;
         private int tpId = (int)Tp.V8;
         private int tpType = 2;
         private int quick = 0;
         private int beyond = 120;
+        private string logName = Tp.V8.ToString();
 
         public WagerRedoV8(
             ILogger<WagerRedoV8> logger,
@@ -32,7 +34,8 @@ namespace ThirdPartyWager.Workers
             WagerV8BLL wagerV8BLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
+            IHostEnvironment environment,
+            Log2File log2File
         )
         {
             this.logger = logger;
@@ -41,6 +44,7 @@ namespace ThirdPartyWager.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
+            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -97,6 +101,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {

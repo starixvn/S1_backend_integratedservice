@@ -22,7 +22,7 @@ namespace ThirdPartyWager.Service.Library
             {
                 Directory.CreateDirectory(LogFolder);
                 using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{InfoContent}\r\n******\r\n");
+                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{InfoContent}\r\n");
             });
         }
         public void Error(string ErrorContent, string PrefixName)
@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.Library
             {
                 Directory.CreateDirectory(LogFolder);
                 using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{ErrorContent}\r\n******\r\n");
+                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{ErrorContent}\r\n");
             });
         }
     }

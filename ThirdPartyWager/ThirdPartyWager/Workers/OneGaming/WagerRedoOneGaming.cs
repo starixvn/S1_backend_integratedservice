@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.OneGaming;
         private int tpType = 2;
         private int iDays = 2;
+        private string logName = Tp.OneGaming.ToString();
 
         public WagerRedoOneGaming(
             ILogger<WagerRedoOneGaming> logger,
@@ -99,7 +100,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
-                log2File.Error(ex.ToString(), "Wager_OneGaming_Redo");
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
