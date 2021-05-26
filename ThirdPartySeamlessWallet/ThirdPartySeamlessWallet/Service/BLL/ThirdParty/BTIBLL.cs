@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var (authToken, sessionToken, tpUserName) = GetToken(token);
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
                 if (tpCheck == null || tpCheck.Locked || tpCheck.Token != sessionToken)
                 {
                     return new BTIStatusObj(token);
@@ -68,7 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var (authToken, sessionToken, tpUserName) = GetToken(token);
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
                 if (tpCheck == null || tpCheck.Locked || tpCheck.Token != sessionToken)
                 {
                     return new BTIRefreshObj(false);
@@ -96,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var (authToken, sessionToken, tpUserName) = GetToken(auth_token);
 
                 // check tp status and sessionToken
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
                 if (tpCheck == null)
                 {
                     throw new InvalidTokenException("tpCheck fail.");
