@@ -204,9 +204,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
+            string TransId = $"{cancelDataPK_AMB.roundId}_{cancelDataPK_AMB.username}";
             var p = new DynamicParameters(new
             {
-                TransId = $"{cancelDataPK_AMB.roundId}_{cancelDataPK_AMB.username}",
+                TransId = TransId,
                 refId = cancelDataPK_AMB.refId,
                 TicketType = (int)BettransType.CancelBet,
                 TicketStatus = (int)TicketStatus.Refund,
@@ -215,6 +216,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+                // check cancel
+                var check = conn.QueryFirstOrDefault<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", new { TransId = TransId, TicketType = (int)BettransType.CancelBet, TicketStatus = (int)TicketStatus.Refund }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check != null)
+                {
+                    // cancel
+                    return -1;
+                }
+
                 result = conn.Execute("Service_BettransPK_AMB_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
@@ -332,12 +341,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    throw;
                 }
-            }
-            catch (Exception ex)
-            {
-                throw;
             }
 
             return result;

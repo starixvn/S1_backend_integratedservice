@@ -146,12 +146,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    throw;
                 }
-            }
-            catch (Exception ex)
-            {
-                throw;
             }
 
             return result;
