@@ -184,6 +184,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.CQ9_Fish;
                     }
                     break;
+                case (int)Tp.JILI:
+                    List<int> fishJL = new List<int>{
+                        1,
+                        20,
+                        42,
+                        32,
+                        60,
+                        74
+                    };
+
+                    gameType = GameType.JILI_RNG;
+
+                    if (fishJL.Contains((int)gameType))
+                    {
+                        gameType = GameType.JILI_Fish;
+                    }
+                    break;
                 default:
                     break;
             }

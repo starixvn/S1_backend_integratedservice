@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -2451,6 +2453,429 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerRng_PT_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
+
+        #region JILI
+
+        private readonly ILogger<BettingService> betLogger;
+
+        public int BetAndPayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, ThirdPartyBLL thirdPartyBLL, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                // check bet
+                var check = conn.QueryFirstOrDefault<BettransData_JILI>("Service_BettransRng_JILI_Get", new { round = bettingData_JILI.round }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check != null)
+                {
+                    return -1;
+                }
+
+                var betAmount = bettingData_JILI.betAmount * -1;
+
+                var iTicketStatus = (int)TicketStatus.Win;
+                var winlose = betAmount + bettingData_JILI.winloseAmount;
+
+                if (winlose > 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Win;
+                }
+                else if (winlose < 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Lost;
+                }
+                else if (winlose == 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Draw;
+                }
+
+                // Special Bets
+                if (betAmount == 0 && bettingData_JILI.winloseAmount >= 0)
+                {
+                    iTicketStatus = (int)TicketStatus.FreeBetWin;
+                }
+
+                var p = new DynamicParameters(new
+                {
+                    reqId = bettingData_JILI.reqId,
+                    userId = bettingData_JILI.userId,
+                    currency = bettingData_JILI.currency,
+                    game = bettingData_JILI.game,
+                    round = bettingData_JILI.round,
+                    wagersTime = bettingData_JILI.wagersTime,
+                    betAmount = betAmount,
+                    winloseAmount = bettingData_JILI.winloseAmount,
+                    isFreeRound = bettingData_JILI.isFreeRound,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = iTicketStatus,
+                    SettleFlag = SettleFlag.EndGame
+                });
+
+                var category = TpCategory.Slots;
+                var gameType = (int)GameType.JILI_RNG;
+
+                result = conn.Execute("Service_BettransRng_JILI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+                    if (betAmount != 0)
+                    {
+                        result = new BettingService(this.configuration, this.walletService, thirdPartyBLL, this.tools, null, betLogger, log2File).PlaceBetV2(
+                            tpCustInfo,
+                            betAmount,
+                            (int)Tp.JILI,
+                            bettingData_JILI.round.ToString(),
+                            gameType,
+                            bettingData_JILI.round.ToString(),
+                            null,
+                            category,
+                            out afterAmount,
+                            ref bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    bool getBonus = false;
+                    if (winlose != 0)
+                    {
+                        if (bonusId > 0)
+                        {
+                            getBonus = true;
+                            result = PayoutWithBonusId(
+                                tpCustInfo,
+                                bettingData_JILI.winloseAmount,
+                                (int)Tp.JILI,
+                                bettingData_JILI.round.ToString(),
+                                gameType,
+                                category,
+                                bettingData_JILI.round.ToString(),
+                                TransType.Payout,
+                                out afterAmount,
+                                "Payout",
+                                bonusId,
+                                conn,
+                                trans
+                            );
+                        }
+                        else
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                bettingData_JILI.winloseAmount,
+                                (int)Tp.JILI,
+                                bettingData_JILI.round.ToString(),
+                                gameType,
+                                category,
+                                bettingData_JILI.round.ToString(),
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                "Payout",
+                                out bonusId,
+                                conn,
+                                trans
+                           );
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+
+                        if (getBonus)
+                        {
+                            //call Service_TpSlotsBonus_Get to set flag
+                            GetTpBonus((int)Tp.JILI, bettingData_JILI.round.ToString(), gameType, category, out int custId, out bonusId);
+                        }
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int CancelBetRNG_JILI(TpCustInfo tpCustInfo, CancelBetData_JILI cancelBetData_JILI, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                // check bet
+                var check = conn.QueryFirstOrDefault<BettransData_JILI>("Service_BettransRng_JILI_Get", new { round = cancelBetData_JILI.round }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check == null)
+                {
+                    return -2;
+                }
+                else if (check.TicketStatus == 3)
+                {
+                    return -1;
+                }
+
+                var p = new DynamicParameters(new
+                {
+                    round = cancelBetData_JILI.round,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = TicketStatus.Refund,
+                    SettleFlag = SettleFlag.EndGame
+                });
+
+                var category = TpCategory.Slots;
+                var gameType = (int)GameType.JILI_RNG;
+
+                result = conn.Execute("Service_BettransRng_JILI_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                var refundAmount = Math.Abs(cancelBetData_JILI.betAmount) + (Math.Abs(cancelBetData_JILI.betAmount) * -1);
+
+                if (result > 0)
+                {
+                    if (refundAmount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            refundAmount,
+                            (int)Tp.JILI,
+                            cancelBetData_JILI.round.ToString(),
+                            gameType,
+                            category,
+                            cancelBetData_JILI.round.ToString(),
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = -99;
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int BetAndPayoutFish_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                // check bet
+                var check = conn.QueryFirstOrDefault<BettransData_JILI>("Service_BettransFish_JILI_Get", new { round = bettingData_JILI.round }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check != null)
+                {
+                    return -1;
+                }
+
+                var betAmount = bettingData_JILI.betAmount * -1;
+                var iTicketStatus = (int)TicketStatus.Win;
+                var winlose = betAmount + bettingData_JILI.winloseAmount;
+
+                if (winlose > 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Win;
+                }
+                else if (winlose < 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Lost;
+                }
+                else if (winlose == 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Draw;
+                }
+
+                // Special Bets
+                if (betAmount == 0 && bettingData_JILI.winloseAmount >= 0)
+                {
+                    iTicketStatus = (int)TicketStatus.FreeBetWin;
+                }
+
+                var p = new DynamicParameters(new
+                {
+                    reqId = bettingData_JILI.reqId,
+                    userId = bettingData_JILI.userId,
+                    currency = bettingData_JILI.currency,
+                    game = bettingData_JILI.game,
+                    round = bettingData_JILI.round,
+                    wagersTime = bettingData_JILI.wagersTime,
+                    betAmount = betAmount,
+                    winloseAmount = bettingData_JILI.winloseAmount,
+                    isFreeRound = bettingData_JILI.isFreeRound,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = iTicketStatus,
+                    SettleFlag = SettleFlag.EndGame
+                });
+
+                result = conn.Execute("Service_BettransFish_JILI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (betAmount != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            betAmount,
+                            (int)Tp.JILI,
+                            TransType.Wagers,
+                            $"Stake: {betAmount:#,##0.##}",
+                            bettingData_JILI.round.ToString(),
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (winlose != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            Math.Abs(bettingData_JILI.winloseAmount),
+                            (int)Tp.JILI,
+                            TransType.Payout,
+                            $"Payout: {Math.Abs(bettingData_JILI.winloseAmount):#,##0.##}",
+                            bettingData_JILI.round.ToString(),
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int CancelBetFish_JILI(TpCustInfo tpCustInfo, CancelBetData_JILI cancelBetData_JILI, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                // check bet
+                var check = conn.QueryFirstOrDefault<BettransData_JILI>("Service_BettransFish_JILI_Get", new { round = cancelBetData_JILI.round }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (check == null)
+                {
+                    return -2;
+                }
+                else if (check.TicketStatus == 3)
+                {
+                    return -1;
+                }
+
+                //cancelBetData_JILI.betAmount *= -1;
+
+                var p = new DynamicParameters(new
+                {
+                    round = cancelBetData_JILI.round,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = TicketStatus.Refund,
+                    SettleFlag = SettleFlag.EndGame
+                });
+
+                result = conn.Execute("Service_BettransFish_JILI_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                var refundAmount = Math.Abs(cancelBetData_JILI.betAmount) + (Math.Abs(cancelBetData_JILI.betAmount) * -1);
+
+                if (result > 0)
+                {
+                    if (refundAmount != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            refundAmount,
+                            (int)Tp.JILI,
+                            TransType.Refunds,
+                            $"Cancel: {refundAmount:#,##0.##}",
+                            cancelBetData_JILI.round.ToString(),
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = -99;
+                throw mySqlEx;
+            }
+
+            return result;
         }
 
         #endregion
