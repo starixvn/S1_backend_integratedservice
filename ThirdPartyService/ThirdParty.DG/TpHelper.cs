@@ -68,11 +68,13 @@ namespace ThirdParty.DG
 
         Dictionary<string, string> limitGroupNoMapping = new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
         {
-            {"MYR","F"},
+            {"MYR","G"},
             {"THB","N"},
-            {"CNY","V"},
-            {"IDR2","H"},
-            {"VND2","C"},
+            {"CNY","G"},
+            {"IDR2","G"},
+            {"VND2","G"},
+            {"USD","F"},
+            {"INR","G"},
         };
 
         private decimal dWinLimit = 0m;
