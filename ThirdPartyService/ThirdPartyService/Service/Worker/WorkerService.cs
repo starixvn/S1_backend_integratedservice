@@ -55,14 +55,14 @@ namespace ThirdPartyService.Service.Worker
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex.Message);
+                            logger.LogError(ex, ex.Message);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
             }
         }
     }

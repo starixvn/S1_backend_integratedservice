@@ -31,6 +31,7 @@ namespace ThirdPartyService.Service.BLL
             this.env = env;
             this.configuration = configuration;
             ThirdPartyHelperBase.AuthProvider = authBLL;
+            ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
             this.tpTransferBonusInfoService = tpTransferBonusInfoService;
             this.log2File = log2File;
         }
