@@ -58,7 +58,7 @@ namespace ThirdParty.JILI
 
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, gameType };
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType };
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
@@ -77,7 +77,7 @@ namespace ThirdParty.JILI
 
             string md5Param = ToMD5($"{sParam}{g}").ToLower();
             string k = $"{GetRandomString(6)}{md5Param}{GetRandomString(6)}";
-            
+
             oApiResult.ErrorCode = ErrorCode.Success;
             //oApiResult.Message = $"{GameUrl}?Token={HttpUtility.UrlEncode(sessionKey)}&GameId={gameId}&Lang={TpLangId}&AgentId={AgentId}&HomeUrl={HomeUrl}&Key={k}";
             oApiResult.Message = $"{GameUrl}?{sParam}&HomeUrl={HomeUrl}&Key={k}";
