@@ -1688,7 +1688,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_BettransLC_N2Live();
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_TpSmartWagerLC_N2Live()
+        public IEnumerable<SettleData_N2Live_Smart> GetUnsettledList_TpSmartWagerLC_N2Live()
         {
             return settledService.GetUnsettledList_TpSmartWagerLC_N2Live();
         }

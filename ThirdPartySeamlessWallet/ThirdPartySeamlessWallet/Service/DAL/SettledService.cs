@@ -184,6 +184,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)betRecordInfo.GameType;
 
             GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
+            if (bonusId == 0 && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
+            {
+                GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
+            }
             betRecordInfo.BonusId = bonusId;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

@@ -2208,10 +2208,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData>("Service_BettransLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_TpSmartWagerLC_N2Live()
+        public IEnumerable<SettleData_N2Live_Smart> GetUnsettledList_TpSmartWagerLC_N2Live()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData>("Service_TpSmartWagerLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_N2Live_Smart>("Service_TpSmartWagerLC_N2Live_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransLC_N2Live(string TransId, int SettleFlag)

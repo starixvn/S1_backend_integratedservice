@@ -850,7 +850,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = (GameType)gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                ReferenceNo = unsettled.schemeid
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
