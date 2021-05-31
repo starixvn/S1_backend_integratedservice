@@ -447,7 +447,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo,
                     Math.Abs(bettingDataLC_N2Live.request.totalamount) * -1,
                     (int)Tp.N2Live,
-                    TransId,
+                    bettingDataLC_N2Live.request.tradeid,
                     gameType,
                     bettingDataLC_N2Live.request.tradeid,
                     null,
@@ -458,23 +458,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans
                 );
 
-                //if (bonusId > 0 && result > 0)
-                //{
-                //    AddTpBonus(
-                //        (int)Tp.N2Live,
-                //        TransId,
-                //        gameType,
-                //        tpCustInfo.CustId,
-                //        tpCustInfo.UserName,
-                //        tpCustInfo.CurrencyId,
-                //        tpCustInfo.SiteId,
-                //        Math.Abs(bettingDataLC_N2Live.request.totalamount),
-                //        bonusId,
-                //        TpCategory.LiveCasino,
-                //        conn,
-                //        trans
-                //    );
-                //}
+                if (bonusId > 0 && result > 0)
+                {
+                    // for group by round settle worker
+                    AddTpBonus(
+                        (int)Tp.N2Live,
+                        TransId,
+                        gameType,
+                        tpCustInfo.CustId,
+                        tpCustInfo.UserName,
+                        tpCustInfo.CurrencyId,
+                        tpCustInfo.SiteId,
+                        Math.Abs(bettingDataLC_N2Live.request.totalamount),
+                        bonusId,
+                        TpCategory.LiveCasino,
+                        conn,
+                        trans
+                    );
+                }
 
                 if (result > 0)
                 {

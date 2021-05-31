@@ -1774,7 +1774,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get_V2", new { tradeid = cancelBetDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get", new { tradeid = cancelBetDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
             if (check == null)
             {
                 // no record
@@ -1796,7 +1796,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo,
                     Math.Abs(stake),
                     (int)Tp.N2Live,
-                    check.TransId,
+                    cancelBetDataLC_N2Live.request.tradeid,
                     gameType, TpCategory.LiveCasino,
                     cancelBetDataLC_N2Live.request.tradeid,
                     TransType.Refunds,
@@ -1850,7 +1850,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get_V2", new { tradeid = payoutDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get", new { tradeid = payoutDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (check != null && check.TicketType == 4)
                 {
                     // already payout 
@@ -1867,7 +1867,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo,
                             payoutDataLC_N2Live.request.totalamount,
                             (int)Tp.N2Live,
-                            TransId,
+                            payoutDataLC_N2Live.request.tradeid,
                             gameType,
                             TpCategory.LiveCasino,
                             payoutDataLC_N2Live.request.tradeid,
