@@ -196,7 +196,7 @@ namespace ThirdPartyWager.Workers
             int quick = 0;
             var currency = "IDR";
             int siteId = 1;
-            int gmt = 7;
+            int gmt = 8;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
