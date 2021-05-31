@@ -762,7 +762,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = (GameType)gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = wager.SettleTime,
-                                        SettlementType = SettlementType.SettledForValid
+                                        SettlementType = SettlementType.SettledForValid,
+                                        ReferenceNo = wager.betid // for fix cant mapping bonusid when data fixed can remove
                                     };
 
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -851,7 +852,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid,
-                                ReferenceNo = unsettled.schemeid
+                                ReferenceNo = unsettled.schemeid // for smart bet mapping
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);

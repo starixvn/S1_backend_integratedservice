@@ -1673,7 +1673,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public SettleData GetSettle_TpWagerLC_N2Live(string TransId)
+        public SettleData_N2Live GetSettle_TpWagerLC_N2Live(string TransId)
         {
             return settledService.GetSettle_TpWagerLC_N2Live(TransId);
         }
