@@ -1251,7 +1251,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 commission = creditTransaction.commission,
                 TicketType = (int)BettransType.Payout,
                 TicketStatus = (int)TicketStatus.Win,
-                SettleFlag = (int)SettleFlag.Running
+                SettleFlag = (int)SettleFlag.EndGame
             });
             p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
@@ -1347,7 +1347,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 commission = creditTransaction.commission,
                 TicketType = (int)BettransType.Payout,
                 TicketStatus = (int)TicketStatus.Win,
-                SettleFlag = (int)SettleFlag.Running
+                SettleFlag = (int)SettleFlag.EndGame
             });
             p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);

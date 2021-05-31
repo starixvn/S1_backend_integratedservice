@@ -51,6 +51,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             foreach (var transaction in request.transactions)
             {
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, transaction.UserId);
+                if (tpCheck == null || tpCheck.Locked)
+                {
+                    _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
+                    throw new KmException(KMErrorCode.UserBlocked);
+                }
+                
                 if (Enum.IsDefined(typeof(KMTxType), transaction.TxType))
                 {
                     var transactionResult = await Bet(transaction);
@@ -69,9 +76,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             foreach (var transaction in request.transactions)
             {
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, transaction.userid);
+                if (tpCheck == null || tpCheck.Locked)
+                {
+                    _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
+                    throw new KmException(KMErrorCode.UserBlocked);
+                }
                 if (Enum.IsDefined(typeof(KMTxType), transaction.txtype))
                 {
-                    var transactionResult = await WinBet(transaction);
+                    var transactionResult = await Payout(transaction);
                     response.transactions.Add(transactionResult);
                 }
             }
@@ -165,7 +178,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<KMCreditBaseTransaction> WinBet(KMCreditRequestTransaction request)
+        private async Task<KMCreditBaseTransaction> Payout(KMCreditRequestTransaction request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.userid);
             request.amt *= tpCurrency.ExchangeRate;

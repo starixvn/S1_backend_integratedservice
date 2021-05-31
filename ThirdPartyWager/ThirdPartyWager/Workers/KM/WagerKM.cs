@@ -54,7 +54,7 @@ namespace ThirdPartyWager.Workers.KM
             var intervalSec = 30;
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(TpId, timerType, TpType);              
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, TpType);              
                 var thisTime = lastTime?.StartTime ?? DateTime.Now.AddMinutes(-1 * dataRangeMins);
 
                 if (thisTime < DateTime.Now)
@@ -64,7 +64,7 @@ namespace ThirdPartyWager.Workers.KM
                     if (isSuccess)
                     {
                         _logger.LogInformation($"KM Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
-                        _thirdPartyBLL.SetThirdPartyTimerByGameType(TpId, timerType, timeCast.endUnix, TpType);
+                        _thirdPartyBLL.SetThirdPartyTimer(TpId, TpType, timeCast.endUnix);
                     }
                 }
 

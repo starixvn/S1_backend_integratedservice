@@ -442,6 +442,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 ValidBet = unsettled.ValidBet,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.TransId,
+                                Revenue = unsettled.Revenue,
                                 GameType = GameType.KM_Poker,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
