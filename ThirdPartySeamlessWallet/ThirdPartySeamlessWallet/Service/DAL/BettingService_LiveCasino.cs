@@ -447,7 +447,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo,
                     Math.Abs(bettingDataLC_N2Live.request.totalamount) * -1,
                     (int)Tp.N2Live,
-                    bettingDataLC_N2Live.request.tradeid,
+                    TransId,
                     gameType,
                     bettingDataLC_N2Live.request.tradeid,
                     null,
