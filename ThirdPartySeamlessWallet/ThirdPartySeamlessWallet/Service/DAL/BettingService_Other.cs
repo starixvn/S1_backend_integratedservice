@@ -604,7 +604,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-
+        
         public async Task<KmDbResult> PlaceBetPK_KM(TpCustInfo tpCustInfo, KMDebitRequestTransaction debitTransaction, int tpId, int gameType)
         {
             var result = 0;
@@ -663,30 +663,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new KmException(KMErrorCode.SystemError);
                 }
 
-                result = PlaceBetV2(
-                    tpCustInfo,
-                    Math.Abs(debitTransaction.Amount) * -1,
-                    tpId,
-                    debitTransaction.PtxId,
-                    gameType,
-                    debitTransaction.PtxId,
-                    null,
-                    TpCategory.Poker,
-                    out var afterAmount,
-                    ref bonusId,
-                    conn,
-                    trans
-                );
-                if (result != 1)
+                var afterAmount = 0M;
+                if (debitTransaction.Amount != 0)
                 {
-                    await trans.RollbackAsync();
-                    logger.LogError($"PlaceBetV2 result:{result}, afterAmount:{afterAmount}");
-                    if (result == 0 && afterAmount < 0)
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(debitTransaction.Amount) * -1,
+                        (int)Tp.KM,
+                        TransType.Wagers,
+                        $"Stake: {Math.Abs(debitTransaction.Amount):#,##0.##}",
+                        debitTransaction.PtxId,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                    if (result != 1)
                     {
-                        throw new KmException(KMErrorCode.InsufficientFunds);
-                    }
+                        await trans.RollbackAsync();
+                        logger.LogError($"PlaceBetPK_KM result:{result}, afterAmount:{afterAmount}");
+                        if (result == 0 && afterAmount < 0)
+                        {
+                            throw new KmException(KMErrorCode.InsufficientFunds);
+                        }
 
-                    throw new KmException(KMErrorCode.SystemError);
+                        throw new KmException(KMErrorCode.SystemError);
+                    }
                 }
 
                 trans.Commit();
