@@ -80,6 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         V8_Poker_None = 47, // without revenue games
         PT_LiveCasino = 48,
         BTI_Sports = 49,
+        AMB_Poker = 50,
         NineW_Sports = 51,
     }
     public enum Tp
@@ -112,6 +113,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PT = 27,
         N2Live = 28,
         BTI = 29,
+        AMB = 30,
         NineW = 31,
     }
     public enum TransferType : int
