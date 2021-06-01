@@ -112,16 +112,11 @@ namespace ThirdParty.NineW
             }
 
             var config = new NineWConfig(inputs);
-
+            var key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config);
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = JsonConvert.SerializeObject(new
-                {
-                    url = $"{config.ApiUrl}/player/{config.WebSite}/login",
-                    key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config),
-                    userId = tpCustInfo.TpUserName,
-                })
+                Message = $"{config.ApiUrl}/player/{config.WebSite}/login?cert={config.Cert}&userId={tpCustInfo.TpUserName}&key={key}"
             };
         }
 
