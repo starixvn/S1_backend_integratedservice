@@ -119,7 +119,7 @@ namespace ThirdPartyWager.Service.BLL
             else
             {
                 var result = response.Content.ReadAsStringAsync().Result;
-                LogContext.PushProperty("TpId", logName);
+                LogContext.PushProperty("Tp", logName);
                 logger.LogError($"URL {url}");
                 logger.LogError($"REQUEST: {json}");
                 logger.LogError($"RESPONSE: {result}");

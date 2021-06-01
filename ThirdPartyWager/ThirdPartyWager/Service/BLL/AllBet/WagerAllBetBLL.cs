@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
             string msg = "FATAL_ERROR";
             string logName = Tp.Allbet.ToString();
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("TpId", logName);
+            LogContext.PushProperty("Tp", logName);
 
             try
             {

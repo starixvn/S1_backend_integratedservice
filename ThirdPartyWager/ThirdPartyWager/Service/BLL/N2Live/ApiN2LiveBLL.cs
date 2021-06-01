@@ -107,7 +107,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                LogContext.PushProperty("TpId", logName);
+                LogContext.PushProperty("Tp", logName);
                 logger.LogError($"URL {url}");
                 logger.LogError($"REQUEST: {param}");
                 logger.LogError($"HEADER: {request.Headers}");

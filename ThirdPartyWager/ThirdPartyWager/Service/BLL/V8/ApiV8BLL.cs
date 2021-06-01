@@ -87,7 +87,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                LogContext.PushProperty("TpId", logName);
+                LogContext.PushProperty("Tp", logName);
                 logger.LogError($"URL {tmpUrl}");
                 logger.LogError($"REQUEST: {param}");
                 logger.LogError($"RESPONSE: {response}");
