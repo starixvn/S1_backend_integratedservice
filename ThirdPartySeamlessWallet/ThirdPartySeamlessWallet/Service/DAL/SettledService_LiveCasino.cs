@@ -2190,10 +2190,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public SettleData GetSettle_TpWagerLC_N2Live(string TransId)
+        public SettleData_N2Live GetSettle_TpWagerLC_N2Live(string TransId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData>("Service_TpWagerLC_N2Live_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<SettleData_N2Live>("Service_TpWagerLC_N2Live_Get_V2", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
         }
 
         public SettleData GetSettle_TpSmartWagerLC_N2Live(string TransId)
@@ -2208,10 +2208,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData>("Service_BettransLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_TpSmartWagerLC_N2Live()
+        public IEnumerable<SettleData_N2Live_Smart> GetUnsettledList_TpSmartWagerLC_N2Live()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData>("Service_TpSmartWagerLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_N2Live_Smart>("Service_TpSmartWagerLC_N2Live_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransLC_N2Live(string TransId, int SettleFlag)
