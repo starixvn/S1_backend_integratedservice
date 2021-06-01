@@ -65,11 +65,11 @@ namespace ThirdPartyWager.Workers
                 {
                     first = 1;
                     last = intervalMins;
-                    timerTime = DateTime.Now.AddMinutes(-1 * last);
+                    timerTime = DateTime.Now.AddMinutes(-1 * last).AddDays(-3);
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime.AddDays(-3).AddMinutes(1);
+                    timerTime = dataTpTimer.StartTime.AddMinutes(1);
                     last = intervalMins;
                 }
 
