@@ -727,13 +727,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledList_KM(string spName)
         {
-            return _mainDbClient.Query<SettleData>(spName); 
+            return _wagerDbClient.Query<SettleData>(spName); 
         }
 
         public int SetSettleFlag_KM(string spName, string transId ,bool isSuccess)
         {
             var parameters = new DynamicParameters(new { transId, isSuccess });
-            return _mainDbClient.Execute(spName, parameters: parameters);
+            return _wagerDbClient.Execute(spName, parameters: parameters);
         }        
 
         #endregion
