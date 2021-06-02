@@ -72,13 +72,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var response = new KMCreditResponse()
             {
-                transactions = new List<KMCreditBaseTransaction>()
+                transactions = new List<KMCreditResponseTransaction>()
             };
             foreach (var transaction in request.transactions)
             {
                 if (Enum.IsDefined(typeof(KMTxType), transaction.txtype))
                 {
-                    KMCreditBaseTransaction transactionResult;
+                    KMCreditResponseTransaction transactionResult;
                     if (transaction.txtype == (int)KMTxType.CancelTransaction ||
                         transaction.txtype == (int)KMTxType.CancelFundOut)
                     {
@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private async Task<KMDebitResponseTransaction> Bet(KMDebitRequestTransaction request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.UserId);
-            request.Amount *= tpCurrency.ExchangeRate;
+            request.amt *= tpCurrency.ExchangeRate;
 
             var dbResult = new KmDbResult();
 
@@ -182,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<KMCreditBaseTransaction> Payout(KMCreditRequestTransaction request)
+        private async Task<KMCreditResponseTransaction> Payout(KMCreditRequestTransaction request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.userid);
             request.amt *= tpCurrency.ExchangeRate;
@@ -203,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //交易不存在
             if (dbResult.SPResult == 2)
             {
-                return new KMCreditErrorTransaction()
+                return new KMCreditResponseTransaction()
                 {
                     txid = dbResult.Trx_id.ToString(),
                     ptxid = request.ptxid,
@@ -242,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<KMCreditBaseTransaction> Cancel(KMCreditRequestTransaction request)
+        private async Task<KMCreditResponseTransaction> Cancel(KMCreditRequestTransaction request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.userid);
             request.amt *= tpCurrency.ExchangeRate;
@@ -252,7 +252,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //交易不存在
             if (dbResult.SPResult == 2)
             {
-                return new KMCreditErrorTransaction()
+                return new KMCreditResponseTransaction()
                 {
                     txid = dbResult.Trx_id.ToString(),
                     ptxid = request.ptxid,

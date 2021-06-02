@@ -27,14 +27,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         [JsonProperty("userid")]
         public string UserId { get; set; }
-        [JsonProperty("authtoken")]
-        public string AuthToken { get; set; }
+        public string authtoken { get; set; }
         [JsonProperty("brandcode")]
         public string BrandCode { get; set; }
-        [JsonProperty("amt")]
-        public decimal Amount { get; set; }
-        [JsonProperty("cur")]
-        public string Currency { get; set; }
+        public decimal amt { get; set; }
+        public string cur { get; set; }
         [JsonProperty("ipaddress")]
         public string IpAddress { get; set; }
         [JsonProperty("ptxid")]
@@ -142,27 +139,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class KMCreditResponse: BaseResult
     {
-        public List<KMCreditBaseTransaction> transactions { get; set; }
+        public List<KMCreditResponseTransaction> transactions { get; set; }
     }
-    public class KMCreditResponseTransaction: KMCreditBaseTransaction
+    public class KMCreditResponseTransaction
     {
+        
+        public string txid { get; set; }
+        public string ptxid { get; set; }
         public decimal bal { get; set; }
         public string cur { get; set; }
         public bool dup { get; set; }
-    }
-
-    public class KMCreditErrorTransaction: KMCreditBaseTransaction
-    {
-        public string txid { get; set; }
-        public string ptxid { get; set; }
+        
         public int err { get; set; }
         public string errdesc { get; set; }
-    }
-
-    public class KMCreditBaseTransaction
-    {
-        public string txid { get; set; }
-        public string ptxid { get; set; }
     }
 
     #endregion
