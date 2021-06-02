@@ -1,10 +1,7 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -125,80 +122,97 @@ namespace ThirdParty.PT
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-            ApiUrl = $"{ApiUrl}/player/checktransaction";
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
-            certificate.Add("password", Pass);
-
-            var CheckTransfer = new
+            try
             {
-                externaltransactionid = TransID,
-            };
+                string currency = tpCustInfo.TpCurrencyId;
+                string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"])
+                    ? inputs["ApiUrl"]
+                    : throw new Exception("ApiUrl");
+                string EntityKey =
+                    inputs.ContainsKey($"XEntityKey_{currency}") &&
+                    !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"])
+                        ? inputs[$"XEntityKey_{currency}"]
+                        : throw new Exception($"XEntityKey_{currency}");
+                string Pass =
+                    inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"])
+                        ? inputs[$"Pass_{currency}"]
+                        : throw new Exception($"Pass_{currency}");
+                ApiUrl = $"{ApiUrl}/player/checktransaction";
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("X_ENTITY_KEY", EntityKey);
 
-            var result = HttpPostWithX509(
-                ApiUrl,
-                sParam,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
+                Dictionary<string, string> certificate = new Dictionary<string, string>();
+                certificate.Add("path", $@"{storagePath}\{currency}.p12");
+                certificate.Add("password", Pass);
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            if (IsJSON(result))
-            {
-                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-                if (error.error != null)
+                var CheckTransfer = new
                 {
-                    apiResult.RawMessage = error.error ?? "";
-                    apiResult.RawErrorCode = error.errorcode.ToString();
-                    apiResult.ErrorCode = ErrorCode.Fail;
-                    apiResult.Data.Status = TransferStatus.Fail;
-                }
-                else
+                    externaltransactionid = TransID,
+                };
+
+                var dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
+                var sParam = string.Join("&",
+                    dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+                var result = HttpPostWithX509(
+                    ApiUrl,
+                    sParam,
+                    "application/x-www-form-urlencoded",
+                    header,
+                    certificate
+                );
+
+                ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+                if (IsJSON(result))
                 {
-                    var json = JsonConvert.DeserializeObject<CheckTransferResponse>(result);
-                    if (json.result.status == "approved")
+                    var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                    if (error.error != null)
                     {
-                        apiResult.ErrorCode = ErrorCode.Success;
-                        apiResult.Data.Status = TransferStatus.Success;
-                    }
-                    else if (json.result.status == "declined" || json.result.status == "notallowed")
-                    {
-                        apiResult.RawMessage = json.result.status;
-                        apiResult.RawErrorCode = json.result.ToString();
+                        apiResult.RawMessage = error.error ?? "";
+                        apiResult.RawErrorCode = error.errorcode.ToString();
                         apiResult.ErrorCode = ErrorCode.Fail;
                         apiResult.Data.Status = TransferStatus.Fail;
                     }
                     else
                     {
-                        // missing 、 waiting
-                        apiResult.RawMessage = json.result.status;
-                        apiResult.RawErrorCode = json.result.ToString();
-                        apiResult.ErrorCode = ErrorCode.TransferPending;
-                        apiResult.Data.Status = TransferStatus.Pending;
+                        var json = JsonConvert.DeserializeObject<CheckTransferResponse>(result);
+                        if (json.result.status == "approved")
+                        {
+                            apiResult.ErrorCode = ErrorCode.Success;
+                            apiResult.Data.Status = TransferStatus.Success;
+                        }
+                        else if (json.result.status == "declined" || json.result.status == "notallowed")
+                        {
+                            apiResult.RawMessage = json.result.status;
+                            apiResult.RawErrorCode = json.result.ToString();
+                            apiResult.ErrorCode = ErrorCode.Fail;
+                            apiResult.Data.Status = TransferStatus.Fail;
+                        }
+                        else
+                        {
+                            // missing 、 waiting
+                            apiResult.RawMessage = json.result.status;
+                            apiResult.RawErrorCode = json.result.ToString();
+                            apiResult.ErrorCode = ErrorCode.TransferPending;
+                            apiResult.Data.Status = TransferStatus.Pending;
+                        }
                     }
                 }
-            }
-            else
-            {
-                apiResult.RawMessage = "No Result";
-                apiResult.RawErrorCode = "1";
-                apiResult.ErrorCode = ErrorCode.TransferPending;
-                apiResult.Data.Status = TransferStatus.Pending;
-            }
+                else
+                {
+                    apiResult.RawMessage = "No Result";
+                    apiResult.RawErrorCode = "1";
+                    apiResult.ErrorCode = ErrorCode.TransferPending;
+                    apiResult.Data.Status = TransferStatus.Pending;
+                }
 
-            return apiResult;
+                return apiResult;
+            }
+            catch
+            {
+                throw new Exception($"storagePath={storagePath}");
+            }
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

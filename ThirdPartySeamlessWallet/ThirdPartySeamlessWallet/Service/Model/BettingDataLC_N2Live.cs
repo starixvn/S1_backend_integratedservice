@@ -195,4 +195,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
+
+    public class SettleData_N2Live : SettleData
+    {
+        public string betid { get; set; }
+    }
+
+    public class SettleData_N2Live_Smart : SettleData
+    {
+        public string schemeid { get; set; }
+    }
 }

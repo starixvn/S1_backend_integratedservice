@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="MySql.Data" Version="8.0.19" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.0.0" />
     <PackageReference Include="Serilog.Exceptions" Version="6.1.0" />
@@ -16,6 +18,7 @@
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Allbet\ThirdParty.Allbet.csproj" />
+    <ProjectReference Include="..\ThirdParty.AMB\ThirdParty.AMB.csproj" />
     <ProjectReference Include="..\ThirdParty.AWC\ThirdParty.AWC.csproj" />
     <ProjectReference Include="..\ThirdParty.BTI\ThirdParty.BTI.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />

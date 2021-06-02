@@ -48,6 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleBTI;
         private Timer timerSettlePPRng;
         private Timer timerSettlePPLC;
+        private Timer timerSettleAMB;
         private Timer timerSettle9W;
         private Timer timerSettleKM;
         private readonly IConfiguration configuration;
@@ -113,6 +114,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePPLC = new Timer(DoSettlePPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
+
             return Task.CompletedTask;
         }
 
@@ -763,7 +766,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = (GameType)gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = wager.SettleTime,
-                                        SettlementType = SettlementType.SettledForValid
+                                        SettlementType = SettlementType.SettledForValid,
+                                        ReferenceNo = wager.betid // for fix cant mapping bonusid when data fixed can remove
                                     };
 
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -851,7 +855,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = (GameType)gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                ReferenceNo = unsettled.schemeid // for smart bet mapping
                             };
 
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -1101,6 +1106,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePPLC?.Change(Timeout.Infinite, 0);
             timerSettle9W?.Change(Timeout.Infinite, 0);
             timerSettleKM?.Change(Timeout.Infinite, 0);
+            timerSettleAMB?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
