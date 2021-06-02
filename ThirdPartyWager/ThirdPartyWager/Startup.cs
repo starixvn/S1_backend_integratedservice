@@ -6,9 +6,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.KM;
 
 namespace ThirdPartyWager
 {
@@ -67,7 +69,8 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerPTService>();
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
-
+            services.AddSingleton<WagerKMService>();
+            
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
@@ -131,6 +134,9 @@ namespace ThirdPartyWager
             //9W
             services.AddSingleton<NineWBLL>();
 
+            //KM
+            services.AddSingleton<ApiKMBLL>();
+            services.AddSingleton<KMBLL>();
             //Worker
 
             services.AddHostedService<WagerDG>();
@@ -157,6 +163,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
+            services.AddHostedService<WagerKM>();
 
             services.AddHostedService<WagerNineW>();
 

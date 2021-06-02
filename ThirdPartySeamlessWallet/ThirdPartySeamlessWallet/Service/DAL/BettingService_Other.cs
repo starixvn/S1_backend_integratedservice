@@ -7,8 +7,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -532,6 +535,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-
     }
 }

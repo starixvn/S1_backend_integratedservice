@@ -82,6 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BTI_Sports = 49,
         AMB_Poker = 50,
         NineW_Sports = 51,
+        KM_Poker = 52
     }
     public enum Tp
     {
@@ -96,6 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         YGG = 8,
         Joker = 9,
         SG = 10,
+        KM = 11,
         Allbet = 12,
         OneGaming = 13,
         PG = 14,

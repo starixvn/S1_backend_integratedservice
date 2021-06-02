@@ -11,7 +11,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartySeamlessWallet.Extensions;
+using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 
@@ -75,8 +78,10 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<BettingBLL>();
             services.AddSingleton<SettledBLL>();
             services.AddSingleton<AuthBLL>();
-
-            services.AddControllers();
+            services.AddTransient<IKMService, KMService>();
+            
+            services.AddSingleton<KMHeaderFilter>();
+            services.AddControllers().AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
