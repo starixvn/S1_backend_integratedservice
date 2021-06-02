@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -14,13 +16,21 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<WagerDG> logger;
         private readonly WagerDGBLL wagerDGBLL;
         private readonly IHostEnvironment environment;
+        private readonly Log2File log2File;
         private Timer timer;
+        private string logName = Tp.DG.ToString();
 
-        public WagerDG(ILogger<WagerDG> logger, IHostEnvironment environment, WagerDGBLL wagerDGBLL)
+        public WagerDG(
+            ILogger<WagerDG> logger, 
+            IHostEnvironment environment, 
+            WagerDGBLL wagerDGBLL,
+            Log2File log2File
+        )
         {
             this.logger = logger;
             this.wagerDGBLL = wagerDGBLL;
             this.environment = environment;
+            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -37,6 +47,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
