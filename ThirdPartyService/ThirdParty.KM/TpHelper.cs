@@ -56,10 +56,12 @@ namespace ThirdParty.KM
             }
             else
             {
+                var platform = appType == AppType.Desktop ? "Nova88_Desktop" : "Nova88_Mobile";
+                
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
-                    Message = $"{gameUrl}?token={dict["authtoken"]}"
+                    Message = $"{gameUrl}/{platform}?token={dict["authtoken"]}"
                 };
             }
         }
