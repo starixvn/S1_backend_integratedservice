@@ -172,8 +172,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 ptxid = debitTransaction.PtxId,
                 userId = debitTransaction.UserId,
-                amount = debitTransaction.Amount,
-                currency = debitTransaction.Currency,
+                amount = debitTransaction.amt,
+                currency = debitTransaction.cur,
                 ipaddress = debitTransaction.IpAddress,
                 refptxid = debitTransaction.RefPtxId,
                 txtype = debitTransaction.TxType,
@@ -219,16 +219,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 var afterAmount = 0M;
-                if (debitTransaction.Amount != 0)
+                if (debitTransaction.amt != 0)
                 {
                     result = walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
-                        Math.Abs(debitTransaction.Amount) * -1,
+                        Math.Abs(debitTransaction.amt) * -1,
                         (int)Tp.KM,
                         TransType.Wagers,
-                        $"Stake: {Math.Abs(debitTransaction.Amount):#,##0.##}",
+                        $"Stake: {Math.Abs(debitTransaction.amt):#,##0.##}",
                         debitTransaction.PtxId,
                         out afterAmount,
                         conn,
@@ -278,8 +278,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 ptxid = debitTransaction.PtxId,
                 userId = debitTransaction.UserId,
-                amount = debitTransaction.Amount,
-                currency = debitTransaction.Currency,
+                amount = debitTransaction.amt,
+                currency = debitTransaction.cur,
                 ipaddress = debitTransaction.IpAddress,
                 refptxid = debitTransaction.RefPtxId,
                 txtype = debitTransaction.TxType,

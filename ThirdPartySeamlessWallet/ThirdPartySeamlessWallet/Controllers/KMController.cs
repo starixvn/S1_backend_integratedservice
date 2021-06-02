@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -36,10 +37,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("debit")]
-        public async Task<BaseResult> Debit(KMDebitRequest request)
+        public async Task<BaseResult> Debit()
         {
             try
             {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var content = await reader.ReadToEndAsync();
+                var request = JsonConvert.DeserializeObject<KMDebitRequest>(content);
                 return await _kmService.Debit(request);
             }
             catch (KmException ke)
@@ -67,10 +71,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("credit")]
-        public async Task<BaseResult> Credit(KMCreditRequest request)
+        public async Task<BaseResult> Credit()
         {
             try
             {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var content = await reader.ReadToEndAsync();
+                var request = JsonConvert.DeserializeObject<KMCreditRequest>(content);
+                
                 return await _kmService.Credit(request);
             }
             catch (KmException ke)
