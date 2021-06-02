@@ -182,7 +182,7 @@ namespace ThirdParty.PT
                             apiResult.ErrorCode = ErrorCode.Success;
                             apiResult.Data.Status = TransferStatus.Success;
                         }
-                        else if (json.result.status == "declined" || json.result.status == "notallowed")
+                        else if (json.result.status == "declined" || json.result.status == "notallowed" || json.result.status == "missing")
                         {
                             apiResult.RawMessage = json.result.status;
                             apiResult.RawErrorCode = json.result.ToString();
