@@ -21,6 +21,11 @@ namespace ThirdPartyWager.Service.DAL
             using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionStringReport"));
             return conn.Query<ServerInfo>("Admin_ServerInfoList_Get", commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<TpCurrency> GetTpCurrencyList(int tpId)
+        {
+            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionStringReport"));
+            return conn.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
 

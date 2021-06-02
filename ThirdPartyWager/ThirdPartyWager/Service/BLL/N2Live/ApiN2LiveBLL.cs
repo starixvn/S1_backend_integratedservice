@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +14,7 @@ using System.Xml;
 using System.Xml.Linq;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -19,14 +22,18 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Log2File log2File;
+        private readonly ILogger<ApiN2LiveBLL> logger;
+        private readonly string logName = Tp.N2Live.ToString();
 
         public ApiN2LiveBLL(
             HttpHelper httpHelper,
-            Log2File log2File
+            Log2File log2File,
+            ILogger<ApiN2LiveBLL> logger
         )
         {
             this.httpHelper = httpHelper;
             this.log2File = log2File;
+            this.logger = logger;
         }
 
         public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime, string guid)
@@ -53,14 +60,16 @@ namespace ThirdPartyWager.Service.BLL
             doc.AppendChild(request);
             request.AppendChild(element);
 
+            // log
+            log2File.AddRequestLog(logName, guid, apiUrl, doc.InnerXml);
+
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{apiUrl}\r\nRequest:\r\n{JsonConvert.SerializeObject(doc.InnerXml)}\r\nvendorId:{vendorId}", "N2Live");
-            string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
+            string r = await DoHttpClientAsync(apiUrl, doc.InnerXml, guid);
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param)
+        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param.ToString(), Encoding.UTF8, "application/xml");
@@ -98,6 +107,12 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
+                LogContext.PushProperty("Tp", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {param}");
+                logger.LogError($"HEADER: {request.Headers}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers);
                 return null;
             }
         }

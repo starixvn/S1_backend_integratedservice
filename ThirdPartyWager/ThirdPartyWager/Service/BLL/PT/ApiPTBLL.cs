@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -21,18 +24,22 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common common;
         private readonly IConfiguration configuration;
         private readonly Log2File log2File;
+        private readonly ILogger<ApiPTBLL> logger;
+        private readonly string logName = Tp.PT.ToString();
 
         public ApiPTBLL(
             HttpHelper httpHelper,
             Common common,
             IConfiguration configuration,
-            Log2File log2File
+            Log2File log2File,
+            ILogger<ApiPTBLL> logger
         )
         {
             this.httpHelper = httpHelper;
             this.common = common;
             this.configuration = configuration;
             this.log2File = log2File;
+            this.logger = logger;
         }
 
         public async Task<WagerPTModel> GetBetListByTime(string apiUrl, string entityKey, Dictionary<string, string> certificate, string startTime, string endTime, int page, int perPage, string guid)
@@ -53,15 +60,18 @@ namespace ThirdPartyWager.Service.BLL
                 perPage = perPage,
                 showgameshortname = true,
             };
+            var cert = new { currency = certificate["currency"], site = certificate["site"] };
+
+            // log
+            log2File.AddRequestLog(logName, guid, url, param, cert);
 
             // request
-            log2File.Info($"Guid:\r\n{guid}\r\nUrl:\r\n{url}\r\nRequest:\r\n{JsonConvert.SerializeObject(param)}\r\nSiteId:{certificate["site"]}\r\nCurrency:{certificate["currency"]}", "PT");
-            string r = await DoHttpClientAsync(url, param, entityKey, certificate);
+            string r = await DoHttpClientAsync(url, param, entityKey, certificate, guid);
             var result = JsonConvert.DeserializeObject<WagerPTModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param, string entityKey, Dictionary<string, string> certificate)
+        private async Task<string> DoHttpClientAsync(string url, object param, string entityKey, Dictionary<string, string> certificate, string guid = null)
         {
             var dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -87,8 +97,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                string fatal = "{\"error\":\"fatal error\",\"errorcode\":999999}";
-                return fatal;
+                var result = "{\"error\":\"fatal error\",\"errorcode\":999999}";
+                LogContext.PushProperty("Tp", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {sParam}");
+                logger.LogError($"HEADER: {request.Headers}");
+                logger.LogError($"CERT: {certificate}");
+                logger.LogError($"RESPONSE: {response}");
+                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error", request.Headers, certificate);
+                return result;
             }
         }
     }

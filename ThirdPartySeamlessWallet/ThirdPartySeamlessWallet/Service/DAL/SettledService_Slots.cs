@@ -1200,7 +1200,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
         #region CQ9
 
         public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, ref decimal afterAmount)
@@ -2284,42 +2284,59 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-
-                    if (bettingDataFish_YL.betAmount != 0)
+                    if (bettingDataFish_YL.profit != 0)
                     {
-                        // stake
                         result = walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
-                            bettingDataFish_YL.betAmount * -1,
-                            (int)Tp.YL,
-                            TransType.Wagers,
-                            $"Stake: {Math.Abs(bettingDataFish_YL.betAmount).ToString("#,##0.##")}",
-                            bettingDataFish_YL.txId,
-                            out afterAmount,
-                            conn,
-                            trans
-                        );
-                    }
-
-                    if (result > 0 && bettingDataFish_YL.payAmount != 0)
-                    {
-                        // payout
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            bettingDataFish_YL.payAmount,
+                            bettingDataFish_YL.profit,
                             (int)Tp.YL,
                             TransType.Payout,
-                            $"Payout: {Math.Abs(bettingDataFish_YL.payAmount).ToString("#,##0.##")}",
+                            $"Settled: {Math.Abs(bettingDataFish_YL.profit).ToString("#,##0.##")}",
                             bettingDataFish_YL.txId,
                             out afterAmount,
                             conn,
-                            trans
+                            trans,
+                            AllowNegative.Allow
                         );
                     }
+
+                    //if (bettingDataFish_YL.betAmount != 0)
+                    //{
+                    //    // stake
+                    //    result = walletService.SetBalance(
+                    //        tpCustInfo.CustId,
+                    //        tpCustInfo.SiteId,
+                    //        tpCustInfo.UserName,
+                    //        bettingDataFish_YL.betAmount * -1,
+                    //        (int)Tp.YL,
+                    //        TransType.Wagers,
+                    //        $"Stake: {Math.Abs(bettingDataFish_YL.betAmount).ToString("#,##0.##")}",
+                    //        bettingDataFish_YL.txId,
+                    //        out afterAmount,
+                    //        conn,
+                    //        trans
+                    //    );
+                    //}
+
+                    //if (result > 0 && bettingDataFish_YL.payAmount != 0)
+                    //{
+                    //    // payout
+                    //    result = walletService.SetBalance(
+                    //        tpCustInfo.CustId,
+                    //        tpCustInfo.SiteId,
+                    //        tpCustInfo.UserName,
+                    //        bettingDataFish_YL.payAmount,
+                    //        (int)Tp.YL,
+                    //        TransType.Payout,
+                    //        $"Payout: {Math.Abs(bettingDataFish_YL.payAmount).ToString("#,##0.##")}",
+                    //        bettingDataFish_YL.txId,
+                    //        out afterAmount,
+                    //        conn,
+                    //        trans
+                    //    );
+                    //}
 
                     if (result > 0)
                     {
@@ -2357,7 +2374,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (bettingDataFish_YL.profit != 0)
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit * -1, (int)Tp.YL, TransType.Refunds, $"Void: {bettingDataFish_YL.profit.ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit * -1, (int)Tp.YL, TransType.Refunds, $"Void: {bettingDataFish_YL.profit.ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans, AllowNegative.Allow);
                 }
 
                 if (result > 0)

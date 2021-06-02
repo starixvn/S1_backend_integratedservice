@@ -11,6 +11,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Serilog.Context;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,7 +27,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
-
         public SettledService(IServiceProvider provider)
         {
             configuration = provider.GetRequiredService<IConfiguration>();
