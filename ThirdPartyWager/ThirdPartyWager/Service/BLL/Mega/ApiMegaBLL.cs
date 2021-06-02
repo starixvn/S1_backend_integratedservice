@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,6 +17,9 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
+        private readonly ILogger<ApiMegaBLL> logger;
+        private readonly string logName = Tp.Mega.ToString();
 
         private class ErrorResponse
         {
@@ -32,13 +38,20 @@ namespace ThirdPartyWager.Service.BLL
             public string action { get; set; }
         }
 
-        public ApiMegaBLL(HttpHelper httpHelper, Common common)
+        public ApiMegaBLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiMegaBLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
+            this.logger = logger;
         }
 
-        public async Task<WagerMegaReport> GetReportPlayerListByTime(string apiUrl, string sn, string secretCode, string agentLoginId, string startTime, string endTime)
+        public async Task<WagerMegaReport> GetReportPlayerListByTime(string apiUrl, string sn, string secretCode, string agentLoginId, string startTime, string endTime, string guid)
         {
             // param
             var uuid = Guid.NewGuid();
@@ -62,8 +75,11 @@ namespace ThirdPartyWager.Service.BLL
                 jsonrpc = "2.0",
             };
 
+            // log
+            log2File.AddRequestLog(logName, guid, apiUrl, param);
+
             // request
-            string r = await DoHttpClientAsync(apiUrl, param);
+            string r = await DoHttpClientAsync(apiUrl, param, guid);
             var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
             if (error.error != null)
             {
@@ -79,20 +95,28 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param)
+        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
         {
             var sParam = JsonConvert.SerializeObject(param);
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/json");
             var response = await httpHelper.GetClient().SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
                 return response.Content.ReadAsStringAsync().Result;
             }
             else
             {
-                return null;
+                var result = response.Content.ReadAsStringAsync().Result;
+                LogContext.PushProperty("Tp", logName);
+                logger.LogError($"URL {url}");
+                logger.LogError($"REQUEST: {sParam}");
+                logger.LogError($"RESPONSE: {result}");
+                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error");
+                return result;
+                //return null;
             }
         }
     }

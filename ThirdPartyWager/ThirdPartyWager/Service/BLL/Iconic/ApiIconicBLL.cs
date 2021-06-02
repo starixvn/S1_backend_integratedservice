@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,14 +17,24 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly Common common;
+        private readonly Log2File log2File;
+        private readonly ILogger<ApiIconicBLL> logger;
+        private readonly string logName = Tp.Iconic.ToString();
 
-        public ApiIconicBLL(HttpHelper httpHelper, Common common)
+        public ApiIconicBLL(
+            HttpHelper httpHelper,
+            Common common,
+            Log2File log2File,
+            ILogger<ApiIconicBLL> logger
+        )
         {
             this.httpHelper = httpHelper;
             this.common = common;
+            this.log2File = log2File;
+            this.logger = logger;
         }
 
-        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage)
+        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage, string guid)
         {
             // param
             string url = $"{apiUrl}/api/v1/profile/sets";
@@ -34,8 +47,11 @@ namespace ThirdPartyWager.Service.BLL
                 page = page
             };
 
+            // log
+            log2File.AddRequestLog(logName, guid, url, param);
+
             // request
-            string r = await DoHttpClientAsync(url, param, "GET", true, token);
+            string r = await DoHttpClientAsync(url, param, "GET", true, token, guid);
             var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
             return result;
         }
@@ -56,12 +72,12 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param, string method, bool header, string token = null)
+        private async Task<string> DoHttpClientAsync(string url, object param, string method, bool header, string token = null, string guid = null)
         {
             HttpRequestMessage request;
             var dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
+            var tmpUrl = url;
             if (method == "GET")
             {
                 url = $"{url}?{sParam}";
@@ -73,13 +89,30 @@ namespace ThirdPartyWager.Service.BLL
                 request.Content = new StringContent(sParam, Encoding.UTF8, "application/x-www-form-urlencoded");
             }
 
-            if (header == true)
+            dynamic tmpHeader = null;
+            if (header)
             {
                 request.Headers.Add("Authorization", $"Bearer {token}");
+                tmpHeader = request.Headers;
             }
 
             var response = await httpHelper.GetClient().SendAsync(request);
-            return response.Content.ReadAsStringAsync().Result;
+
+            if (response.IsSuccessStatusCode)
+            {
+                return response.Content.ReadAsStringAsync().Result;
+            }
+            else
+            {
+                var result = response.Content.ReadAsStringAsync().Result;
+                LogContext.PushProperty("Tp", logName);
+                logger.LogError($"URL {tmpUrl}");
+                logger.LogError($"REQUEST: {sParam}");
+                logger.LogError($"HEADER: {tmpHeader}");
+                logger.LogError($"RESPONSE: {result}");
+                log2File.AddResponseLog(logName, guid, tmpUrl, sParam, response, "Error", tmpHeader);
+                return result;
+            }
         }
     }
 }

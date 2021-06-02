@@ -18,6 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
+        private readonly Log2File log2File;
         private Timer timer;
         private int intervalDays = 1;
         private int iRangMins = 1440;
@@ -25,13 +26,15 @@ namespace ThirdPartyWager.Workers
         private int tpType = 2;
         private int quick = 0;
         private int iDays = 2;
+        private string logName = Tp.N2Live.ToString();
 
         public WagerRedoN2Live(
             ILogger<WagerRedoN2Live> logger,
             WagerN2LiveBLL wagerN2LiveBLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
+            IHostEnvironment environment,
+            Log2File log2File
         )
         {
             this.logger = logger;
@@ -88,6 +91,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {

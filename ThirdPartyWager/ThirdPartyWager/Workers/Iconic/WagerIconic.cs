@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
+        private readonly Log2File log2File;
         private Timer timerTHB;
         private Timer timerMYR;
         private Timer timerIDR;
@@ -36,13 +37,15 @@ namespace ThirdPartyWager.Workers
         private int quickCNY = 0;
         private int quickUSDT = 0;
         private int beyond = 5;
+        private string logName = Tp.Iconic.ToString();
 
         public WagerIconic(
             ILogger<WagerIconic> logger,
             WagerIconicBLL wagerIconicBLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
+            IHostEnvironment environment,
+            Log2File log2File
         )
         {
             this.logger = logger;
@@ -50,6 +53,7 @@ namespace ThirdPartyWager.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
+            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -102,6 +106,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -158,6 +163,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -214,6 +220,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -270,6 +277,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -326,6 +334,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -382,6 +391,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {

@@ -147,19 +147,14 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoSA>();
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
-            //services.AddHostedService<CheckTicketAG>();
-            //services.AddHostedService<WagerCF>();
             services.AddHostedService<WagerSG>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
-            /*services.AddHostedService<WagerKiss918>();
-            services.AddHostedService<WagerRedoKiss918>();*/
             services.AddHostedService<WagerOne789>();
-            //services.AddHostedService<WagerMega>();
-            //services.AddHostedService<WagerRedoMega>();
             services.AddHostedService<JwtIconic>();
             services.AddHostedService<WagerIconic>();
             services.AddHostedService<WagerOneGaming>();
+            services.AddHostedService<WagerRedoOneGaming>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
@@ -171,6 +166,15 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerKM>();
 
             services.AddHostedService<WagerNineW>();
+
+            /*
+                services.AddHostedService<CheckTicketAG>();
+                services.AddHostedService<WagerCF>();
+                services.AddHostedService<WagerKiss918>();
+                services.AddHostedService<WagerRedoKiss918>();
+                services.AddHostedService<WagerMega>();
+                services.AddHostedService<WagerRedoMega>();
+            */
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
