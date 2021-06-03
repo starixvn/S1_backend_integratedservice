@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,17 +17,20 @@ namespace ThirdPartyWager.Service.BLL.KM
 {
     public class ApiKMBLL
     {
+        private readonly IConfiguration _configuration;
         public Dictionary<string, string> KmConfig { get; set; }
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<ApiKMBLL> _logger;
         
-        public ApiKMBLL(IServiceProvider provider)
+        public ApiKMBLL(IServiceProvider provider, IConfiguration configuration)
         {
+            _configuration = configuration;
             _logger = provider.GetRequiredService<ILogger<ApiKMBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
         }
         public async Task<List<WagerKMModel>> QueryBetHistoryAsync(string startTime, string endTime)
         {
+            var historyBet = string.Empty;
             try
             {
                 var apiUrl = GetInputValue(KmConfig, "ApiUrl");
@@ -38,25 +42,21 @@ namespace ThirdPartyWager.Service.BLL.KM
 
                 var encodingQueryStr = $"startdate={HttpUtility.UrlEncode(startTime)}&" +
                                              $"enddate={HttpUtility.UrlEncode(endTime)}&issettled=true";
-                var historyBet = $"{apiUrl}/api/history/bets?{encodingQueryStr}";
+                historyBet = $"{apiUrl}/api/history/bets?{encodingQueryStr}";
             
                 var request = new HttpRequestMessage(HttpMethod.Get, historyBet);
                 request.Headers.Add("X-QM-ClientId", clientId);
                 request.Headers.Add("X-QM-ClientSecret", clientSecret);
                 request.Headers.Add("X-QM-Accept", "json");
                 request.Headers.Add("Accept-Encoding", "gzip");
-
-                var client = _httpHelper.GetClientWithHandler(new HttpClientHandler()
-                {
-                    AutomaticDecompression = DecompressionMethods.GZip
-                });
-
+                
+                var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var response = await client.SendAsync(request);
             
                 var content = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"query history bets error :{content}");
+                    _logger.LogError($"{historyBet} query history bets error:{content}");
                     return null;
                 }
                 var kmWagers = JsonConvert.DeserializeObject<List<WagerKMModel>>(content);
@@ -64,7 +64,7 @@ namespace ThirdPartyWager.Service.BLL.KM
             }
             catch (Exception e)
             {
-                _logger.LogError(e ,$"query history bets error :{e.Message}");
+                _logger.LogError(e ,$"{historyBet} query history bets failed:{e.Message}");
                 return null;
             }
             
@@ -77,29 +77,21 @@ namespace ThirdPartyWager.Service.BLL.KM
             }
             throw new Exception();
         }
-        public static byte[] ReadFully(Stream input)
-        {
-            byte[] buffer = new byte[16 * 1024];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                int read;
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                }
-                return ms.ToArray();
-            }
-        }
 
-        public static byte[] Decompress(byte[] data)
+        private HttpClientHandler CreateHandler()
         {
-            using (var compressedStream = new MemoryStream(data))
-            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
-            using (var resultStream = new MemoryStream())
+            var handler = new HttpClientHandler()
             {
-                zipStream.CopyTo(resultStream);
-                return resultStream.ToArray();
+                AutomaticDecompression = DecompressionMethods.GZip,
+            };
+            if (_configuration.GetValue<string>("ProxyHost") != null)
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
             }
+
+            return handler;
         }
     }
 }
