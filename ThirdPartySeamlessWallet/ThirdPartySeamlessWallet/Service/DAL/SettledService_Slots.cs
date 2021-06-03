@@ -2893,6 +2893,28 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public IEnumerable<SettleData_JILI> GetUnsettledList_JILI(int category)
+        {
+            string sp = "Service_BettransRng_JILI_Unsettle_Get";
+            if (category == (int)TpCategory.Fish)
+            {
+                sp = "Service_BettransFish_JILI_Unsettle_Get";
+            }
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData_JILI>(sp, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_JILI(int category, long TransId)
+        {
+            string sp = "Service_BettransRng_JILI_Settle_Set";
+            if (category == (int)TpCategory.Fish)
+            {
+                sp = "Service_BettransFish_JILI_Settle_Set";
+            }
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute(sp, new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
         #endregion
     }
 }

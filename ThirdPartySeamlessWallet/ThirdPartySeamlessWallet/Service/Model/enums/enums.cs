@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         NineW_Sports = 51,
         KM_Poker = 52,
         JILI_RNG = 53,
-        JILI_Fish = 54,
+        JILI_Fish = 56,
     }
     public enum Tp
     {

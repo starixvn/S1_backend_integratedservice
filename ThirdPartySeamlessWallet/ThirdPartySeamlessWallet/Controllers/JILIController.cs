@@ -266,6 +266,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.userId, (int)gameType);
                 if (result > 0)
                 {
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = tpCustInfoBLL.GetBalance((int)thisTp, getReq.userId, (int)gameType).Balance;
+                    }
                     BetResp getApiResponse = new BetResp();
                     getApiResponse.errorCode = 0;
                     getApiResponse.message = "success";

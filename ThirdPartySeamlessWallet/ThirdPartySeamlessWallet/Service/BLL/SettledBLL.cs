@@ -1811,6 +1811,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleData_JILI> GetUnsettledList_JILI(int category)
+        {
+            return settledService.GetUnsettledList_JILI(category);
+        }
+
+        public int SetSettleFlag_JILI(int category, long TransId)
+        {
+            return settledService.SetSettleFlag_JILI(category, TransId);
+        }
+
         #endregion
     }
 }

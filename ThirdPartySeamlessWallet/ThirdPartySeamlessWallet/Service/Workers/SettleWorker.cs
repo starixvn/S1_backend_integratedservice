@@ -51,6 +51,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleAMB;
         private Timer timerSettle9W;
         private Timer timerSettleKM;
+        private Timer timerSettleJILIRng;
+        private Timer timerSettleJILIFish;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -115,6 +117,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1107,6 +1111,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W?.Change(Timeout.Infinite, 0);
             timerSettleKM?.Change(Timeout.Infinite, 0);
             timerSettleAMB?.Change(Timeout.Infinite, 0);
+            timerSettleJILIRng?.Change(Timeout.Infinite, 0);
+            timerSettleJILIFish?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

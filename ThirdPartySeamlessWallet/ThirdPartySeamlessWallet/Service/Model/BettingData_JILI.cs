@@ -45,4 +45,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }
+
+    public class SettleData_JILI
+    {
+        public long TransId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public string Account { get; set; }
+        public long SettleTime { get; set; }
+        public int TicketStatus { get; set; }
+    }
 }
