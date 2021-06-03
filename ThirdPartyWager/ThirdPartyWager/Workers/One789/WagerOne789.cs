@@ -18,6 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
+        private readonly Log2File log2File;
         private Timer timerLT;
         private Timer timerLT_789;
         private Timer timerLC;
@@ -29,13 +30,15 @@ namespace ThirdPartyWager.Workers
         private int quickLT = 0;
         private int quickLT_789 = 0;
         private int quickLC = 0;
+        private string logName = Tp.One789.ToString();
 
         public WagerOne789(
             ILogger<WagerOne789> logger,
             WagerOne789BLL wagerOne789BLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
+            IHostEnvironment environment,
+            Log2File log2File
         )
         {
             this.logger = logger;
@@ -43,6 +46,7 @@ namespace ThirdPartyWager.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
+            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -91,6 +95,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -147,6 +152,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -203,6 +209,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {

@@ -35,6 +35,7 @@ namespace ThirdPartyWager.Workers
         private int quickCNY = 0;
         private int quickUSD = 0;
         private int beyond = 5;
+        private string logName = Tp.OneGaming.ToString();
 
         public WagerOneGaming(
             ILogger<WagerOneGaming> logger,
@@ -105,7 +106,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -165,7 +166,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -223,7 +224,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 logger.LogError(ex.Message);
-                log2File.Error(ex.ToString(), "WagerOneGaming");
+                log2File.Error(ex.ToString(), logName);
             }
             finally
             {
@@ -282,7 +283,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -299,6 +300,7 @@ namespace ThirdPartyWager.Workers
                 }
             }
         }
+        
         private async void DoTaskVND(object state)
         {
             int quick = 0;
@@ -341,7 +343,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -358,6 +360,7 @@ namespace ThirdPartyWager.Workers
                 }
             }
         }
+        
         private async void DoTaskUSD(object state)
         {
             if (environment.IsProduction())
@@ -400,7 +403,7 @@ namespace ThirdPartyWager.Workers
                 catch (Exception ex)
                 {
                     logger.LogError(ex.Message);
-                    log2File.Error(ex.ToString(), "WagerOneGaming");
+                    log2File.Error(ex.ToString(), logName);
                 }
                 finally
                 {
@@ -420,7 +423,6 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timerTHB?.Change(Timeout.Infinite, 0);
             timerMYR?.Change(Timeout.Infinite, 0);
             timerIDR?.Change(Timeout.Infinite, 0);

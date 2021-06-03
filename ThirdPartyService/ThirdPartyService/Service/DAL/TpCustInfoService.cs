@@ -50,11 +50,8 @@ namespace ThirdPartyService.Service.DAL
                 // pt development not available
                 if (environment.EnvironmentName != "Production" && tpId == 27)
                 {
-                    if (custId != 565)
-                    {
-                        apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
-                        return apiResult;
-                    }
+                    apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
+                    return apiResult;
                 }
                 using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
                 {

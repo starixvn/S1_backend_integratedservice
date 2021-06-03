@@ -18,6 +18,7 @@
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Allbet\ThirdParty.Allbet.csproj" />
+    <ProjectReference Include="..\ThirdParty.AMB\ThirdParty.AMB.csproj" />
     <ProjectReference Include="..\ThirdParty.AWC\ThirdParty.AWC.csproj" />
     <ProjectReference Include="..\ThirdParty.BTI\ThirdParty.BTI.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\ThirdParty.Iconic\ThirdParty.Iconic.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
+    <ProjectReference Include="..\ThirdParty.KM\ThirdParty.KM.csproj" />
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />
     <ProjectReference Include="..\ThirdParty.One789\ThirdParty.One789.csproj" />
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
@@ -59,5 +61,9 @@
     <TypeScriptSourceMap>True</TypeScriptSourceMap>
     <TypeScriptMapRoot />
     <TypeScriptSourceRoot />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
   </PropertyGroup>
 </Project>

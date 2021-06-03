@@ -278,8 +278,18 @@ namespace ThirdParty.Saba
 
             string url;
             string urlKey = "";
+            string device = "";
 
-            urlKey = $"{appType}Url";
+            inputs.TryGetValue("device", out device);
+
+            if((device != null) && (string.Compare(device, "wap", StringComparison.OrdinalIgnoreCase) == 0))
+            {
+                urlKey = $"WAPUrl";
+            }
+            else
+            {
+                urlKey = $"{appType}Url";
+            }
 
             url = inputs.ContainsKey(urlKey) && !string.IsNullOrEmpty(inputs[urlKey]) ? inputs[urlKey] : throw new Exception("url Error");
 

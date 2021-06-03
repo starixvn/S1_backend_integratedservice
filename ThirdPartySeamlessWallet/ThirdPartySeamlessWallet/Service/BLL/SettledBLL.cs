@@ -348,7 +348,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataFish_YL.validBet *= tpCurrency.ExchangeRate;
                 bettingDataFish_YL.commission *= tpCurrency.ExchangeRate;
             }
-
             var result = settledService.SettledFish_YL(tpCustInfo, bettingDataFish_YL, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)

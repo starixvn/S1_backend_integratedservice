@@ -274,75 +274,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
-        #region OneGaming
-
-        public int MoneyInPK_OneGaming(BettingDataPK_OneGaming bettingDataPK_OneGaming, out decimal afterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, bettingDataPK_OneGaming.player_id);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                bettingDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
-            }
-
-            var result = settledService.MoneyInPK_OneGaming(tpCustInfo, bettingDataPK_OneGaming, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
-
-        public int RollbackPK_OneGaming(RollbackDataPK_OneGaming rollbackDataPK_OneGaming, out decimal afterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.OneGaming, rollbackDataPK_OneGaming.player_id);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.OneGaming, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                rollbackDataPK_OneGaming.amount *= tpCurrency.ExchangeRate;
-            }
-
-            var result = settledService.RollbackPK_OneGaming(tpCustInfo, rollbackDataPK_OneGaming, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
-
-        public IEnumerable<SettleDataPK_OneGaming> GetUnsettledListPK_OneGaming()
-        {
-            return settledService.GetUnsettledListPK_OneGaming();
-        }
-
-        public int SetSettleFlag_TpWagerPK_OneGaming(string ticket)
-        {
-            return settledService.SetSettleFlag_TpWagerPK_OneGaming(ticket);
-        }
-
-        public int Settled_OneGaming(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
-        {
-            return settledService.Settled_OneGaming(tpCustInfo, betRecordInfo);
-        }
-
-        #endregion
-
-        #region V8
-
-        public IEnumerable<SettleDataPK_V8> GetUnsettledListPK_V8()
-        {
-            return settledService.GetUnsettledListPK_V8();
-        }
-
-        public int SetSettleFlag_TpWagerPK_V8(string gameId)
-        {
-            return settledService.SetSettleFlag_TpWagerPK_V8(gameId);
-        }
-
-        #endregion
-
         #region BTI
         
         public IEnumerable<SettleData> GetUnsettledListBTI()
@@ -367,6 +298,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
         {
             return settledService.SetSettleFlagBySpName(spName, transId, isSuccess, dataBase);
+        }
+
+        #endregion
+
+        #region KM
+
+        public IEnumerable<SettleData> GetUnsettledListPK_KM(string spName)
+        {
+            return settledService.GetUnsettledList_KM(spName);
+        }
+
+        public int SetSettleFlag_KM(string spName, string transId , bool isSuccess = true)
+        {
+            return settledService.SetSettleFlag_KM(spName, transId , isSuccess);
         }
 
         #endregion
