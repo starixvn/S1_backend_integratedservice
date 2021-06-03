@@ -2548,7 +2548,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
 
                     bool getBonus = false;
-                    if (winlose != 0)
+                    if (bettingData_JILI.winloseAmount != 0)
                     {
                         if (bonusId > 0)
                         {
@@ -2561,7 +2561,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 gameType,
                                 category,
                                 bettingData_JILI.round.ToString(),
-                                (iTicketStatus == (int)TicketStatus.FreeBetWin) ? TransType.Prize : TransType.Payout,
+                                TransType.Payout,
                                 out afterAmount,
                                 "Payout",
                                 bonusId,
@@ -2582,7 +2582,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 (iTicketStatus == (int)TicketStatus.FreeBetWin) ? TransType.Prize : TransType.Payout,
                                 null,
                                 out afterAmount,
-                                "Payout",
+                                (iTicketStatus == (int)TicketStatus.FreeBetWin) ? "Prize" : "Payout",
                                 out bonusId,
                                 conn,
                                 trans
@@ -2649,7 +2649,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 result = conn.Execute("Service_BettransRng_JILI_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                var refundAmount = Math.Abs(cancelBetData_JILI.betAmount) + (Math.Abs(cancelBetData_JILI.betAmount) * -1);
+                var refundAmount = Math.Abs(cancelBetData_JILI.betAmount) + (Math.Abs(cancelBetData_JILI.winloseAmount) * -1);
 
                 if (result > 0)
                 {
@@ -2666,7 +2666,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             TransType.Refunds,
                             null,
                             out afterAmount,
-                            "Payout",
+                            "CancelBet",
                             out bonusId,
                             conn,
                             trans
@@ -2856,7 +2856,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 result = conn.Execute("Service_BettransFish_JILI_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                var refundAmount = Math.Abs(cancelBetData_JILI.betAmount) + (Math.Abs(cancelBetData_JILI.betAmount) * -1);
+                var refundAmount = Math.Abs(cancelBetData_JILI.betAmount) + (Math.Abs(cancelBetData_JILI.winloseAmount) * -1);
 
                 if (result > 0)
                 {
@@ -2869,7 +2869,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             refundAmount,
                             (int)Tp.JILI,
                             TransType.Refunds,
-                            $"Cancel: {refundAmount:#,##0.##}",
+                            $"CancelBet: {refundAmount:#,##0.##}",
                             cancelBetData_JILI.round.ToString(),
                             out afterAmount,
                             conn,
