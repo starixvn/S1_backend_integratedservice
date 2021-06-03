@@ -282,7 +282,7 @@ namespace ThirdParty.Saba
 
             inputs.TryGetValue("device", out device);
 
-            if(device != null && device.ToLower() == "wap")
+            if((device != null) && (string.Compare(device, "wap", StringComparison.OrdinalIgnoreCase) == 0))
             {
                 urlKey = $"WAPUrl";
             }
