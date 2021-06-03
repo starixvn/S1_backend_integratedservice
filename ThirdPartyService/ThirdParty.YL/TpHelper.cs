@@ -143,7 +143,7 @@ namespace ThirdParty.YL
 
                     dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
                     sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={System.Web.HttpUtility.UrlEncode(kp.Value)}").ToArray());
-                    if (appType == AppType.Native)
+                    if (appType != AppType.Desktop)
                     {
                         sParam = $"{sParam}&fullscreen=0";
                     }
