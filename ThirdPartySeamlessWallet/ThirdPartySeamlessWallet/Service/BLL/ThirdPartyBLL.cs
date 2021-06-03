@@ -193,10 +193,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         60,
                         74
                     };
-
+                    
                     gameType = GameType.JILI_RNG;
-
-                    if (fishJL.Contains((int)gameType))
+                    if (fishJL.Contains(Convert.ToInt32(gameId)))
                     {
                         gameType = GameType.JILI_Fish;
                     }

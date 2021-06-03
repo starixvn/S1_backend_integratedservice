@@ -58,7 +58,7 @@ namespace ThirdParty.JILI
 
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType };
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameId };
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 

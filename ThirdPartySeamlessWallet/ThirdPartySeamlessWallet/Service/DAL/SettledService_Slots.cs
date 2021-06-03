@@ -2561,7 +2561,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 gameType,
                                 category,
                                 bettingData_JILI.round.ToString(),
-                                TransType.Payout,
+                                (iTicketStatus == (int)TicketStatus.FreeBetWin) ? TransType.Prize : TransType.Payout,
                                 out afterAmount,
                                 "Payout",
                                 bonusId,
@@ -2579,7 +2579,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 gameType,
                                 category,
                                 bettingData_JILI.round.ToString(),
-                                TransType.Payout,
+                                (iTicketStatus == (int)TicketStatus.FreeBetWin) ? TransType.Prize : TransType.Payout,
                                 null,
                                 out afterAmount,
                                 "Payout",
@@ -2754,39 +2754,56 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    if (betAmount != 0)
+                    var amount = betAmount + bettingData_JILI.winloseAmount;
+                    if (amount != 0)
                     {
                         result = walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
-                            betAmount,
-                            (int)Tp.JILI,
-                            TransType.Wagers,
-                            $"Stake: {betAmount:#,##0.##}",
-                            bettingData_JILI.round.ToString(),
-                            out afterAmount,
-                            conn,
-                            trans
-                        );
-                    }
-
-                    if (winlose != 0)
-                    {
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            Math.Abs(bettingData_JILI.winloseAmount),
+                            amount,
                             (int)Tp.JILI,
                             TransType.Payout,
-                            $"Payout: {Math.Abs(bettingData_JILI.winloseAmount):#,##0.##}",
+                            $"Settled: {amount:#,##0.##}",
                             bettingData_JILI.round.ToString(),
                             out afterAmount,
                             conn,
                             trans
                         );
                     }
+                    //if (betAmount != 0)
+                    //{
+                    //    result = walletService.SetBalance(
+                    //        tpCustInfo.CustId,
+                    //        tpCustInfo.SiteId,
+                    //        tpCustInfo.UserName,
+                    //        betAmount,
+                    //        (int)Tp.JILI,
+                    //        TransType.Wagers,
+                    //        $"Stake: {betAmount:#,##0.##}",
+                    //        bettingData_JILI.round.ToString(),
+                    //        out afterAmount,
+                    //        conn,
+                    //        trans
+                    //    );
+                    //}
+
+                    //if (winlose != 0)
+                    //{
+                    //    result = walletService.SetBalance(
+                    //        tpCustInfo.CustId,
+                    //        tpCustInfo.SiteId,
+                    //        tpCustInfo.UserName,
+                    //        Math.Abs(bettingData_JILI.winloseAmount),
+                    //        (int)Tp.JILI,
+                    //        TransType.Payout,
+                    //        $"Payout: {Math.Abs(bettingData_JILI.winloseAmount):#,##0.##}",
+                    //        bettingData_JILI.round.ToString(),
+                    //        out afterAmount,
+                    //        conn,
+                    //        trans
+                    //    );
+                    //}
 
                     if (result > 0)
                     {

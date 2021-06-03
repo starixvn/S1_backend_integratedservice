@@ -59,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string longTimeToken { get; set; }
             public string tpUserName { get; set; }
             //public string tpCurrency { get; set; }
-            public string gameType { get; set; }
+            public string gameId { get; set; }
         }
 
         #region Request
@@ -161,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getErrorResponse;
                 }
 
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, tokenInfo.gameType);
+                var gameType = thirdPartyBLL.GetGameType((int)thisTp, tokenInfo.gameId);
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                 if (tpCustBalance != null)
@@ -444,8 +444,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 shortTimeToken = sessionKeyArr[0], /* 1 min*/
                 longTimeToken = sessionKeyArr[1],  /* Long Time*/
                 tpUserName = sessionKeyArr[2],
-                //tpCurrency = sessionKeyArr[3],
-                gameType = sessionKeyArr[3]
+                gameId = sessionKeyArr[3]
             };
         }
     }

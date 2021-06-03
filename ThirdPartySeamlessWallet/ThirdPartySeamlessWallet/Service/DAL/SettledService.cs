@@ -154,9 +154,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
 
-                //var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
-
-                if (afterBonus < 0 || bonusId == -1)
+                if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
                 {
                     result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
                 }
