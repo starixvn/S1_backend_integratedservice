@@ -544,7 +544,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return xml;
                     }
 
+
                     var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginManualReq.request.userid);
+                    if (tpCheck == null)
+                    {
+                        string token = null;
+                        string clientIp = "";
+                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginManualReq.request.userid);
+                        tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
+                        tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "Web", "Web");
+                        tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginManualReq.request.userid);
+                    }
                     if (tpCheck == null || tpCheck.Locked)
                     {
                         commResp.status = "105";
@@ -1145,6 +1155,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             List<long> testHierarchyCustId = new List<long>();
             if (environment.IsDevelopment())
             {
+                testHierarchyCustId.Add(1288);
                 testHierarchyCustId.Add(1481);
             }
             else
