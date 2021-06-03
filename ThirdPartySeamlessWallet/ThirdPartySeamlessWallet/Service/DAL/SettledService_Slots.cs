@@ -2844,8 +2844,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -1;
                 }
 
-                //cancelBetData_JILI.betAmount *= -1;
-
                 var p = new DynamicParameters(new
                 {
                     round = cancelBetData_JILI.round,
