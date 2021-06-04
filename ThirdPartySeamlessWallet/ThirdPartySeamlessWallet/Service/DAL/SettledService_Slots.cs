@@ -2513,6 +2513,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     betAmount = betAmount,
                     winloseAmount = bettingData_JILI.winloseAmount,
                     isFreeRound = bettingData_JILI.isFreeRound,
+                    TransactionID = bettingData_JILI.TransactionID,
                     SiteId = tpCustInfo.SiteId,
                     CustId = tpCustInfo.CustId,
                     CurrencyId = tpCustInfo.CurrencyId,
@@ -2546,7 +2547,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans
                         );
                     }
-
+                    
+                    var transId = (bettingData_JILI.TransactionID != 0) ? bettingData_JILI.TransactionID.ToString() : bettingData_JILI.round.ToString();
+                    
                     bool getBonus = false;
                     if (bettingData_JILI.winloseAmount != 0)
                     {
@@ -2557,7 +2560,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 tpCustInfo,
                                 bettingData_JILI.winloseAmount,
                                 (int)Tp.JILI,
-                                bettingData_JILI.round.ToString(),
+                                transId,
                                 gameType,
                                 category,
                                 bettingData_JILI.round.ToString(),
@@ -2575,14 +2578,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 tpCustInfo,
                                 bettingData_JILI.winloseAmount,
                                 (int)Tp.JILI,
-                                bettingData_JILI.round.ToString(),
+                                transId,
                                 gameType,
                                 category,
                                 bettingData_JILI.round.ToString(),
-                                (iTicketStatus == (int)TicketStatus.FreeBetWin) ? TransType.Prize : TransType.Payout,
+                                TransType.Payout,
                                 null,
                                 out afterAmount,
-                                (iTicketStatus == (int)TicketStatus.FreeBetWin) ? "Prize" : "Payout",
+                                "Payout",
                                 out bonusId,
                                 conn,
                                 trans

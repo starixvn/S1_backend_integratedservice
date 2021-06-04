@@ -17,6 +17,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal winloseAmount { get; set; }
         public string userId { get; set; }
         public bool isFreeRound { get; set; }
+        public long TransactionID { get; set; }
+        
     }
 
     public class CancelBetData_JILI
