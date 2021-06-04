@@ -802,7 +802,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid,
+                                SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus,
                             };
 

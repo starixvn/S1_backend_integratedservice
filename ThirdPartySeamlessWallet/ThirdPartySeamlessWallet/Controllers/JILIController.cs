@@ -245,23 +245,23 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                 }
 
-                //if (environment.IsDevelopment() && getReq.betAmount == 90)
-                //{
-                //    System.Threading.Thread.Sleep(3000);
-                //    log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                //    return getErrorResponse;
-                //}
+                if (environment.IsDevelopment() && getReq.betAmount == 90)
+                {
+                    System.Threading.Thread.Sleep(3000);
+                    log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    return getErrorResponse;
+                }
 
                 var gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.game.ToString());
 
                 var result = settledBLL.BetAndPayoutRNG_JILI(getReq, (int)gameType, out decimal tpAffterAmount);
 
-                //if (environment.IsDevelopment() && getReq.betAmount == 210)
-                //{
-                //    System.Threading.Thread.Sleep(6000);
-                //    log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                //    return getErrorResponse;
-                //}
+                if (environment.IsDevelopment() && getReq.betAmount == 210)
+                {
+                    System.Threading.Thread.Sleep(3000);
+                    log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    return getErrorResponse;
+                }
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.userId, (int)gameType);
                 if (result > 0)
