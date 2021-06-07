@@ -2600,7 +2600,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (getBonus)
                         {
                             //call Service_TpSlotsBonus_Get to set flag
-                            GetTpBonus((int)Tp.JILI, bettingData_JILI.round.ToString(), gameType, category, out int custId, out bonusId);
+                            GetTpBonus((int)Tp.JILI, transId, gameType, category, out int custId, out bonusId);
                         }
                     }
                 }

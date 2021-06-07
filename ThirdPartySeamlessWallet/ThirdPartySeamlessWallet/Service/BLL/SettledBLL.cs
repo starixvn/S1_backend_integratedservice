@@ -1746,22 +1746,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
             }
 
-            /*
-            var result = 0;
-            if (gameType == (int)GameType.JILI_RNG)
-            {
-                result = settledService.BetAndPayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount);
-            }
-            else if (gameType == (int)GameType.JILI_Fish)
-            {
-                result = settledService.BetAndPayoutFish_JILI(tpCustInfo, bettingData_JILI, out afterAmount);
-            }
-            else
-            {
-                result = settledService.BetAndPayoutPK_JILI(tpCustInfo, bettingData_JILI, out afterAmount);
-            }
-            */
-
             var result = (gameType == (int)GameType.JILI_RNG) ? settledService.BetAndPayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount) : settledService.BetAndPayoutFish_JILI(tpCustInfo, bettingData_JILI, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
@@ -1783,22 +1767,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 cancelBetData_JILI.betAmount *= tpCurrency.ExchangeRate;
                 cancelBetData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
             }
-
-            /*
-            var result = 0;
-            if (gameType == (int)GameType.JILI_RNG)
-            {
-                result = settledService.CancelBetRNG_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
-            }
-            else if (gameType == (int)GameType.JILI_Fish)
-            {
-                result = settledService.CancelBetFish_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
-            }
-            else
-            {
-                result = settledService.CancelBetPK_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
-            }
-            */
 
             var result = (gameType == (int)GameType.JILI_RNG) ? settledService.CancelBetRNG_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount) : settledService.CancelBetFish_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
 
