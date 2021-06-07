@@ -46,6 +46,10 @@ namespace ThirdPartyWager.Service.BLL.KM
                 {
                     foreach (var wager in kmWagers)
                     {
+                        wager.beton = wager.beton.ToUniversalTime();
+                        wager.betclosedon = wager.betclosedon.ToUniversalTime();
+                        wager.betupdatedon = wager.betupdatedon.ToUniversalTime();
+                        wager.timestamp = wager.timestamp.ToUniversalTime();
                         var result = await _wagerKmService.InsertWager(wager);
                         if (result != 1)
                         {
