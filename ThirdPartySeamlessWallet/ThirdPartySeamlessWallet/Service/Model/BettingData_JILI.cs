@@ -57,5 +57,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Account { get; set; }
         public long SettleTime { get; set; }
         public int TicketStatus { get; set; }
+        public int GameId { get; set; }
     }
 }

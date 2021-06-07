@@ -75,6 +75,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {"bjma",false },
                     {"rla",false },
                 }
+            },
+            {
+                GameType.JILI_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"61",false },
+                    {"62",false },
+                    {"63",false },
+                    {"64",false },
+                    {"66",false },
+                }
             }
         };
 

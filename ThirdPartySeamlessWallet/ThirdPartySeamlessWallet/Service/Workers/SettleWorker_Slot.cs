@@ -802,10 +802,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
+                                SettlementType = settledBLL.GetSettlementType(gameType, unsettled.GameId.ToString()),
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus,
                             };
-
+                            // SettlementType = settledBLL.GetSettlementType(gameType, unsettled.gameId),
+                            if (unsettled.TicketStatus == (int)TicketStatus.Refund)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                            }
                             settledBLL.Settled(tpCustInfo, betRecordInfo, category);
                             settledBLL.SetSettleFlag_JILI((int)category, unsettled.TransId);
                         }
