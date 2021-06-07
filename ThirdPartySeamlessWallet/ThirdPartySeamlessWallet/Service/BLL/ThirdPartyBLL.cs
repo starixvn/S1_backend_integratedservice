@@ -185,21 +185,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     }
                     break;
                 case (int)Tp.JILI:
-                    gameType = GetGameCasinoByGameId((int)Tp.JILI, gameId);
-                    if (gameType == 0)
+                    gameType = GameType.JILI_RNG;
+
+                    List<int> fish = new List<int>{1,20,42,32,60,74};
+                    if (fish.Contains(Convert.ToInt32(gameId)))
                     {
-                        List<int> fish = new List<int>{
-                            1,
-                            20,
-                            42,
-                            32,
-                            60,
-                            74
-                        };
-                        if (fish.Contains(Convert.ToInt32(gameId)))
-                        {
-                            gameType = GameType.JILI_Fish;
-                        }
+                        gameType = GameType.JILI_Fish;
                     }
                     break;
                 default:
@@ -231,23 +222,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 settlementType = SettlementType.SettledForValidNotRollover;
             }
             return settlementType;
-        }
-
-        public GameType GetGameCasinoByGameId(int tpId, string gameId)
-        {
-            var casino = GetGameCasinoWithCache(tpId);
-            var check = casino.Where(x => x.GameId == gameId).FirstOrDefault();
-            if (check != null)
-            {
-                switch (tpId)
-                {
-                    case (int)Tp.JILI:
-                        return GameType.JILI_RNG;
-                    default:
-                        break;
-                }
-            }
-            return 0;
         }
     }
 }
