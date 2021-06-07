@@ -43,7 +43,6 @@ namespace ThirdParty.JILI
             string AgentId = inputs.ContainsKey("AgentId") && !String.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception($"AgentId is empty");
             string AgentKey = inputs.ContainsKey("AgentKey") && !String.IsNullOrEmpty(inputs["AgentKey"]) ? inputs["AgentKey"] : throw new Exception($"AgentKey is empty");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
-            string gameType = inputs.ContainsKey("gametype") && !string.IsNullOrEmpty(inputs["gametype"]) ? inputs["gametype"] : throw new Exception("gametype");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             GameUrl = $"{GameUrl}/Login";
 
