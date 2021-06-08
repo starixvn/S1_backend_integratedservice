@@ -28,7 +28,7 @@ namespace ThirdParty.KM
             var obj = new
             {
                 ipaddress = inputs["ClientIP"],
-                username = tpCustInfo.UserName,
+                username = tpCustInfo.TpUserName,
                 userid = tpCustInfo.TpUserName,
                 lang = TpLangId,
                 cur = tpCustInfo.TpCurrencyId,
