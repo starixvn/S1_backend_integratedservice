@@ -23,7 +23,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"MYR","MY" },
             {"THB","TH" },
             {"VND","VN" },
-            {"USD","KH" },
             {"INR","INR"}
         };
 
