@@ -55,7 +55,7 @@ namespace ThirdParty.Iconic
 
             if (jwtTokens[currency].ExpiredTime <= DateTime.Now)
             {
-                string jwtUserName = $"novax{currency}";
+                string jwtUserName = (currency == "INR") ? $"nova88x{currency}" : $"novax{currency}";
                 if (string.IsNullOrWhiteSpace(jwtTokens[currency].token))
                 {
                     var jwtToken = GetJwtToken(ApiUrl, jwtUserName, password);
