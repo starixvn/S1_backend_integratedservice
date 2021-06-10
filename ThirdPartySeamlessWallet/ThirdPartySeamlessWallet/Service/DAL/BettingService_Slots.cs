@@ -227,7 +227,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         bettingDataRNG_SG.amount,
-                        gameType,
+                        (int)Tp.SG,
                         TransType.Wagers,
                         $"Stake: {Math.Abs(bettingDataRNG_SG.amount):#,##0.##}",
                         bettingDataRNG_SG.transferId,
