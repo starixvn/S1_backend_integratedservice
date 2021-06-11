@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/Auth")]
         [HttpPost]
-        public VerifySessionResp VerifySession(string traceId, [FromForm]Dictionary<string, string> reqq)
+        public VerifySessionResp VerifySession(string traceId, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_VerifySession";
             VerifySessionResp resp = new VerifySessionResp();
@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
             string operator_token = thirdPartySetting.TpSetting["operator_token"];
 
-            if (!verifySessionReq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !verifySessionReq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(verifySessionReq.OperatorToken) || string.IsNullOrEmpty(verifySessionReq.SecretKey) || string.IsNullOrEmpty(verifySessionReq.OperatorPlayerSession) || !verifySessionReq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !verifySessionReq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
                 resp.error = new Error
                 {
@@ -228,7 +228,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/GetUserBalance")]
         [HttpPost]
-        public Resp GetBalance(string traceId, [FromForm]Dictionary<string, string> reqq)
+        public Resp GetBalance(string traceId, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_GetBalance";
             Resp resp = new Resp();
@@ -372,7 +372,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/PlaceBet")]
         [HttpPost]
-        public Resp TransferOut(string traceId, [FromForm]Dictionary<string, string> reqq)
+        public Resp TransferOut(string traceId, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_TransferOut";
             Resp resp = new Resp();
@@ -401,6 +401,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, transferOutReqq.PlayerName);
+            if (tpCustInfo == null)
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
             TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName, gameType);
 
             if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferOutReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
@@ -585,7 +598,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/Payout")]
         [HttpPost]
-        public Resp TransferIn(string traceId, [FromForm]Dictionary<string, string> reqq)
+        public Resp TransferIn(string traceId, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_TransferIn";
             Resp resp = new Resp();
@@ -612,8 +625,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName, gameType);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, transferInReqq.PlayerName);
+            if (tpCustInfo == null)
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
 
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInReqq.PlayerName, gameType);
             if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferInReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
             {
                 resp.error = new Error
