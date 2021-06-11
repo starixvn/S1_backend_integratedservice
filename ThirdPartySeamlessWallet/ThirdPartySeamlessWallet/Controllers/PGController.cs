@@ -84,6 +84,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public VerifySessionResp VerifySession(string traceId, [FromForm]Dictionary<string, string> reqq)
         {
+            string logName = $"{thisTp}_VerifySession";
             VerifySessionResp resp = new VerifySessionResp();
             resp.error = new Error
             {
@@ -104,6 +105,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1034",
                     message = "Invalid request."
                 };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
 
@@ -125,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 code = "1308",
                                 message = "Player session is expired"
                             };
-
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
                         else if (tpCheck.Token != sessionToken)
@@ -135,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 code = "1308",
                                 message = "Player session is expired"
                             };
-
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
                         else if (tpCheck.Locked)
@@ -145,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 code = "1309",
                                 message = "Player is inactive"
                             };
-
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
                         else
@@ -169,11 +171,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                             code = "1300",
                             message = "Invalid player session"
                         };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
                     }
                 }
                 catch (FormatException fEx)
                 {
-                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{fEx}", $"{thisTp}_VerifySession");
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{fEx}", logName);
                 }
             }
             else
@@ -183,10 +187,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1301",
                     message = "Player session token is empty"
                 };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_VerifySession");
-
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             return resp;
         }
 
@@ -225,6 +230,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public Resp GetBalance(string traceId, [FromForm]Dictionary<string, string> reqq)
         {
+            string logName = $"{thisTp}_GetBalance";
             Resp resp = new Resp();
             resp.error = new Error
             {
@@ -245,7 +251,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1034",
                     message = "Invalid request."
                 };
-
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
 
@@ -264,7 +270,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         code = "1308",
                         message = "Invalid request."
                     };
-
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
                 else if (tpCheck.Token != sessionToken)
@@ -274,7 +280,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         code = "1308",
                         message = "Player session is expired"
                     };
-
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
                 else if (tpCheck.Locked)
@@ -284,7 +290,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         code = "1309",
                         message = "Player is inactive"
                     };
-
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
                 else
@@ -311,9 +317,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1300",
                     message = "Invalid player session"
                 };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_GetBalance");
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
 
             return resp;
         }
@@ -366,6 +374,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public Resp TransferOut(string traceId, [FromForm]Dictionary<string, string> reqq)
         {
+            string logName = $"{thisTp}_TransferOut";
             Resp resp = new Resp();
             resp.error = new Error
             {
@@ -389,7 +398,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1034",
                     message = "Invalid request."
                 };
-
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
             TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferOutReqq.PlayerName, gameType);
@@ -401,7 +410,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1034",
                     message = "Invalid request."
                 };
-
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
 
@@ -424,7 +433,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 code = "1308",
                                 message = "Player session is expired"
                             };
-
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
                         else if (tpCheck.Token != sessionToken)
@@ -434,7 +443,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 code = "1308",
                                 message = "Player session is expired"
                             };
-
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
                         else if (tpCheck.Locked)
@@ -444,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 code = "1309",
                                 message = "Player is inactive"
                             };
-
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
                     }
@@ -488,6 +497,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                             code = "3202",
                             message = "No enough cash balance to bet."
                         };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
                     }
                     else/*Can't Insert Bet*/
                     {
@@ -497,6 +508,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                             code = "1034",
                             message = $"Invalid request."
                         };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
                     }
                 }
                 catch (Exception ex)
@@ -512,10 +525,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1300",
                     message = "Invalid player session"
                 };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_TransferOut");
-
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             return resp;
         }
 
@@ -573,6 +587,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public Resp TransferIn(string traceId, [FromForm]Dictionary<string, string> reqq)
         {
+            string logName = $"{thisTp}_TransferIn";
             Resp resp = new Resp();
             resp.error = new Error
             {
@@ -593,6 +608,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1034",
                     message = "Invalid request."
                 };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
 
@@ -605,7 +621,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     code = "1034",
                     message = "Invalid request."
                 };
-
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 return resp;
             }
 
@@ -649,7 +665,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 throw ex;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_TransferIn");
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
 
             return resp;
         }
