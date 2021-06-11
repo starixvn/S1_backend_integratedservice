@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -22,8 +23,12 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpTransferInfo tpTransferInfo;
         private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
         private readonly Log2File log2File;
+        private readonly ILogger<ThirdPartyBLL> _logger;
 
-        public ThirdPartyBLL(IConfiguration configuration, IWebHostEnvironment env, TpCustInfoService tpCustInfoService, ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo, TpTransferBonusInfoService tpTransferBonusInfoService, AuthBLL authBLL, Log2File log2File)
+        public ThirdPartyBLL(IConfiguration configuration, IWebHostEnvironment env, TpCustInfoService tpCustInfoService,
+            ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo,
+            TpTransferBonusInfoService tpTransferBonusInfoService, AuthBLL authBLL, Log2File log2File,
+            ILogger<ThirdPartyBLL> logger)
         {
             this.tpCustInfoService = tpCustInfoService;
             this.thirdPartyHelper = thirdPartyHelper;
@@ -34,7 +39,9 @@ namespace ThirdPartyService.Service.BLL
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
             this.tpTransferBonusInfoService = tpTransferBonusInfoService;
             this.log2File = log2File;
+            _logger = logger;
         }
+
         public ApiResult GotoGame(TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
@@ -111,126 +118,148 @@ namespace ThirdPartyService.Service.BLL
 
         public ApiResult<TransferResult> Transfer(TpTransfer tpTransfer)
         {
-            string prefix = "T";
             var apiResult = new ApiResult<TransferResult>();
+            try
+            {
+                string prefix = "T";
 
-            if (tpTransfer.direction != Direction.ToMain && tpTransfer.direction != Direction.ToTp)
-            {
-                apiResult.ErrorCode = ErrorCode.InvalidParameter;
-                return apiResult;
-            }
-            else if (tpTransfer.Amount <= 0)
-            {
-                apiResult.ErrorCode = ErrorCode.InvalidParameter;
-                return apiResult;
-            }
-
-            // source autotransfer running bonus failed
-            if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("Source") && tpTransfer.inputs["Source"] == "Auto")
-            {
-                prefix = "AT";
-                var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
-                if(custBonus != null)
+                if (tpTransfer.direction != Direction.ToMain && tpTransfer.direction != Direction.ToTp)
                 {
-                    apiResult.ErrorCode = ErrorCode.AutoTransferBonusFail;
+                    apiResult.ErrorCode = ErrorCode.InvalidParameter;
                     return apiResult;
                 }
-            }
-
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
-
-            // Test account create 3rd party only for saba
-            if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
-            {
-                apiResult.ErrorCode = ErrorCode.NoAuthority;
-                apiResult.RawMessage = "This Account is for Testing.";
-                return apiResult;
-            }
-            else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
-            {
-                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
-                return apiResult;
-            }
-
-            IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
-
-            var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
-            if (balanceApiResult.ErrorCode != ErrorCode.Success)
-            {
-                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = balanceApiResult.RawMessage;/*3RD Error Message*/
-                return apiResult;
-            }
-
-            if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("AllOut"))
-            {
-                decimal _Amount = balanceApiResult.Data.balance;
-                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                else if (tpTransfer.Amount <= 0)
                 {
-                    _Amount *= tpCustInfoResult.Data.ExchangeRate;
+                    apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                    return apiResult;
                 }
 
-                tpTransfer.direction = Direction.ToMain;
-                tpTransfer.Amount = Math.Abs(_Amount);
-            }
-
-            string transId = null;
-            var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
-            string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
-            var tpTransferReqResult = tpTransferInfo.TpTransferReqV2(tpTransfer, tpCustInfoResult.Data, thirdId, prefix, out transId);
-            if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
-            {
-                return tpTransferReqResult;
-            }
-
-            decimal amount = tpTransfer.Amount;
-
-            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
-            {
-                amount = tpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
-            }
-
-            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, tpTransfer.direction, transId, thirdId);
-
-            tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, transId);
-            /*Use Async to Record Log*/
-            if (apiResult.ErrorCode == ErrorCode.Success)
-            {
-                Task.Run(() =>
+                // source autotransfer running bonus failed
+                if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("Source") &&
+                    tpTransfer.inputs["Source"] == "Auto")
                 {
-                    tpCustInfoService.SetTpLastTradingTime(tpTransfer.CustId, tpTransfer.TpId);
-                });
+                    prefix = "AT";
+                    var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
+                    if (custBonus != null)
+                    {
+                        apiResult.ErrorCode = ErrorCode.AutoTransferBonusFail;
+                        return apiResult;
+                    }
+                }
+
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
+
+                // Test account create 3rd party only for saba
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
+                {
+                    apiResult.ErrorCode = ErrorCode.NoAuthority;
+                    apiResult.RawMessage = "This Account is for Testing.";
+                    return apiResult;
+                }
+                else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+                {
+                    apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                    apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                    apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
+                    return apiResult;
+                }
+
+                IThirdPartyHelper tpHelper =
+                    thirdPartyHelper.GetThirdPartyHelper(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
+                var oThirdPartyModel =
+                    thirdPartyHelper.GetThirdPartyBySite(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+                var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+                if (balanceApiResult.ErrorCode != ErrorCode.Success)
+                {
+                    apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                    apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
+                    apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
+                    return apiResult;
+                }
+
+                if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("AllOut"))
+                {
+                    decimal _Amount = balanceApiResult.Data.balance;
+                    if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                    {
+                        _Amount *= tpCustInfoResult.Data.ExchangeRate;
+                    }
+
+                    tpTransfer.direction = Direction.ToMain;
+                    tpTransfer.Amount = Math.Abs(_Amount);
+                }
+
+                string transId = null;
+                var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
+                string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
+                var tpTransferReqResult =
+                    tpTransferInfo.TpTransferReqV2(tpTransfer, tpCustInfoResult.Data, thirdId, prefix, out transId);
+                if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
+                {
+                    return tpTransferReqResult;
+                }
+
+                decimal amount = tpTransfer.Amount;
+
+                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                {
+                    amount = tpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
+                }
+
+                apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, tpTransfer.direction, transId,
+                    thirdId);
+
+                tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, transId);
+                /*Use Async to Record Log*/
+                if (apiResult.ErrorCode == ErrorCode.Success)
+                {
+                    Task.Run(() => { tpCustInfoService.SetTpLastTradingTime(tpTransfer.CustId, tpTransfer.TpId); });
+                }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                throw;
+            }
+
             return apiResult;
         }
 
         public ApiResult<UserBalance> GetBalance(TpInfo tpInfo)
         {
-            var apiResult = new ApiResult<UserBalance>();
-            apiResult.ErrorCode = ErrorCode.SystemError;
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
-            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            var apiResult = new ApiResult<UserBalance>
             {
-                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
-                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
-                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
-
-                apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
-
-                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                ErrorCode = ErrorCode.SystemError
+            };
+            
+            try
+            {
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+                if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
-                    apiResult.Data.balance = apiResult.Data.balance * tpCustInfoResult.Data.ExchangeRate;
-                    apiResult.Data.outstanding = apiResult.Data.outstanding * tpCustInfoResult.Data.ExchangeRate;
+                    IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                    var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                    var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+                    apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+
+                    if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                    {
+                        apiResult.Data.balance = apiResult.Data.balance * tpCustInfoResult.Data.ExchangeRate;
+                        apiResult.Data.outstanding = apiResult.Data.outstanding * tpCustInfoResult.Data.ExchangeRate;
+                    }
+                }
+                else
+                {
+                    apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                _logger.LogError(ex, ex.Message);
+                throw;
             }
 
             return apiResult;
@@ -495,33 +524,43 @@ namespace ThirdPartyService.Service.BLL
                         // get each games third-party of balance
                         var preTpInfo = tpInfo;
                         preTpInfo.TpId = betaTpId;
-                        var preBalance = GetBalance(preTpInfo);
-                        if (preBalance.ErrorCode == ErrorCode.Success && preBalance.Data.balance > 0)
+                        try
                         {
-                            // prepare transfer param
-                            transfer.TpId = preTpInfo.TpId;
-                            transfer.Amount = 1; // temporary use 1 for pass validation
-                            transfer.direction = Direction.ToMain;
-                            transfer.CustId = tpInfo.CustId;
-                            transfer.inputs = preInput;
+                            var preBalance = GetBalance(preTpInfo);
+                            if (preBalance.ErrorCode == ErrorCode.Success && preBalance.Data.balance > 0)
+                            {
+                                // prepare transfer param
+                                transfer.TpId = preTpInfo.TpId;
+                                transfer.Amount = 1; // temporary use 1 for pass validation
+                                transfer.direction = Direction.ToMain;
+                                transfer.CustId = tpInfo.CustId;
+                                transfer.inputs = preInput;
 
-                            // 同步
-                            var subTrans = Transfer(transfer);
+                                // 同步
+                                var subTrans = Transfer(transfer);
 
-                            /*
-                            // 非同步
-                            var taskTransfer = Task.Run(() => Transfer(transfer));
-                            taskTransfer.Wait(1000);
-                            */
-                            subResult.Data.FromTpId = preTpInfo.TpId;
-                            subResult.Data.ToTpId = 0;
-                            subResult.Data.MainBalanceBefore = "--";
-                            subResult.Data.MainBalanceAfter = "--";
-                            subResult.Data.GameBalance = (subTrans.ErrorCode == ErrorCode.Success) ? preBalance.Data.balance.ToString() : "--";
-                            subResult.ErrorCode = subTrans.ErrorCode;
-                            subResult.RawErrorCode = subTrans.RawErrorCode ?? "";
-                            subResult.RawMessage = subTrans.RawMessage ?? "";
-                            log2File.Info($"Game To Main : \r\n{JsonConvert.SerializeObject(subResult)}", "AutoTransfer");
+                                /*
+                                // 非同步
+                                var taskTransfer = Task.Run(() => Transfer(transfer));
+                                taskTransfer.Wait(1000);
+                                */
+                                subResult.Data.FromTpId = preTpInfo.TpId;
+                                subResult.Data.ToTpId = 0;
+                                subResult.Data.MainBalanceBefore = "--";
+                                subResult.Data.MainBalanceAfter = "--";
+                                subResult.Data.GameBalance = (subTrans.ErrorCode == ErrorCode.Success)
+                                    ? preBalance.Data.balance.ToString()
+                                    : "--";
+                                subResult.ErrorCode = subTrans.ErrorCode;
+                                subResult.RawErrorCode = subTrans.RawErrorCode ?? "";
+                                subResult.RawMessage = subTrans.RawMessage ?? "";
+                                log2File.Info($"Game To Main : \r\n{JsonConvert.SerializeObject(subResult)}",
+                                    "AutoTransfer");
+                            }
+                        }
+                        catch
+                        {
+                            // ignored
                         }
                     }
                 }
