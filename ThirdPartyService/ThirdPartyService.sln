@@ -71,6 +71,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartyService.Integrati
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.AMB", "ThirdParty.AMB\ThirdParty.AMB.csproj", "{4FA2C031-5081-432A-A8FE-D33A7086A0DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.MG", "ThirdParty.MG\ThirdParty.MG.csproj", "{FB4A91A8-B536-4407-8A21-D67AFF238C1B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -209,6 +211,10 @@ Global
 		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FA2C031-5081-432A-A8FE-D33A7086A0DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB4A91A8-B536-4407-8A21-D67AFF238C1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB4A91A8-B536-4407-8A21-D67AFF238C1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB4A91A8-B536-4407-8A21-D67AFF238C1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB4A91A8-B536-4407-8A21-D67AFF238C1B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -244,6 +250,7 @@ Global
 		{68B79FBA-5B3A-43EE-A286-CE737BCD4014} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{960A6959-6EF6-4AEE-B08A-6B94CAEDC0F0} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{4FA2C031-5081-432A-A8FE-D33A7086A0DB} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{FB4A91A8-B536-4407-8A21-D67AFF238C1B} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
