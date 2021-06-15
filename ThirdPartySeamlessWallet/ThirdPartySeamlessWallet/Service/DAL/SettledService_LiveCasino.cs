@@ -255,6 +255,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            p.Add("GameType", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("GameId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             int result = conn.Execute("Service_TpWagerDG_Settle_Get", p, commandType: CommandType.StoredProcedure);
 
             if (p.Get<decimal?>("Stake") != null)
@@ -262,7 +264,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 stake = p.Get<decimal>("Stake");
                 validBet = p.Get<decimal>("ValidBet");
                 winLostAmount = p.Get<decimal>("WinLostAmount");
-                settleTime = p.Get<long>("SettleTime");
+                var checkSettleTime = p.Get<dynamic>("SettleTime");
+                if (checkSettleTime == null)
+                {
+                    int gameType = p.Get<int>("GameType");
+                    int gameId = p.Get<int>("GameId");
+                    //会员抢红包
+                    if (gameType == 2 && gameId == 2)
+                    {
+                        return -1;
+                    }
+                }
+                else
+                {
+                    settleTime = p.Get<long>("SettleTime");
+                }
+
             }
             else
             {

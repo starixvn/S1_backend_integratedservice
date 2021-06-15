@@ -293,6 +293,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     settledBLL.SetSettleFlag_DG(unsettled.TransId);
                                 });
                             }
+                            else if (result == -1)
+                            {
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
+                                    settledBLL.SetSettleFlag_DG(unsettled.TransId);
+                                });
+                            }
                         }
                         catch (Exception ex1)
                         {
@@ -944,7 +952,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 SettlementType = SettlementType.SettledForValidNotRollover
                             };
 
-                           
+
                             if (stake == 0 && validBet == 0 && winLostAmount == 0)
                             {
                                 settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
