@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.Model
         public long memberId { get; set; }
         public int parentId { get; set; }
         public DateTime betTime { get; set; }
-        public DateTime calTime { get; set; }
+        public DateTime? calTime { get; set; }
         public decimal winOrLoss { get; set; }
         public decimal balanceBefore { get; set; }
         public decimal betPoints { get; set; }
@@ -54,13 +54,21 @@ namespace ThirdPartyWager.Service.Model
             get
             {
                 return new DateTimeOffset(betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+
             }
         }
         public long calUnix
         {
             get
             {
-                return new DateTimeOffset(calTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+                if (calTime != null)
+                {
+                    return new DateTimeOffset((DateTime)calTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+                }
+                else
+                {
+                    return 0;
+                }
             }
         }
     }
