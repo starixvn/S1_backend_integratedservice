@@ -92,7 +92,7 @@ namespace ThirdParty.MG
             {
                 {"Authorization", $"Bearer {dict["access_token"]}"}
             };
-            parameters = $"playerId={tpCustInfo.TpUserName}";
+            parameters = $"contentType=Game&contentCode=SMG_10000Wishes&platform=Desktop&langCode=zh-CN";
             
             try
             {
@@ -101,7 +101,7 @@ namespace ThirdParty.MG
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
-                    Message = $"{con["Url"]}"
+                    Message = $"{con["url"]}"
                 };
             }
             catch (WebException e)

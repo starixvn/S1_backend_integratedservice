@@ -293,6 +293,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public async Task<(int result, decimal afterAmount)> PlaceBetRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        {
+            var bonusId = 0;
+            var afterAmount = 0M;
+            var result = 0;
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            bettingDataRNG_MG.amount *= -1;
+            bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingDataRNG_MG.type = BettransType.Bet;
+            var p = new DynamicParameters();
+
+            result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0 && bettingDataRNG_MG.amount != 0)
+            {
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_MG.amount, (int)Tp.MG, bettingDataRNG_MG.roundId, gameType, bettingDataRNG_MG.txnId, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return (result, afterAmount);
+        }
+        
         #region CQ9
 
         public int PlaceBetRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)

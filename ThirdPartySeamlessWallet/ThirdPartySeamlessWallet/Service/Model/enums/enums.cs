@@ -82,7 +82,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BTI_Sports = 49,
         AMB_Poker = 50,
         NineW_Sports = 51,
-        KM_Poker = 52
+        KM_Poker = 52,
+        
+        
+        
+        
+        MG_RNG = 57,
+        MG_LiveCasino = 58
     }
     public enum Tp
     {
@@ -117,6 +123,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BTI = 29,
         AMB = 30,
         NineW = 31,
+        
+        
+        MG = 34
     }
     public enum TransferType : int
     {

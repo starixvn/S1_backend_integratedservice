@@ -1,0 +1,83 @@
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model
+{
+    public class BettingDataRNG_MG
+    {
+        public string txnType { get; set; }
+        public string txnEventType { get; set; }
+        public string playerId { get; set; }
+        public decimal amount { get; set; }
+        public string currency { get; set; }
+        public string txnId { get; set; }
+        public int creationTime { get; set; }
+        public string contentCode { get; set; }
+        public string betId { get; set; }
+        public string roundId { get; set; }
+        public string deviceType { get; set; }
+        public string platformType { get; set; }
+        public string completed { get; set; }
+        public int TicketStatus { get; set; }
+        public BettransType type { get; set; }
+    }
+
+    public class MGLoginRequest
+    {
+        public string playerId { get; set; }
+    }
+
+    public class MGLoginResponse
+    {
+        public string currency { get; set; }
+        public decimal balance { get; set; }
+    }
+
+    public class MGGetBalanceRequest
+    {
+        public string playerId { get; set; }
+    }
+    
+    public class MGGetBalanceResponse
+    {
+        public string currency { get; set; }
+        public decimal balance { get; set; }
+    }
+
+    public class MGUpdatebalanceRequest
+    {
+        public MGTxnType txnType { get; set; }
+        public string txnEventType { get; set; }
+        public string playerId { get; set; }
+        public decimal amount { get; set; }
+        public string currency { get; set; }
+        public string txnId { get; set; }
+        public int creationTime { get; set; }
+        public string contentCode { get; set; }
+        public string betId { get; set; }
+        public string roundId { get; set; }
+        public string deviceType { get; set; }
+        public string platformType { get; set; }
+        public string completed { get; set; }
+    }
+
+    public class MGUpdatebalanceResponse
+    {
+        public string extTxnId { get; set; }
+        public decimal balance { get; set; }
+        public string currency { get; set; }
+    }
+    public class MGRollbackeRequest
+    {
+        public string playerId { get; set; }
+        public decimal amount { get; set; }
+        public string currency { get; set; }
+        public string txnId { get; set; }
+    }
+
+    public class MGRollbackResponse
+    {
+        public string extTxnId { get; set; }
+        public decimal balance { get; set; }
+        public string currency { get; set; }
+    }
+}

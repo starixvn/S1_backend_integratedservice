@@ -2454,5 +2454,68 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        public async Task<(int, decimal)> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType)
+        {
+            var bonusId = 0;
+            var afterAmount = 0M;
+            var result = 0;
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            
+            bettingDataRNG_PP.TicketStatus = bettingDataRNG_PP.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+            var p = new DynamicParameters();
+            
+            try
+            {
+                var category = TpCategory.Slots;
+                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingDataRNG_PP.amount > 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo, 
+                            bettingDataRNG_PP.amount, 
+                            (int)Tp.MG, 
+                            bettingDataRNG_PP.roundId.ToString(), 
+                            gameType,
+                            category, 
+                            bettingDataRNG_PP.reference, 
+                            TransType.Payout, 
+                            null, 
+                            out afterAmount, 
+                            "Payout", 
+                            out bonusId,
+                            conn, 
+                            trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return (result, afterAmount);
+        }
     }
 }
