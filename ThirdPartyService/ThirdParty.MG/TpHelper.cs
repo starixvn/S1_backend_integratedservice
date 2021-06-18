@@ -16,25 +16,22 @@ namespace ThirdParty.MG
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = GetInputValue(inputs, "ApiUrl");
-            var tokenUrl = GetInputValue(inputs, "TokenUrl");
             var strAgents = GetInputValue(inputs, "Agent");
             var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
             var agent = mgAgents.SingleOrDefault(a => a.Currency == tpCustInfo.TpCurrencyId);
 
-            var parameters =
-                $"client_id={agent.AgentCode}&client_secret={agent.SecretKey}&grant_type=client_credentials";
-            var tokenResult = HttpPost($"{tokenUrl}/connect/token", parameters, "application/x-www-form-urlencoded");
-
+            var token = GetToken(inputs, tpCustInfo.TpCurrencyId);
             try
             {
-                var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenResult);
-
                 var header = new Dictionary<string, string>()
                 {
-                    {"Authorization", $"Bearer {dict["access_token"]}"}
+                    {"Authorization", $"Bearer {token}"}
                 };
-                parameters = $"playerId={tpCustInfo.TpUserName}";
-                var playerResult = HttpPost($"{apiUrl}{BasePath}/agents/{agent.AgentCode}/players", parameters, "application/x-www-form-urlencoded", header);
+                var parameters = $"playerId={tpCustInfo.TpUserName}";
+                HttpPost($"{apiUrl}{BasePath}/agents/{agent.AgentCode}/players", 
+                          parameters, 
+                          "application/x-www-form-urlencoded", 
+                          header);
 
                 return new ApiResult
                 {
@@ -43,26 +40,10 @@ namespace ThirdParty.MG
             }
             catch(WebException e)
             {
-                var message = "";
-                var code = "";
-                using (WebResponse response = e.Response)
+                var (code, message) = GetMgError(e.Response);
+                if (string.IsNullOrEmpty(message))
                 {
-                    var httpResponse = (HttpWebResponse) response;
-                    if (httpResponse.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        using (var data = response.GetResponseStream())
-                        using (var reader = new StreamReader(data))
-                        {
-                            var text = reader.ReadToEnd();
-                            var error = JsonConvert.DeserializeObject<Dictionary<string, string>>(text);
-                            message = error["message"];
-                            code = error["code"];
-                        }
-                    }
-                    else
-                    {
-                        message = e.Message;
-                    }
+                    message = e.Message;
                 }
                 return new ApiResult()
                 {
@@ -77,27 +58,27 @@ namespace ThirdParty.MG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var apiUrl = GetInputValue(inputs, "ApiUrl");
-            var tokenUrl = GetInputValue(inputs, "TokenUrl");
             var strAgents = GetInputValue(inputs, "Agent");
+            var gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
+            var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
             var agent = mgAgents.SingleOrDefault(a => a.Currency == tpCustInfo.TpCurrencyId);
 
-            var parameters =
-                $"client_id={agent.AgentCode}&client_secret={agent.SecretKey}&grant_type=client_credentials";
-            var tokenResult = HttpPost($"{tokenUrl}/connect/token", parameters, "application/x-www-form-urlencoded");
-            
-            var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenResult);
-
-            var header = new Dictionary<string, string>()
-            {
-                {"Authorization", $"Bearer {dict["access_token"]}"}
-            };
-            parameters = $"contentType=Game&contentCode=SMG_10000Wishes&platform=Desktop&langCode=zh-CN";
+            var token = GetToken(inputs, tpCustInfo.TpCurrencyId);
             
             try
             {
-                var sessionResult = HttpPost($"{apiUrl}{BasePath}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/sessions", parameters, "application/x-www-form-urlencoded", header);
-                var con = JsonConvert.DeserializeObject<Dictionary<string, string>>(sessionResult);
+                var header = new Dictionary<string, string>()
+                {
+                    {"Authorization", $"Bearer {token}"}
+                };
+                var platform = appType == AppType.Desktop ? "Desktop" : "Mobile";
+                var parameters = $"contentType=Game&contentCode={gameId}&platform={platform}&homeUrl={homeUrl}&langCode={TpLangId}";
+                var result = HttpPost($"{apiUrl}{BasePath}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/sessions", 
+                                            parameters, 
+                                            "application/x-www-form-urlencoded", 
+                                            header);
+                var con = JsonConvert.DeserializeObject<Dictionary<string, string>>(result);
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
@@ -106,26 +87,10 @@ namespace ThirdParty.MG
             }
             catch (WebException e)
             {
-                var message = "";
-                var code = "";
-                using (WebResponse response = e.Response)
+                var (code, message) = GetMgError(e.Response);
+                if (string.IsNullOrEmpty(message))
                 {
-                    var httpResponse = (HttpWebResponse) response;
-                    if (httpResponse.StatusCode == HttpStatusCode.BadRequest)
-                    {
-                        using (var data = response.GetResponseStream())
-                        using (var reader = new StreamReader(data))
-                        {
-                            var text = reader.ReadToEnd();
-                            var error = JsonConvert.DeserializeObject<Dictionary<string, string>>(text);
-                            message = error["message"];
-                            code = error["code"];
-                        }
-                    }
-                    else
-                    {
-                        message = e.Message;
-                    }
+                    message = e.Message;
                 }
                 return new ApiResult()
                 {
@@ -169,7 +134,43 @@ namespace ThirdParty.MG
             }
             throw new Exception();
         }
-        
+
+        private string GetToken(Dictionary<string, string> inputs, string tpCurrencyId)
+        {
+            var tokenUrl = GetInputValue(inputs, "TokenUrl");
+            var strAgents = GetInputValue(inputs, "Agent");
+            var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
+            var agent = mgAgents.SingleOrDefault(a => a.Currency == tpCurrencyId);
+
+            var parameters =
+                $"client_id={agent.AgentCode}&client_secret={agent.SecretKey}&grant_type=client_credentials";
+            var tokenResult = HttpPost($"{tokenUrl}/connect/token", parameters, "application/x-www-form-urlencoded");
+            
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenResult);
+            return dict["access_token"];
+        }
+
+        private (string, string) GetMgError(WebResponse webResponse)
+        {
+            using var response = webResponse;
+            var httpResponse = (HttpWebResponse) response;
+            if (httpResponse.StatusCode == HttpStatusCode.BadRequest)
+            {
+                using var data = response.GetResponseStream();
+                if (data != null)
+                {
+                    using (var reader = new StreamReader(data))
+                    {
+                        var text = reader.ReadToEnd();
+                        var error = JsonConvert.DeserializeObject<MGError>(text);
+                        return (error.error.code, error.error.message);
+                    }
+                }
+            }
+
+            return (string.Empty, string.Empty);
+        }
+
         private class MGAgents
         {
             public string Currency { get; set; }
@@ -177,5 +178,17 @@ namespace ThirdParty.MG
             public string AgentCode { get; set; }
             public string SecretKey { get; set; }
         }
+        public class Error
+        {
+            public string code { get; set; }
+            public string message { get; set; }
+        }
+
+        public class MGError
+        {
+            public Error error { get; set; }
+        }
+
+
     }
 }
