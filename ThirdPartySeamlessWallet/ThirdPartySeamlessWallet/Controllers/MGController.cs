@@ -12,7 +12,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    // [ServiceFilter(typeof(MGHeaderFilter))]
+    [ServiceFilter(typeof(MGHeaderFilter))]
+    [ServiceFilter(typeof(MGExceptionFilter))]
     public class MGController : ControllerBase
     {
         private readonly ILogger<MGController> _logger;
@@ -35,16 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("login")]
         public async Task<MGLoginResponse> Login(MGLoginRequest request)
         {
-            try
-            {
-                return _mgbll.Login(request);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-            
+            return _mgbll.Login(request);
         }
         
         /// <summary>
@@ -54,15 +46,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("getbalance")]
         public async Task<MGGetBalanceResponse> GetBalance(MGGetBalanceRequest request)
         {
-            try
-            {
-                return _mgbll.GetBalance(request);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            return _mgbll.GetBalance(request);
         }
         
         /// <summary>
@@ -70,17 +54,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("updatebalance")]
-        public async Task<IActionResult> UpdateBalance(MGUpdatebalanceRequest request)
+        public async Task<MGUpdatebalanceResponse> UpdateBalance(MGUpdatebalanceRequest request)
         {
-            try
-            {
-                return Ok(_mgbll.UpdateBalance(request));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return BadRequest();
-            }
+            return await _mgbll.UpdateBalance(request);
         }
         
         /// <summary>

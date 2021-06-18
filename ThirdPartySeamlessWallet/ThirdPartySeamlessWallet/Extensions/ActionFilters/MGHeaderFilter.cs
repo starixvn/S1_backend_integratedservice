@@ -17,7 +17,7 @@ namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
             await next();
             
             var srcTimestamp = long.Parse(timestamp);
-            var nowTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var nowTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             context.HttpContext.Response.Headers.Add("X-MGP-REQ-ID",requestId);
             context.HttpContext.Response.Headers.Add("X-MGP-RESPONSE-TIME", (nowTimestamp - srcTimestamp).ToString());
         }

@@ -10,15 +10,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string currency { get; set; }
         public string txnId { get; set; }
-        public int creationTime { get; set; }
+        public long creationTime { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public string roundId { get; set; }
         public string deviceType { get; set; }
         public string platformType { get; set; }
-        public string completed { get; set; }
+        public bool completed { get; set; }
+        public string TransType { get; set; }
+        public int TicketType { get; set; }
         public int TicketStatus { get; set; }
-        public BettransType type { get; set; }
+        public int SettleFlag { get; set; }
     }
 
     public class MGLoginRequest
@@ -45,19 +47,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class MGUpdatebalanceRequest
     {
-        public MGTxnType txnType { get; set; }
+        public string txnType { get; set; }
         public string txnEventType { get; set; }
         public string playerId { get; set; }
         public decimal amount { get; set; }
         public string currency { get; set; }
         public string txnId { get; set; }
-        public int creationTime { get; set; }
+        public long creationTime { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public string roundId { get; set; }
         public string deviceType { get; set; }
         public string platformType { get; set; }
-        public string completed { get; set; }
+        public bool completed { get; set; }
     }
 
     public class MGUpdatebalanceResponse

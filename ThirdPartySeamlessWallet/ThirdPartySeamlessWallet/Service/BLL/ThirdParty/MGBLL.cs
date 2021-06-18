@@ -87,7 +87,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<MGUpdatebalanceResponse> UpdateBalance(MGUpdatebalanceRequest request)
         {
-            return await _processRequestHandler[request.txnType].Invoke(request);
+            var trnType = (MGTxnType)Enum.Parse(typeof(MGTxnType), request.txnType);
+            return await _processRequestHandler[trnType].Invoke(request);
         }
 
         public async Task<MGRollbackResponse> Rollback(MGRollbackeRequest request)
@@ -136,15 +137,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 (result, afterAmount) = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int) GameType);
             }
-
-            if (result <= 0)
-            {
-                throw new MGException();
-            } 
+            
             if(afterAmount <0 )
             {
                 throw new MGException();
             }
+            if (result <= 0)
+            {
+                throw new MGException();
+            } 
+
             
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
             
@@ -157,7 +159,54 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         private async Task<MGUpdatebalanceResponse> Credit(MGUpdatebalanceRequest request)
         {
-            return new MGUpdatebalanceResponse();
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
+            request.amount *= tpCurrency.ExchangeRate;
+            
+            var result = 0;
+            var afterAmount = 0M;
+            var bettingData = new BettingDataRNG_MG()
+            {
+                txnType = request.txnType.ToString(),
+                txnEventType = request.txnEventType,
+                playerId = request.playerId,
+                amount = request.amount,
+                currency = request.currency,
+                txnId = request.txnId,
+                creationTime = request.creationTime,
+                contentCode = request.contentCode,
+                betId = request.betId,
+                roundId = request.roundId,
+                deviceType = request.deviceType,
+                platformType = request.platformType,
+                completed = request.completed
+            };
+            // GameType = _thirdPartyBLL.GetGameType_PP(request.contentCode);
+            GameType = GameType.MG_RNG;
+            if (GameType == GameType.MG_RNG)
+            {
+                (result, afterAmount) = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)GameType);
+            }
+            else if(GameType == GameType.MG_LiveCasino)
+            {
+                (result, afterAmount) = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)GameType);
+            }
+            
+            if(afterAmount <0 )
+            {
+                throw new MGException();
+            }
+            if (result <= 0)
+            {
+                throw new MGException();
+            } 
+            
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
+            
+            return new MGUpdatebalanceResponse()
+            {
+                currency = tpCurrency.TpCurrencyId,
+                balance = tpCustBalance.Balance
+            };
         }
 
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
@@ -166,14 +215,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (tpCustInfo == null)
             {
                 _logger.LogError($"tpCustInfo is null, tpUserName:{tpUserName}");
-                throw new KmException(KMErrorCode.UserBlocked);
+                throw new MGException();
             }
 
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int) ThirdParty, tpCustInfo.CurrencyId);
             if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
             {
                 _logger.LogError($"tpCurrency is null, {JsonConvert.SerializeObject(tpCustInfo)}");
-                throw new KmException(KMErrorCode.CurrencyMismatch);
+                throw new MGException();
             }
 
             return (tpCustInfo, tpCurrency);

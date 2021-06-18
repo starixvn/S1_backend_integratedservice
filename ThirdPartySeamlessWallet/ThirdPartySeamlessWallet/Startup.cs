@@ -83,6 +83,7 @@ namespace ThirdPartySeamlessWallet
             
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
+            services.AddSingleton<MGExceptionFilter>();
             services.AddControllers();
         }
 

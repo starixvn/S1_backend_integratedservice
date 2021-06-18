@@ -302,23 +302,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
             bettingDataRNG_MG.amount *= -1;
-            bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
-            bettingDataRNG_MG.type = BettransType.Bet;
-            var p = new DynamicParameters();
+            bettingDataRNG_MG.TransType = "D";
+            bettingDataRNG_MG.TicketType = (int) BettransType.Bet;
+            bettingDataRNG_MG.TicketStatus = (int) TicketStatus.UnSettled;
+            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.Running;
+            
+            var p = new DynamicParameters(bettingDataRNG_MG);
 
-            result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0 && bettingDataRNG_MG.amount != 0)
+            try
             {
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_MG.amount, (int)Tp.MG, bettingDataRNG_MG.roundId, gameType, bettingDataRNG_MG.txnId, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
-            }
+                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+                if (result > 0 && bettingDataRNG_MG.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo, 
+                        bettingDataRNG_MG.amount, 
+                        (int)Tp.MG, 
+                        bettingDataRNG_MG.roundId, 
+                        gameType, 
+                        bettingDataRNG_MG.txnId, 
+                        null, TpCategory.Slots, 
+                        out afterAmount, 
+                        ref bonusId, 
+                        conn,
+                        trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+
+                return (result, afterAmount);
+            }
+            catch (Exception e)
             {
-                trans.Commit();
+                await trans.RollbackAsync();
+                throw;
             }
-
-            return (result, afterAmount);
         }
         
         #region CQ9

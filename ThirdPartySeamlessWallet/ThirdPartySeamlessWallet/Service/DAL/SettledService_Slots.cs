@@ -2455,7 +2455,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
         
-        public async Task<(int, decimal)> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType)
+        public async Task<(int, decimal)> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
@@ -2463,44 +2463,38 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
-            
-            bettingDataRNG_PP.TicketStatus = bettingDataRNG_PP.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-            var p = new DynamicParameters();
-            
+
+            bettingDataRNG_MG.TransType = "C";
+            bettingDataRNG_MG.TicketType = (int) BettransType.Payout;
+            bettingDataRNG_MG.TicketStatus = (int) TicketStatus.Win;
+            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.EndGame;
+            var p = new DynamicParameters(bettingDataRNG_MG);
+
             try
             {
-                var category = TpCategory.Slots;
                 result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
+                if (result > 0 && bettingDataRNG_MG.amount > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo, 
+                        bettingDataRNG_MG.amount, 
+                        (int)Tp.MG, 
+                        bettingDataRNG_MG.roundId, 
+                        gameType,
+                        TpCategory.Slots, 
+                        bettingDataRNG_MG.txnId, 
+                        TransType.Payout, 
+                        null, 
+                        out afterAmount, 
+                        $"Payout: {Math.Abs(bettingDataRNG_MG.amount):#,##0.##}",
+                        out bonusId,
+                        conn, 
+                        trans);
+                }
                 if (result > 0)
                 {
-                    if (bettingDataRNG_PP.amount > 0)
-                    {
-                        result = PayoutV2(
-                            tpCustInfo, 
-                            bettingDataRNG_PP.amount, 
-                            (int)Tp.MG, 
-                            bettingDataRNG_PP.roundId.ToString(), 
-                            gameType,
-                            category, 
-                            bettingDataRNG_PP.reference, 
-                            TransType.Payout, 
-                            null, 
-                            out afterAmount, 
-                            "Payout", 
-                            out bonusId,
-                            conn, 
-                            trans);
-                    }
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
-                }
-                else
-                {
-                    result = -1;
+                    trans.Commit();
                 }
             }
             catch (MySqlException mySqlEx)
