@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly SettledService _settledService;
         private readonly ILogger<MGBLL> _logger;
         private Dictionary<string, string> Config;
-        private readonly Dictionary<MGTxnType, Func<MGUpdatebalanceRequest, Task<MGUpdatebalanceResponse>>> _processRequestHandler;
+        private readonly Dictionary<MGTxnType, Func<MGUpdatebalanceRequest, Task<MGDbResult>>> _processRequestHandler;
         public MGBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.MG;
@@ -33,7 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetService<ILogger<MGBLL>>();
             // Config = _thirdPartyBLL.GetThirdPartySetting((int) ThirdParty).TpSetting;
             _processRequestHandler =
-                new Dictionary<MGTxnType, Func<MGUpdatebalanceRequest, Task<MGUpdatebalanceResponse>>>()
+                new Dictionary<MGTxnType, Func<MGUpdatebalanceRequest, Task<MGDbResult>>>()
                 {
                     {MGTxnType.DEBIT, Debit},
                     {MGTxnType.CREDIT, Credit}
@@ -88,7 +88,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<MGUpdatebalanceResponse> UpdateBalance(MGUpdatebalanceRequest request)
         {
             var trnType = (MGTxnType)Enum.Parse(typeof(MGTxnType), request.txnType);
-            return await _processRequestHandler[trnType].Invoke(request);
+            var dbResult = await _processRequestHandler[trnType].Invoke(request);
+            
+            // 餘額不足
+            if(dbResult.AfterAmount < 0 )
+            {
+                throw new MGException();
+            }
+            // DB 錯誤
+            if (dbResult.Result <= 0)
+            {
+                throw new MGException();
+            } 
+            
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
+            
+            return new MGUpdatebalanceResponse()
+            {
+                extTxnId = dbResult.ExtTxnId.ToString(),
+                currency = request.currency,
+                balance = tpCustBalance.Balance
+            };
         }
 
         public async Task<MGRollbackResponse> Rollback(MGRollbackeRequest request)
@@ -96,7 +116,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             throw new System.NotImplementedException();
         }
 
-        private async Task<MGUpdatebalanceResponse> Debit(MGUpdatebalanceRequest request)
+        private async Task<MGDbResult> Debit(MGUpdatebalanceRequest request)
         {
             // 檢查玩家
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int) ThirdParty, request.playerId);
@@ -110,9 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             GameType = GameType.MG_RNG;
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
             request.amount *= tpCurrency.ExchangeRate;
-
-            var result = 0;
-            var afterAmount = 0M;
+            
             var bettingData = new BettingDataRNG_MG()
             {
                 txnType = request.txnType.ToString(),
@@ -129,41 +147,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 platformType = request.platformType,
                 completed = request.completed
             };
+            var dbResult = new MGDbResult();
             if (GameType == GameType.MG_RNG)
             {
-                (result, afterAmount) = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int) GameType);
+                dbResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int) GameType);
             }
             else if (GameType == GameType.MG_LiveCasino)
             {
-                (result, afterAmount) = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int) GameType);
+                dbResult = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int) GameType);
             }
-            
-            if(afterAmount <0 )
+            else
             {
                 throw new MGException();
             }
-            if (result <= 0)
-            {
-                throw new MGException();
-            } 
 
-            
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
-            
-            return new MGUpdatebalanceResponse()
-            {
-                currency = tpCurrency.TpCurrencyId,
-                balance = tpCustBalance.Balance
-            };
+            return dbResult;
         }
         
-        private async Task<MGUpdatebalanceResponse> Credit(MGUpdatebalanceRequest request)
+        private async Task<MGDbResult> Credit(MGUpdatebalanceRequest request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
             request.amount *= tpCurrency.ExchangeRate;
             
-            var result = 0;
-            var afterAmount = 0M;
             var bettingData = new BettingDataRNG_MG()
             {
                 txnType = request.txnType.ToString(),
@@ -182,31 +187,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             // GameType = _thirdPartyBLL.GetGameType_PP(request.contentCode);
             GameType = GameType.MG_RNG;
+            var dbResult = new MGDbResult();
             if (GameType == GameType.MG_RNG)
             {
-                (result, afterAmount) = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)GameType);
+                dbResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)GameType);
             }
             else if(GameType == GameType.MG_LiveCasino)
             {
-                (result, afterAmount) = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)GameType);
+                dbResult = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)GameType);
             }
-            
-            if(afterAmount <0 )
+            else
             {
                 throw new MGException();
             }
-            if (result <= 0)
-            {
-                throw new MGException();
-            } 
-            
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
-            
-            return new MGUpdatebalanceResponse()
-            {
-                currency = tpCurrency.TpCurrencyId,
-                balance = tpCustBalance.Balance
-            };
+
+            return dbResult;
         }
 
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)

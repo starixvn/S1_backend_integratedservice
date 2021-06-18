@@ -559,7 +559,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
         
-        public async Task<(int result, decimal afterAmount)> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        public async Task<MGDbResult> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
@@ -578,8 +578,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+                var extTxnId = await conn.QueryFirstOrDefaultAsync<long>("Service_BettransRng_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (extTxnId != 0)
+                {
+                    return new MGDbResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                        ExtTxnId = extTxnId
+                    };
+                }
+                
                 result = conn.Execute("Service_BettransLC_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
+                extTxnId = p.Get<long>("extTxnId");
+                
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
                 {
                     result = PlaceBetV2(
@@ -601,7 +613,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans.Commit();
                 }
 
-                return (result, afterAmount);
+                return new MGDbResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount,
+                    ExtTxnId = extTxnId
+                };
             }
             catch (Exception e)
             {

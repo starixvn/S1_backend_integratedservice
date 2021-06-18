@@ -82,4 +82,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal balance { get; set; }
         public string currency { get; set; }
     }
+    public class MGDbResult
+    {
+        public int Result { get; set; }
+
+        public long ExtTxnId { get; set; }
+
+        public decimal AfterAmount { get; set; }
+    }
 }

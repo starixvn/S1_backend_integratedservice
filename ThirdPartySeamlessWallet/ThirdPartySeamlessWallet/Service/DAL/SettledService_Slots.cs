@@ -2455,11 +2455,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
         
-        public async Task<(int, decimal)> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        public async Task<MGDbResult> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
-            var result = 0;
             await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
@@ -2472,8 +2471,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
+                var extTxnId = await conn.QueryFirstOrDefaultAsync<long>("Service_BettransRng_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (extTxnId != 0)
+                {
+                    return new MGDbResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                        ExtTxnId = extTxnId
+                    };
+                }
+                
+                var result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                extTxnId = p.Get<long>("extTxnId");
+                
                 if (result > 0 && bettingDataRNG_MG.amount > 0)
                 {
                     result = PayoutV2(
@@ -2496,20 +2507,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     trans.Commit();
                 }
+                return new MGDbResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount,
+                    ExtTxnId = extTxnId
+                };
             }
-            catch (MySqlException mySqlEx)
+            catch (Exception e)
             {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
+                await trans.RollbackAsync();
+                throw;
             }
-
-            return (result, afterAmount);
         }
     }
 }
