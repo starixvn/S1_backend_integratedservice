@@ -10,7 +10,6 @@ namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
 {
     public class MGExceptionFilter: IExceptionFilter
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<MGExceptionFilter> _logger;
 
         public MGExceptionFilter(IServiceProvider serviceProvider)

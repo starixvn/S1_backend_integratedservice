@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("login")]
-        public async Task<MGLoginResponse> Login(MGLoginRequest request)
+        public MGLoginResponse Login(MGLoginRequest request)
         {
             return _mgbll.Login(request);
         }
@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("getbalance")]
-        public async Task<MGGetBalanceResponse> GetBalance(MGGetBalanceRequest request)
+        public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
         {
             return _mgbll.GetBalance(request);
         }
