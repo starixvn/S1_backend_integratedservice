@@ -82,7 +82,7 @@ namespace CommonService.Service.Library
                 }
             }
             var data = new StringContent(parameters, Encoding.UTF8, contentType);
-            _logger.LogInformation($"HttpHelper.Request.BODY:{data}");
+            _logger.LogInformation($"HttpHelper.Request.BODY:{parameters}");
             var response = await client.PostAsync(url, data);
             _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
