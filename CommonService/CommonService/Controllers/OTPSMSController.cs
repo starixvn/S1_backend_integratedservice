@@ -124,7 +124,7 @@ namespace CommonService.Controllers
             catch (Exception ex)
             {
                 apiResult.RawMessage = ex.ToString();
-                log2File.Error(ex.ToString(), "VerifyOTP");
+                log2File.Error(ex.ToString(), "VerifyOTP", ex);
             }
 
             return apiResult;
