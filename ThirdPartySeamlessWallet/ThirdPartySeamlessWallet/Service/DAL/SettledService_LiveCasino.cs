@@ -9,6 +9,7 @@ using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -2250,7 +2251,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
         
-        public async Task<MGDbResult> PayoutLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        public async Task<MGPayoutResult> PayoutLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
@@ -2267,19 +2268,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var extTxnId = await conn.QueryFirstOrDefaultAsync<long>("Service_BettransRng_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (extTxnId != 0)
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransLcMg.ExtTxnId != 0)
                 {
-                    return new MGDbResult()
+                    return new MGPayoutResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = extTxnId
+                        ExtTxnId = bettransLcMg.ExtTxnId
                     };
                 }
                 
-                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                extTxnId = p.Get<long>("extTxnId");
+                result = conn.Execute("Service_BettransLC_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var extTxnId = p.Get<long>("extTxnId");
                 
                 if (result > 0 && bettingDataRNG_MG.amount > 0)
                 {
@@ -2289,7 +2290,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)Tp.MG, 
                         bettingDataRNG_MG.roundId, 
                         gameType,
-                        TpCategory.Slots, 
+                        TpCategory.LiveCasino, 
                         bettingDataRNG_MG.txnId, 
                         TransType.Payout, 
                         null, 
@@ -2303,7 +2304,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     trans.Commit();
                 }
-                return new MGDbResult()
+                return new MGPayoutResult()
                 {
                     Result = result,
                     AfterAmount = afterAmount,
@@ -2313,6 +2314,82 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception e)
             {
                 await trans.RollbackAsync();
+                throw;
+            }
+        }
+        
+        public async Task<MGCancelResult> CancelBetLC_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG,
+            int gameType)
+        {
+            int bonusId = 0;
+            var afterAmount = 0M;
+
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", 
+                    new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransLcMg == null)
+                {
+                    throw new MGException();
+                }
+
+                if (bettransLcMg.PlayerId != cancelDataRng_MG.playerId ||
+                    bettransLcMg.Amount != cancelDataRng_MG.amount)
+                {
+                    throw new MGException();
+                }
+
+                if (bettransLcMg.TicketType == (int) BettransType.CancelBet)
+                {
+                    return new MGCancelResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                        ExtTxnId = bettransLcMg.ExtTxnId
+                    };
+                }
+
+                var result = conn.Execute("Service_CancelBetLC_MG_Set", 
+                    new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    if (cancelDataRng_MG.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            cancelDataRng_MG.amount,
+                            (int) Tp.MG,
+                            bettransLcMg.RoundId,
+                            gameType, TpCategory.LiveCasino,
+                            cancelDataRng_MG.txnId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Refund",
+                            out bonusId,
+                            conn,
+                            trans);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+                return new MGCancelResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount,
+                    ExtTxnId = bettransLcMg.ExtTxnId
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 throw;
             }
         }

@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public async Task<MGDbResult> PlaceBetRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        public async Task<MGPlaceBetResult> PlaceBetRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
@@ -311,19 +311,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var extTxnId = await conn.QueryFirstOrDefaultAsync<long>("Service_BettransRng_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (extTxnId != 0)
+                var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransRngMG != null)
                 {
-                    return new MGDbResult()
+                    return new MGPlaceBetResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = extTxnId
+                        ExtTxnId = bettransRngMG.ExtTxnId
                     };
                 }
                 
                 result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                extTxnId = p.Get<long>("extTxnId");
+                var extTxnId = p.Get<long>("extTxnId");
                 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
                 {
@@ -340,13 +340,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans);
                 }
-
+                
                 if (result > 0)
                 {
                     trans.Commit();
                 }
 
-                return new MGDbResult()
+                return new MGPlaceBetResult()
                 {
                     Result = result,
                     AfterAmount = afterAmount,
