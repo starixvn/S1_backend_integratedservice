@@ -16,12 +16,10 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ServiceFilter(typeof(MGExceptionFilter))]
     public class MGController : ControllerBase
     {
-        private readonly ILogger<MGController> _logger;
         private readonly IMGBLL _mgbll;
         
-        public MGController(IServiceProvider provider, ILogger<MGController> logger)
+        public MGController(IServiceProvider provider)
         {
-            _logger = logger;
             _mgbll = provider.GetService<IMGBLL>();
         }
 

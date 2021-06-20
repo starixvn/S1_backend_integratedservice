@@ -21,9 +21,9 @@ namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
             var requestId = req.Headers["X-MGP-REQ-ID"];
             var token = req.Headers["X-MGP-TOKEN"];
             var timestamp = req.Headers["X-MGP-REQUEST-TIME"].ToString();
-            LogContext.PushProperty("X-MGP-REQ-ID", requestId.ToString());
-            LogContext.PushProperty("X-MGP-TOKEN", token.ToString());
-            LogContext.PushProperty("X-MGP-REQUEST-TIME", requestId.ToString());
+            LogContext.PushProperty("MGP_REQ_ID", requestId.ToString());
+            LogContext.PushProperty("MGP_TOKEN", token.ToString());
+            LogContext.PushProperty("MGP_REQUEST_TIME", requestId.ToString());
             
             await next();
             
