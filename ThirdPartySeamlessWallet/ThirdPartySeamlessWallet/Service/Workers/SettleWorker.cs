@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Org.BouncyCastle.Asn1.Cms;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -51,6 +52,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleAMB;
         private Timer timerSettle9W;
         private Timer timerSettleKM;
+        
+        
+        private Timer timerSettleMG;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -115,6 +119,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            
+            
+            
+            timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1107,6 +1115,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W?.Change(Timeout.Infinite, 0);
             timerSettleKM?.Change(Timeout.Infinite, 0);
             timerSettleAMB?.Change(Timeout.Infinite, 0);
+            
+            
+            
+            timerSettleMG?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

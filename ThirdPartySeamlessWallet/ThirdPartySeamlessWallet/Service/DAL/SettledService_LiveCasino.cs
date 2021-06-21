@@ -2370,7 +2370,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             TransType.Refunds,
                             null,
                             out afterAmount,
-                            "Refund",
+                            $"Refund {cancelDataRng_MG.amount:#,##0.##}",
                             out bonusId,
                             conn,
                             trans);

@@ -2456,7 +2456,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
+        #region MG
         public async Task<MGPayoutResult> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
@@ -2573,7 +2574,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             TransType.Refunds,
                             null,
                             out afterAmount,
-                            "Refund",
+                            $"Refund:  {cancelDataRng_MG.amount:#,##0.##}",
                             out bonusId,
                             conn,
                             trans);
@@ -2596,5 +2597,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw;
             }
         }
+        public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData_MG>(spName, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_MG(string spName, string transId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute(spName, new {betId = transId}, commandType: CommandType.StoredProcedure);
+        }
+        #endregion
     }
 }
