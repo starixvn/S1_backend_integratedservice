@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public MGBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.MG;
+            GameType = GameType.MG_RNG;
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
             _bettingService = provider.GetService<BettingService>();
@@ -45,11 +46,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (tpCheck == null || tpCheck.Locked)
             {
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
-                throw new MGException();
+                throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
             }
 
             var tpCustBalance =
-                _tpCustInfoBLL.GetBalanceByHalfSecCache((int) ThirdParty, request.playerId, (int) GameType);
+                _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.playerId, (int)GameType);
             if (tpCustBalance != null)
             {
                 return new MGLoginResponse()
@@ -58,7 +59,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     currency = tpCustBalance.TpCurrencyId
                 };
             }
-            throw new MGException();
+            throw new MGException(MGErrorCode.BalanceFailed,
+                $"{ThirdParty} {GameType}: {request.playerId} get balance failed");
         }
 
         public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
@@ -67,7 +69,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (tpCheck == null || tpCheck.Locked)
             {
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
-                throw new MGException();
+                throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
             }
 
             var tpCustBalance =
@@ -80,8 +82,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     currency = tpCustBalance.TpCurrencyId
                 };
             }
-            _logger.LogError($"get balance fail:{JsonConvert.SerializeObject(tpCheck)}");
-            throw new MGException();
+            throw new MGException(MGErrorCode.BalanceFailed,
+                $"{ThirdParty} {GameType}: {request.playerId} get balance failed");
         }
 
         public async Task<MGUpdatebalanceResponse> UpdateBalance(MGUpdatebalanceRequest request)
@@ -92,7 +94,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<MGRollbackResponse> Rollback(MGRollbackeRequest request)
         {
-            GameType = GameType.MG_RNG;
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
             if (tpCurrency.ExchangeRate > 0) 
                 request.amount *= tpCurrency.ExchangeRate;
@@ -114,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
             }
 
             
@@ -141,11 +142,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (tpCheck == null || tpCheck.Locked)
             {
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
-                throw new MGException();
+                throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
             }
             
-            // GameType = _thirdPartyBLL.GetGameType_PP(request.contentCode);
-            GameType = GameType.MG_RNG;
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
             if (tpCurrency.ExchangeRate > 0)
                 request.amount *= tpCurrency.ExchangeRate;
@@ -166,36 +165,37 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 platformType = request.platformType,
                 completed = request.completed
             };
-            var dbResult = new MGPlaceBetResult();
+            var placeBetResult = new MGPlaceBetResult();
             if (GameType == GameType.MG_RNG)
             {
-                dbResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int) GameType);
+                placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int) GameType);
             }
             else if (GameType == GameType.MG_LiveCasino)
             {
-                dbResult = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int) GameType);
+                placeBetResult = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int) GameType);
             }
             else
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
             }
             
             // 餘額不足
-            if(dbResult.AfterAmount < 0 )
+            if(placeBetResult.AfterAmount < 0 )
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.InsufficientBalance,
+                    $"betting data: {JsonConvert.SerializeObject(bettingData)} and afterAmount:{placeBetResult.AfterAmount}");
             }
             // DB 錯誤
-            if (dbResult.Result <= 0)
+            if (placeBetResult.Result <= 0)
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.SystemError);
             } 
             
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
             
             return new MGUpdatebalanceResponse()
             {
-                extTxnId = dbResult.ExtTxnId.ToString(),
+                extTxnId = placeBetResult.ExtTxnId.ToString(),
                 currency = request.currency,
                 balance = tpCustBalance.Balance
             };
@@ -203,8 +203,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         private async Task<MGUpdatebalanceResponse> Credit(MGUpdatebalanceRequest request)
         {
-            // GameType = _thirdPartyBLL.GetGameType_PP(request.contentCode);
-            GameType = GameType.MG_RNG;
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
             if (tpCurrency.ExchangeRate > 0) 
                 request.amount *= tpCurrency.ExchangeRate;
@@ -225,36 +223,37 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 platformType = request.platformType,
                 completed = request.completed
             };
-            var dbResult = new MGPayoutResult();
+            var payoutResult = new MGPayoutResult();
             if (GameType == GameType.MG_RNG)
             {
-                dbResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)GameType);
+                payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)GameType);
             }
             else if(GameType == GameType.MG_LiveCasino)
             {
-                dbResult = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)GameType);
+                payoutResult = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)GameType);
             }
             else
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
             }
             
             // 餘額不足
-            if(dbResult.AfterAmount < 0 )
+            if(payoutResult.AfterAmount < 0 )
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.InsufficientBalance,
+                    $"betting data: {JsonConvert.SerializeObject(bettingData)} and afterAmount:{payoutResult.AfterAmount}");
             }
             // DB 錯誤
-            if (dbResult.Result <= 0)
+            if (payoutResult.Result <= 0)
             {
-                throw new MGException();
+                throw new MGException(MGErrorCode.SystemError);
             } 
             
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
             
             return new MGUpdatebalanceResponse()
             {
-                extTxnId = dbResult.ExtTxnId.ToString(),
+                extTxnId = payoutResult.ExtTxnId.ToString(),
                 currency = request.currency,
                 balance = tpCustBalance.Balance
             };
@@ -265,15 +264,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int) ThirdParty, tpUserName);
             if (tpCustInfo == null)
             {
-                _logger.LogError($"tpCustInfo is null, tpUserName:{tpUserName}");
-                throw new MGException();
+                throw new MGException(MGErrorCode.SystemError, $"tpCustInfo is null, tpUserName:{tpUserName}");
             }
 
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int) ThirdParty, tpCustInfo.CurrencyId);
             if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
             {
-                _logger.LogError($"tpCurrency is null, {JsonConvert.SerializeObject(tpCustInfo)}");
-                throw new MGException();
+                throw new MGException(MGErrorCode.SystemError, $"tpCurrency is null, {JsonConvert.SerializeObject(tpCustInfo)}");
             }
 
             return (tpCustInfo, tpCurrency);

@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
                 var ex = context.Exception as MGException;
 
                 status = HttpStatusCode.BadRequest;
-                _logger.LogInformation(exMessage);
+                _logger.LogError($"{ex.MGErrorCode}:{ex.ErrorMessage}");
             }
             else
             {

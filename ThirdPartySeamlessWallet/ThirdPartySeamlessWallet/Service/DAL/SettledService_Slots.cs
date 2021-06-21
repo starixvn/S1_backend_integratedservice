@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -2472,7 +2473,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransRngMg.ExtTxnId != 0)
                 {
                     return new MGPayoutResult()
@@ -2517,7 +2518,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception e)
             {
-                await trans.RollbackAsync();
+                logger.LogError(e, $"PayoutRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
                 throw;
             }
         }
@@ -2538,13 +2539,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransRngMg == null)
                 {
-                    throw new MGException();
+                    throw new MGException(MGErrorCode.TransactionNotExists, $"{cancelDataRng_MG.txnId} not exists");
                 }
 
                 if (bettransRngMg.PlayerId != cancelDataRng_MG.playerId ||
                     bettransRngMg.Amount != cancelDataRng_MG.amount)
                 {
-                    throw new MGException();
+                    throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
                 if (bettransRngMg.TicketType == (int) BettransType.CancelBet)
@@ -2591,7 +2592,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                logger.LogError(e, $"CancelBetRNG_MG failed: {JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 throw;
             }
         }

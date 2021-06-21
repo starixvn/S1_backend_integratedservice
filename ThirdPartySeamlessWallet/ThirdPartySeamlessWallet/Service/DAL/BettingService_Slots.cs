@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -293,6 +294,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        #region MG
         public async Task<MGPlaceBetResult> PlaceBetRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
@@ -355,10 +357,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception e)
             {
-                await trans.RollbackAsync();
+                logger.LogError(e, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
                 throw;
             }
         }
+        #endregion
         
         #region CQ9
 

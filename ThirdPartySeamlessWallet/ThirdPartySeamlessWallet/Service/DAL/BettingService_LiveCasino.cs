@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Model;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using Newtonsoft.Json;
 
@@ -578,7 +579,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new { txnId = bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransLcMg != null)
                 {
                     return new MGPlaceBetResult()
@@ -623,7 +624,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception e)
             {
-                await trans.RollbackAsync();
+                logger.LogError(e, $"PlaceBetLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
                 throw;
             }
             
