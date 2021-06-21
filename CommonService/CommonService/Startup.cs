@@ -1,3 +1,4 @@
+using CommonService.Extensions;
 using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
@@ -78,7 +79,8 @@ namespace CommonService
             app.UseRouting();
 
             app.UseAuthorization();
-
+            app.UseRequestLogMiddleware();
+            app.UseResponseLogMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>
