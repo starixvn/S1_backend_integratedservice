@@ -162,4 +162,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Report,//ConnectionStringReport
         Wager,//ConnectionStringWager
     }
+
+    public enum SabaOnlineMemberStatus
+    {
+        MemberIsOnline = 0,
+        InvalidSecretKeyOrIpAddressNotAllow = 1,
+        VendorMemberIdNotFound = 2,
+        MemberIsOffline = 3
+    }
 }
