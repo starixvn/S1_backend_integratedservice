@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -13,13 +17,15 @@ namespace CommonService.Service.Library
     {
         public static string proxyHost;
         public static int proxyPort;
-        public HttpHelper()
+        private readonly ILogger<HttpHelper> _logger;
+        public HttpHelper(IServiceProvider provider)
         {
-
+            _logger = provider.GetRequiredService<ILogger<HttpHelper>>();
         }
 
         public async Task<string> HttpPostAsync(string url, Dictionary<string, string> headerParams, string parameters, string contentType)
         {
+            LogContext.PushProperty("HttpHelper.Request.URL", url);
             HttpClientHandler handler = null;
             if (!string.IsNullOrEmpty(proxyHost))
             {
@@ -40,16 +46,18 @@ namespace CommonService.Service.Library
             {
                 client.DefaultRequestHeaders.Add(param.Key, param.Value);
             }
+            _logger.LogInformation($"HttpHelper.Request.BODY:{parameters}");
             var data = new StringContent(parameters, Encoding.UTF8, contentType);
             var response = await client.PostAsync(url, data);
 
             string result = response.Content.ReadAsStringAsync().Result;
-
+            _logger.LogInformation($"HttpHelper.Request.Repsone:{result}");
             return result;
         }
 
         public async Task<HttpResponseMessage> HttpPost1Async(string url, Dictionary<string, string> headerParams, string parameters, string contentType)
         {
+            LogContext.PushProperty("HttpHelper.Request.URL", url);
             HttpClientHandler handler = null;
             if (!string.IsNullOrEmpty(proxyHost))
             {
@@ -74,13 +82,15 @@ namespace CommonService.Service.Library
                 }
             }
             var data = new StringContent(parameters, Encoding.UTF8, contentType);
+            _logger.LogInformation($"HttpHelper.Request.BODY:{parameters}");
             var response = await client.PostAsync(url, data);
-
+            _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
 
         public async Task<HttpResponseMessage> HttpFromPostAsync(string url, Dictionary<string, string> headerParams, Dictionary<string, string> parameters, string contentType)
         {
+            LogContext.PushProperty("HttpHelper.Request.URL", url);
             HttpClientHandler handler = null;
             if (!string.IsNullOrEmpty(proxyHost))
             {
@@ -104,11 +114,11 @@ namespace CommonService.Service.Library
                     client.DefaultRequestHeaders.Add(param.Key, param.Value);
                 }
             }
-
+            _logger.LogInformation($"HttpHelper.Request.BODY:{JsonConvert.SerializeObject(parameters)}");
             var data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters) };
 
             var response = await client.SendAsync(data);
-
+            _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
 
         }
@@ -157,9 +167,10 @@ namespace CommonService.Service.Library
             }
             builder.Query = query.ToString();
             string newurl = builder.ToString();
+            LogContext.PushProperty("HttpHelper.Request.URL", newurl);
             var data = new HttpRequestMessage(HttpMethod.Get, newurl);
             var response = await client.SendAsync(data);
-
+            _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
     }
