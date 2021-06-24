@@ -64,6 +64,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskTHB(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "THB";
             int siteId = 1;
@@ -123,6 +127,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskMYR(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "MYR";
             int siteId = 1;
@@ -182,6 +190,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskIDR(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "IDR";
             int siteId = 1;
@@ -241,6 +253,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskVNDGoal(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "VND";
             int siteId = 2;
@@ -300,6 +316,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskVNDBwing(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "VND";
             int siteId = 3;
@@ -359,6 +379,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskUSD(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "USD";
             int siteId = 1;
@@ -418,6 +442,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskINR(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "INR";
             int siteId = 1;
@@ -478,6 +506,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskCNY(object state)
         {
+            if (!environment.IsProduction())
+            {
+                return;
+            }
             int quick = 0;
             var currency = "CNY";
             int siteId = 1;
