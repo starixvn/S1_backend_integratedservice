@@ -27,6 +27,7 @@
     <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
     <ProjectReference Include="..\ThirdParty.Iconic\ThirdParty.Iconic.csproj" />
+    <ProjectReference Include="..\ThirdParty.JILI\ThirdParty.JILI.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
     <ProjectReference Include="..\ThirdParty.KM\ThirdParty.KM.csproj" />
@@ -46,6 +47,29 @@
     <ProjectReference Include="..\ThirdParty.WM\ThirdParty.WM.csproj" />
     <ProjectReference Include="..\ThirdParty.YGG\ThirdParty.YGG.csproj" />
     <ProjectReference Include="..\ThirdParty.YL\ThirdParty.YL.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Storage\PT\CNY.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\PT\IDR.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\PT\INR.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\PT\MYR.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\PT\THB.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\PT\USD.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Storage\PT\VND.p12">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

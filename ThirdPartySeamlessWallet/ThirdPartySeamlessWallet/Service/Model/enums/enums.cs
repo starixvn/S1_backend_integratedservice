@@ -83,10 +83,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         AMB_Poker = 50,
         NineW_Sports = 51,
         KM_Poker = 52,
-        
-        
-        
-        
+        JILI_RNG = 53,
+        JILI_Fish = 56,
         MG_RNG = 57,
         MG_LiveCasino = 58
     }
@@ -123,8 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BTI = 29,
         AMB = 30,
         NineW = 31,
-        
-        
+        JILI = 32,
         MG = 34
     }
     public enum TransferType : int
@@ -170,5 +167,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Main, //ConnectionString
         Report,//ConnectionStringReport
         Wager,//ConnectionStringWager
+    }
+
+    public enum SabaOnlineMemberStatus
+    {
+        MemberIsOnline = 0,
+        InvalidSecretKeyOrIpAddressNotAllow = 1,
+        VendorMemberIdNotFound = 2,
+        MemberIsOffline = 3
     }
 }
