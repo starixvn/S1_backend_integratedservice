@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Workers
                 currencyList.Add("INR");
                 foreach (var curr in currencyList)
                 {
-                    string jwtUserName = (curr == "INR") ? $"nova88x{curr}" : $"novax{curr}";
+                    string jwtUserName = setting[$"agent_{curr}"];
                     var getJwt = await apiIconicBLL.GetJwtToken(setting["ApiUrl"], jwtUserName, setting["password"]);
                     if (getJwt.token != null)
                     {
