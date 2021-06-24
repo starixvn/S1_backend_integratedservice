@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Workers
         private Timer timerVNDGoal;
         private Timer timerVNDBwing;
         private Timer timerUSD;
+        private Timer timerINR;
         private Timer timerCNY;
         private int intervalMins = 2;
         private int iRangMins = 20;
@@ -57,6 +58,7 @@ namespace ThirdPartyWager.Workers
             timerVNDGoal = new Timer(DoTaskVNDGoal, null, TimeSpan.Zero, TimeSpan.Zero);
             timerVNDBwing = new Timer(DoTaskVNDBwing, null, TimeSpan.Zero, TimeSpan.Zero);
             timerUSD = new Timer(DoTaskUSD, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerINR = new Timer(DoTaskINR, null, TimeSpan.Zero, TimeSpan.Zero);
             timerCNY = new Timer(DoTaskCNY, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -516,6 +518,71 @@ namespace ThirdPartyWager.Workers
             }
         }
 
+        private async void DoTaskINR(object state)
+        {
+            int quick = 0;
+            var currency = "INR";
+            int siteId = 1;
+            int gmt = 5;
+            int gmtMinute = 30;
+            try
+            {
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                DateTime timerTime;
+                int last;
+                if (dataTpTimer == null)
+                {
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime;
+                    last = iRangMins - 1;
+                }
+
+                if (timerTime < DateTime.Now)
+                {
+                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime, gmtMinute);
+                    TimeSpan timeLimit = DateTime.UtcNow - DateTime.Parse(time.endTime);
+                    if (timeLimit.TotalMinutes < 3)
+                    {
+                        // manually range can be set up to 3 minutes in the past
+                        time.endTime = DateTime.Parse(time.endTime).AddMinutes(-3).ToString("yyyy-MM-dd HH:mm:ss");
+                        time.endUnix -= 180;
+                    }
+                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    if (result)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                    }
+                }
+                TimeSpan ts = DateTime.Now - timerTime;
+                int diffMin = (int)ts.TotalMinutes;
+                if (diffMin > beyond)
+                {
+                    quick = 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
+            }
+            finally
+            {
+                if (quick == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(35);
+                    timerINR.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    timerINR.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+            }
+        }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             timerTHB?.Change(Timeout.Infinite, 0);
@@ -524,6 +591,7 @@ namespace ThirdPartyWager.Workers
             timerVNDGoal?.Change(Timeout.Infinite, 0);
             timerVNDBwing?.Change(Timeout.Infinite, 0);
             timerUSD?.Change(Timeout.Infinite, 0);
+            timerINR?.Change(Timeout.Infinite, 0);
             timerCNY?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
