@@ -5,6 +5,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Linq;
 using System.Web;
+using Newtonsoft.Json;
 
 namespace ThirdParty.Sexy
 {
@@ -54,29 +55,17 @@ namespace ThirdParty.Sexy
             {1029,"Invalid parameters. Please check currency & betlimitid\" 参数无效。 请检查货币和限红\""},
             {1030,"Invalid betlimitId setting. 限红设置无效。"},
         };
-        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+
+        private class SignupResponse
         {
-            throw new NotImplementedException();
+            public string status { get; set; }
+            public string desc { get; set; }
         }
 
-        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        private class LoginResponse
         {
-            ApiResult oApiResult = new ApiResult();
-            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
-            oApiResult.ErrorCode = ErrorCode.Success;
-            return oApiResult;
-        }
-
-        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
-            return oApiResult;
-        }
-
-        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
+            public string status { get; set; }
+            public string url { get; set; }
         }
 
         public class GetKeyReq
@@ -106,71 +95,214 @@ namespace ThirdParty.Sexy
             public string lobbyURL { get; set; }
         }
 
-        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string cert = inputs.ContainsKey("cert") && !string.IsNullOrEmpty(inputs["cert"]) ? inputs["cert"] : throw new Exception("cert");
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
-            string WEBSITE = inputs.ContainsKey("WEBSITE") && !string.IsNullOrEmpty(inputs["WEBSITE"]) ? inputs["WEBSITE"] : throw new Exception("WEBSITE");
-            string getKeyUrl = $"{ApiUrl}api/{WEBSITE}/getKey";
+            throw new NotImplementedException();
+        }
 
-            GetKeyReq getKeyReq = new GetKeyReq();
+        //public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        //{
+        //    ApiResult oApiResult = new ApiResult();
+        //    tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
+        //    oApiResult.ErrorCode = ErrorCode.Success;
+        //    return oApiResult;
+        //}
+        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            string ApiUrl = inputs.ContainsKey("ApiUrl2") && !string.IsNullOrEmpty(inputs["ApiUrl2"]) ? inputs["ApiUrl2"] : throw new Exception("ApiUrl2");
+            string cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
+            string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
+            string betLimitId = inputs.ContainsKey($"BetLimitId2{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"]) ? inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] : throw new Exception($"BetLimitId2{tpCustInfo.TpCurrencyId}");
+            ApiUrl = $"{ApiUrl}/wallet/createMember";
 
-            string betLimitIdKey = $"BetLimitId{tpCustInfo.TpCurrencyId}";
-            string agentIdKey = $"AgentId{tpCustInfo.TpCurrencyId}";
-            getKeyReq.cert = cert;
-            getKeyReq.currency = currencyIdMapping[tpCustInfo.TpCurrencyId];
-            getKeyReq.user = tpCustInfo.TpUserName;
-            getKeyReq.betLimitIds = inputs[betLimitIdKey];
-            if (!IsDevelopment && tpCustInfo.CustId == 61920)
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
+
+            var SignUp = new
             {
-                /* 
-                 Nova88_61920  IDR member can change his bet limit to 5-500
-                 MexNova88net已為您在正式環境新增限紅10603 IDR 5-500
-                */
-                getKeyReq.betLimitIds = "10603";
-            }
+                cert = cert,
+                agentId = agentId,
+                userId = tpCustInfo.TpUserName,
+                currency = tpCustInfo.TpCurrencyId,
+                betLimit = JsonConvert.SerializeObject(new
+                {
+                    SEXYBCRT = new
+                    {
+                        LIVE = new
+                        {
+                            limitId = new List<string>()
+                            {
+                               betLimitId
+                            }
+                        }
+                    }
+                }),
+            };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(getKeyReq));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var result = HttpPost(getKeyUrl, sParam, "application/x-www-form-urlencoded");
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var result = HttpPost(
+                ApiUrl,
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
 
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var getKeyResp = FromJson<GetKeyResp>(result);
-                if (getKeyResp.Status == 1)
+                var json = JsonConvert.DeserializeObject<SignupResponse>(result);
+                if (json.status == "0000")
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    LoginReq loginReq = new LoginReq();
-                    loginReq.key = getKeyResp.Key;
-                    loginReq.user = getKeyReq.user;
-                    loginReq.userName = getKeyReq.user;
-                    loginReq.extension1 = inputs[agentIdKey];
-                    loginReq.extension2 = loginReq.extension1;
-                    loginReq.language = TpLangId;
-                    loginReq.lobbyURL = lobbyUrl;
-                    loginReq.mb = appType == AppType.Desktop ? null : "1";
-
-                    dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
-                    sParam = string.Join("&", dicP.Where(kp => !string.IsNullOrEmpty(kp.Value)).Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
-                    oApiResult.Message = $"{getKeyResp.Url}{sParam}";
                 }
                 else
                 {
                     oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = ErrorMassage[getKeyResp.Status];
-                    oApiResult.RawErrorCode = getKeyResp.Status.ToString();
+                    oApiResult.RawMessage = json.desc;
+                    oApiResult.RawErrorCode = json.status;
                 }
             }
             else
             {
                 oApiResult.RawMessage = "No Result";
                 oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.SystemError;
+                oApiResult.ErrorCode = ErrorCode.Fail;
             }
+
+            return oApiResult;
+        }
+
+        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
+        }
+
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        //public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        //{
+        //    string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        //    string cert = inputs.ContainsKey("cert") && !string.IsNullOrEmpty(inputs["cert"]) ? inputs["cert"] : throw new Exception("cert");
+        //    string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
+        //    string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
+        //    string WEBSITE = inputs.ContainsKey("WEBSITE") && !string.IsNullOrEmpty(inputs["WEBSITE"]) ? inputs["WEBSITE"] : throw new Exception("WEBSITE");
+        //    string getKeyUrl = $"{ApiUrl}api/{WEBSITE}/getKey";
+
+        //    GetKeyReq getKeyReq = new GetKeyReq();
+
+        //    string betLimitIdKey = $"BetLimitId{tpCustInfo.TpCurrencyId}";
+        //    string agentIdKey = $"AgentId{tpCustInfo.TpCurrencyId}";
+        //    getKeyReq.cert = cert;
+        //    getKeyReq.currency = currencyIdMapping[tpCustInfo.TpCurrencyId];
+        //    getKeyReq.user = tpCustInfo.TpUserName;
+        //    getKeyReq.betLimitIds = inputs[betLimitIdKey];
+        //    if (!IsDevelopment && tpCustInfo.CustId == 61920)
+        //    {
+        //        /* 
+        //         Nova88_61920  IDR member can change his bet limit to 5-500
+        //         MexNova88net已為您在正式環境新增限紅10603 IDR 5-500
+        //        */
+        //        getKeyReq.betLimitIds = "10603";
+        //    }
+
+        //    var dicP = FromJson<Dictionary<string, string>>(ToJson(getKeyReq));
+        //    string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+        //    var result = HttpPost(getKeyUrl, sParam, "application/x-www-form-urlencoded");
+
+        //    ApiResult oApiResult = new ApiResult();
+        //    if (IsJSON(result))
+        //    {
+        //        var getKeyResp = FromJson<GetKeyResp>(result);
+        //        if (getKeyResp.Status == 1)
+        //        {
+        //            oApiResult.ErrorCode = ErrorCode.Success;
+        //            LoginReq loginReq = new LoginReq();
+        //            loginReq.key = getKeyResp.Key;
+        //            loginReq.user = getKeyReq.user;
+        //            loginReq.userName = getKeyReq.user;
+        //            loginReq.extension1 = inputs[agentIdKey];
+        //            loginReq.extension2 = loginReq.extension1;
+        //            loginReq.language = TpLangId;
+        //            loginReq.lobbyURL = lobbyUrl;
+        //            loginReq.mb = appType == AppType.Desktop ? null : "1";
+
+        //            dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
+        //            sParam = string.Join("&", dicP.Where(kp => !string.IsNullOrEmpty(kp.Value)).Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
+        //            oApiResult.Message = $"{getKeyResp.Url}{sParam}";
+        //        }
+        //        else
+        //        {
+        //            oApiResult.ErrorCode = ErrorCode.Fail;
+        //            oApiResult.RawMessage = ErrorMassage[getKeyResp.Status];
+        //            oApiResult.RawErrorCode = getKeyResp.Status.ToString();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        oApiResult.RawMessage = "No Result";
+        //        oApiResult.RawErrorCode = "1";
+        //        oApiResult.ErrorCode = ErrorCode.SystemError;
+        //    }
+        //    return oApiResult;
+        //}
+
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        {
+            string ApiUrl = inputs.ContainsKey("ApiUrl2") && !string.IsNullOrEmpty(inputs["ApiUrl2"]) ? inputs["ApiUrl2"] : throw new Exception("ApiUrl2");
+            string cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
+            string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
+            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
+            ApiUrl = $"{ApiUrl}/wallet/doLoginAndLaunchGame";
+
+            var Login = new
+            {
+                cert = cert,
+                agentId = agentId,
+                userId = tpCustInfo.TpUserName,
+                isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
+                externalURL = lobbyUrl,
+                gameType = "LIVE",
+                platform = "SEXYBCRT",
+                language = TpLangId,
+                hall = "SEXY",
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var result = HttpPost(
+                ApiUrl,
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
+
+            ApiResult oApiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<LoginResponse>(result);
+                if (json.status == "0000")
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = json.url;
+                }
+                else
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = json.status;
+                    oApiResult.RawErrorCode = json.status;
+                }
+            }
+            else
+            {
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+
             return oApiResult;
         }
 
