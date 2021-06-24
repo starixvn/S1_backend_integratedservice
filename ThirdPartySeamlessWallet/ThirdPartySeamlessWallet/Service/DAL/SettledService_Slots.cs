@@ -2470,7 +2470,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             bettingDataRNG_MG.TransType = "C";
             bettingDataRNG_MG.TicketType = (int) BettransType.Payout;
-            bettingDataRNG_MG.TicketStatus = (int) TicketStatus.Win;
+            bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int) TicketStatus.Draw : (int) TicketStatus.Win;
             bettingDataRNG_MG.SettleFlag = (int) SettleFlag.EndGame;
             var p = new DynamicParameters(bettingDataRNG_MG);
 

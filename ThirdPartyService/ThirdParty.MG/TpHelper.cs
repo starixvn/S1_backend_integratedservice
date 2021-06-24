@@ -12,7 +12,6 @@ namespace ThirdParty.MG
 {
     public class TpHelper: ThirdPartyHelperBase
     {
-        private const string BasePath = "/api/v1";
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = GetInputValue(inputs, "ApiUrl");
@@ -28,7 +27,7 @@ namespace ThirdParty.MG
                     {"Authorization", $"Bearer {token}"}
                 };
                 var parameters = $"playerId={tpCustInfo.TpUserName}";
-                HttpPost($"{apiUrl}{BasePath}/agents/{agent.AgentCode}/players", 
+                HttpPost($"{apiUrl}/agents/{agent.AgentCode}/players", 
                           parameters, 
                           "application/x-www-form-urlencoded", 
                           header);
@@ -74,7 +73,7 @@ namespace ThirdParty.MG
                 };
                 var platform = appType == AppType.Desktop ? "Desktop" : "Mobile";
                 var parameters = $"contentType=Game&contentCode={gameId}&platform={platform}&homeUrl={homeUrl}&langCode={TpLangId}";
-                var result = HttpPost($"{apiUrl}{BasePath}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/sessions", 
+                var result = HttpPost($"{apiUrl}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/sessions", 
                                             parameters, 
                                             "application/x-www-form-urlencoded", 
                                             header);

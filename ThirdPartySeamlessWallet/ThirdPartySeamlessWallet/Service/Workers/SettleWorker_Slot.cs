@@ -881,7 +881,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unixTimestamp,
-                                SettlementType = settledBLL.GetSettlementType(gameType, unsettled.GameId),
+                                SettlementType =  thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
 

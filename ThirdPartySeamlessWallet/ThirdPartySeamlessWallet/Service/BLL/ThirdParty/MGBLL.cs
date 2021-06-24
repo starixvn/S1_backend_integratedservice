@@ -125,12 +125,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 throw new MGException();
             } 
             
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
-            
+            if (cancelResult.AfterAmount == 0)
+            {
+                cancelResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+            }
+            else
+            {
+                if (tpCurrency.ExchangeRate > 0) 
+                    cancelResult.AfterAmount /= tpCurrency.ExchangeRate;   
+            }
+
             return new MGRollbackResponse()
             {
                 currency = tpCurrency.TpCurrencyId,
-                balance = tpCustBalance.Balance,
+                balance = cancelResult.AfterAmount,
                 extTxnId = cancelResult.ExtTxnId.ToString()
             };
         }
@@ -191,13 +199,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 throw new MGException(MGErrorCode.SystemError);
             } 
             
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
-            
+            if (placeBetResult.AfterAmount == 0)
+            {
+                placeBetResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+            }
+            else
+            {
+                if (tpCurrency.ExchangeRate > 0) 
+                    placeBetResult.AfterAmount /= tpCurrency.ExchangeRate;   
+            }
+
             return new MGUpdatebalanceResponse()
             {
                 extTxnId = placeBetResult.ExtTxnId.ToString(),
                 currency = request.currency,
-                balance = tpCustBalance.Balance
+                balance = placeBetResult.AfterAmount
             };
         }
         
@@ -247,15 +263,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (payoutResult.Result <= 0)
             {
                 throw new MGException(MGErrorCode.SystemError);
-            } 
-            
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType);
+            }
+
+            if (payoutResult.AfterAmount == 0)
+            {
+                payoutResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+            }
+            else
+            {
+                if (tpCurrency.ExchangeRate > 0) 
+                    payoutResult.AfterAmount /= tpCurrency.ExchangeRate;   
+            }
             
             return new MGUpdatebalanceResponse()
             {
                 extTxnId = payoutResult.ExtTxnId.ToString(),
                 currency = request.currency,
-                balance = tpCustBalance.Balance
+                balance = payoutResult.AfterAmount
             };
         }
 
