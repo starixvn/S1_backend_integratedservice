@@ -765,5 +765,82 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettlePPRng.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        private void DoSettleJILIRngWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.JILI;
+            var gameType = GameType.JILI_RNG;
+            var category = TpCategory.Slots;
+            string logName = "Settle_JILI_Rng";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledList_JILI((int)category);
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId.ToString(),
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId.ToString()),
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                            };
+                            // SettlementType = settledBLL.GetSettlementType(gameType, unsettled.gameId),
+                            if (unsettled.TicketStatus == (int)TicketStatus.Refund)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                            }
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            settledBLL.SetSettleFlag_JILI((int)category, unsettled.TransId);
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleJILIRng.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
     }
 }

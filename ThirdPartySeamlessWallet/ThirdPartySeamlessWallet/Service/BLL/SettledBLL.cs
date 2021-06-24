@@ -1732,5 +1732,63 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region JILI
+
+        public int BetAndPayoutRNG_JILI(BettingData_JILI bettingData_JILI, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.JILI, bettingData_JILI.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = (gameType == (int)GameType.JILI_RNG) ? settledService.BetAndPayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount) : settledService.BetAndPayoutFish_JILI(tpCustInfo, bettingData_JILI, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingData_JILI.betAmount /= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int CancelBetRNG_JILI(CancelBetData_JILI cancelBetData_JILI, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.JILI, cancelBetData_JILI.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                cancelBetData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                cancelBetData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = (gameType == (int)GameType.JILI_RNG) ? settledService.CancelBetRNG_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount) : settledService.CancelBetFish_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                cancelBetData_JILI.betAmount /= tpCurrency.ExchangeRate;
+                cancelBetData_JILI.winloseAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public IEnumerable<SettleData_JILI> GetUnsettledList_JILI(int category)
+        {
+            return settledService.GetUnsettledList_JILI(category);
+        }
+
+        public int SetSettleFlag_JILI(int category, long TransId)
+        {
+            return settledService.SetSettleFlag_JILI(category, TransId);
+        }
+
+        #endregion
     }
 }
