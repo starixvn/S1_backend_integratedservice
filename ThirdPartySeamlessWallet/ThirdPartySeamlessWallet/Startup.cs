@@ -79,8 +79,11 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<SettledBLL>();
             services.AddSingleton<AuthBLL>();
             services.AddTransient<IKMService, KMService>();
+            services.AddTransient<IMGBLL, MGBLL>();
             
             services.AddSingleton<KMHeaderFilter>();
+            services.AddSingleton<MGHeaderFilter>();
+            services.AddSingleton<MGExceptionFilter>();
             services.AddControllers();
         }
 

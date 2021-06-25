@@ -184,10 +184,44 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.CQ9_Fish;
                     }
                     break;
+                case (int)Tp.JILI:
+                    gameType = GameType.JILI_RNG;
+
+                    List<int> fish = new List<int>{1,20,42,32,60,74};
+                    if (fish.Contains(Convert.ToInt32(gameId)))
+                    {
+                        gameType = GameType.JILI_Fish;
+                    }
+                    break;
                 default:
                     break;
             }
             return gameType;
+        }
+
+        public IEnumerable<TpGameCasino> GetGameCasinoWithCache(int tpId)
+        {
+            string key = $"TpGameCasino_{tpId}";
+            var tpGameCasino = cache.Get<IEnumerable<TpGameCasino>>(key);
+            if (tpGameCasino == null)
+            {
+                tpGameCasino = thirdPartyService.GetGameCasino(tpId);
+                cache.Set(key, tpGameCasino, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(30)));
+            }
+
+            return tpGameCasino;
+        }
+
+        public SettlementType GetGameCasinoSettlementType(int tpId, string gameId)
+        {
+            SettlementType settlementType = SettlementType.SettledForValid;
+            var casino = GetGameCasinoWithCache(tpId);
+            var check = casino.Where(x => x.GameId == gameId && x.TypeId == 3).FirstOrDefault();
+            if (check != null)
+            {
+                settlementType = SettlementType.SettledForValidNotRollover;
+            }
+            return settlementType;
         }
     }
 }

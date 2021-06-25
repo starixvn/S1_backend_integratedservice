@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -227,7 +228,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         bettingDataRNG_SG.amount,
-                        gameType,
+                        (int)Tp.SG,
                         TransType.Wagers,
                         $"Stake: {Math.Abs(bettingDataRNG_SG.amount):#,##0.##}",
                         bettingDataRNG_SG.transferId,
@@ -293,6 +294,75 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        #region MG
+        public async Task<MGPlaceBetResult> PlaceBetRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        {
+            var bonusId = 0;
+            var afterAmount = 0M;
+            var result = 0;
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            bettingDataRNG_MG.amount *= -1;
+            bettingDataRNG_MG.TransType = "D";
+            bettingDataRNG_MG.TicketType = (int) BettransType.Bet;
+            bettingDataRNG_MG.TicketStatus = (int) TicketStatus.UnSettled;
+            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.Running;
+            
+            var p = new DynamicParameters(bettingDataRNG_MG);
+            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            try
+            {
+                var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransRngMG != null)
+                {
+                    return new MGPlaceBetResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                        ExtTxnId = bettransRngMG.ExtTxnId
+                    };
+                }
+                
+                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var extTxnId = p.Get<long>("extTxnId");
+                
+                if (result > 0 && bettingDataRNG_MG.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo, 
+                        bettingDataRNG_MG.amount, 
+                        (int)Tp.MG, 
+                        bettingDataRNG_MG.roundId, 
+                        gameType, 
+                        bettingDataRNG_MG.txnId, 
+                        null, TpCategory.Slots, 
+                        out afterAmount, 
+                        ref bonusId, 
+                        conn,
+                        trans);
+                }
+                
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+
+                return new MGPlaceBetResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount,
+                    ExtTxnId = extTxnId
+                };
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                throw;
+            }
+        }
+        #endregion
+        
         #region CQ9
 
         public int PlaceBetRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
@@ -387,7 +457,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                        tpCustInfo.SiteId,
                        tpCustInfo.UserName,
                        bettingDataRNG_CQ9.amount,
-                       gameType,
+                       (int)Tp.CQ9,
                        TransType.Wagers,
                        $"Stake: {Math.Abs(bettingDataRNG_CQ9.amount):#,##0.##}",
                        bettingDataRNG_CQ9.mtcode,
@@ -458,7 +528,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                        tpCustInfo.SiteId,
                        tpCustInfo.UserName,
                        bettingDataRNG_CQ9.amount,
-                       gameType,
+                       (int)Tp.CQ9,
                        TransType.Wagers,
                        $"Stake: {Math.Abs(bettingDataRNG_CQ9.amount):#,##0.##}",
                        bettingDataRNG_CQ9.mtcode,
@@ -613,7 +683,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         bettingDataFish_Iconic.amount,
-                        gameType,
+                        (int)Tp.Iconic,
                         TransType.Wagers,
                         $"Stake: {Math.Abs(bettingDataFish_Iconic.amount):#,##0.##}",
                         bettingDataFish_Iconic.transactionId.ToString(),

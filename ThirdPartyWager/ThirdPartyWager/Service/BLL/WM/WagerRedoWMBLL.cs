@@ -59,6 +59,7 @@ namespace ThirdPartyWager.Service.BLL
                     currencyList.Add("IDRK");
                     currencyList.Add("VNDK");
                     currencyList.Add("USD");
+                    currencyList.Add("INR");
                 }
 
                 foreach (var curr in currencyList)

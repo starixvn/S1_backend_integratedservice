@@ -46,6 +46,7 @@ namespace ThirdParty.Iconic
             string currency = tpCustInfo.TpCurrencyId;
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string password = inputs.ContainsKey("password") && !string.IsNullOrEmpty(inputs["password"]) ? inputs["password"] : throw new Exception("password");
+            string agent = inputs.ContainsKey($"agent_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"agent_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"agent_{tpCustInfo.TpCurrencyId}"] : throw new Exception($"agent_{tpCustInfo.TpCurrencyId}");
             string token = null;
 
             if (!jwtTokens.ContainsKey(currency))
@@ -55,7 +56,7 @@ namespace ThirdParty.Iconic
 
             if (jwtTokens[currency].ExpiredTime <= DateTime.Now)
             {
-                string jwtUserName = $"novax{currency}";
+                string jwtUserName = agent;
                 if (string.IsNullOrWhiteSpace(jwtTokens[currency].token))
                 {
                     var jwtToken = GetJwtToken(ApiUrl, jwtUserName, password);

@@ -2,10 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -13,10 +14,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     public class TpCustInfoService
     {
         private readonly IConfiguration configuration;
+        private readonly MySqlClient _mainDbClient;
 
-        public TpCustInfoService(IConfiguration configuration)
+        public TpCustInfoService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
         }
         public TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
         {
@@ -59,6 +63,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Execute("LoginLog_Ins", new { CustId = custId, UserName = userName, SiteId = siteId, LoginIp = loginIp, FromUrl = fromUrl, UserAgent = userAgent }, commandType: CommandType.StoredProcedure);
             });
+        }
+        public int UpdateOnline(int custId, bool isOnline, string token, string ip)
+        {
+            var parameters = new DynamicParameters(new {IsOnline = isOnline, CustId = custId, IP = ip, Token = token});
+            return _mainDbClient.Execute("LoginCheckIn_Set", parameters: parameters);
         }
         private string GetToken()
         {
