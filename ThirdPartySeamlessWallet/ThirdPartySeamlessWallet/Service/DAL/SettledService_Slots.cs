@@ -2473,7 +2473,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int) TicketStatus.Draw : (int) TicketStatus.Win;
             bettingDataRNG_MG.SettleFlag = (int) SettleFlag.EndGame;
             var p = new DynamicParameters(bettingDataRNG_MG);
-
+            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
                 var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -2546,7 +2546,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 if (bettransRngMg.PlayerId != cancelDataRng_MG.playerId ||
-                    bettransRngMg.Amount != cancelDataRng_MG.amount)
+                    Math.Abs(bettransRngMg.Amount) != cancelDataRng_MG.amount)
                 {
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }

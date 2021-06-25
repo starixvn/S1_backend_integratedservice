@@ -576,7 +576,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketStatus = (int) TicketStatus.UnSettled;
             bettingDataRNG_MG.SettleFlag = (int) SettleFlag.Running;
             var p = new DynamicParameters(bettingDataRNG_MG);
-
+            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
                 var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
