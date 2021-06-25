@@ -8,9 +8,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -2456,7 +2458,161 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        #region MG
+        public async Task<MGPayoutResult> PayoutRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        {
+            var bonusId = 0;
+            var afterAmount = 0M;
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
 
+            bettingDataRNG_MG.TransType = "C";
+            bettingDataRNG_MG.TicketType = (int) BettransType.Payout;
+            bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int) TicketStatus.Draw : (int) TicketStatus.Win;
+            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.EndGame;
+            var p = new DynamicParameters(bettingDataRNG_MG);
+            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            try
+            {
+                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransRngMg.ExtTxnId != 0)
+                {
+                    return new MGPayoutResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                        ExtTxnId = bettransRngMg.ExtTxnId
+                    };
+                }
+                
+                var result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var extTxnId = p.Get<long>("extTxnId");
+                
+                if (result > 0 && bettingDataRNG_MG.amount > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo, 
+                        bettingDataRNG_MG.amount, 
+                        (int)Tp.MG, 
+                        bettingDataRNG_MG.roundId, 
+                        gameType,
+                        TpCategory.Slots, 
+                        bettingDataRNG_MG.txnId, 
+                        TransType.Payout, 
+                        null, 
+                        out afterAmount, 
+                        $"Payout: {Math.Abs(bettingDataRNG_MG.amount):#,##0.##}",
+                        out bonusId,
+                        conn, 
+                        trans);
+                }
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+                return new MGPayoutResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount,
+                    ExtTxnId = extTxnId
+                };
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"PayoutRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                throw;
+            }
+        }
+
+        public async Task<MGCancelResult> CancelBetRNG_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG,
+            int gameType)
+        {
+            int bonusId = 0;
+            var afterAmount = 0M;
+
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", 
+                    new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransRngMg == null)
+                {
+                    throw new MGException(MGErrorCode.TransactionNotExists, $"{cancelDataRng_MG.txnId} not exists");
+                }
+
+                if (bettransRngMg.PlayerId != cancelDataRng_MG.playerId ||
+                    Math.Abs(bettransRngMg.Amount) != cancelDataRng_MG.amount)
+                {
+                    throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
+                }
+
+                if (bettransRngMg.TicketType == (int) BettransType.CancelBet)
+                {
+                    return new MGCancelResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount
+                    };
+                }
+
+                var result = conn.Execute("Service_CancelBetRng_MG_Set", 
+                    new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    if (cancelDataRng_MG.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            cancelDataRng_MG.amount,
+                            (int) Tp.MG,
+                            bettransRngMg.RoundId,
+                            gameType, TpCategory.Slots,
+                            cancelDataRng_MG.txnId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            $"Refund:  {cancelDataRng_MG.amount:#,##0.##}",
+                            out bonusId,
+                            conn,
+                            trans);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+                return new MGCancelResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"CancelBetRNG_MG failed: {JsonConvert.SerializeObject(cancelDataRng_MG)}");
+                throw;
+            }
+        }
+        public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData_MG>(spName, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_MG(string spName, string transId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute(spName, new {betId = transId}, commandType: CommandType.StoredProcedure);
+        }
+        
+        #endregion
+        
         #region JILI
 
         private readonly ILogger<BettingService> betLogger;

@@ -1732,7 +1732,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+        
+        #region MG
+        public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
+        {
+            return settledService.GetUnsettledList_MG(spName);
+        }
 
+        public int SetSettleFlag_MG(string spName, string transId)
+        {
+            return settledService.SetSettleFlag_MG(spName, transId);
+        }
+
+        #endregion
+        
         #region JILI
 
         public int BetAndPayoutRNG_JILI(BettingData_JILI bettingData_JILI, int gameType, out decimal afterAmount)
