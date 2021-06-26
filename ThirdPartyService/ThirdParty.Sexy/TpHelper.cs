@@ -123,6 +123,14 @@ namespace ThirdParty.Sexy
             getKeyReq.currency = currencyIdMapping[tpCustInfo.TpCurrencyId];
             getKeyReq.user = tpCustInfo.TpUserName;
             getKeyReq.betLimitIds = inputs[betLimitIdKey];
+            if (!IsDevelopment && tpCustInfo.CustId == 61920)
+            {
+                /* 
+                 Nova88_61920  IDR member can change his bet limit to 5-500
+                 MexNova88net已為您在正式環境新增限紅10603 IDR 5-500
+                */
+                getKeyReq.betLimitIds = "10603";
+            }
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(getKeyReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
