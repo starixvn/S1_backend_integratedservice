@@ -35,7 +35,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<ContentResult> CheckOnlineMember(CheckOnlineMemberInput input)
+        public async Task<ContentResult> CheckOnlineMember([FromForm]CheckOnlineMemberInput input)
         {
             string json;
             if (input.Secret_Key != _sabaSecretKey)
