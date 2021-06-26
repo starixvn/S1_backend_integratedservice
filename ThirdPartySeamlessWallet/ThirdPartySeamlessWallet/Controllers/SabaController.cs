@@ -38,73 +38,34 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public async Task<ContentResult> CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
         {
-            var json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
-            {
-                CheckOnlineMember = new CheckOnlineMember
-                {
-                    Version = Version,
-                    StatusCode = (int) SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow,
-                    Message = "System Error"
-                }
-            });
-            var errorResult = _tools.TransformJsonToXml<CheckOnlineMember>(json);
+            var json = GetJsonResult(SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow, "System Error");
+            var errorResult = ""; 
             
             try
             {
+                errorResult = _tools.TransformJsonToXml<CheckOnlineMember>(json);
                 if (input.Secret_Key != _sabaSecretKey)
                 {
-                    json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
-                    {
-                        CheckOnlineMember = new CheckOnlineMember
-                        {
-                            Version = Version,
-                            StatusCode = (int) SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow,
-                            Message = SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow.ToString()
-                        }
-                    });
+                    json = GetJsonResult(SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow);
                 }
                 else
                 {
                     var tpCustInfo = _sabaBLL.GetTpInfo(input.Vendor_Member_Id);
                     if (tpCustInfo.CustId == 0)
                     {
-                        json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
-                        {
-                            CheckOnlineMember = new CheckOnlineMember
-                            {
-                                Version = Version,
-                                StatusCode = (int) SabaOnlineMemberStatus.VendorMemberIdNotFound,
-                                Message = SabaOnlineMemberStatus.VendorMemberIdNotFound.ToString()
-                            }
-                        });
+                        json = GetJsonResult(SabaOnlineMemberStatus.VendorMemberIdNotFound);
                     }
                     else
                     {
                         var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int) Tp.Saba, input.Vendor_Member_Id);
                         if (tpCheck == null)
                         {
-                            json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
-                            {
-                                CheckOnlineMember = new CheckOnlineMember
-                                {
-                                    Version = Version,
-                                    StatusCode = (int) SabaOnlineMemberStatus.MemberIsOffline,
-                                    Message = SabaOnlineMemberStatus.MemberIsOffline.ToString()
-                                }
-                            });
+                            json = GetJsonResult(SabaOnlineMemberStatus.MemberIsOffline);
                         }
                         else
                         {
                             _sabaBLL.UpdateOnline(tpCustInfo.CustId, true, tpCheck.Token, tpCheck.IP);
-                            json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
-                            {
-                                CheckOnlineMember = new CheckOnlineMember
-                                {
-                                    Version = Version,
-                                    StatusCode = (int) SabaOnlineMemberStatus.MemberIsOnline,
-                                    Message = SabaOnlineMemberStatus.MemberIsOnline.ToString()
-                                }
-                            });
+                            json = GetJsonResult(SabaOnlineMemberStatus.MemberIsOnline);
                         }
                     }
                 }
@@ -115,8 +76,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception e)
             {
                 _logger.LogError(e, GetCurrentAsyncMethod());
-                return new ContentResult() {Content = errorResult, ContentType = "application/xml", StatusCode = 200};
+                return new ContentResult() {Content = errorResult, ContentType = "application/xml", StatusCode = 403};
             }
+        }
+
+        private static string GetJsonResult(SabaOnlineMemberStatus status, string message = null)
+        {
+            return JsonConvert.SerializeObject(new CheckOnlineMemberOutput
+            {
+                CheckOnlineMember = new CheckOnlineMember
+                {
+                    Version = Version,
+                    StatusCode = (int) status,
+                    Message = message ?? status.GetEnumDescription()
+                }
+            });
         }
     }
 }
