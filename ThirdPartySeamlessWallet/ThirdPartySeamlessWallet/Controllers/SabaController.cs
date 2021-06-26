@@ -10,6 +10,7 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -35,66 +36,87 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<ContentResult> CheckOnlineMember([FromForm]CheckOnlineMemberInput input)
+        public async Task<ContentResult> CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
         {
-            string json;
-            if (input.Secret_Key != _sabaSecretKey)
+            var json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
             {
-                json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
+                CheckOnlineMember = new CheckOnlineMember
                 {
-                    CheckOnlineMember = new CheckOnlineMember{
-                        Version = Version,
-                        StatusCode = (int)SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow,
-                        Message = SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow.ToString()
-                    }
-                });
-            }
-            else
+                    Version = Version,
+                    StatusCode = (int) SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow,
+                    Message = "System Error"
+                }
+            });
+            var errorResult = _tools.TransformJsonToXml<CheckOnlineMember>(json);
+            
+            try
             {
-                var tpCustInfo = _sabaBLL.GetTpInfo(input.Vendor_Member_Id);
-                if (tpCustInfo.CustId == 0)
+                if (input.Secret_Key != _sabaSecretKey)
                 {
                     json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
                     {
-                        CheckOnlineMember = new CheckOnlineMember{
+                        CheckOnlineMember = new CheckOnlineMember
+                        {
                             Version = Version,
-                            StatusCode = (int)SabaOnlineMemberStatus.VendorMemberIdNotFound,
-                            Message = SabaOnlineMemberStatus.VendorMemberIdNotFound.ToString()
+                            StatusCode = (int) SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow,
+                            Message = SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow.ToString()
                         }
                     });
                 }
                 else
                 {
-                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)Tp.Saba, input.Vendor_Member_Id);
-                    if (tpCheck == null)
+                    var tpCustInfo = _sabaBLL.GetTpInfo(input.Vendor_Member_Id);
+                    if (tpCustInfo.CustId == 0)
                     {
-                        json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
-                        {
-                            CheckOnlineMember = new CheckOnlineMember{
-                                Version = Version,
-                                StatusCode = (int)SabaOnlineMemberStatus.MemberIsOffline,
-                                Message = SabaOnlineMemberStatus.MemberIsOffline.ToString()
-                            }
-                        });
-                    }
-                    else
-                    {
-                        _sabaBLL.UpdateOnline(tpCustInfo.CustId, true, tpCheck.Token, tpCheck.IP);
                         json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
                         {
                             CheckOnlineMember = new CheckOnlineMember
                             {
                                 Version = Version,
-                                StatusCode = (int) SabaOnlineMemberStatus.MemberIsOnline,
-                                Message = SabaOnlineMemberStatus.MemberIsOnline.ToString()
+                                StatusCode = (int) SabaOnlineMemberStatus.VendorMemberIdNotFound,
+                                Message = SabaOnlineMemberStatus.VendorMemberIdNotFound.ToString()
                             }
                         });
                     }
+                    else
+                    {
+                        var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int) Tp.Saba, input.Vendor_Member_Id);
+                        if (tpCheck == null)
+                        {
+                            json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
+                            {
+                                CheckOnlineMember = new CheckOnlineMember
+                                {
+                                    Version = Version,
+                                    StatusCode = (int) SabaOnlineMemberStatus.MemberIsOffline,
+                                    Message = SabaOnlineMemberStatus.MemberIsOffline.ToString()
+                                }
+                            });
+                        }
+                        else
+                        {
+                            _sabaBLL.UpdateOnline(tpCustInfo.CustId, true, tpCheck.Token, tpCheck.IP);
+                            json = JsonConvert.SerializeObject(new CheckOnlineMemberOutput
+                            {
+                                CheckOnlineMember = new CheckOnlineMember
+                                {
+                                    Version = Version,
+                                    StatusCode = (int) SabaOnlineMemberStatus.MemberIsOnline,
+                                    Message = SabaOnlineMemberStatus.MemberIsOnline.ToString()
+                                }
+                            });
+                        }
+                    }
                 }
-            }
 
-            var result = _tools.TransformJsonToXml<CheckOnlineMember>(json); 
-            return new ContentResult() { Content = result, ContentType = "application/xml", StatusCode = 200 };
+                var result = _tools.TransformJsonToXml<CheckOnlineMember>(json);
+                return new ContentResult() {Content = result, ContentType = "application/xml", StatusCode = 200};
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, GetCurrentAsyncMethod());
+                return new ContentResult() {Content = errorResult, ContentType = "application/xml", StatusCode = 200};
+            }
         }
     }
 }
