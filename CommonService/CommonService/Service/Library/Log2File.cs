@@ -37,8 +37,12 @@ namespace PaymentService.Service.Library
             {
                 _logger.LogError(ex, ErrorContent, new string[] { PrefixName });
             }
-            _logger.LogError(ErrorContent, new string[] { PrefixName });
-             
+            else
+            {
+                _logger.LogError(ErrorContent, new string[] { PrefixName });
+            }
+                            
+                          
             var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now:yyyyMMdd}.log";
             Task.Run(() =>
             {
