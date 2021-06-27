@@ -9,8 +9,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model;
-using Ubiety.Dns.Core;
+using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers
 {
@@ -77,8 +76,8 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 isError = true;
-                logger.LogError(ex.Message);
-                log2File.Error(ex.ToString(), "SabaOdds");
+                logger.LogError(ex, GetCurrentAsyncMethod());
+                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {

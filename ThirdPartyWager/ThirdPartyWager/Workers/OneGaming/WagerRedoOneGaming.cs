@@ -85,6 +85,7 @@ namespace ThirdPartyWager.Workers
                         }
                         catch (Exception ex)
                         {
+                            logger.LogError(ex, logName);
                             Interlocked.Increment(ref failed);
                         }
                     }));
@@ -99,7 +100,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, logName);
                 log2File.Error(ex.ToString(), logName);
             }
             finally

@@ -92,8 +92,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         var wagerId = bet.ticket_id;
-                        logger.LogError(ex, ex.Message);
-                        logger.LogError($"INSERT_WAGER ( WAGERID: {wagerId} )");
+                        logger.LogError(ex, $"INSERT_WAGER ( WAGERID: {wagerId} )");
                         continue;
                     }
                 }

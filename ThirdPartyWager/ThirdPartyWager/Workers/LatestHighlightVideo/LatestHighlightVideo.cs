@@ -6,12 +6,12 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers
 {
@@ -105,8 +105,8 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 isError = true;
-                logger.LogError(ex.Message);
-                log2File.Error(ex.ToString(), "LatestHighlightVideo");
+                logger.LogError(ex, GetCurrentAsyncMethod());
+                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {
