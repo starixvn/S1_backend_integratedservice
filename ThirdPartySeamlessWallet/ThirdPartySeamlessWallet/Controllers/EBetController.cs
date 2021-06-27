@@ -206,6 +206,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getRegisterLoginResp.status = 500;
                 log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}\r\n{ex}", $"EBet_Register_Login");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}");
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", $"EBet_Register_Login");
@@ -426,6 +427,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"EBet_increaseCredit");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}");
                 return getBetResp;
             }
         }
@@ -517,6 +519,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{JsonConvert.SerializeObject(getRefundBetReq)}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}\r\n{ex}", $"EBet_refundSingleWallet");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getRefundBetReq)}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}");
                 return getRefundSingleWalletResp;
             }
 
@@ -574,6 +577,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{JsonConvert.SerializeObject(getAutoBatchRefundReq)}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}\r\n{ex}", $"EBet_autoBatchRefund");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getAutoBatchRefundReq)}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}");
                 return getAutoBatchRefundResp;
             }
 
