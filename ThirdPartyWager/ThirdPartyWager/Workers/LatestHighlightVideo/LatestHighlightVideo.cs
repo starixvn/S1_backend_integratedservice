@@ -67,7 +67,7 @@ namespace ThirdPartyWager.Workers
                     IEnumerable<ServerInfo> siteList = commonBLL.GetSiteList().Where(x => x.SiteId == SiteId);
                     var LatestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
 
-                    if (siteList.Any() && siteList != null && LatestHighlightVideo != null)
+                    if (siteList.Any() && LatestHighlightVideo != null)
                     {
                         foreach (var siteListInfo in siteList)
                         {
