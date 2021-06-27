@@ -110,7 +110,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     afterAmount = afterAmount,
                     bonusId = bonusId,
                 };
-                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
 
