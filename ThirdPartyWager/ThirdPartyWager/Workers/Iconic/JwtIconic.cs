@@ -16,6 +16,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<JwtIconic> logger;
         private readonly ApiIconicBLL apiIconicBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly IHostEnvironment environment;
         private Timer timer;
         private int tpId = (int)Tp.Iconic;
 
@@ -23,12 +24,14 @@ namespace ThirdPartyWager.Workers
         public JwtIconic(
             ILogger<JwtIconic> logger,
             ApiIconicBLL apiIconicBLL,
-            ThirdPartyBLL thirdPartyBLL
+            ThirdPartyBLL thirdPartyBLL,
+            IHostEnvironment environment
         )
         {
             this.logger = logger;
             this.apiIconicBLL = apiIconicBLL;
             this.thirdPartyBLL = thirdPartyBLL;
+            this.environment = environment;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -51,9 +54,11 @@ namespace ThirdPartyWager.Workers
                 currencyList.Add("VND");
                 currencyList.Add("CNY");
                 currencyList.Add("USDT");
+                currencyList.Add("INR");
                 foreach (var curr in currencyList)
                 {
-                    var getJwt = await apiIconicBLL.GetJwtToken(setting["ApiUrl"], $"novax{curr}", setting["password"]);
+                    string jwtUserName = setting[$"agent_{curr}"];
+                    var getJwt = await apiIconicBLL.GetJwtToken(setting["ApiUrl"], jwtUserName, setting["password"]);
                     if (getJwt.token != null)
                     {
                         setting[$"token_{curr}"] = getJwt.token;
@@ -62,11 +67,11 @@ namespace ThirdPartyWager.Workers
 
                 //update setting
                 var result = thirdPartyBLL.SetThirdPartySetting(tpId, setting);
-                
+
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {

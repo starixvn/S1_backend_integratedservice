@@ -75,6 +75,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {"bjma",false },
                     {"rla",false },
                 }
+            },
+            {
+                GameType.JILI_RNG, new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+                {
+                    {"61",false },
+                    {"62",false },
+                    {"63",false },
+                    {"64",false },
+                    {"66",false },
+                }
             }
         };
 
@@ -139,12 +149,55 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     bonusId = bonusId,
                     allowNegative = allowNegative
                 };
-                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
 
             return result;
         }
+
+        private int PayoutWithBonusId(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, out decimal afterAmount, string memoHead, int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
+        {
+            afterAmount = 0;
+            int result = 0;
+            try
+            {
+                result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
+
+                if (afterBonus < 0 || bonusId == -1)
+                {
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
+                }
+                else
+                {
+                    afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
+                var parameter = new
+                {
+                    tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
+                    amount = amount,
+                    tpId = tpId,
+                    tpTransId = tpTransId,
+                    gameType = gameType,
+                    tpCategory = tpCategory,
+                    refId = refId,
+                    transType = transType,
+                    afterAmount = afterAmount,
+                    memoHead = memoHead,
+                    bonusId = bonusId,
+                    allowNegative = allowNegative
+                };
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
+            }
+
+            return result;
+        }
+
         private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
             CustId = 0;

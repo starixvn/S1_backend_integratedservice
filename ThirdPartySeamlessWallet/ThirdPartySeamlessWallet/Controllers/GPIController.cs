@@ -22,7 +22,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"IDR","ID" },
             {"MYR","MY" },
             {"THB","TH" },
-            {"VND","VN" }
+            {"VND","VN" },
+            {"INR","INR"}
         };
 
         private readonly AuthBLL authBLL;

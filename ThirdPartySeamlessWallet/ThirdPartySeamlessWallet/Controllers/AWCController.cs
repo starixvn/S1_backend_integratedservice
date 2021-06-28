@@ -195,6 +195,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -229,6 +230,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -263,6 +265,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -292,6 +295,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -321,6 +325,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -351,6 +356,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -381,6 +387,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -411,6 +418,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -441,6 +449,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -494,6 +503,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }
@@ -529,6 +539,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
+                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
                     log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
                 }
             }

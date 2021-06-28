@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -82,7 +83,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BTI_Sports = 49,
         AMB_Poker = 50,
         NineW_Sports = 51,
-        KM_Poker = 52
+        KM_Poker = 52,
+        JILI_RNG = 53,
+        JILI_Fish = 56,
+        MG_RNG = 57,
+        MG_LiveCasino = 58
     }
     public enum Tp
     {
@@ -117,6 +122,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BTI = 29,
         AMB = 30,
         NineW = 31,
+        JILI = 32,
+        MG = 34
     }
     public enum TransferType : int
     {
@@ -161,5 +168,17 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Main, //ConnectionString
         Report,//ConnectionStringReport
         Wager,//ConnectionStringWager
+    }
+
+    public enum SabaOnlineMemberStatus
+    {
+        [Description("Member Is Online")]
+        MemberIsOnline = 0,
+        [Description("Invalid Secret Key or Ip Address Not Allow")]
+        InvalidSecretKeyOrIpAddressNotAllow = 1,
+        [Description("Vendor MemberId NotFound")]
+        VendorMemberIdNotFound = 2,
+        [Description("Member Is Offline")]
+        MemberIsOffline = 3
     }
 }

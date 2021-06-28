@@ -93,7 +93,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, logName);
                 log2File.Error(ex.ToString(), logName);
             }
             finally

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Model;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using Newtonsoft.Json;
 
@@ -558,5 +559,75 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        public async Task<MGPlaceBetResult> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        {
+            var bonusId = 0;
+            var afterAmount = 0M;
+            var result = 0;
+            
+            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            
+            bettingDataRNG_MG.amount *= -1;
+            bettingDataRNG_MG.TransType = "D";
+            bettingDataRNG_MG.TicketType = (int) BettransType.Bet;
+            bettingDataRNG_MG.TicketStatus = (int) TicketStatus.UnSettled;
+            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.Running;
+            var p = new DynamicParameters(bettingDataRNG_MG);
+            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            try
+            {
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransLcMg != null)
+                {
+                    return new MGPlaceBetResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                        ExtTxnId = bettransLcMg.ExtTxnId
+                    };
+                }
+                
+                result = conn.Execute("Service_BettransLC_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var extTxnId = p.Get<long>("extTxnId");
+                
+                if (result > 0 && bettingDataRNG_MG.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo, 
+                        bettingDataRNG_MG.amount, 
+                        (int)Tp.MG, 
+                        bettingDataRNG_MG.roundId, 
+                        gameType, 
+                        bettingDataRNG_MG.txnId, 
+                        null, 
+                        TpCategory.LiveCasino, 
+                        out afterAmount, 
+                        ref bonusId, 
+                        conn, 
+                        trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+
+                return new MGPlaceBetResult()
+                {
+                    Result = result,
+                    AfterAmount = afterAmount,
+                    ExtTxnId = extTxnId
+                };
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"PlaceBetLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                throw;
+            }
+            
+        }
     }
 }

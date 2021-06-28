@@ -1,13 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Web;
+using System.Xml;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ThirdPartySeamlessWallet.Service.Library
 {
@@ -53,6 +55,26 @@ namespace ThirdPartySeamlessWallet.Service.Library
                 return deserializationObj;
             };
         }
+
+        public string TransformJsonToXml<T>(string json)
+        {
+            // Remove root property
+            var jsonObjectAttribute = typeof(T).GetCustomAttribute(typeof(JsonObjectAttribute)) as JsonObjectAttribute;
+            var root = JObject.Parse(json);
+            var data = root[jsonObjectAttribute?.Title ?? throw new InvalidOperationException()];
+
+            var obj = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(data));
+
+            var serializer = new XmlSerializer(typeof(T));
+            using var memoryStream = new MemoryStream();
+            using var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings() {Indent = true, Encoding = Encoding.UTF8});
+            xmlWriter.WriteStartDocument();  
+            var xmlSerializerNamespaces = new XmlSerializerNamespaces();
+            xmlSerializerNamespaces.Add("", "");
+            serializer.Serialize(xmlWriter, obj, xmlSerializerNamespaces);
+            return Encoding.UTF8.GetString(memoryStream.ToArray());
+        }
+
         public string ToMD5(string encodeStr)
         {
             using var cryptoMD5 = MD5.Create();
@@ -68,7 +90,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         {
             if (string.IsNullOrEmpty(str)) return null;
             if (isDecodeUrl)
-                str = System.Web.HttpUtility.UrlDecode(str);
+                str = HttpUtility.UrlDecode(str);
 
             byte[] toEncryptArray = Convert.FromBase64String(str);
 

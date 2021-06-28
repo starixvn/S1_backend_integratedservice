@@ -109,7 +109,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {bet.BetID} )";
-                        logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(bet)}, EXCEPTION: {ex.Message}");
+                        logger.LogError(ex, $"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(bet)}, EXCEPTION: {ex.Message}");
                         log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
                         return false;
                     }
@@ -122,7 +122,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                logger.LogError($"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
                 log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
                 return false;
             }
