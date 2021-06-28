@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
             }
 
             return resp;
@@ -203,8 +203,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.error = (int)Error.SystemError;
                 //logger.LogError(ex.Message);
-                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBet");
-                logger.LogError(ex, $"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}");
+                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBet", ex);
             }
 
             return resp;
@@ -265,8 +264,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 resp.error = (int)Error.SystemError;
-                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlayerWin");
-                logger.LogError(ex, $"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}");
+                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlayerWin", ex);
             }
             return resp;
         }
@@ -317,8 +315,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 resp.error = (int)Error.SystemError;
-                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlayerLost");
-                logger.LogError(ex, $"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}");
+                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlayerLost", ex);
             }
             return resp;
         }
@@ -384,8 +381,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 resp.error = (int)Error.SystemError;
-                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBetCancel");
-                logger.LogError(ex, $"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}");
+                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBetCancel", ex);
             }
             return resp;
         }
@@ -454,8 +450,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 resp.error = (int)Error.SystemError;
-                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBetCancel");
-                logger.LogError(ex, $"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}");
+                log2File.Error($"{Content}\r\n{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "SA_PlaceBetCancel", ex);
             }
             return resp;
         }

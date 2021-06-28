@@ -33,14 +33,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSGFish");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSGFish", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "SettleSGFish");
+                log2File.Error(ex.ToString(), "SettleSGFish", ex);
                 isError = true;
             }
             finally
@@ -112,14 +112,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
@@ -185,14 +185,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
@@ -259,14 +259,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally

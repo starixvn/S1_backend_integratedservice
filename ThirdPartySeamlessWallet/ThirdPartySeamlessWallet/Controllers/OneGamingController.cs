@@ -359,8 +359,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
-                logger.LogError(ex, $"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 throw;
             }
 
@@ -451,8 +450,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
-                logger.LogError(ex, $"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 throw;
             }
 
@@ -498,8 +496,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
-                logger.LogError(ex, $"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 throw;
             }
 

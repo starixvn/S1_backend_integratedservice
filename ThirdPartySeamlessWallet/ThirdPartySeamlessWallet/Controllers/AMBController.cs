@@ -231,8 +231,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
@@ -284,8 +283,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
@@ -348,8 +346,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
@@ -404,8 +401,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }

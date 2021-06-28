@@ -219,7 +219,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 //logger.LogError(ex.Message);
                 resp.ResponseCode = Error.ERROR.ToString();
                 Response.StatusCode = (int)Error.ERROR;
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "AG_PostTransfer");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "AG_PostTransfer", ex);
             }
 
             //logger.LogCritical(JsonConvert.SerializeObject(resp));

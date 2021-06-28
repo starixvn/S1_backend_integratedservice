@@ -242,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     debitResp.Error_code = -1;
                     debitResp.Error_msg = "Unknown error";
-                    log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}\r\n{ex}", "GPI_debit");
+                    log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}\r\n{ex}", "GPI_debit", ex);
                 }
             }
 
@@ -320,7 +320,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 creditResp.Error_code = -1;
                 creditResp.Error_msg = "Unknown error";
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", "GPI_credit");
+                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", "GPI_credit", ex);
                 throw ex;
             }
 

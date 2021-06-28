@@ -245,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 catch (Exception ex)
                 {
                     playerInfoRep.code = 1000;
-                    log2File.Error($"{JsonConvert.SerializeObject(PlayerInfoReq)}\r\n{JsonConvert.SerializeObject(playerInfoRep)}\r\n{ex}", "YGG_playerinfo");
+                    log2File.Error($"{JsonConvert.SerializeObject(PlayerInfoReq)}\r\n{JsonConvert.SerializeObject(playerInfoRep)}\r\n{ex}", "YGG_playerinfo", ex);
                 }
             }
             else
@@ -337,7 +337,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             data = wagerData
                         };
 
-                        log2File.Error($"{JsonConvert.SerializeObject(wagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Wager");
+                        log2File.Error($"{JsonConvert.SerializeObject(wagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Wager", ex);
                     }
                 }
             }
@@ -424,7 +424,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     data = wagerData
                 };
 
-                log2File.Error($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Endwager");
+                log2File.Error($"{JsonConvert.SerializeObject(endwagerReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Endwager", ex);
             }
 
             return wagerRep;
@@ -565,7 +565,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     data = wagerData
                 };
 
-                log2File.Error($"{JsonConvert.SerializeObject(appendwagerresultReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Appendwagerresult");
+                log2File.Error($"{JsonConvert.SerializeObject(appendwagerresultReqq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Appendwagerresult", ex);
             }
 
             return wagerRep;
