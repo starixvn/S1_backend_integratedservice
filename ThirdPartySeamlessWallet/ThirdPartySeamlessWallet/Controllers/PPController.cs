@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 authenticateResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}\r\n{ex}", $"{thisTp}_Authenticate");
+                log2File.Error($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}\r\n{ex}", $"{thisTp}_Authenticate", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}", $"{thisTp}_Authenticate");
@@ -185,7 +185,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 balanceResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}\r\n{ex}", $"{thisTp}_Balance");
+                log2File.Error($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}\r\n{ex}", $"{thisTp}_Balance", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}", $"{thisTp}_Balance");
@@ -294,7 +294,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 betResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}\r\n{ex}", $"{thisTp}_Bet");
+                log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}\r\n{ex}", $"{thisTp}_Bet", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}", $"{thisTp}_Bet");
@@ -383,7 +383,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 resultResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}\r\n{ex}", $"{thisTp}_Result");
+                log2File.Error($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}\r\n{ex}", $"{thisTp}_Result", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}", $"{thisTp}_Result");
@@ -426,7 +426,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_BonusWin");
+                log2File.Error($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_BonusWin", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_BonusWin");
@@ -498,7 +498,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_JackpotWin");
+                log2File.Error($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_JackpotWin", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_JackpotWin");
@@ -574,7 +574,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_PromoWin");
+                log2File.Error($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_PromoWin", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_PromoWin");
@@ -623,7 +623,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 endRoundResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}\r\n{ex}", $"{thisTp}_EndRound");
+                log2File.Error($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}\r\n{ex}", $"{thisTp}_EndRound", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}", $"{thisTp}_EndRound");
@@ -681,7 +681,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 refundResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}\r\n{ex}", $"{thisTp}_refund");
+                log2File.Error($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}\r\n{ex}", $"{thisTp}_refund", ex);
             }
 
             log2File.Info($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}", $"{thisTp}_refund");

@@ -55,14 +55,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "CF_SettleWorker");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "CF_SettleWorker", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "CF_SettleWorker");
+                log2File.Error(ex.ToString(), "CF_SettleWorker", ex);
                 isError = true;
             }
             finally
@@ -101,14 +101,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
-                            log2File.Error($"{JsonConvert.SerializeObject(unpay)}\r\n{ex1.ToString()}", "CF_SettleWorker");
+                            log2File.Error($"{JsonConvert.SerializeObject(unpay)}\r\n{ex1.ToString()}", "CF_SettleWorker", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "CF_PayoutWorker");
+                log2File.Error(ex.ToString(), "CF_PayoutWorker", ex);
                 isError = true;
             }
             finally

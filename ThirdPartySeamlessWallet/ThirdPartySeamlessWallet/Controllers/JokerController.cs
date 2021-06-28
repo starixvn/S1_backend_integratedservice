@@ -282,7 +282,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         rep.Status = 1000;
                         rep.Message = "Other";
-                        log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(rep)}\r\n{ex}", "Joker_Bet");
+                        log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(rep)}\r\n{ex}", "Joker_Bet", ex);
                     }
                 }
             }
@@ -382,7 +382,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     rep.Status = 1000;
                     rep.Message = "Other";
-                    log2File.Error($"{JsonConvert.SerializeObject(settleBetReqq)}\r\n{JsonConvert.SerializeObject(rep)}\r\n{ex}", "Joker_SettleBet");
+                    log2File.Error($"{JsonConvert.SerializeObject(settleBetReqq)}\r\n{JsonConvert.SerializeObject(rep)}\r\n{ex}", "Joker_SettleBet", ex);
                 }
             }
             else

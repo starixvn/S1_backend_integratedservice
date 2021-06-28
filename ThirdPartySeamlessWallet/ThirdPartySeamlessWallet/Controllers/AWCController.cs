@@ -195,8 +195,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "cancelBet", StringComparison.OrdinalIgnoreCase))
@@ -230,8 +229,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "adjustBet", StringComparison.OrdinalIgnoreCase))
@@ -265,8 +263,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "voidBet", StringComparison.OrdinalIgnoreCase))
@@ -295,8 +292,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "unvoidBet", StringComparison.OrdinalIgnoreCase))
@@ -325,8 +321,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "settle", StringComparison.OrdinalIgnoreCase))
@@ -356,8 +351,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "unsettle", StringComparison.OrdinalIgnoreCase))
@@ -387,8 +381,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "voidSettle", StringComparison.OrdinalIgnoreCase))
@@ -418,8 +411,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "unvoidSettle", StringComparison.OrdinalIgnoreCase))
@@ -449,8 +441,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "refund", StringComparison.OrdinalIgnoreCase))
@@ -503,8 +494,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
             else if (string.Equals(reqAction.action, "give", StringComparison.OrdinalIgnoreCase))
@@ -539,8 +529,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    logger.LogError(ex, $"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}");
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
                 }
             }
 

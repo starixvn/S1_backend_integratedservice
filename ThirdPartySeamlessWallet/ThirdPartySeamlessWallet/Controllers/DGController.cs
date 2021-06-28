@@ -260,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 //logger.LogError(ex.Message);
                 transferRep.codeId = (int)Error.SystemError;
-                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}\r\n{ex}", "DG_transfer");
+                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}\r\n{ex}", "DG_transfer", ex);
             }
 
             return transferRep;
@@ -395,7 +395,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 //logger.LogError(ex.Message);
                 transferRep.codeId = (int)Error.SystemError;
-                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}\r\n{ex}", "DG_inform");
+                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(transferRep)}\r\n{ex}", "DG_inform", ex);
             }
 
             return transferRep;
@@ -440,7 +440,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 //logger.LogError(ex.Message);
                 checkTransferRep.codeId = (int)Error.SystemError;
-                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(checkTransferRep)}\r\n{ex}", "DG_checkTransfer");
+                log2File.Error($"{bodyText}\r\n{JsonConvert.SerializeObject(checkTransferRep)}\r\n{ex}", "DG_checkTransfer", ex);
             }
 
             return checkTransferRep;
