@@ -8,6 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.DAL;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
@@ -17,12 +18,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
         private readonly IHostEnvironment environment;
+        private readonly ILogger<BonusWorker> logger;
         private Timer timer;
-        public BonusWorker(IConfiguration configuration, IHostEnvironment environment, WalletService walletService)
+        public BonusWorker(IConfiguration configuration, IHostEnvironment environment, WalletService walletService, ILogger<BonusWorker> logger)
         {
             this.configuration = configuration;
             this.walletService = walletService;
             this.environment = environment;
+            this.logger = logger;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -41,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
-                //logger.LogError(ex.Message);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
