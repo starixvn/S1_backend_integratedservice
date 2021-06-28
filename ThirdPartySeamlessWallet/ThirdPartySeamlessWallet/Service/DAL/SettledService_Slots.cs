@@ -2477,7 +2477,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransRngMg.ExtTxnId != 0)
+                if (bettransRngMg != null)
                 {
                     return new MGPayoutResult()
                     {
@@ -2503,7 +2503,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TransType.Payout, 
                         null, 
                         out afterAmount, 
-                        $"Payout: {Math.Abs(bettingDataRNG_MG.amount):#,##0.##}",
+                        $"Payout",
                         out bonusId,
                         conn, 
                         trans);
@@ -2576,7 +2576,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             TransType.Refunds,
                             null,
                             out afterAmount,
-                            $"Refund:  {cancelDataRng_MG.amount:#,##0.##}",
+                            $"Refund",
                             out bonusId,
                             conn,
                             trans);
