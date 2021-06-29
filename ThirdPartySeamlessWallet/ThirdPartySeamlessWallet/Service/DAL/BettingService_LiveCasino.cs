@@ -184,6 +184,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
+
         #region Sexy
         public int PlaceBetLC_Sexy(TpCustInfo tpCustInfo, BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
@@ -227,6 +228,87 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        #endregion
+
+        #region Sexy (AWC)
+
+        public int PlaceBetLC_AWC_Sexy(TpCustInfo tpCustInfo, BetLC_Sexy betLC_Sexy, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            var result = 0;
+            afterAmount = 0;
+
+            foreach (var txn in betLC_Sexy.txns)
+            {
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = txn.platformTxId,
+                    userId = txn.userId,
+                    currency = txn.currency,
+                    platform = txn.platform,
+                    gameType = txn.gameType,
+                    gameCode = txn.gameCode,
+                    gameName = txn.gameName,
+                    betType = txn.betType,
+                    betAmount = txn.betAmount,
+                    betUnix = new DateTimeOffset(txn.betTime).ToUnixTimeSeconds(),
+                    roundId = txn.roundId,
+                    gameInfo = JsonConvert.SerializeObject(txn.gameInfo),
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                try
+                {
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        result = PlaceBetV2(
+                            tpCustInfo,
+                            Math.Abs(txn.betAmount) * -1,
+                            (int)Tp.Sexy,
+                            txn.platformTxId,
+                            (int)GameType.Sexy_LiveCasino,
+                            txn.platformTxId,
+                            null,
+                            TpCategory.LiveCasino,
+                            out afterAmount,
+                            ref bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    if (mySqlEx.Number == 1062)
+                    {
+                        result = -1;
+                        continue;
+                    }
+                    else
+                    {
+                        throw mySqlEx;
+                    }
+                }
+            }
+            return result;
+        }
+
         #endregion
 
         #region EBet
@@ -561,27 +643,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
         public async Task<MGPlaceBetResult> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
             var result = 0;
-            
+
             await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
-            
+
             bettingDataRNG_MG.amount *= -1;
             bettingDataRNG_MG.TransType = "D";
-            bettingDataRNG_MG.TicketType = (int) BettransType.Bet;
-            bettingDataRNG_MG.TicketStatus = (int) TicketStatus.UnSettled;
-            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.Running;
+            bettingDataRNG_MG.TicketType = (int)BettransType.Bet;
+            bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingDataRNG_MG.SettleFlag = (int)SettleFlag.Running;
             var p = new DynamicParameters(bettingDataRNG_MG);
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
-                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransLcMg != null)
                 {
                     return new MGPlaceBetResult()
@@ -591,10 +673,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         ExtTxnId = bettransLcMg.ExtTxnId
                     };
                 }
-                
+
                 result = conn.Execute("Service_BettransLC_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
-                
+
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
                 {
                     result = PlaceBetV2(
@@ -629,7 +711,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 logger.LogError(e, $"PlaceBetLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
                 throw;
             }
-            
+
         }
     }
 }

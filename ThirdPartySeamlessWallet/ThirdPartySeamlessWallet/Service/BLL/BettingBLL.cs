@@ -232,6 +232,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int PlaceBetLC_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, bettingDataLC_Sexy_Bet.UserId);
@@ -246,6 +247,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = bettingService.PlaceBetLC_Sexy(tpCustInfo, bettingDataLC_Sexy_Bet, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        
+        public int PlaceBetLC_AWC_Sexy(BetLC_Sexy betLC_Sexy, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var userId = betLC_Sexy.txns.ElementAt(0).userId;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+            foreach (var item in betLC_Sexy.txns)
+            {
+                if (item.userId != userId)
+                {
+                    return -99;
+                }
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = bettingService.PlaceBetLC_AWC_Sexy(tpCustInfo, betLC_Sexy, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

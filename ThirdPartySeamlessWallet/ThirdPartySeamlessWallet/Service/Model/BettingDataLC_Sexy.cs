@@ -185,4 +185,216 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string transferTime { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }
+
+    #region Sexy (AWC)
+
+    public class CommonData_Sexy
+    {
+        public string platformTxId { get; set; }
+        public string userId { get; set; }
+        public string platform { get; set; }
+        public string gameCode { get; set; }
+        public string gameType { get; set; }
+        public string roundId { get; set; }
+    }
+
+    public class BetLC_Sexy
+    {
+        public IList<BettingData_Sexy> txns { get; set; }
+    }
+
+    public class BettingData_Sexy : CommonData_Sexy
+    {
+        public string currency { get; set; }
+        public string gameName { get; set; }
+        public string betType { get; set; }
+        public decimal betAmount { get; set; }
+        public DateTime betTime { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public long betUnix
+        {
+            get
+            {
+                return new DateTimeOffset(betTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+    }
+
+    public class GameInfoDataLC_Sexy
+    {
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DateTime? roundStartTime { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? streamerId { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? tableId { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? dealerDomain { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public dynamic? result { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? winner { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? ip { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? odds { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? winLoss { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? status { get; set; }
+    }
+
+    public class CancelLC_Sexy
+    {
+        public IList<CancelBetDataLC_Sexy> txns { get; set; }
+    }
+
+    public class CancelBetDataLC_Sexy : CommonData_Sexy
+    {
+        //public GameInfoBet gameInfo { get; set; }
+    }
+
+    public class AdjustBetLC_Sexy
+    {
+        public IList<AdjustBetDataLC_Sexy> txns { get; set; }
+    }
+
+    public class AdjustBetDataLC_Sexy : CommonData_Sexy
+    {
+        public string gameName { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal adjustAmount { get; set; }
+        public DateTime updateTime { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+    }
+
+    public class VoidBetLC_Sexy
+    {
+        public IList<VoidBetDataLC_Sexy> txns { get; set; }
+    }
+
+    public class VoidBetDataLC_Sexy : CommonData_Sexy
+    {
+        public long txId { get; set; }
+        public string gameName { get; set; }
+        public decimal betAmount { get; set; }
+        public int voidType { get; set; }
+        public DateTime updateTime { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class UnVoidBetLC_Sexy
+    {
+        public IList<UnvoidBetDataLC_Sexy> txns { get; set; }
+    }
+
+    public class UnvoidBetDataLC_Sexy : CommonData_Sexy
+    {
+        public string gameName { get; set; }
+        public int voidType { get; set; }
+        public DateTime updateTime { get; set; }
+        //public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class PayoutLC_Sexy
+    {
+        public IList<SettleDataLC_Sexy> txns { get; set; }
+    }
+
+    public class SettleDataLC_Sexy : CommonData_Sexy
+    {
+        public long txId { get; set; }
+        public string gameName { get; set; }
+        public string betType { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal winAmount { get; set; }
+        public decimal turnover { get; set; }
+        public DateTime betTime { get; set; }
+        public DateTime updateTime { get; set; }
+        public DateTime txTime { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class UnPayoutLC_Sexy
+    {
+        public IList<UnsettleDataLC_Sexy> txns { get; set; }
+    }
+
+    public class UnsettleDataLC_Sexy : CommonData_Sexy
+    {
+        public string gameName { get; set; }
+        public decimal betAmount { get; set; }
+        public DateTime updateTime { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class VoidSettleLC_Sexy
+    {
+        public IList<VoidSettleDataLC_Sexy> txns { get; set; }
+    }
+
+    public class VoidSettleDataLC_Sexy : CommonData_Sexy
+    {
+        public string gameName { get; set; }
+        public decimal betAmount { get; set; }
+        public DateTime updateTime { get; set; }
+        public int voidType { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class UnVoidSettleLC_Sexy
+    {
+        public IList<UnvoidSettleDataLC_Sexy> txns { get; set; }
+    }
+
+    public class UnvoidSettleDataLC_Sexy : CommonData_Sexy
+    {
+        public string gameName { get; set; }
+        public DateTime updateTime { get; set; }
+        public int voidType { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    public class RefundLC_Sexy
+    {
+        public IList<RefundDataLC_Sexy> txns { get; set; }
+    }
+
+    public class RefundDataLC_Sexy : CommonData_Sexy
+    {
+        public long txId { get; set; }
+        public string gameName { get; set; }
+        public string betType { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal winAmount { get; set; }
+        public decimal turnover { get; set; }
+        public DateTime betTime { get; set; }
+        public DateTime updateTime { get; set; }
+        public string refundPlatformTxId { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+    }
+
+    public class RewardLC_Sexy
+    {
+        public IList<RewardDataLC_Sexy> txns { get; set; }
+    }
+
+    public class RewardDataLC_Sexy
+    {
+        public string promotionTxId { get; set; }
+        public string promotionId { get; set; }
+        public string promotionTypeId { get; set; }
+        public string platform { get; set; }
+        public string userId { get; set; }
+        public decimal amount { get; set; }
+        public DateTime txTime { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+    }
+
+    #endregion
 }
