@@ -179,7 +179,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
                 return getErrorResponse;
             }
 
@@ -307,7 +307,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
                 return getErrorResponse;
             }
 
@@ -380,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
                 return getErrorResponse;
             }
 

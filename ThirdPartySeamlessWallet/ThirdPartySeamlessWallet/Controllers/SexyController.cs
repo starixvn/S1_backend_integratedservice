@@ -169,7 +169,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}", ex);
                 }
             }
             else if (string.Equals(reqAction.action, "cancelBet", StringComparison.OrdinalIgnoreCase))
@@ -205,7 +205,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}", ex);
                 }
             }
             else if (string.Equals(reqAction.action, "settle", StringComparison.OrdinalIgnoreCase))
@@ -232,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}", ex);
                 }
             }
             else if (string.Equals(reqAction.action, "unsettle", StringComparison.OrdinalIgnoreCase))
@@ -258,7 +258,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}", ex);
                 }
             }
             else if (string.Equals(reqAction.action, "voidRound", StringComparison.OrdinalIgnoreCase))
@@ -284,7 +284,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}", ex);
                 }
             }
             else if (string.Equals(reqAction.action, "voidTxn", StringComparison.OrdinalIgnoreCase))
@@ -310,7 +310,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{reqAction.action}", ex);
                 }
             }
 
@@ -379,7 +379,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{req.action}");
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{req.action}", ex);
                 }
 
                 log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{req.action}");

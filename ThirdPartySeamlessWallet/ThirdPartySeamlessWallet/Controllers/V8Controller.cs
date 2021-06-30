@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 catch (Exception ex)
                 {
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{ex}", $"{logName}_{subName}");
+                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{ex}", $"{logName}_{subName}", ex);
                     return getBalanceResponse;
                 }
 
