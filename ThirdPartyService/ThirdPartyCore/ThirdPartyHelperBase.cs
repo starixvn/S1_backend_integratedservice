@@ -32,6 +32,18 @@ namespace ThirdPartyCore
         ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
         //ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, string transID, string thirdPartyTransID);
     }
+
+    public interface IThirdPartyGetBalanceParticular
+    {
+        /// <summary>
+        /// 取得指定第三方多筆客戶餘額
+        /// </summary>
+        /// <param name="inputs">第三方相關參數</param>
+        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
+        /// <returns></returns>
+        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs,string tpUserNameString);
+    }
+
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper
     {
         public static string proxyHost;

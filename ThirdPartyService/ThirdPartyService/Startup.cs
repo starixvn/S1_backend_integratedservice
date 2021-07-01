@@ -47,6 +47,7 @@ namespace ThirdPartyService
             services.AddSingleton<TpTransferBonusInfoService>();
             services.AddSingleton<ServerInfoService>();
             services.AddSingleton<AuthService>();
+            services.AddSingleton<TpCustBalanceService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();

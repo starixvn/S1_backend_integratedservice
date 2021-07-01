@@ -9,7 +9,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.NineW
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
 
@@ -196,6 +196,45 @@ namespace ThirdParty.NineW
             var result = FromJson<NineWResult>(json);
             return result.status == "1"
                 ? HttpUtility.UrlEncode(result.key) : throw new Exception($"9w get key error status is : {result.status}");
+        }
+
+        /// <summary>
+        /// 取得指定客戶的餘額資料
+        /// </summary>
+        /// <param name="inputs">第三方相關參數</param>
+        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
+        /// <returns></returns>
+        public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString)
+        {
+            var config = new NineWConfig(inputs);
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getBalance";
+            var sParam = $"cert={config.Cert}&alluser=0&userIds={tpUserNameString}";
+
+            var json = HttpPost(apiUrl, sParam, ContentType);
+            var result = FromJson<NineWResult>(json);
+
+            if (result.status != "1")
+            {
+                return new ApiResult<List<ReceiveTpUserBalanceModel>>()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    Message = "fail",
+                    RawErrorCode = result.status,
+                    RawMessage = json,
+                };
+            }
+
+            return new ApiResult<List<ReceiveTpUserBalanceModel>>()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = "ok",
+                Data = result.BalaceResult.Select(x => new ReceiveTpUserBalanceModel
+                {
+                    TpUserName = x.userId,
+                    Balance = x.balance,
+                    ErrorCode = ErrorCode.Success
+                }).ToList()
+            };
         }
 
         private class NineWConfig
