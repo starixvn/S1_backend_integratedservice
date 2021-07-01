@@ -165,8 +165,8 @@ namespace ThirdPartyService.Service.Worker
 
                     //如果是第一次跑排程，要在整點跑(0~10分內跑)
                     //如果不是第一次跑排程，則判斷上次執行小時(yyyyMmdd HH:00:00)與現在時間是否間隔N小時
-                    if ((firstRun && currentTime.Minute > 0 && currentTime.Minute <= 10)
-                       || (!firstRun && currentTime.Subtract(lastestRunTime).Hours >= intervalHour && (currentTime.Minute > 0 && currentTime.Minute <= 20)))
+                    if ((firstRun && currentTime.Minute >= 0 && currentTime.Minute <= 10)
+                       || (!firstRun && currentTime.Subtract(lastestRunTime).Hours >= intervalHour && (currentTime.Minute >= 0 && currentTime.Minute <= 20)))
 
                     {
                         return true;
