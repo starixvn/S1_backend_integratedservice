@@ -34,11 +34,11 @@ namespace ThirdPartySeamlessWallet.Service.Library
         {
             if (ex != null)
             {
-                _logger.LogError(ex, ErrorContent, PrefixName);
+                _logger.LogError(ex, $"{ErrorContent}, PrefixName:{PrefixName}");
             }
             else
             {
-                _logger.LogError(ErrorContent, PrefixName );
+                _logger.LogError($"{ErrorContent}, PrefixName:{PrefixName}");
             }
 
             var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now.ToString("yyyyMMdd")}.log";
