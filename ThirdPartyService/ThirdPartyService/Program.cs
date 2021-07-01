@@ -25,7 +25,7 @@ namespace ThirdPartyService
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) 
+        public static IHostBuilder CreateHostBuilder(string[] args)
             => Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
@@ -48,6 +48,10 @@ namespace ThirdPartyService
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<WorkerService>();
+                    if (Configuration.GetSection("GetTpBalanceParam:RunGetBalanceWorker").Get<bool>())
+                    {
+                        services.AddHostedService<GetBalanceWorker>();
+                    }
                 });
     }
 }

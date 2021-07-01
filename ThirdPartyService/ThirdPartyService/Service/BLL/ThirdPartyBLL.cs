@@ -11,36 +11,73 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
+using ThirdPartyService.Service.Model;
+using ThirdPartyService.Extensions;
+using System.Transactions;
 
 namespace ThirdPartyService.Service.BLL
 {
     public class ThirdPartyBLL
     {
+        #region Fields
+
         private readonly IWebHostEnvironment env;
         private readonly IConfiguration configuration;
-        private readonly TpCustInfoService tpCustInfoService;
+        private readonly ILogger<ThirdPartyBLL> _logger;
+        private readonly Log2File log2File;
+
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpTransferInfo tpTransferInfo;
-        private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
-        private readonly Log2File log2File;
-        private readonly ILogger<ThirdPartyBLL> _logger;
 
-        public ThirdPartyBLL(IConfiguration configuration, IWebHostEnvironment env, TpCustInfoService tpCustInfoService,
-            ThirdPartyHelper thirdPartyHelper, TpTransferInfo tpTransferInfo,
-            TpTransferBonusInfoService tpTransferBonusInfoService, AuthBLL authBLL, Log2File log2File,
-            ILogger<ThirdPartyBLL> logger)
+        private readonly TpCustInfoService tpCustInfoService;
+        private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
+        private readonly ServerInfoService _serverInfoService;
+        private readonly TpCustBalanceService _tpCustBalanceService;
+#if DEBUG
+        /// <summary>
+        /// PT異常客戶清單(測試機)，共13筆
+        /// </summary>
+        private readonly int[] PTWrongCustList = new int[] { 1342, 249646, 249688, 249768, 249782, 249784, 249827, 249832, 249835, 249862, 249863, 249864, 249892 };
+
+        /// <summary>
+        /// 9W異常客戶清單(測試機)，共11筆
+        /// </summary>
+        private readonly int[] NineWWrongCustList = new int[] { 565, 602, 1017, 127559, 249667, 249745, 249814, 249874, 249951, 250066, 249951 };
+#endif
+        #endregion
+
+        #region Constructors
+
+        public ThirdPartyBLL(IConfiguration configuration,
+                                 IWebHostEnvironment env,
+                                 ILogger<ThirdPartyBLL> logger,
+                                 Log2File log2File,
+                                 ThirdPartyHelper thirdPartyHelper,
+                                 TpTransferInfo tpTransferInfo,
+                                 TpCustInfoService tpCustInfoService,
+                                 TpTransferBonusInfoService tpTransferBonusInfoService,
+                                 ServerInfoService serverInfoService,
+                                 TpCustBalanceService tpCustBalanceService,
+                                 AuthBLL authBLL)
         {
-            this.tpCustInfoService = tpCustInfoService;
-            this.thirdPartyHelper = thirdPartyHelper;
-            this.tpTransferInfo = tpTransferInfo;
             this.env = env;
             this.configuration = configuration;
+            _logger = logger;
+            this.log2File = log2File;
+
+            this.thirdPartyHelper = thirdPartyHelper;
+            this.tpTransferInfo = tpTransferInfo;
+
+            this.tpCustInfoService = tpCustInfoService;
+            this.tpTransferBonusInfoService = tpTransferBonusInfoService;
+            _serverInfoService = serverInfoService;
+            _tpCustBalanceService = tpCustBalanceService;
+
             ThirdPartyHelperBase.AuthProvider = authBLL;
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
-            this.tpTransferBonusInfoService = tpTransferBonusInfoService;
-            this.log2File = log2File;
-            _logger = logger;
         }
+
+        #endregion
 
         public ApiResult GotoGame(TpInfo tpInfo)
         {
@@ -54,7 +91,7 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.Message = $"Language Id: {tpInfo.LangId} has not found.";
                 return apiResult;
             }
-            
+
             // free game no need to login
             if (tpInfo.inputs.ContainsKey("fun") && tpInfo.inputs["fun"].Equals("1", StringComparison.OrdinalIgnoreCase))
             {
@@ -233,7 +270,7 @@ namespace ThirdPartyService.Service.BLL
             {
                 ErrorCode = ErrorCode.SystemError
             };
-            
+
             try
             {
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
@@ -604,5 +641,360 @@ namespace ThirdPartyService.Service.BLL
             }
             return apiResult;
         }
+
+        /// <summary>
+        /// 取指定條件玩家的第三方餘額
+        /// </summary>
+        /// <param name="tpId">第三方ID</param>
+        /// <param name="siteId">平台ID</param>
+        /// <param name="balanceDatas">餘額資料</param>
+        public void GetBalance(int tpId,
+                               int siteId,
+                               out List<TpCustBalanceModel> balanceDatas)
+        {
+            balanceDatas = new List<TpCustBalanceModel>();
+
+            try
+            {
+                _logger.LogInformation($"GetBalanceWorker-GetBalance-Start_"
+                                       + $"TpId={tpId} SiteId={siteId} "
+                                       + $"EndTime={DateTime.UtcNow.AddHours(8)}");
+
+                //log2File.Info($"GetBalanceWorker-GetBalance-Start_"
+                //                       + $"TpId={tpId} SiteId={siteId} "
+                //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+
+                var custInfoList = GetTpCustInfoList(tpId, siteId);
+
+                if (tpId == (int)TpEnum.NineW || tpId == (int)TpEnum.Saba)
+                {
+                    if (GetBalanceAtSameTime(tpId, siteId, custInfoList,
+                                             out List<TpCustBalanceModel> datasResult))
+                    {
+                        balanceDatas.AddRange(datasResult);
+                    }
+                }
+                else
+                {
+                    if (GetBalanceInOrder(custInfoList,
+                                             out List<TpCustBalanceModel> datasResult))
+                    {
+                        balanceDatas.AddRange(datasResult);
+                    }
+                }
+
+                _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
+                                       + $"TpId={tpId} SiteId={siteId} "
+                                       + $"EndTime={DateTime.UtcNow.AddHours(8)}");
+
+                //log2File.Info($"GetBalanceWorker-GetBalance-End_"
+                //                       + $"TpId={tpId} SiteId={siteId} "
+                //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+
+                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
+                //                       + $"TpId={tpId} SiteId={siteId} "
+                //                       + $"ex={ex}", "GetBalanceWorker");
+
+                return;
+            }
+        }
+
+        /// <summary>
+        /// 新增餘額資料
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <param name="timeString">資料所屬時間</param>
+        /// <param name="datas">資料</param>
+        public void InsertBalance(string tableDate,
+                                  string timeString,
+                                  List<TpCustBalanceModel> datas)
+        {
+
+            _logger.LogInformation($"GetBalanceWorker-InsertBalance-Start_"
+                                       + $"StartTime={DateTime.UtcNow.AddHours(8)}");
+
+            //log2File.Info($"GetBalanceWorker-InsertBalance-Start_"
+            //                           + $"StartTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+
+            foreach (var data in datas.OrderBy(x => x.TpId).ThenBy(x => x.CustId))
+            {
+                var result = InsertBalance(tableDate, timeString, data);
+
+                if (result == 0)
+                {
+                    _logger.LogWarning($"GetBalanceWorker-InsertBalance-Warning_"
+                                       + $"TableDate={tableDate} TimeString={timeString}"
+                                       + $"BalanceData={JsonConvert.SerializeObject(data)}"
+                                       + "Insert balance data fail.");
+
+                    //log2File.Error($"GetBalanceWorker-InsertBalance-Warning_"
+                    //                   + $"TableDate={tableDate} TimeString={timeString}"
+                    //                   + $"BalanceData={JsonConvert.SerializeObject(data)}"
+                    //                   + "Insert balance data fail.", "GetBalanceWorker");
+                }
+            }
+
+            _logger.LogInformation($"GetBalanceWorker-InsertBalance-End_"
+                                   + $"EndTime={DateTime.UtcNow.AddHours(8)}");
+
+            //log2File.Info($"GetBalanceWorker-InsertBalance-End_"
+            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+
+        }
+
+        /// <summary>
+        /// 取得最近一次執行排程時間
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <returns></returns>
+        public DateTime? GetLastestRunTime(string tableDate)
+        {
+            int i = 0; bool tableExist = false;
+            for (i = Convert.ToInt32(tableDate); i > 20210701; i--)
+            {
+                if (CheckTpCustBalanceCourseTable(i.ToString()))
+                {
+                    tableExist = true;
+                    break;
+                }
+            }
+
+            if (tableExist)
+            {
+                return GetLastestRunTime(i);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 檢查第三方餘額資料表是否存在
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <returns></returns>
+        public bool CheckTpCustBalanceCourseTable(string tableDate)
+        {
+            var checkResult = _tpCustBalanceService.CheckTpCustBalanceCourseTable(tableDate);
+
+            if (checkResult != $"TpCustBalanceCourse_{tableDate}")
+            {
+                return false; //not exist;
+            }
+            else
+            {
+                return true; //exist;
+            }
+        }
+
+        /// <summary>
+        /// 新增第三方餘額資料表
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <returns></returns>
+        public bool CreateTpCustBalanceCourseTable(string tableDate)
+        {
+            return _tpCustBalanceService.CreateTpCustBalanceCourseTable(tableDate);
+        }
+
+        /// <summary>
+        /// 刪除第三方餘額資料表
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <returns></returns>
+        public bool DropTpCustBalanceCourseTable(string tableDate)
+        {
+            return _tpCustBalanceService.DropTpCustBalanceCourseTable(tableDate);
+        }
+
+        #region Private Methods
+
+        /// <summary>
+        /// 取得最近一次執行排程時間
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <returns></returns>
+        private DateTime GetLastestRunTime(int tableDate)
+        {
+            return Convert.ToDateTime(_tpCustBalanceService.GetLastestRunTime(tableDate.ToString()));
+        }
+
+        /// <summary>
+        /// 取得第三方客戶的清單
+        /// </summary>
+        /// <param name="tpId">第三方ID</param>
+        /// <returns></returns>
+        private IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(int tpId, int siteId)
+        {
+            return tpCustInfoService.GetTpCustInfoList(tpId, siteId);
+        }
+
+        /// <summary>
+        /// 同時取得第三方客戶餘額
+        /// </summary>
+        /// <param name="tpId">第三方ID</param>
+        /// <param name="siteId">平台ID</param>
+        /// <param name="custInfoList">客戶資料清單</param>
+        /// <param name="balanceDatas">餘額資料</param>
+        /// <returns></returns>
+        private bool GetBalanceAtSameTime(int tpId,
+                                          int siteId,
+                                          IEnumerable<BalanceTpCustInfoModel> custInfoList,
+                                          out List<TpCustBalanceModel> balanceDatas)
+        {
+            balanceDatas = new List<TpCustBalanceModel>();
+            var tpHelper = (IThirdPartyGetBalanceParticular)thirdPartyHelper.GetThirdPartyHelper(tpId, siteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+#if DEBUG
+            if (env.EnvironmentName != "Production" && tpId == (int)TpEnum.NineW)
+            {
+                custInfoList = custInfoList.Where(x => !NineWWrongCustList.Any(y => y == x.CustId));
+            }
+#endif
+            var tpUserNameString = string.Join(",", custInfoList.Select(x => x.TpUserName));
+
+            var balanceResult = tpHelper.GetBalance(inputs, tpUserNameString);
+
+            if (balanceResult.ErrorCode != ErrorCode.Success)
+            {
+                _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                       + $"TpId={tpId} SiteId={siteId}" +
+                                       " Not Success when get this condiction datas.");
+
+                //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                //                       + $"TpId={tpId} SiteId={siteId}" +
+                //                       " Not Success when get this condiction datas.", "GetBalanceWorker");
+                return false;
+            }
+
+            foreach (var cust in custInfoList)
+            {
+
+                var data = balanceResult.Data.Where(x => x.TpUserName == cust.TpUserName
+                                                    || x.TpUserName == (cust.TpUserName).ToLower())
+                                             .FirstOrDefault();
+
+                if (data == null)
+                {
+                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                           + $"TpId={tpId} SiteId={siteId}" +
+                                           $" CustId={cust.CustId}.Can't get this cust data.");
+
+                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                    //                       + $"TpId={tpId} SiteId={siteId}" +
+                    //                       $" CustId={cust.CustId}.Can't get this cust data.", "GetBalanceWorker");
+                    continue;
+                }
+                else if (data.ErrorCode != 0)
+                {
+                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                           + $" TpId={tpId} SiteId={siteId}" +
+                                           $" CustId={cust.CustId}.Not Success when get this cust data.");
+
+                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                    //                       + $" TpId={tpId} SiteId={siteId}" +
+                    //                       $" CustId={cust.CustId}.Not Success when get this cust data.", "GetBalanceWorker");
+                    continue;
+                }
+
+                balanceDatas.Add(new TpCustBalanceModel
+                {
+                    TpId = cust.TpId,
+                    CustId = cust.CustId,
+                    SiteId = cust.SiteId,
+                    CurrencyId = cust.CurrencyId,
+                    Balance = (cust.ExchangeRate > 0 && cust.ExchangeRate != 1)
+                              ? data.Balance * cust.ExchangeRate
+                              : data.Balance
+                });
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 依序取得第三方客戶餘額
+        /// </summary>
+        /// <param name="custInfoList">客戶資料清單</param>
+        /// <param name="balanceDatas">餘額資料</param>
+        /// <returns></returns>
+        private bool GetBalanceInOrder(IEnumerable<BalanceTpCustInfoModel> custInfoList,
+                                       out List<TpCustBalanceModel> balanceDatas)
+        {
+            balanceDatas = new List<TpCustBalanceModel>();
+            //Tp don't have API for All user.Just can get one by one.
+            foreach (var cust in custInfoList)
+            {
+#if DEBUG
+                if (env.EnvironmentName != "Production" && cust.TpId == (int)TpEnum.PT)
+                {
+                    if (PTWrongCustList.Contains(cust.CustId))
+                    {
+                        continue;
+                    }
+                }
+#endif
+                var balanceResult = GetBalance(new TpInfo
+                {
+                    TpId = cust.TpId,
+                    CustId = cust.CustId,
+                    SiteId = cust.SiteId
+                });
+
+                if (balanceResult == null)
+                {
+                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                           + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
+                                           $" CustId={cust.CustId}.Get Data Fail.");
+
+                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                    //                       + $" TpId={tpId} SiteId={siteId}" +
+                    //                       $" CustId={cust.CustId}.Get Data Fail.", "GetBalanceWorker");
+                    continue;
+                }
+                else if (balanceResult.ErrorCode != ErrorCode.Success)
+                {
+                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                           + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
+                                           $" CustId={cust.CustId}.Not success when get this cust data.");
+
+                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                    //                       + $" TpId={tpId} SiteId={siteId}" +
+                    //                       $" CustId={cust.CustId}.Not success when get this cust data.", "GetBalanceWorker");
+                    continue;
+                }
+
+                balanceDatas.Add(new TpCustBalanceModel
+                {
+                    TpId = cust.TpId,
+                    CustId = cust.CustId,
+                    SiteId = cust.SiteId,
+                    CurrencyId = cust.CurrencyId,
+                    Balance = balanceResult.Data.balance
+                });
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 新增客戶餘額資料
+        /// </summary>
+        /// <param name="tableDate">資料表日期</param>
+        /// <param name="timeString">所屬其實間</param>
+        /// <param name="balanceData">客戶餘額資料</param>
+        /// <returns></returns>
+        private int InsertBalance(string tableDate, string timeString, TpCustBalanceModel balanceData)
+        {
+            return _tpCustBalanceService.InsertBalance(tableDate, timeString, balanceData);
+        }
+
+        #endregion
     }
 }
