@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Org.BouncyCastle.Asn1.Cms;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -51,6 +52,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleAMB;
         private Timer timerSettle9W;
         private Timer timerSettleKM;
+        private Timer timerSettleJILIRng;
+        private Timer timerSettleJILIFish;
+        private Timer timerSettleMG;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -115,6 +119,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -210,14 +217,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAG");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAG", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "SettleAG");
+                log2File.Error(ex.ToString(), "SettleAG", ex);
                 isError = true;
             }
             finally
@@ -283,6 +290,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                                 result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
+                                    settledBLL.SetSettleFlag_DG(unsettled.TransId);
+                                });
+                            }
+                            else if (result == -1)
+                            {
                                 Task.Run(() =>
                                 {
                                     settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
@@ -940,7 +955,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 SettlementType = SettlementType.SettledForValidNotRollover
                             };
 
-                           
+
                             if (stake == 0 && validBet == 0 && winLostAmount == 0)
                             {
                                 settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
@@ -1107,6 +1122,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W?.Change(Timeout.Infinite, 0);
             timerSettleKM?.Change(Timeout.Infinite, 0);
             timerSettleAMB?.Change(Timeout.Infinite, 0);
+            timerSettleJILIRng?.Change(Timeout.Infinite, 0);
+            timerSettleJILIFish?.Change(Timeout.Infinite, 0);
+            timerSettleMG?.Change(Timeout.Infinite, 0);
+
             return Task.CompletedTask;
         }
     }

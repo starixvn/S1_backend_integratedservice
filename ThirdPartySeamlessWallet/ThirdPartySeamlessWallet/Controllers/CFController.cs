@@ -215,7 +215,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status_code = "500";
                 getBetResp.status_text = "system busy";
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"CF_Bet");
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"CF_Bet", ex);
                 throw ex;
             }
 
@@ -249,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getCancelBetResp.status_code = "500";
                 getCancelBetResp.status_text = "system busy";
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getCancelBetResp)}\r\n{ex}", $"CF_Cancel_Bet");
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getCancelBetResp)}\r\n{ex}", $"CF_Cancel_Bet", ex);
                 throw ex;
             }
 

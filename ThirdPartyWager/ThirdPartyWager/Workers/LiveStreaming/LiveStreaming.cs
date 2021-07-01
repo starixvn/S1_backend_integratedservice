@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers
 {
@@ -66,8 +67,8 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 isError = true;
-                logger.LogError(ex.Message);
-                log2File.Error(ex.ToString(), "LiveStreaming");
+                logger.LogError(ex, GetCurrentAsyncMethod());
+                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {

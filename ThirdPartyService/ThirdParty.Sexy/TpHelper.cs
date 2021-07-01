@@ -11,11 +11,12 @@ namespace ThirdParty.Sexy
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<string, int> currencyIdMapping = new Dictionary<string, int>() {
-            {"MYR",1 },//MYR
-            {"CNY",3 },//CNY
-            {"IDR",6 },//IDR
-            {"THB",9 },//THB
-            {"VND",11 }//VND
+            {"MYR",1 },
+            {"CNY",3 },
+            {"IDR",6 },
+            {"THB",9 },
+            {"VND",11 },
+            {"INR",15 },
         };
 
         private readonly Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
@@ -122,6 +123,14 @@ namespace ThirdParty.Sexy
             getKeyReq.currency = currencyIdMapping[tpCustInfo.TpCurrencyId];
             getKeyReq.user = tpCustInfo.TpUserName;
             getKeyReq.betLimitIds = inputs[betLimitIdKey];
+            if (!IsDevelopment && tpCustInfo.CustId == 61920)
+            {
+                /* 
+                 Nova88_61920  IDR member can change his bet limit to 5-500
+                 MexNova88net已為您在正式環境新增限紅10603 IDR 5-500
+                */
+                getKeyReq.betLimitIds = "10603";
+            }
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(getKeyReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());

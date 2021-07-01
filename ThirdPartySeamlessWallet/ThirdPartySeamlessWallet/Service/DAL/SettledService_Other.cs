@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_settle");
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_settle", mySqlEx);
                 }
             }
 
@@ -358,7 +358,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_unsettle");
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_unsettle", mySqlEx);
                 }
             }
 
@@ -426,7 +426,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_voidSettle");
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_voidSettle", mySqlEx);
                 }
             }
 
@@ -494,7 +494,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     isError = true;
-                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_unvoidSettle");
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"AWC_unvoidSettle", mySqlEx);
                 }
             }
 

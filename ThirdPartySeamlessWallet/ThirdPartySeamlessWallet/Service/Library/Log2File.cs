@@ -34,8 +34,13 @@ namespace ThirdPartySeamlessWallet.Service.Library
         {
             if (ex != null)
             {
-                _logger.LogError(ex, ErrorContent, new string[]{ PrefixName });
+                _logger.LogError(ex, ErrorContent, PrefixName);
             }
+            else
+            {
+                _logger.LogError(ErrorContent, PrefixName );
+            }
+
             var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now.ToString("yyyyMMdd")}.log";
             Task.Run(() =>
             {

@@ -33,14 +33,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSGFish");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSGFish", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "SettleSGFish");
+                log2File.Error(ex.ToString(), "SettleSGFish", ex);
                 isError = true;
             }
             finally
@@ -112,14 +112,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
@@ -185,14 +185,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
@@ -259,6 +259,79 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error(ex.ToString(), logName, ex);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleYLFish.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private void DoSettleJILIFishWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.JILI;
+            var gameType = GameType.JILI_Fish;
+            var category = TpCategory.Fish;
+            string logName = "Settle_JILI_Fish";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledList_JILI((int)category);
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.ValidBet;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = unsettled.Stake,
+                                ValidBet = unsettled.ValidBet,
+                                WinlostAmount = unsettled.WinLostAmount,
+                                TransId = unsettled.TransId.ToString(),
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus
+                            };
+
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            settledBLL.SetSettleFlag_JILI((int)category, unsettled.TransId);
+                        }
+                        catch (Exception ex1)
+                        {
+                            isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                         }
                     }
@@ -282,9 +355,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleYLFish.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleJILIFish.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
     }
 }

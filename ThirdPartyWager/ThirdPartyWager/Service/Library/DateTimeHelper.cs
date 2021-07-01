@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Service.Library
 
     public class DateTimeHelper
     {
-        public TimeCast GetTimeByMinute(int period, int utc, string format, DateTime timerTime)
+        public TimeCast GetTimeByMinute(int period, int utc, string format, DateTime timerTime, int utcMinute = 0)
         {
             DateTime current = timerTime;
 
@@ -44,8 +44,8 @@ namespace ThirdPartyWager.Service.Library
 
             var beginAt = new DateTimeOffset(timeBase);
             var endAt = new DateTimeOffset(dEndTime);
-            var startTime = beginAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
-            var endTime = endAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
+            var startTime = beginAt.ToOffset(new TimeSpan(utc, utcMinute, 0)).ToString(format);
+            var endTime = endAt.ToOffset(new TimeSpan(utc, utcMinute, 0)).ToString(format);
             long startUnix = beginAt.ToUnixTimeSeconds();
             long endUnix = endAt.ToUnixTimeSeconds();
 
