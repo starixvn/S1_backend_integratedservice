@@ -35,7 +35,8 @@ namespace CommonService
             services.Configure<Dictionary<string, OTPSMSServiceConfig>>(Configuration.GetSection("OTPSMSServiceConfig"));
             services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
-
+            services.Configure<Dictionary<string, FireBaseConfig>>(Configuration.GetSection("FireBaseConfig"));
+            
 
             services.AddMemoryCache();
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
@@ -61,7 +62,7 @@ namespace CommonService
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
             services.AddSingleton<LiveStreamingBLL>();
-
+            services.AddSingleton<FireBaseBLL>();
             services.AddSingleton<Tools>();
 
             services.AddControllers();
