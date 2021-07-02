@@ -67,8 +67,6 @@ namespace ThirdPartyService.Service.Worker
 
             if (execCount == 1)
             {
-                var success = true;
-
                 try
                 {
                     DateTime currentTime = DateTime.UtcNow;
@@ -106,11 +104,8 @@ namespace ThirdPartyService.Service.Worker
                             DropTable(currentTime);
                         }
 
-                        if (success)
-                        {
-                            lastestProcessTime = DateTime.UtcNow;
-                            firstRun = false;
-                        }
+                        lastestProcessTime = DateTime.UtcNow;
+                        firstRun = false;
 
                         _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}");
                         //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
@@ -121,7 +116,6 @@ namespace ThirdPartyService.Service.Worker
                 }
                 catch (Exception ex)
                 {
-                    success = false;
                     _logger.LogError(ex, MethodExtension.GetCurrentMethod());
                 }
                 finally
