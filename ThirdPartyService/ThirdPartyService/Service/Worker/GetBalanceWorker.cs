@@ -67,8 +67,6 @@ namespace ThirdPartyService.Service.Worker
 
             if (execCount == 1)
             {
-                var success = true;
-
                 try
                 {
                     DateTime currentTime = DateTime.UtcNow;
@@ -106,11 +104,8 @@ namespace ThirdPartyService.Service.Worker
                             DropTable(currentTime);
                         }
 
-                        if (success)
-                        {
-                            lastestProcessTime = DateTime.UtcNow;
-                            firstRun = false;
-                        }
+                        lastestProcessTime = DateTime.UtcNow;
+                        firstRun = false;
 
                         _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}");
                         //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
@@ -121,7 +116,6 @@ namespace ThirdPartyService.Service.Worker
                 }
                 catch (Exception ex)
                 {
-                    success = false;
                     _logger.LogError(ex, MethodExtension.GetCurrentMethod());
                 }
                 finally
@@ -165,8 +159,8 @@ namespace ThirdPartyService.Service.Worker
 
                     //如果是第一次跑排程，要在整點跑(0~10分內跑)
                     //如果不是第一次跑排程，則判斷上次執行小時(yyyyMmdd HH:00:00)與現在時間是否間隔N小時
-                    if ((firstRun && currentTime.Minute > 0 && currentTime.Minute <= 10)
-                       || (!firstRun && currentTime.Subtract(lastestRunTime).Hours >= intervalHour && (currentTime.Minute > 0 && currentTime.Minute <= 20)))
+                    if ((firstRun && currentTime.Minute >= 0 && currentTime.Minute <= 10)
+                       || (!firstRun && currentTime.Subtract(lastestRunTime).Hours >= intervalHour && (currentTime.Minute >= 0 && currentTime.Minute <= 20)))
 
                     {
                         return true;

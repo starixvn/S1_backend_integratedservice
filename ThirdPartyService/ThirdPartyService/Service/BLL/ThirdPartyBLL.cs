@@ -40,9 +40,9 @@ namespace ThirdPartyService.Service.BLL
         private readonly int[] PTWrongCustList = new int[] { 1342, 249646, 249688, 249768, 249782, 249784, 249827, 249832, 249835, 249862, 249863, 249864, 249892 };
 
         /// <summary>
-        /// 9W異常客戶清單(測試機)，共11筆
+        /// 9W異常客戶清單(測試機)，共12筆
         /// </summary>
-        private readonly int[] NineWWrongCustList = new int[] { 565, 602, 1017, 127559, 249667, 249745, 249814, 249874, 249951, 250066, 249951 };
+        private readonly int[] NineWWrongCustList = new int[] { 565, 602, 1017, 127559, 249667, 249745, 249814, 249874, 249951, 250066, 249951, 250057 };
 #endif
         #endregion
 
@@ -654,55 +654,42 @@ namespace ThirdPartyService.Service.BLL
         {
             balanceDatas = new List<TpCustBalanceModel>();
 
-            try
+            _logger.LogInformation($"GetBalanceWorker-GetBalance-Start_"
+                                   + $"TpId={tpId} SiteId={siteId} "
+                                   + $"EndTime={DateTime.UtcNow.AddHours(8)}");
+
+            //log2File.Info($"GetBalanceWorker-GetBalance-Start_"
+            //                       + $"TpId={tpId} SiteId={siteId} "
+            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+
+            var custInfoList = GetTpCustInfoList(tpId, siteId);
+
+            if (tpId == (int)TpEnum.NineW || tpId == (int)TpEnum.Saba)
             {
-                _logger.LogInformation($"GetBalanceWorker-GetBalance-Start_"
-                                       + $"TpId={tpId} SiteId={siteId} "
-                                       + $"EndTime={DateTime.UtcNow.AddHours(8)}");
-
-                //log2File.Info($"GetBalanceWorker-GetBalance-Start_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
-                var custInfoList = GetTpCustInfoList(tpId, siteId);
-
-                if (tpId == (int)TpEnum.NineW || tpId == (int)TpEnum.Saba)
+                if (GetBalanceAtSameTime(tpId, siteId, custInfoList,
+                                         out List<TpCustBalanceModel> datasResult))
                 {
-                    if (GetBalanceAtSameTime(tpId, siteId, custInfoList,
-                                             out List<TpCustBalanceModel> datasResult))
-                    {
-                        balanceDatas.AddRange(datasResult);
-                    }
+                    balanceDatas.AddRange(datasResult);
                 }
-                else
-                {
-                    if (GetBalanceInOrder(custInfoList,
-                                             out List<TpCustBalanceModel> datasResult))
-                    {
-                        balanceDatas.AddRange(datasResult);
-                    }
-                }
-
-                _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
-                                       + $"TpId={tpId} SiteId={siteId} "
-                                       + $"EndTime={DateTime.UtcNow.AddHours(8)}");
-
-                //log2File.Info($"GetBalanceWorker-GetBalance-End_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
-                return;
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
-
-                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"ex={ex}", "GetBalanceWorker");
-
-                return;
+                if (GetBalanceInOrder(custInfoList,
+                                         out List<TpCustBalanceModel> datasResult))
+                {
+                    balanceDatas.AddRange(datasResult);
+                }
             }
+
+            _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
+                                   + $"TpId={tpId} SiteId={siteId} "
+                                   + $"EndTime={DateTime.UtcNow.AddHours(8)}");
+
+            //log2File.Info($"GetBalanceWorker-GetBalance-End_"
+            //                       + $"TpId={tpId} SiteId={siteId} "
+            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+
+            return;
         }
 
         /// <summary>
@@ -850,73 +837,86 @@ namespace ThirdPartyService.Service.BLL
                                           out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
-            var tpHelper = (IThirdPartyGetBalanceParticular)thirdPartyHelper.GetThirdPartyHelper(tpId, siteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
-            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            try
+            {
+                var tpHelper = (IThirdPartyGetBalanceParticular)thirdPartyHelper.GetThirdPartyHelper(tpId, siteId);
+                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 #if DEBUG
-            if (env.EnvironmentName != "Production" && tpId == (int)TpEnum.NineW)
-            {
-                custInfoList = custInfoList.Where(x => !NineWWrongCustList.Any(y => y == x.CustId));
-            }
+                if (env.EnvironmentName != "Production" && tpId == (int)TpEnum.NineW)
+                {
+                    custInfoList = custInfoList.Where(x => !NineWWrongCustList.Any(y => y == x.CustId));
+                }
 #endif
-            var tpUserNameString = string.Join(",", custInfoList.Select(x => x.TpUserName));
+                var tpUserNameString = string.Join(",", custInfoList.Select(x => x.TpUserName));
 
-            var balanceResult = tpHelper.GetBalance(inputs, tpUserNameString);
+                var balanceResult = tpHelper.GetBalance(inputs, tpUserNameString);
 
-            if (balanceResult.ErrorCode != ErrorCode.Success)
-            {
-                _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                       + $"TpId={tpId} SiteId={siteId}" +
-                                       " Not Success when get this condiction datas.");
-
-                //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                //                       + $"TpId={tpId} SiteId={siteId}" +
-                //                       " Not Success when get this condiction datas.", "GetBalanceWorker");
-                return false;
-            }
-
-            foreach (var cust in custInfoList)
-            {
-
-                var data = balanceResult.Data.Where(x => x.TpUserName == cust.TpUserName
-                                                    || x.TpUserName == (cust.TpUserName).ToLower())
-                                             .FirstOrDefault();
-
-                if (data == null)
+                if (balanceResult.ErrorCode != ErrorCode.Success)
                 {
                     _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $"TpId={tpId} SiteId={siteId}" +
-                                           $" CustId={cust.CustId}.Can't get this cust data.");
+                                           " Not Success when get this condiction datas.");
 
                     //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
                     //                       + $"TpId={tpId} SiteId={siteId}" +
-                    //                       $" CustId={cust.CustId}.Can't get this cust data.", "GetBalanceWorker");
-                    continue;
-                }
-                else if (data.ErrorCode != 0)
-                {
-                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                           + $" TpId={tpId} SiteId={siteId}" +
-                                           $" CustId={cust.CustId}.Not Success when get this cust data.");
-
-                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                    //                       + $" TpId={tpId} SiteId={siteId}" +
-                    //                       $" CustId={cust.CustId}.Not Success when get this cust data.", "GetBalanceWorker");
-                    continue;
+                    //                       " Not Success when get this condiction datas.", "GetBalanceWorker");
+                    return false;
                 }
 
-                balanceDatas.Add(new TpCustBalanceModel
+                foreach (var cust in custInfoList)
                 {
-                    TpId = cust.TpId,
-                    CustId = cust.CustId,
-                    SiteId = cust.SiteId,
-                    CurrencyId = cust.CurrencyId,
-                    Balance = (cust.ExchangeRate > 0 && cust.ExchangeRate != 1)
-                              ? data.Balance * cust.ExchangeRate
-                              : data.Balance
-                });
+
+                    var data = balanceResult.Data.Where(x => x.TpUserName == cust.TpUserName)
+                                                 .FirstOrDefault();
+
+                    if (data == null)
+                    {
+                        _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                               + $"TpId={tpId} SiteId={siteId}" +
+                                               $" CustId={cust.CustId}.Can't get this cust data.");
+
+                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                        //                       + $"TpId={tpId} SiteId={siteId}" +
+                        //                       $" CustId={cust.CustId}.Can't get this cust data.", "GetBalanceWorker");
+                        continue;
+                    }
+                    else if (data.ErrorCode != 0)
+                    {
+                        _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                               + $" TpId={tpId} SiteId={siteId}" +
+                                               $" CustId={cust.CustId}.Not Success when get this cust data.");
+
+                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                        //                       + $" TpId={tpId} SiteId={siteId}" +
+                        //                       $" CustId={cust.CustId}.Not Success when get this cust data.", "GetBalanceWorker");
+                        continue;
+                    }
+
+                    balanceDatas.Add(new TpCustBalanceModel
+                    {
+                        TpId = cust.TpId,
+                        CustId = cust.CustId,
+                        SiteId = cust.SiteId,
+                        CurrencyId = cust.CurrencyId,
+                        Balance = (cust.ExchangeRate > 0 && cust.ExchangeRate != 1)
+                                  ? data.Balance * cust.ExchangeRate
+                                  : data.Balance
+                    });
+                }
+                return true;
             }
-            return true;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+
+                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
+                //                       + $"TpId={tpId} SiteId={siteId} "
+                //                       + $"ex={ex}", "GetBalanceWorker");
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -929,58 +929,71 @@ namespace ThirdPartyService.Service.BLL
                                        out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
-            //Tp don't have API for All user.Just can get one by one.
-            foreach (var cust in custInfoList)
+
+            try
             {
-#if DEBUG
-                if (env.EnvironmentName != "Production" && cust.TpId == (int)TpEnum.PT)
+                foreach (var cust in custInfoList)
                 {
-                    if (PTWrongCustList.Contains(cust.CustId))
+#if DEBUG
+                    if (env.EnvironmentName != "Production" && cust.TpId == (int)TpEnum.PT)
                     {
+                        if (PTWrongCustList.Contains(cust.CustId))
+                        {
+                            continue;
+                        }
+                    }
+#endif
+                    var balanceResult = GetBalance(new TpInfo
+                    {
+                        TpId = cust.TpId,
+                        CustId = cust.CustId,
+                        SiteId = cust.SiteId
+                    });
+
+                    if (balanceResult == null)
+                    {
+                        _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                               + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
+                                               $" CustId={cust.CustId}.Get Data Fail.");
+
+                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                        //                       + $" TpId={tpId} SiteId={siteId}" +
+                        //                       $" CustId={cust.CustId}.Get Data Fail.", "GetBalanceWorker");
                         continue;
                     }
+                    else if (balanceResult.ErrorCode != ErrorCode.Success)
+                    {
+                        _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
+                                               + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
+                                               $" CustId={cust.CustId}.Not success when get this cust data.");
+
+                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
+                        //                       + $" TpId={tpId} SiteId={siteId}" +
+                        //                       $" CustId={cust.CustId}.Not success when get this cust data.", "GetBalanceWorker");
+                        continue;
+                    }
+
+                    balanceDatas.Add(new TpCustBalanceModel
+                    {
+                        TpId = cust.TpId,
+                        CustId = cust.CustId,
+                        SiteId = cust.SiteId,
+                        CurrencyId = cust.CurrencyId,
+                        Balance = balanceResult.Data.balance
+                    });
                 }
-#endif
-                var balanceResult = GetBalance(new TpInfo
-                {
-                    TpId = cust.TpId,
-                    CustId = cust.CustId,
-                    SiteId = cust.SiteId
-                });
-
-                if (balanceResult == null)
-                {
-                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                           + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
-                                           $" CustId={cust.CustId}.Get Data Fail.");
-
-                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                    //                       + $" TpId={tpId} SiteId={siteId}" +
-                    //                       $" CustId={cust.CustId}.Get Data Fail.", "GetBalanceWorker");
-                    continue;
-                }
-                else if (balanceResult.ErrorCode != ErrorCode.Success)
-                {
-                    _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                           + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
-                                           $" CustId={cust.CustId}.Not success when get this cust data.");
-
-                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                    //                       + $" TpId={tpId} SiteId={siteId}" +
-                    //                       $" CustId={cust.CustId}.Not success when get this cust data.", "GetBalanceWorker");
-                    continue;
-                }
-
-                balanceDatas.Add(new TpCustBalanceModel
-                {
-                    TpId = cust.TpId,
-                    CustId = cust.CustId,
-                    SiteId = cust.SiteId,
-                    CurrencyId = cust.CurrencyId,
-                    Balance = balanceResult.Data.balance
-                });
+                return true;
             }
-            return true;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+
+                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
+                //                       + $"TpId={tpId} SiteId={siteId} "
+                //                       + $"ex={ex}", "GetBalanceWorker");
+
+                return false;
+            }
         }
 
         /// <summary>
