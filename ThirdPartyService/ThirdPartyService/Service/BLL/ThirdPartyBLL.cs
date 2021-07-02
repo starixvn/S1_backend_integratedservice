@@ -791,16 +791,6 @@ namespace ThirdPartyService.Service.BLL
             return _tpCustBalanceService.CreateTpCustBalanceCourseTable(tableDate);
         }
 
-        /// <summary>
-        /// 刪除第三方餘額資料表
-        /// </summary>
-        /// <param name="tableDate">資料表日期</param>
-        /// <returns></returns>
-        public bool DropTpCustBalanceCourseTable(string tableDate)
-        {
-            return _tpCustBalanceService.DropTpCustBalanceCourseTable(tableDate);
-        }
-
         #region Private Methods
 
         /// <summary>

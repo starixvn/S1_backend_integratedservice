@@ -99,11 +99,6 @@ namespace ThirdPartyService.Service.Worker
                                                      currentTime.ToString("yyyy-MM-dd HH:00:00"),
                                                      dataResult);
 
-                        if (currentTime.Hour == 0)
-                        {
-                            DropTable(currentTime);
-                        }
-
                         lastestProcessTime = DateTime.UtcNow;
                         firstRun = false;
 
@@ -244,28 +239,6 @@ namespace ThirdPartyService.Service.Worker
 
                 //_log2File.Info($"GetBalanceWorker-Create table "
                 //                      + $"TpCustBalanceCourse{currentTime.ToString("yyyyMMdd")} "
-                //                      + $"At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-            }
-        }
-
-        /// <summary>
-        /// 刪除資料表
-        /// </summary>
-        /// <param name="currentTime">目前時間</param>
-        private void DropTable(DateTime currentTime)
-        {
-            int day = _configuration.GetValue<int>("GetTpBalanceParam:KeepDataWithinDay") * -1;
-
-            if (_thirdPartyBLL.CheckTpCustBalanceCourseTable(currentTime.AddDays(day).ToString("yyyyMMdd")))
-            {
-                _thirdPartyBLL.DropTpCustBalanceCourseTable(currentTime.AddDays(day).ToString("yyyyMMdd"));
-
-                _logger.LogInformation($"GetBalanceWorker-Drop table "
-                                      + $"TpCustBalanceCourse{currentTime.AddDays(day).ToString("yyyyMMdd")} "
-                                      + $"At {DateTime.UtcNow.AddHours(8)}");
-
-                //_log2File.Info($"GetBalanceWorker-Drop table "
-                //                      + $"TpCustBalanceCourse{currentTime.AddDays(day).ToString("yyyyMMdd")} "
                 //                      + $"At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
             }
         }

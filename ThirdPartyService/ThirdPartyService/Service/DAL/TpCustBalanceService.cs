@@ -72,18 +72,6 @@ namespace ThirdPartyService.Service.DAL
         }
 
         /// <summary>
-        /// 刪除第三方客戶餘額歷程表
-        /// </summary>
-        /// <param name="tableDate">資料表日期</param>
-        /// <returns></returns>
-        public bool DropTpCustBalanceCourseTable(string tableDate)
-        {
-            var parameter = new DynamicParameters();
-            parameter.Add("_TableDate", tableDate);
-            return _mainDbClient.Execute("Service_TpCustBalanceCourse_DropTable", parameter);
-        }
-
-        /// <summary>
         /// 新增餘額
         /// </summary>
         /// <param name="tableDate">資料表日期</param>
