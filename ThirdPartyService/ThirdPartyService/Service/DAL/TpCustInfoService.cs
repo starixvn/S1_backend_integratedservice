@@ -176,5 +176,20 @@ namespace ThirdPartyService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<CustWalletModel>("Service_CustWallet_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
         }
+
+        /// <summary>
+        /// 取得指定第三方客戶資訊清單
+        /// </summary>
+        /// <param name="tpId">第三方ID</param>
+        /// <param name="siteId">平台ID</param>
+        /// <returns></returns>
+        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(int tpId, int siteId)
+        {
+            var parameter = new DynamicParameters();
+            parameter.Add("_TpId", tpId);
+            parameter.Add("_SiteId", siteId);
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
+            return conn.Query<BalanceTpCustInfoModel>("Service_TpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
+        }
     }
 }
