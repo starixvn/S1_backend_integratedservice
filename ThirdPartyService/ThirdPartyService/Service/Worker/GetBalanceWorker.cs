@@ -7,10 +7,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyCore.Model;
-using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.Library;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.Worker
 {
@@ -18,10 +18,9 @@ namespace ThirdPartyService.Service.Worker
     {
         #region Fields
 
-        private readonly IHostEnvironment _environment;
         private readonly IConfiguration _configuration;
         private readonly ILogger<GetBalanceWorker> _logger;
-        private readonly Log2File _log2File;
+        //private readonly Log2File _log2File;
         private readonly ServerInfoBLL _serverInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
@@ -30,19 +29,21 @@ namespace ThirdPartyService.Service.Worker
 
         private DateTime? lastestProcessTime = null;
         private bool firstRun = false;
+        private bool success = true;
+        private int reRun = 0;
+        private List<ParameterModel> failList = new List<ParameterModel>();
 
         #endregion
 
         #region Constructors
 
         public GetBalanceWorker(IHostEnvironment environment,
-                                IConfiguration configuration,
-                                ILogger<GetBalanceWorker> logger,
-                                 Log2File log2File,
-                                ServerInfoBLL serverInfoBLL,
-                                ThirdPartyBLL thirdPartyBLL)
+            IConfiguration configuration,
+            ILogger<GetBalanceWorker> logger,
+            Log2File log2File,
+            ServerInfoBLL serverInfoBLL,
+            ThirdPartyBLL thirdPartyBLL)
         {
-            _environment = environment;
             _configuration = configuration;
             _logger = logger;
             _log2File = log2File;
@@ -64,7 +65,6 @@ namespace ThirdPartyService.Service.Worker
         private void DoWorker(object state)
         {
             Interlocked.Increment(ref execCount);
-
             if (execCount == 1)
             {
                 try
@@ -73,38 +73,48 @@ namespace ThirdPartyService.Service.Worker
 
                     if (VerifyParameter(currentTime, lastestProcessTime))
                     {
-                        _logger.LogInformation($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)}");
+                        success = true;
+                        _logger.LogInformation($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
 
                         //_log2File.Info($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
-                        if (currentTime.Hour == 0)
-                        {
-                            CreateTable(currentTime);
-                        }
+                        CreateTable(currentTime);
 
                         var tpIdList = _configuration.GetSection("GetTpBalanceParam:TpId").Get<IEnumerable<int>>();
                         var siteList = _serverInfoBLL.GetServerInfoList();
                         var dataResult = new List<TpCustBalanceModel>();
 
-                        foreach (var tpId in tpIdList)
+                        List<ParameterModel> tpIdSiteIdList = GenerateParameterList(currentTime, tpIdList, siteList, failList);
+                        failList = new List<ParameterModel>();
+
+                        foreach (var item in tpIdSiteIdList)
                         {
-                            foreach (var site in siteList)
+                            if (!_thirdPartyBLL.GetBalance(item.TpId, item.SiteId, out var data))
                             {
-                                _thirdPartyBLL.GetBalance(tpId, site.SiteId, out var data);
+                                failList.Add(item);
+                                success = false;
+                            }
+                            else
+                            {
                                 dataResult.AddRange(data);
                             }
                         }
 
                         _thirdPartyBLL.InsertBalance(currentTime.ToString("yyyyMMdd"),
-                                                     currentTime.ToString("yyyy-MM-dd HH:00:00"),
-                                                     dataResult);
+                            currentTime.ToString("yyyy-MM-dd HH:00:00"),
+                            dataResult);
 
+                        if (success)
+                        {
+                            reRun = 0;
+                        }
+
+                        _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
+                        //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
+                        
                         lastestProcessTime = DateTime.UtcNow;
                         firstRun = false;
-
-                        _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}");
-                        //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
+                        reRun++;
                     }
 
                     Thread.Sleep(_configuration.GetValue<int>("GetTpBalanceParam:ColdDownTime") * 1000);
@@ -115,10 +125,12 @@ namespace ThirdPartyService.Service.Worker
                 }
                 finally
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(_configuration.GetValue<int>("GetTpBalanceParam:CheckTime"));
+                    TimeSpan dueTimeSpan =
+                        TimeSpan.FromSeconds(_configuration.GetValue<int>("GetTpBalanceParam:CheckTime"));
                     _timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
+
             Interlocked.Decrement(ref execCount);
         }
 
@@ -126,6 +138,19 @@ namespace ThirdPartyService.Service.Worker
         {
             _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region Private Model
+
+        /// <summary>
+        /// 參數模型
+        /// </summary>
+        private class ParameterModel
+        {
+            public int TpId { get; set; }
+            public int SiteId { get; set; }
         }
 
         #endregion
@@ -146,39 +171,82 @@ namespace ThirdPartyService.Service.Worker
             this.lastestProcessTime = this.lastestProcessTime == null ? lastestRunTime : this.lastestProcessTime;
 
             int period = _configuration.GetValue<int>("GetTpBalanceParam:Period");
+            int retryTime = _configuration.GetValue<int>("GetTpBalanceParam:ReRunTime");
 
             switch (period)
             {
-                case 1://by hour 間隔幾小時執行排程(整點)
+                case 1: //by hour 間隔幾小時執行排程(整點)
                     int intervalHour = _configuration.GetValue<int>("GetTpBalanceParam:IntervalHour");
 
                     //如果是第一次跑排程，要在整點跑(0~10分內跑)
                     //如果不是第一次跑排程，則判斷上次執行小時(yyyyMmdd HH:00:00)與現在時間是否間隔N小時
+                    //執行不成功時，最多重跑N次
                     if ((firstRun && currentTime.Minute >= 0 && currentTime.Minute <= 10)
-                       || (!firstRun && currentTime.Subtract(lastestRunTime).Hours >= intervalHour && (currentTime.Minute >= 0 && currentTime.Minute <= 20)))
+                        || (!firstRun &&
+                            currentTime.Subtract(lastestRunTime).Hours >= intervalHour &&
+                            (currentTime.Minute >= 0 && currentTime.Minute <= 20))
+                        || (reRun < retryTime && !success))
 
                     {
+                        if (!firstRun &&
+                            currentTime.Subtract(lastestRunTime).Hours >= intervalHour &&
+                            (currentTime.Minute >= 0 && currentTime.Minute <= 20)) { reRun = 0; }
                         return true;
                     }
+
                     break;
 
-                case 2://by day 每天幾點執行排程(整點)
+                case 2: //by day 每天幾點執行排程(整點)，最多重跑N次
                     int specifiedHour = _configuration.GetValue<int>("GetTpBalanceParam:SpecifiedHour");
-                    if (currentTime.Date != lastestRunTime.Date
-                        && currentTime.AddHours(8).Hour == specifiedHour)
+                    if ((currentTime.Date != lastestRunTime.Date
+                        && currentTime.AddHours(8).Hour == specifiedHour) || (reRun <= retryTime && !success))
                     {
+                        if (currentTime.Date != lastestRunTime.Date
+                        && currentTime.AddHours(8).Hour == specifiedHour) { reRun = 0; }
                         return true;
                     }
+
                     break;
 
                 default:
                     _logger.LogWarning($"GetBalanceWorker-VerifyParameter-Warning_"
-                                                   + " Parameter:Period is invalid.");
+                                       + " Parameter:Period is invalid.");
                     break;
             }
 
 
             return false;
+        }
+
+        /// <summary>
+        /// 產生參數清單
+        /// </summary>
+        /// <param name="tpIdList">第三方清單</param>
+        /// <param name="siteIdList">平台清單</param>
+        /// <param name="failList">失敗參數清單</param>
+        /// <returns></returns>
+        private List<ParameterModel> GenerateParameterList(DateTime currentTime,
+             IEnumerable<int> tpIdList,
+             IEnumerable<ServerInfo> siteIdList,
+             List<ParameterModel> failList)
+        {
+            var result = new List<ParameterModel>();
+
+            if (failList.Count() == 0)
+            {
+                foreach (var tpId in tpIdList)
+                {
+                    foreach (var site in siteIdList)
+                    {
+                        result.Add(new ParameterModel { TpId = tpId, SiteId = site.SiteId });
+                    }
+                }
+            }
+            else
+            {
+                result = failList;
+            }
+            return result;
         }
 
         /// <summary>
@@ -189,8 +257,8 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="lastestTime">實際上最後一次執行時間</param>
         /// <returns></returns>
         private bool CheckFirstRun(DateTime currentTime,
-                                   DateTime? lastestProcessTime,
-                                   out DateTime resultTime)
+            DateTime? lastestProcessTime,
+            out DateTime resultTime)
         {
             var baseTime = DateTime.Now;
 
@@ -214,13 +282,12 @@ namespace ThirdPartyService.Service.Worker
             }
 
             resultTime = new DateTime(baseTime.Year,
-                                      baseTime.Month,
-                                      baseTime.Day,
-                                      baseTime.Hour,
-                                      0, 0);
+                baseTime.Month,
+                baseTime.Day,
+                baseTime.Hour,
+                0, 0);
 
             return false; //already run.
-
         }
 
         /// <summary>
@@ -234,8 +301,8 @@ namespace ThirdPartyService.Service.Worker
                 _thirdPartyBLL.CreateTpCustBalanceCourseTable(currentTime.ToString("yyyyMMdd"));
 
                 _logger.LogInformation($"GetBalanceWorker-Create table "
-                                      + $"TpCustBalanceCourse{currentTime.ToString("yyyyMMdd")} "
-                                      + $"At {DateTime.UtcNow.AddHours(8)}");
+                                       + $"TpCustBalanceCourse{currentTime.ToString("yyyyMMdd")} "
+                                       + $"At {DateTime.UtcNow.AddHours(8)}");
 
                 //_log2File.Info($"GetBalanceWorker-Create table "
                 //                      + $"TpCustBalanceCourse{currentTime.ToString("yyyyMMdd")} "
