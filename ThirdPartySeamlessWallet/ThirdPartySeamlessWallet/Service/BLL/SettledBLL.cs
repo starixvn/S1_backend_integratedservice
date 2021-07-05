@@ -1028,28 +1028,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int AdjustBetLC_AWC_Sexy(AdjustBetLC_Sexy adjustBetLC_Sexy, out decimal afterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, adjustBetLC_Sexy.txns.ElementAt(0).userId);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
-
-            foreach (var item in adjustBetLC_Sexy.txns)
-            {
-                if (tpCurrency.ExchangeRate > 0)
-                {
-                    item.betAmount *= tpCurrency.ExchangeRate;
-                    item.adjustAmount *= tpCurrency.ExchangeRate;
-                }
-            }
-
-            var result = settledService.AdjustBetLC_AWC_Sexy(tpCustInfo, adjustBetLC_Sexy, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
-
         public int VoidBetLC_AWC_Sexy(VoidBetLC_Sexy voidBetLC_Sexy)
         {
             foreach (var item in voidBetLC_Sexy.txns)
@@ -1064,17 +1042,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
             var result = settledService.VoidBetLC_AWC_Sexy(voidBetLC_Sexy);
-            return result;
-        }
-
-        public int UnvoidBetLC_Sexy(UnVoidBetLC_Sexy unVoidBetLC_Sexy)
-        {
-            foreach (var item in unVoidBetLC_Sexy.txns)
-            {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
-                item.tpCustInfo = tpCustInfo;
-            }
-            var result = settledService.UnvoidBetLC_Sexy(unVoidBetLC_Sexy);
             return result;
         }
 
@@ -1130,36 +1097,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
             var result = settledService.VoidSettleLC_AWC_Sexy(voidSettleLC_Sexy);
-            return result;
-        }
-
-        public int UnvoidSettleLC_AWC_Sexy(UnVoidSettleLC_Sexy unVoidSettleLC_Sexy)
-        {
-            foreach (var item in unVoidSettleLC_Sexy.txns)
-            {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
-                item.tpCustInfo = tpCustInfo;
-            }
-            var result = settledService.UnvoidSettleLC_AWC_Sexy(unVoidSettleLC_Sexy);
-            return result;
-        }
-
-        public int RefundLC_AWC_Sexy(RefundLC_Sexy refundLC_Sexy)
-        {
-            foreach (var item in refundLC_Sexy.txns)
-            {
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
-                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
-                item.tpCustInfo = tpCustInfo;
-
-                if (tpCurrency.ExchangeRate > 0)
-                {
-                    item.betAmount *= tpCurrency.ExchangeRate;
-                    item.winAmount *= tpCurrency.ExchangeRate;
-                }
-            }
-
-            var result = settledService.RefundLC_AWC_Sexy(refundLC_Sexy);
             return result;
         }
 

@@ -413,13 +413,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return hash;
         }
 
-        #region Request
-
-        #endregion
-
         #region Response
-
-        //[JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
         private class GetSeamlessWalletResp
         {
             public string status { get; set; }
@@ -603,41 +597,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
             }
-            else if (string.Equals(reqAction.action, "adjustBet", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    AdjustBetLC_Sexy adjustBet = JsonConvert.DeserializeObject<AdjustBetLC_Sexy>(req.message);
-
-                    int result = settledBLL.AdjustBetLC_AWC_Sexy(adjustBet, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        GetBetResp getBetResp = new GetBetResp();
-                        getBetResp.status = "0000";
-                        getBetResp.balance = tpAffterAmount;
-                        getBetResp.balanceTs = getCurrentGameTime();
-                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                        return getBetResp;
-                    }
-                    else if (result == -1)
-                    {
-                        GetBetResp getBetResp = new GetBetResp();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, adjustBet.txns.ElementAt(0).userId, gameType);
-                        getBetResp.status = "0000";
-                        getBetResp.balance = tpCustBalance.Balance;
-                        getBetResp.balanceTs = getCurrentGameTime();
-                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                        return getBetResp;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "9999";
-                    resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
-                    return resp;
-                }
-            }
             else if (string.Equals(reqAction.action, "voidBet", StringComparison.OrdinalIgnoreCase))
             {
                 try
@@ -645,28 +604,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     VoidBetLC_Sexy voidBet = JsonConvert.DeserializeObject<VoidBetLC_Sexy>(req.message);
 
                     int result = settledBLL.VoidBetLC_AWC_Sexy(voidBet);
-                    if (result > 0 || result == -1)
-                    {
-                        resp.status = "0000";
-                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                        return resp;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "9999";
-                    resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
-                    return resp;
-                }
-            }
-            else if (string.Equals(reqAction.action, "unvoidBet", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    UnVoidBetLC_Sexy unvoidBet = JsonConvert.DeserializeObject<UnVoidBetLC_Sexy>(req.message);
-
-                    int result = settledBLL.UnvoidBetLC_Sexy(unvoidBet);
                     if (result > 0 || result == -1)
                     {
                         resp.status = "0000";
@@ -748,88 +685,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
             }
-            else if (string.Equals(reqAction.action, "unvoidSettle", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    UnVoidSettleLC_Sexy unvoidSettle = JsonConvert.DeserializeObject<UnVoidSettleLC_Sexy>(req.message);
-
-                    int result = settledBLL.UnvoidSettleLC_AWC_Sexy(unvoidSettle);
-                    if (result > 0 || result == -1)
-                    {
-                        resp.status = "0000";
-                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                        return resp;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "9999";
-                    resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
-                    return resp;
-                }
-            }
-            else if (string.Equals(reqAction.action, "refund", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    RefundLC_Sexy refund = JsonConvert.DeserializeObject<RefundLC_Sexy>(req.message);
-                    int cnt = refund.txns.Count();
-                    if (cnt % 2 != 0)
-                    {
-                        resp.status = "9999";
-                        resp.desc = "fail";
-                        log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                        return resp;
-                    }
-                    else
-                    {
-                        Dictionary<string, RefundLC_Sexy> keyValuePairs = new Dictionary<string, RefundLC_Sexy>();
-                        foreach (var item in refund.txns)
-                        {
-                            RefundLC_Sexy refRefundList;
-                            if (keyValuePairs.ContainsKey(item.refundPlatformTxId))
-                            {
-                                refRefundList = keyValuePairs[item.refundPlatformTxId];
-                            }
-                            else
-                            {
-                                refRefundList = new RefundLC_Sexy();
-                                keyValuePairs.Add(item.refundPlatformTxId, refRefundList);
-                                refRefundList.txns = new List<RefundDataLC_Sexy>();
-                            }
-                            refRefundList.txns.Add(item);
-                        }
-
-                        var segment = keyValuePairs.Values.ToList();
-                        foreach (var record in segment)
-                        {
-                            int result = settledBLL.RefundLC_AWC_Sexy(record);
-                            if (result > 0 || result == -1)
-                            {
-                                resp.status = "0000";
-                                log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                            }
-                            else
-                            {
-                                resp.status = "9999";
-                                resp.desc = "fail";
-                                log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                                return resp;
-                            }
-                        }
-                    }
-                    return resp;
-                }
-                catch (Exception ex)
-                {
-                    resp.status = "9999";
-                    resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
-                    return resp;
-                }
-            }
             else if (string.Equals(reqAction.action, "give", StringComparison.OrdinalIgnoreCase))
             {
                 try
@@ -865,7 +720,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
             }
-
+            
             resp.status = "9999";
             resp.desc = "fail";
             log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
