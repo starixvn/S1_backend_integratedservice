@@ -348,7 +348,7 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        else if (SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223" || SportType == "245")
+                        else if (SportType == "43" || SportType == "200" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
@@ -376,7 +376,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "223" || SportType == "245")
+                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
                         {
                             if (!string.IsNullOrEmpty(betType))
                             {
