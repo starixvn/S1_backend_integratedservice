@@ -8,7 +8,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.Saba
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
     {
         Dictionary<string, string> sportTypeDic = new Dictionary<string, string>() {
             {"1","soccer" },
@@ -22,13 +22,13 @@ namespace ThirdParty.Saba
             {"43","esports" },
             {"50", "indiancricket" },
             {"161","numbergame" },
-            {"164","164" }, 
+            {"164","164" },
             {"180","180" },
-            {"190","190" }, 
-            {"192","192" }, 
+            {"190","190" },
+            {"192","192" },
             {"193","193" },
-            {"194","194" }, 
-            {"197","197" }, 
+            {"194","194" },
+            {"197","197" },
             {"200","sabaclub" },
             {"202","keno" },
             {"208","casino" },
@@ -282,7 +282,7 @@ namespace ThirdParty.Saba
 
             inputs.TryGetValue("device", out device);
 
-            if((device != null) && (string.Compare(device, "wap", StringComparison.OrdinalIgnoreCase) == 0))
+            if ((!string.IsNullOrEmpty(device)) && (string.Compare(device, "wap", StringComparison.OrdinalIgnoreCase) == 0))
             {
                 urlKey = $"WAPUrl";
             }
@@ -321,12 +321,12 @@ namespace ThirdParty.Saba
 
                     if (appType == AppType.Native)
                     {
-                        if (matchId != null)
+                        if (!string.IsNullOrEmpty(matchId))
                         {
                             oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
 
                         }
-                        else if (betType != null)
+                        else if (!string.IsNullOrEmpty(betType))
                         {
                             oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&gameid={betType}";
 
@@ -348,16 +348,16 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        else if (SportType == "43" || SportType == "200" || SportType == "220" || SportType == "223" || SportType == "245")
+                        else if (SportType == "43" || SportType == "200" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
 
-                        if (matchId != null)
+                        if (!string.IsNullOrEmpty(matchId))
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
                         }
-                        else if (betType != null)
+                        else if (!string.IsNullOrEmpty(betType))
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&gameid={betType}";
                         }
@@ -376,9 +376,9 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "223" || SportType == "245")
+                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
                         {
-                            if (betType != null)
+                            if (!string.IsNullOrEmpty(betType))
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}&gameid={betType}";
                             }
@@ -394,11 +394,11 @@ namespace ThirdParty.Saba
                         }
                         else
                         {
-                            if (matchId != null)
+                            if (!string.IsNullOrEmpty(matchId))
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
                             }
-                            else if (betType != null)
+                            else if (!string.IsNullOrEmpty(betType))
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}";
                             }
@@ -620,5 +620,88 @@ namespace ThirdParty.Saba
 
             return apiResult;
         }
+
+        /// <summary>
+        /// 取得指定客戶的餘額資料
+        /// </summary>
+        /// <param name="inputs">第三方相關參數</param>
+        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
+        /// <returns></returns>
+        public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString)
+        {
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            GetBalanceReg input = new GetBalanceReg();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_member_ids = tpUserNameString;
+            input.wallet_id = 1;
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
+            string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+
+            ApiUrl = $"{ApiUrl}/CheckUserBalance";
+            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
+
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<GetBalanceResult>(result);
+                if (json.error_code == 0)
+                {
+                    var balanceResult = new List<ReceiveTpUserBalanceModel>();
+
+                    foreach (var data in json.Data)
+                    {
+                        if (data.error_code == 0 || data.error_code == 2 || data.error_code == 6)
+                        {
+                            balanceResult.Add(new ReceiveTpUserBalanceModel
+                            {
+                                ErrorCode = ErrorCode.Success,
+                                Message = "ok.",
+                                TpUserName = data.vendor_member_id,
+                                Balance = data.balance ?? 0
+                            });
+                        }
+                        else
+                        {
+                            balanceResult.Add(new ReceiveTpUserBalanceModel
+                            {
+                                ErrorCode = ErrorCode.Fail,
+                                Message = "fail.",
+                                TpUserName = data.vendor_member_id,
+                            });
+                        }
+                    }
+
+                    return new ApiResult<List<ReceiveTpUserBalanceModel>>()
+                    {
+                        ErrorCode = ErrorCode.Success,
+                        Message = "ok",
+                        Data = balanceResult
+                    };
+
+                }
+                else
+                {
+                    return new ApiResult<List<ReceiveTpUserBalanceModel>>()
+                    {
+                        ErrorCode = ErrorCode.Fail,
+                        RawErrorCode = json.error_code.ToString(),
+                        RawMessage = json.message
+                    };
+                }
+            }
+            else
+            {
+                return new ApiResult<List<ReceiveTpUserBalanceModel>>()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawMessage = result
+                };
+            }
+
+            return new ApiResult<List<ReceiveTpUserBalanceModel>>()
+            {
+            };
+        }
+
     }
 }

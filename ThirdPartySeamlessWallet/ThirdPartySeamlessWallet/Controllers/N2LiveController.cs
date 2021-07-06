@@ -757,7 +757,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             catch (Exception ex)
                             {
-                                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                                 return xml;
                             }
                         }
@@ -802,7 +802,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
@@ -846,7 +846,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
@@ -910,7 +910,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             catch (Exception ex)
                             {
-                                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                                 return xml;
                             }
                         }
@@ -954,7 +954,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
@@ -998,7 +998,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
@@ -1041,7 +1041,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
@@ -1089,7 +1089,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
@@ -1103,7 +1103,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName);
+                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                 return xml;
             }
         }

@@ -79,7 +79,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.error_code = "40000";
                 resp.message = "invalid request parameter";
-                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer");
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer", ex);
                 return resp;
             }
             TransferType transferType = TransferType.Bet;
@@ -428,7 +428,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.error_code = "50000";
                 resp.message = "server error";
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer", ex);
                 throw ex;
             }
 
@@ -461,7 +461,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.error_code = "40000";
                 resp.message = "invalid request parameter";
-                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer");
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer", ex);
                 return resp;
             }
             TransferType transferType = TransferType.Bet;
@@ -565,7 +565,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.error_code = "50000";
                 resp.message = "server error";
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer", ex);
                 throw ex;
             }
 
@@ -651,7 +651,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.error_code = "50000";
                 resp.message = "server error";
-                log2File.Error($"{JsonConvert.SerializeObject(client)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Balance");
+                log2File.Error($"{JsonConvert.SerializeObject(client)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Balance", ex);
             }
 
             //log2File.Info($"{JsonConvert.SerializeObject(client)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Balance");

@@ -61,7 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             // Remove root property
             var jsonObjectAttribute = typeof(T).GetCustomAttribute(typeof(JsonObjectAttribute)) as JsonObjectAttribute;
             var root = JObject.Parse(json);
-            var data = root[jsonObjectAttribute.Title];
+            var data = root[jsonObjectAttribute?.Title ?? throw new InvalidOperationException()];
 
             var obj = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(data));
 

@@ -23,9 +23,10 @@ namespace CommonService.Service.Model
             this.RawMessage = RawMessage;
         }
     }
-    public class ApiResult<TData> : ApiResult where TData : new()
+    public class ApiResult<TData> : ApiResult //where TData : new()
     {
-        public ApiResult() : this(9000, "", new TData()) { }
+        //public ApiResult() : this(9000, "", new TData()) { }
+        public ApiResult() : this(9000, "", default) { }
         public ApiResult(TData data) : this(0, "", data) { }
         public ApiResult(int ErrorCode, string Message) : base(ErrorCode, Message) { }
         public ApiResult(ErrorCode ErrorCode, string Message) : base(ErrorCode, Message) { }

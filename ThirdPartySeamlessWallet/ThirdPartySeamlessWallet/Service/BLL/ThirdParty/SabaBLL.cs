@@ -9,8 +9,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class SabaBLL: IThirdPartyBLL
     {
-        private readonly AuthBLL _authBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly TpCustInfoService _tpCustInfoService;
@@ -21,8 +19,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             ThirdParty = Tp.Saba;
             GameType = GameType.Saba_Sports;
-            _authBLL = provider.GetRequiredService<AuthBLL>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
         }

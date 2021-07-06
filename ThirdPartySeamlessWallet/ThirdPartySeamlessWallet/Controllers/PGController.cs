@@ -177,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 catch (FormatException fEx)
                 {
-                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{fEx}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{fEx}", logName, fEx);
                 }
             }
             else
@@ -527,7 +527,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 catch (Exception ex)
                 {
-                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferOutReqq)}\r\n{ex}", $"{thisTp}_TransferOut");
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferOutReqq)}\r\n{ex}", $"{thisTp}_TransferOut", ex);
                     throw ex;
                 }
             }
@@ -685,7 +685,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferInReqq)}\r\n{ex}", $"{thisTp}_TransferIn");
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferInReqq)}\r\n{ex}", $"{thisTp}_TransferIn", ex);
                 throw ex;
             }
 

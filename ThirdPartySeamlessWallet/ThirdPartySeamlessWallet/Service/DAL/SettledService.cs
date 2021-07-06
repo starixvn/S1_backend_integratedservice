@@ -149,7 +149,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     bonusId = bonusId,
                     allowNegative = allowNegative
                 };
-                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
 
@@ -191,7 +191,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     bonusId = bonusId,
                     allowNegative = allowNegative
                 };
-                logger.LogError($"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
             }
 

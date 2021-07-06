@@ -254,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex}", logName);
+                            log2File.Error($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex}", logName, ex);
                         }
                         break;
                     case "3":

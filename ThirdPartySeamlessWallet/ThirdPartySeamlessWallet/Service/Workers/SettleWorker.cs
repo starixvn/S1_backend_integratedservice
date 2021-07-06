@@ -217,14 +217,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAG");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAG", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "SettleAG");
+                log2File.Error(ex.ToString(), "SettleAG", ex);
                 isError = true;
             }
             finally

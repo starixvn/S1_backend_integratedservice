@@ -53,14 +53,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         catch (Exception ex1)
                         {
                             isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAWC");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAWC", ex1);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), "SettleAWC");
+                log2File.Error(ex.ToString(), "SettleAWC", ex);
                 isError = true;
             }
             finally
@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             catch (Exception ex1)
                             {
                                 isError = true;
-                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName, ex1);
                             }
                         }
                     }
@@ -143,7 +143,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
@@ -218,7 +218,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             catch (Exception ex1)
                             {
                                 isError = true;
-                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName, ex1);
                             }
                         }
                     }
@@ -226,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
-                log2File.Error(ex.ToString(), logName);
+                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
