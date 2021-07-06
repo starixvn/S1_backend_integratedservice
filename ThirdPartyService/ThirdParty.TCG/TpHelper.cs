@@ -21,7 +21,7 @@ namespace ThirdParty.TCG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new TCGConfig(inputs);
+            var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
             var sParam = new
             {
                 method = "cm",
@@ -71,7 +71,7 @@ namespace ThirdParty.TCG
                 };
             }
 
-            var config = new TCGConfig(inputs);
+            var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
             var sParam = new LaunchGameObj(tpCustInfo, appType, TpLangId, inputs);
 
             var json = HttpPost(config.ApiUrl, GetBody(sParam, config), ContentType);
@@ -101,7 +101,7 @@ namespace ThirdParty.TCG
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new TCGConfig(inputs);
+            var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
             var sParam = new
             {
                 method = "kom",
@@ -134,13 +134,13 @@ namespace ThirdParty.TCG
             public string MerchantCode { get; set; }
             public string DesKey { get; set; }
             public string SignKey { get; set; }
-            public TCGConfig(Dictionary<string, string> inputs)
+            public TCGConfig(Dictionary<string, string> inputs, string tpCurrencyId)
             {
                 GameUrl = inputs.GetValue("GameUrl");
                 ApiUrl = inputs.GetValue("ApiUrl");
-                MerchantCode = inputs.GetValue("MerchantCode");
-                DesKey = inputs.GetValue("DesKey");
-                SignKey = inputs.GetValue("SignKey");
+                MerchantCode = inputs.GetValue($"MerchantCode_{tpCurrencyId}");
+                DesKey = inputs.GetValue($"DESKey_{tpCurrencyId}");
+                SignKey = inputs.GetValue($"SHA256Key_{tpCurrencyId}");
             }
         }
 
@@ -160,7 +160,7 @@ namespace ThirdParty.TCG
             public string game_code { get; set; }
             public string game_mode { get; set; }
             public string platform { get; set; }
-            public string back_url { get; set; }        
+            public string back_url { get; set; }
             public string lottery_bet_mode { get; set; }
             public string view { get; set; }
             public List<Series> series { get; set; }
@@ -179,7 +179,7 @@ namespace ThirdParty.TCG
                     throw new ArgumentException("gameType is error.");
                 }
                 var gameId = inputs.GetValue("GameId");
-                
+
                 switch (gameType)
                 {
                     case GameType.SEALottery:
@@ -188,37 +188,43 @@ namespace ThirdParty.TCG
                     case GameType.VNLottery:
                         SettingVNLottery(appType, gameId);
                         break;
-                }             
-                game_code = "HNVNC";
-                lottery_bet_mode = "";            
-                series = new List<Series>()
-                {
-                    new Series{ game_group_code = "MAS", prize_mode_id=1 },
-                    new Series{ game_group_code = "VNC", prize_mode_id=1 },
-                    new Series{ game_group_code = "THAI", prize_mode_id=1},
-                    new Series{ game_group_code = "SGC", prize_mode_id=1 },
-                    new Series{ game_group_code = "LAO", prize_mode_id=1 },
-                };
+                }
             }
 
             private void SettingSEALottery(AppType appType, string gameId)
             {
                 product_type = 384;
                 platform = "flash";
-
+                game_code = "HNVNC";
+                lottery_bet_mode = "SEA_Tradition";
+                series = new List<Series>()
+                {
+                    new Series{ game_group_code = "VNC", prize_mode_id = "1" },
+                };
             }
             private void SettingVNLottery(AppType appType, string gameId)
             {
                 product_type = 420;
-                platform = appType== AppType.Mobile ? "MOBILE" : "WEB";
+                platform = appType == AppType.Mobile ? "MOBILE" : "WEB";
+                game_code = "lobby";
+                lottery_bet_mode = "Lott";
+                series = new List<Series>()
+                {
+                    new Series{ game_group_code = "VIETNAM_LOTTO", default_series="100" },
+                };
             }
         }
 
         public class Series
         {
             public string game_group_code { get; set; }
-            public int prize_mode_id { get; set; }
+            public string prize_mode_id { get; set; }
+            public string max_series { get; set; }
+            public string min_series { get; set; }
+            public string max_bet_series { get; set; }
+            public string default_series { get; set; }
         }
+
 
         public enum GameType
         {

@@ -27,7 +27,7 @@ namespace ThirdParty.TCG.Tests
                 UserName = "hanstest01",
                 TpUserName = "XNova88249951",
                 TpPwd = "h5N3Bjn",
-                TpCurrencyId = "2",
+                TpCurrencyId = "MYR",
                 ExchangeRate = 1.0000m,
                 IsTest = false,
                 ActStatus = 2,
@@ -37,13 +37,12 @@ namespace ThirdParty.TCG.Tests
 
             _inputs = new Dictionary<string, string>
             {
-                { "GameUrl", "https://GameUrl" },
-                { "ApiUrl", "https://ApiUrl" },
-                 { "homeUrl", "https://homeUrl" },
-                { "MerchantCode", "test1" },             
-                { "DesKey", "0wiwGiYCht8IPlTL40Ci+Meb0BBtwhAC" },
-                { "SignKey", "0wiwGiYCht8IPlTL40Ci+Meb0BBtwhAC" },
-                { "gameType", "54"},
+                { "GameUrl", "https://tcg.nova88asia.com/" },
+                { "ApiUrl", "http://www.connect6play.com/doBusiness.do" },
+                { "homeUrl", "https://www.nova88.net/" },
+                { "MerchantCode_MYR", "xpnovamyr" },
+                { "DESKey_MYR", "dHJoyySB" },
+                { "SHA256Key_MYR", "70tOVKomTbE5booC" },
         };
         }
 
@@ -64,6 +63,8 @@ namespace ThirdParty.TCG.Tests
             var appType = AppType.Desktop;
             var tpLangId = "1";
             _inputs.Add("fun", "0");
+            _inputs.Add("gameType", "54");
+            _inputs.Add("GameId", "0");
 
             //Act
             var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);
@@ -71,6 +72,6 @@ namespace ThirdParty.TCG.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-      
+
     }
 }
