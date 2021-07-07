@@ -7,10 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
+using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.KM;
+using ThirdPartyWager.Workers.MG;
 
 namespace ThirdPartyWager
 {
@@ -141,6 +143,11 @@ namespace ThirdPartyWager
             //KM
             services.AddSingleton<ApiKMBLL>();
             services.AddSingleton<KMBLL>();
+            
+            //MG
+            services.AddTransient<IApiMGBLL, ApiMGBLL>();
+            services.AddTransient<IApiSWBLL, ApiSWBLL>();
+            services.AddTransient<IMGBLL, MGBLL>();
             //Worker
 
             services.AddHostedService<WagerDG>();
@@ -169,6 +176,7 @@ namespace ThirdPartyWager
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
+            services.AddHostedService<WagerMG>();
 
             services.AddHostedService<WagerNineW>();
 
