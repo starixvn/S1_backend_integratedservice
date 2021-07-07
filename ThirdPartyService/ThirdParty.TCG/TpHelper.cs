@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Extensions;
+using System.IO;
 
 namespace ThirdParty.TCG
 {
@@ -22,6 +23,7 @@ namespace ThirdParty.TCG
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
+            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
             var sParam = new
             {
                 method = "cm",
@@ -174,11 +176,11 @@ namespace ThirdParty.TCG
                 back_url = inputs.GetValue("homeUrl");
                 view = "lobby";
 
-                if (!Enum.TryParse(inputs.GetValue("gameType"), out GameType gameType))
+                if (!Enum.TryParse(inputs.GetValue("gametype"), out GameType gameType))
                 {
-                    throw new ArgumentException("gameType is error.");
+                    throw new ArgumentException("gametype is error.");
                 }
-                var gameId = inputs.GetValue("GameId");
+                var gameId = inputs.GetValue("gameId");
 
                 switch (gameType)
                 {
@@ -241,7 +243,10 @@ namespace ThirdParty.TCG
             $"&sign={HttpUtility.UrlEncode(sign)}";
         }
 
-        private string DesEncrypt(string input, string key)
+        /// <summary>
+        /// DES加密
+        /// </summary>
+        public string DesEncrypt(string input, string key)
         {
             var toEncryptArray = Encoding.UTF8.GetBytes(input);
             var des = new DESCryptoServiceProvider
@@ -254,14 +259,30 @@ namespace ThirdParty.TCG
             var resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
             return Convert.ToBase64String(resultArray, 0, resultArray.Length);
         }
-
-        private string SHA256(string input)
+        
+        /// <summary>
+        /// DES解密
+        /// </summary>
+        public string DesDecrypt(string pToDecrypt, string key)
+        {
+            var dataByteArray = Convert.FromBase64String(pToDecrypt);
+            var des = new DESCryptoServiceProvider
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
+            };
+            using MemoryStream ms = new MemoryStream();
+            using CryptoStream cs = new CryptoStream(ms, des.CreateDecryptor(), CryptoStreamMode.Write);
+            cs.Write(dataByteArray, 0, dataByteArray.Length);
+            cs.FlushFinalBlock();
+            return Encoding.UTF8.GetString(ms.ToArray());
+        }
+        public string SHA256(string input)
         {
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var outputBytes = new SHA256CryptoServiceProvider().ComputeHash(inputBytes);
             return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
         }
-
-
     }
 }

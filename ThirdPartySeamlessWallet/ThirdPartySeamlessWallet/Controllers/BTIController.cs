@@ -256,7 +256,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             using (LogContext.PushProperty("Exception.Url", Request.GetDisplayUrl()))
             using (LogContext.PushProperty("Exception.Message", ex.Message))
             {
-                logger.LogError(ex.StackTrace);
+                logger.LogError(ex, ex.Message);
             }
         }
     }
