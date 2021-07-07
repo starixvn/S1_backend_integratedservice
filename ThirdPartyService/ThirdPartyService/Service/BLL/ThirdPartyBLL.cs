@@ -37,28 +37,31 @@ namespace ThirdPartyService.Service.BLL
         /// <summary>
         /// PT異常客戶清單(測試機)，共13筆
         /// </summary>
-        private readonly int[] PTWrongCustList = new int[] { 1342, 249646, 249688, 249768, 249782, 249784, 249827, 249832, 249835, 249862, 249863, 249864, 249892 };
+        private readonly int[] PTWrongCustList = new int[]
+            {1342, 249646, 249688, 249768, 249782, 249784, 249827, 249832, 249835, 249862, 249863, 249864, 249892};
 
         /// <summary>
         /// 9W異常客戶清單(測試機)，共12筆
         /// </summary>
-        private readonly int[] NineWWrongCustList = new int[] { 565, 602, 1017, 127559, 249667, 249745, 249814, 249874, 249951, 250066, 249951, 250057 };
+        private readonly int[] NineWWrongCustList = new int[]
+            {565, 602, 1017, 127559, 249667, 249745, 249814, 249874, 249951, 250066, 249951, 250057};
 #endif
+
         #endregion
 
         #region Constructors
 
         public ThirdPartyBLL(IConfiguration configuration,
-                                 IWebHostEnvironment env,
-                                 ILogger<ThirdPartyBLL> logger,
-                                 Log2File log2File,
-                                 ThirdPartyHelper thirdPartyHelper,
-                                 TpTransferInfo tpTransferInfo,
-                                 TpCustInfoService tpCustInfoService,
-                                 TpTransferBonusInfoService tpTransferBonusInfoService,
-                                 ServerInfoService serverInfoService,
-                                 TpCustBalanceService tpCustBalanceService,
-                                 AuthBLL authBLL)
+            IWebHostEnvironment env,
+            ILogger<ThirdPartyBLL> logger,
+            Log2File log2File,
+            ThirdPartyHelper thirdPartyHelper,
+            TpTransferInfo tpTransferInfo,
+            TpCustInfoService tpCustInfoService,
+            TpTransferBonusInfoService tpTransferBonusInfoService,
+            ServerInfoService serverInfoService,
+            TpCustBalanceService tpCustBalanceService,
+            AuthBLL authBLL)
         {
             this.env = env;
             this.configuration = configuration;
@@ -93,10 +96,13 @@ namespace ThirdPartyService.Service.BLL
             }
 
             // free game no need to login
-            if (tpInfo.inputs.ContainsKey("fun") && tpInfo.inputs["fun"].Equals("1", StringComparison.OrdinalIgnoreCase))
+            if (tpInfo.inputs.ContainsKey("fun") &&
+                tpInfo.inputs["fun"].Equals("1", StringComparison.OrdinalIgnoreCase))
             {
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpInfo.SiteId);
-                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpInfo.SiteId).Setting);
+                var inputs =
+                    JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper
+                        .GetThirdPartyBySite(tpInfo.TpId, tpInfo.SiteId).Setting);
                 if (tpInfo.inputs != null)
                 {
                     foreach (var infoI in tpInfo.inputs)
@@ -106,7 +112,7 @@ namespace ThirdPartyService.Service.BLL
                 }
 
                 TpCustInfo freeCustInfo = new TpCustInfo();
-                apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
+                apiResult = tpHelper.Login(freeCustInfo, (AppType) tpInfo.AppType, tpLangId, inputs);
                 return apiResult;
             }
 
@@ -115,7 +121,8 @@ namespace ThirdPartyService.Service.BLL
             {
                 var tpCustInfo = tpCustInfoResult.Data;
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfo.SiteId);
-                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfo.SiteId).Setting);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper
+                    .GetThirdPartyBySite(tpInfo.TpId, tpCustInfo.SiteId).Setting);
                 if (tpInfo.inputs != null)
                 {
                     foreach (var infoI in tpInfo.inputs)
@@ -127,27 +134,26 @@ namespace ThirdPartyService.Service.BLL
                 var configEnv = configuration.GetValue<string>("Environment");
 
                 // Test account only allow login for saba
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null && tpInfo.TpId != 1)
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
+                    tpInfo.TpId != 1)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = "This Account not allow for access";
                 }
                 else
                 {
-                    apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
+                    apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType) tpInfo.AppType, tpLangId, inputs);
                 }
+
                 /*Use Async to Record Log*/
-                Task.Run(() =>
-                {
-                    tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId);
-                });
+                Task.Run(() => { tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId); });
             }
             else
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
                 apiResult.Message = tpCustInfoResult.Message;
-                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
             }
 
             return apiResult;
@@ -276,8 +282,10 @@ namespace ThirdPartyService.Service.BLL
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
-                    IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
-                    var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                    IThirdPartyHelper tpHelper =
+                        thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                    var oThirdPartyModel =
+                        thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
                     apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
@@ -301,6 +309,7 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
+
         public ApiResult Logout(TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
@@ -308,7 +317,9 @@ namespace ThirdPartyService.Service.BLL
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
             if (tpCustInfoResult.Data != null)
             {
-                var tpHelper = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                var tpHelper =
+                    (IThirdPartyParticular) thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId,
+                        tpCustInfoResult.Data.SiteId);
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
@@ -326,16 +337,20 @@ namespace ThirdPartyService.Service.BLL
 
         public void CheckTransfer(TpTransferInfoModel tpTransferInfoModel)
         {
-            if (tpTransferInfoModel.Direction == (int)Direction.ToTp && tpTransferInfoModel.Status == (int)TransferStatus.Pending)
+            if (tpTransferInfoModel.Direction == (int) Direction.ToTp &&
+                tpTransferInfoModel.Status == (int) TransferStatus.Pending)
             {
                 bool isSuccess = tpTransferInfo.SetTransferFail(tpTransferInfoModel.TransId);
             }
             else
             {
                 //tpTransferInfoModel.CustId
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
-                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
-                var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
+                var tpCustInfoResult =
+                    tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
+                IThirdPartyHelper tpHelper =
+                    thirdPartyHelper.GetThirdPartyHelper(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
+                var oThirdPartyModel =
+                    thirdPartyHelper.GetThirdPartyBySite(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
                 decimal amount = tpTransferInfoModel.Amount;
@@ -344,15 +359,19 @@ namespace ThirdPartyService.Service.BLL
                     amount = tpTransferInfoModel.Amount / tpCustInfoResult.Data.ExchangeRate;
                 }
 
-                var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount, (Direction)tpTransferInfoModel.Direction, tpTransferInfoModel.TransId, tpTransferInfoModel.ThirdId);
+                var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount,
+                    (Direction) tpTransferInfoModel.Direction, tpTransferInfoModel.TransId,
+                    tpTransferInfoModel.ThirdId);
                 TpTransfer tpTransfer = new TpTransfer();
-                tpTransfer.direction = (Direction)tpTransferInfoModel.Direction;
+                tpTransfer.direction = (Direction) tpTransferInfoModel.Direction;
                 tpTransfer.Amount = tpTransferInfoModel.Amount;
                 tpTransfer.TpId = tpTransferInfoModel.TpId;
 
-                tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, tpTransferInfoModel.TransId);
+                tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer,
+                    tpTransferInfoModel.TransId);
             }
         }
+
         public ApiResult BonusTransfer(TpBonusTransfer tpBonusTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
@@ -363,29 +382,34 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
 
-            IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var tpHelperParticular = (IThirdPartyParticular)thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            IThirdPartyHelper tpHelper =
+                thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var tpHelperParticular =
+                (IThirdPartyParticular) thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId,
+                    tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel =
+                thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
             if (balanceApiResult.ErrorCode != ErrorCode.Success)
             {
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = balanceApiResult.RawMessage;/*3RD Error Message*/
+                apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
 
             string transId = null;
             var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
             string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
-            var tpTransferReqResult = tpTransferBonusInfoService.TpTransferBonusReq(tpBonusTransfer, tpCustInfoResult.Data, thirdId, out transId, out int bonusId);
+            var tpTransferReqResult = tpTransferBonusInfoService.TpTransferBonusReq(tpBonusTransfer,
+                tpCustInfoResult.Data, thirdId, out transId, out int bonusId);
             if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
             {
                 return tpTransferReqResult;
@@ -403,9 +427,11 @@ namespace ThirdPartyService.Service.BLL
                 rolloverAmount /= tpCustInfoResult.Data.ExchangeRate;
             }
 
-            apiResult = apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp, transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
+            apiResult = apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp,
+                transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
 
-            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
+            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId,
+                bonusId);
 
             if (apiResult.ErrorCode == ErrorCode.Success)
             {
@@ -417,6 +443,7 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
+
         public ApiResult FixNegative(TpInfo tpInfo)
         {
             var apiResult = new ApiResult();
@@ -425,18 +452,21 @@ namespace ThirdPartyService.Service.BLL
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
             if (tpCustInfoResult.Data != null)
             {
-                IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+                IThirdPartyHelper tpHelper =
+                    thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
                 var balanceResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
                 if (balanceResult.Data.balance < 0)
                 {
-                    apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, Math.Abs(balanceResult.Data.balance), Direction.ToTp, Guid.NewGuid().ToString("N"), null);
+                    apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, Math.Abs(balanceResult.Data.balance),
+                        Direction.ToTp, Guid.NewGuid().ToString("N"), null);
                 }
                 else
                 {
                     apiResult.ErrorCode = ErrorCode.TransferFail;
-                    apiResult.Message = $"{tpCustInfoResult.Data.TpUserName}'s balance is {balanceResult.Data.balance.ToString("#,##0.##")}, It's not Negative.";
+                    apiResult.Message =
+                        $"{tpCustInfoResult.Data.TpUserName}'s balance is {balanceResult.Data.balance.ToString("#,##0.##")}, It's not Negative.";
                 }
             }
 
@@ -463,21 +493,23 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.Data == null)
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = tpCustInfoResult.RawMessage;/*3RD Error Message*/
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
 
-            IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(adminTpTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(adminTpTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            IThirdPartyHelper tpHelper =
+                thirdPartyHelper.GetThirdPartyHelper(adminTpTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel =
+                thirdPartyHelper.GetThirdPartyBySite(adminTpTransfer.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
             if (balanceApiResult.ErrorCode != ErrorCode.Success)
             {
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;/*3RD Error Code*/
-                apiResult.RawMessage = balanceApiResult.RawMessage;/*3RD Error Message*/
+                apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
 
@@ -493,7 +525,8 @@ namespace ThirdPartyService.Service.BLL
             }
 
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
-            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId, thirdId);
+            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
+                thirdId);
             tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
 
             return apiResult;
@@ -519,15 +552,17 @@ namespace ThirdPartyService.Service.BLL
                 log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
                 return apiResult;
             }
+
             apiResult.Data.MainBalanceBefore = custWallet.Balance.ToString();
 
-            if (custWallet.AutoTransfer != (int)AutoType.Auto)
+            if (custWallet.AutoTransfer != (int) AutoType.Auto)
             {
                 apiResult.ErrorCode = ErrorCode.AutoTransferIsOff;
                 apiResult.Message = "This Account Auto Transfer Is Off";
                 log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
                 return apiResult;
             }
+
             apiResult.Data.AutoTransfer = custWallet.AutoTransfer;
             log2File.Info($"Main Before : \r\n{JsonConvert.SerializeObject(apiResult)}", "AutoTransfer");
 
@@ -536,7 +571,8 @@ namespace ThirdPartyService.Service.BLL
             subResult = apiResult;
 
             // get all transfer games and status is on
-            var transferGames = thirdPartyHelper.GetThirdPartyByWalletType((int)WalletType.Transfer, custWallet.SiteId);
+            var transferGames =
+                thirdPartyHelper.GetThirdPartyByWalletType((int) WalletType.Transfer, custWallet.SiteId);
             if (transferGames.Any())
             {
                 int alphaTpId = tpInfo.TpId;
@@ -618,7 +654,9 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.Data.FromTpId = 0;
                     apiResult.Data.ToTpId = tpInfo.TpId;
                     subResult.Data.MainBalanceBefore = "--";
-                    apiResult.Data.MainBalanceAfter = (doTransfer.ErrorCode == ErrorCode.Success) ? custWallet.Balance.ToString() : "--";
+                    apiResult.Data.MainBalanceAfter = (doTransfer.ErrorCode == ErrorCode.Success)
+                        ? custWallet.Balance.ToString()
+                        : "--";
                     apiResult.Data.GameBalance = "--";
                     apiResult.ErrorCode = doTransfer.ErrorCode;
                     apiResult.Message = doTransfer.Message;
@@ -639,6 +677,7 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.Message = "Get Transfer Games Failed";
                 log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
             }
+
             return apiResult;
         }
 
@@ -648,9 +687,9 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="tpId">第三方ID</param>
         /// <param name="siteId">平台ID</param>
         /// <param name="balanceDatas">餘額資料</param>
-        public void GetBalance(int tpId,
-                               int siteId,
-                               out List<TpCustBalanceModel> balanceDatas)
+        public bool GetBalance(int tpId,
+            int siteId,
+            out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
 
@@ -664,23 +703,23 @@ namespace ThirdPartyService.Service.BLL
 
             var custInfoList = GetTpCustInfoList(tpId, siteId);
 
-            if (tpId == (int)TpEnum.NineW || tpId == (int)TpEnum.Saba)
+            if (tpId == (int) TpEnum.NineW || tpId == (int) TpEnum.Saba)
             {
-                if (GetBalanceAtSameTime(tpId, siteId, custInfoList,
-                                         out List<TpCustBalanceModel> datasResult))
+                if (!GetBalanceAtSameTime(tpId, siteId, custInfoList,
+                    out balanceDatas))
                 {
-                    balanceDatas.AddRange(datasResult);
+                    return false;
                 }
             }
             else
             {
-                if (GetBalanceInOrder(custInfoList,
-                                         out List<TpCustBalanceModel> datasResult))
+                if (!GetBalanceInOrder(custInfoList,
+                    out balanceDatas))
                 {
-                    balanceDatas.AddRange(datasResult);
+                    return false;
                 }
             }
-
+            
             _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
                                    + $"TpId={tpId} SiteId={siteId} "
                                    + $"EndTime={DateTime.UtcNow.AddHours(8)}");
@@ -689,7 +728,7 @@ namespace ThirdPartyService.Service.BLL
             //                       + $"TpId={tpId} SiteId={siteId} "
             //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
-            return;
+            return true;
         }
 
         /// <summary>
@@ -699,12 +738,11 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="timeString">資料所屬時間</param>
         /// <param name="datas">資料</param>
         public void InsertBalance(string tableDate,
-                                  string timeString,
-                                  List<TpCustBalanceModel> datas)
+            string timeString,
+            List<TpCustBalanceModel> datas)
         {
-
             _logger.LogInformation($"GetBalanceWorker-InsertBalance-Start_"
-                                       + $"StartTime={DateTime.UtcNow.AddHours(8)}");
+                                   + $"StartTime={DateTime.UtcNow.AddHours(8)}");
 
             //log2File.Info($"GetBalanceWorker-InsertBalance-Start_"
             //                           + $"StartTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
@@ -732,7 +770,6 @@ namespace ThirdPartyService.Service.BLL
 
             //log2File.Info($"GetBalanceWorker-InsertBalance-End_"
             //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
         }
 
         /// <summary>
@@ -742,7 +779,8 @@ namespace ThirdPartyService.Service.BLL
         /// <returns></returns>
         public DateTime? GetLastestRunTime(string tableDate)
         {
-            int i = 0; bool tableExist = false;
+            int i = 0;
+            bool tableExist = false;
             for (i = Convert.ToInt32(tableDate); i > 20210701; i--)
             {
                 if (CheckTpCustBalanceCourseTable(i.ToString()))
@@ -822,19 +860,19 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="balanceDatas">餘額資料</param>
         /// <returns></returns>
         private bool GetBalanceAtSameTime(int tpId,
-                                          int siteId,
-                                          IEnumerable<BalanceTpCustInfoModel> custInfoList,
-                                          out List<TpCustBalanceModel> balanceDatas)
+            int siteId,
+            IEnumerable<BalanceTpCustInfoModel> custInfoList,
+            out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
 
             try
             {
-                var tpHelper = (IThirdPartyGetBalanceParticular)thirdPartyHelper.GetThirdPartyHelper(tpId, siteId);
+                var tpHelper = (IThirdPartyGetBalanceParticular) thirdPartyHelper.GetThirdPartyHelper(tpId, siteId);
                 var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 #if DEBUG
-                if (env.EnvironmentName != "Production" && tpId == (int)TpEnum.NineW)
+                if (env.EnvironmentName != "Production" && tpId == (int) TpEnum.NineW)
                 {
                     custInfoList = custInfoList.Where(x => !NineWWrongCustList.Any(y => y == x.CustId));
                 }
@@ -846,26 +884,24 @@ namespace ThirdPartyService.Service.BLL
                 if (balanceResult.ErrorCode != ErrorCode.Success)
                 {
                     _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                           + $"TpId={tpId} SiteId={siteId}" +
-                                           " Not Success when get this condiction datas.");
+                                       + $"TpId={tpId} SiteId={siteId}" +
+                                       " Not Success when get this condiction datas.");
 
                     //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
                     //                       + $"TpId={tpId} SiteId={siteId}" +
                     //                       " Not Success when get this condiction datas.", "GetBalanceWorker");
-                    return false;
                 }
 
                 foreach (var cust in custInfoList)
                 {
-
                     var data = balanceResult.Data.Where(x => x.TpUserName == cust.TpUserName)
-                                                 .FirstOrDefault();
+                        .FirstOrDefault();
 
                     if (data == null)
                     {
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                               + $"TpId={tpId} SiteId={siteId}" +
-                                               $" CustId={cust.CustId}.Can't get this cust data.");
+                                           + $"TpId={tpId} SiteId={siteId}" +
+                                           $" CustId={cust.CustId}.Can't get this cust data.");
 
                         //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
                         //                       + $"TpId={tpId} SiteId={siteId}" +
@@ -875,8 +911,8 @@ namespace ThirdPartyService.Service.BLL
                     else if (data.ErrorCode != 0)
                     {
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                               + $" TpId={tpId} SiteId={siteId}" +
-                                               $" CustId={cust.CustId}.Not Success when get this cust data.");
+                                           + $" TpId={tpId} SiteId={siteId}" +
+                                           $" CustId={cust.CustId}.Not Success when get this cust data.");
 
                         //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
                         //                       + $" TpId={tpId} SiteId={siteId}" +
@@ -891,10 +927,11 @@ namespace ThirdPartyService.Service.BLL
                         SiteId = cust.SiteId,
                         CurrencyId = cust.CurrencyId,
                         Balance = (cust.ExchangeRate > 0 && cust.ExchangeRate != 1)
-                                  ? data.Balance * cust.ExchangeRate
-                                  : data.Balance
+                            ? data.Balance * cust.ExchangeRate
+                            : data.Balance
                     });
                 }
+
                 return true;
             }
             catch (Exception ex)
@@ -916,7 +953,7 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="balanceDatas">餘額資料</param>
         /// <returns></returns>
         private bool GetBalanceInOrder(IEnumerable<BalanceTpCustInfoModel> custInfoList,
-                                       out List<TpCustBalanceModel> balanceDatas)
+            out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
 
@@ -925,7 +962,7 @@ namespace ThirdPartyService.Service.BLL
                 foreach (var cust in custInfoList)
                 {
 #if DEBUG
-                    if (env.EnvironmentName != "Production" && cust.TpId == (int)TpEnum.PT)
+                    if (env.EnvironmentName != "Production" && cust.TpId == (int) TpEnum.PT)
                     {
                         if (PTWrongCustList.Contains(cust.CustId))
                         {
@@ -943,8 +980,8 @@ namespace ThirdPartyService.Service.BLL
                     if (balanceResult == null)
                     {
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                               + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
-                                               $" CustId={cust.CustId}.Get Data Fail.");
+                                           + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
+                                           $" CustId={cust.CustId}.Get Data Fail.");
 
                         //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
                         //                       + $" TpId={tpId} SiteId={siteId}" +
@@ -954,8 +991,8 @@ namespace ThirdPartyService.Service.BLL
                     else if (balanceResult.ErrorCode != ErrorCode.Success)
                     {
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
-                                               + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
-                                               $" CustId={cust.CustId}.Not success when get this cust data.");
+                                           + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
+                                           $" CustId={cust.CustId}.Not success when get this cust data.");
 
                         //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
                         //                       + $" TpId={tpId} SiteId={siteId}" +
@@ -972,6 +1009,7 @@ namespace ThirdPartyService.Service.BLL
                         Balance = balanceResult.Data.balance
                     });
                 }
+
                 return true;
             }
             catch (Exception ex)
