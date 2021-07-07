@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyWager.Service.BLL.KM;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -15,6 +17,7 @@ namespace ThirdPartyWager.Service.BLL.MG
         private readonly IApiSWBLL _swApi;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly List<string> _currency = new List<string> {"VND", "USD", "INR", "IDR", "MYR", "THB"};
+        private readonly Log2File log2File;
 
         public MGBLL(IServiceProvider provider)
         {
@@ -23,6 +26,7 @@ namespace ThirdPartyWager.Service.BLL.MG
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             var config = _thirdPartyBLL.GetThirdPartySetting((int)Tp.MG);
             _mgApi.MgConfig = config;
+            log2File = provider.GetRequiredService<Log2File>();
         }
 
         public async Task ReSettle()
@@ -53,6 +57,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                         var isSuccess = await _swApi.MgUpdateBalance(request);
                         if (isSuccess)
                         {
+                            log2File.Info($"currency:{currencyId},transaction {JsonConvert.SerializeObject(request)}", "MG_ReSettle");
                             await _mgApi.UpdateFailedTransactionToResolvedState(token, transaction.txnId, currencyId);
                         }
                     }
