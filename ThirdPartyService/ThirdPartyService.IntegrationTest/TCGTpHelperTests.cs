@@ -68,7 +68,7 @@ namespace ThirdParty.TCG.Tests
             var tpLangId = "1";
             _inputs.Add("fun", "0");
             _inputs.Add("gameType", "54");
-            _inputs.Add("GameId", "0");
+            _inputs.Add("gameId", "0");
 
             //Act
             var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);

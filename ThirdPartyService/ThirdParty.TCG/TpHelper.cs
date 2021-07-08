@@ -155,6 +155,7 @@ namespace ThirdParty.TCG
 
         public class LaunchGameObj
         {
+            private readonly Dictionary<GameType, Action<AppType, string>> _launchGameHandler;
             public string method { get; set; }
             public string username { get; set; }
             public string language { get; set; }
@@ -169,6 +170,11 @@ namespace ThirdParty.TCG
 
             public LaunchGameObj(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
             {
+                _launchGameHandler = new Dictionary<GameType, Action<AppType, string>>()
+                {
+                    { GameType.SEALottery, SettingSEALottery },
+                    { GameType.VNLottery, SettingVNLottery }
+                };
                 method = "lg";
                 username = tpCustInfo.TpUserName;
                 language = TpLangId;
@@ -176,21 +182,12 @@ namespace ThirdParty.TCG
                 back_url = inputs.GetValue("homeUrl");
                 view = "lobby";
 
-                if (!Enum.TryParse(inputs.GetValue("gametype"), out GameType gameType))
+                if (!Enum.TryParse(inputs.GetValue("gameType"), out GameType gameType))
                 {
-                    throw new ArgumentException("gametype is error.");
+                    throw new ArgumentException("gameType is error.");
                 }
                 var gameId = inputs.GetValue("gameId");
-
-                switch (gameType)
-                {
-                    case GameType.SEALottery:
-                        SettingSEALottery(appType, gameId);
-                        break;
-                    case GameType.VNLottery:
-                        SettingVNLottery(appType, gameId);
-                        break;
-                }
+                _launchGameHandler[gameType].Invoke(appType, gameId);
             }
 
             private void SettingSEALottery(AppType appType, string gameId)
