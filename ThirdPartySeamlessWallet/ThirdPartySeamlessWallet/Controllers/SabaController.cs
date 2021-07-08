@@ -36,7 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<ContentResult> CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
+        public ContentResult CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
         {
             var json = GetJsonResult(SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow, "System Error");
             var errorResult = ""; 
@@ -75,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, GetCurrentAsyncMethod());
+                _logger.LogError(e, GetCurrentMethod());
                 return new ContentResult() {Content = errorResult, ContentType = "application/xml", StatusCode = 403};
             }
         }
