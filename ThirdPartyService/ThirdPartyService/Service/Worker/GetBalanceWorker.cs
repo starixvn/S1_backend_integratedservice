@@ -20,7 +20,7 @@ namespace ThirdPartyService.Service.Worker
 
         private readonly IConfiguration _configuration;
         private readonly ILogger<GetBalanceWorker> _logger;
-        //private readonly Log2File _log2File;
+        private readonly Log2File _log2File;
         private readonly ServerInfoBLL _serverInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
