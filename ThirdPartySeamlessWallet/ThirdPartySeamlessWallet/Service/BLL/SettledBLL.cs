@@ -850,6 +850,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int RewardRNG_PG(AdjustmentDataRNG_PG adjustmentDataRNG_PG, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, adjustmentDataRNG_PG.PlayerName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                adjustmentDataRNG_PG.TransferAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RewardRNG_PG(tpCustInfo, adjustmentDataRNG_PG, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                adjustmentDataRNG_PG.TransferAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         public IEnumerable<SettleData_PG> GetUnsettledList_PG()
         {
             return settledService.GetUnsettledList_PG();
