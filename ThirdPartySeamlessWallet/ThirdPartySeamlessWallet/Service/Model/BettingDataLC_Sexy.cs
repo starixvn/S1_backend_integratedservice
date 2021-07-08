@@ -251,21 +251,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class CancelBetDataLC_Sexy : CommonData_Sexy
     {
-        //public GameInfoBet gameInfo { get; set; }
-    }
-
-    public class AdjustBetLC_Sexy
-    {
-        public IList<AdjustBetDataLC_Sexy> txns { get; set; }
-    }
-
-    public class AdjustBetDataLC_Sexy : CommonData_Sexy
-    {
-        public string gameName { get; set; }
-        public decimal betAmount { get; set; }
-        public decimal adjustAmount { get; set; }
-        public DateTime updateTime { get; set; }
-        public GameInfoDataLC_Sexy gameInfo { get; set; }
+        //public GameInfoDataLC_Sexy gameInfo { get; set; }
     }
 
     public class VoidBetLC_Sexy
@@ -281,20 +267,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int voidType { get; set; }
         public DateTime updateTime { get; set; }
         public GameInfoDataLC_Sexy gameInfo { get; set; }
-        public TpCustInfo tpCustInfo { get; set; }
-    }
-
-    public class UnVoidBetLC_Sexy
-    {
-        public IList<UnvoidBetDataLC_Sexy> txns { get; set; }
-    }
-
-    public class UnvoidBetDataLC_Sexy : CommonData_Sexy
-    {
-        public string gameName { get; set; }
-        public int voidType { get; set; }
-        public DateTime updateTime { get; set; }
-        //public GameInfoDataLC_Sexy gameInfo { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }
 
@@ -344,39 +316,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime updateTime { get; set; }
         public int voidType { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
-    }
-
-    public class UnVoidSettleLC_Sexy
-    {
-        public IList<UnvoidSettleDataLC_Sexy> txns { get; set; }
-    }
-
-    public class UnvoidSettleDataLC_Sexy : CommonData_Sexy
-    {
-        public string gameName { get; set; }
-        public DateTime updateTime { get; set; }
-        public int voidType { get; set; }
-        public TpCustInfo tpCustInfo { get; set; }
-    }
-
-    public class RefundLC_Sexy
-    {
-        public IList<RefundDataLC_Sexy> txns { get; set; }
-    }
-
-    public class RefundDataLC_Sexy : CommonData_Sexy
-    {
-        public long txId { get; set; }
-        public string gameName { get; set; }
-        public string betType { get; set; }
-        public decimal betAmount { get; set; }
-        public decimal winAmount { get; set; }
-        public decimal turnover { get; set; }
-        public DateTime betTime { get; set; }
-        public DateTime updateTime { get; set; }
-        public string refundPlatformTxId { get; set; }
-        public TpCustInfo tpCustInfo { get; set; }
-        public GameInfoDataLC_Sexy gameInfo { get; set; }
     }
 
     public class RewardLC_Sexy

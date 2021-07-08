@@ -1308,6 +1308,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     "WIN" => (int)TicketStatus.Win,
                     "LOSE" => (int)TicketStatus.Lost,
                     "DRAW" => (int)TicketStatus.Draw,
+                    "TIE" => (int)TicketStatus.Draw,
                     "VOID" => (int)TicketStatus.Refund,
                     "CANCEL" => (int)TicketStatus.Refund,
                     _ => throw new NotImplementedException()
@@ -1320,6 +1321,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         platformTxId = txn.platformTxId,
                         winAmount = txn.winAmount,
                         turnover = txn.turnover,
+                        winLoss = txn.gameInfo.winLoss,
                         roundId = txn.roundId,
                         betType = txn.betType,
                         status = txn.gameInfo.status,
@@ -1332,7 +1334,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleFlag = (int)SettleFlag.EndGame
                     });
 
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
                     decimal payout = txn.winAmount;
                     if (result > 0)
                     {
@@ -1362,6 +1364,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans.Commit();
                         }
                     }
+                    else
+                    {
+                        result = -1;
+                    }
                 }
                 catch (MySqlException mySqlEx)
                 {
@@ -1369,7 +1375,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     log2File.Error($"{JsonConvert.SerializeObject(txn)}\r\n{mySqlEx}", $"{Tp.Sexy}_settle", mySqlEx);
                 }
             }
-
             return isError ? 0 : result;
         }
 
@@ -1395,7 +1400,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var trans = conn.BeginTransaction();
                 try
                 {
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_UnSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_UnPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
@@ -1512,7 +1517,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return isError ? 0 : result;
         }
-        
+
         public int RewardLC_AWC_Sexy(RewardLC_Sexy rewardLC_Sexy, out decimal afterAmount)
         {
             bool isError = false;
@@ -1584,6 +1589,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return isError ? 0 : result;
         }
 
+        public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get", commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_BettransLC_AWC_Sexy(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_AWC_Sexy_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
         #endregion
 
         #region EBet

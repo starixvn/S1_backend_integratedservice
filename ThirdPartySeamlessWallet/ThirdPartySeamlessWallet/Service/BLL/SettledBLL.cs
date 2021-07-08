@@ -1117,6 +1117,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
+        {
+            return settledService.GetUnsettledListLC_AWC_Sexy();
+        }
+
+        public int SetSettleFlag_BettransLC_AWC_Sexy(string TransId)
+        {
+            return settledService.SetSettleFlag_BettransLC_AWC_Sexy(TransId);
+        }
         #endregion
 
         #region EBet

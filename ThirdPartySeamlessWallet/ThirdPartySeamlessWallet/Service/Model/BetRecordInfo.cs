@@ -41,5 +41,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ProgressiveBet { get; set; }
         public decimal ProgressiveWin { get; set; }
         public string GameId { get; set; }
+        public int TicketStatus { get; set; }
     }
 }
