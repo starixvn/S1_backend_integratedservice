@@ -1039,6 +1039,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 if (tpCurrency.ExchangeRate > 0)
                 {
                     item.betAmount *= tpCurrency.ExchangeRate;
+                    item.gameInfo.realWinAmt *= tpCurrency.ExchangeRate;
                 }
             }
             var result = settledService.VoidBetLC_AWC_Sexy(voidBetLC_Sexy);

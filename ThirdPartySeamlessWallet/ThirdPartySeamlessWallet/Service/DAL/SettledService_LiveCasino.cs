@@ -1234,22 +1234,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             foreach (var item in voidBetLC_Sexy.txns)
             {
-                var p = new DynamicParameters(new
-                {
-                    platformTxId = item.platformTxId,
-                    gameInfo = JsonConvert.SerializeObject(item.gameInfo),
-                    updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
-                    voidType = item.voidType,
-                    TicketType = (int)BettransType.CancelBet,
-                    TicketStatus = (int)TicketStatus.Refund,
-                    SettleFlag = (int)SettleFlag.EndGame
-                });
-
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
                 using var trans = conn.BeginTransaction();
+
                 try
                 {
+                    var p = new DynamicParameters(new
+                    {
+                        platformTxId = item.platformTxId,
+                        gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                        updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                        voidType = item.voidType,
+                        TicketType = (int)BettransType.CancelBet,
+                        TicketStatus = (int)TicketStatus.Refund,
+                        SettleFlag = (int)SettleFlag.EndGame
+                    });
+
                     result = conn.Execute("Service_BettransLC_AWC_Sexy_VoidBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
                     if (result > 0)
                     {

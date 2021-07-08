@@ -242,6 +242,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal? winLoss { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? status { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? realWinAmt { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? voidType { get; set; }
     }
 
     public class CancelLC_Sexy
