@@ -25,10 +25,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService bettingService;
         private readonly SettledService settledService;
         private readonly ThirdPartySetting thirdPartySetting;
-        private readonly Dictionary<string, Func<dynamic, Task<dynamic>>> _requestHandler;
+        private readonly Dictionary<string, Func<TCGRequest, TCGConfig, Task<dynamic>>> _requestHandler;
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
-
 
         public TCGBLL(IServiceProvider provider)
         {
@@ -39,74 +38,113 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bettingService = provider.GetRequiredService<BettingService>();
             settledService = provider.GetRequiredService<SettledService>();
             thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-            _requestHandler = new Dictionary<string, Func<dynamic, Task<dynamic>>>()
+            _requestHandler = new Dictionary<string, Func<TCGRequest, TCGConfig, Task<dynamic>>>()
             {
-                {TCGApiMethod.GetBalance, GetBalance},
+                { TCGApiMethod.GetBalance, GetBalance},
+                { TCGApiMethod.Debit, Debit},
+                { TCGApiMethod.Credit, Credit},
+                { TCGApiMethod.Reserve, Reserve},
+                { TCGApiMethod.CancelReserve, CancelReserve},
+                { TCGApiMethod.ConfirmReserve, ConfirmReserve},
+                { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
         }
 
         public async Task<dynamic> SeamlessWallet(string merchantCode, string @params, string sign)
         {
-            var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
-            var jsonString = DesDecrypt(@params, tcgConfig.DesKey);
-
-            var desEncrypt = DesEncrypt(jsonString, tcgConfig.DesKey);
-            var checkSign = SHA256($"{desEncrypt}{tcgConfig.SignKey}");
-            if (sign != checkSign)
-            {
-                return new TCGBaseResult()
-                {
-                    status = "7",
-                    error_desc = $"Invalid signature | RequestSign is:{sign} | CheckSign is {checkSign}",
-                };
-            }
-
-            var request = JsonConvert.DeserializeObject<dynamic>(jsonString);
-            return await _requestHandler[(string)request.method].Invoke(request);            
-        }
-
-        private async Task<dynamic> GetBalance(dynamic request)
-        {
             try
             {
-                var tpUserName = (string)request.username;
-                var (tpCustInfo, tpCurrency) = GetTPInfo(tpUserName);
-                var gameType = GetGameType((string)request.product_type);
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)gameType);
-                return new 
+                var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
+                var jsonString = DesDecrypt(@params, tcgConfig.DesKey);
+                var desEncrypt = DesEncrypt(jsonString, tcgConfig.DesKey);
+                var checkSign = SHA256($"{desEncrypt}{tcgConfig.SignKey}");
+                if (sign != checkSign)
                 {
-                    status = "0",
-                    error_desc = "Success",
-                    balance = tpCustBalance.Balance.ToString(),
-                };
+                    throw new TCGException(TCGErrorCode.InvalidSignature, $"Invalid signature | RequestSign is:{sign} | CheckSign is {checkSign}");
+                }
+
+                var request = JsonConvert.DeserializeObject<TCGRequest>(jsonString);
+                return await _requestHandler[request.method].Invoke(request, tcgConfig);
             }
-            catch (NotSupportedGameTypeException ex)
+            catch (TCGException ex)
             {
                 return new TCGBaseResult()
                 {
-                    status = "4",
-                    error_desc = ex.Message,
-                };
-            }
-            catch (CustomerNotFoundException ex)
-            {
-                return new TCGBaseResult()
-                {
-                    status = "15",
-                    error_desc = ex.Message,
-                };
-            }
-            catch (RestrictedCustomerException ex)
-            {
-                return new TCGBaseResult()
-                {
-                    status = "8",
+                    status = ex.ErrorCode,
                     error_desc = ex.Message,
                 };
             }
         }
 
+        private async Task<dynamic> GetBalance(TCGRequest request, TCGConfig tcgConfig)
+        {
+            var tpUserName = request.username;
+            var (tpCustInfo, tpCurrency) = GetTPInfo(tpUserName);
+            var gameType = GetGameType(request.product_type);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)gameType);
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+                balance = tpCustBalance.Balance.ToString(),
+            };
+        }
+
+        private async Task<dynamic> Debit(TCGRequest request, TCGConfig tcgConfig)
+        {
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+            };
+        }
+
+        private async Task<dynamic> Credit(TCGRequest request, TCGConfig tcgConfig)
+        {
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+            };
+        }
+
+        private async Task<dynamic> Reserve(TCGRequest request, TCGConfig tcgConfig)
+        {
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+            };
+        }
+
+        private async Task<dynamic> CancelReserve(TCGRequest request, TCGConfig tcgConfig)
+        {
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+            };
+        }
+
+        private async Task<dynamic> ConfirmReserve(TCGRequest request, TCGConfig tcgConfig)
+        {
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+            };
+        }
+
+        private async Task<dynamic> CheckTransactionStatus(TCGRequest request, TCGConfig tcgConfig)
+        {
+            return new
+            {
+                status = "0",
+                error_desc = "Success",
+            };
+        }
+
+        
         /// <summary>
         /// DES加密
         /// </summary>
@@ -150,16 +188,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
         }
 
-        private GameType GetGameType(string productType)
+        private GameType GetGameType(int productType)
         {
             return productType switch
             {
-                "384" => GameType.TCG_SEA_Lottery,
-                "420" => GameType.TCG_VN_Lottery,
-                _ => throw new NotSupportedGameTypeException($"product_type:{productType} not supported.")
+                384 => GameType.TCG_SEA_Lottery,
+                420 => GameType.TCG_VN_Lottery,
+                _ => throw new TCGException(TCGErrorCode.MerchantNotAllowedProductType, $"product_type:{productType} not supported.")
             };
         }
 
+        private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
+            if (tpCustInfo == null)
+            {
+                throw new TCGException(TCGErrorCode.UserDoesNotExists, $"Customer:{tpUserName} not found.");
+            }
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate < 0)
+            {
+                throw new TCGException(TCGErrorCode.UnSupportedCurrency, $"CurrencyId:{tpCustInfo.CurrencyId} not supported.");
+            }
+            return (tpCustInfo, tpCurrency);
+        }
+        
+        
         #region BTI
 
         public string ValidateToken(string auth_token)
@@ -456,20 +510,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
-            if (tpCustInfo == null)
-            {
-                throw new CustomerNotFoundException($"Customer:{tpUserName} not found.");
-            }
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
-            if (tpCurrency.ExchangeRate < 0)
-            {
-                throw new RestrictedCustomerException($"CurrencyId:{tpCustInfo.CurrencyId} not supported.");
-            }
-            return (tpCustInfo, tpCurrency);
-        }
+
 
         private string ReturnBTI(Dictionary<string, string> dic)
         {
