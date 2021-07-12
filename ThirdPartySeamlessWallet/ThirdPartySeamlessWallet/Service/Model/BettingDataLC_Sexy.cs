@@ -255,7 +255,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class CancelBetDataLC_Sexy : CommonData_Sexy
     {
-        //public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
     }
 
     public class VoidBetLC_Sexy
@@ -290,6 +290,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime betTime { get; set; }
         public DateTime updateTime { get; set; }
         public DateTime txTime { get; set; }
+        public string settleType { get; set; }
+        public string refPlatformTxId { get; set; }
         public GameInfoDataLC_Sexy gameInfo { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }
@@ -339,5 +341,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public TpCustInfo tpCustInfo { get; set; }
     }
 
+    public class BettransDataLC_Sexy
+    {
+        public string platformTxId { get; set; }
+        public decimal betAmount { get; set; }
+        public int TicketStatus { get; set; }
+        public int TicketType { get; set; }
+    }
     #endregion
 }

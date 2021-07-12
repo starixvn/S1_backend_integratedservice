@@ -1187,34 +1187,46 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     platformTxId = item.platformTxId,
+                    userId = item.userId,
+                    platform = item.platform,
+                    gameType = item.gameType,
+                    gameCode = item.gameCode,
+                    roundId = item.roundId,
+                    roundStartUnix = new DateTimeOffset((DateTime)item.gameInfo.roundStartTime).ToUnixTimeSeconds(),
+                    gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
                     TicketType = (int)BettransType.CancelBet,
                     TicketStatus = (int)TicketStatus.Refund,
                     SettleFlag = (int)SettleFlag.Settled
                 });
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
                 result = conn.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
                     decimal stake = p.Get<decimal>("out_stake");
-                    result = PayoutV2(
-                        tpCustInfo,
-                        stake,
-                        (int)Tp.Sexy,
-                        item.platformTxId,
-                        (int)GameType.Sexy_LiveCasino,
-                        TpCategory.LiveCasino,
-                        item.platformTxId,
-                        TransType.Refunds,
-                        null,
-                        out afterAmount,
-                        "CancelBet",
-                        out bonusId,
-                        conn,
-                        trans
-                    );
 
+                    if (stake > 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            stake,
+                            (int)Tp.Sexy,
+                            item.platformTxId,
+                            (int)GameType.Sexy_LiveCasino,
+                            TpCategory.LiveCasino,
+                            item.platformTxId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
                     if (result > 0)
                     {
                         trans.Commit();
@@ -1222,6 +1234,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
+                    p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                    conn.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var refBettransLC = p.Get<int>("out_result");
+
+                    if (refBettransLC == 2)
+                    {
+                        // insert cancel record
+                        trans.Commit();
+                    }
                     result = -1;
                 }
             }
