@@ -119,6 +119,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
                         }
+
+                        // check bonus status and update status cancel to running
+                        if (afterBonus > 0)
+                        {
+                            AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
+                        }
                     }
                     else
                     {
@@ -171,6 +177,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 else
                 {
                     afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
+                }
+
+                // check bonus status and update status cancel to running
+                if (afterBonus > 0)
+                {
+                    AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
                 }
             }
             catch (Exception ex)
@@ -237,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)betRecordInfo.GameType;
 
             GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
-            if (bonusId == 0 && betRecordInfo .TpId == (int)Tp.N2Live && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
+            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.N2Live && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
             {
                 // for n2 smart bet use
                 // for n2 temporary fix noraml bet
@@ -608,6 +620,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans);
             }
 
+            return result;
+        }
+
+        public int AutoRunningSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, AfterBonus = afterBonus });
+            var result = conn.Execute("Service_AutoRunningSeamlessBonus_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             return result;
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
