@@ -47,7 +47,7 @@ namespace ThirdParty.TCG.Tests
                 { "MerchantCode_MYR", "xpnovamyr" },
                 { "DESKey_MYR", "dHJoyySB" },
                 { "SHA256Key_MYR", "70tOVKomTbE5booC" },
-        };
+            };
         }
 
         [Test()]
@@ -97,20 +97,19 @@ namespace ThirdParty.TCG.Tests
                 request_time = DateTime.Now.ToFileTime(),
             };
 
-
-
             var merchantCode = _inputs["MerchantCode_MYR"];
             var desKey = _inputs["DESKey_MYR"];
             var SignKey = _inputs["SHA256Key_MYR"];
             var hashString = ToJson(sParam);
+
             //Act
-            var desEncrypt = _tpHelper.DesEncrypt(hashString, desKey);     
+            var desEncrypt = _tpHelper.DesEncrypt(hashString, desKey);
             var sign = _tpHelper.SHA256($"{desEncrypt}{SignKey}");
 
             var requestBody = $"?merchant_code={HttpUtility.UrlEncode(merchantCode)}&params={HttpUtility.UrlEncode(desEncrypt)}&sign={HttpUtility.UrlEncode(sign)}";
 
             //Assert
-            var result =_tpHelper.DesDecrypt(desEncrypt, desKey);
+            var result = _tpHelper.DesDecrypt(desEncrypt, desKey);
             result.Should().Be(hashString);
 
 

@@ -20,35 +20,35 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public const string CheckTransactionStatus = "scs";
     }
 
-    public class TCGErrorCode
+    public class TCGReturnCode
     {
-        public const string Success = "0";
-        public const string UnknownSystemError = "1";
-        public const string MissingRequiredParameter = "2";
-        public const string MethodNotSupported = "3";
-        public const string MerchantNotAllowedProductType = "4";
-        public const string MerchantNotFound = "5";
-        public const string InvalidParameters = "6";
-        public const string InvalidSignature = "7";
-        public const string UnSupportedCurrency = "8";
-        public const string InvalidAccountType = "9";
-        public const string InvalidProducttype = "10";
-        public const string Insufficientbalancetofundoutwithdraw = "11";
-        public const string Transactionalreadyexists = "12";
-        public const string Invalidgamecode = "13";
-        public const string UserDoesNotExists = "15";
-        public const string Insufficientmerchantcredittofundin = "16";
-        public const string Trialmodeisnotsupportedforthisgamecode = "18";
-        public const string Batchnotready = "19";
-        public const string Methodnotfound = "21";
-        public const string ParameterValidationFailed = "22";
-        public const string APIisbusy = "23";
-        public const string Transactionnotfound = "24";
-        public const string Reservationalreadyprocess = "25";
-        public const string Decimalnotsupported = "26";
-        public const string APIisundermaintenance = "27";
-        public const string APIisprohibitedforthismerchant = "28";
-        public const string Productisundermaintenance = "30";
+        public const int Success = 0;
+        public const int UnknownSystemError = 1;
+        public const int MissingRequiredParameter = 2;
+        public const int MethodNotSupported = 3;
+        public const int MerchantNotAllowedProductType = 4;
+        public const int MerchantNotFound = 5;
+        public const int InvalidParameters = 6;
+        public const int InvalidSignature = 7;
+        public const int UnSupportedCurrency = 8;
+        public const int InvalidAccountType = 9;
+        public const int InvalidProducttype = 10;
+        public const int InsufficientBalance = 11;
+        public const int TransactionAlreadyExists = 12;
+        public const int Invalidgamecode = 13;
+        public const int UserDoesNotExists = 15;
+        public const int Insufficientmerchantcredittofundin = 16;
+        public const int Trialmodeisnotsupportedforthisgamecode = 18;
+        public const int Batchnotready = 19;
+        public const int MethodNotFound = 21;
+        public const int ParameterValidationFailed = 22;
+        public const int APIisbusy = 23;
+        public const int Transactionnotfound = 24;
+        public const int Reservationalreadyprocess = 25;
+        public const int Decimalnotsupported = 26;
+        public const int APIisundermaintenance = 27;
+        public const int APIisprohibitedforthismerchant = 28;
+        public const int Productisundermaintenance = 30;
     }
 
     public class TCGConfig
@@ -72,16 +72,39 @@ namespace ThirdPartySeamlessWallet.Service.Model
             }
             catch (Exception ex)
             {
-                throw new TCGException(TCGErrorCode.MerchantNotFound, ex.Message);
+                throw new TCGException(TCGReturnCode.MerchantNotFound, ex.Message);
             }
         }
     }
 
-    public class TCGBaseResult
+    public class TCGReturnObj
     {
         public string status { get; set; }
 
         public string error_desc { get; set; }
+    }
+
+    public class TCGBalanceObj : TCGReturnObj
+    {
+        public string balance { get; set; }
+    }
+
+    public class BettransLottery_TCG
+    {
+        public string username { get; set; }
+        public string ref_no { get; set; }
+        public string TransType { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+    }
+
+    public class TCGResult
+    {
+
+        public int Result { get; set; } = 1;
+
+        public string Message { get; set; }
     }
 
     public class TCGRequest

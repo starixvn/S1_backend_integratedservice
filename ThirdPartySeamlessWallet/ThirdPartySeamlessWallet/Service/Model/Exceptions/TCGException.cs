@@ -6,10 +6,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 {
     public class TCGException: Exception
     {
-        public string ErrorCode { get; }
+        public int ErrorCode { get; }
         public string ErrorMessage { get; set; }
 
-        public TCGException(string errorCode, string message): base(message)
+        public TCGException(int errorCode, string message): base(message)
         {
             ErrorCode = errorCode;
             ErrorMessage = message;

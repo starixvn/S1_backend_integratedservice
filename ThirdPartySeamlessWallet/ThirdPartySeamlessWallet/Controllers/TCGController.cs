@@ -40,9 +40,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return new TCGBaseResult()
+                return new TCGReturnObj()
                 {
-                    status = "1",
+                    status = TCGReturnCode.UnknownSystemError.ToString(),
                     error_desc= "Unknown system error",
                 };         
             }
