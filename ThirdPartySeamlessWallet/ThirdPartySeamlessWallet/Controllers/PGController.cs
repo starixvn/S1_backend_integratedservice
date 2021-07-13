@@ -778,7 +778,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         respData.adjust_amount = adjustmentReqq.TransferAmount;
                         respData.balance_before = balanceBefore;
                         respData.balance_after = tpAffterAmount;
-                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeSeconds();
+                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                         resp.error = null;
                     }
                     else if (adjustmentReqq.TransferAmount == 0)
@@ -788,7 +788,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         respData.adjust_amount = adjustmentReqq.TransferAmount;
                         respData.balance_before = balanceBefore;
                         respData.balance_after = tpCustBalance.Balance;
-                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeSeconds();
+                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                         resp.error = null;
                     }
                 }
@@ -798,7 +798,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     respData.adjust_amount = adjustmentReqq.TransferAmount;
                     respData.balance_before = balanceBefore;
                     respData.balance_after = tpCustBalance.Balance;
-                    respData.updated_time = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     resp.error = null;
                 }
                 else if (tpAffterAmount < 0)
