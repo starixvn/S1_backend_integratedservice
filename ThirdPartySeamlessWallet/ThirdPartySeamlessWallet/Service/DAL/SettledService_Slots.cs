@@ -1246,6 +1246,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         );
                     }
 
+                    if(afterAmount < 0)
+                    {
+                        trans.Rollback();
+                        return 0;
+                    }
 
                     if (result > 0)
                     {

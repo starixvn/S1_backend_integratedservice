@@ -727,7 +727,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string secret_key = thirdPartySetting.TpSetting["secret_key"];
             string operator_token = thirdPartySetting.TpSetting["operator_token"];
 
-            if (string.IsNullOrEmpty(adjustmentReqq.PlayerName) || !adjustmentReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !adjustmentReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || adjustmentReqq.TransferAmount == 0)
+            if (string.IsNullOrEmpty(adjustmentReqq.PlayerName) || !adjustmentReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !adjustmentReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
                 resp.error = new Error
                 {
@@ -764,7 +764,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             AdjustmentBalanceData respData = new AdjustmentBalanceData();
             resp.data = respData;
-            respData.updated_time = adjustmentReqq.UpdatedTime;
             resp.error = null;
 
             try
@@ -779,15 +778,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                         respData.adjust_amount = adjustmentReqq.TransferAmount;
                         respData.balance_before = balanceBefore;
                         respData.balance_after = tpAffterAmount;
+                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeSeconds();
                         resp.error = null;
                     }
                     else if (adjustmentReqq.TransferAmount == 0)
                     {
-                        
+
                         tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReqq.PlayerName, gameType);
                         respData.adjust_amount = adjustmentReqq.TransferAmount;
                         respData.balance_before = balanceBefore;
                         respData.balance_after = tpCustBalance.Balance;
+                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeSeconds();
                         resp.error = null;
                     }
                 }
@@ -797,7 +798,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                     respData.adjust_amount = adjustmentReqq.TransferAmount;
                     respData.balance_before = balanceBefore;
                     respData.balance_after = tpCustBalance.Balance;
+                    respData.updated_time = DateTimeOffset.Now.ToUnixTimeSeconds();
                     resp.error = null;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    resp.data = null;
+                    resp.error = new Error
+                    {
+                        code = "3202",
+                        message = "No enough cash balance."
+                    };
                 }
             }
             catch (Exception ex)
