@@ -682,6 +682,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                     respData.balance_amount = tpCustBalance.Balance;
                     resp.error = null;
                 }
+                else if (tpAffterAmount < 0)
+                {
+                    resp.data = null;
+                    resp.error = new Error
+                    {
+                        code = "3202",
+                        message = "No enough cash balance."
+                    };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
+                }
             }
             catch (Exception ex)
             {
@@ -809,6 +820,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         code = "3202",
                         message = "No enough cash balance."
                     };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
                 }
             }
             catch (Exception ex)
