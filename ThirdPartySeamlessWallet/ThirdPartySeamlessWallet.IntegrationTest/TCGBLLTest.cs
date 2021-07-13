@@ -21,39 +21,55 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         }
 
         [Test]
-        public void GetBalanceTest() 
+        public void GetBalance() 
             => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
             .GetBalance()
             .CheckResult(TCGReturnCode.Success);
 
         [TestCase(10)]
-        public void DebitTest(decimal amount) 
+        public void Debit(decimal amount) 
             => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
             .CreateDebit(_transId, amount)
             .CheckResult(TCGReturnCode.Success);
+        
+        [TestCase(10)]
+        public void Debit_Resend(decimal amount)
+            => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
+            .CreateDebit(_transId, amount)
+            .CheckResult(TCGReturnCode.Success)
+            .CreateDebit(_transId, amount)
+            .CheckResult(TCGReturnCode.TransactionAlreadyExists);
 
         [TestCase(10)]
-        public void CreditTest(decimal amount)
+        public void Credit(decimal amount)
             => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
             .CreateCredit(_transId, amount)
             .CheckResult(TCGReturnCode.Success);
 
         [TestCase(10)]
-        public void ReserveTest(decimal amount)
+        public void Credit_Resend(decimal amount)
+            => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
+            .CreateCredit(_transId, amount)
+            .CheckResult(TCGReturnCode.Success)
+            .CreateCredit(_transId, amount)
+            .CheckResult(TCGReturnCode.TransactionAlreadyExists);
+
+        [TestCase(10)]
+        public void Reserve(decimal amount)
             => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
             .CreateReserve(_transId, amount)
             .CheckResult(TCGReturnCode.Success);
 
         [TestCase(10)]
-        public void Resend_Debit_Test(decimal amount)
+        public void Reserve_Resend(decimal amount)
             => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
-            .CreateDebit(_transId, amount)
+            .CreateReserve(_transId, amount)
             .CheckResult(TCGReturnCode.Success)
-            .CreateDebit(_transId, amount)//Resend_Same_Debit
+            .CreateReserve(_transId, amount)
             .CheckResult(TCGReturnCode.TransactionAlreadyExists);
-        
+
         [TestCase(10)]
-        public void Debit_Balance_Test(decimal amount)
+        public void Debit_Then_CheckBalance(decimal amount)
         {
             var sandbox = new TCGBLLSandbox(_merchantCode, _tpUserName, _transId);
             var firstBalance = sandbox.GetBalance().CheckResult(TCGReturnCode.Success).Balance;
@@ -66,7 +82,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         }
 
         [TestCase(10)]
-        public void Debit_Then_Credit_Balance_Test(decimal amount)
+        public void Debit_Then_Credit_Then_CheckBalance(decimal amount)
         {
             var debitSandbox = new TCGBLLSandbox(_merchantCode, _tpUserName, _transId);
             var firstBalance = debitSandbox.GetBalance().CheckResult(TCGReturnCode.Success).Balance;
