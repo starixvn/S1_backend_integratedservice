@@ -315,9 +315,11 @@ namespace ThirdParty.Saba
                     string SportType = null;
                     string matchId = null;
                     string betType = null;
+                    string menutype = "0";
                     inputs.TryGetValue("gameId", out SportType);
                     inputs.TryGetValue("matchid", out matchId);
                     inputs.TryGetValue("bettype", out betType);
+                    inputs.TryGetValue("menutype", out menutype);
 
                     if (appType == AppType.Native)
                     {
@@ -338,7 +340,7 @@ namespace ThirdParty.Saba
                     }
                     else if (appType == AppType.Mobile)
                     {
-                        string types = $"{SportType},0,l";
+                        string types = $"{SportType},{menutype},l";
 
                         if (SportType == "202")
                         {
@@ -400,7 +402,7 @@ namespace ThirdParty.Saba
                             }
                             else if (!string.IsNullOrEmpty(betType))
                             {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}";
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}&menutype={menutype}";
                             }
                             else if (SportType == "997")
                             {
@@ -409,7 +411,7 @@ namespace ThirdParty.Saba
                             }
                             else
                             {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}";
+                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&menutype={menutype}";
                             }
                         }
                     }
