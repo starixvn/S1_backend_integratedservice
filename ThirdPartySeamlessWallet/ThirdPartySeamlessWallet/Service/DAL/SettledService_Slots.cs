@@ -2496,7 +2496,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo, 
                         bettingDataRNG_MG.amount, 
                         (int)Tp.MG, 
-                        bettingDataRNG_MG.roundId, 
+                        bettingDataRNG_MG.betId, 
                         gameType,
                         TpCategory.Slots, 
                         bettingDataRNG_MG.txnId, 
