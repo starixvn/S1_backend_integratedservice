@@ -20,6 +20,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public const string CheckTransactionStatus = "scs";
     }
 
+    public enum TCGTransType
+    { 
+        Debit,
+        Credit,
+        Reserve,
+    }
+
     public class TCGReturnCode
     {
         public const int Success = 0;
@@ -43,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public const int MethodNotFound = 21;
         public const int ParameterValidationFailed = 22;
         public const int APIisbusy = 23;
-        public const int Transactionnotfound = 24;
+        public const int TransactionNotFound = 24;
         public const int Reservationalreadyprocess = 25;
         public const int Decimalnotsupported = 26;
         public const int APIisundermaintenance = 27;
@@ -89,10 +96,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string balance { get; set; }
     }
 
-    public class BettransLottery_TCG
+    public class TCGBettransLottery
     {
         public string username { get; set; }
         public string ref_no { get; set; }
+        public decimal amount { get; set; }
         public string TransType { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
@@ -115,18 +123,18 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public int product_type { get; set; }
 
-        public List<TransactionData> transactions { get; set; }
+        public List<TCGTransactionData> transactions { get; set; }
 
         public long request_time { get; set; }
 
         public List<string> ref_nos { get; set; }
 
-        public List<TransactionData> reservation_details { get; set; }
+        public List<TCGReservationDetail> reservation_details { get; set; }
 
-        public List<TransactionInfo> transaction_details { get; set; }
+        public List<TCGTransactionInfo> transaction_details { get; set; }
     }
 
-    public class TransactionData
+    public class TCGTransactionData
     {
         public string ref_no { get; set; }
         public string username { get; set; }
@@ -136,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public dynamic additionalInformation { get; set; }
     }
 
-    public class ReservationDetail
+    public class TCGReservationDetail
     {
         public decimal amount { get; set; }
         public string ref_no { get; set; }
@@ -144,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public dynamic additionalInformation { get; set; }
     }
 
-    public class TransactionInfo
+    public class TCGTransactionInfo
     {
         public decimal amount { get; set; }
         public string ref_no { get; set; }

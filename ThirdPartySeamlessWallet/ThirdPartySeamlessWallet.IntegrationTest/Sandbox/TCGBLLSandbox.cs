@@ -70,8 +70,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _exceptSqlMapping = new Dictionary<Type, Lazy<string>>
             {
                 {
-                    typeof(ReserveRecord), new Lazy<string>(() =>
-                        @$"SELECT * FROM BettransLottery_TCG WHERE ref_no={_transId}")
+                    typeof(TCGRecord), new Lazy<string>(() =>
+                        @$"SELECT * FROM BettransLottery_TCG WHERE ref_no=""{_transId}""")
                 },
             };
         }
@@ -189,8 +189,55 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
+        public TCGBLLSandbox CancelReserve(string _transId, decimal amount)
+        {
+            var sParam = new
+            {
+                method = "cnrsv",
+                product_type = 384,
+                reservation_details = new[]
+                {
+                    new
+                    {
+                        ref_no = _transId,
+                        username= _tpUserName,
+                        amount,
+                    }
+                },
+                request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            };
 
-        public TCGBLLSandbox CheckResult(int expected)
+            var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
+            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+            return this;
+        }
+
+        public TCGBLLSandbox ConfirmReserve(string _transId, decimal amount)
+        {
+            var sParam = new
+            {
+                method = "crsv",
+                product_type = 384,
+                reservation_details = new[]
+                {
+                    new
+                    {
+                        ref_no = _transId,
+                        username= _tpUserName,
+                        amount,
+                    }
+                },
+                request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            };
+
+            var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
+            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+            return this;
+        }
+
+        public TCGBLLSandbox ResultShouldBe(int expected)
         {
             Result.status.Should().Be(expected.ToString());
             return this; 
@@ -204,6 +251,18 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             actual.Should().BeEquivalentTo(data.Value);
             return this;
         }
+
+        public static Lazy<TCGRecord> TCGRecord(TCGTransType tCGTransType, string tpUserName, string ref_no, decimal amount) =>
+        new Lazy<TCGRecord>(() => new TCGRecord
+        {
+            TransType = tCGTransType.ToString(),
+            username = tpUserName,
+            ref_no = ref_no,
+            amount = amount,          
+            //TicketType = 0,
+            //TicketStatus = 0,
+            //SettleFlag = 0,
+        });
 
         private ServiceCollection SetEnvironment(ServiceCollection services)
         {

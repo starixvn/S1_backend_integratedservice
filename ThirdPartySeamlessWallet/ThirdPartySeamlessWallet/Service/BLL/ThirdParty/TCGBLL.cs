@@ -45,8 +45,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { TCGApiMethod.Debit, Transaction},
                 { TCGApiMethod.Credit, Transaction},
                 { TCGApiMethod.Reserve, Transaction},
-                { TCGApiMethod.CancelReserve, CancelReserve},
-                { TCGApiMethod.ConfirmReserve, ConfirmReserve},
+                { TCGApiMethod.CancelReserve, Reservation},
+                { TCGApiMethod.ConfirmReserve, Reservation},
                 { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
         }
@@ -113,18 +113,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<TCGResult> ExecuteTransaction(TCGRequest request , TransactionData transactionData)
+        private async Task<TCGResult> ExecuteTransaction(TCGRequest request , TCGTransactionData transaction)
         {
             try
             {
-                var (tpCustInfo, tpCurrency) = GetTPInfo(transactionData.username);
-                transactionData.amount *= tpCurrency.ExchangeRate;
+                var (tpCustInfo, tpCurrency) = GetTPInfo(transaction.username);
+                transaction.amount *= tpCurrency.ExchangeRate;
 
                 return request.method switch
                 {
-                    TCGApiMethod.Debit => await bettingService.Debit_TCG(tpCustInfo, GetGameType(request.product_type), request, transactionData),
-                    TCGApiMethod.Credit => await settledService.Credit_TCG(tpCustInfo, GetGameType(request.product_type), request, transactionData),
-                    TCGApiMethod.Reserve => await bettingService.Reserve_TCG(tpCustInfo, GetGameType(request.product_type), request, transactionData),
+                    TCGApiMethod.Debit => await bettingService.Debit_TCG(tpCustInfo, GetGameType(request.product_type), request, transaction),
+                    TCGApiMethod.Credit => await settledService.Credit_TCG(tpCustInfo, GetGameType(request.product_type), request, transaction),
+                    TCGApiMethod.Reserve => await bettingService.Reserve_TCG(tpCustInfo, GetGameType(request.product_type), request, transaction),
                     _ => throw new TCGException(TCGReturnCode.MethodNotFound, $"method:{request.method} not found.")
                 };
             }
@@ -146,8 +146,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private async Task<TCGReturnObj> CancelReserve(TCGRequest request, TCGConfig tcgConfig)
+        private async Task<TCGReturnObj> Reservation(TCGRequest request, TCGConfig tcgConfig)
         {
+            var Tasks = request.reservation_details.Select(item => Task.Run(() => ExecuteReservation(request, item))).ToArray();
+            var result = await Task.WhenAll(Tasks);
+
+            var error = result.FirstOrDefault(item => item.Result != 0);
+            if (error != null)
+            {
+                return new TCGReturnObj
+                {
+                    status = error.Result.ToString(),
+                    error_desc = error.Message,
+                };
+            }
+
             return new TCGReturnObj
             {
                 status = TCGReturnCode.Success.ToString(),
@@ -155,13 +168,38 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<TCGReturnObj> ConfirmReserve(TCGRequest request, TCGConfig tcgConfig)
+        private async Task<TCGResult> ExecuteReservation(TCGRequest request, TCGReservationDetail reservation)
         {
-            return new TCGReturnObj
+            try
             {
-                status = TCGReturnCode.Success.ToString(),
-                error_desc = "Success",
-            };
+                var (tpCustInfo, tpCurrency) = GetTPInfo(reservation.username);
+                reservation.amount *= tpCurrency.ExchangeRate;
+
+                return request.method switch
+                {
+                    TCGApiMethod.CancelReserve 
+                        => await settledService.CancelReserve_TCG(tpCustInfo, GetGameType(request.product_type), request, reservation),
+                    TCGApiMethod.ConfirmReserve 
+                        => await settledService.ConfirmReserve_TCG(tpCustInfo, GetGameType(request.product_type), request, reservation),
+                    _ => throw new TCGException(TCGReturnCode.MethodNotFound, $"method:{request.method} not found.")
+                };
+            }
+            catch (TCGException ex)
+            {
+                return new TCGResult()
+                {
+                    Result = ex.ErrorCode,
+                    Message = ex.Message,
+                };
+            }
+            catch (Exception ex)
+            {
+                return new TCGResult()
+                {
+                    Result = TCGReturnCode.UnknownSystemError,
+                    Message = ex.Message,
+                };
+            }
         }
 
         private async Task<TCGReturnObj> CheckTransactionStatus(TCGRequest request, TCGConfig tcgConfig)

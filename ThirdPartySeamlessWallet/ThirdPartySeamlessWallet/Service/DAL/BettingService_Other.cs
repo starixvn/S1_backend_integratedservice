@@ -538,7 +538,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region TCG
 
-        public async Task<TCGResult> Debit_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TransactionData data)
+        public async Task<TCGResult> Debit_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TCGTransactionData data)
         {
             try
             {
@@ -546,7 +546,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                var transType = "Debit";
                 var p = new DynamicParameters(new
                 {
                     request.method,
@@ -558,13 +557,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     data.tx_type,
                     data.remarks,
                     additionalInformation = JsonConvert.SerializeObject(data.additionalInformation),
-                    TransType = transType,
+                    TransType = TCGTransType.Debit.ToString(),
                     TicketType = (int)BettransType.Bet,
                     TicketStatus = (int)TicketStatus.UnSettled,
                     SettleFlag = (int)SettleFlag.Running
                 });
 
-                var bettransTCG = await conn.QueryFirstOrDefaultAsync<BettransLottery_TCG>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransTCG != null)
                 {
                     return new TCGResult()
@@ -609,7 +608,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<TCGResult> Reserve_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TransactionData data)
+        public async Task<TCGResult> Reserve_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TCGTransactionData data)
         {
             try
             {
@@ -629,13 +628,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     data.tx_type,
                     data.remarks,
                     additionalInformation = JsonConvert.SerializeObject(data.additionalInformation),
-                    TransType = "Reserve",
+                    TransType = TCGTransType.Reserve.ToString(),
                     TicketType = (int)BettransType.Reserve,
                     TicketStatus = (int)TicketStatus.UnSettled,
                     SettleFlag = (int)SettleFlag.Running
                 });
 
-                var bettransTCG = await conn.QueryFirstOrDefaultAsync<BettransLottery_TCG>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransTCG != null)
                 {
                     return new TCGResult()
