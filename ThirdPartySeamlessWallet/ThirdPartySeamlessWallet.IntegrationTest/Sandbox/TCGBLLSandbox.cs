@@ -45,6 +45,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public TCGBalanceObj Balance;
 
+        public TCGCheckObj Check;
+
         public TCGBLLSandbox(string merchantCode, string tpUserName, string transId)
         {
             _merchantCode = merchantCode;
@@ -93,7 +95,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public TCGBLLSandbox CreateDebit(string _transId, decimal amount)
+        public TCGBLLSandbox Debit(string _transId, decimal amount)
         {
             var sParam = new
             {
@@ -125,7 +127,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public TCGBLLSandbox CreateCredit(string _transId, decimal amount)
+        public TCGBLLSandbox Credit(string _transId, decimal amount)
         {
             var sParam = new
             {
@@ -157,7 +159,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public TCGBLLSandbox CreateReserve(string _transId, decimal amount)
+        public TCGBLLSandbox Reserve(string _transId, decimal amount)
         {
             var sParam = new
             {
@@ -237,6 +239,31 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
+        public TCGBLLSandbox CheckTransactionStatus(string _transId, decimal amount)
+        {
+            var sParam = new
+            {
+                method = "scs",
+                product_type = 384,
+                transaction_details = new[]
+                {
+                    new
+                    {
+                        ref_no = _transId,
+                        username= _tpUserName,
+                        amount,
+                    }
+                },
+                request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            };
+
+            var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
+            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+            Check = (TCGCheckObj)Result;
+            return this;
+        }
+
         public TCGBLLSandbox ResultShouldBe(int expected)
         {
             Result.status.Should().Be(expected.ToString());
@@ -249,6 +276,20 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             var sqlScript = _exceptSqlMapping[typeof(TRecord)].Value;
             var actual = _mySqlClient.Query<TRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(data.Value);
+            return this;
+        }
+
+        public TCGBLLSandbox BalanceShouldBe(decimal expected)
+        {
+            Balance.status.Should().Be(TCGReturnCode.Success.ToString());
+            Balance.balance.Should().Be(expected.ToString());
+            return this;
+        }
+
+        public TCGBLLSandbox StatusShouldBe(string expected)
+        {
+            Check.status.Should().Be(TCGReturnCode.Success.ToString());
+            Check.query_result.First().trans_status.Should().Be(expected.ToString());
             return this;
         }
 

@@ -537,6 +537,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region TCG
+        public async Task<TCGBettransLottery> BettransLottery_Get_TCG(string username, string ref_no)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                var p = new DynamicParameters(new
+                {
+                    username,
+                    ref_no,
+                });
+
+                return await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, commandType: CommandType.StoredProcedure);         
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"BettransLottery_Get_TCG Exception: username={username}, ref_no={ref_no}");
+                return default;
+            }
+        }
+
 
         public async Task<TCGResult> Debit_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TCGTransactionData data)
         {

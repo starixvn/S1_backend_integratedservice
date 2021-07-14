@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +7,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -204,13 +201,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<TCGReturnObj> CheckTransactionStatus(TCGRequest request, TCGConfig tcgConfig)
         {
-            return new TCGReturnObj
+            var queryList = new List<TCGQueryResult>();
+            foreach (var item in request.transaction_details)
+            {
+                var bettransLottery = await bettingService.BettransLottery_Get_TCG(item.username, item.ref_no);
+                queryList.Add(new TCGQueryResult(item.ref_no, bettransLottery));
+            }
+            
+            return new TCGCheckObj
             {
                 status = TCGReturnCode.Success.ToString(),
                 error_desc = "Success",
+                query_result = queryList,
             };
         }
-
 
         /// <summary>
         /// DES加密

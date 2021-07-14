@@ -96,6 +96,55 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string balance { get; set; }
     }
 
+    public class TCGCheckObj : TCGReturnObj
+    {
+        public IEnumerable<TCGQueryResult> query_result { get; set; }
+    }
+
+    public class TCGQueryResult
+    {
+        public string ref_no { get; set; }
+        public string trans_status { get; set; }
+
+        public TCGQueryResult(string ref_no, TCGBettransLottery bettransLottery)
+        {
+            this.ref_no = ref_no;
+            if (bettransLottery == null)
+            {
+                trans_status = "NOT_FOUND";
+                return;
+            }
+
+            if (bettransLottery.TransType == TCGTransType.Credit.ToString() 
+                || bettransLottery.TransType == TCGTransType.Debit.ToString())
+            {
+                trans_status = "SUCCESS";
+                return;
+            }
+
+            if (bettransLottery.TransType == TCGTransType.Reserve.ToString())
+            {
+                switch (bettransLottery.TicketType)
+                {
+                    case (int)BettransType.CancelBet:
+                        trans_status = "CANCELLED";
+                        break;
+                    case (int)BettransType.Bet:
+                        trans_status = "SUCCESS";
+                        break;
+                    case (int)BettransType.Reserve:
+                        trans_status = "RESERVED";
+                        break;
+                    default:
+                        trans_status = "FAILED";
+                        break;
+                }
+                return;
+            }
+            trans_status = "FAILED";
+        }
+    }
+
     public class TCGBettransLottery
     {
         public string username { get; set; }
