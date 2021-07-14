@@ -210,7 +210,7 @@ namespace ThirdParty.NineW
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getBalance";
             var sParam = $"cert={config.Cert}&alluser=0&userIds={tpUserNameString}";
 
-            var json = HttpPost(apiUrl, sParam, ContentType);
+            var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 120);
             var result = FromJson<NineWResult>(json);
 
             if (result.status != "1")
