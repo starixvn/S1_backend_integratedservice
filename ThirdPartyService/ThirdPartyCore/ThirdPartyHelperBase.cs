@@ -97,7 +97,7 @@ namespace ThirdPartyCore
 
             if (timeOutTime > 0)
             {
-                request.Timeout = timeOutTime;
+                request.Timeout = timeOutTime * 1000;
             }
 
             request.Method = "POST";

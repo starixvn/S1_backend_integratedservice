@@ -641,7 +641,7 @@ namespace ThirdParty.Saba
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
             ApiUrl = $"{ApiUrl}/CheckUserBalance";
-            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded", timeOutTime: 120);
+            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded", timeOutTime: 300);
 
             if (IsJSON(result))
             {
