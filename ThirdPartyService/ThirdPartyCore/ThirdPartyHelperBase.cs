@@ -41,7 +41,7 @@ namespace ThirdPartyCore
         /// <param name="inputs">第三方相關參數</param>
         /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
         /// <returns></returns>
-        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs,string tpUserNameString);
+        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString);
     }
 
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper
@@ -78,7 +78,7 @@ namespace ThirdPartyCore
             isHeathly = true;
         }
         public bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) { return true; }
-        protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null, int timeOutTime = 0)
         {
 
             InsertLog?.Invoke(url, parameters, "1");
@@ -93,6 +93,11 @@ namespace ThirdPartyCore
             if (!string.IsNullOrEmpty(proxyHost))
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+
+            if (timeOutTime > 0)
+            {
+                request.Timeout = timeOutTime;
             }
 
             request.Method = "POST";
