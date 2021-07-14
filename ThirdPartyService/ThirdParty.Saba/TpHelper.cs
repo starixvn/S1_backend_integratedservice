@@ -355,12 +355,12 @@ namespace ThirdParty.Saba
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
-
-                        if (SportType == "2000")
+                        else if (SportType == "2000")
                         {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types=1,0,l&menutype=1&market=E&isChinaView=true";
+                            types = "1,1,e";
                         }
-                        else if (!string.IsNullOrEmpty(matchId))
+
+                        if (!string.IsNullOrEmpty(matchId))
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
                         }
