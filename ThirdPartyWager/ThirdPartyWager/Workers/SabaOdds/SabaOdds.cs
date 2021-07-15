@@ -42,7 +42,8 @@ namespace ThirdPartyWager.Workers
             bool isError = false;
             try
             {
-                string url = "http://portal.1100011.com/feeds/Nova88/odds.xml?sport=1,3&&league=UEFA%20EURO%202020&bettype=1";
+                //string url = "http://portal.1100011.com/feeds/Nova88/odds.xml?sport=1,3&&league=UEFA%20EURO%202020&bettype=1";
+                string url = "http://portal.1100011.com/feeds/Nova88/odds.xml?sport=1&bettype=1";
 
                 UriBuilder builder = new UriBuilder(url)
                 {
