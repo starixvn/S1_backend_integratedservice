@@ -84,7 +84,9 @@ namespace ThirdPartyService.Service.Worker
                         var siteList = _serverInfoBLL.GetServerInfoList();
                         var dataResult = new List<TpCustBalanceModel>();
 
-                        List<ParameterModel> tpIdSiteIdList = GenerateParameterList(currentTime, tpIdList, siteList, failList);
+                        _logger.LogInformation($"GetBalanceWorker-Worker TpList = {tpIdList.ToString()}");
+
+                        List<ParameterModel> tpIdSiteIdList = GenerateParameterList(tpIdList, siteList, failList);
                         failList = new List<ParameterModel>();
 
                         foreach (var item in tpIdSiteIdList)
@@ -111,7 +113,7 @@ namespace ThirdPartyService.Service.Worker
 
                         _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
                         //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-                        
+
                         lastestProcessTime = DateTime.UtcNow;
                         firstRun = false;
                         reRun++;
@@ -225,14 +227,13 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="siteIdList">平台清單</param>
         /// <param name="failList">失敗參數清單</param>
         /// <returns></returns>
-        private List<ParameterModel> GenerateParameterList(DateTime currentTime,
-             IEnumerable<int> tpIdList,
+        private List<ParameterModel> GenerateParameterList(IEnumerable<int> tpIdList,
              IEnumerable<ServerInfo> siteIdList,
              List<ParameterModel> failList)
         {
             var result = new List<ParameterModel>();
 
-            if (failList.Count() == 0)
+            if (failList.Count() == 0 || reRun == 0)
             {
                 foreach (var tpId in tpIdList)
                 {

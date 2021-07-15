@@ -695,7 +695,7 @@ namespace ThirdPartyService.Service.BLL
 
             _logger.LogInformation($"GetBalanceWorker-GetBalance-Start_"
                                    + $"TpId={tpId} SiteId={siteId} "
-                                   + $"EndTime={DateTime.UtcNow.AddHours(8)}");
+                                   + $"StartTime={DateTime.UtcNow.AddHours(8)}");
 
             //log2File.Info($"GetBalanceWorker-GetBalance-Start_"
             //                       + $"TpId={tpId} SiteId={siteId} "
