@@ -208,4 +208,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
         public dynamic additionalInformation { get; set; }
     }
+
+    public class TCGSettleData : SettleData
+    {
+        public string ProductType { get; set; }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,20 +18,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class TCGBLL : ITCGBLL, IThirdPartyBLL
     {
-        private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingService bettingService;
         private readonly SettledService settledService;
+        private readonly ILogger<TCGBLL> _logger;
         public readonly ThirdPartySetting thirdPartySetting;
         private readonly Dictionary<string, Func<TCGRequest, TCGConfig, Task<TCGReturnObj>>> _requestHandler;
+        
+
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
         public TCGBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.TCG;
-            authBLL = provider.GetRequiredService<AuthBLL>();
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             bettingService = provider.GetRequiredService<BettingService>();
@@ -46,6 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { TCGApiMethod.ConfirmReserve, Reservation},
                 { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
+            _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
         }
 
         public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)
@@ -69,6 +72,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new TCGReturnObj()
                 {
                     status = ex.ErrorCode.ToString(),
+                    error_desc = ex.Message,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new TCGReturnObj()
+                {
+                    status = TCGReturnCode.UnknownSystemError.ToString(),
                     error_desc = ex.Message,
                 };
             }
@@ -135,6 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return new TCGResult()
                 {
                     Result = TCGReturnCode.UnknownSystemError,
@@ -191,6 +204,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return new TCGResult()
                 {
                     Result = TCGReturnCode.UnknownSystemError,

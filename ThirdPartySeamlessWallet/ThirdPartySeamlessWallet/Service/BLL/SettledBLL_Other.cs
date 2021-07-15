@@ -290,9 +290,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region 共用
 
-        public IEnumerable<SettleData> GetUnsettledListBySpName(string spName, DataBase dataBase = DataBase.Main)
+        public IEnumerable<TResult> GetUnsettledListBySpName<TResult>(string spName, DataBase dataBase = DataBase.Main)
         {
-            return settledService.GetUnsettledListBySpName(spName, dataBase);
+            return settledService.GetUnsettledListBySpName<TResult>(spName, dataBase);
         }
 
         public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
