@@ -389,9 +389,6 @@ namespace ThirdPartyService.Service.BLL
 
             IThirdPartyHelper tpHelper =
                 thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var tpHelperParticular =
-                (IThirdPartyParticular) thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId,
-                    tpCustInfoResult.Data.SiteId);
             var oThirdPartyModel =
                 thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
