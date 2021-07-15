@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,9 +83,8 @@ namespace ThirdPartyService.Service.Worker
 
                         var tpIdList = _configuration.GetSection("GetTpBalanceParam:TpId").Get<IEnumerable<int>>();
                         var siteList = _serverInfoBLL.GetServerInfoList();
-                        var dataResult = new List<TpCustBalanceModel>();
 
-                        _logger.LogInformation($"GetBalanceWorker-Worker TpList = {tpIdList.ToString()}");
+                        _logger.LogInformation($"GetBalanceWorker-Worker TpList = {JsonConvert.SerializeObject(tpIdList)}");
 
                         List<ParameterModel> tpIdSiteIdList = GenerateParameterList(tpIdList, siteList, failList);
                         failList = new List<ParameterModel>();
@@ -98,13 +98,11 @@ namespace ThirdPartyService.Service.Worker
                             }
                             else
                             {
-                                dataResult.AddRange(data);
+                                _thirdPartyBLL.InsertBalance(currentTime.ToString("yyyyMMdd"),
+                                                             currentTime.ToString("yyyy-MM-dd HH:00:00"),
+                                                             data);
                             }
                         }
-
-                        _thirdPartyBLL.InsertBalance(currentTime.ToString("yyyyMMdd"),
-                            currentTime.ToString("yyyy-MM-dd HH:00:00"),
-                            dataResult);
 
                         if (success)
                         {
