@@ -33,6 +33,7 @@ namespace ThirdPartyWager.Service.Model.enums
         PT = 27,
         N2Live = 28,
         NineW = 31,
+        TCG = 33,
         MG = 34,
     }
 

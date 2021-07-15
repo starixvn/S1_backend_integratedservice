@@ -138,7 +138,7 @@ namespace ThirdParty.TCG
             public string SignKey { get; set; }
             public TCGConfig(Dictionary<string, string> inputs, string tpCurrencyId)
             {
-                GameUrl = inputs.GetValue("GameUrl");
+                GameUrl = inputs.GetValue($"GameUrl_{tpCurrencyId}");
                 ApiUrl = inputs.GetValue("ApiUrl");
                 MerchantCode = inputs.GetValue($"MerchantCode_{tpCurrencyId}");
                 DesKey = inputs.GetValue($"DESKey_{tpCurrencyId}");
@@ -179,7 +179,7 @@ namespace ThirdParty.TCG
                 username = tpCustInfo.TpUserName;
                 language = TpLangId;
                 game_mode = "1";
-                back_url = inputs.GetValue("homeUrl");
+                back_url = inputs.GetValue("HomeUrl");
                 view = "lobby";
 
                 if (!Enum.TryParse(inputs.GetValue("gameType"), out GameType gameType))

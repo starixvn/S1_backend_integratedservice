@@ -148,37 +148,39 @@ namespace ThirdPartyWager
             services.AddTransient<IApiMGBLL, ApiMGBLL>();
             services.AddTransient<IApiSWBLL, ApiSWBLL>();
             services.AddTransient<IMGBLL, MGBLL>();
+            //TCG
+            services.AddSingleton<TCGBLL>();
+            
             //Worker
-
-            services.AddHostedService<WagerDG>();
-            services.AddHostedService<WagerRedoDG>();
-            services.AddHostedService<WagerAllBet>();
-            services.AddHostedService<WagerRedoAllBet>();
-            services.AddHostedService<WagerSA>();
-            services.AddHostedService<WagerRedoSA>();
-            services.AddHostedService<WagerAG>();
-            services.AddHostedService<WagerRedoAG>();
-            services.AddHostedService<WagerSG>();
-            services.AddHostedService<WagerWM>();
-            services.AddHostedService<WagerRedoWM>();
-            services.AddHostedService<WagerOne789>();
-            services.AddHostedService<JwtIconic>();
-            services.AddHostedService<WagerIconic>();
-            services.AddHostedService<WagerOneGaming>();
-            services.AddHostedService<WagerRedoOneGaming>();
-            services.AddHostedService<WagerV8>();
-            services.AddHostedService<WagerRedoV8>();
-            services.AddHostedService<WagerN2Live>();
-            services.AddHostedService<WagerRedoN2Live>();
-            services.AddHostedService<WagerPT>();
-            services.AddHostedService<WagerRedoPT>();
-            services.AddHostedService<LiveStreaming>();
-            services.AddHostedService<LatestHighlightVideo>();
-            services.AddHostedService<SabaOdds>();
-            services.AddHostedService<WagerKM>();
-            services.AddHostedService<WagerMG>();
-
-            services.AddHostedService<WagerNineW>();
+            //services.AddHostedService<WagerDG>();
+            //services.AddHostedService<WagerRedoDG>();
+            //services.AddHostedService<WagerAllBet>();
+            //services.AddHostedService<WagerRedoAllBet>();
+            //services.AddHostedService<WagerSA>();
+            //services.AddHostedService<WagerRedoSA>();
+            //services.AddHostedService<WagerAG>();
+            //services.AddHostedService<WagerRedoAG>();
+            //services.AddHostedService<WagerSG>();
+            //services.AddHostedService<WagerWM>();
+            //services.AddHostedService<WagerRedoWM>();
+            //services.AddHostedService<WagerOne789>();
+            //services.AddHostedService<JwtIconic>();
+            //services.AddHostedService<WagerIconic>();
+            //services.AddHostedService<WagerOneGaming>();
+            //services.AddHostedService<WagerRedoOneGaming>();
+            //services.AddHostedService<WagerV8>();
+            //services.AddHostedService<WagerRedoV8>();
+            //services.AddHostedService<WagerN2Live>();
+            //services.AddHostedService<WagerRedoN2Live>();
+            //services.AddHostedService<WagerPT>();
+            //services.AddHostedService<WagerRedoPT>();
+            //services.AddHostedService<LiveStreaming>();
+            //services.AddHostedService<LatestHighlightVideo>();
+            //services.AddHostedService<SabaOdds>();
+            //services.AddHostedService<WagerKM>();
+            //services.AddHostedService<WagerMG>();
+            //services.AddHostedService<WagerNineW>();
+            services.AddHostedService<WagerTCG>();
 
             /*
                 services.AddHostedService<CheckTicketAG>();
