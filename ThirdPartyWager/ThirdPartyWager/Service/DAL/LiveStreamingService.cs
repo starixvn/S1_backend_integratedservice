@@ -16,8 +16,7 @@ namespace ThirdPartyWager.Service.DAL
         public int SetLiveStreaming(string liveStreamingJson)
         {
             using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            var a = conn.Execute("Service_LiveStreaming_Set", new { LiveStreamingJson = liveStreamingJson }, commandType: CommandType.StoredProcedure);
-            return a;
+            return conn.Execute("Service_LiveStreaming_Set", new { LiveStreamingJson = liveStreamingJson }, commandType: CommandType.StoredProcedure);
         }
     }
 }
