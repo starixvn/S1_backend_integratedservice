@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -298,6 +299,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
         {
             return settledService.SetSettleFlagBySpName(spName, transId, isSuccess, dataBase);
+        }
+
+        public int SetSettleFlagBySpName(string spName, DynamicParameters parameters, DataBase dataBase = DataBase.Main)
+        {
+            return settledService.SetSettleFlagBySpName(spName, parameters, dataBase);
         }
 
         #endregion

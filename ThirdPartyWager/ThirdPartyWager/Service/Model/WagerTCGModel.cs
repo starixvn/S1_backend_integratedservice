@@ -35,35 +35,35 @@ namespace ThirdPartyWager.Service.Model
     public class TCGWagerData
     {
         public int betAmount { get; set; }
-        public string gameCode { get; set; }
-        public string betOrderNo { get; set; }
-        public string betTime { get; set; }
-        public string transTime { get; set; }
-        public string betContentId { get; set; }
-        public string playCode { get; set; }
-        public string orderNum { get; set; }
-        public string chase { get; set; }
-        public string numero { get; set; }
-        public string merchantCode { get; set; }
-        public string bettingContent { get; set; }
+        public string gameCode { get; set; } = "";
+        public string betOrderNo { get; set; } = "";
+        public string betTime { get; set; } = "";
+        public string transTime { get; set; } = "";
+        public string betContentId { get; set; } = "";
+        public string playCode { get; set; } = "";
+        public string orderNum { get; set; } = "";
+        public string chase { get; set; } = "";
+        public string numero { get; set; } = "";
+        public string merchantCode { get; set; } = "";
+        public string bettingContent { get; set; } = "";
         public int playId { get; set; }
-        public string freezeTime { get; set; }
+        public string freezeTime { get; set; } = "";
         public int multiple { get; set; }
-        public string remark { get; set; }
-        public string playName { get; set; }
-        public string gameGroupName { get; set; }
+        public string remark { get; set; } = "";
+        public string playName { get; set; } = "";
+        public string gameGroupName { get; set; } = "";
         public int winAmount { get; set; }
         public int netPNL { get; set; }
-        public string betStatus { get; set; }
-        public string settlementTime { get; set; }
-        public string actualBetAmount { get; set; }
+        public string betStatus { get; set; } = "";
+        public string settlementTime { get; set; } = "";
+        public string actualBetAmount { get; set; } = "";
         public int exceedWinAmount { get; set; }
-        public string details { get; set; }
-        public string winningNumber { get; set; }
-        public string clientIp { get; set; }
-        public float playBonus { get; set; }
-        public string username { get; set; }
-        public string productType { get; set; }
+        public string details { get; set; } = "";
+        public string winningNumber { get; set; } = "";
+        public string clientIp { get; set; } = "";
+        public decimal playBonus { get; set; }
+        public string username { get; set; } = "";
+        public string productType { get; set; } = "";
         public bool single { get; set; }
         public int detailStatusId { get; set; }
     }

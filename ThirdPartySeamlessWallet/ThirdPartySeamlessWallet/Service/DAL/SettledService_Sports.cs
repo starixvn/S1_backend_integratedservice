@@ -263,6 +263,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
+        public int SetSettleFlagBySpName(string spName, DynamicParameters parameters, DataBase dataBase = DataBase.Main)
+        {
+            return dataBase switch
+            {
+                DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
+                DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
+                DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
+                _ => throw new System.NotImplementedException(),
+            };
+        }
 
     }
 }

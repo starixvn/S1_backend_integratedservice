@@ -1054,6 +1054,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     data.username,
                     data.amount,
                     data.tx_type,
+                    data.order_no,
                     data.remarks,
                     additionalInformation = JsonConvert.SerializeObject(data.additionalInformation),
                     TransType = TCGTransType.Credit.ToString(),

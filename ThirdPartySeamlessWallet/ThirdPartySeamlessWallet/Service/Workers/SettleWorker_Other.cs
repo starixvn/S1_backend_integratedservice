@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Dapper;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -285,19 +286,32 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, dataBase: DataBase.Wager);
+                                    settledBLL.SetSettleFlagBySpName(spName, new DynamicParameters(
+                                    new 
+                                    {   
+                                        betOrderNo = unsettled.TransId, 
+                                        orderNum = unsettled.OrderNum, 
+                                        isSuccess = true 
+                                    }), dataBase: DataBase.Wager);
                                 });
                             }
 
                         }
                         catch (Exception ex1)
                         {
-                            Task.Run(() =>
-                            {
-                                settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
-                            });
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlagBySpName(spName, new DynamicParameters(
+                                    new
+                                    {
+                                        betOrderNo = unsettled.TransId,
+                                        orderNum = unsettled.OrderNum,
+                                        isSuccess = false
+                                    }), dataBase: DataBase.Wager);
+                                });
+
                             isError = true;
-                            _logger.LogError(ex1, $"exMessage:{ex1.Message}||{JsonConvert.SerializeObject(unsettled)}");
+                            _logger.LogError(ex1, $"exMessage:{ex1.Message} ||　{JsonConvert.SerializeObject(unsettled)}");
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }

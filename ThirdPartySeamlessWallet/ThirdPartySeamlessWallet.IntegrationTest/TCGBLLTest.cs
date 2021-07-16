@@ -27,6 +27,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             .ResultShouldBe(TCGReturnCode.Success);
 
         [TestCase(10)]
+        [TestCase(20)]
         public void Debit(decimal amount) 
             => new TCGBLLSandbox(_merchantCode, _tpUserName, _transId)
             .Debit(_transId, amount)

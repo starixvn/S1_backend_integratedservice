@@ -185,11 +185,22 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class TCGTransactionData
     {
+        private string _order_no { get; set; } = "";
         public string ref_no { get; set; }
         public string username { get; set; }
         public decimal amount { get; set; }
         public string tx_type { get; set; }
         public string remarks { get; set; }
+
+        public string order_no 
+        { 
+            get 
+            {
+                var result = additionalInformation["order_no"];
+                return result == null ? _order_no : result;
+            }
+            set { _order_no = value; } 
+        }
         public dynamic additionalInformation { get; set; }
     }
 
@@ -197,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public decimal amount { get; set; }
         public string ref_no { get; set; }
-        public string username { get; set; }       
+        public string username { get; set; }
         public dynamic additionalInformation { get; set; }
     }
 
@@ -212,5 +223,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class TCGSettleData : SettleData
     {
         public string ProductType { get; set; }
+
+        public string OrderNum { get; set; }
     }
 }

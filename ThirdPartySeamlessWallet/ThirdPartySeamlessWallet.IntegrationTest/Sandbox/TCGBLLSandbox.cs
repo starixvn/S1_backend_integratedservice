@@ -106,15 +106,13 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
                     new
                     {
                         ref_no = _transId,
-                        username= _tpUserName,
-                        amount= amount,
-                        tx_type= "3250",
-                        remarks= "test",
+                        username = _tpUserName,
+                        amount = amount,
+                        tx_type = "3250",
+                        remarks = "test",
                         additionalInformation= new
                         {
-                            sortTime="test",
-                            validBetAmount = amount,
-                            winAmount = amount * 2,
+                            order_no = "HV102753908ZIP6GA",
                         }
                     }
                 },
@@ -144,9 +142,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
                         remarks= "test",
                         additionalInformation= new
                         {
-                            sortTime = "test",
-                            validBetAmount = amount,
-                            winAmount = amount * 2,
+                           order_no = "HV102753908ZIP6GA",
                         }
                     }
                 },
@@ -176,9 +172,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
                         remarks= "test",
                         additionalInformation= new
                         {
-                            sortTime = "test",
-                            validBetAmount = amount,
-                            winAmount = amount * 2,
+                            order_no = "HV102753908ZIP6GA",
                         }
                     }
                 },
