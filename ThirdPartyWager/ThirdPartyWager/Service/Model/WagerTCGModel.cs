@@ -8,11 +8,13 @@ namespace ThirdPartyWager.Service.Model
         public string WagerUrl { get; set; }
         public string WagerAccount { get; set; }
         public string WagerPassword { get; set; }
+        public string WagerTypeList { get; set; }
         public TCGConfig(Dictionary<string, string> inputs, string tpCurrencyId)
         {
             WagerUrl = inputs.GetValue($"WagerUrl");
             WagerAccount = inputs.GetValue($"WagerAccount_{tpCurrencyId}");
             WagerPassword = inputs.GetValue($"WagerPassword_{tpCurrencyId}");
+            WagerTypeList = inputs.GetValue($"WagerTypeList_{tpCurrencyId}");
         }
     }
 

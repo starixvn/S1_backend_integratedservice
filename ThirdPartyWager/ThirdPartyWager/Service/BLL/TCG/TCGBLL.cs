@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -28,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-
+            LogContext.PushProperty("TP", "TCG");
             var log = provider.GetRequiredService<ILogger<MySqlClient>>();
             var conn = configuration.GetConnectionString("ConnectionStringWager");
             _wagerDbClient = new MySqlClient(conn, log);
@@ -58,11 +59,7 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<List<TCGWagerData>> QuerySettleBetHistoryAsync(TCGConfig config, DateTimeOffset batchTime)
         {           
             var result = new List<TCGWagerData>();
-            var reportType = new List<string>
-            {
-                "TCG_SEA/ELOTTO",
-                "TCG_LOTTO_VN/ELOTTO",
-            };
+            var reportType = config.WagerTypeList.Split(",").Where(i => i != string.Empty);
             foreach (var type in reportType)
             {           
                 var page = 1;
@@ -95,12 +92,12 @@ namespace ThirdPartyWager.Service.BLL
                 using StreamReader sr = new StreamReader(s);
                 using JsonReader reader = new JsonTextReader(sr);
                 JsonSerializer serializer = new JsonSerializer();
-                _logger.LogInformation($"TCG FTP StatusCode is {response.StatusCode}, status is {response.StatusDescription}");
+                _logger.LogInformation($"TCG: {config.WagerAccount} || FTP Success:{response.StatusDescription}");
                 return serializer.Deserialize<TCGQueryWagerObj>(reader);
             }
             catch (Exception ex)
             {
-                _logger.LogInformation(ex, $"TCG {fileUrl} Download FTP File Exception. {ex.Message}");
+                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {fileUrl} {ex.Message}.");
                 return new TCGQueryWagerObj() ;
             }
         }

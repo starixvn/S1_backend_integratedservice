@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,6 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
+            LogContext.PushProperty("TP", "TCG");
         }
 
         public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)

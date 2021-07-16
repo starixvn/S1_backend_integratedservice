@@ -58,12 +58,13 @@ namespace ThirdPartyWager.Workers
 
                 if (thisTime < DateTime.UtcNow)
                 {
-                    var batchTime = new DateTimeOffset(thisTime);
-                    var isSuccess = await _tcgBLL.GetWagersAsync(batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0)), currency);
+                    var utcBatchTime = new DateTimeOffset(thisTime);
+                    var timezoneBatchTime = utcBatchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
+                    var isSuccess = await _tcgBLL.GetWagersAsync(timezoneBatchTime, currency);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"TCG {currency} Get {thisTime} Wagers");
-                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, batchTime.ToUnixTimeSeconds(), currency);
+                        _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
+                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, utcBatchTime.ToUnixTimeSeconds(), currency);
                     }
                 }
 
@@ -78,7 +79,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(30) : TimeSpan.FromMinutes(intervalMins);
+                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(5) : TimeSpan.FromMinutes(intervalMins);
                 switch (currency)
                 {
                     case "MYR":
