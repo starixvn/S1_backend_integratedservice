@@ -71,7 +71,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             {
                 var key = inputs.GetKey(merchant_code);
                 var currency = key.Split("_")[1];
-                GameUrl = inputs.GetValue("GameUrl");
+                GameUrl = inputs.GetValue($"GameUrl_{currency}");
                 ApiUrl = inputs.GetValue("ApiUrl");
                 MerchantCode = inputs.GetValue($"MerchantCode_{currency}");
                 DesKey = inputs.GetValue($"DESKey_{currency}");

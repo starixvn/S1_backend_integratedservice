@@ -166,7 +166,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 .ResultShouldBe(TCGReturnCode.Success)
                 .ShouldBeHaveRecord(TCGBLLSandbox.TCGRecord(TCGTransType.Debit, _tpUserName, _transId, amount));
 
-            //afterBalance 
+            //Before Balance 
             debitSandbox.GetBalance().BalanceShouldBe(Convert.ToDecimal(firstBalance.balance) - amount);
 
             _transId = _transId.Replace("test", "ctest");
