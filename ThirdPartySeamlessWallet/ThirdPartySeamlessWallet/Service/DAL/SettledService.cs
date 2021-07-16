@@ -120,9 +120,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
                         }
 
-                        // check bonus status and update status cancel to running
                         if (afterBonus > 0)
                         {
+                            // check bonus status and update status cancel to running
                             AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
                         }
                     }
@@ -178,10 +178,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
                 }
-
-                // check bonus status and update status cancel to running
+                
                 if (afterBonus > 0)
                 {
+                    // check bonus status and update status cancel to running
                     AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
                 }
             }
@@ -626,7 +626,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int AutoRunningSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)
         {
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, AfterBonus = afterBonus });
+            p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = conn.Execute("Service_AutoRunningSeamlessBonus_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            int outResult = p.Get<int>("out_result");
+            if (outResult == 2)
+            {
+                var parameter = new
+                {
+                    BonusId = bonusId,
+                    GameType = gameType,
+                    CustId = custId,
+                    AfterBonus = afterBonus,
+                    OutResult = outResult
+                };
+                log2File.Info($"{JsonConvert.SerializeObject(parameter)}", MethodBase.GetCurrentMethod().Name);
+            }
             return result;
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
