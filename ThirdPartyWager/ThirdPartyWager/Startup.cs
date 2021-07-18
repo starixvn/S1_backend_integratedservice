@@ -176,7 +176,7 @@ namespace ThirdPartyWager
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
-            services.AddHostedService<WagerMG>();
+            //services.AddHostedService<WagerMG>();
 
             services.AddHostedService<WagerNineW>();
 
