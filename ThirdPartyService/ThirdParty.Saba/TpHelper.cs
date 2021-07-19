@@ -323,7 +323,7 @@ namespace ThirdParty.Saba
 
                     if (appType == AppType.Native)
                     {
-                        if (!string.IsNullOrEmpty(matchId))
+                        if (!string.IsNullOrEmpty(matchId) && matchId != "0")
                         {
                             oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
 
@@ -355,7 +355,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
 
-                        if (!string.IsNullOrEmpty(matchId))
+                        if (!string.IsNullOrEmpty(matchId) && matchId != "0")
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
                         }
@@ -397,7 +397,7 @@ namespace ThirdParty.Saba
                         }
                         else
                         {
-                            if (!string.IsNullOrEmpty(matchId))
+                            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
                             }
