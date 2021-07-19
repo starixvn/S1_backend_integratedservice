@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -19,24 +20,25 @@ namespace ThirdPartyWager.Service.BLL.MG
         private readonly string _url;
         private readonly ILogger<ApiSWBLL> _logger;
         private readonly IConfiguration _configuration;
-        private readonly HttpClient _client;
+        private readonly HttpHelper _httpHelper;
         
         public ApiSWBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _configuration = configuration;
             _url = configuration.GetValue<string>("TpSWserviceUrl");
             _logger = provider.GetRequiredService<ILogger<ApiSWBLL>>();
-            var httpHelper = provider.GetRequiredService<HttpHelper>();
-            _client = httpHelper.GetClientWithHandler(CreateHandler());
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            
         }
         public async Task<bool> MgUpdateBalance(MGUpdatebalanceRequest request)
         {
             try
             {
-                _client.DefaultRequestHeaders.Add("X-MGP-REQ-ID", Guid.NewGuid().ToString());
-                _client.DefaultRequestHeaders.Add("X-MGP-REQUEST-TIME", DateTime.UtcNow.Ticks.ToString());
+                var client = _httpHelper.GetClientWithHandler(CreateHandler());
+                client.DefaultRequestHeaders.Add("X-MGP-REQ-ID", Guid.NewGuid().ToString());
+                client.DefaultRequestHeaders.Add("X-MGP-REQUEST-TIME", DateTime.UtcNow.Ticks.ToString());
                 var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                var response = await _client.PostAsync($"{_url}/MG/updatebalance", content);
+                var response = await client.PostAsync($"{_url}/MG/updatebalance", content);
                 return response.IsSuccessStatusCode;
             }
             catch(Exception ex)
