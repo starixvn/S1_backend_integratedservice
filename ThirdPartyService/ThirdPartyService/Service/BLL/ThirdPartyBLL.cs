@@ -571,8 +571,7 @@ namespace ThirdPartyService.Service.BLL
             subResult = apiResult;
 
             // get all transfer games and status is on
-            var transferGames =
-                thirdPartyHelper.GetThirdPartyByWalletType((int) WalletType.Transfer, custWallet.SiteId);
+            var transferGames = thirdPartyHelper.GetThirdPartyByWalletTypeByCustId((int)WalletType.Transfer, custWallet.SiteId, tpInfo.CustId);
             if (transferGames.Any())
             {
                 int alphaTpId = tpInfo.TpId;
