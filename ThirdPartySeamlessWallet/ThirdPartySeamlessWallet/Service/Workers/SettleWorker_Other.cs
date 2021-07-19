@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Dapper;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -243,6 +245,96 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleOne789LT_789.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        public void DoSettleTCGWork(object state)
+        {
+            var forContinue = false;
+            var isError = false;
+            var thisTp = (int)Tp.TCG;
+            var logName = "Settle_TCG_Lottery";
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListBySpName<TCGSettleData>("Service_TpWagerTCG_Unsettle_Get", DataBase.Wager);
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    var spName = "Service_TpWagerTCG_Settle_Set";
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {                       
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = unsettled.Stake,
+                                ValidBet = unsettled.ValidBet,
+                                WinlostAmount = unsettled.WinLostAmount,
+                                TransId = unsettled.TransId,
+                                GameType = unsettled.ProductType.Equals("TCG_SEA") ? GameType.TCG_SEA_Lottery : GameType.TCG_VN_Lottery,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                SettlementType = SettlementType.SettledForValid,
+                                TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                            };
+
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Lottery);
+                            if (result == 1)
+                            {
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlagBySpName(spName, new DynamicParameters(
+                                    new 
+                                    {   
+                                        betOrderNo = unsettled.TransId, 
+                                        orderNum = unsettled.OrderNum, 
+                                        isSuccess = true 
+                                    }), dataBase: DataBase.Wager);
+                                });
+                            }
+
+                        }
+                        catch (Exception ex1)
+                        {
+                                Task.Run(() =>
+                                {
+                                    settledBLL.SetSettleFlagBySpName(spName, new DynamicParameters(
+                                    new
+                                    {
+                                        betOrderNo = unsettled.TransId,
+                                        orderNum = unsettled.OrderNum,
+                                        isSuccess = false
+                                    }), dataBase: DataBase.Wager);
+                                });
+
+                            isError = true;
+                            _logger.LogError(ex1, $"exMessage:{ex1.Message} ||　{JsonConvert.SerializeObject(unsettled)}");
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                log2File.Error(ex.ToString(), logName, ex);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+                timerSettleTCG?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

@@ -16,8 +16,7 @@ namespace ThirdPartyWager.Service.DAL
         public int SetSabaOdds(string sabaOddsJson)
         {
             using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            var a = conn.Execute("Service_SabaOdds_Set", new { SabaOddsJson = sabaOddsJson }, commandType: CommandType.StoredProcedure);
-            return a;
+            return conn.Execute("Service_SabaOdds_Set", new { SabaOddsJson = sabaOddsJson }, commandType: CommandType.StoredProcedure);
         }
     }
 }

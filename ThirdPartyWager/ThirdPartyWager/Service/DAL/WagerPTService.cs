@@ -32,7 +32,6 @@ namespace ThirdPartyWager.Service.DAL
                 // slot
                 return conn.Execute("Service_TpWagerRng_PT_Ins", bet, commandType: CommandType.StoredProcedure);
             }
-
         }
     }
 }

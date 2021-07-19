@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName("Service_TpWager9W_Unsettle_Get", DataBase.Wager);
+                var unsettledList = settledBLL.GetUnsettledListBySpName<SettleData>("Service_TpWager9W_Unsettle_Get", DataBase.Wager);
 
                 if (unsettledList != null)
                 {

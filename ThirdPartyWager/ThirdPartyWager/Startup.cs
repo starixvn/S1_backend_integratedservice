@@ -148,8 +148,10 @@ namespace ThirdPartyWager
             services.AddTransient<IApiMGBLL, ApiMGBLL>();
             services.AddTransient<IApiSWBLL, ApiSWBLL>();
             services.AddTransient<IMGBLL, MGBLL>();
-            //Worker
+            //TCG
+            services.AddSingleton<TCGBLL>();
 
+            //Worker
             services.AddHostedService<WagerDG>();
             services.AddHostedService<WagerRedoDG>();
             services.AddHostedService<WagerAllBet>();
@@ -176,9 +178,9 @@ namespace ThirdPartyWager
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
-            //services.AddHostedService<WagerMG>();
-
+            services.AddHostedService<WagerMG>();
             services.AddHostedService<WagerNineW>();
+            services.AddHostedService<WagerTCG>();
 
             /*
                 services.AddHostedService<CheckTicketAG>();

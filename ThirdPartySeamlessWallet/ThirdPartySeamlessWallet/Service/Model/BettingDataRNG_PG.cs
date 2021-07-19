@@ -53,4 +53,28 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Account { get; set; }
         public long SettleTime { get; set; }
     }
+
+    public class AdjustmentDataRNG_PG : BettingDataRNG_PG
+    {
+        [JsonProperty("operator_token")]
+        public string OperatorToken { get; set; }
+
+        [JsonProperty("secret_key")]
+        public string SecretKey { get; set; }
+
+        [JsonProperty("adjustment_id")]
+        public string AdjustmentId { get; set; }
+
+        [JsonProperty("adjustment_transaction_id")]
+        public string AdjustmentTransactionId { get; set; }
+
+        [JsonProperty("adjustment_time")]
+        public long AdjustmentTime { get; set; }
+
+        [JsonProperty("transaction_type")]
+        public string TransactionType { get; set; }
+
+        [JsonProperty("bet_type")]
+        public int BetType { get; set; }
+    }
 }
