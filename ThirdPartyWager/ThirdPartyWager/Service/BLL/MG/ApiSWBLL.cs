@@ -20,25 +20,33 @@ namespace ThirdPartyWager.Service.BLL.MG
         private readonly string _url;
         private readonly ILogger<ApiSWBLL> _logger;
         private readonly IConfiguration _configuration;
-        private readonly HttpHelper _httpHelper;
+        private readonly HttpClient _client;
         
         public ApiSWBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _configuration = configuration;
             _url = configuration.GetValue<string>("TpSWserviceUrl");
             _logger = provider.GetRequiredService<ILogger<ApiSWBLL>>();
-            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            var httpHelper = provider.GetRequiredService<HttpHelper>();
+            _client = httpHelper.GetClientWithHandler(CreateHandler());
+            
             
         }
         public async Task<bool> MgUpdateBalance(MGUpdatebalanceRequest request)
         {
             try
             {
-                var client = _httpHelper.GetClientWithHandler(CreateHandler());
-                client.DefaultRequestHeaders.Add("X-MGP-REQ-ID", Guid.NewGuid().ToString());
-                client.DefaultRequestHeaders.Add("X-MGP-REQUEST-TIME", DateTime.UtcNow.Ticks.ToString());
-                var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-                var response = await client.PostAsync($"{_url}/MG/updatebalance", content);
+                var httpRequest = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri($"{_url}/MG/updatebalance"),
+                    Headers = {
+                        { "X-MGP-REQ-ID", Guid.NewGuid().ToString()},
+                        { "X-MGP-REQUEST-TIME", DateTime.UtcNow.Ticks.ToString()},
+                    },
+                    Content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json")
+                };
+                var response = await _client.SendAsync(httpRequest);
                 return response.IsSuccessStatusCode;
             }
             catch(Exception ex)
