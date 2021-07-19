@@ -933,6 +933,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 unsettled.Stake *= tpCurrency.ExchangeRate;
                                 unsettled.ValidBet *= tpCurrency.ExchangeRate;
                                 unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                                unsettled.ProgressiveBet *= tpCurrency.ExchangeRate;
+                                unsettled.ProgressiveWin *= tpCurrency.ExchangeRate;
                             }
 
                             decimal stake = unsettled.Stake;
@@ -945,6 +947,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 Stake = stake,
                                 ValidBet = validBet,
                                 WinlostAmount = winLostAmount,
+                                ProgressiveBet = unsettled.ProgressiveBet,
+                                ProgressiveWin = unsettled.ProgressiveWin,
                                 TransId = unsettled.TransId,
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
