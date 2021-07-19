@@ -11,6 +11,8 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
@@ -55,33 +57,27 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleJILIRng;
         private Timer timerSettleJILIFish;
         private Timer timerSettleMG;
+        private Timer timerSettleTCG;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
         private readonly SettledBLL settledBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
+        private readonly ILogger<SettleWorker> _logger;
 
         #endregion
 
-        #region Constructors
-
-        public SettleWorker(IConfiguration configuration,
-                            IHostEnvironment environment,
-                            Log2File log2File,
-                            ThirdPartyBLL thirdPartyBLL,
-                            SettledBLL settledBLL,
-                            TpCustInfoBLL tpCustInfoBLL)
+        public SettleWorker(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.environment = environment;
-            this.log2File = log2File;
-            this.settledBLL = settledBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            environment = provider.GetRequiredService<IHostEnvironment>();
+            log2File = provider.GetRequiredService<Log2File>();
+            settledBLL = provider.GetRequiredService<SettledBLL>();
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _logger = provider.GetRequiredService<ILogger<SettleWorker>>();
         }
-
-        #endregion
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -122,6 +118,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleTCG = new Timer(DoSettleTCGWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1125,7 +1122,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleJILIRng?.Change(Timeout.Infinite, 0);
             timerSettleJILIFish?.Change(Timeout.Infinite, 0);
             timerSettleMG?.Change(Timeout.Infinite, 0);
-
+            timerSettleTCG?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

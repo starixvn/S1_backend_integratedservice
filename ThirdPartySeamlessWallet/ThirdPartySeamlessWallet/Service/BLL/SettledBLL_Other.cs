@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -290,14 +291,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region 共用
 
-        public IEnumerable<SettleData> GetUnsettledListBySpName(string spName, DataBase dataBase = DataBase.Main)
+        public IEnumerable<TResult> GetUnsettledListBySpName<TResult>(string spName, DataBase dataBase = DataBase.Main)
         {
-            return settledService.GetUnsettledListBySpName(spName, dataBase);
+            return settledService.GetUnsettledListBySpName<TResult>(spName, dataBase);
         }
 
         public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
         {
             return settledService.SetSettleFlagBySpName(spName, transId, isSuccess, dataBase);
+        }
+
+        public int SetSettleFlagBySpName(string spName, DynamicParameters parameters, DataBase dataBase = DataBase.Main)
+        {
+            return settledService.SetSettleFlagBySpName(spName, parameters, dataBase);
         }
 
         #endregion
