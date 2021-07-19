@@ -130,6 +130,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(transaction.username);
                 transaction.amount *= tpCurrency.ExchangeRate;
+                
+                if (request.method == TCGApiMethod.Debit || request.method == TCGApiMethod.Reserve)
+                {        
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpCustInfo.TpUserName);
+                    if (tpCheck == null)
+                    {
+                        throw new TCGException(TCGReturnCode.InvalidAccountType, "tpCheck fail.");
+                    }
+                    if (tpCheck.Locked)
+                    {
+                        throw new TCGException(TCGReturnCode.InvalidAccountType, "tpuser is locked.");
+                    }
+                }
 
                 return request.method switch
                 {

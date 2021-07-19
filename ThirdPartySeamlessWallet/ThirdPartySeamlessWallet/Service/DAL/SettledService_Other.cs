@@ -1060,7 +1060,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     TransType = TCGTransType.Credit.ToString(),
                     TicketType = (int)BettransType.Payout,
                     TicketStatus = (int)TicketStatus.UnSettled,
-                    SettleFlag = (int)SettleFlag.Running
+                    SettleFlag = (int)SettleFlag.EndGame
                 });
 
                 var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);

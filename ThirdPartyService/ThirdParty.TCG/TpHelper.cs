@@ -53,7 +53,10 @@ namespace ThirdParty.TCG
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            return new ApiResult<UserBalance>()
+            {
+                ErrorCode = ErrorCode.Fail,
+            };
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
