@@ -35,9 +35,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         private readonly string _tpUserName;
 
-        private readonly string _transId;
-
-        private Dictionary<Type, Lazy<string>> _exceptSqlMapping;
+        private Dictionary<TCGTransType, Lazy<string>> _exceptSqlMapping;
 
         private readonly TCGBLL _target;
 
@@ -47,11 +45,13 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public TCGCheckObj Check;
 
-        public TCGBLLSandbox(string merchantCode, string tpUserName, string transId)
+        private Dictionary<string, string> _inputs;
+
+        public TCGBLLSandbox(Dictionary<string, string> inputs)
         {
-            _merchantCode = merchantCode;
-            _tpUserName = tpUserName;
-            _transId = transId;
+            _inputs = inputs;
+            _merchantCode = inputs["MerchantCode"];
+            _tpUserName = inputs["TpUserName"];
             _serviceCollection = new ServiceCollection();
             _serviceCollection = SetEnvironment(_serviceCollection);
             _serviceCollection = LoadConfig(_serviceCollection);
@@ -69,11 +69,19 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
             _target = new TCGBLL(_serviceProvider);
 
-            _exceptSqlMapping = new Dictionary<Type, Lazy<string>>
+            _exceptSqlMapping = new Dictionary<TCGTransType, Lazy<string>>
             {
                 {
-                    typeof(TCGRecord), new Lazy<string>(() =>
-                        @$"SELECT * FROM BettransLottery_TCG WHERE ref_no=""{_transId}""")
+                    TCGTransType.Debit, new Lazy<string>(() =>
+                        @$"SELECT * FROM BettransLottery_TCG WHERE ref_no='{inputs["DebitID"]}'")
+                },
+                {
+                    TCGTransType.Credit, new Lazy<string>(() =>
+                        @$"SELECT * FROM BettransLottery_TCG WHERE ref_no='{inputs["CreditID"]}'")
+                },
+                {
+                    TCGTransType.Reserve, new Lazy<string>(() =>
+                        @$"SELECT * FROM BettransLottery_TCG WHERE ref_no='{inputs["ReserveID"]}'")
                 },
             };
         }
@@ -95,24 +103,43 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public TCGBLLSandbox Debit(string _transId, decimal amount)
+        public TCGBLLSandbox Debit(Dictionary<string, string> inputs, decimal amount)
+        {
+            SeamlessWallet(TCGApiMethod.Debit, inputs, amount,inputs["DebitID"]);
+            return this;
+        }
+
+        
+        public TCGBLLSandbox Credit(Dictionary<string, string> inputs, decimal amount)
+        {
+            SeamlessWallet(TCGApiMethod.Credit, inputs, amount, inputs["CreditID"]);
+            return this;
+        }
+
+        public TCGBLLSandbox Reserve(Dictionary<string, string> inputs, decimal amount)
+        {
+            SeamlessWallet(TCGApiMethod.Reserve, inputs, amount, inputs["ReserveID"]);
+            return this;
+        }
+
+        public void SeamlessWallet(string method, Dictionary<string, string> inputs, decimal amount, string ref_no)
         {
             var sParam = new
             {
-                method = "db",
+                method = method,
                 product_type = 384,
                 transactions = new[]
-                {
+                   {
                     new
                     {
-                        ref_no = _transId,
-                        username = _tpUserName,
+                        ref_no = ref_no,
+                        username = inputs["TpUserName"],
                         amount = amount,
                         tx_type = "3250",
                         remarks = "test",
                         additionalInformation= new
                         {
-                            order_no = "HV102753908ZIP6GA",
+                            order_no = inputs["OrderNo"],
                         }
                     }
                 },
@@ -122,82 +149,25 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
             Result = _target.SeamlessWallet(merchantCode, @params, sign)
                 .ConfigureAwait(false).GetAwaiter().GetResult();
-            return this;
         }
 
-        public TCGBLLSandbox Credit(string _transId, decimal amount)
+        public TCGBLLSandbox CancelReserve(Dictionary<string, string> inputs, decimal amount)
         {
             var sParam = new
             {
-                method = "cr",
-                product_type = 384,
-                transactions = new[]
-                {
-                    new
-                    {
-                        ref_no = _transId,
-                        username= _tpUserName,
-                        amount,
-                        tx_type= "3250",
-                        remarks= "test",
-                        additionalInformation= new
-                        {
-                           order_no = "HV102753908ZIP6GA",
-                        }
-                    }
-                },
-                request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            };
-
-            var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
-                .ConfigureAwait(false).GetAwaiter().GetResult();
-            return this;
-        }
-
-        public TCGBLLSandbox Reserve(string _transId, decimal amount)
-        {
-            var sParam = new
-            {
-                method = "rsv",
-                product_type = 384,
-                transactions = new[]
-                {
-                    new
-                    {
-                        ref_no = _transId,
-                        username= _tpUserName,
-                        amount,
-                        tx_type= "3250",
-                        remarks= "test",
-                        additionalInformation= new
-                        {
-                            order_no = "HV102753908ZIP6GA",
-                        }
-                    }
-                },
-                request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
-            };
-
-            var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
-                .ConfigureAwait(false).GetAwaiter().GetResult();
-            return this;
-        }
-
-        public TCGBLLSandbox CancelReserve(string _transId, decimal amount)
-        {
-            var sParam = new
-            {
-                method = "cnrsv",
+                method = TCGApiMethod.CancelReserve,
                 product_type = 384,
                 reservation_details = new[]
                 {
                     new
                     {
-                        ref_no = _transId,
+                        ref_no = inputs["ReserveID"],
                         username= _tpUserName,
                         amount,
+                        additionalInformation= new
+                        {
+                            order_no = inputs["OrderNo"],
+                        }
                     }
                 },
                 request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -209,19 +179,23 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public TCGBLLSandbox ConfirmReserve(string _transId, decimal amount)
+        public TCGBLLSandbox ConfirmReserve(Dictionary<string, string> inputs, decimal amount)
         {
             var sParam = new
             {
-                method = "crsv",
+                method = TCGApiMethod.ConfirmReserve,
                 product_type = 384,
                 reservation_details = new[]
                 {
                     new
                     {
-                        ref_no = _transId,
+                        ref_no = inputs["ReserveID"],
                         username= _tpUserName,
                         amount,
+                        additionalInformation= new
+                        {
+                            order_no = inputs["OrderNo"],
+                        }
                     }
                 },
                 request_time = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
@@ -237,7 +211,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         {
             var sParam = new
             {
-                method = "scs",
+                method = TCGApiMethod.CheckTransactionStatus,
                 product_type = 384,
                 transaction_details = new[]
                 {
@@ -264,12 +238,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this; 
         }
 
-        public TCGBLLSandbox ShouldBeHaveRecord<TRecord>(Lazy<TRecord> data)
-            where TRecord : class
+        public TCGBLLSandbox ShouldBeHaveRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount)
         {
-            var sqlScript = _exceptSqlMapping[typeof(TRecord)].Value;
-            var actual = _mySqlClient.Query<TRecord>(sqlScript, CommandType.Text).First();
-            actual.Should().BeEquivalentTo(data.Value);
+            var expected = CreateTCGRecord(transType, inputs, amount);
+            var sqlScript = _exceptSqlMapping[transType].Value;
+            var actual = _mySqlClient.Query<TCGRecord>(sqlScript, CommandType.Text).First();
+            actual.Should().BeEquivalentTo(expected);
             return this;
         }
 
@@ -287,17 +261,31 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public static Lazy<TCGRecord> TCGRecord(TCGTransType tCGTransType, string tpUserName, string ref_no, decimal amount) =>
-        new Lazy<TCGRecord>(() => new TCGRecord
+        private TCGRecord CreateTCGRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount) 
         {
-            TransType = tCGTransType.ToString(),
-            username = tpUserName,
-            ref_no = ref_no,
-            amount = amount,          
-            //TicketType = 0,
-            //TicketStatus = 0,
-            //SettleFlag = 0,
-        });
+            var ref_no = string.Empty;
+            switch (transType)
+            {
+                case TCGTransType.Debit:
+                    ref_no = inputs["DebitID"];
+                    break;
+                case TCGTransType.Credit:
+                    ref_no = inputs["CreditID"];
+                    break;
+                case TCGTransType.Reserve:
+                    ref_no = inputs["ReserveID"];
+                    break;
+                default:
+                    break;
+            }
+            return new TCGRecord
+            {
+                TransType = transType.ToString(),
+                username = inputs["TpUserName"],
+                ref_no = ref_no,
+                amount = amount,
+            };
+        }
 
         private ServiceCollection SetEnvironment(ServiceCollection services)
         {

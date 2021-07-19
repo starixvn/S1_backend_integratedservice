@@ -34,7 +34,7 @@ namespace ThirdPartyWager.Service.Model
 
     public class TCGWagerData
     {
-        public int betAmount { get; set; }
+        public decimal betAmount { get; set; }
         public string gameCode { get; set; } = "";
         public string betOrderNo { get; set; } = "";
         public string betTime { get; set; } = "";
@@ -52,19 +52,19 @@ namespace ThirdPartyWager.Service.Model
         public string remark { get; set; } = "";
         public string playName { get; set; } = "";
         public string gameGroupName { get; set; } = "";
-        public int winAmount { get; set; }
-        public int netPNL { get; set; }
+        public decimal winAmount { get; set; }
+        public decimal netPNL { get; set; }
         public string betStatus { get; set; } = "";
         public string settlementTime { get; set; } = "";
-        public string actualBetAmount { get; set; } = "";
-        public int exceedWinAmount { get; set; }
+        public decimal actualBetAmount { get; set; }
+        public decimal exceedWinAmount { get; set; }
         public string details { get; set; } = "";
         public string winningNumber { get; set; } = "";
         public string clientIp { get; set; } = "";
         public decimal playBonus { get; set; }
         public string username { get; set; } = "";
         public string productType { get; set; } = "";
-        public bool single { get; set; }
+        public string single { get; set; } = "";
         public int detailStatusId { get; set; }
     }
 

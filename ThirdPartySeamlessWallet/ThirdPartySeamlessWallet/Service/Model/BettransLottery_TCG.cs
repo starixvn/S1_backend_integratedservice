@@ -206,9 +206,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class TCGReservationDetail
     {
+        private string _order_no { get; set; } = "";
         public decimal amount { get; set; }
         public string ref_no { get; set; }
         public string username { get; set; }
+        public string order_no
+        {
+            get
+            {
+                var result = additionalInformation["order_no"];
+                return result == null ? _order_no : result;
+            }
+            set { _order_no = value; }
+        }
         public dynamic additionalInformation { get; set; }
     }
 

@@ -248,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
-        private void DoSettleTCGWork(object state)
+        public void DoSettleTCGWork(object state)
         {
             var forContinue = false;
             var isError = false;
@@ -273,7 +273,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 ValidBet = unsettled.ValidBet,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.TransId,
-                                GameType = unsettled.ProductType.Equals("384") ? GameType.TCG_SEA_Lottery : GameType.TCG_VN_Lottery,
+                                GameType = unsettled.ProductType.Equals("TCG_SEA") ? GameType.TCG_SEA_Lottery : GameType.TCG_VN_Lottery,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid,
@@ -334,7 +334,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 {
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
-                timerSettleTCG.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleTCG?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

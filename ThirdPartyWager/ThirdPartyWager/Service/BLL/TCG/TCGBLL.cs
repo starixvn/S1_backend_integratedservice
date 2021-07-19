@@ -102,9 +102,9 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private Task<int> InsertWager(TCGWagerData bet)
+        private Task<int> InsertWager(TCGWagerData wager)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWagerTCG_Ins", new DynamicParameters(bet));
+            return _wagerDbClient.ExecuteAsync("Service_TpWagerTCG_Ins", new DynamicParameters(wager));
         }
     }
 }

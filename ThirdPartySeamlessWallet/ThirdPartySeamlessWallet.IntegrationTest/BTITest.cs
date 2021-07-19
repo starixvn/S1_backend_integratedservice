@@ -5,7 +5,7 @@ using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {
-    public class BTIBLLTest
+    public class BTITest
     {
 
         private string _reserve_id;
