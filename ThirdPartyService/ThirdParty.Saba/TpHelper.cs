@@ -36,8 +36,7 @@ namespace ThirdParty.Saba
             {"222","tablegame" },
             {"223","indo4d" },
             {"245","virtualgame" },
-            {"997","90088,89692,89697,93062,95730,96666,95731" },
-            {"2000","OLYMPIC TOKYO 2020"}
+            {"997","90088,89692,89697,93062,95730,96666,95731" }
         };
 
         private class Result
@@ -324,7 +323,7 @@ namespace ThirdParty.Saba
 
                     if (appType == AppType.Native)
                     {
-                        if (!string.IsNullOrEmpty(matchId))
+                        if (!string.IsNullOrEmpty(matchId) && matchId != "0")
                         {
                             oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
 
@@ -355,12 +354,8 @@ namespace ThirdParty.Saba
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
-                        else if (SportType == "2000")
-                        {
-                            types = "1,1,e";
-                        }
 
-                        if (!string.IsNullOrEmpty(matchId))
+                        if (!string.IsNullOrEmpty(matchId) && matchId != "0")
                         {
                             oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
                         }
@@ -384,11 +379,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (SportType == "2000")
-                        {
-                            oApiResult.Message = oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act=soccer&menutype=1&market=E"; ;
-                        }
-                        else if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
+                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
                         {
                             if (!string.IsNullOrEmpty(betType))
                             {
@@ -406,7 +397,7 @@ namespace ThirdParty.Saba
                         }
                         else
                         {
-                            if (!string.IsNullOrEmpty(matchId))
+                            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
                             {
                                 oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
                             }

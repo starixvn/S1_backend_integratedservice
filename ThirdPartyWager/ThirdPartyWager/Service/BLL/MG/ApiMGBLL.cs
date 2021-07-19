@@ -17,13 +17,16 @@ namespace ThirdPartyWager.Service.BLL.MG
     public class ApiMGBLL : IApiMGBLL
     {
         public Dictionary<string, string> MgConfig { get; set; }
-        private readonly HttpHelper _httpHelper;
         private readonly ILogger<ApiMGBLL> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly HttpClient _client;
 
-        public ApiMGBLL(IServiceProvider provider)
+        public ApiMGBLL(IServiceProvider provider, IConfiguration configuration)
         {
+            _configuration = configuration;
             _logger = provider.GetRequiredService<ILogger<ApiMGBLL>>();
-            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            var httpHelper = provider.GetRequiredService<HttpHelper>();
+            _client = httpHelper.GetClientWithHandler(CreateHandler());
         }
 
         public async Task<List<MGFailedTransactions>> GetFailedTransactionsAsync(string token, string currencyId)
@@ -35,9 +38,8 @@ namespace ThirdPartyWager.Service.BLL.MG
 
             try
             {
-                var client = _httpHelper.GetClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await client.GetAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions");
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.GetAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions");
                 var result = await response.Content.ReadAsStringAsync();
                 var failedTransactions = JsonConvert.DeserializeObject<List<MGFailedTransactions>>(result);
                 return failedTransactions;
@@ -58,9 +60,8 @@ namespace ThirdPartyWager.Service.BLL.MG
 
             try
             {
-                var client = _httpHelper.GetClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await client.PatchAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions/{txnId}", null);
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.PatchAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions/{txnId}", null);
                 _logger.LogInformation($"update mg failed transactions {response.StatusCode}");
             }
             catch(Exception ex)
@@ -84,9 +85,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                     { "client_secret", agent.SecretKey },
                     { "grant_type", "client_credentials" }
                 });
-            
-                var client = _httpHelper.GetClient();
-                var response = await client.PostAsync($"{tokenUrl}/connect/token", httpContent);
+                var response = await _client.PostAsync($"{tokenUrl}/connect/token", httpContent);
                 var tokenResult = await response.Content.ReadAsStringAsync();
                 var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenResult);
                 return dict.ContainsKey("access_token") ? dict["access_token"] : string.Empty;
@@ -112,6 +111,17 @@ namespace ThirdPartyWager.Service.BLL.MG
             public string AgentCode { get; set; }
             public string SecretKey { get; set; }
         }
-        
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler();
+            if (_configuration.GetValue<string>("ProxyHost") != null)
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
+            }
+
+            return handler;
+        }
     }
 }

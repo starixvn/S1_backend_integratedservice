@@ -76,21 +76,23 @@ namespace ThirdPartyWager.Service.BLL
             var dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/x-www-form-urlencoded");
             request.Headers.Add("X_ENTITY_KEY", entityKey);
 
-            HttpClientHandler handler = new HttpClientHandler();
+            using HttpClientHandler handler = new HttpClientHandler();
             if (configuration.GetValue<string>("ProxyHost") != null)
             {
-                handler.Proxy = new WebProxy(configuration.GetValue<string>("ProxyHost"), configuration.GetValue<int>("ProxyPort"));
+                handler.Proxy = new WebProxy(configuration.GetValue<string>("ProxyHost"),
+                    configuration.GetValue<int>("ProxyPort"));
                 handler.UseProxy = true;
             }
-            handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
 
-            var client = new HttpClient(handler);
-            var response = await client.SendAsync(request);
+            handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"],
+                X509KeyStorageFlags.MachineKeySet));
 
+            using var client = new HttpClient(handler);
+            using var response = await client.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 return response.Content.ReadAsStringAsync().Result;

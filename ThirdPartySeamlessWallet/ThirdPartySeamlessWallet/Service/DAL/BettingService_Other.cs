@@ -535,5 +535,173 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region TCG
+        public async Task<TCGBettransLottery> BettransLottery_Get_TCG(string username, string ref_no)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                var p = new DynamicParameters(new
+                {
+                    username,
+                    ref_no,
+                });
+
+                return await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, commandType: CommandType.StoredProcedure);         
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"BettransLottery_Get_TCG Exception: username={username}, ref_no={ref_no}");
+                return default;
+            }
+        }
+
+
+        public async Task<TCGResult> Debit_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TCGTransactionData data)
+        {
+            try
+            {
+                var bonusId = 0;
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                var p = new DynamicParameters(new
+                {
+                    request.method,
+                    request.product_type,
+                    request.request_time,
+                    data.ref_no,
+                    data.username,
+                    data.amount,
+                    data.tx_type,
+                    data.order_no,
+                    data.remarks,
+                    additionalInformation = JsonConvert.SerializeObject(data.additionalInformation),
+                    TransType = TCGTransType.Debit.ToString(),
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+                var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransTCG != null)
+                {
+                    return new TCGResult()
+                    {
+                        Result = TCGReturnCode.TransactionAlreadyExists,
+                    };
+                }
+                
+                var result = conn.Execute("Service_BettransLottery_TCG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                if (result > 0 && data.amount != 0)
+                {
+                    result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(data.amount) * -1,
+                    tpId: (int)Tp.TCG,
+                    tpTransId: data.ref_no,
+                    gameType: (int)gameType,
+                    refId: data.order_no,
+                    betData: null,
+                    tpCategory: TpCategory.Lottery,
+                    afterAmount: out decimal afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+
+                return new TCGResult()
+                { 
+                    Result = result > 0 ? TCGReturnCode.Success : TCGReturnCode.UnknownSystemError,
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Debit_TCG Exception: {JsonConvert.SerializeObject(request)} {JsonConvert.SerializeObject(data)}");
+                throw;
+            }
+        }
+
+        public async Task<TCGResult> Reserve_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TCGTransactionData data)
+        {
+            try
+            {
+                var bonusId = 0;
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    request.method,
+                    request.product_type,
+                    request.request_time,
+                    data.ref_no,
+                    data.username,
+                    data.amount,
+                    data.tx_type,
+                    data.order_no,
+                    data.remarks,
+                    additionalInformation = JsonConvert.SerializeObject(data.additionalInformation),
+                    TransType = TCGTransType.Reserve.ToString(),
+                    TicketType = (int)BettransType.Reserve,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+                var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (bettransTCG != null)
+                {
+                    return new TCGResult()
+                    {
+                        Result = TCGReturnCode.TransactionAlreadyExists,
+                    };
+                }
+
+                var result = conn.Execute("Service_BettransLottery_TCG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && data.amount != 0)
+                {
+                    result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(data.amount) * -1,
+                    tpId: (int)Tp.TCG,
+                    tpTransId: data.ref_no,
+                    gameType: (int)gameType,
+                    refId: data.order_no,
+                    betData: null,
+                    tpCategory: TpCategory.Lottery,
+                    afterAmount: out decimal afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+
+                return new TCGResult()
+                {
+                    Result = result > 0 ? TCGReturnCode.Success : TCGReturnCode.UnknownSystemError,
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Reserve_TCG Exception: {JsonConvert.SerializeObject(request)} {JsonConvert.SerializeObject(data)}");
+                throw;
+            }
+        }
+
+        #endregion
     }
 }

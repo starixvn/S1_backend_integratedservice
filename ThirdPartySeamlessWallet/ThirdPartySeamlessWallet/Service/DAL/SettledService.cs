@@ -119,6 +119,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
                         }
+
+                        if (afterBonus > 0)
+                        {
+                            // check bonus status and update status cancel to running
+                            AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
+                        }
                     }
                     else
                     {
@@ -171,6 +177,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 else
                 {
                     afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
+                }
+                
+                if (afterBonus > 0)
+                {
+                    // check bonus status and update status cancel to running
+                    AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
                 }
             }
             catch (Exception ex)
@@ -237,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)betRecordInfo.GameType;
 
             GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
-            if (bonusId == 0 && betRecordInfo .TpId == (int)Tp.N2Live && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
+            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.N2Live && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
             {
                 // for n2 smart bet use
                 // for n2 temporary fix noraml bet
@@ -561,11 +573,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_TpSettleBet_Set", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, SettledTime = betRecordInfo.SettledTime, ValidBet = betRecordInfo.ValidBet, Revenue = betRecordInfo.Revenue, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus }, transaction: trans, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_TpSettleBet_Set", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, SettledTime = betRecordInfo.SettledTime, ValidBet = betRecordInfo.ValidBet, Revenue = betRecordInfo.Revenue, ProgressiveBet = betRecordInfo.ProgressiveBet, ProgressiveWin = betRecordInfo.ProgressiveWin, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int AddTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_TpSettleBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, SettledTime = betRecordInfo.SettledTime, Stake = betRecordInfo.Stake, ValidBet = betRecordInfo.ValidBet, Revenue = betRecordInfo.Revenue, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus, BonusId = betRecordInfo.BonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_TpSettleBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, SettledTime = betRecordInfo.SettledTime, Stake = betRecordInfo.Stake, ValidBet = betRecordInfo.ValidBet, Revenue = betRecordInfo.Revenue, ProgressiveBet = betRecordInfo.ProgressiveBet, ProgressiveWin = betRecordInfo.ProgressiveWin, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus, BonusId = betRecordInfo.BonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
         public int SetRollOverTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -608,6 +620,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans);
             }
 
+            return result;
+        }
+
+        public int AutoRunningSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, AfterBonus = afterBonus });
+            p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            var result = conn.Execute("Service_AutoRunningSeamlessBonus_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            int outResult = p.Get<int>("out_result");
+            if (outResult == 2)
+            {
+                var parameter = new
+                {
+                    BonusId = bonusId,
+                    GameType = gameType,
+                    CustId = custId,
+                    AfterBonus = afterBonus,
+                    OutResult = outResult
+                };
+                log2File.Info($"{JsonConvert.SerializeObject(parameter)}", MethodBase.GetCurrentMethod().Name);
+            }
             return result;
         }
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
