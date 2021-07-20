@@ -2542,7 +2542,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransRngMg == null)
                 {
-                    throw new MGException(MGErrorCode.TransactionNotExists, $"{cancelDataRng_MG.txnId} not exists");
+                    return new MGCancelResult()
+                    {
+                        Result = 1,
+                    };
                 }
 
                 if (bettransRngMg.PlayerId != cancelDataRng_MG.playerId ||
