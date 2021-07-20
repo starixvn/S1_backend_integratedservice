@@ -229,6 +229,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        
+        public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
+        {
+            bonusId = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var p = new DynamicParameters(new { TpId = tpId, CustId = custId });
+            p.Add("BonusId", direction: ParameterDirection.Output);
+            var result = conn.Execute($"Service_BonusIdByTpId_Get", p);
+            if (result > 0)
+            {
+                bonusId = p.Get<int?>("BonusId") ?? 0;
+            }
+
+            return result > 0 && bonusId != 0;
+        }
+        
         public SettlementType GetSettlementType(GameType gameType, string gameId)
         {
             SettlementType settlementType = SettlementType.SettledForValid;
@@ -255,6 +271,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // for n2 temporary fix noraml bet
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
             }
+
+            if (bonusId == 0 && betRecordInfo.TpId == (int) Tp.PT)
+            {
+                GetBonusIdByTpId(betRecordInfo.TpId, tpCustInfo.CustId, out bonusId);
+            }
+
             betRecordInfo.BonusId = bonusId;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
