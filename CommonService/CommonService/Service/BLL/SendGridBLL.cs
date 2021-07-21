@@ -97,7 +97,7 @@ namespace CommonService.Service.BLL
 
             content1.value = $"key={key}";
 
-            var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendMailBody), "application/json");
+            using var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendMailBody), "application/json");
             if (result.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
                 apiResult.ErrorCode = 0;

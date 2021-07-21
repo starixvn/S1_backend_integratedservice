@@ -122,7 +122,7 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
-            var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
+            using var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
             log2File.Info(result.Content.ReadAsStringAsync().Result, $"{siteName}_OTP");
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK)

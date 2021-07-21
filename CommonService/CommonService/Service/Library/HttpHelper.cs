@@ -83,7 +83,7 @@ namespace CommonService.Service.Library
             }
             using var data = new StringContent(parameters, Encoding.UTF8, contentType);
             _logger.LogInformation($"HttpHelper.Request.BODY:{parameters}");
-            using var response = await client.PostAsync(url, data);
+            var response = await client.PostAsync(url, data);
             _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
@@ -117,7 +117,7 @@ namespace CommonService.Service.Library
             _logger.LogInformation($"HttpHelper.Request.BODY:{JsonConvert.SerializeObject(parameters)}");
             using var data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters) };
 
-            using var response = await client.SendAsync(data);
+            var response = await client.SendAsync(data);
             _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
 
@@ -169,7 +169,7 @@ namespace CommonService.Service.Library
             string newurl = builder.ToString();
             LogContext.PushProperty("HttpHelper.Request.URL", newurl);
             using var data = new HttpRequestMessage(HttpMethod.Get, newurl);
-            using var response = await client.SendAsync(data);
+            var response = await client.SendAsync(data);
             _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
