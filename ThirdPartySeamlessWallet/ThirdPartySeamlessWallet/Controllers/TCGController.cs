@@ -36,7 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                return await _tcgBLL.SeamlessWallet(HttpUtility.UrlDecode(merchant_code), HttpUtility.UrlDecode(@params), HttpUtility.UrlDecode(sign));
+                return await _tcgBLL.SeamlessWallet(merchant_code, @params, sign);
             }
             catch (Exception ex)
             {
