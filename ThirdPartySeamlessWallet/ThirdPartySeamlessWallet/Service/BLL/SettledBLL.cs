@@ -1029,6 +1029,36 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
+            else if (result == -1 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int PreRefundLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.EBet, bettingData_EBet.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PreRefundLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
+            else if (result == -1 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
             }
 
             return result;
@@ -1054,6 +1084,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
+            else if (result == -1 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
             }
             return result;
         }
@@ -1111,7 +1146,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
                 bettingData_EBet.money /= tpCurrency.ExchangeRate;
             }
-
+            else if (result == -1 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
             return result;
         }
 
@@ -1765,7 +1803,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
-        
+
         #region MG
         public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
         {
@@ -1778,7 +1816,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
-        
+
         #region JILI
 
         public int BetAndPayoutRNG_JILI(BettingData_JILI bettingData_JILI, int gameType, out decimal afterAmount)
