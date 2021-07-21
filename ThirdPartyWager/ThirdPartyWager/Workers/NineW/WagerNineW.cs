@@ -49,9 +49,9 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);              
-                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins- intervalMins) * -1) ?? DateTime.UtcNow.AddDays(-1);
+                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins- intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
                     doQuickly = true;
                 }
@@ -87,9 +87,9 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
-                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.Date.AddDays(-3);
+                var thisTime = lastTime?.StartTime ?? DateTime.Now.Date.AddDays(-3);
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByDay(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
@@ -100,7 +100,7 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
                     doQuickly = true;
                 }
@@ -125,9 +125,9 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
-                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddDays(-3);
+                var thisTime = lastTime?.StartTime ?? DateTime.Now.AddDays(-3);
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByHour(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetReSettleWagersAsync(timeCast.startTime, timeCast.endTime);
@@ -138,7 +138,7 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
                     doQuickly = true;
                 }

@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("TP", "TCG");
+            LogContext.PushProperty("Tp", "TCG");
             var log = provider.GetRequiredService<ILogger<MySqlClient>>();
             var conn = configuration.GetConnectionString("ConnectionStringWager");
             _wagerDbClient = new MySqlClient(conn, log);
