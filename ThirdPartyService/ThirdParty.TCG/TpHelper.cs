@@ -185,11 +185,8 @@ namespace ThirdParty.TCG
                 back_url = inputs.GetValue("HomeUrl");
                 view = "lobby";
 
-                if (!Enum.TryParse(inputs.GetValue("gameType"), out GameType gameType))
-                {
-                    throw new ArgumentException("gameType is error.");
-                }
-                var gameId = inputs.GetValue("gameId");
+                var gameType = GetGameType(tpCustInfo.TpCurrencyId);
+                var gameId = inputs.TryGetValue("gameId", out string output) ? output :  "";
                 _launchGameHandler[gameType].Invoke(appType, gameId);
             }
 
@@ -213,6 +210,15 @@ namespace ThirdParty.TCG
                 series = new List<Series>()
                 {
                     new Series{ game_group_code = "VIETNAM_LOTTO", default_series="100" },
+                };
+            }
+
+            private GameType GetGameType(string tpCurrencyId)
+            {
+                return tpCurrencyId switch
+                {
+                    "VNDK" => GameType.VNLottery,
+                    _ => GameType.SEALottery,
                 };
             }
         }
