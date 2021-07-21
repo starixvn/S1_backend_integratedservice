@@ -54,21 +54,21 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, timerType, currency);
-                var thisTime = lastTime?.StartTime.AddMinutes(dataRangeMins) ?? DateTime.UtcNow.BeginningOfTheDay();
+                var thisTime = lastTime?.StartTime.AddMinutes(dataRangeMins) ?? DateTime.Now.BeginningOfTheDay();
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now)
                 {
-                    var utcBatchTime = new DateTimeOffset(thisTime);
-                    var timezoneBatchTime = utcBatchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
+                    var batchTime = new DateTimeOffset(thisTime);
+                    var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
                     var isSuccess = await _tcgBLL.GetWagersAsync(timezoneBatchTime, currency);
                     if (isSuccess)
                     {
                         _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
-                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, utcBatchTime.ToUnixTimeSeconds(), currency);
+                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, batchTime.ToUnixTimeSeconds(), currency);
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
                     doQuickly = true;
                 }
