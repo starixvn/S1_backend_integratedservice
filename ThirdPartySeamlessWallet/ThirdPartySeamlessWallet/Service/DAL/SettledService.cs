@@ -234,9 +234,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             bonusId = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { TpId = tpId, CustId = custId });
-            p.Add("BonusId", direction: ParameterDirection.Output);
-            var result = conn.Execute($"Service_BonusIdByTpId_Get", p);
+            var p = new DynamicParameters(new { CustId = custId, TpId = tpId });
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            var result = conn.Execute($"Service_BonusIdByTpId_Get", p, commandType: CommandType.StoredProcedure);
             if (result > 0)
             {
                 bonusId = p.Get<int?>("BonusId") ?? 0;

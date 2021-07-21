@@ -649,7 +649,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValidNotRollover
+                                SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId)
                             };
 
                             if (stake == 0 && validBet == 0 && winLostAmount == 0)
