@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -17,6 +18,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var isError = false;
             var thisTp = (int)Tp.BTI;
             var logName = "Settle_BTI_Sports";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -61,6 +63,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 settledBLL.SetSettleFlag_BTI(unsettled.Account, unsettled.TransId, isSuccess: false);
                             });
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
@@ -69,6 +72,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
@@ -95,6 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var isError = false;
             var thisTp = (int)Tp.NineW;
             var logName = "Settle_9W_Sports";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -139,6 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
                             });
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
@@ -147,6 +153,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
