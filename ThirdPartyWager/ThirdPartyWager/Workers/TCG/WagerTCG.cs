@@ -50,13 +50,13 @@ namespace ThirdPartyWager.Workers
             var doQuickly = false;
             var timerType = 1;
             var dataRangeMins = 5;
-            var intervalMins = 3;
+            var intervalMins = 2;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, timerType, currency);
                 var thisTime = lastTime?.StartTime.AddMinutes(dataRangeMins) ?? DateTime.Now.BeginningOfTheDay();
 
-                if (thisTime < DateTime.Now)
+                if (thisTime < DateTime.Now.AddMinutes(-10))
                 {
                     var batchTime = new DateTimeOffset(thisTime);
                     var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));

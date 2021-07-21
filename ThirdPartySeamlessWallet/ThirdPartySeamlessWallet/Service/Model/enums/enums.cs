@@ -144,7 +144,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Payout = 4,
         Tip = 6,
         Bonus = 7,
-        Jackpot = 8
+        Jackpot = 8,
+        ConfirmReserve = 9
     }
     public enum AllowNegative
     {
