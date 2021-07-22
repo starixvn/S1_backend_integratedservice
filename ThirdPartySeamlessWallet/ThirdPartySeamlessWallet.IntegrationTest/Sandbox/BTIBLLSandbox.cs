@@ -62,7 +62,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             {
                 {
                     typeof(ReserveRecord), new Lazy<string>(() =>
-                        @$"SELECT * FROM BettransSports_BTI_Reserve WHERE reserve_id={_reserveId}")
+                        @$"SELECT * FROM BettransSports_BTI_Reserve WHERE reserve_id=""{_reserveId}""")
                 },
             };
         }

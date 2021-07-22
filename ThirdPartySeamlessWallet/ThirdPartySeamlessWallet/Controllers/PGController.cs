@@ -682,10 +682,151 @@ namespace ThirdPartySeamlessWallet.Controllers
                     respData.balance_amount = tpCustBalance.Balance;
                     resp.error = null;
                 }
+                else if (tpAffterAmount < 0)
+                {
+                    resp.data = null;
+                    resp.error = new Error
+                    {
+                        code = "3202",
+                        message = "No enough cash balance."
+                    };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
+                }
             }
             catch (Exception ex)
             {
                 log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(transferInReqq)}\r\n{ex}", $"{thisTp}_TransferIn", ex);
+                throw ex;
+            }
+
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+
+            return resp;
+        }
+
+        public class AdjustmentResp
+        {
+            public AdjustmentBalanceData data { get; set; }
+            public Error error { get; set; }
+        }
+
+        public class AdjustmentBalanceData
+        {
+            public decimal adjust_amount { get; set; }
+            public decimal balance_before { get; set; }
+            public decimal balance_after { get; set; }
+            public long updated_time { get; set; }
+        }
+
+        [Route("[controller]/Adjustment")]
+        [HttpPost]
+        public AdjustmentResp Adjustment(string traceId, [FromForm] Dictionary<string, string> reqq)
+        {
+            // api used for future certain PG event only , such as Cash Tournament.
+            string logName = $"{thisTp}_Adjustment";
+            AdjustmentResp resp = new AdjustmentResp();
+            resp.error = new Error
+            {
+                code = "1034",
+                message = "Invalid request."
+            };
+
+            var adjustmentReqq = JsonConvert.DeserializeObject<AdjustmentDataRNG_PG>(JsonConvert.SerializeObject(reqq));
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+
+            string secret_key = thirdPartySetting.TpSetting["secret_key"];
+            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+
+            if (string.IsNullOrEmpty(adjustmentReqq.PlayerName) || !adjustmentReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !adjustmentReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, adjustmentReqq.PlayerName);
+            if (tpCustInfo == null)
+            {
+                resp.error = new Error
+                {
+                    code = "3004",
+                    message = "Player does not exist."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, adjustmentReqq.PlayerName, gameType);
+            if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(adjustmentReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+            {
+                resp.error = new Error
+                {
+                    code = "3005",
+                    message = "Player wallet does not exist."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            AdjustmentBalanceData respData = new AdjustmentBalanceData();
+            resp.data = respData;
+            resp.error = null;
+
+            try
+            {
+                var balanceBefore = tpCustBalance.Balance;
+                int result = settledBLL.RewardRNG_PG(adjustmentReqq, out decimal tpAffterAmount);
+
+                if (result > 0)
+                {
+                    if (adjustmentReqq.TransferAmount != 0)
+                    {
+                        respData.adjust_amount = adjustmentReqq.TransferAmount;
+                        respData.balance_before = balanceBefore;
+                        respData.balance_after = tpAffterAmount;
+                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        resp.error = null;
+                    }
+                    else if (adjustmentReqq.TransferAmount == 0)
+                    {
+
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReqq.PlayerName, gameType);
+                        respData.adjust_amount = adjustmentReqq.TransferAmount;
+                        respData.balance_before = balanceBefore;
+                        respData.balance_after = tpCustBalance.Balance;
+                        respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        resp.error = null;
+                    }
+                }
+                else if (result == -1)
+                {
+                    tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReqq.PlayerName, gameType);
+                    respData.adjust_amount = adjustmentReqq.TransferAmount;
+                    respData.balance_before = balanceBefore;
+                    respData.balance_after = tpCustBalance.Balance;
+                    respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    resp.error = null;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    resp.data = null;
+                    resp.error = new Error
+                    {
+                        code = "3202",
+                        message = "No enough cash balance."
+                    };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{ex}", logName, ex);
                 throw ex;
             }
 

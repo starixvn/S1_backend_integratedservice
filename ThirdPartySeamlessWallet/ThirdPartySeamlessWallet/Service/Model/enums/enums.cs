@@ -85,6 +85,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         NineW_Sports = 51,
         KM_Poker = 52,
         JILI_RNG = 53,
+        TCG_SEA_Lottery=54,
+        TCG_VN_Lottery =55,
         JILI_Fish = 56,
         MG_RNG = 57,
         MG_LiveCasino = 58
@@ -123,6 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         AMB = 30,
         NineW = 31,
         JILI = 32,
+        TCG = 33,
         MG = 34
     }
     public enum TransferType : int
@@ -141,7 +144,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Payout = 4,
         Tip = 6,
         Bonus = 7,
-        Jackpot = 8
+        Jackpot = 8,
+        ConfirmReserve = 9
     }
     public enum AllowNegative
     {

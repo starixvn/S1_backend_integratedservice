@@ -17,6 +17,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Stake { get; set; }
         public decimal? ValidBet { get; set; }
         public decimal? Revenue { get; set; }
+        public decimal ProgressiveBet { get; set; }
+        public decimal ProgressiveWin { get; set; }
         public decimal WinlostAmount { get; set; }
         public SettlementType SettlementType { get; set; }
         public TicketStatus TicketStatus { get; set; }
@@ -35,5 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal? Revenue { get; set; }
         public string Account { get; set; }
         public long SettleTime { get; set; }
+        public decimal ProgressiveBet { get; set; }
+        public decimal ProgressiveWin { get; set; }
     }
 }

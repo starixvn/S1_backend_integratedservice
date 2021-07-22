@@ -417,6 +417,7 @@ namespace ThirdPartyCore
             return result;
         }
 
+
         public void Info(string InfoContent, string PrefixName)
         {
             var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";

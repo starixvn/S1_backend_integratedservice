@@ -46,7 +46,7 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(sendIovationChecks);
-            var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
+            using var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(result.Content.ReadAsStringAsync().Result);
             var resultIns = iovationService.IovationResultIns(resultResp);
 
