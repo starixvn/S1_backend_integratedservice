@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             var result = settleService.Settle(tpCustInfo, betRecordInfo);
             Assert.AreEqual(1, result);
         }
-        
+
         private ServiceCollection SetEnvironment(ServiceCollection services)
         {
             var env = new HostingEnvironment()
