@@ -658,7 +658,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             else
                             {
-                                settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                                settledBLL.Settled(tpCustInfo, betRecordInfo, PromotionCategory.PTSlotsGame);
                                 settledBLL.SetSettleFlag_TpWagerRng_PT(long.Parse(unsettled.TransId));
                             }
                         }

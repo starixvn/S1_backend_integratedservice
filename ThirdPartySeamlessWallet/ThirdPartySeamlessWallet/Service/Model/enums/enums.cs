@@ -160,6 +160,19 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Poker,
         Sports
     }
+
+    public enum PromotionCategory
+    {
+        SlotsGame = 1,
+        LiveCasino = 2,
+        Fish = 3,
+        SabaSports = 4,
+        Lottery = 5,
+        Sports = 6,
+        PTSlotsGame = 7,
+        PTLiveCasino = 8
+    }
+
     public enum Direction
     {
         ToTp = 1,
