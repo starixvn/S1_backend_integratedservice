@@ -31,12 +31,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
             _logger = provider.GetService<ILogger<MGBLL>>();
-            // Config = _thirdPartyBLL.GetThirdPartySetting((int) ThirdParty).TpSetting;
             _processRequestHandler =
                 new Dictionary<MGTxnType, Func<MGUpdatebalanceRequest, Task<MGUpdatebalanceResponse>>>()
                 {
                     {MGTxnType.DEBIT, Debit},
-                    {MGTxnType.CREDIT, Credit}
+                    {MGTxnType.CREDIT, Credit},
+                    {MGTxnType.ROLLBACK, Rollback},
                 };
         }
 
@@ -283,6 +283,57 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        private async Task<MGUpdatebalanceResponse> Rollback(MGUpdatebalanceRequest request)
+        {
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
+            if (tpCurrency.ExchangeRate > 0) 
+                request.amount *= tpCurrency.ExchangeRate;
+
+            var cancelData = new CancelDataRNG_MG()
+            {
+                txnId = request.txnId,
+                playerId = request.playerId,
+                amount = request.amount
+            };
+            var cancelResult = new MGCancelResult();
+            if (GameType == GameType.MG_RNG)
+            {
+                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, (int)GameType);
+            }
+            else if (GameType == GameType.MG_LiveCasino)
+            {
+                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, (int)GameType);
+            }
+            else
+            {
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
+            }
+
+            
+            // DB 錯誤
+            if (cancelResult.Result <= 0)
+            {
+                throw new MGException();
+            } 
+            
+            if (cancelResult.AfterAmount == 0)
+            {
+                cancelResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+            }
+            else
+            {
+                if (tpCurrency.ExchangeRate > 0) 
+                    cancelResult.AfterAmount /= tpCurrency.ExchangeRate;   
+            }
+
+            return new MGUpdatebalanceResponse()
+            {
+                currency = tpCurrency.TpCurrencyId,
+                balance = cancelResult.AfterAmount,
+                extTxnId = cancelResult.ExtTxnId.ToString()
+            };
+        }
+        
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int) ThirdParty, tpUserName);

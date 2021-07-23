@@ -77,7 +77,7 @@ namespace ThirdParty.TCG
             }
 
             var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
-            var sParam = new LaunchGameObj(tpCustInfo, appType, TpLangId, inputs);
+            var sParam = new LaunchGameObj(tpCustInfo, appType, TpLangId, inputs, config);
 
             var json = HttpPost(config.ApiUrl, GetBody(sParam, config), ContentType);
             var result = FromJson<TCGResult>(json);
@@ -135,6 +135,7 @@ namespace ThirdParty.TCG
         public class TCGConfig
         {
             public string GameUrl { get; set; }
+            public string HomeUrl { get; set; }
             public string ApiUrl { get; set; }
             public string MerchantCode { get; set; }
             public string DesKey { get; set; }
@@ -142,6 +143,7 @@ namespace ThirdParty.TCG
             public TCGConfig(Dictionary<string, string> inputs, string tpCurrencyId)
             {
                 GameUrl = inputs.GetValue($"GameUrl_{tpCurrencyId}");
+                HomeUrl = inputs.GetValue($"HomeUrl");
                 ApiUrl = inputs.GetValue("ApiUrl");
                 MerchantCode = inputs.GetValue($"MerchantCode_{tpCurrencyId}");
                 DesKey = inputs.GetValue($"DESKey_{tpCurrencyId}");
@@ -171,7 +173,7 @@ namespace ThirdParty.TCG
             public string view { get; set; }
             public List<Series> series { get; set; }
 
-            public LaunchGameObj(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+            public LaunchGameObj(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs, TCGConfig config)
             {
                 _launchGameHandler = new Dictionary<GameType, Action<AppType, string>>()
                 {
@@ -182,14 +184,11 @@ namespace ThirdParty.TCG
                 username = tpCustInfo.TpUserName;
                 language = TpLangId;
                 game_mode = "1";
-                back_url = inputs.GetValue("HomeUrl");
+                back_url = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : config.HomeUrl;
                 view = "lobby";
 
-                if (!Enum.TryParse(inputs.GetValue("gameType"), out GameType gameType))
-                {
-                    throw new ArgumentException("gameType is error.");
-                }
-                var gameId = inputs.GetValue("gameId");
+                var gameType = GetGameType(tpCustInfo.TpCurrencyId);
+                var gameId = inputs.TryGetValue("gameId", out string output) ? output :  "";
                 _launchGameHandler[gameType].Invoke(appType, gameId);
             }
 
@@ -213,6 +212,15 @@ namespace ThirdParty.TCG
                 series = new List<Series>()
                 {
                     new Series{ game_group_code = "VIETNAM_LOTTO", default_series="100" },
+                };
+            }
+
+            private GameType GetGameType(string tpCurrencyId)
+            {
+                return tpCurrencyId switch
+                {
+                    "VNDK" => GameType.VNLottery,
+                    _ => GameType.SEALottery,
                 };
             }
         }

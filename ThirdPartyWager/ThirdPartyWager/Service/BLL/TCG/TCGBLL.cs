@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("TP", "TCG");
+            LogContext.PushProperty("Tp", "TCG");
             var log = provider.GetRequiredService<ILogger<MySqlClient>>();
             var conn = configuration.GetConnectionString("ConnectionStringWager");
             _wagerDbClient = new MySqlClient(conn, log);
@@ -37,12 +37,12 @@ namespace ThirdPartyWager.Service.BLL
             
         }
 
-        public async Task<bool> GetWagersAsync(DateTimeOffset batchTime, string currency)
+        public async Task<bool> GetWagersAsync<T>(DateTimeOffset batchTime, string currency)
         {
             try
             {
                 var _config = new TCGConfig(_setting, currency);
-                var result = await QuerySettleBetHistoryAsync(_config, batchTime);
+                var result = await QuerySettleBetHistoryAsync<T>(_config, batchTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
 
@@ -56,9 +56,9 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
-        private async Task<List<TCGWagerData>> QuerySettleBetHistoryAsync(TCGConfig config, DateTimeOffset batchTime)
+        private async Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime)
         {           
-            var result = new List<TCGWagerData>();
+            var result = new List<T>();
             var reportType = config.WagerTypeList.Split(",").Where(i => i != string.Empty);
             foreach (var type in reportType)
             {           
@@ -67,19 +67,19 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     var fileUrl = $"{config.WagerUrl}{type}/SETTLED/{batchTime:yyyyMMdd}/{batchTime:yyyyMMddHHmm}_{page:0000}.json";
-                    var queryReuslt = DownloadFTPFile(config, fileUrl);
+                    var queryReuslt = DownloadFTPFile<T>(config, fileUrl);
                     if (queryReuslt.list.Count > 0)
                     {
                         result.AddRange(queryReuslt.list);
                     }         
                     page++;
-                    totalPage = queryReuslt.page.total;
+                    totalPage = 1 + (queryReuslt.page.total / queryReuslt.page.pageSize);
                 }
             }
             return result;
         }
 
-        public TCGQueryWagerObj DownloadFTPFile(TCGConfig config, string fileUrl)
+        public TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl)
         {
             try
             {      
@@ -93,18 +93,19 @@ namespace ThirdPartyWager.Service.BLL
                 using JsonReader reader = new JsonTextReader(sr);
                 JsonSerializer serializer = new JsonSerializer();
                 _logger.LogInformation($"TCG: {config.WagerAccount} || FTP Success:{response.StatusDescription}");
-                return serializer.Deserialize<TCGQueryWagerObj>(reader);
+                return serializer.Deserialize<TCGQueryWagerObj<T>>(reader);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {fileUrl} {ex.Message}.");
-                return new TCGQueryWagerObj() ;
+                return new TCGQueryWagerObj<T>() ;
             }
         }
 
-        private Task<int> InsertWager(TCGWagerData wager)
+        private Task<int> InsertWager<T>(T wager)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWagerTCG_Ins", new DynamicParameters(wager));
+            var spName = typeof(T) == typeof(TCGSEAWagerData) ? "Service_TpWagerTCG_SEA_Ins" : "Service_TpWagerTCG_VN_Ins";
+            return _wagerDbClient.ExecuteAsync(spName, new DynamicParameters(wager));
         }
     }
 }

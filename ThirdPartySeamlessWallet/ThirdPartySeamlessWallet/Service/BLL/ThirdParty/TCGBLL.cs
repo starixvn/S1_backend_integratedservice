@@ -59,6 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
                 var jsonString = DesDecrypt(@params, tcgConfig.DesKey);
+                _logger.LogInformation(jsonString);
                 var desEncrypt = DesEncrypt(jsonString, tcgConfig.DesKey);
                 var checkSign = SHA256($"{desEncrypt}{tcgConfig.SignKey}");
                 if (sign != checkSign)
@@ -136,11 +137,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpCustInfo.TpUserName);
                     if (tpCheck == null)
                     {
-                        throw new TCGException(TCGReturnCode.InvalidAccountType, "tpCheck fail.");
+                        throw new TCGException(TCGReturnCode.InvalidAccountType, $"tpuser {transaction.username} is logout.");
                     }
                     if (tpCheck.Locked)
                     {
-                        throw new TCGException(TCGReturnCode.InvalidAccountType, "tpuser is locked.");
+                        throw new TCGException(TCGReturnCode.InvalidAccountType, $"tpuser {transaction.username} is locked.");
                     }
                 }
 

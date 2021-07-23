@@ -42,7 +42,7 @@ namespace CommonService.Service.BLL
 
             };
 
-            var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
+            using var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
             //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK)

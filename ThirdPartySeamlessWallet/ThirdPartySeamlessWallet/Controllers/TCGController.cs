@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
        
         [HttpPost]
-        public async Task<dynamic> SeamlessWallet([FromQuery] string merchant_code, [FromQuery] string @params, [FromQuery] string sign)
+        public async Task<dynamic> SeamlessWallet([FromForm] string merchant_code, [FromForm] string @params, [FromForm] string sign)
         {
             try
             {

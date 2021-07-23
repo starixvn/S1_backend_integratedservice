@@ -41,9 +41,9 @@ namespace ThirdParty.TCG.Tests
 
             _inputs = new Dictionary<string, string>
             {
-                { "GameUrl", "https://tcg.nova88asia.com/" },
+                { "GameUrl_MYR", "https://tcgmyr.nova88asia.com/" },
                 { "ApiUrl", "http://www.connect6play.com/doBusiness.do" },
-                { "homeUrl", "https://www.nova88.net/" },
+                { "HomeUrl", "https://www.nova88.net/" },
                 { "MerchantCode_MYR", "xpnovamyr" },
                 { "DESKey_MYR", "dHJoyySB" },
                 { "SHA256Key_MYR", "70tOVKomTbE5booC" },
@@ -66,9 +66,6 @@ namespace ThirdParty.TCG.Tests
             //Arrange
             var appType = AppType.Desktop;
             var tpLangId = "1";
-            _inputs.Add("fun", "0");
-            _inputs.Add("gameType", "54");
-            _inputs.Add("gameId", "0");
 
             //Act
             var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);

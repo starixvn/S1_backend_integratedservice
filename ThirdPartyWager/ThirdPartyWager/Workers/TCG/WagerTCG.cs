@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -50,25 +51,27 @@ namespace ThirdPartyWager.Workers
             var doQuickly = false;
             var timerType = 1;
             var dataRangeMins = 5;
-            var intervalMins = 3;
+            var intervalMins = 2;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, timerType, currency);
-                var thisTime = lastTime?.StartTime.AddMinutes(dataRangeMins) ?? DateTime.UtcNow.BeginningOfTheDay();
+                var thisTime = lastTime?.StartTime.AddMinutes(dataRangeMins) ?? DateTime.Now.BeginningOfTheDay();
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now.AddMinutes(-10))
                 {
-                    var utcBatchTime = new DateTimeOffset(thisTime);
-                    var timezoneBatchTime = utcBatchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
-                    var isSuccess = await _tcgBLL.GetWagersAsync(timezoneBatchTime, currency);
+                    var batchTime = new DateTimeOffset(thisTime);
+                    var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
+                    var isSuccess = currency == "VNDK" ? 
+                        await _tcgBLL.GetWagersAsync<TCGVNWagerData>(timezoneBatchTime, currency):
+                        await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(timezoneBatchTime, currency);
                     if (isSuccess)
                     {
                         _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
-                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, utcBatchTime.ToUnixTimeSeconds(), currency);
+                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, batchTime.ToUnixTimeSeconds(), currency);
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
                     doQuickly = true;
                 }

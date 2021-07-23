@@ -72,7 +72,7 @@ namespace CommonService.Service.BLL
                 { "to", phone }
             };
 
-            var result = await httpHelper.HttpFromPostAsync(url, null, sendVerifySMS, "application/x-www-form-urlencoded");
+            using var result = await httpHelper.HttpFromPostAsync(url, null, sendVerifySMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<MoviderResult>(result.Content.ReadAsStringAsync().Result);
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -103,7 +103,7 @@ namespace CommonService.Service.BLL
                 { "code", code }
             };
 
-            var result = await httpHelper.HttpFromPostAsync(url, null, AcknowledgeVerifySMS, "application/x-www-form-urlencoded");
+            using var result = await httpHelper.HttpFromPostAsync(url, null, AcknowledgeVerifySMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<MoviderResult>(result.Content.ReadAsStringAsync().Result);
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {

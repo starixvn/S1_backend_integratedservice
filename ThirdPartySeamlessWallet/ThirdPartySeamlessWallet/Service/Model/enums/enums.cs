@@ -144,7 +144,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Payout = 4,
         Tip = 6,
         Bonus = 7,
-        Jackpot = 8
+        Jackpot = 8,
+        ConfirmReserve = 9
     }
     public enum AllowNegative
     {
@@ -160,6 +161,19 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Poker,
         Sports
     }
+
+    public enum PromotionCategory
+    {
+        SlotsGame = 1,
+        LiveCasino = 2,
+        Fish = 3,
+        SabaSports = 4,
+        Lottery = 5,
+        Sports = 6,
+        PTSlotsGame = 7,
+        PTLiveCasino = 8
+    }
+
     public enum Direction
     {
         ToTp = 1,

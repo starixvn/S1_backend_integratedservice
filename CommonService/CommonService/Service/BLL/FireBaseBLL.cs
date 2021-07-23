@@ -122,7 +122,7 @@ namespace CommonService.Service.BLL
                 string senderId = config.SenderId;
 
                 string deviceId = messageItem.Token;
-                HttpClient client = new HttpClient();
+                using HttpClient client = new HttpClient();
                 client.BaseAddress = new Uri("https://fcm.googleapis.com/fcm/");
                 client.DefaultRequestHeaders
                                       .Accept
@@ -130,7 +130,7 @@ namespace CommonService.Service.BLL
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("key", "=" + applicationID);
                 client.DefaultRequestHeaders.Add("Sender", "id=" + senderId);
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "relativeAddress");
+                using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "relativeAddress");
                 var data = new
                 {
                     to = deviceId,
@@ -147,7 +147,7 @@ namespace CommonService.Service.BLL
                                                     Encoding.UTF8,
                                                             "application/json");//CONTENT-TYPE header
 
-                var data1 = await client.PostAsync("send", request.Content);
+                using var data1 = await client.PostAsync("send", request.Content);
                 bool isTopicsMessage = messageItem.Token.Contains("topics");
                 var Response = JsonConvert.DeserializeObject<FireBaseResponse>(data1.Content.ReadAsStringAsync().Result);
                 if (data1.IsSuccessStatusCode)
@@ -167,7 +167,6 @@ namespace CommonService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.OTHER_ERROR;
                 apiResult.Message = ex.Message;
-
             }
 
 
