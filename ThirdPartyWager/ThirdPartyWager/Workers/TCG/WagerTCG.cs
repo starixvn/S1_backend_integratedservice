@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -60,7 +61,9 @@ namespace ThirdPartyWager.Workers
                 {
                     var batchTime = new DateTimeOffset(thisTime);
                     var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
-                    var isSuccess = await _tcgBLL.GetWagersAsync(timezoneBatchTime, currency);
+                    var isSuccess = currency == "VNDK" ? 
+                        await _tcgBLL.GetWagersAsync<TCGVNWagerData>(timezoneBatchTime, currency):
+                        await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(timezoneBatchTime, currency);
                     if (isSuccess)
                     {
                         _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
