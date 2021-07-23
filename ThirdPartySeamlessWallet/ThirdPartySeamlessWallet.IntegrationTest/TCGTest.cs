@@ -197,26 +197,30 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         [TestCase(10, 30, ExpectedResult = 20)]
         [TestCase(20, 0, ExpectedResult = -20)]
-        public decimal Debit_Then_Credit_Then_InsertWager_Then_Settle_Then_CheckAll(decimal debitAmount, decimal creditAmount)
+        public decimal SEA_GameFlow_Test(decimal reserveAmount, decimal creditAmount)
         {
-            //Debit and Credit
+            //Reserve and Credit 
             new TCGBLLSandbox(_inputs)
-                .Debit(_inputs, debitAmount)
+                .Reserve(_inputs, reserveAmount)
                 .ResultShouldBe(TCGReturnCode.Success)
-                .ShouldBeHaveRecord(TCGTransType.Debit, _inputs, debitAmount)
+                .ShouldBeHaveRecord(TCGTransType.Reserve, _inputs, reserveAmount)
                 .Credit(_inputs, creditAmount)
                 .ResultShouldBe(TCGReturnCode.Success)
-                .ShouldBeHaveRecord(TCGTransType.Credit, _inputs, creditAmount);
+                .ShouldBeHaveRecord(TCGTransType.Credit, _inputs, creditAmount)
+                .ConfirmReserve(_inputs, reserveAmount)
+                .ResultShouldBe(TCGReturnCode.Success)
+                .CheckTransactionStatus(_inputs["ReserveID"], reserveAmount)
+                .StatusShouldBe(TransStatus.Success);
 
             //InsertWager and Settle 
             var settle = new SettleWorkerSandbox()
-                .InsertWager("Service_TpWagerTCG_Ins", new TCGWagerData()
+                .InsertWager("Service_TpWagerTCG_SEA_Ins", new TCGSEAWagerData()
                 {
                     betOrderNo = _inputs["WagerID"],
-                    betAmount = debitAmount,
-                    actualBetAmount = debitAmount,
+                    betAmount = reserveAmount,
+                    actualBetAmount = reserveAmount,
                     username = _inputs["TpUserName"],
-                    netPNL = creditAmount - debitAmount,//¿éÄ¹ª÷ÃB
+                    netPNL = creditAmount - reserveAmount,//¿éÄ¹ª÷ÃB
                     winAmount = creditAmount,//¬£±mª÷ÃB
                     settlementTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
                     productType = "TCG_SEA",
@@ -224,19 +228,68 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     details = "testing",
                 })
                 .ShouldBeHaveUnsettleRecord(SettleFlag.EndGame, _inputs["WagerID"])
-                .DoSettleTCGWork();
+                .DoSettleTCGWork(GameType.TCG_SEA_Lottery);
 
             Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
 
             //Check SettleFlag and TpBetRecord
-            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TpWagerTCG WHERE betOrderNo='{_inputs["WagerID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["DebitID"]}'")
+            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TpWagerTCG_SEA WHERE betOrderNo='{_inputs["WagerID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
             .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
-            .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], debitAmount, creditAmount - debitAmount);
+            .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], reserveAmount, creditAmount - reserveAmount);
 
             return settle.ActualWinlostAmount;
         }
 
+
+        [TestCase(10, 30, ExpectedResult = 20)]
+        [TestCase(20, 0, ExpectedResult = -20)]
+        public decimal VN_GameFlow_Test(decimal reserveAmount, decimal creditAmount)
+        {
+            var exchangeRate = 1000;
+            _inputs.Remove("TpUserName");
+            _inputs.Add("TpUserName", "dgoal123x250024");
+
+            //Reserve and Credit 
+            new TCGBLLSandbox(_inputs)
+                .Reserve(_inputs, reserveAmount)
+                .ResultShouldBe(TCGReturnCode.Success)
+                .ShouldBeHaveRecord(TCGTransType.Reserve, _inputs, reserveAmount * exchangeRate)
+                .Credit(_inputs, creditAmount)
+                .ResultShouldBe(TCGReturnCode.Success)
+                .ShouldBeHaveRecord(TCGTransType.Credit, _inputs, creditAmount * exchangeRate)
+                .ConfirmReserve(_inputs, reserveAmount)
+                .ResultShouldBe(TCGReturnCode.Success)
+                .CheckTransactionStatus(_inputs["ReserveID"], reserveAmount * exchangeRate)
+                .StatusShouldBe(TransStatus.Success);
+
+            //InsertWager and Settle 
+            var settle = new SettleWorkerSandbox()
+                .InsertWager("Service_TpWagerTCG_VN_Ins", new TCGVNWagerData()
+                {
+                    orderMasterId = _inputs["WagerID"],
+                    betAmount = null,
+                    playName = null,
+                    actualBetAmount = reserveAmount,
+                    username = _inputs["TpUserName"],
+                    winAmount = creditAmount,//¬£±mª÷ÃB
+                    drawTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
+                    orderNum = _inputs["OrderNo"],
+                    remark = "testing",
+                })
+                .ShouldBeHaveUnsettleRecord(SettleFlag.EndGame, _inputs["WagerID"])
+                .DoSettleTCGWork(GameType.TCG_VN_Lottery);
+
+            Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
+
+            //Check SettleFlag and TpBetRecord
+            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TpWagerTCG_VN WHERE orderMasterId='{_inputs["WagerID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
+            .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], reserveAmount * exchangeRate, (creditAmount - reserveAmount) * exchangeRate);
+
+            return settle.ActualWinlostAmount / exchangeRate;
+        }
 
     }
 }

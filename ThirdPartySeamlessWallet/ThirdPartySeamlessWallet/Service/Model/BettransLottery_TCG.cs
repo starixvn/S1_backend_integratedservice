@@ -129,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     case (int)BettransType.CancelBet:
                         trans_status = "CANCELLED";
                         break;
-                    case (int)BettransType.Bet:
+                    case (int)BettransType.ConfirmReserve:
                         trans_status = "SUCCESS";
                         break;
                     case (int)BettransType.Reserve:
@@ -232,8 +232,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class TCGSettleData : SettleData
     {
-        public string ProductType { get; set; }
-
         public string OrderNum { get; set; }
     }
 }

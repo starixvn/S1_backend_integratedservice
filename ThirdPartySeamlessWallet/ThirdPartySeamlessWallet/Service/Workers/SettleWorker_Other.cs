@@ -253,19 +253,32 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var forContinue = false;
             var isError = false;
             var thisTp = (int)Tp.TCG;
-            var logName = "Settle_TCG_Lottery";
+
+            var gametype = (GameType)state;
+            var type = gametype == GameType.TCG_SEA_Lottery ? "SEA" : "VN";
+            var logName = $"Settle_TCG_Lottery_{type}";
+            var unsettleSP = $"Service_TpWagerTCG_{type}_Unsettle_Get";
+            var setSP = $"Service_TpWagerTCG_{type}_Settle_Set";
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName<TCGSettleData>("Service_TpWagerTCG_Unsettle_Get", DataBase.Wager);
+                var unsettledList = settledBLL.GetUnsettledListBySpName<TCGSettleData>(unsettleSP, DataBase.Wager);
                 if (unsettledList != null)
                 {
                     forContinue = unsettledList.Count() == 200;
-                    var spName = "Service_TpWagerTCG_Settle_Set";
                     foreach (var unsettled in unsettledList)
                     {
                         try
-                        {                       
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                            if (tpCurrency.ExchangeRate > 0)
+                            {
+                                unsettled.Stake *= tpCurrency.ExchangeRate;
+                                unsettled.ValidBet *= tpCurrency.ExchangeRate;
+                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            }
+
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
@@ -273,25 +286,24 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 ValidBet = unsettled.ValidBet,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.TransId,
-                                GameType = unsettled.ProductType.Equals("TCG_SEA") ? GameType.TCG_SEA_Lottery : GameType.TCG_VN_Lottery,
+                                GameType = gametype,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                             };
-
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Lottery);
                             if (result == 1)
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(spName, new DynamicParameters(
-                                    new 
-                                    {   
-                                        betOrderNo = unsettled.TransId, 
-                                        orderNum = unsettled.OrderNum, 
-                                        isSuccess = true 
+                                    settledBLL.SetSettleFlagBySpName(setSP, new DynamicParameters(
+                                    new
+                                    {
+                                        betOrderNo = unsettled.TransId,
+                                        orderNum = unsettled.OrderNum,
+                                        username = unsettled.Account,
+                                        isSuccess = true
                                     }), dataBase: DataBase.Wager);
                                 });
                             }
@@ -299,17 +311,17 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
-                                Task.Run(() =>
+                            Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(spName, new DynamicParameters(
+                                    settledBLL.SetSettleFlagBySpName(setSP, new DynamicParameters(
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
                                         orderNum = unsettled.OrderNum,
+                                        username = unsettled.Account,
                                         isSuccess = false
                                     }), dataBase: DataBase.Wager);
                                 });
-
                             isError = true;
                             _logger.LogError(ex1, $"exMessage:{ex1.Message} ||　{JsonConvert.SerializeObject(unsettled)}");
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
@@ -334,7 +346,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 {
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
-                timerSettleTCG?.Change(dueTimeSpan, TimeSpan.Zero);
+
+                _ = gametype == GameType.TCG_SEA_Lottery ?
+                timerSettleTCGSEA?.Change(dueTimeSpan, TimeSpan.Zero) :
+                timerSettleTCGVN?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

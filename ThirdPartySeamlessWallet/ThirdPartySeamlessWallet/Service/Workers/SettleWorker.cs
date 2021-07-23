@@ -57,7 +57,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleJILIRng;
         private Timer timerSettleJILIFish;
         private Timer timerSettleMG;
-        private Timer timerSettleTCG;
+        private Timer timerSettleTCGSEA;
+        private Timer timerSettleTCGVN;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -118,8 +119,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleTCG = new Timer(DoSettleTCGWork, null, TimeSpan.Zero, TimeSpan.Zero);
-
+            timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -1126,7 +1127,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleJILIRng?.Change(Timeout.Infinite, 0);
             timerSettleJILIFish?.Change(Timeout.Infinite, 0);
             timerSettleMG?.Change(Timeout.Infinite, 0);
-            timerSettleTCG?.Change(Timeout.Infinite, 0);
+            timerSettleTCGSEA?.Change(Timeout.Infinite, 0);
+            timerSettleTCGVN?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

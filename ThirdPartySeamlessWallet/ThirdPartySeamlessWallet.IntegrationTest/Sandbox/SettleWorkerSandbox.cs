@@ -57,9 +57,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _target = new SettleWorker(_serviceProvider);
         }
 
-        public SettleWorkerSandbox DoSettleTCGWork()
+        public SettleWorkerSandbox DoSettleTCGWork(GameType gameType)
         {
-            _target.DoSettleTCGWork(null);
+            _target.DoSettleTCGWork(gameType);
             return this;
         }
 

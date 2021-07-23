@@ -83,7 +83,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal? betAmount { get; set; }
         public string bettingTime { get; set; } = "";
         public string chase { get; set; } = "";
-        public string multiple { get; set; } = "";
+        public int multiple { get; set; }
         public string playName { get; set; } = "";
         public string remark { get; set; } = "";
         public decimal totalBet { get; set; }
