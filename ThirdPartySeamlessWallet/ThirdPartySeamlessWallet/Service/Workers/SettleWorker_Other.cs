@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -18,6 +19,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool forContinue = false;
             bool isError = false;
             int thisTp = (int)Tp.AWC;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -54,6 +56,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAWC", ex1);
                         }
@@ -62,6 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleAWC", ex);
                 isError = true;
             }
@@ -89,6 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             int thisTp = (int)Tp.One789;
             var gameType = (int)GameType.One789_Lottery;
             string logName = "Settle_One789_LT";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -136,6 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             catch (Exception ex1)
                             {
+                                LogContext.PushProperty("TP", tpName);
                                 isError = true;
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName, ex1);
                             }
@@ -145,6 +151,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
@@ -172,6 +179,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             int thisTp = (int)Tp.One789;
             var gameType = (int)GameType.One789_Lottery_789;
             string logName = "Settle_One789_LT_789";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -219,6 +227,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             catch (Exception ex1)
                             {
+                                LogContext.PushProperty("TP", tpName);
                                 isError = true;
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName, ex1);
                             }
@@ -228,6 +237,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
@@ -322,6 +332,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         isSuccess = false
                                     }), dataBase: DataBase.Wager);
                                 });
+
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             _logger.LogError(ex1, $"exMessage:{ex1.Message} ||　{JsonConvert.SerializeObject(unsettled)}");
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
@@ -331,6 +343,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 _logger.LogError(ex, ex.Message);
                 log2File.Error(ex.ToString(), logName, ex);
                 isError = true;

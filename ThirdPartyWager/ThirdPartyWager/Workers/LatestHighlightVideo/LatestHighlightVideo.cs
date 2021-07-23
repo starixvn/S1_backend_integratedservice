@@ -80,16 +80,19 @@ namespace ThirdPartyWager.Workers
 
                                 foreach (var siteListInfoDetail in JsonSerializer.Deserialize<IEnumerable<string>>(siteListInfo.LangList))
                                 {
-                                    string title = siteListInfoDetail == "cs" ? LatestHighlightVideo.title.cs : LatestHighlightVideo.title.en;
-                                    LatestHighlightVideoData.Add(new LatestHighlightVideoData()
+                                    if (!string.IsNullOrEmpty(LatestHighlightVideo.m3u8))
                                     {
-                                        SiteId = SiteId,
-                                        LangId = siteListInfoDetail,
-                                        Date = LatestHighlightVideo.date,
-                                        Title = title,
-                                        Link = $"https://89ksj.nova88.com/Streaming/HighlightsRecap?SportType=1&Title={title}&ShareUrl={LatestHighlightVideo.share}&ClipUrl=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}?v={timestamp}",
-                                        Operator = "Service Auto Create"
-                                    }); ;
+                                        string title = siteListInfoDetail == "cs" ? LatestHighlightVideo.title.cs : LatestHighlightVideo.title.en;
+                                        LatestHighlightVideoData.Add(new LatestHighlightVideoData()
+                                        {
+                                            SiteId = SiteId,
+                                            LangId = siteListInfoDetail,
+                                            Date = LatestHighlightVideo.date,
+                                            Title = title,
+                                            Link = $"https://89ksj.nova88.com/Streaming/HighlightsRecap?SportType=1&Title={title}&ShareUrl={LatestHighlightVideo.share}&ClipUrl=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}?v={timestamp}",
+                                            Operator = "Service Auto Create"
+                                        }); ;
+                                    }
                                 }
 
                                 latestHighlightVideoBLL.SetLatestHighlightVideo(JsonSerializer.Serialize(LatestHighlightVideoData));

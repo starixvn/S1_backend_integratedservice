@@ -3,7 +3,8 @@
     public enum MGTxnType
     {
         DEBIT,
-        CREDIT
+        CREDIT,
+        ROLLBACK
     }
 
     public enum MGErrorCode

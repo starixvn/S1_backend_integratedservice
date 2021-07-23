@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
@@ -31,6 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            LogContext.PushProperty("TP", "CF");
             timerSettle = new Timer(DoSettleWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerPayout = new Timer(DoPayoutWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;

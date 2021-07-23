@@ -64,7 +64,7 @@ namespace CommonService.Service.BLL
 
             sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[custInfo.UserLang];
 
-            var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
+            using var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
                 apiResult.ErrorCode = 0;

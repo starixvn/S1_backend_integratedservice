@@ -64,7 +64,7 @@ namespace CommonService.Service.BLL
                 { "Authorization", $"Basic {Base64Authtoken}" }
             };
 
-            var result = await httpHelper.HttpFromPostAsync(url, Authorization, sendVerifySMS, "application/x-www-form-urlencoded");
+            using var result = await httpHelper.HttpFromPostAsync(url, Authorization, sendVerifySMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<TwilioVerificationsResult>(result.Content.ReadAsStringAsync().Result);
             if (result.StatusCode == System.Net.HttpStatusCode.Created)
             {
@@ -110,7 +110,7 @@ namespace CommonService.Service.BLL
                 { "Authorization", $"Basic {Base64Authtoken}" }
             };
 
-            var result = await httpHelper.HttpFromPostAsync(url, Authorization, VerificationCheckSMS, "application/x-www-form-urlencoded");
+            using var result = await httpHelper.HttpFromPostAsync(url, Authorization, VerificationCheckSMS, "application/x-www-form-urlencoded");
             var resultResp = JsonConvert.DeserializeObject<TwilioVerificationsResult>(result.Content.ReadAsStringAsync().Result);
             if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.valid == "true")
             {

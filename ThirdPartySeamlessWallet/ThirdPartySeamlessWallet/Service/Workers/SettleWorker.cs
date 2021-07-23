@@ -13,6 +13,7 @@ using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
@@ -130,6 +131,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             bool forContinue = false;
             bool isError = false;
+            const int thisTp = (int)Tp.AG;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+            
             try
             {
                 var unsettledList = settledBLL.GetUnsettledListLC_AG();
@@ -214,6 +218,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAG", ex1);
                         }
@@ -222,6 +227,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleAG", ex);
                 isError = true;
             }
@@ -247,6 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool forContinue = false;
             bool isError = false;
             int thisTp = (int)Tp.DG;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -305,6 +312,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleDG");
                         }
@@ -313,6 +321,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleDG");
                 isError = true;
             }
@@ -337,6 +346,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool forContinue = false;
             bool isError = false;
             int thisTp = (int)Tp.Allbet;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -387,6 +397,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAllbet");
                         }
@@ -395,6 +406,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleAllbet");
                 isError = true;
             }
@@ -420,6 +432,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool forContinue = false;
             bool isError = false;
             int thisTp = (int)Tp.SA;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -471,6 +484,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSA");
                         }
@@ -479,6 +493,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleSA");
                 isError = true;
             }
@@ -504,6 +519,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool forContinue = false;
             bool isError = false;
             int thisTp = (int)Tp.EBet;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -544,6 +560,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleEBet");
                         }
@@ -552,6 +569,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleEBet");
                 isError = true;
             }
@@ -577,6 +595,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool forContinue = false;
             bool isError = false;
             int thisTp = (int)Tp.WM;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -624,6 +643,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             catch (Exception ex1)
                             {
+                                LogContext.PushProperty("TP", tpName);
                                 isError = true;
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleWM");
                             }
@@ -633,6 +653,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), "SettleWM");
                 isError = true;
             }
@@ -660,6 +681,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             int thisTp = (int)Tp.One789;
             var gameType = (int)GameType.One789_LiveCasino;
             string logName = "Settle_One789_LC";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -707,6 +729,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             catch (Exception ex1)
                             {
+                                LogContext.PushProperty("TP", tpName);
                                 isError = true;
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
                             }
@@ -716,6 +739,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName);
                 isError = true;
             }
@@ -743,6 +767,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             int thisTp = (int)Tp.N2Live;
             var gameType = (int)GameType.N2Live_LiveCasino;
             string logName = "Settle_N2Live";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -791,6 +816,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             catch (Exception ex1)
                             {
+                                LogContext.PushProperty("TP", tpName);
                                 isError = true;
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
                             }
@@ -809,6 +835,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName);
                 isError = true;
             }
@@ -836,6 +863,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             int thisTp = (int)Tp.N2Live;
             var gameType = (int)GameType.N2Live_LiveCasino;
             string logName = "Settle_N2Live_LC_Smart";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -879,6 +907,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
                         }
@@ -887,6 +916,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName);
                 isError = true;
             }
@@ -915,6 +945,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var gameType = GameType.PT_LiveCasino;
             var category = TpCategory.LiveCasino;
             string logName = "Settle_PT_LC";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -970,6 +1001,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                         }
@@ -978,6 +1010,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName);
                 isError = true;
             }
@@ -1005,6 +1038,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             int thisTp = (int)Tp.PP;
             var gameType = GameType.PP_LiveCasino;
             string logName = "Settle_PP_LC";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
@@ -1057,6 +1091,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         }
                         catch (Exception ex1)
                         {
+                            LogContext.PushProperty("TP", tpName);
                             isError = true;
                             log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                         }
@@ -1065,6 +1100,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
+                LogContext.PushProperty("TP", tpName);
                 log2File.Error(ex.ToString(), logName);
                 isError = true;
             }
