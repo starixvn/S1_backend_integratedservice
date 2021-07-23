@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="lbl_DepositReject" xml:space="preserve">
+    <value>Deposit transaction failed! Please contact our 24/7 LIVE CHAT for further assistance.</value>
+  </data>
   <data name="lbl_OTP" xml:space="preserve">
     <value>Hello, your verification code is</value>
   </data>
