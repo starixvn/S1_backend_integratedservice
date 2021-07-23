@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="lbl_DepositReject" xml:space="preserve">
-    <value>การทำธุรกรรมการฝากล้มเหลว! โปรดติดต่อเจ้าหน้าที่ แชทสด 24/7 เพื่อขอความช่วยเหลือเพิ่มเติม</value>
-  </data>
   <data name="lbl_OTP" xml:space="preserve">
     <value>สวัสดีรหัสการตรวจสอบของคุณคือ</value>
   </data>
