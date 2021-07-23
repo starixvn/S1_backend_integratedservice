@@ -233,10 +233,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool GetBonusIdByPromoCategoryId(int custId, int promoCategoryId, out int bonusId)
         {
             bonusId = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new {CustId = custId, PromoCategoryId = promoCategoryId});
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute($"Service_BonusIdByPromoCategoryId_Get", p, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute("Service_BonusIdByPromoCategoryId_Get", CommandType.StoredProcedure, p);
             if (result > 0)
             {
                 bonusId = p.Get<int?>("BonusId") ?? 0;
@@ -485,7 +484,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             if (bonusId > 0)
                             {
-                                if (betRecord.TpId == 27)
+                                if (betRecord.TpId == (int)Tp.PT)
                                     AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                 else
                                     AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);   
@@ -510,7 +509,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             if (bonusId > 0)
                             {
-                                if(RefBetRecord.TpId == 27)
+                                if(RefBetRecord.TpId == (int)Tp.PT)
                                     AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                 else
                                     AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
@@ -539,7 +538,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             {
                                 if (bonusId > 0)
                                 {
-                                    if(RefBetRecord.TpId == 27)
+                                    if(RefBetRecord.TpId == (int)Tp.PT)
                                         AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                     else
                                         AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);

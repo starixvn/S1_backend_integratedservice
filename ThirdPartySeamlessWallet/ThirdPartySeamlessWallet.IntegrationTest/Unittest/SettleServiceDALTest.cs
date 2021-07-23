@@ -108,6 +108,20 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             Assert.AreEqual(1, result);
         }
 
+        [TestCase]
+        public void Test_GetBonusIdByPromoCategoryId()
+        {
+            var custId = 250323;
+            var promoCategoryId = 7;
+            
+            var settleService = new SettledService(_serviceProvider);
+
+            var actual = settleService.GetBonusIdByPromoCategoryId(custId, promoCategoryId, out var bonusId);
+            
+            Assert.IsTrue(actual);
+            Assert.AreEqual(55361, bonusId);
+        }
+
         private ServiceCollection SetEnvironment(ServiceCollection services)
         {
             var env = new HostingEnvironment()
