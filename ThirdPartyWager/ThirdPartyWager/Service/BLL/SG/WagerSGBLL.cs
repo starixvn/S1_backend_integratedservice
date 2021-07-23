@@ -82,9 +82,14 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             if (!bet.gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
                             {
-                                continue;
+                                // slot
+                                wagerSGService.InsertWagerRng(bet);
                             }
-                            wagerSGService.InsertWager(bet);
+                            else
+                            {
+                                // fish
+                                wagerSGService.InsertWager(bet);
+                            }
                         }
                         catch (Exception ex)
                         {
