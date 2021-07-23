@@ -263,6 +263,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var forContinue = false;
             var isError = false;
             var thisTp = (int)Tp.TCG;
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             var gametype = (GameType)state;
             var type = gametype == GameType.TCG_SEA_Lottery ? "SEA" : "VN";
