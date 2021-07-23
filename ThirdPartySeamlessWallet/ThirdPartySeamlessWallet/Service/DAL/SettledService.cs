@@ -229,6 +229,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        
+        public bool GetBonusIdByPromoCategoryId(int custId, int promoCategoryId, out int bonusId)
+        {
+            bonusId = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var p = new DynamicParameters(new {CustId = custId, PromoCategoryId = promoCategoryId});
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            var result = conn.Execute($"Service_BonusIdByPromoCategoryId_Get", p, commandType: CommandType.StoredProcedure);
+            if (result > 0)
+            {
+                bonusId = p.Get<int?>("BonusId") ?? 0;
+            }
+
+            return result > 0 && bonusId != 0;
+        }
+        
         public SettlementType GetSettlementType(GameType gameType, string gameId)
         {
             SettlementType settlementType = SettlementType.SettledForValid;
@@ -255,6 +271,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // for n2 temporary fix noraml bet
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
             }
+
             betRecordInfo.BonusId = bonusId;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -269,6 +286,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        
+        public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            int result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
+        
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -451,9 +484,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (Losses != 0)
                         {
                             if (bonusId > 0)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
-                            /*else
-                                AutoCancelBonus(tpCustInfo.CustId, conn, trans);*/
+                            {
+                                if (betRecord.TpId == 27)
+                                    AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                else
+                                    AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);   
+                                
+                            }
                         }
                     }
                 }
@@ -472,9 +509,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (Losses != 0)
                         {
                             if (bonusId > 0)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
-                            /*else
-                                AutoCancelBonus(tpCustInfo.CustId, conn, trans);*/
+                            {
+                                if(RefBetRecord.TpId == 27)
+                                    AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                else
+                                    AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
+                            }
                         }
                     }
                     else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
@@ -498,9 +538,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (Losses != 0)
                             {
                                 if (bonusId > 0)
-                                    AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
-                                /*else
-                                    AutoCancelBonus(tpCustInfo.CustId, conn, trans);*/
+                                {
+                                    if(RefBetRecord.TpId == 27)
+                                        AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                    else
+                                        AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
+                                }
                             }
                         }
                     }
@@ -606,6 +649,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int AutoCancelBonus(int CustId, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
+        }
+        private int AutoCancelTransferBonus(int bonusId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
+        {
+            return conn.Execute("Service_AutoCancelTransferBonus_Set", new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType }, trans, commandType: CommandType.StoredProcedure);
         }
         public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, MySqlConnection conn, MySqlTransaction trans)
         {

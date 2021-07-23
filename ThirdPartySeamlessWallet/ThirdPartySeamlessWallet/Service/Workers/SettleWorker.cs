@@ -985,7 +985,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValidNotRollover
+                                SettlementType = SettlementType.SettledForValid
                             };
 
 
@@ -995,7 +995,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
                             else
                             {
-                                settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                                settledBLL.Settled(tpCustInfo, betRecordInfo, PromotionCategory.PTLiveCasino);
                                 settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
                             }
                         }
