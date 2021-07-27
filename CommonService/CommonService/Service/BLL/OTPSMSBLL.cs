@@ -158,8 +158,8 @@ namespace CommonService.Service.BLL
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
             string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{selLangBLL.GetResourceValue("lbl_DepositReject", userLang)}";
-
+            string smsMessage = $"[{siteName}]{selLangBLL.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
+            
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
