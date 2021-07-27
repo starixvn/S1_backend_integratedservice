@@ -1,13 +1,10 @@
-﻿using CommonService.Service.BLL;
-using CommonService.Service.Library;
+﻿using System;
+using System.Threading.Tasks;
+using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
 using PaymentService.Service.Library;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -19,12 +16,14 @@ namespace CommonService.Controllers
         private readonly MoviderSMSBLL moviderSMSBLL;
         private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, MoviderSMSBLL moviderSMSBLL, Log2File log2File)
+        private readonly SelLangBLL selLangBLL;
+        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, MoviderSMSBLL moviderSMSBLL, Log2File log2File, SelLangBLL selLangBLL)
         {
             this.sOTPSMSBLL = sOTPSMSBLL;
             this.custInfoBLL = custInfoBLL;
             this.moviderSMSBLL = moviderSMSBLL;
             this.log2File = log2File;
+            this.selLangBLL = selLangBLL;
         }
 
         public class Req
@@ -129,6 +128,29 @@ namespace CommonService.Controllers
 
             return apiResult;
         }
-    }
+        [HttpPost]
+        public async Task<ApiResult> SendSMSAsync(Req req)
+        {
+            var apiResult = new ApiResult();
 
+            var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
+
+            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo) && custInfo.PhoneVerified)
+            {
+                var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
+                var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
+                var phone = $"{areacode}{phoneNo}";
+                apiResult = await sOTPSMSBLL.SendSMSAsync(phone, custInfo, custInfo.UserLang);
+            }
+            else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+            }
+            else
+            {
+                apiResult.ErrorCode = ErrorCode.UserNotExist;
+            }
+            return apiResult;
+        }
+    }
 }
