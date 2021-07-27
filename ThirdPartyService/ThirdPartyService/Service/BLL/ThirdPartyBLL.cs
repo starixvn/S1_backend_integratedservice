@@ -138,7 +138,7 @@ namespace ThirdPartyService.Service.BLL
                     tpInfo.TpId != 1)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
-                    apiResult.RawMessage = "This Account not allow for access";
+                    apiResult.RawMessage = apiResult.Message = "This Account not allow for access";
                 }
                 else
                 {
