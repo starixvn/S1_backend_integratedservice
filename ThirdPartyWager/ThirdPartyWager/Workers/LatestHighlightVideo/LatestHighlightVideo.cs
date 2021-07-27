@@ -89,7 +89,8 @@ namespace ThirdPartyWager.Workers
                                             LangId = siteListInfoDetail,
                                             Date = LatestHighlightVideo.date,
                                             Title = title,
-                                            Link = $"https://89ksj.nova88.com/Streaming/HighlightsRecap?SportType=1&Title={title}&ShareUrl={LatestHighlightVideo.share}&ClipUrl=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}?v={timestamp}",
+                                            Link = $"https://www.88novasoursop.com/api/Player?url=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}&v={timestamp}",
+                                            //Link = $"https://89ksj.nova88.com/Streaming/HighlightsRecap?SportType=1&Title={title}&ShareUrl={LatestHighlightVideo.share}&ClipUrl=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}?v={timestamp}",
                                             Operator = "Service Auto Create"
                                         }); ;
                                     }
