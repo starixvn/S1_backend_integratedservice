@@ -273,6 +273,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
+            }
+            else if (result == -1 && tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EBet.money /= tpCurrency.ExchangeRate;
             }
             return result;
         }

@@ -1263,6 +1263,88 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int PreRefundLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.EBet_LiveCasino;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = 0;
+
+            string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
+            var p = new DynamicParameters(new
+            {
+                TransId = mixUniqueId,
+                username = bettingData_EBet.username,
+                channelId = bettingData_EBet.channelId,
+                money = bettingData_EBet.money,
+                type = bettingData_EBet.type,
+                platform = bettingData_EBet.platform,
+                currency = bettingData_EBet.currency,
+                seqNo = bettingData_EBet.seqNo,
+                Event = bettingData_EBet.Event,
+                timestamp = bettingData_EBet.timestamp,
+                tableCode = bettingData_EBet.detail.tableCode,
+                roundCode = bettingData_EBet.detail.roundCode,
+                betTime = bettingData_EBet.timestamp,
+                totalBet = bettingData_EBet.detail.totalBet,
+                validBet = bettingData_EBet.detail.validBet,
+                detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
+                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
+                TicketStatus = (int)TicketStatus.Refund,
+                TicketType = (int)BettransType.Reserve
+            });
+            
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (bettingData_EBet.money != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingData_EBet.money,
+                            (int)Tp.EBet,
+                            mixUniqueId,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            mixUniqueId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                         );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
         public int CancelBetLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
             int bonusId = 0;

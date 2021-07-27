@@ -156,12 +156,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq)
         {
+            string logName = $"{thisTp}_Register_Login";
+
             GetRegisterLoginResp getRegisterLoginResp = new GetRegisterLoginResp();
             getRegisterLoginResp.status = 500;
             // check signature
             if (string.IsNullOrEmpty(registerLoginReq.signature))
             {
                 getRegisterLoginResp.status = 4026;
+                log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", logName);
                 return getRegisterLoginResp;
             }
 
@@ -172,6 +175,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (!check)
             {
                 getRegisterLoginResp.status = 4026;
+                log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", logName);
                 return getRegisterLoginResp;
             }
 
@@ -183,6 +187,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (tpCheck == null || tpCheck.Locked)
                     {
                         getRegisterLoginResp.status = 4037;
+                        log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", logName);
                         return getRegisterLoginResp;
                     }
 
@@ -199,23 +204,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     getRegisterLoginResp.status = 410;
+                    log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", logName);
                     return getRegisterLoginResp;
                 }
             }
             catch (Exception ex)
             {
                 getRegisterLoginResp.status = 500;
-                log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}\r\n{ex}", $"EBet_Register_Login", ex);
+                log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}\r\n{ex}", logName, ex);
+                return getRegisterLoginResp;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", $"EBet_Register_Login");
-
+            log2File.Info($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", logName);
             return getRegisterLoginResp;
         }
 
         [HttpPost]
         public GetBalanceResp syncCredit(SyncCreditData_EBet syncCreditReq)
         {
+            string logName = $"{thisTp}_Sync_Credit";
+
             GetBalanceResp getBalanceResp = new GetBalanceResp();
 
             // check user (exist status online)
@@ -223,6 +231,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (tpCheck == null || tpCheck.Locked)
             {
                 getBalanceResp.status = 4037;
+                log2File.Error($"{JsonConvert.SerializeObject(syncCreditReq)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                 return getBalanceResp;
             }
 
@@ -235,7 +244,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.seqNo = syncCreditReq.seqNo;
             getBalanceResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", $"EBet_Sync_Credit");
+            log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
 
             return getBalanceResp;
         }
@@ -245,7 +254,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, $"EBet_increaseCredit");
+            string logName = $"{thisTp}_increaseCredit";
+            log2File.Info(Content, logName);
 
             BettingData_EBet getBetReq = JsonConvert.DeserializeObject<BettingData_EBet>(Content);
             GetBetResp getBetResp = new GetBetResp();
@@ -261,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status = 4026;
                 getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_increaseCredit");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
 
@@ -273,10 +283,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status = 4026;
                 getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_increaseCredit");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
-
 
             var result = 0;
             try
@@ -286,12 +295,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     case 1:
                     case 27:
                         // 1: bet、27: pre-bet
+                        logName = $"{logName}_Bet";
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
                         if (tpCheck == null || tpCheck.Locked)
                         {
                             getBetResp.status = 4037;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Bet");
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
 
@@ -299,12 +309,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             getBetResp.status = 410;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Bet");
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
+
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
+                            //if (environment.IsDevelopment() && getBetReq.type == 1 && getBetReq.money == -40m)
+                            //{
+                            //    getBetResp.status = 500;
+                            //    getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            //    log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            //    return getBetResp;
+                            //}
                             getBetResp.status = 200;
                             getBetResp.money = tpAffterAmount;
                             getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
@@ -320,18 +338,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetReq.username);
                             getBetResp.status = 500;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
                         }
-                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Bet");
+                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
 
                         break;
                     case 2:
-                    case 28:
-                        // 2: payout、28: pre-refund
+                        // 2: payout
+                        logName = $"{logName}_Payout";
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
-                        if (result > 0 || result == -1)
+                        if (result > 0)
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 200;
@@ -353,12 +372,47 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
                         }
-                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Payout");
+                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+
+                        break;
+                    case 28:
+                        // 28: pre-refund
+                        logName = $"{logName}_PreRefund";
+                        result = settledBLL.PreRefundLC_EBet(getBetReq, out tpAffterAmount);
+                        if (result > 0)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 200;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else if (result == -1)
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 201;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                        }
+                        else
+                        {
+                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
+                            getBetResp.status = 500;
+                            getBetResp.money = tpCustBalance.Balance;
+                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
+                        }
+                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
 
                         break;
                     case 11:
                         // cancel bet
+                        logName = $"{logName}_Cancel_Bet";
                         result = settledBLL.CancelBetLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0)
                         {
@@ -383,14 +437,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
                         }
-                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Cancel_Bet");
+                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
 
                         break;
                     case 38:
                         // 宝箱奖金
+                        logName = $"{logName}_Reward";
                         result = settledBLL.RewardLC_EBet(getBetReq, out tpAffterAmount);
-                        if (result > 0 || result == -1)
+                        if (result > 0)
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 200;
@@ -412,8 +469,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
                         }
-                        log2File.Info($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", $"EBet_Reward");
+                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
 
                         break;
                     default:
@@ -425,7 +484,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                log2File.Error($"{JsonConvert.SerializeObject(getBetReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"EBet_increaseCredit", ex);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"EBet_increaseCredit", ex);
                 return getBetResp;
             }
         }
@@ -435,7 +494,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, $"EBet_queryIncreaseCreditRecord");
+
+            string logName = $"{thisTp}_queryIncreaseCreditRecord";
+            log2File.Info(Content, logName);
+
             CreditRecordData_EBet getCreditRecordReq = JsonConvert.DeserializeObject<CreditRecordData_EBet>(Content);
             GetCreditRecordResp getCreditRecordResp = new GetCreditRecordResp();
             getCreditRecordResp.status = 200;
@@ -452,7 +514,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             getCreditRecordResp.creditRecord = data;
 
-            log2File.Info($"{JsonConvert.SerializeObject(getCreditRecordReq)}\r\n{JsonConvert.SerializeObject(getCreditRecordResp)}", $"EBet_queryIncreaseCreditRecord");
+            log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getCreditRecordResp)}", logName);
             return getCreditRecordResp;
         }
 
@@ -461,7 +523,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, $"EBet_refundSingleWallet");
+
+            string logName = $"{thisTp}_refundSingleWallet";
+            log2File.Info(Content, logName);
+
             RefundSingleWallet_EBet getRefundBetReq = JsonConvert.DeserializeObject<RefundSingleWallet_EBet>(Content);
             GetRefundSingleWalletResp getRefundSingleWalletResp = new GetRefundSingleWalletResp();
             getRefundSingleWalletResp.status = 500;
@@ -509,19 +574,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getRefundSingleWalletResp.refundList.Add(refRefundList);
                         refRefundList.refundSeqNo = item.refundSeqNo;
                         refRefundList.status = 500;
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}", logName);
+                        return getRefundSingleWalletResp;
                     }
                 }
                 getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}", logName);
+                return getRefundSingleWalletResp;
             }
             catch (Exception ex)
             {
                 getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                log2File.Error($"{JsonConvert.SerializeObject(getRefundBetReq)}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}\r\n{ex}", $"EBet_refundSingleWallet", ex);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}\r\n{ex}", logName, ex);
                 return getRefundSingleWalletResp;
             }
-
-            log2File.Info($"{JsonConvert.SerializeObject(getRefundBetReq)}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}", $"EBet_refundSingleWallet");
-            return getRefundSingleWalletResp;
         }
 
         [HttpPost]
@@ -529,7 +595,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, $"EBet_autoBatchRefund");
+            string logName = $"{thisTp}_autoBatchRefund";
+            log2File.Info(Content, logName);
+
             AutoBatchRefund_EBet getAutoBatchRefundReq = JsonConvert.DeserializeObject<AutoBatchRefund_EBet>(Content);
             GetAutoBatchRefundResp getAutoBatchRefundResp = new GetAutoBatchRefundResp();
             getAutoBatchRefundResp.status = 500;
@@ -569,16 +637,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getAutoBatchRefundResp.refundResultList = keyValuePairs.Values.ToList();
                 getAutoBatchRefundResp.status = 200;
                 getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}", logName);
+                return getAutoBatchRefundResp;
             }
             catch (Exception ex)
             {
                 getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                log2File.Error($"{JsonConvert.SerializeObject(getAutoBatchRefundReq)}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}\r\n{ex}", $"EBet_autoBatchRefund", ex);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}\r\n{ex}", logName, ex);
                 return getAutoBatchRefundResp;
             }
-
-            log2File.Info($"{JsonConvert.SerializeObject(getAutoBatchRefundReq)}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}", $"EBet_autoBatchRefund");
-            return getAutoBatchRefundResp;
         }
 
         private bool VerifySignature(string dataToSign, string signedData, string publicKey)

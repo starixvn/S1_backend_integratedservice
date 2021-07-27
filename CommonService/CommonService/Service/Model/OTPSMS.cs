@@ -3,7 +3,13 @@ using System.Collections.Generic;
 
 namespace CommonService.Service.Model
 {
-    public class OTPSMSServiceConfig
+    public class SkyLineSMSServiceTypeConfig
+    {
+        public SkyLineSMSServiceConfig OTP { get; set; }
+        public SkyLineSMSServiceConfig SMS { get; set; }
+    }
+
+    public class SkyLineSMSServiceConfig
     {
         public string ResourceURL { get; set; }
         public string Account { get; set; }
