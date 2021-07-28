@@ -1347,6 +1347,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         roundId = txn.roundId,
                         betType = txn.betType,
                         status = txn.gameInfo.status,
+                        settleType = txn.settleType,
+                        refPlatformTxId = txn.refPlatformTxId,
                         gameInfo = JsonConvert.SerializeObject(txn.gameInfo),
                         betUnix = new DateTimeOffset(txn.betTime).ToUnixTimeSeconds(),
                         txUnix = new DateTimeOffset(txn.txTime).ToUnixTimeSeconds(),
@@ -1755,7 +1757,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Reserve
             });
-            
+
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
@@ -2845,10 +2847,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataRNG_MG.amount > 0)
                 {
                     result = PayoutV2(
-                        tpCustInfo, 
-                        bettingDataRNG_MG.amount, 
-                        (int)Tp.MG, 
-                        bettingDataRNG_MG.betId, 
+                        tpCustInfo,
+                        bettingDataRNG_MG.amount,
+                        (int)Tp.MG,
+                        bettingDataRNG_MG.betId,
                         gameType,
                         TpCategory.LiveCasino,
                         bettingDataRNG_MG.txnId,
