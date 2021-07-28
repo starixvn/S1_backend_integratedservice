@@ -102,6 +102,10 @@ namespace CommonService.Service.BLL
             {
                 smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", "id"), OTPNum);
             }
+            else if (userLang.Equals("hi", StringComparison.OrdinalIgnoreCase))
+            {
+                smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", userLang), siteName, OTPNum);
+            }
 
             //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
             // String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
