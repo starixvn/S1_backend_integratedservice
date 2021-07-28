@@ -606,6 +606,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
+                throw;
             }
             return result;
         }
