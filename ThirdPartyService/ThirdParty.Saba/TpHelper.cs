@@ -593,21 +593,21 @@ namespace ThirdParty.Saba
                 }
                 else if (json.error_code == 0 && json.Data.status == 1)
                 {
-                    apiResult.RawMessage = json.message;
+                    apiResult.RawMessage = apiResult.Message = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
                     apiResult.ErrorCode = ErrorCode.Fail;
                     apiResult.Data.Status = TransferStatus.Fail;
                 }
                 else if (json.error_code == 14 || json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 5 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
                 {
-                    apiResult.RawMessage = json.message;
+                    apiResult.RawMessage= apiResult.Message = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
                     apiResult.ErrorCode = ErrorCode.Fail;
                     apiResult.Data.Status = TransferStatus.Fail;
                 }
                 else
                 {
-                    apiResult.RawMessage = json.message;
+                    apiResult.RawMessage= apiResult.Message = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
                     apiResult.ErrorCode = ErrorCode.TransferPending;
                     apiResult.Data.Status = TransferStatus.Pending;
@@ -615,7 +615,7 @@ namespace ThirdParty.Saba
             }
             else
             {
-                apiResult.RawMessage = "No Result";
+                apiResult.RawMessage= apiResult.Message = "No Result";
                 apiResult.RawErrorCode = "1";
                 apiResult.ErrorCode = ErrorCode.TransferPending;
                 apiResult.Data.Status = TransferStatus.Pending;
