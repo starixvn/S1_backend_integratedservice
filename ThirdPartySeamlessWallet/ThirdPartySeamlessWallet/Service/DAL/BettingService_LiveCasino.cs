@@ -242,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            result = conn.Execute("Service_BettransLC_EBet_Bet_Ins", new
+            result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2", new
             {
                 TransId = mixUniqueId,
                 username = bettingData_EBet.username,
@@ -260,7 +260,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 totalBet = bettingData_EBet.detail.totalBet,
                 validBet = bettingData_EBet.detail.validBet,
                 detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
-                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList)
+                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
+                TicketStatus = (int)TicketStatus.UnSettled,
+                TicketType = (bettingData_EBet.type == 1) ? (int)BettransType.Bet : (int)BettransType.Reserve
             },
             transaction: trans,
             commandType: CommandType.StoredProcedure
