@@ -139,10 +139,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var dbResult = new KmDbResult();
 
-            if ((request.GameCode == KMGameCode.Gao_Gae.ToString() ||
-                 request.GameCode == KMGameCode.Pai_Kang.ToString() ||
-                 request.GameCode == KMGameCode.Kingmaker_Pok_Deng.ToString()) &&
-                request.TxType.ToString().StartsWith("5"))
+            if (Enum.IsDefined(typeof(KMGameCode), request.GameCode) && request.TxType.ToString().StartsWith("5"))
             {
                 dbResult = await _bettingService.PlaceBetNoSetBalance_KM(request);
 
@@ -188,10 +185,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             request.amt *= tpCurrency.ExchangeRate;
 
             var dbResult = new KmDbResult();
-            if ((request.gamecode == KMGameCode.Gao_Gae.ToString() ||
-                 request.gamecode == KMGameCode.Pai_Kang.ToString() ||
-                 request.gamecode == KMGameCode.Kingmaker_Pok_Deng.ToString()) &&
-                request.txtype.ToString().StartsWith("5"))
+            if (Enum.IsDefined(typeof(KMGameCode), request.gamecode) && request.txtype.ToString().StartsWith("5"))
             {
                 dbResult = await _settledService.PayoutNoSetBalance_KM(request);
             }

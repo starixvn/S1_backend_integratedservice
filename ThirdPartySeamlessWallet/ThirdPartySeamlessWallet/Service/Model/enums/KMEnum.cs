@@ -63,7 +63,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         Gao_Gae,
         Kingmaker_Pok_Deng,
-        Pai_Kang
+        Pai_Kang,
+        Blackjack
     }
 
     public enum KMErrorCode
