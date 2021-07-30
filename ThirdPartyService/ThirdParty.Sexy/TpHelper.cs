@@ -65,6 +65,7 @@ namespace ThirdParty.Sexy
         private class LoginResponse
         {
             public string status { get; set; }
+            public string desc { get; set; }
             public string url { get; set; }
         }
 
@@ -257,7 +258,16 @@ namespace ThirdParty.Sexy
         //    string cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
         //    string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
         //    string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
+        //    string betLimitId = inputs.ContainsKey($"BetLimitId2{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"]) ? inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] : throw new Exception($"BetLimitId2{tpCustInfo.TpCurrencyId}");
         //    ApiUrl = $"{ApiUrl}/wallet/doLoginAndLaunchGame";
+
+        //    if (!IsDevelopment && tpCustInfo.CustId == 61920)
+        //    {
+        //        /* 
+        //         Nova88_61920  IDR member can change his bet limit to 5-500
+        //        */
+        //        betLimitId = "580601";
+        //    }
 
         //    var Login = new
         //    {
@@ -270,6 +280,19 @@ namespace ThirdParty.Sexy
         //        platform = "SEXYBCRT",
         //        language = TpLangId,
         //        hall = "SEXY",
+        //        betLimit = JsonConvert.SerializeObject(new
+        //        {
+        //            SEXYBCRT = new
+        //            {
+        //                LIVE = new
+        //                {
+        //                    limitId = new List<string>()
+        //                {
+        //                    betLimitId
+        //                }
+        //                }
+        //            }
+        //        }),
         //    };
 
         //    var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
@@ -292,7 +315,7 @@ namespace ThirdParty.Sexy
         //        else
         //        {
         //            oApiResult.ErrorCode = ErrorCode.Fail;
-        //            oApiResult.RawMessage = json.status;
+        //            oApiResult.RawMessage = json.desc;
         //            oApiResult.RawErrorCode = json.status;
         //        }
         //    }
