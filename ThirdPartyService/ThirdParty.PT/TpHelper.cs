@@ -50,39 +50,6 @@ namespace ThirdParty.PT
             public string password { get; set; }
         }
 
-        private class PlayerInfoResponse
-        {
-            public PlayerInfoResult result { get; set; }
-        }
-
-        private class PlayerInfoResult
-        {
-            public string BALANCE { get; set; }
-            public string BONUSBALANCE { get; set; }
-            public string COMPPOINTS { get; set; }
-            public string CURRENTBET { get; set; }
-            public string CURRENTBONUSBET { get; set; }
-            public string FROZEN { get; set; }
-            public string INTERNAL { get; set; }
-            public bool ISINGAME { get; set; }
-            public DateTime LASTDEPOSITDATE { get; set; }
-            public DateTime LASTLOGINDATE { get; set; }
-            public DateTime LASTWITHDRAWALDATE { get; set; }
-            public int LOCKEDMINUTES { get; set; }
-            public string MAXBALANCE { get; set; }
-            public string NETLOSS { get; set; }
-            public string NOBONUS { get; set; }
-            public string PENDINGBONUSBALANCE { get; set; }
-            public string PLAYERNAME { get; set; }
-            public int RC_BALANCE { get; set; }
-            public string RESERVEDBALANCE { get; set; }
-            public int SUSPENDED { get; set; }
-            public string TOTALCOMPPOINTS { get; set; }
-            public string TOTALDEPOSITS { get; set; }
-            public string TOTALWITHDRAWALS { get; set; }
-            public string VIPLEVEL { get; set; }
-        }
-
         private class ChangePasswordResponse
         {
             public ChangePasswordResult result { get; set; }
@@ -92,16 +59,6 @@ namespace ThirdParty.PT
         {
             public string playername { get; set; }
             public string password { get; set; }
-        }
-
-        private class ResetFailedLoginResponse
-        {
-            public ResetFailedLoginResult result { get; set; }
-        }
-
-        private class ResetFailedLoginResult
-        {
-            public string result { get; set; }
         }
 
         private class BalanceResponse
@@ -435,23 +392,8 @@ namespace ThirdParty.PT
 
             if (fun.Equals("0", StringComparison.OrdinalIgnoreCase))
             {
-                // change password
-                ApiResult changeResult = ChangePassword(tpCustInfo, inputs);
-                if (changeResult.ErrorCode == ErrorCode.Success)
-                {
-                    // check player info
-                    ApiResult playerInfoResult = GetPlayerInfo(tpCustInfo, inputs);
-                    if (playerInfoResult.ErrorCode == ErrorCode.Success)
-                    {
-                        var playerInfoData = JsonConvert.DeserializeObject<PlayerInfoResult>(playerInfoResult.Message);
-
-                        if (playerInfoData.LOCKEDMINUTES != 0)
-                        {
-                            // reset failed login
-                            ResetFailedLogin(tpCustInfo, inputs);
-                        }
-                    }
-                }
+                // change password (error:2) - will also clean lock minutes
+                ChangePassword(tpCustInfo, inputs);
             }
 
             ApiResult oApiResult = new ApiResult();
@@ -646,121 +588,5 @@ namespace ThirdParty.PT
             return oApiResult;
         }
 
-        private ApiResult ResetFailedLogin(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-            ApiUrl = $"{ApiUrl}/player/resetfailedlogin";
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
-            certificate.Add("password", Pass);
-
-            var Reset = new
-            {
-                playername = tpCustInfo.TpUserName
-            };
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Reset));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var result = HttpPostWithX509(
-                ApiUrl,
-                sParam,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
-
-            ApiResult oApiResult = new ApiResult();
-            if (!IsJSON(result))
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                return oApiResult;
-            }
-
-            var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-            if (error.error != null)
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = error.error ?? "";
-                oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
-                return oApiResult;
-            }
-
-            var json = JsonConvert.DeserializeObject<ResetFailedLoginResponse>(result);
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = json.result.result;
-            oApiResult.RawMessage = "";
-            oApiResult.RawErrorCode = "";
-            return oApiResult;
-        }
-
-        private ApiResult GetPlayerInfo(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-            ApiUrl = $"{ApiUrl}/player/info";
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
-            certificate.Add("password", Pass);
-
-            var PlayerInfo = new
-            {
-                playername = tpCustInfo.TpUserName
-            };
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(PlayerInfo));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var result = HttpPostWithX509(
-                ApiUrl,
-                sParam,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
-
-            ApiResult oApiResult = new ApiResult();
-            if (!IsJSON(result))
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                return oApiResult;
-            }
-
-            var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-            if (error.error != null)
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = error.error ?? "";
-                oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
-                return oApiResult;
-            }
-
-            var json = JsonConvert.DeserializeObject<PlayerInfoResponse>(result);
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = JsonConvert.SerializeObject(new
-            {
-                lockedMinutes = json.result.LOCKEDMINUTES
-            });
-            oApiResult.RawMessage = "";
-            oApiResult.RawErrorCode = "";
-            return oApiResult;
-        }
     }
 }
