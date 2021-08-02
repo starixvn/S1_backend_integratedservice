@@ -724,6 +724,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public SettleData_SG GetSettle_TpWagerRng_SG(string TransId)
+        {
+            return settledService.GetSettle_TpWagerRng_SG(TransId);
+        }
+
+        public int SetSettleFlag_TpWagerRng_SG(string TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerRng_SG(TransId);
+        }
+
         #endregion
 
         #region Allbet

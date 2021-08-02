@@ -1107,6 +1107,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public SettleData_SG GetSettle_TpWagerRng_SG(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData_SG>("Service_TpWagerRng_SG_Settle_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int SetSettleFlag_TpWagerRng_SG(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerRng_SG_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+        }
+
         #endregion
 
         #region PG
