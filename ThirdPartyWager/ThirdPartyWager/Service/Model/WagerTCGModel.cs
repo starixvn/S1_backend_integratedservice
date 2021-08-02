@@ -28,7 +28,7 @@ namespace ThirdPartyWager.Service.Model
     public class PageInfo
     {
         public int currentPage { get; set; }
-        public int pageSize { get; set; }
+        public int pageSize { get; set; } = 1000;
         public int total { get; set; }
     }
 
