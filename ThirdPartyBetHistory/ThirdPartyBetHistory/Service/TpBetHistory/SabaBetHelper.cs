@@ -376,7 +376,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
 
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                    if (betDetial.bet_type==1613 && betDetial.tokenmoney =="freebet")
+                    // Saba Club Se Die or Vgaming Se Die gives freebet
+                    if ((betDetial.bet_type==1613 && betDetial.tokenmoney =="freebet") || (betDetial.bet_type == 3803 && betDetial.tokenmoney == "freebet"))
                     { 
                         betRecordInfo.ValidBet = 0; 
                     }
