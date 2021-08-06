@@ -210,6 +210,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.GameType = GameType.Saba_CardClub;
                             }
+                            else if ((betDetial.sport_type ?? 0) == 171)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_Vgaming;
+                            }
                             else if ((betDetial.sport_type ?? 0) == 200)
                             {
                                 betRecordInfo.GameType = GameType.Saba_SabaClub;
@@ -368,11 +372,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG ||
                     betRecordInfo.GameType == GameType.Saba_CardClub || betRecordInfo.GameType == GameType.Saba_Indo4D || betRecordInfo.GameType == GameType.Saba_Keno ||
                     betRecordInfo.GameType == GameType.Saba_Lottery || betRecordInfo.GameType == GameType.Saba_MacauGame || betRecordInfo.GameType == GameType.Saba_SabaClub ||
-                    betRecordInfo.GameType == GameType.Saba_VirtualGames)
+                    betRecordInfo.GameType == GameType.Saba_VirtualGames || betRecordInfo.GameType == GameType.Saba_Vgaming)
                 {
 
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                    if (betDetial.bet_type==1613 && betDetial.tokenmoney =="freebet")
+                    // Saba Club Se Die or Vgaming Se Die gives freebet
+                    if ((betDetial.bet_type==1613 && betDetial.tokenmoney =="freebet") || (betDetial.bet_type == 3803 && betDetial.tokenmoney == "freebet"))
                     { 
                         betRecordInfo.ValidBet = 0; 
                     }
