@@ -51,5 +51,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region MP
+
+        public int MoneyOutPK_MP(TransferData_MP transferData_MP, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.MP, transferData_MP.player);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.MP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                transferData_MP.requestAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.MoneyOutPK_MP(tpCustInfo, transferData_MP, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
     }
 }
