@@ -383,6 +383,9 @@ namespace ThirdPartyService.Service.BLL
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
                 apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
                 apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
@@ -398,6 +401,9 @@ namespace ThirdPartyService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
                 apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
                 apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
@@ -491,6 +497,9 @@ namespace ThirdPartyService.Service.BLL
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
                 apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
                 apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
@@ -506,7 +515,10 @@ namespace ThirdPartyService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
                 apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
-                apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
+                apiResult.RawMessage = apiResult.Message = balanceApiResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
 
