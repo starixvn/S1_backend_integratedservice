@@ -51,7 +51,7 @@ namespace CommonService.Service.Library
             using var response = await client.PostAsync(url, data);
 
             string result = response.Content.ReadAsStringAsync().Result;
-            _logger.LogInformation($"HttpHelper.Request.Repsone:{result}");
+            _logger.LogInformation($"HttpHelper.Request.Response:{result}");
             return result;
         }
 
@@ -84,7 +84,7 @@ namespace CommonService.Service.Library
             using var data = new StringContent(parameters, Encoding.UTF8, contentType);
             _logger.LogInformation($"HttpHelper.Request.BODY:{parameters}");
             var response = await client.PostAsync(url, data);
-            _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
+            _logger.LogInformation($"HttpHelper.Request.Response:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
 
@@ -118,7 +118,7 @@ namespace CommonService.Service.Library
             using var data = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(parameters) };
 
             var response = await client.SendAsync(data);
-            _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
+            _logger.LogInformation($"HttpHelper.Request.Response:{response.Content.ReadAsStringAsync().Result}");
             return response;
 
         }
@@ -170,7 +170,7 @@ namespace CommonService.Service.Library
             LogContext.PushProperty("HttpHelper.Request.URL", newurl);
             using var data = new HttpRequestMessage(HttpMethod.Get, newurl);
             var response = await client.SendAsync(data);
-            _logger.LogInformation($"HttpHelper.Request.Repsone:{response.Content.ReadAsStringAsync().Result}");
+            _logger.LogInformation($"HttpHelper.Request.Response:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
     }
