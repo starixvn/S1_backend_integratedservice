@@ -200,7 +200,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.ProgressiveWin *= tpCurrency.ExchangeRate;
                                 }
 
-                                if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
+                                if (wager.Stake == unsettled.Stake && Math.Round(wager.WinLostAmount, 2) == unsettled.WinLostAmount)
                                 {
                                     decimal stake = unsettled.Stake;
                                     decimal validBet = unsettled.Stake;
