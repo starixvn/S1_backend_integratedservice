@@ -25,7 +25,6 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly SettledService _settledService;
         private readonly ILogger<ThirdPartyService> _logger;
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
         private readonly string _connectionString;
 
         public ThirdPartyService(IServiceProvider serviceProvider)
@@ -38,17 +37,16 @@ namespace ThirdPartyBetHistory.Service.DAL
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _connectionString = configuration.GetConnectionString("ConnectionString");
             _mainDbClient = new MySqlClient(_connectionString, mySqlLogger);
-            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), mySqlLogger);
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()
         {
-            return _reportDbClient.Query<ThirdPartyModel>("Common_TpList_Get");
+            return _mainDbClient.Query<ThirdPartyModel>("Common_TpList_Get");
         }
 
         public IEnumerable<ThirdPartyModel> GetSiteTpList()
         {
-            return _reportDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
+            return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
         }
 
         public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
@@ -310,13 +308,13 @@ namespace ThirdPartyBetHistory.Service.DAL
         private TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
         {
             var parameters = new DynamicParameters(new {TpId, TpUserName});
-            return _reportDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get", parameters);
+            return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get", parameters);
         }
 
         private BetRecordInfo GetTpBetRecord(int TpId, string TransId, int GameType)
         {
             var parameters = new DynamicParameters(new {TpId, TransId, GameType});
-            return _reportDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters);
+            return _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters);
         }
 
         private int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn,
@@ -383,7 +381,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             var parameters = new DynamicParameters(new { TpId = tpId, CurrencyId = currencyId });
-            return _reportDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", parameters);
+            return _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", parameters);
         }
 
         private int SetRollOverTurnOver(int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
