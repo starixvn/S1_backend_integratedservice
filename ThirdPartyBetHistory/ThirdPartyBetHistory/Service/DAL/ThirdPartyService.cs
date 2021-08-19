@@ -99,7 +99,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = _settledService.GetBonusIdByTpId(1, tpCustInfo.CustId, out bonusId);
+                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.Saba, tpCustInfo.CustId, out bonusId);
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
@@ -272,13 +272,13 @@ namespace ThirdPartyBetHistory.Service.DAL
                         trans.Commit();
                     }
 
-                    if (tpCustInfo.SiteId == 1)
+                    if (tpCustInfo.SiteId == (int)SiteId.Nova88)
                     {
-                        SetTicketKey(1, betRecord.TicketKey);
+                        SetTicketKey((int)Tp.Saba, betRecord.TicketKey);
                     }
                     else
                     {
-                        SiteTpTicketKey(1, tpCustInfo.SiteId, betRecord.TicketKey);
+                        SiteTpTicketKey((int)Tp.Saba, tpCustInfo.SiteId, betRecord.TicketKey);
                     }
 
                     _logger.LogInformation(JsonConvert.SerializeObject(betRecord));

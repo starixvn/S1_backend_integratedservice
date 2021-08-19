@@ -43,8 +43,15 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba_Vgaming = 59
     }
 
-    public enum TpId
+    public enum Tp
     {
         Saba = 1
+    }
+    
+    public enum SiteId
+    {
+        Nova88 = 1,
+        Goal123 = 2,
+        Bwing = 3
     }
 }
