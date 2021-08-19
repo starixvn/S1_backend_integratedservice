@@ -221,7 +221,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
                                 betRecord.TransId, conn, trans);
 
-                        if (Losses != 0 && hasJoinBonus)
+                        if (Losses != 0 && bonusId > 0)
                         {
                             AutoCancelBonusV2(bonusId, conn, trans);
                         }
@@ -240,7 +240,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                                     tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
                                     "Settled", bonusId, betRecord.TransId, conn, trans);
 
-                            if (Losses != 0 && hasJoinBonus)
+                            if (Losses != 0 && bonusId > 0)
                             {
                                 AutoCancelBonusV2(bonusId, conn, trans);
                             }
