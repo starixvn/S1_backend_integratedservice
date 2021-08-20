@@ -141,9 +141,9 @@ namespace ThirdPartyWager.Service.BLL
                     }
                 }
 
-                msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
-                return true;
+                msg = "FINISH_REDO";
+                log2File.AddResultLog(logName, guid, msg, null, "Error");
+                return false;
 
             }
             catch (Exception ex)

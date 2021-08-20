@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.AG;
         private int tpType = 2;
         private int quick = 0;
+        private readonly int timeZone = -4;
         private string logName = Tp.AG.ToString();
 
         public WagerRedoAG(
@@ -63,7 +64,7 @@ namespace ThirdPartyWager.Workers
                 int last;
                 if (dataTpTimer == null)
                 {
-                    timerTime = DateTime.Now.AddMinutes(-2 * intervalMins);
+                    timerTime = DateTime.Now.AddDays(-1);
                     last = intervalMins;
                 }
                 else
@@ -71,11 +72,13 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     last = intervalMins;
                 }
-                if (timerTime < DateTime.Now)
+
+                var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTime.UtcNow.AddHours(timeZone);
+                if (Convert.ToDateTime(time.endTime) < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByHour(last, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerRedoAGBLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }

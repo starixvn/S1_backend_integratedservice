@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.AG;
         private int tpType = 1;
         private int quick = 0;
+        private readonly int timeZone = -4;
         private string logName = Tp.AG.ToString();
 
         public WagerAG(
@@ -52,10 +53,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-            //if (!environment.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!environment.IsProduction())
+            {
+                return;
+            }
 
             try
             {
@@ -74,11 +75,12 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTime.UtcNow.AddHours(timeZone);
+                if (Convert.ToDateTime(time.endTime) < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerAGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
