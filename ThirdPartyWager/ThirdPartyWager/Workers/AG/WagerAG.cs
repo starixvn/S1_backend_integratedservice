@@ -76,8 +76,8 @@ namespace ThirdPartyWager.Workers
                 }
 
                 var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                var cvTime = DateTime.UtcNow.AddHours(timeZone);
-                if (Convert.ToDateTime(time.endTime) < cvTime)
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                if (time.endUnix < cvTime)
                 {
                     bool result = await wagerAGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result)

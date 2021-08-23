@@ -12,13 +12,14 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers.KM
 {
-    public class WagerKM  : BackgroundService
+    public class WagerKM : BackgroundService
     {
         private readonly ILogger<WagerKM> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly KMBLL _kmBLL;
         private Timer _settleTimer;
+        private readonly Log2File log2File;
 
         private const int TpId = (int)Tp.KM;
         private const int TpType = 52;
@@ -26,12 +27,13 @@ namespace ThirdPartyWager.Workers.KM
 
         public WagerKM(IServiceProvider provider)
         {
+            log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<WagerKM>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _kmBLL = provider.GetRequiredService<KMBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
-        
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
@@ -54,12 +56,14 @@ namespace ThirdPartyWager.Workers.KM
             var intervalSec = 30;
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, TpType);              
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, TpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.Now.AddMinutes(-1 * dataRangeMins);
 
-                if (thisTime < DateTime.Now)
+                var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm:ss", thisTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{Tp.KM}\r\n{timeCast.endUnix}\r\n{cvTime}", "AA");
+                if (timeCast.endUnix < cvTime)
                 {
-                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm:ss", thisTime);
                     var isSuccess = await _kmBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
@@ -83,7 +87,7 @@ namespace ThirdPartyWager.Workers.KM
                 _settleTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _settleTimer?.Change(Timeout.Infinite, 0);

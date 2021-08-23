@@ -36,6 +36,7 @@ namespace ThirdPartyWager.Workers
         private int quickVND = 0;
         private int quickCNY = 0;
         private int beyond = 5;
+        private readonly int timeZone = 0;
         private string logName = Tp.Iconic.ToString();
 
         public WagerIconic(
@@ -85,11 +86,13 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
@@ -142,11 +145,13 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
@@ -199,11 +204,13 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
@@ -256,11 +263,13 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
@@ -313,11 +322,13 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
@@ -370,9 +381,11 @@ namespace ThirdPartyWager.Workers
                     last = iRangMins - 1;
                 }
 
-                if (timerTime < DateTime.Now)
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();//new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
                     if (result)
                     {

@@ -51,10 +51,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-            //if (!environment.IsProduction())
-            //{
-            //    return;
-            //}
+            if (!environment.IsProduction())
+            {
+                return;
+            }
 
             try
             {
@@ -74,8 +74,9 @@ namespace ThirdPartyWager.Workers
                 }
 
                 var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                var cvTime = DateTime.UtcNow.AddHours(timeZone);
-                if (Convert.ToDateTime(time.endTime) < cvTime)
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
                     bool result = await wagerRedoAGBLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix);
                     if (result)

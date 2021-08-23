@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Workers
         private int tpType = 2;
         private int quick = 0;
         private int iDays = 2;
+        private readonly int timeZone = 0;
         private string logName = Tp.N2Live.ToString();
 
         public WagerRedoN2Live(
@@ -38,6 +39,7 @@ namespace ThirdPartyWager.Workers
         )
         {
             this.logger = logger;
+            this.log2File = log2File;
             this.wagerN2LiveBLL = wagerN2LiveBLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
@@ -71,10 +73,11 @@ namespace ThirdPartyWager.Workers
                         timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     }
 
-                    if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                    var time = dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                    if (time.endUnix < cvTime)
                     {
-                        var time = dateTimeHelper.GetTimeByDay(iRangMins, 0, "yyyy-MM-dd HH:mm:ss", timerTime);
-                        
                         bool result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
                         if (result)
                         {
