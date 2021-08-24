@@ -406,7 +406,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
                         }
 
-                        if (betDetial.odds > 0 && betDetial.odds < 0.5m)
+                        if (betDetial.odds > 0 && betDetial.odds < 0.7m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                         }
@@ -417,7 +417,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
                     else if ((betDetial.odds_type ?? 0) == 2)
                     {
-                        if (betDetial.odds < 0.5m)
+                        if (betDetial.odds < 0.7m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                         }
@@ -428,7 +428,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
                     else if ((betDetial.odds_type ?? 0) == 3)
                     {
-                        if (betDetial.odds < 1.5m)
+                        if (betDetial.odds < 1.7m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                         }
@@ -444,7 +444,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds);
                         }
 
-                        if (betDetial.odds < -2m)
+                        if (betDetial.odds < -1.43m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                         }
@@ -460,7 +460,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.ValidBet = betRecordInfo.Stake * Math.Abs(betDetial.odds) / 100;
                         }
 
-                        if (betDetial.odds < -200m)
+                        if (betDetial.odds < -143m)
                         {
                             betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                         }
