@@ -233,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         getErrorResponse.errorCode = 4;
                         getErrorResponse.message = "Wrong token";
-                        log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                        log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}", logName);
                         return getErrorResponse;
                     }
                     else if (tpCheck.Locked)
