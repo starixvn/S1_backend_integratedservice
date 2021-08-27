@@ -219,6 +219,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tokenInfo = getTokenInfo(getReq.token);
 
                 // offline payment no need to check online
+                var logToken = "";
                 if (!getReq.isFreeRound)
                 {
                     var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.userId);
@@ -243,6 +244,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                         return getErrorResponse;
                     }
+
+                    logToken = $"\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}";
                 }
 
                 if (environment.IsDevelopment() && getReq.betAmount == 90)
@@ -277,7 +280,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.token = getReq.token;
-                    log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -289,7 +292,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
                     return getApiResponse;
                 }
                 else if (tpAffterAmount < 0)
@@ -301,7 +304,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
                     return getApiResponse;
                 }
             }
