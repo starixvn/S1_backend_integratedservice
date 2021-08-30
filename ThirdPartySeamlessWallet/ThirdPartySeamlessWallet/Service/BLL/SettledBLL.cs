@@ -742,9 +742,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledListLC_Allbet();
         }
-        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
         {
-            var result = settledService.Get_TpWagerAllbet_Settle(betNum, out stake, out validBet, out winLostAmount, out settleTime);
+            var result = settledService.Get_TpWagerAllbet_Settle(betNum, out stake, out validBet, out winLostAmount, out settleTime, out transTime);
             return result;
         }
         public int SetSettleFlag_Allbet(long betNum)

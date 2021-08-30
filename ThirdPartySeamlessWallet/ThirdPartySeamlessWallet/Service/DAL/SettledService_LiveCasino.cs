@@ -692,18 +692,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerAllBet_Settle_Set", new { betNum = betNum }, commandType: CommandType.StoredProcedure);
         }
-        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
         {
             stake = 0;
             validBet = 0;
             winLostAmount = 0;
             settleTime = 0;
+            transTime = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             var p = new DynamicParameters(new { betNum = betNum });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            p.Add("TransTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             int result = conn.Execute("Service_TpWagerAllBet_Settle_Get", p, commandType: CommandType.StoredProcedure);
 
             if (p.Get<decimal?>("Stake") != null)
@@ -712,6 +714,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 validBet = p.Get<decimal>("ValidBet");
                 winLostAmount = p.Get<decimal>("WinLostAmount");
                 settleTime = p.Get<long>("SettleTime");
+                transTime = p.Get<long>("TransTime");
             }
             else
             {
