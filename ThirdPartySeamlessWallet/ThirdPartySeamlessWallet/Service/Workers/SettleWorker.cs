@@ -446,7 +446,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         try
                         {
                             //$"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}"
-                            var result = settledBLL.Get_TpWagerSA_Settle(unsettled.gameid, unsettled.username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
+                            var result = settledBLL.Get_TpWagerSA_Settle(unsettled.gameid, unsettled.username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime);
 
                             if (result > 0)
                             {
@@ -470,6 +470,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     GameType = GameType.SA_LiveCasino,
                                     TpUserName = unsettled.username,
                                     SettledTime = settleTime,
+                                    TransTime = transTime,
                                     SettlementType = SettlementType.SettledForValid
                                 };
 

@@ -161,9 +161,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
         {
-            return settledService.Get_TpWagerSA_Settle(GameID, Username, out stake, out validBet, out winLostAmount, out settleTime);
+            return settledService.Get_TpWagerSA_Settle(GameID, Username, out stake, out validBet, out winLostAmount, out settleTime, out transTime);
         }
         public int SetSettleFlag_TpWagerSA(string GameID, string Username)
         {
