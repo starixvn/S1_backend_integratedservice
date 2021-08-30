@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
+                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{response.ReasonPhrase}", $"{logName}_{subName}");
                     }
                     return getBalanceResponse;
                 }
