@@ -76,11 +76,13 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddMinutes(-1 * overlap);
                     last = 45;
                 }
-                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ssZ", timerTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
-                if (time.endUnix < cvTime)
+                if (timerTime < DateTime.Now)
                 {
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ssZ", timerTime);
+                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    //log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                    //if (time.endUnix < cvTime)
+                    //{
                     bool result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
                     if (result)
                     {
@@ -134,12 +136,13 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddMinutes(-1 * overlap);
                     last = iRangMins - 1;
                 }
-
-                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ssZ", timerTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
-                if (time.endUnix < cvTime)
+                if (timerTime < DateTime.Now)
                 {
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ssZ", timerTime);
+                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    //log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                    //if (time.endUnix < cvTime)
+                    //{
                     bool result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
                     if (result)
                     {
@@ -193,12 +196,13 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddMinutes(-1 * overlap);
                     last = iRangMins - 1;
                 }
-
-                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ssZ", timerTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
-                if (time.endUnix < cvTime)
+                if (timerTime < DateTime.Now)
                 {
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ssZ", timerTime);
+                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    //log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                    //if (time.endUnix < cvTime)
+                    //{
                     bool result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
                     if (result)
                     {

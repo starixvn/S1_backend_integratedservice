@@ -19,7 +19,6 @@ namespace ThirdPartyWager.Workers.KM
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly KMBLL _kmBLL;
         private Timer _settleTimer;
-        private readonly Log2File log2File;
 
         private const int TpId = (int)Tp.KM;
         private const int TpType = 52;
@@ -27,7 +26,6 @@ namespace ThirdPartyWager.Workers.KM
 
         public WagerKM(IServiceProvider provider)
         {
-            log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<WagerKM>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _kmBLL = provider.GetRequiredService<KMBLL>();
@@ -59,11 +57,12 @@ namespace ThirdPartyWager.Workers.KM
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, TpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.Now.AddMinutes(-1 * dataRangeMins);
 
-                var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm:ss", thisTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{Tp.KM}\r\n{timeCast.endUnix}\r\n{cvTime}", "AA");
-                if (timeCast.endUnix < cvTime)
+                if (thisTime < DateTime.Now)
                 {
+                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm:ss", thisTime);
+                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
+                    //if (timeCast.endUnix < cvTime)
+                    //{
                     var isSuccess = await _kmBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {

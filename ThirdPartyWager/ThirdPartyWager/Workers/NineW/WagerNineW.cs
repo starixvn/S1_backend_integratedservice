@@ -19,7 +19,6 @@ namespace ThirdPartyWager.Workers
         private Timer _settleTimer;
         private Timer _settleTimerByDate;
         private Timer _reSttleTimer;
-        private readonly Log2File log2File;
 
         private readonly int tpId = (int)Tp.NineW;
         private readonly int tpType = 51;
@@ -27,7 +26,6 @@ namespace ThirdPartyWager.Workers
 
         public WagerNineW(IServiceProvider provider)
         {
-            log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<WagerNineW>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _nineWService = provider.GetRequiredService<NineWBLL>();
@@ -50,14 +48,11 @@ namespace ThirdPartyWager.Workers
             var intervalMins = 3;
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);              
-                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins- intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
-
-                var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{Tp.NineW}\r\n{timeCast.endUnix}\r\n{cvTime}", "AA");
-                if (timeCast.endUnix < cvTime)
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
+                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins - intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
+                if (thisTime < DateTime.Now)
                 {
+                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
@@ -93,11 +88,9 @@ namespace ThirdPartyWager.Workers
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.Now.Date.AddDays(-3);
 
-                var timeCast = _dateTimeHelper.GetTimeByDay(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{Tp.NineW}\r\n{timeCast.endUnix}\r\n{cvTime}", "AA");
-                if (timeCast.endUnix < cvTime)
+                if (thisTime < DateTime.Now)
                 {
+                    var timeCast = _dateTimeHelper.GetTimeByDay(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
@@ -135,7 +128,6 @@ namespace ThirdPartyWager.Workers
 
                 var timeCast = _dateTimeHelper.GetTimeByHour(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{Tp.NineW}\r\n{timeCast.endUnix}\r\n{cvTime}", "AA");
                 if (timeCast.endUnix < cvTime)
                 {
                     var isSuccess = await _nineWService.GetReSettleWagersAsync(timeCast.startTime, timeCast.endTime);
