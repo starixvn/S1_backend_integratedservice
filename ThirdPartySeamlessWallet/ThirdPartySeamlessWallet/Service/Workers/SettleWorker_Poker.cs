@@ -351,5 +351,83 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleKM.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        private void DoSettleMPWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.MP;
+            string logName = "Settle_MP_PK";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledListPK_MP();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                            if (tpCurrency.ExchangeRate > 1)
+                            {
+                                unsettled.Stake *= tpCurrency.ExchangeRate;
+                                unsettled.ValidBet *= tpCurrency.ExchangeRate;
+                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                                unsettled.Revenue *= tpCurrency.ExchangeRate;
+                            }
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = unsettled.Stake,
+                                ValidBet = unsettled.ValidBet,
+                                Revenue = unsettled.Revenue,
+                                WinlostAmount = unsettled.WinLostAmount,
+                                TransId = unsettled.TransId,
+                                GameType = (GameType)unsettled.GameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
+                                SettlementType = SettlementType.SettledForValid
+                            };
+                            var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                            settledBLL.SetSettleFlag_TpWagerPK_MP(unsettled.TransId);
+                        }
+                        catch (Exception ex1)
+                        {
+                            LogContext.PushProperty("TP", tpName);
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", tpName);
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleMP.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
     }
 }

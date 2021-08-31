@@ -60,6 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleMG;
         private Timer timerSettleTCGSEA;
         private Timer timerSettleTCGVN;
+        private Timer timerSettleMP;
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
@@ -122,6 +123,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -1167,6 +1169,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleMG?.Change(Timeout.Infinite, 0);
             timerSettleTCGSEA?.Change(Timeout.Infinite, 0);
             timerSettleTCGVN?.Change(Timeout.Infinite, 0);
+            timerSettleMP?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

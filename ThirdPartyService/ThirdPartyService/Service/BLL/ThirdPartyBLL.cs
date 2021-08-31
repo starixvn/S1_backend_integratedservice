@@ -61,7 +61,8 @@ namespace ThirdPartyService.Service.BLL
             TpTransferBonusInfoService tpTransferBonusInfoService,
             ServerInfoService serverInfoService,
             TpCustBalanceService tpCustBalanceService,
-            AuthBLL authBLL)
+            AuthBLL authBLL
+        )
         {
             this.env = env;
             this.configuration = configuration;

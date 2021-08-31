@@ -734,8 +734,83 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var parameters = new DynamicParameters(new { transId, isSuccess });
             return _wagerDbClient.Execute(spName, parameters: parameters);
-        }        
+        }
 
+        #endregion
+
+        #region MP
+        
+        public int MoneyInPK_MP(TpCustInfo tpCustInfo, TransferData_MP transferData_MP, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            var amount = transferData_MP.requestAmount;
+
+            var p = new DynamicParameters(new
+            {
+                channelId = transferData_MP.channelId,
+                account = transferData_MP.account,
+                requestAmount = transferData_MP.requestAmount,
+                gameId = transferData_MP.gameId,
+                orderId = transferData_MP.orderId,
+                TicketType = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = (int)SettleFlag.Running
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_BettransPK_MP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && amount != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        amount,
+                        (int)Tp.MP,
+                        TransType.Payout,
+                        $"Transfer In: {transferData_MP.requestAmount:#,##0.##}",
+                        transferData_MP.orderId,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleDataPK_MP> GetUnsettledListPK_MP()
+        {
+            return _wagerDbClient.Query<SettleDataPK_MP>("Service_TpWagerPK_MP_Unsettle_Get");
+        }
+
+        public int SetSettleFlag_TpWagerPK_MP(string TransId)
+        {
+            return _wagerDbClient.Execute("Service_TpWagerPK_MP_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
         #endregion
     }
 }

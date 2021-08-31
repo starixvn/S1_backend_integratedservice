@@ -100,12 +100,6 @@ namespace ThirdPartyWager.Service.BLL
             else
             {
                 var result = "{\"error\":\"fatal error\",\"errorcode\":999999}";
-                LogContext.PushProperty("Tp", logName);
-                logger.LogError($"URL {url}");
-                logger.LogError($"REQUEST: {sParam}");
-                logger.LogError($"HEADER: {request.Headers}");
-                logger.LogError($"CERT: {certificate}");
-                logger.LogError($"RESPONSE: {response}");
                 log2File.AddResponseLog(logName, guid, url, sParam, response, "Error", request.Headers, certificate);
                 return result;
             }

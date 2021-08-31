@@ -103,10 +103,6 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                LogContext.PushProperty("Tp", logName);
-                logger.LogError($"URL {url}");
-                logger.LogError($"REQUEST: {param}");
-                logger.LogError($"RESPONSE: {response}");
                 log2File.AddResponseLog(logName, guid, url, param, response);
                 return null;
             }

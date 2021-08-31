@@ -107,6 +107,45 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return Encoding.UTF8.GetString(resultArray);
         }
 
+        public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+
+            RijndaelManaged rm = new RijndaelManaged
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
+            };
+
+            ICryptoTransform cTransform = rm.CreateEncryptor();
+            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+            var base64Str = Convert.ToBase64String(resultArray, 0, resultArray.Length);
+
+            return isEncodeUrl ? HttpUtility.UrlEncode(base64Str) : base64Str;
+        }
+
+        public T FromJson<T>(string jsonString)
+        {
+            if (!string.IsNullOrEmpty(jsonString))
+            {
+                return JsonConvert.DeserializeObject<T>(jsonString);
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+        public string ToJson(object t)
+        {
+            return JsonConvert.SerializeObject(t, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+        }
+
         #region GetClientIP
         /// <summary>
         /// 获取客户端IP
