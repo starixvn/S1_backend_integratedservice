@@ -48,9 +48,8 @@ namespace ThirdPartyWager.Workers
             var intervalMins = 3;
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);              
-                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins- intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
-
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
+                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins - intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
                 if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
@@ -127,9 +126,10 @@ namespace ThirdPartyWager.Workers
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.Now.AddDays(-3);
 
-                if (thisTime < DateTime.Now)
+                var timeCast = _dateTimeHelper.GetTimeByHour(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
+                if (timeCast.endUnix < cvTime)
                 {
-                    var timeCast = _dateTimeHelper.GetTimeByHour(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetReSettleWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
