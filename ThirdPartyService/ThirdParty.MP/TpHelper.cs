@@ -249,7 +249,7 @@ namespace ThirdParty.MP
             string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
             string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
-            string HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+            //string HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
@@ -297,7 +297,7 @@ namespace ThirdParty.MP
             var json = JsonConvert.DeserializeObject<ApiResponse>(result);
             if (json.d.code == 0)
             {
-                var returnType = (string.IsNullOrEmpty(HomeUrl)) ? 0 : 1;
+                //var returnType = (string.IsNullOrEmpty(HomeUrl)) ? 0 : 1;
                 oApiResult.ErrorCode = ErrorCode.Success;
                 var forward = json.d.url;
                 var uri = new Uri(forward);
@@ -306,7 +306,8 @@ namespace ThirdParty.MP
                 {
                     forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
                 }
-                oApiResult.Message = $"{forward}&returnUrl={HomeUrl}&returnType={returnType}";
+                //oApiResult.Message = $"{forward}&returnUrl={HomeUrl}&returnType={returnType}";
+                oApiResult.Message = forward;
             }
             else
             {
