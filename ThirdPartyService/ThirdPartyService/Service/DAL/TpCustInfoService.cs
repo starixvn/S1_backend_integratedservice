@@ -183,9 +183,10 @@ namespace ThirdPartyService.Service.DAL
         /// <param name="tpId">第三方ID</param>
         /// <param name="siteId">平台ID</param>
         /// <returns></returns>
-        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(int tpId, int siteId)
+        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(bool firstRun,int tpId, int siteId)
         {
             var parameter = new DynamicParameters();
+            parameter.Add("_FirstRun", firstRun);
             parameter.Add("_TpId", tpId);
             parameter.Add("_SiteId", siteId);
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));

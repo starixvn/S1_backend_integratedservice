@@ -581,7 +581,9 @@ namespace ThirdPartyService.Service.BLL
             subResult = apiResult;
 
             // get all transfer games and status is on
-            var transferGames = thirdPartyHelper.GetThirdPartyByWalletTypeByCustId((int)WalletType.Transfer, custWallet.SiteId, tpInfo.CustId);
+            var transferGames =
+                thirdPartyHelper.GetThirdPartyByWalletTypeByCustId((int) WalletType.Transfer, custWallet.SiteId,
+                    tpInfo.CustId);
             if (transferGames.Any())
             {
                 int alphaTpId = tpInfo.TpId;
@@ -696,7 +698,8 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="tpId">第三方ID</param>
         /// <param name="siteId">平台ID</param>
         /// <param name="balanceDatas">餘額資料</param>
-        public bool GetBalance(int tpId,
+        public bool GetBalance(bool firstrRun,
+            int tpId,
             int siteId,
             out List<TpCustBalanceModel> balanceDatas)
         {
@@ -710,7 +713,7 @@ namespace ThirdPartyService.Service.BLL
             //                       + $"TpId={tpId} SiteId={siteId} "
             //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
-            var custInfoList = GetTpCustInfoList(tpId, siteId);
+            var custInfoList = GetTpCustInfoList(firstrRun,tpId, siteId);
 
             if (tpId == (int) TpEnum.NineW || tpId == (int) TpEnum.Saba)
             {
@@ -728,7 +731,7 @@ namespace ThirdPartyService.Service.BLL
                     return false;
                 }
             }
-            
+
             _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
                                    + $"TpId={tpId} SiteId={siteId} "
                                    + $"EndTime={DateTime.UtcNow.AddHours(8)}");
@@ -746,8 +749,7 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="tableDate">資料表日期</param>
         /// <param name="timeString">資料所屬時間</param>
         /// <param name="datas">資料</param>
-        public void InsertBalance(string tableDate,
-            string timeString,
+        public void InsertBalance(string timeString,
             List<TpCustBalanceModel> datas)
         {
             _logger.LogInformation($"GetBalanceWorker-InsertBalance-Start_"
@@ -756,14 +758,14 @@ namespace ThirdPartyService.Service.BLL
             //log2File.Info($"GetBalanceWorker-InsertBalance-Start_"
             //                           + $"StartTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
-            foreach (var data in datas.OrderBy(x => x.TpId).ThenBy(x => x.CustId))
+            foreach (var data in datas.OrderBy(x => x.TpId).ThenBy(x => x.CustId).ThenBy(x => x.RequestTime))
             {
-                var result = InsertBalance(tableDate, timeString, data);
+                var result = InsertBalance(timeString, data);
 
                 if (result == 0)
                 {
                     _logger.LogWarning($"GetBalanceWorker-InsertBalance-Warning_"
-                                       + $"TableDate={tableDate} TimeString={timeString}"
+                                       + $"TimeString={timeString}"
                                        + $"BalanceData={JsonConvert.SerializeObject(data)}"
                                        + "Insert balance data fail.");
 
@@ -784,58 +786,20 @@ namespace ThirdPartyService.Service.BLL
         /// <summary>
         /// 取得最近一次執行排程時間
         /// </summary>
-        /// <param name="tableDate">資料表日期</param>
+        /// <param name="tpId">第三方ID</param>
         /// <returns></returns>
-        public DateTime? GetLastestRunTime(string tableDate)
+        public DateTime? GetLastestRunTime()
         {
-            int i = 0;
-            bool tableExist = false;
-            for (i = Convert.ToInt32(tableDate); i > 20210701; i--)
-            {
-                if (CheckTpCustBalanceCourseTable(i.ToString()))
-                {
-                    tableExist = true;
-                    break;
-                }
-            }
+            var result = GetLastestRunTimeFromTable();
 
-            if (tableExist)
-            {
-                return GetLastestRunTime(i);
-            }
-            else
+            if (string.IsNullOrWhiteSpace(result))
             {
                 return null;
             }
-        }
-
-        /// <summary>
-        /// 檢查第三方餘額資料表是否存在
-        /// </summary>
-        /// <param name="tableDate">資料表日期</param>
-        /// <returns></returns>
-        public bool CheckTpCustBalanceCourseTable(string tableDate)
-        {
-            var checkResult = _tpCustBalanceService.CheckTpCustBalanceCourseTable(tableDate);
-
-            if (checkResult != $"TpCustBalanceCourse_{tableDate}")
-            {
-                return false; //not exist;
-            }
             else
             {
-                return true; //exist;
+                return Convert.ToDateTime(result);
             }
-        }
-
-        /// <summary>
-        /// 新增第三方餘額資料表
-        /// </summary>
-        /// <param name="tableDate">資料表日期</param>
-        /// <returns></returns>
-        public bool CreateTpCustBalanceCourseTable(string tableDate)
-        {
-            return _tpCustBalanceService.CreateTpCustBalanceCourseTable(tableDate);
         }
 
         #region Private Methods
@@ -843,11 +807,11 @@ namespace ThirdPartyService.Service.BLL
         /// <summary>
         /// 取得最近一次執行排程時間
         /// </summary>
-        /// <param name="tableDate">資料表日期</param>
+        /// <param name="tpId">資料表日期</param>
         /// <returns></returns>
-        private DateTime GetLastestRunTime(int tableDate)
+        private string GetLastestRunTimeFromTable()
         {
-            return Convert.ToDateTime(_tpCustBalanceService.GetLastestRunTime(tableDate.ToString()));
+            return _tpCustBalanceService.GetLastestRunTime();
         }
 
         /// <summary>
@@ -855,9 +819,9 @@ namespace ThirdPartyService.Service.BLL
         /// </summary>
         /// <param name="tpId">第三方ID</param>
         /// <returns></returns>
-        private IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(int tpId, int siteId)
+        private IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(bool firstRun,int tpId, int siteId)
         {
-            return tpCustInfoService.GetTpCustInfoList(tpId, siteId);
+            return tpCustInfoService.GetTpCustInfoList(firstRun,tpId, siteId);
         }
 
         /// <summary>
@@ -874,6 +838,8 @@ namespace ThirdPartyService.Service.BLL
             out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
+            DateTime requestTime = DateTime.UtcNow;
+            DateTime responseTime = DateTime.UtcNow;
 
             try
             {
@@ -888,7 +854,11 @@ namespace ThirdPartyService.Service.BLL
 #endif
                 var tpUserNameString = string.Join(",", custInfoList.Select(x => x.TpUserName));
 
+                requestTime = DateTime.UtcNow;
+
                 var balanceResult = tpHelper.GetBalance(inputs, tpUserNameString);
+
+                responseTime = DateTime.UtcNow;
 
                 if (balanceResult.ErrorCode != ErrorCode.Success)
                 {
@@ -937,7 +907,9 @@ namespace ThirdPartyService.Service.BLL
                         CurrencyId = cust.CurrencyId,
                         Balance = (cust.ExchangeRate > 0 && cust.ExchangeRate != 1)
                             ? data.Balance * cust.ExchangeRate
-                            : data.Balance
+                            : data.Balance,
+                        RequestTime = requestTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ResponseTIme = responseTime.ToString("yyyy-MM-dd HH:mm:ss")
                     });
                 }
 
@@ -965,6 +937,8 @@ namespace ThirdPartyService.Service.BLL
             out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
+            DateTime requestTime = DateTime.UtcNow;
+            DateTime responseTime = DateTime.UtcNow;
 
             try
             {
@@ -979,12 +953,16 @@ namespace ThirdPartyService.Service.BLL
                         }
                     }
 #endif
+                    requestTime = DateTime.UtcNow;
+
                     var balanceResult = GetBalance(new TpInfo
                     {
                         TpId = cust.TpId,
                         CustId = cust.CustId,
                         SiteId = cust.SiteId
                     });
+
+                    responseTime = DateTime.UtcNow;
 
                     if (balanceResult == null)
                     {
@@ -1015,7 +993,9 @@ namespace ThirdPartyService.Service.BLL
                         CustId = cust.CustId,
                         SiteId = cust.SiteId,
                         CurrencyId = cust.CurrencyId,
-                        Balance = balanceResult.Data.balance
+                        Balance = balanceResult.Data.balance,
+                        RequestTime = requestTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ResponseTIme = responseTime.ToString("yyyy-MM-dd HH:mm:ss")
                     });
                 }
 
@@ -1036,13 +1016,12 @@ namespace ThirdPartyService.Service.BLL
         /// <summary>
         /// 新增客戶餘額資料
         /// </summary>
-        /// <param name="tableDate">資料表日期</param>
         /// <param name="timeString">所屬其實間</param>
         /// <param name="balanceData">客戶餘額資料</param>
         /// <returns></returns>
-        private int InsertBalance(string tableDate, string timeString, TpCustBalanceModel balanceData)
+        private int InsertBalance(string timeString, TpCustBalanceModel balanceData)
         {
-            return _tpCustBalanceService.InsertBalance(tableDate, timeString, balanceData);
+            return _tpCustBalanceService.InsertBalance(timeString, balanceData);
         }
 
         #endregion
