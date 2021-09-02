@@ -47,7 +47,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, conn, trans);
-            if (result > 0)
+            if (result >= 0)
             {
                 trans.Commit();
             }
