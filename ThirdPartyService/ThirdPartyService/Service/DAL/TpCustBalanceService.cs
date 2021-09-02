@@ -38,12 +38,11 @@ namespace ThirdPartyService.Service.DAL
         /// <summary>
         /// 取得最近一次排程執行結束時間
         /// </summary>
-        /// <param name="tableDate">資料表日期</param>
         /// <returns></returns>
-        public string GetLastestRunTime()
+        public string GetLatestRunTime()
         {
             var parameter = new DynamicParameters();
-            return _reportDbClient.QueryFirst<string>("Service_TpCustBalanceHistory_GetLastestRunTime", parameter);
+            return _reportDbClient.QueryFirst<string>("Service_TpCustBalanceHistory_GetLatestRunTime", parameter);
         }
 
         /// <summary>

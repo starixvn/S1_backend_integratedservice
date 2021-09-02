@@ -28,7 +28,7 @@ namespace ThirdPartyService.Service.Worker
         private Timer _timer;
         private int execCount = 0;
 
-        private DateTime? lastestProcessTime = null;
+        private DateTime? latestProcessTime = null;
         private bool firstRun = false;
         private bool success = true;
         private int reRun = 0;
@@ -72,7 +72,7 @@ namespace ThirdPartyService.Service.Worker
                 {
                     DateTime currentTime = DateTime.UtcNow;
 
-                    if (VerifyParameter(currentTime, lastestProcessTime))
+                    if (VerifyParameter(currentTime))
                     {
                         success = true;
                         _logger.LogInformation($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
@@ -110,7 +110,7 @@ namespace ThirdPartyService.Service.Worker
                         _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
                         //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
-                        lastestProcessTime = DateTime.UtcNow;
+                        latestProcessTime = DateTime.UtcNow;
                         firstRun = false;
                         reRun++;
                     }
@@ -159,14 +159,14 @@ namespace ThirdPartyService.Service.Worker
         /// 驗證排程參數
         /// </summary>
         /// <returns>是否執行排程</returns>
-        private bool VerifyParameter(DateTime currentTime, DateTime? lastestProcessTime)
+        private bool VerifyParameter(DateTime currentTime)
         {
-            if (CheckFirstRun(currentTime, lastestProcessTime, out DateTime lastestRunTime))
+            if (CheckFirstRun(latestProcessTime, out DateTime latestRunTime))
             {
                 firstRun = true;
             }
 
-            this.lastestProcessTime = this.lastestProcessTime == null ? lastestRunTime : this.lastestProcessTime;
+            this.latestProcessTime = this.latestProcessTime == null ? latestRunTime : this.latestProcessTime;
 
             int period = _configuration.GetValue<int>("GetTpBalanceParam:Period");
             int retryTime = _configuration.GetValue<int>("GetTpBalanceParam:ReRunTime");
@@ -181,13 +181,13 @@ namespace ThirdPartyService.Service.Worker
                     //執行不成功時，最多重跑N次
                     if ((firstRun && currentTime.Minute >= 0 && currentTime.Minute <= 10)
                         || (!firstRun &&
-                            currentTime.Subtract(lastestRunTime).Hours >= intervalHour &&
+                            currentTime.Subtract(latestRunTime).Hours >= intervalHour &&
                             (currentTime.Minute >= 0 && currentTime.Minute <= 20))
                         || (reRun < retryTime && !success))
 
                     {
                         if (!firstRun &&
-                            currentTime.Subtract(lastestRunTime).Hours >= intervalHour &&
+                            currentTime.Subtract(latestRunTime).Hours >= intervalHour &&
                             (currentTime.Minute >= 0 && currentTime.Minute <= 20)) { reRun = 0; }
                         return true;
                     }
@@ -197,10 +197,10 @@ namespace ThirdPartyService.Service.Worker
                 case 2: //by day 每天幾點執行排程(整點)，最多重跑N次
                     int specifiedHour = _configuration.GetValue<int>("GetTpBalanceParam:SpecifiedHour");
                     if (firstRun ||
-                        (currentTime.Date != lastestRunTime.Date && currentTime.AddHours(8).Hour == specifiedHour) ||
+                        (currentTime.Date != latestRunTime.Date && currentTime.AddHours(8).Hour == specifiedHour) ||
                         (reRun <= retryTime && !success))
                     {
-                        if (currentTime.Date != lastestRunTime.Date
+                        if (currentTime.Date != latestRunTime.Date
                         && currentTime.AddHours(8).Hour == specifiedHour) { reRun = 0; }
                         return true;
                     }
@@ -251,19 +251,18 @@ namespace ThirdPartyService.Service.Worker
         /// 檢查是否為第一次執行排程
         /// </summary>
         /// <param name="currentTime">目前時間(UTC+0)</param>
-        /// <param name="lastestProcessTime">server紀錄最近一次執行時間</param>
-        /// <param name="lastestTime">實際上最後一次執行時間</param>
+        /// <param name="latestProcessTime">server紀錄最近一次執行時間</param>
+        /// <param name="resultTime">實際上最後一次執行時間</param>
         /// <returns></returns>
-        private bool CheckFirstRun(DateTime currentTime,
-            DateTime? lastestProcessTime,
+        private bool CheckFirstRun(DateTime? latestProcessTime,
             out DateTime resultTime)
         {
             var baseTime = DateTime.Now;
 
             //如果Worker最近一次排程執行時間參數被reset,要先去找到最近一次排程執行時間
-            if (lastestProcessTime == null)
+            if (latestProcessTime == null)
             {
-                var getResult = _thirdPartyBLL.GetLastestRunTime();
+                var getResult = _thirdPartyBLL.GetLatestRunTime();
                 if (getResult != null)
                 {
                     baseTime = Convert.ToDateTime(getResult);
@@ -276,7 +275,7 @@ namespace ThirdPartyService.Service.Worker
             }
             else
             {
-                baseTime = Convert.ToDateTime(lastestProcessTime);
+                baseTime = Convert.ToDateTime(latestProcessTime);
             }
 
             resultTime = new DateTime(baseTime.Year,

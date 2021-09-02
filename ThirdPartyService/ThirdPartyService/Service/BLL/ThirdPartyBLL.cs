@@ -788,9 +788,9 @@ namespace ThirdPartyService.Service.BLL
         /// </summary>
         /// <param name="tpId">第三方ID</param>
         /// <returns></returns>
-        public DateTime? GetLastestRunTime()
+        public DateTime? GetLatestRunTime()
         {
-            var result = GetLastestRunTimeFromTable();
+            var result = GetLatestRunTimeFromTable();
 
             if (string.IsNullOrWhiteSpace(result))
             {
@@ -809,9 +809,9 @@ namespace ThirdPartyService.Service.BLL
         /// </summary>
         /// <param name="tpId">資料表日期</param>
         /// <returns></returns>
-        private string GetLastestRunTimeFromTable()
+        private string GetLatestRunTimeFromTable()
         {
-            return _tpCustBalanceService.GetLastestRunTime();
+            return _tpCustBalanceService.GetLatestRunTime();
         }
 
         /// <summary>
