@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,10 +15,15 @@ namespace ThirdPartyWager.Service.Library
     public class Log2File
     {
         private readonly string LogFolder = "";
-        public Log2File(IHostEnvironment environment)
+        private readonly ILogger<Log2File> _logger;
+        
+        public Log2File(IServiceProvider provider)
         {
+            _logger = provider.GetRequiredService<ILogger<Log2File>>();
+            var environment = provider.GetRequiredService<IHostEnvironment>();
             LogFolder = $@"{environment.ContentRootPath}\Logs";
         }
+        
         public void Info(string InfoContent, string PrefixName)
         {
             var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now:yyyyMMdd}.log";
@@ -53,6 +61,7 @@ namespace ThirdPartyWager.Service.Library
 
         public void AddResponseLog(string logName, string guid, string url, dynamic param, dynamic response, string logType = "Error", dynamic header = null, dynamic extra = null)
         {
+            var tp = logName;
             logName = $"{logName}_Response";
             var resp = new
             {
@@ -66,6 +75,8 @@ namespace ThirdPartyWager.Service.Library
 
             if (string.Equals(logType, "Error", StringComparison.OrdinalIgnoreCase))
             {
+                LogContext.PushProperty("Tp", tp);
+                _logger.LogError(JsonConvert.SerializeObject(resp));
                 Error(JsonConvert.SerializeObject(resp), logName);
             }
             else
@@ -76,6 +87,7 @@ namespace ThirdPartyWager.Service.Library
 
         public void AddResultLog(string logName, string guid, string message, string response, string logType = "Error", string exception = null)
         {
+            var tp = logName;
             logName = $"{logName}_Result";
             var res = new
             {
@@ -87,6 +99,8 @@ namespace ThirdPartyWager.Service.Library
 
             if (string.Equals(logType, "Error", StringComparison.OrdinalIgnoreCase))
             {
+                LogContext.PushProperty("Tp", tp);
+                _logger.LogError(JsonConvert.SerializeObject(res));
                 Error(JsonConvert.SerializeObject(res), logName);
             }
             else

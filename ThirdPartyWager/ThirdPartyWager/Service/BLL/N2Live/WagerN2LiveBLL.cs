@@ -57,7 +57,6 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     // 506是有牌局未完成结算，startdate enddate这段时间的牌局结算完成就能返回
                     msg = "THIRD_PARTY_ERROR";
-                    logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
                     log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
                     return false;
                 }
@@ -107,7 +106,6 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {dealItem.id} )";
-                            logger.LogError(ex, $"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dealItem)}, EXCEPTION: {ex.Message}");
                             log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dealItem), "Error", ex.Message);
                             return false;
                         }
@@ -121,7 +119,6 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                logger.LogError(ex, $"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
                 log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
                 return false;
             }

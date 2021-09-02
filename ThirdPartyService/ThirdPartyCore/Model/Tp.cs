@@ -154,6 +154,11 @@ namespace ThirdPartyCore.Model
         public int CurrencyId { get; set; }
 
         public decimal Balance { get; set; }
+
+        public string RequestTime { get; set; }
+
+        public string ResponseTIme { get; set; }
+
         //public decimal bonus { get; set; }
         //public decimal outstanding { get; set; }
     }

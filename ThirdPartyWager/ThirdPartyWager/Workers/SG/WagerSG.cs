@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.SG;
         private int tpType = 1;
         private int quick = 0;
+        private readonly int timeZone = 8;
         private string logName = Tp.SG.ToString();
 
         public WagerSG(
@@ -68,10 +69,13 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddSeconds(-1);
                     last = iRangMins - 1;
                 }
-
                 if (timerTime < DateTime.Now)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyyMMdd'T'HHmmss", timerTime);
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMdd'T'HHmmss", timerTime);
+                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    //log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                    //if (time.endUnix < cvTime)
+                    //{
                     bool result = await wagerSGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result)
                     {

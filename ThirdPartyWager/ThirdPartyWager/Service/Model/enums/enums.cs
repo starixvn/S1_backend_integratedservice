@@ -35,12 +35,15 @@ namespace ThirdPartyWager.Service.Model.enums
         NineW = 31,
         TCG = 33,
         MG = 34,
+        MP = 35,
     }
 
     public enum GameType
     {
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
-        One789_LiveCasino = 37
+        One789_LiveCasino = 37,
+        MP_Poker = 60,
+        MP_Poker_None = 61, // without revenue games
     }
 }

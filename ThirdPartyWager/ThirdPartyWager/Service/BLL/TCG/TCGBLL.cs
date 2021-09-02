@@ -50,7 +50,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "TCG GetWagersAsync Exception.");
+                _logger.LogError(ex, $"TCG GetWagersAsync Exception. batchTime:{batchTime} | currency:{currency}");
                 return false;
             }
 

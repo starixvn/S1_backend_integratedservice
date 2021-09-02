@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.OneGaming;
         private int tpType = 2;
         private int iDays = 2;
+        private readonly int timeZone = 8;
         private string logName = Tp.OneGaming.ToString();
 
         public WagerRedoOneGaming(
@@ -124,7 +125,6 @@ namespace ThirdPartyWager.Workers
             var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
 
             DateTime timerTime;
-            int last;
             if (dataTpTimer == null)
             {
                 timerTime = DateTime.Now.AddDays(-7);
@@ -134,9 +134,11 @@ namespace ThirdPartyWager.Workers
                 timerTime = dataTpTimer.StartTime.AddSeconds(1);
             }
 
-            if (timerTime < DateTime.Now.AddDays(iDays * -1))
+            var time = dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyyMMddHHmmss", timerTime);
+            var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+            log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+            if (time.endUnix < cvTime)
             {
-                var time = dateTimeHelper.GetTimeByDay(iRangMins, 8, "yyyyMMddHHmmss", timerTime);
                 bool result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                 if (result)
                 {

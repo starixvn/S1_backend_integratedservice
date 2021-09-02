@@ -87,12 +87,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -150,12 +155,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -213,12 +223,18 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -276,12 +292,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -339,12 +360,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -402,12 +428,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -466,12 +497,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime, gmtMinute);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime, gmtMinute);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
@@ -529,12 +565,17 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime;
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                //TimeSpan ts = DateTime.Now - timerTime;
+                //int diffMin = (int)ts.TotalMinutes;
 
-                if (timerTime < DateTime.Now && diffMin > beyond)
+                //if (timerTime < DateTime.Now && diffMin > beyond)
+                //{
+                var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(gmt, 0, 0)).ToUnixTimeSeconds();
+                var diffMin = (cvTime - time.startUnix) / 60;
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, gmt, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
