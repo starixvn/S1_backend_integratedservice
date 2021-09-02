@@ -79,7 +79,6 @@ namespace ThirdPartyService.Service.Worker
 
                         //_log2File.Info($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
-                        CreateTable(currentTime);
 
                         var tpIdList = _configuration.GetSection("GetTpBalanceParam:TpId").Get<IEnumerable<int>>();
                         var siteList = _serverInfoBLL.GetServerInfoList();
@@ -91,15 +90,14 @@ namespace ThirdPartyService.Service.Worker
 
                         foreach (var item in tpIdSiteIdList)
                         {
-                            if (!_thirdPartyBLL.GetBalance(item.TpId, item.SiteId, out var data))
+                            if (!_thirdPartyBLL.GetBalance(firstRun,item.TpId, item.SiteId,out var data))
                             {
                                 failList.Add(item);
                                 success = false;
                             }
                             else
                             {
-                                _thirdPartyBLL.InsertBalance(currentTime.ToString("yyyyMMdd"),
-                                                             currentTime.ToString("yyyy-MM-dd HH:00:00"),
+                                _thirdPartyBLL.InsertBalance(currentTime.ToString("yyyy-MM-dd HH:00:00"),
                                                              data);
                             }
                         }
@@ -198,8 +196,9 @@ namespace ThirdPartyService.Service.Worker
 
                 case 2: //by day 每天幾點執行排程(整點)，最多重跑N次
                     int specifiedHour = _configuration.GetValue<int>("GetTpBalanceParam:SpecifiedHour");
-                    if ((currentTime.Date != lastestRunTime.Date
-                        && currentTime.AddHours(8).Hour == specifiedHour) || (reRun <= retryTime && !success))
+                    if (firstRun ||
+                        (currentTime.Date != lastestRunTime.Date && currentTime.AddHours(8).Hour == specifiedHour) ||
+                        (reRun <= retryTime && !success))
                     {
                         if (currentTime.Date != lastestRunTime.Date
                         && currentTime.AddHours(8).Hour == specifiedHour) { reRun = 0; }
@@ -264,7 +263,7 @@ namespace ThirdPartyService.Service.Worker
             //如果Worker最近一次排程執行時間參數被reset,要先去找到最近一次排程執行時間
             if (lastestProcessTime == null)
             {
-                var getResult = _thirdPartyBLL.GetLastestRunTime(currentTime.ToString("yyyyMMdd"));
+                var getResult = _thirdPartyBLL.GetLastestRunTime();
                 if (getResult != null)
                 {
                     baseTime = Convert.ToDateTime(getResult);
@@ -288,26 +287,7 @@ namespace ThirdPartyService.Service.Worker
 
             return false; //already run.
         }
-
-        /// <summary>
-        /// 新增資料表
-        /// </summary>
-        /// <param name="currentTime">目前時間</param>
-        private void CreateTable(DateTime currentTime)
-        {
-            if (!_thirdPartyBLL.CheckTpCustBalanceCourseTable(currentTime.ToString("yyyyMMdd")))
-            {
-                _thirdPartyBLL.CreateTpCustBalanceCourseTable(currentTime.ToString("yyyyMMdd"));
-
-                _logger.LogInformation($"GetBalanceWorker-Create table "
-                                       + $"TpCustBalanceCourse{currentTime.ToString("yyyyMMdd")} "
-                                       + $"At {DateTime.UtcNow.AddHours(8)}");
-
-                //_log2File.Info($"GetBalanceWorker-Create table "
-                //                      + $"TpCustBalanceCourse{currentTime.ToString("yyyyMMdd")} "
-                //                      + $"At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-            }
-        }
+        
 
         #endregion
     }
