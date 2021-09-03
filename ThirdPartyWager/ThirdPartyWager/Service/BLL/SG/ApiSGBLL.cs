@@ -74,10 +74,6 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (HttpRequestException HREx)
             {
-                LogContext.PushProperty("Tp", logName);
-                logger.LogError($"URL {url}");
-                logger.LogError($"REQUEST: {param}");
-                logger.LogError($"HEADER: {request.Headers}");
                 log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers, HREx.Message);
                 return null;
             }

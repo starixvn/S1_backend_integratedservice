@@ -20,11 +20,12 @@ namespace ThirdPartyWager.Workers
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
         private Timer timer;
-        private int intervalMins = 2;
+        //private int intervalMins = 2;
         private int iRangMins = 20;
         private int tpId = (int)Tp.SG;
         private int tpType = 1;
         private int quick = 0;
+        private readonly int timeZone = 8;
         private string logName = Tp.SG.ToString();
 
         public WagerSG(
@@ -65,15 +66,18 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime;
+                    timerTime = dataTpTimer.StartTime.AddSeconds(-1);
                     last = iRangMins - 1;
                 }
-
                 if (timerTime < DateTime.Now)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyyMMdd'T'HHmmss", timerTime);
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMdd'T'HHmmss", timerTime);
+                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    //log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                    //if (time.endUnix < cvTime)
+                    //{
                     bool result = await wagerSGBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
@@ -95,12 +99,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(35);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

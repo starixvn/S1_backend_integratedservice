@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ThirdPartyWager.Extensions;
 
 namespace ThirdPartyWager.Service.Model
@@ -28,7 +29,7 @@ namespace ThirdPartyWager.Service.Model
     public class PageInfo
     {
         public int currentPage { get; set; }
-        public int pageSize { get; set; }
+        public int pageSize { get; set; } = 1000;
         public int total { get; set; }
     }
 
@@ -55,7 +56,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal winAmount { get; set; }
         public decimal netPNL { get; set; }
         public string betStatus { get; set; } = "";
-        public string settlementTime { get; set; } = "";
+        public DateTime settlementTime { get; set; }
         public decimal actualBetAmount { get; set; }
         public decimal exceedWinAmount { get; set; }
         public string details { get; set; } = "";
@@ -66,6 +67,13 @@ namespace ThirdPartyWager.Service.Model
         public string productType { get; set; } = "";
         public string single { get; set; } = "";
         public int detailStatusId { get; set; }
+        public long SettleTimeUnix
+        {
+            get
+            {
+                return new DateTimeOffset(settlementTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
     }
 
 
@@ -98,12 +106,20 @@ namespace ThirdPartyWager.Service.Model
         public decimal planWinAmount { get; set; }
         public decimal rebateAmount { get; set; }
         public int result { get; set; }
-        public string drawTime { get; set; } = "";
+        public DateTime drawTime { get; set; }
         public decimal exceedWinAmount { get; set; }
         public string winningNumber { get; set; } = "";
         public string clientIp { get; set; } = "";
         public string single { get; set; } = "";
         public decimal playBonus { get; set; }
+
+        public long SettleTimeUnix
+        {
+            get
+            {
+                return new DateTimeOffset(drawTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
     }
 
 

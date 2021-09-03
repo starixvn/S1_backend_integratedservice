@@ -57,7 +57,6 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(getWagerSummary)}");
                     log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(getWagerSummary));
                     return false;
                 }
@@ -109,7 +108,6 @@ namespace ThirdPartyWager.Service.BLL
                         if (errorCode != 0)
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataWager)}");
                             log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
                             return false;
                         }
@@ -134,7 +132,6 @@ namespace ThirdPartyWager.Service.BLL
                             catch (Exception ex)
                             {
                                 msg = $"INSERT_WAGER(WAGERID: {bet.billNo.ToString()} )";
-                                logger.LogError(ex, $"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(bet)}, EXCEPTION: {ex.Message}");
                                 log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
                                 return false;
                                 //continue;
@@ -144,15 +141,14 @@ namespace ThirdPartyWager.Service.BLL
                     }
                 }
 
-                msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
-                return true;
+                msg = "FINISH_REDO";
+                log2File.AddResultLog(logName, guid, msg, null, "Error");
+                return false;
 
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                logger.LogError(ex, $"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
                 log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
                 return false;
             }

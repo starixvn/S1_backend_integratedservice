@@ -73,8 +73,9 @@ namespace ThirdParty.One789
                 var json = JsonConvert.DeserializeObject<ApiResponse>(result);
                 if (!string.IsNullOrEmpty(json.Token))
                 {
+                    string App = (appType == AppType.Native) ? "&app=1" : "";
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{GameUrl}?token={HttpUtility.UrlEncode(json.Token)}&production={gameId}";
+                    oApiResult.Message = $"{GameUrl}?token={HttpUtility.UrlEncode(json.Token)}&production={gameId}{App}";
                 }
                 else
                 {

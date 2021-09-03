@@ -50,6 +50,17 @@ namespace ThirdParty.PT
             public string password { get; set; }
         }
 
+        private class ChangePasswordResponse
+        {
+            public ChangePasswordResult result { get; set; }
+        }
+
+        private class ChangePasswordResult
+        {
+            public string playername { get; set; }
+            public string password { get; set; }
+        }
+
         private class BalanceResponse
         {
             public BalanceResult result { get; set; }
@@ -379,6 +390,12 @@ namespace ThirdParty.PT
                 }
             }
 
+            if (fun.Equals("0", StringComparison.OrdinalIgnoreCase))
+            {
+                // change password (error:2) - will also clean lock minutes
+                ChangePassword(tpCustInfo, inputs);
+            }
+
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = JsonConvert.SerializeObject(new
@@ -510,5 +527,66 @@ namespace ThirdParty.PT
 
             return apiResult;
         }
+
+        private ApiResult ChangePassword(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            string currency = tpCustInfo.TpCurrencyId;
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
+            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
+            ApiUrl = $"{ApiUrl}/player/changepassword";
+
+            Dictionary<string, string> header = new Dictionary<string, string>();
+            header.Add("X_ENTITY_KEY", EntityKey);
+
+            Dictionary<string, string> certificate = new Dictionary<string, string>();
+            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("password", Pass);
+
+            var ChangePassword = new
+            {
+                playername = tpCustInfo.TpUserName,
+                password = tpCustInfo.TpPwd,
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(ChangePassword));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            var result = HttpPostWithX509(
+                ApiUrl,
+                sParam,
+                "application/x-www-form-urlencoded",
+                header,
+                certificate
+            );
+
+            ApiResult oApiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                if (error.error != null)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = error.error ?? "";
+                    oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
+                }
+                else
+                {
+                    var json = JsonConvert.DeserializeObject<ChangePasswordResponse>(result);
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = json.result.password;
+                    oApiResult.RawMessage = "";
+                    oApiResult.RawErrorCode = "";
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+            }
+            return oApiResult;
+        }
+
     }
 }

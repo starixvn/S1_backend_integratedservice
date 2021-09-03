@@ -72,9 +72,9 @@ namespace ThirdPartyWager
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
             services.AddSingleton<SabaOddsService>();
-
             services.AddSingleton<WagerKMService>();
-            
+            services.AddSingleton<WagerMPService>();
+
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
@@ -139,11 +139,12 @@ namespace ThirdPartyWager
             services.AddSingleton<NineWBLL>();
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
-
             //KM
             services.AddSingleton<ApiKMBLL>();
             services.AddSingleton<KMBLL>();
-            
+            // MP
+            services.AddSingleton<WagerMPBLL>();
+            services.AddSingleton<ApiMPBLL>();
             //MG
             services.AddTransient<IApiMGBLL, ApiMGBLL>();
             services.AddTransient<IApiSWBLL, ApiSWBLL>();
@@ -181,6 +182,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerMG>();
             services.AddHostedService<WagerNineW>();
             services.AddHostedService<WagerTCG>();
+            services.AddHostedService<WagerMP>();
+            services.AddHostedService<WagerRedoMP>();
 
             /*
                 services.AddHostedService<CheckTicketAG>();

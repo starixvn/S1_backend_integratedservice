@@ -89,7 +89,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         TCG_VN_Lottery =55,
         JILI_Fish = 56,
         MG_RNG = 57,
-        MG_LiveCasino = 58
+        MG_LiveCasino = 58,
+        MP_Poker = 60,
+        MP_Poker_None = 61, // without revenue games
     }
     public enum Tp
     {
@@ -126,7 +128,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         NineW = 31,
         JILI = 32,
         TCG = 33,
-        MG = 34
+        MG = 34,
+        MP = 35
     }
     public enum TransferType : int
     {

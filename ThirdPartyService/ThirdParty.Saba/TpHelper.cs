@@ -23,13 +23,15 @@ namespace ThirdParty.Saba
             {"50", "indiancricket" },
             {"161","numbergame" },
             {"164","164" },
+            {"171","vgaming" },
             {"180","180" },
             {"190","190" },
             {"192","192" },
             {"193","193" },
             {"194","194" },
             {"197","197" },
-            {"200","sabaclub" },
+            {"200","vgaming" },
+            //{"200","sabaclub" },
             {"202","keno" },
             {"208","casino" },
             {"220","KenoLottery" },
@@ -350,7 +352,7 @@ namespace ThirdParty.Saba
                         {
                             types = "CL";
                         }
-                        else if (SportType == "43" || SportType == "200" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
+                        else if (CheckSportType(SportType))
                         {
                             sportTypeDic.TryGetValue(SportType, out types);
                         }
@@ -379,7 +381,7 @@ namespace ThirdParty.Saba
                             sportTypeDic.TryGetValue(gameId, out act);
                         }
 
-                        if (SportType == "43" || SportType == "200" || SportType == "202" || SportType == "220" || SportType == "222" || SportType == "223" || SportType == "245")
+                        if (CheckSportType(SportType))
                         {
                             if (!string.IsNullOrEmpty(betType))
                             {
@@ -431,6 +433,12 @@ namespace ThirdParty.Saba
             }
 
             return oApiResult;
+        }
+
+        private static bool CheckSportType(string sportType)
+        {
+            return sportType == "43" || sportType == "171" || sportType == "200" || sportType == "202" ||
+                   sportType == "220" || sportType == "222" || sportType == "223" || sportType == "245";
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)

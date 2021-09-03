@@ -161,9 +161,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
         {
-            return settledService.Get_TpWagerSA_Settle(GameID, Username, out stake, out validBet, out winLostAmount, out settleTime);
+            return settledService.Get_TpWagerSA_Settle(GameID, Username, out stake, out validBet, out winLostAmount, out settleTime, out transTime);
         }
         public int SetSettleFlag_TpWagerSA(string GameID, string Username)
         {
@@ -724,6 +724,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public SettleData_SG GetSettle_TpWagerRng_SG(string TransId)
+        {
+            return settledService.GetSettle_TpWagerRng_SG(TransId);
+        }
+
+        public int SetSettleFlag_TpWagerRng_SG(string TransId)
+        {
+            return settledService.SetSettleFlag_TpWagerRng_SG(TransId);
+        }
+
         #endregion
 
         #region Allbet
@@ -732,9 +742,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledListLC_Allbet();
         }
-        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
+        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
         {
-            var result = settledService.Get_TpWagerAllbet_Settle(betNum, out stake, out validBet, out winLostAmount, out settleTime);
+            var result = settledService.Get_TpWagerAllbet_Settle(betNum, out stake, out validBet, out winLostAmount, out settleTime, out transTime);
             return result;
         }
         public int SetSettleFlag_Allbet(long betNum)

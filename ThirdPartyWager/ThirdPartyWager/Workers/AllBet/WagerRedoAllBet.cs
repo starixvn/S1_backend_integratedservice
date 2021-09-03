@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private int tpId = (int)Tp.Allbet;
         private int tpType = 2;
         private int quick = 0;
+        private readonly int timeZone = 8;
         private string logName = Tp.Allbet.ToString();
 
         public WagerRedoAllBet(
@@ -66,11 +67,14 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     last = intervalMins;
                 }
-                if (timerTime < DateTime.Now)
+
+                var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByHour(last, 8, "yyyy-MM-dd HH:mm:ss", timerTime);
                     bool result = await wagerRedoAllBetBLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix);
-                    if (result == true)
+                    if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }

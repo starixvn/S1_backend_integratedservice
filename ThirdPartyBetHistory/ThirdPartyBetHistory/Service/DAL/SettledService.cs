@@ -12,24 +12,20 @@ namespace ThirdPartyBetHistory.Service.DAL
 {
     public class SettledService
     {
-        private readonly IConfiguration configuration;
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
         private readonly string _connectionString;
 
         public SettledService(IConfiguration configuration, ILogger<MySqlClient> logger)
         {
-            this.configuration = configuration;
             _connectionString = configuration.GetConnectionString("ConnectionString");
             _mainDbClient = new MySqlClient(_connectionString, logger);
-            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), logger);
         }
         public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
         {
             bonusId = 0;
             var p = new DynamicParameters(new { TpId = tpId, CustId = custId });
             p.Add("BonusId", direction: ParameterDirection.Output);
-            var result = _reportDbClient.Execute($"Service_BonusIdByTpId_Get", p);
+            var result = _mainDbClient.Execute($"Service_BonusIdByTpId_Get", p);
             if (result > 0)
             {
                 bonusId = p.Get<int?>("BonusId") ?? 0;
@@ -40,7 +36,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
-            return _reportDbClient.Query<BonusFulfill>("Service_BonusFulfill_Get");
+            return _mainDbClient.Query<BonusFulfill>("Service_BonusFulfill_Get");
         }
         public bool BonusSettle(BonusFulfill bonusFulfill)
         {
@@ -51,7 +47,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, conn, trans);
-            if (result > 0)
+            if (result >= 0)
             {
                 trans.Commit();
             }

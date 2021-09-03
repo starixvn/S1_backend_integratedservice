@@ -186,30 +186,48 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.Stake;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-                            List<string> transferIdList = JsonConvert.DeserializeObject<List<string>>(unsettled.transferIdList);
-                            transferIdList.Add(unsettled.referenceId);
-
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            var wager = settledBLL.GetSettle_TpWagerRng_SG(unsettled.referenceId);
+                            if (wager != null)
                             {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.referenceId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid,
-                                //BonusId = bonusId
-                            };
 
-                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_SG((int)gameType, JsonConvert.SerializeObject(transferIdList));
+                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                                if (tpCurrency.ExchangeRate > 1)
+                                {
+                                    wager.Stake *= tpCurrency.ExchangeRate;
+                                    wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                                    wager.ProgressiveBet *= tpCurrency.ExchangeRate;
+                                    wager.ProgressiveWin *= tpCurrency.ExchangeRate;
+                                }
+
+                                if (wager.Stake == unsettled.Stake && Math.Round(wager.WinLostAmount, 2) == unsettled.WinLostAmount)
+                                {
+                                    decimal stake = unsettled.Stake;
+                                    decimal validBet = unsettled.Stake;
+                                    decimal winLostAmount = unsettled.WinLostAmount;
+                                    List<string> transferIdList = JsonConvert.DeserializeObject<List<string>>(unsettled.transferIdList);
+                                    transferIdList.Add(unsettled.referenceId);
+
+                                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                                    {
+                                        TpId = thisTp,
+                                        Stake = stake,
+                                        ValidBet = validBet,
+                                        WinlostAmount = winLostAmount,
+                                        TransId = unsettled.referenceId,
+                                        GameType = gameType,
+                                        TpUserName = unsettled.Account,
+                                        SettledTime = unsettled.SettleTime,
+                                        SettlementType = SettlementType.SettledForValid,
+                                        ProgressiveBet = wager.ProgressiveBet,
+                                        ProgressiveWin = wager.ProgressiveWin,
+                                    };
+
+                                    settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                                    settledBLL.SetSettleFlag_SG((int)gameType, JsonConvert.SerializeObject(transferIdList));
+                                    settledBLL.SetSettleFlag_TpWagerRng_SG(unsettled.referenceId);
+                                }
+                            }
                         }
                         catch (Exception ex1)
                         {
@@ -890,7 +908,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var category = TpCategory.Slots;
             var logName = "Settle_MG_Rng";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
-            
+
             try
             {
                 var unsettledList = settledBLL.GetUnsettledList_MG("Service_BettransRng_MG_Unsettle_Get");

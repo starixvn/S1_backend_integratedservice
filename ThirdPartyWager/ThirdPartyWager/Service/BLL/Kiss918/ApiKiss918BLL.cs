@@ -107,10 +107,6 @@ namespace ThirdPartyWager.Service.BLL
             else
             {
                 var result = response.Content.ReadAsStringAsync().Result;
-                LogContext.PushProperty("Tp", logName);
-                logger.LogError($"URL {url}");
-                logger.LogError($"REQUEST: {sParam}");
-                logger.LogError($"RESPONSE: {result}");
                 log2File.AddResponseLog(logName, guid, url, sParam, response, "Error");
                 return result;
                 //return null;
