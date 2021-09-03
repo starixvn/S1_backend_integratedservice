@@ -1499,12 +1499,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public IEnumerable<SettleData> GetUnsettledList_WM()
         {
             return settledService.GetUnsettledList_WM();
         }
 
-        public SettleData_WM GetSettle_TpWagerWM(string TransId)
+        public SettleData GetSettle_TpWagerWM(string TransId)
         {
             return settledService.GetSettle_TpWagerWM(TransId);
         }
