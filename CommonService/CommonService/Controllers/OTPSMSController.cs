@@ -37,7 +37,7 @@ namespace CommonService.Controllers
 
             var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
 
-            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo) && !custInfo.PhoneVerified)
+            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
             {
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
@@ -64,10 +64,6 @@ namespace CommonService.Controllers
             {
                 apiResult.ErrorCode = ErrorCode.InvalidParameter;
             }
-            else if (custInfo.PhoneVerified)
-            {
-                apiResult.ErrorCode = ErrorCode.Verified;
-            }
             else
             {
                 apiResult.ErrorCode = ErrorCode.UserNotExist;
@@ -80,45 +76,41 @@ namespace CommonService.Controllers
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
             ApiResult apiResult = new ApiResult();
+
             try
             {
                 var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
-                if (custInfo.PhoneVerified)
+                
+                log2File.Info($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_Verify");
+
+                if (verifyOTPReq.InputOTP.Length >= 10)
                 {
-                    apiResult.ErrorCode = 0;
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    return apiResult;
+                }
+
+                var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
+
+                if (GetOTPVerifyResult.ErrorCode == 0)
+                {
+                    apiResult = sOTPSMSBLL.VerifyOPT(verifyOTPReq);
+                    //if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
+                    //{
+                    //    apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
+                    //}
+                    //else
+                    //{
+                    //    var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(custInfo.SiteName, GetOTPVerifyResult.Data.Request_id, verifyOTPReq.InputOTP);
+                    //    apiResult.ErrorCode = resultResp.ErrorCode;
+                    //    apiResult.Message = resultResp.Message;
+                    //    apiResult.RawMessage = resultResp.RawMessage;
+                    //}
                 }
                 else
                 {
-                    log2File.Info($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_Verify");
-
-                    if (verifyOTPReq.InputOTP.Length >= 10)
-                    {
-                        apiResult.ErrorCode = ErrorCode.Fail;
-                        return apiResult;
-                    }
-
-                    var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
-
-                    if (GetOTPVerifyResult.ErrorCode == 0)
-                    {
-                        apiResult = sOTPSMSBLL.VerifyOPT(verifyOTPReq);
-                        //if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
-                        //{
-                        //    apiResult = sOTPSMSBLL.VerifyOPTAsync(verifyOTPReq);
-                        //}
-                        //else
-                        //{
-                        //    var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(custInfo.SiteName, GetOTPVerifyResult.Data.Request_id, verifyOTPReq.InputOTP);
-                        //    apiResult.ErrorCode = resultResp.ErrorCode;
-                        //    apiResult.Message = resultResp.Message;
-                        //    apiResult.RawMessage = resultResp.RawMessage;
-                        //}
-                    }
-                    else
-                    {
-                        apiResult.ErrorCode = GetOTPVerifyResult.ErrorCode;
-                    }
+                    apiResult.ErrorCode = GetOTPVerifyResult.ErrorCode;
                 }
+                
             }
             catch (Exception ex)
             {
@@ -149,6 +141,35 @@ namespace CommonService.Controllers
             else
             {
                 apiResult.ErrorCode = ErrorCode.UserNotExist;
+            }
+            return apiResult;
+        }
+        [HttpPost]
+        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(Req req)
+        {
+            var apiResult = new ApiResult<SendOTPSMSResult>();
+            try
+            {
+                var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
+
+                if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
+                {
+                    apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
+                    apiResult.ErrorCode = ErrorCode.Success;
+                }
+                else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
+                {
+                    apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                }
+                else
+                {
+                    apiResult.ErrorCode = ErrorCode.UserNotExist;
+                }
+            }
+            catch (Exception ex)
+            {
+                apiResult.RawMessage = ex.ToString();
+                log2File.Error(ex.ToString(), "GetOTPVerifyInfo", ex);
             }
             return apiResult;
         }
