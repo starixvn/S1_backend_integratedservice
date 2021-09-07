@@ -206,6 +206,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             {
                                 betRecordInfo.GameType = GameType.Saba_ChinaLottery;
                             }
+                            else if ((betDetial.sport_type ?? 0) == 69)
+                            {
+                                betRecordInfo.GameType = GameType.Saba_Bitcoin;
+                            }
                             else if ((betDetial.sport_type ?? 0) == 165)
                             {
                                 betRecordInfo.GameType = GameType.Saba_CardClub;
