@@ -395,11 +395,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         betRecordInfo.ValidBet = betDetial.discount_stake ?? 0;
                     }
 
-                    if ((betDetial.bet_type ?? 0) == 468 || (betDetial.bet_type ?? 0) == 469) /*Cause Hard to Win So Cal to Valid*/
+                    if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap || (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder) /*Cause Hard to Win So Cal to Valid*/
                     {
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                     }
-                    else if ((betDetial.odds_type ?? 0) == 1)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.MalayOdds)
                     {
                         if (betDetial.odds < 0 && isEBV)
                         {
@@ -415,7 +415,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == 2)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.ChinaOdds)
                     {
                         if (betDetial.odds < 0.7m)
                         {
@@ -426,7 +426,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == 3)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.DecimalOdds)
                     {
                         if (betDetial.odds < 1.7m)
                         {
@@ -437,7 +437,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == 4)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.IndoOdds)
                     {
                         if (betDetial.odds < 0 && isEBV)
                         {
@@ -453,7 +453,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == 5)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.AmericanOdds)
                     {
                         if (betDetial.odds < 0)
                         {
