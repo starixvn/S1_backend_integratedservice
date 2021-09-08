@@ -318,6 +318,7 @@ namespace ThirdParty.Saba
             var betType = inputs.GetValueOrDefault("bettype");
             if (sportType == "2001" || sportType == "2002" || sportType == "2003")
             {
+                sportType = "1";
                 menuType = menuTypeDic[sportType];
             }
 
