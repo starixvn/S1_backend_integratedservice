@@ -635,6 +635,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = GameType.WM_LiveCasino,
                                         TpUserName = wager.Account,
                                         SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 

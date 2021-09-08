@@ -112,7 +112,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.errorCode = 10304;
                 resp.errorMessage = "signature empty";
-                log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_signature");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_signature");
                 return resp;
             }
 
@@ -122,7 +122,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.errorCode = 10303;
                 resp.errorMessage = "signature error";
-                log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_signature");
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_signature");
                 return resp;
             }
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     callBalanceResp.errorCode = 10501;
                     callBalanceResp.errorMessage = "Invalid user Id";
-                    log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                     return callBalanceResp;
                 }
 
@@ -152,20 +152,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     callBalanceResp.errorCode = 10505;
                     callBalanceResp.errorMessage = "Account is Lock";
-                    log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                     return callBalanceResp;
                 }
 
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.user, gameType);
-
                 if (tpCustBalance != null)
                 {
                     callBalanceResp.errorCode = 0;
                     callBalanceResp.errorMessage = "";
                     callBalanceResp.result.money = tpCustBalance.Balance;
+                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                    return callBalanceResp;
                 }
 
-                log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                 return callBalanceResp;
             }
             else if (string.Equals(getReq.cmd, "PointInout", StringComparison.OrdinalIgnoreCase))
@@ -188,25 +189,37 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     case "1":
                         // 加點
-                        if (environment.IsDevelopment() && getPointInoutReq.money >= 100m)
+                        if (environment.IsDevelopment() && getPointInoutReq.money >= 30m)
                         {
-                            log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
-                        result = settledBLL.PayoutLC_WM(getPointInoutReq, out decimal tpAffterAmount);
-                        if (result > 0)
+                        try
                         {
-                            //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getPointInoutReq.user, gameType);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpAffterAmount;
+                            result = settledBLL.PayoutLC_WM(getPointInoutReq, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getPointInoutReq.user, gameType);
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpAffterAmount;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
+                            else if (result == -1)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user, gameType);
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpCustBalance.Balance;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
                         }
-                        else if (result == -1)
+                        catch (Exception ex)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user, gameType);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpCustBalance.Balance;
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            return pointInoutResp;
                         }
                         break;
                     case "2":
@@ -216,19 +229,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             pointInoutResp.errorCode = 10501;
                             pointInoutResp.errorMessage = "Invalid user Id";
-                            log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
                         if (tpCheck.Locked)
                         {
                             pointInoutResp.errorCode = 10505;
                             pointInoutResp.errorMessage = "Account is Lock";
-                            log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
                         try
                         {
-                            result = bettingBLL.PlaceBetLC_WM(getPointInoutReq, out tpAffterAmount);
+                            result = bettingBLL.PlaceBetLC_WM(getPointInoutReq, out decimal tpAffterAmount);
                             if (environment.IsDevelopment() && getPointInoutReq.money == -40m)
                             {
                                 System.Threading.Thread.Sleep(60000);
@@ -238,6 +251,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpAffterAmount;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
                             }
                             else if (result == -1)
                             {
@@ -245,41 +260,59 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpCustBalance.Balance;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
                             }
                             else if (tpAffterAmount < 0)
                             {
                                 pointInoutResp.errorCode = 10805;
                                 pointInoutResp.errorMessage = "Not Enough Balance";
+                                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
                             }
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex}", logName, ex);
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            return pointInoutResp;
                         }
                         break;
                     case "3":
                     case "4":
                     case "5":
-                        //  3:重對加點 4:重對扣點 5:重新派彩
-                        result = settledBLL.ResettleLC_WM(getPointInoutReq, out tpAffterAmount);
-                        if (result > 0)
+                        try
                         {
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpAffterAmount;
+                            //  3:重對加點 4:重對扣點 5:重新派彩
+                            result = settledBLL.ResettleLC_WM(getPointInoutReq, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpAffterAmount;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
+                            else if (result == -1)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user);
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpCustBalance.Balance;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
                         }
-                        else if (result == -1)
+                        catch (Exception ex)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpCustBalance.Balance;
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            return pointInoutResp;
                         }
                         break;
                     default:
                         break;
                 }
-                log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                 return pointInoutResp;
             }
             else if (string.Equals(getReq.cmd, "TimeoutBetReturn", StringComparison.OrdinalIgnoreCase))
@@ -302,51 +335,76 @@ namespace ThirdPartySeamlessWallet.Controllers
                     case "1":
                         if (environment.IsDevelopment() && getTimeoutBetReturnReq.money >= 100m)
                         {
-                            log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
-                        // 加點
-                        result = settledBLL.PayoutLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
-                        if (result > 0)
+                        try
                         {
-                            //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpAffterAmount;
+                            // 加點
+                            result = settledBLL.PayoutLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpAffterAmount;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
+                            else if (result == -1)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpCustBalance.Balance;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
                         }
-                        else if (result == -1)
+                        catch (Exception ex)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getTimeoutBetReturnReq.user, gameType);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpCustBalance.Balance;
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            return pointInoutResp;
                         }
                         break;
                     case "2":
-                        // 扣點
-                        result = settledBLL.CancelBetLC_WM(getTimeoutBetReturnReq, out tpAffterAmount);
-                        if (result > 0)
+                        try
                         {
-                            //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpAffterAmount;
+                            // 扣點
+                            result = settledBLL.CancelBetLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
+                            if (result > 0)
+                            {
+                                //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpAffterAmount;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
+                            else if (result == -1)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                                pointInoutResp.errorCode = 0;
+                                pointInoutResp.errorMessage = "";
+                                pointInoutResp.result.cash = tpCustBalance.Balance;
+                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                return pointInoutResp;
+                            }
                         }
-                        else if (result == -1)
+                        catch (Exception ex)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getTimeoutBetReturnReq.user, gameType);
-                            pointInoutResp.errorCode = 0;
-                            pointInoutResp.errorMessage = "";
-                            pointInoutResp.result.cash = tpCustBalance.Balance;
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            return pointInoutResp;
                         }
                         break;
                     default:
                         break;
                 }
 
-                log2File.Info($"{JsonConvert.SerializeObject(Content)}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                 return pointInoutResp;
             }
+
+            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             return resp;
         }
 

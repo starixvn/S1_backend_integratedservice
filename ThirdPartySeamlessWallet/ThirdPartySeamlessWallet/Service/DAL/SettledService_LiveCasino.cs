@@ -1836,16 +1836,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public IEnumerable<SettleData> GetUnsettledList_WM()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransLC_WM_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public SettleData_WM GetSettle_TpWagerWM(string TransId)
+        public SettleData GetSettle_TpWagerWM(string TransId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData_WM>("Service_TpWagerWM_Settle_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<SettleData>("Service_TpWagerWM_Settle_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerWM(string TransId)
