@@ -71,8 +71,8 @@ namespace CommonService.Service.BLL
             //if send SMS Success
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
             {
-                //apiResult = OTPVerifyinfoInsAsync(custId, OTPNum);
-                apiResult.ErrorCode = 0;
+                apiResult = OTPVerifyinfoInsAsync(custId, OTPNum);
+                //apiResult.ErrorCode = 0;
             }
             else
             {
