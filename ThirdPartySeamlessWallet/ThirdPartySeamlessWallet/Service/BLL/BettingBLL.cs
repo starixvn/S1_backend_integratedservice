@@ -232,6 +232,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+        
+        #region Sexy
 
         public int PlaceBetLC_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
         {
@@ -253,7 +255,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
-        
+
         public int PlaceBetLC_AWC_Sexy(BetLC_Sexy betLC_Sexy, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -279,6 +281,34 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int TipLC_AWC_Sexy(TipLC_Sexy tipLC_Sexy, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var userId = tipLC_Sexy.txns.ElementAt(0).userId;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+            foreach (var item in tipLC_Sexy.txns)
+            {
+                if (item.userId != userId)
+                {
+                    return -99;
+                }
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.tip *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = bettingService.TipLC_AWC_Sexy(tpCustInfo, tipLC_Sexy, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
 
         public int PlaceBetLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {

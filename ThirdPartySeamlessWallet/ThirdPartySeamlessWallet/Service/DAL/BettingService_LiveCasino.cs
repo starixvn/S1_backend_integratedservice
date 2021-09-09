@@ -309,6 +309,80 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int TipLC_AWC_Sexy(TpCustInfo tpCustInfo, TipLC_Sexy tipLC_Sexy, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+
+            foreach (var txn in tipLC_Sexy.txns)
+            {
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = txn.platformTxId,
+                    userId = txn.userId,
+                    currency = txn.currency,
+                    platform = txn.platform,
+                    gameType = txn.gameType,
+                    gameCode = txn.gameCode,
+                    gameName = txn.gameName,
+                    betType = "",
+                    roundId = "",
+                    tip = txn.tip,
+                    txUnix = txn.txUnix,
+                    tipInfo = JsonConvert.SerializeObject(txn.tipInfo),
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Tip,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                try
+                {
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Tip_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            Math.Abs(txn.tip) * -1,
+                            (int)Tp.Sexy,
+                            TransType.Tip,
+                            $"Tip: {Math.Abs(txn.tip):#,##0.##}",
+                            txn.platformTxId,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    if (mySqlEx.Number == 1062)
+                    {
+                        result = -1;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+            return result;
+        }
+
         #endregion
 
         #region EBet
@@ -680,17 +754,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
                 {
                     result = PlaceBetV2(
-                        tpCustInfo, 
-                        bettingDataRNG_MG.amount, 
-                        (int)Tp.MG, 
-                        bettingDataRNG_MG.betId, 
-                        gameType, 
-                        bettingDataRNG_MG.txnId, 
-                        null, 
-                        TpCategory.LiveCasino, 
-                        out afterAmount, 
-                        ref bonusId, 
-                        conn, 
+                        tpCustInfo,
+                        bettingDataRNG_MG.amount,
+                        (int)Tp.MG,
+                        bettingDataRNG_MG.betId,
+                        gameType,
+                        bettingDataRNG_MG.txnId,
+                        null,
+                        TpCategory.LiveCasino,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
                         trans);
                 }
 

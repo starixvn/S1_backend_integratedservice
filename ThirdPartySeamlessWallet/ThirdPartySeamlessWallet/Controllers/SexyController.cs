@@ -558,7 +558,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
@@ -593,7 +593,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
@@ -615,7 +615,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
@@ -637,7 +637,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
@@ -659,7 +659,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
@@ -681,7 +681,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
@@ -716,11 +716,113 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "9999";
                     resp.desc = "fail";
-                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
                     return resp;
                 }
             }
-            
+            else if (string.Equals(reqAction.action, "tip", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    TipLC_Sexy tip = JsonConvert.DeserializeObject<TipLC_Sexy>(req.message);
+
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tip.txns.ElementAt(0).userId);
+                    if (tpCheck == null)
+                    {
+                        resp.status = "1012";
+                        resp.desc = "Invalid user Id";
+                        log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+
+                    if (tpCheck.Locked)
+                    {
+                        resp.status = "1013";
+                        resp.desc = "Account is Lock";
+                        log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+
+                    if (environment.IsDevelopment() && tip.txns.ElementAt(0).tip == 40m)
+                    {
+                        System.Threading.Thread.Sleep(60000);
+                        resp.desc = "fail (test cancel tip)";
+                        log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+
+                    int result = bettingBLL.TipLC_AWC_Sexy(tip, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        GetBetResp getBetResp = new GetBetResp();
+                        getBetResp.status = "0000";
+                        getBetResp.balance = tpAffterAmount;
+                        getBetResp.balanceTs = getCurrentGameTime();
+                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                        return getBetResp;
+                    }
+                    else if (result == -1)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tip.txns.ElementAt(0).userId, gameType);
+                        GetBetResp getBetResp = new GetBetResp();
+                        getBetResp.status = "0000";
+                        getBetResp.balance = tpCustBalance.Balance;
+                        getBetResp.balanceTs = getCurrentGameTime();
+                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                        return getBetResp;
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        resp.status = "1018";
+                        resp.desc = "Not Enough Balance";
+                        log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    resp.status = "9999";
+                    resp.desc = "fail";
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
+                    return resp;
+                }
+            }
+            else if (string.Equals(reqAction.action, "cancelTip", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    CancelTipLC_Sexy cancelTip = JsonConvert.DeserializeObject<CancelTipLC_Sexy>(req.message);
+
+                    int result = settledBLL.CancelTipLC_AWC_Sexy(cancelTip, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        GetBetResp getBetResp = new GetBetResp();
+                        getBetResp.status = "0000";
+                        getBetResp.balance = tpAffterAmount;
+                        getBetResp.balanceTs = getCurrentGameTime();
+                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                        return getBetResp;
+                    }
+                    else if (result == -1)
+                    {
+                        GetBetResp getBetResp = new GetBetResp();
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, cancelTip.txns.ElementAt(0).userId, gameType);
+                        getBetResp.status = "0000";
+                        getBetResp.balance = tpCustBalance.Balance;
+                        getBetResp.balanceTs = getCurrentGameTime();
+                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                        return getBetResp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    resp.status = "9999";
+                    resp.desc = "fail";
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
+                    return resp;
+                }
+            }
+
             resp.status = "9999";
             resp.desc = "fail";
             log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);

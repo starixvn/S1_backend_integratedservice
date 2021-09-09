@@ -1028,6 +1028,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int CancelTipLC_AWC_Sexy(CancelTipLC_Sexy cancelTipLC_Sexy, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, cancelTipLC_Sexy.txns.ElementAt(0).userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+
+            var result = settledService.CancelTipLC_AWC_Sexy(tpCustInfo, cancelTipLC_Sexy, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public int VoidBetLC_AWC_Sexy(VoidBetLC_Sexy voidBetLC_Sexy)
         {
             foreach (var item in voidBetLC_Sexy.txns)

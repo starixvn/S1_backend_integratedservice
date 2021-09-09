@@ -348,5 +348,48 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public int TicketType { get; set; }
     }
+
+    public class TipLC_Sexy
+    {
+        public IList<TipData_Sexy> txns { get; set; }
+    }
+
+    public class TipData_Sexy
+    {
+        public string platformTxId { get; set; }
+        public string userId { get; set; }
+        public string platform { get; set; }
+        public string gameCode { get; set; }
+        public string gameType { get; set; }
+        public string gameName { get; set; }
+        public decimal tip { get; set; }
+        public string currency { get; set; }
+        public DateTime txTime { get; set; }
+        public dynamic tipInfo { get; set; }
+        public long txUnix
+        {
+            get
+            {
+                return new DateTimeOffset(txTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+    }
+
+    public class CancelTipLC_Sexy
+    {
+        public IList<CancelTipDataLC_Sexy> txns { get; set; }
+    }
+
+    public class CancelTipDataLC_Sexy
+    {
+        public string platformTxId { get; set; }
+        public string userId { get; set; }
+        public string platform { get; set; }
+        public string gameCode { get; set; }
+        public string gameType { get; set; }
+        public string gameName { get; set; }
+        public dynamic tipInfo { get; set; }
+    }
+
     #endregion
 }

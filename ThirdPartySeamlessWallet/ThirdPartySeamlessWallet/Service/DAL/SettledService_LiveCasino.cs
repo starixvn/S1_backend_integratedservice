@@ -1250,6 +1250,81 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int CancelTipLC_AWC_Sexy(TpCustInfo tpCustInfo, CancelTipLC_Sexy cancelTipLC_Sexy, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in cancelTipLC_Sexy.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    userId = item.userId,
+                    platform = item.platform,
+                    gameType = item.gameType,
+                    gameCode = item.gameCode,
+                    gameName = item.gameName,
+                    betType = "",
+                    roundId = "",
+                    tipInfo = JsonConvert.SerializeObject(item.tipInfo),
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Tip,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = (int)SettleFlag.Settled
+                });
+                p.Add("out_tip", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal tip = p.Get<decimal>("out_tip");
+
+                    if (tip > 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            tip,
+                            (int)Tp.Sexy,
+                            TransType.Tip,
+                            $"CancelTip: {tip:#,##0.##}",
+                            item.platformTxId,
+                            out afterAmount,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                    conn.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var refBettransLC = p.Get<int>("out_result");
+
+                    if (refBettransLC == 2)
+                    {
+                        // insert cancel record
+                        trans.Commit();
+                    }
+                    result = -1;
+                }
+            }
+
+            return result;
+        }
+
         public int VoidBetLC_AWC_Sexy(VoidBetLC_Sexy voidBetLC_Sexy)
         {
             var result = 0;
