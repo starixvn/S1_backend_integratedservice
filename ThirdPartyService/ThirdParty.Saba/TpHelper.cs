@@ -306,10 +306,11 @@ namespace ThirdParty.Saba
 
             // 設定共用參數
             var resultUrl = new StringBuilder(loginResult.Data);
+            resultUrl.Append($"{(tpCustInfo.TpUserName == null ? "?" : "&")}lang={TpLangId}");
             var homeUrl = inputs.GetValueOrDefault("homeUrl");
             var signupUrl = inputs.GetValueOrDefault("signupUrl");
             var loginUrl = inputs.GetValueOrDefault("LoginUrl");
-            resultUrl.Append($"?lang={TpLangId}&homeUrl={homeUrl}&signupUrl={signupUrl}&LoginUrl={loginUrl}");
+            resultUrl.Append($"&homeUrl={homeUrl}&signupUrl={signupUrl}&LoginUrl={loginUrl}");
 
             // 依裝置類型設定Deeplink
             var sportType = inputs.GetValueOrDefault("gameId");
@@ -649,7 +650,7 @@ namespace ThirdParty.Saba
 
         private string GetDesktopDeeplink(string sportType, string menuType, string matchId, string betType)
         {
-            var act = sportTypeDic.GetValueOrDefault(sportType);
+            var act = sportType != null ? sportTypeDic.GetValueOrDefault(sportType) : null;
             if (CheckSportType(sportType))
             {
                 if (!string.IsNullOrEmpty(betType))

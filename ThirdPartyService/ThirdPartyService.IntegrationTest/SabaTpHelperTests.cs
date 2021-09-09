@@ -1,11 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
 using ThirdPartyCore.Model;
-using FluentAssertions;
 using ThirdPartyCore.Model.enums;
-using Newtonsoft.Json;
-using System.Web;
-using System.Diagnostics;
 using System;
 using static ThirdParty.Saba.TpHelper;
 
@@ -46,7 +42,15 @@ namespace ThirdParty.Saba.Tests
                 { "ApiUrl", "https://tsa.n88dev.com/api" },
                 { "NewApiUrl", "http://k024tsa.db5688.com/api" },
                 { "VendorId", "aakx8ncolf" },
+                { "WAPUrl","http://wapsbtest.n88dev.com/deposit_processlogin.aspx"},
+                { "MobileUrl","https://smartsbtest.n88dev.com"},
+                { "NativeUrl", "https://smartsbtest.n88dev.com"},
+                { "DesktopUrl", "https://sbtest.n88dev.com/deposit_processlogin.aspx"},
+                { "homeUrl","homeUrl"},
+                { "signupUrl","signupUrl"},
+                { "LoginUrl","LoginUrl"},
             };
+
         }
 
         [TestCase("", ExpectedResult = "ApiUrl")]
@@ -64,7 +68,7 @@ namespace ThirdParty.Saba.Tests
             {
                 _inputs.Add("NewApiUrl", newApiUrl);
             }
-            
+
             var config = new SabaConfig(_inputs);
             return config.ApiUrl;
         }
@@ -75,6 +79,7 @@ namespace ThirdParty.Saba.Tests
         public ErrorCode FunGame_LoginTest(AppType appType)
         {
             var actual = _tpHelper.Login(new TpCustInfo(), appType, tpLangId, _inputs);
+            Console.WriteLine(actual.Message);
             return actual.ErrorCode;
         }
 
@@ -88,6 +93,21 @@ namespace ThirdParty.Saba.Tests
             return actual.ErrorCode;
         }
 
-
+        [TestCase(AppType.Desktop, "1", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Mobile, "1", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Native, "1", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Desktop, "43", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Mobile, "43", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Native, "43", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Desktop, "997", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Mobile, "997", ExpectedResult = ErrorCode.Success)]
+        [TestCase(AppType.Native, "997", ExpectedResult = ErrorCode.Success)]
+        public ErrorCode LoginTest(AppType appType, string gameId)
+        {
+            _inputs.Add("gameId", gameId);
+            var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);
+            Console.WriteLine(actual.Message);
+            return actual.ErrorCode;
+        }
     }
 }
