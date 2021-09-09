@@ -162,4 +162,12 @@ namespace ThirdPartyCore.Model
         //public decimal bonus { get; set; }
         //public decimal outstanding { get; set; }
     }
+
+    public class SetBetLimit
+    {
+        public int TpId { set; get; }
+        public int CustId { set; get; }
+        public int MinBet { set; get; }
+        public int MaxBet { set; get; }
+    }
 }

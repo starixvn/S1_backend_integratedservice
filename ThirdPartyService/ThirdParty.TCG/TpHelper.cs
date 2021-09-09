@@ -132,6 +132,11 @@ namespace ThirdParty.TCG
             };
         }
 
+        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet)
+        {
+            throw new NotImplementedException();
+        }
+
         public class TCGConfig
         {
             public string GameUrl { get; set; }

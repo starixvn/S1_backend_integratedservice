@@ -79,6 +79,25 @@ namespace ThirdParty.Saba
             public List<Datum> Data { get; set; }
         }
 
+        private class SetMemberBetSettingReq : Req
+        {
+            public string bet_setting { get; set; }
+        }
+        
+        private class BetSetting
+        {
+            public string sport_type { get; set; }
+            public int min_bet { get; set; }
+            public int max_bet { get; set; }
+            public int max_bet_per_match { get; set; }
+        }
+        
+        private class SetMemberBetSettingResult
+        {
+            public int error_code { get; set; }
+            public string message { get; set; }
+        }
+        
         public class Datum
         {
             public string vendor_member_id { get; set; }
@@ -714,5 +733,55 @@ namespace ThirdParty.Saba
             };
         }
 
+        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet)
+        {
+            var sportType = new List<string>()
+            {
+                "1", "2", "3", "5", "8", "10", "11", "43", "99", "99MP", "1MP"
+            };
+            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            var input = new SetMemberBetSettingReq();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_member_id = tpCustInfo.TpUserName;
+            
+            var betSetting = sportType.Select(type => new BetSetting()
+            {
+                sport_type = type,
+                min_bet = minBet,
+                max_bet = maxBet,
+                max_bet_per_match = maxBet
+            }).ToList();
+            input.bet_setting = JsonConvert.SerializeObject(betSetting);
+            
+            var t = input.GetType();
+            var props = t.GetProperties();
+            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(input)}"))}";
+
+            apiUrl = $"{apiUrl}/SetMemberBetSetting";
+            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
+            
+            var oApiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<SetMemberBetSettingResult>(result);
+                if (json.error_code == 0)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    oApiResult.RawMessage = json.message;
+                    oApiResult.RawErrorCode = json.error_code.ToString();
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result;
+            }
+
+            return oApiResult;
+        }
     }
 }

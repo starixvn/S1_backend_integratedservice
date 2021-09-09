@@ -31,6 +31,7 @@ namespace ThirdPartyCore
     {
         ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
         //ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, string transID, string thirdPartyTransID);
+        ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet);
     }
 
     public interface IThirdPartyGetBalanceParticular
