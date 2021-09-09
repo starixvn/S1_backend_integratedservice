@@ -311,7 +311,7 @@ namespace ThirdParty.Saba
             var loginUrl = inputs.GetValueOrDefault("LoginUrl");
             resultUrl.Append($"?lang={TpLangId}&homeUrl={homeUrl}&signupUrl={signupUrl}&LoginUrl={loginUrl}");
 
-            // 依裝置類型設定deeplink
+            // 依裝置類型設定Deeplink
             var sportType = inputs.GetValueOrDefault("gameId");
             var menuType = inputs.GetValueOrDefault("menutype") ?? "0";
             var matchId = inputs.GetValueOrDefault("matchid");
@@ -322,101 +322,35 @@ namespace ThirdParty.Saba
                 menuType = menuTypeDic[sportType];
             }
 
-            if (appType == AppType.Native)
+            var deeplink = appType switch
             {
-                if (!string.IsNullOrEmpty(matchId) && matchId != "0")
-                {
-                    resultUrl.Append( $"&matchid={matchId}");
-
-                }
-                else if (!string.IsNullOrEmpty(betType))
-                {
-                    resultUrl.Append($"&gameid={betType}");
-                }
-            }
-            
-            if (appType == AppType.Mobile)
-            {
-                var types = $"{sportType},{menuType},l";
-                if (sportType == "202")
-                {
-                    types = "Keno";
-                }
-                else if (sportType == "208")
-                {
-                    types = "CL";
-                }
-                else if (CheckSportType(sportType))
-                {
-                    sportTypeDic.TryGetValue(sportType, out types);
-                }
-
-                if (!string.IsNullOrEmpty(matchId) && matchId != "0")
-                {
-                    resultUrl.Append($"&types={types}&isChinaView=true&matchid={matchId}");
-                }
-                else if (!string.IsNullOrEmpty(betType))
-                {
-                    resultUrl.Append($"&types={types}&isChinaView=true&gameid={betType}");
-                }
-                else
-                {
-                    resultUrl.Append($"&types={types}&isChinaView=true");
-                }
-            }
-
-            if (appType == AppType.Desktop)
-            {
-                var act = sportTypeDic.GetValueOrDefault(sportType);
-                if (CheckSportType(sportType))
-                {
-                    if (!string.IsNullOrEmpty(betType))
-                    {
-                        resultUrl.Append( $"&game={act}&gameid={betType}");
-                    }
-                    else if (sportType == "997")
-                    {
-                        // Saba Soccer deeplink
-                        resultUrl.Append($"&menutype=0&sportid=1&leaguekey={act}");
-                    }
-                    else
-                    {
-                        resultUrl.Append($"&game={act}");
-                    }
-                }
-                else
-                {
-                    if (!string.IsNullOrEmpty(matchId) && matchId != "0")
-                    {
-                        resultUrl.Append($"&act={act}&matchid={matchId}");
-                    }
-                    else if (!string.IsNullOrEmpty(betType))
-                    {
-                        resultUrl.Append($"&act={act}&gameid={betType}&menutype={menuType}");
-                    }
-                    else if (sportType == "997")
-                    {
-                        // Saba Soccer deeplink
-                        resultUrl.Append($"&menutype=0&act=1&leaguekey={act}");
-                    }
-                    else
-                    {
-                        resultUrl.Append($"&act={act}&menutype={menuType}");
-                    }
-                }
-            }
+                AppType.Desktop => GetDesktopDeeplink(sportType, menuType, matchId, betType),
+                AppType.Mobile => GetMobileDeeplink(sportType, menuType, matchId, betType),
+                AppType.Native => GetNativeDeeplink(matchId, betType),
+                _ => string.Empty,
+            };
 
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = resultUrl.ToString(),
+                Message = resultUrl.Append(deeplink).ToString(),
             };
         }
 
-        private  bool CheckSportType(string sportType)
+        private bool CheckSportType(string sportType)
         {
-            return sportType == "43" || sportType == "171" || sportType == "200" || sportType == "202" ||
-                   sportType == "220" || sportType == "222" || sportType == "223" || sportType == "245";
+            return sportType switch
+            {
+                "43" => true,   // 电子竞技
+                "171" => true,  // Vgaming
+                "200" => true,  // 沙巴俱乐部
+                "202" => true,  // 快乐彩
+                "220" => true,  // 彩票(Keno Lottery)
+                "222" => true,  // 桌面游戏
+                "223" => true,  // Togel 4D
+                "245" => true,  // 虚拟娱乐城
+                _ => false,
+            };
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
@@ -711,6 +645,80 @@ namespace ThirdParty.Saba
                 ApiUrl = inputs.GetValueOrDefault("NewApiUrl") ?? inputs.GetValue("ApiUrl");
                 VendorId = inputs.GetValue("VendorId");
             }
+        }
+
+        private string GetDesktopDeeplink(string sportType, string menuType, string matchId, string betType)
+        {
+            var act = sportTypeDic.GetValueOrDefault(sportType);
+            if (CheckSportType(sportType))
+            {
+                if (!string.IsNullOrEmpty(betType))
+                {
+                    return $"&game={act}&gameid={betType}";
+                }
+                if (sportType == "997")
+                {
+                    // Saba Soccer deeplink
+                    return $"&menutype=0&sportid=1&leaguekey={act}";
+                } 
+                return $"&game={act}";              
+            }
+
+            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
+            {
+                return $"&act={act}&matchid={matchId}";
+            }
+            if (!string.IsNullOrEmpty(betType))
+            {
+                return $"&act={act}&gameid={betType}&menutype={menuType}";
+            }
+            if (sportType == "997")
+            {
+                // Saba Soccer deeplink
+                return $"&menutype=0&act=1&leaguekey={act}";
+            }
+   
+            return $"&act={act}&menutype={menuType}";                 
+        }
+
+        private string GetMobileDeeplink(string sportType, string menuType, string matchId, string betType)
+        {
+            var types = CheckSportType(sportType) ? sportTypeDic.GetValueOrDefault(sportType) : $"{sportType},{menuType},l";
+            if (sportType == "202")
+            {
+                types = "Keno";
+            }
+            if (sportType == "208")
+            {
+                types = "CL";
+            }
+
+            var result = $"&types={types}&isChinaView=true";
+            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
+            {
+                return $"{result}&matchid={matchId}";
+            }            
+            if (!string.IsNullOrEmpty(betType))
+            {
+                return $"{result}&gameid={betType}";
+            }
+
+            return result;
+        }
+
+        private string GetNativeDeeplink(string matchId, string betType)
+        {
+            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
+            {
+                return $"&matchid={matchId}";
+            }
+
+            if (!string.IsNullOrEmpty(betType))
+            {
+                return $"&gameid={betType}";
+            }
+
+            return string.Empty;
         }
     }
 }
