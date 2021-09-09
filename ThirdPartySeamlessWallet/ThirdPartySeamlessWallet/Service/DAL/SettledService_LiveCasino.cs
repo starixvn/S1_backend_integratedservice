@@ -1615,14 +1615,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get");
         }
 
         public int SetSettleFlag_BettransLC_AWC_Sexy(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_AWC_Sexy_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
         #endregion
 

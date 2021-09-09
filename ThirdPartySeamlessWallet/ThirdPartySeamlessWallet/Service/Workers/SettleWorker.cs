@@ -126,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1166,6 +1166,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = unsettled.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus
                             };
