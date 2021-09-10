@@ -370,7 +370,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         {
             get
             {
-                return new DateTimeOffset(txTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+                return new DateTimeOffset(txTime).ToUnixTimeSeconds();
+                //return new DateTimeOffset(txTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
     }
