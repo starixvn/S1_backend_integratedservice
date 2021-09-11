@@ -856,10 +856,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId.ToString()),
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus,
                             };
-                            // SettlementType = settledBLL.GetSettlementType(gameType, unsettled.gameId),
                             if (unsettled.TicketStatus == (int)TicketStatus.Refund)
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
