@@ -337,7 +337,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
+                                TransTime = unsettled.SettleTime,
                                 SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus
                             };
