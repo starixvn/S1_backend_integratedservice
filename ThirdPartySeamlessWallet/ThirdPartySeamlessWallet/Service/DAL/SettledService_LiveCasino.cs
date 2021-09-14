@@ -2285,7 +2285,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                return -1;
+                var p = new DynamicParameters(new
+                {
+                    TransId = mixUniqueId,
+                    user = bettingDataLC_WM.user,
+                    money = bettingDataLC_WM.money,
+                    dealid = bettingDataLC_WM.dealid,
+                    gtype = bettingDataLC_WM.gtype,
+                    type = bettingDataLC_WM.type,
+                    betdetail = bettingDataLC_WM.betdetail,
+                    gameno = bettingDataLC_WM.gameno,
+                    code = bettingDataLC_WM.code,
+                    category = bettingDataLC_WM.category,
+                    requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                    TicketType = bettingDataLC_WM.category == "1" ? (int)BettransType.Bet : (int)BettransType.Tip,
+                    TicketStatus = TicketStatus.Refund,
+                    SettleFlag = SettleFlag.Settled
+                });
+
+                p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                conn.Execute("Service_BettransLC_WM_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var refBettransLC = p.Get<int>("out_result");
+
+                if (refBettransLC == 2)
+                {
+                    // insert cancel record
+                    trans.Commit();
+                }
+                result = -1;
             }
 
             return result;
