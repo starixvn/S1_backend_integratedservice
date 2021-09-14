@@ -561,7 +561,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
+        #region MG
         public async Task<MGPlaceBetResult> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
@@ -631,5 +632,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             
         }
+        #endregion MG
     }
 }
