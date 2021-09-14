@@ -17,6 +17,7 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet
 {
@@ -59,6 +60,7 @@ namespace ThirdPartySeamlessWallet
             ////}
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
+            services.AddDatabaseConnection(Configuration);
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<HttpHelper>();
@@ -67,6 +69,14 @@ namespace ThirdPartySeamlessWallet
             /*DAL*/
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
+            services.AddSingleton<BetLimitService>();
+            services.AddSingleton(serviceProvider =>
+            {
+                var sqlClient = serviceProvider.GetServices<MySqlClient>()
+                    .First(item => item.DataBase == DataBase.Main);
+                return new CustBetLimitService(sqlClient);
+            });
+            //services.AddSingleton<CustBetLimitService>();
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();

@@ -11,7 +11,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
         [Test]
         public void Cust_Bet_10_And_In_Bet_Limit()
         {
-            var expected = true;
+            var expected = false;
             var betSetting = new CustBetLimit()
             {
                 CustId = 250032,
@@ -29,7 +29,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             var betAmount = 5.0m;
             var betLimitService = new BetLimitService();
             
-            var actual = betLimitService.SetBetLimit(3, 4, betSetting).IsInBetLimit(betAmount);
+            var actual = betLimitService.SetBetLimit(3, 4, betSetting).IsOutOfLimit(betAmount);
             
             Assert.AreEqual(expected, actual);
         }
@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
         [Test]
         public void DG_LiveCasino_Bet_10_And_In_Bet_Limit()
         {
-            var expected = false;
+            var expected = true;
             var betSetting = new CustBetLimit()
             {
                 CustId = 250032,
@@ -63,7 +63,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             };
             var betLimitService = new BetLimitService();
             
-            var actual = betLimitService.SetBetLimit(3, 4, betSetting).IsInBetLimit(60);
+            var actual = betLimitService.SetBetLimit(3, 4, betSetting).IsOutOfLimit(60);
             
             Assert.AreEqual(expected, actual);
         }

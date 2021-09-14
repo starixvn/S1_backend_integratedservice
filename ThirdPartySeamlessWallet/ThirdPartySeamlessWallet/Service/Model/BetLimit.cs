@@ -2,6 +2,13 @@
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
+    public class CustBetLimitData
+    {
+        public int CustId { get; set; }
+        public int SiteId { get; set; }
+        public string BetSetting { get; set; }
+    }
+    
     public class CustBetLimit
     {
         public int CustId { get; set; }

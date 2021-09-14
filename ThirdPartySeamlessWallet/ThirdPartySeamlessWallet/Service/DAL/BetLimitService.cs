@@ -26,9 +26,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return this;
         }
 
-        public bool IsInBetLimit(decimal betAmount)
+        public bool IsOutOfLimit(decimal betAmount)
         {
-            return betAmount >= _minBet && betAmount <= _maxBet;
+            if (_minBet != 0 && _maxBet != 0)
+            {
+                return betAmount < _minBet || betAmount > _maxBet;
+            }
+            return false;
         }
     }
 }

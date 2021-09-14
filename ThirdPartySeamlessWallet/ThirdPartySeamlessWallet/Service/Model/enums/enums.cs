@@ -157,12 +157,14 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     }
     public enum TpCategory
     {
+        Sports = 1,
         Slots,
         LiveCasino,
         Fish,
+        Cockfighting,
         Lottery,
+        VirtualSports,
         Poker,
-        Sports
     }
 
     public enum PromotionCategory
