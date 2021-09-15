@@ -66,7 +66,7 @@ namespace ThirdPartyService.Controllers
                 apiResult = thirdPartyBLL.GotoGame(tpInfo);
                 logger.LogInformation(apiResult.Message);
 
-                if (apiResult.ErrorCode == ErrorCode.Success)
+                if (apiResult.ErrorCode == ErrorCode.Success && tpInfo.CustId != 0)
                 {
                     thirdPartyBLL.AutoTransfer(tpInfo);
                 }

@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
@@ -10,7 +12,10 @@ namespace ThirdParty.Saba
 {
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
     {
-        Dictionary<string, string> sportTypeDic = new Dictionary<string, string>() {
+        private const string ContentType = "application/x-www-form-urlencoded";
+
+        private readonly Dictionary<string, string> sportTypeDic = new Dictionary<string, string>()
+        {
             {"1","soccer" },
             {"2","basketball" },
             {"3","football" },
@@ -39,6 +44,13 @@ namespace ThirdParty.Saba
             {"223","indo4d" },
             {"245","virtualgame" },
             {"997","90088,89692,89697,93062,95730,96666,95731" }
+        };
+
+        private readonly Dictionary<string, string> menuTypeDic = new Dictionary<string, string>()
+        {
+            {"2001","1" },// Olympics
+            {"2002","2" },// World Cup
+            {"2003","3" } // Euro Cup
         };
 
         private class Result
@@ -290,174 +302,75 @@ namespace ThirdParty.Saba
             return transIdModel;
         }
 
-        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string langid, Dictionary<string, string> inputs)
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl Error");
-            CreateMemberReq input = new CreateMemberReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception("vendor_id Error");
-            input.vendor_member_id = tpCustInfo.TpUserName;
-
-            string url;
-            string urlKey = "";
-            string device = "";
-
-            inputs.TryGetValue("device", out device);
-
-            if ((!string.IsNullOrEmpty(device)) && (string.Compare(device, "wap", StringComparison.OrdinalIgnoreCase) == 0))
+            var config = new SabaConfig(inputs);
+            var platform = (int)appType;
+            if (inputs.TryGetValue("device", out var device) && device.Equals("wap", StringComparison.OrdinalIgnoreCase))
             {
-                urlKey = $"WAPUrl";
-            }
-            else
-            {
-                urlKey = $"{appType}Url";
+                platform = 3;
             }
 
-            url = inputs.ContainsKey(urlKey) && !string.IsNullOrEmpty(inputs[urlKey]) ? inputs[urlKey] : throw new Exception("url Error");
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
-
-            ApiUrl = $"{ApiUrl}/Login";
-            if (appType == AppType.Native)
+            // 取得進入網址         
+            var loginResult = GetSabaUrl(config, tpCustInfo.TpUserName, platform);
+            if (loginResult.error_code != 0)
             {
-                ApiUrl = $"{inputs["ApiUrl"]}/AppLogIn";
-            }
-            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
-
-            ApiResult oApiResult = new ApiResult();
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<LoginResult>(result);
-                if (json.error_code == 0)
+                return new ApiResult()
                 {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{url}?token={json.Data}&lang={langid}";
-
-                    string SportType = null;
-                    string matchId = null;
-                    string betType = null;
-                    string menutype = "0";
-                    inputs.TryGetValue("gameId", out SportType);
-                    inputs.TryGetValue("matchid", out matchId);
-                    inputs.TryGetValue("bettype", out betType);
-                    inputs.TryGetValue("menutype", out menutype);
-
-                    if (appType == AppType.Native)
-                    {
-                        if (!string.IsNullOrEmpty(matchId) && matchId != "0")
-                        {
-                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&matchid={matchId}";
-
-                        }
-                        else if (!string.IsNullOrEmpty(betType))
-                        {
-                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}&gameid={betType}";
-
-                        }
-                        else
-                        {
-                            oApiResult.Message = $"{url}?lang={langid}&mobiletoken={json.Data}";
-                        }
-                    }
-                    else if (appType == AppType.Mobile)
-                    {
-                        string types = $"{SportType},{menutype},l";
-
-                        if (SportType == "202")
-                        {
-                            types = "Keno";
-                        }
-                        else if (SportType == "208")
-                        {
-                            types = "CL";
-                        }
-                        else if (CheckSportType(SportType))
-                        {
-                            sportTypeDic.TryGetValue(SportType, out types);
-                        }
-
-                        if (!string.IsNullOrEmpty(matchId) && matchId != "0")
-                        {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&matchid={matchId}";
-                        }
-                        else if (!string.IsNullOrEmpty(betType))
-                        {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true&gameid={betType}";
-                        }
-                        else
-                        {
-                            oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&homeUrl={inputs["homeUrl"]}&signupUrl={inputs["signupUrl"]}&LoginUrl={inputs["LoginUrl"]}&types={types}&isChinaView=true";
-                        }
-
-                    }
-                    else
-                    {
-                        string act = null;
-                        string gameId = null;
-
-                        if (inputs.TryGetValue("gameId", out gameId))
-                        {
-                            sportTypeDic.TryGetValue(gameId, out act);
-                        }
-
-                        if (CheckSportType(SportType))
-                        {
-                            if (!string.IsNullOrEmpty(betType))
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}&gameid={betType}";
-                            }
-                            else if (SportType == "997")
-                            {
-                                // Saba Soccer deeplink
-                                oApiResult.Message = $"{url}?token={json.Data}&menutype=0&lang={langid}&sportid=1&leaguekey={act}";
-                            }
-                            else
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&game={act}";
-                            }
-                        }
-                        else
-                        {
-                            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&matchid={matchId}";
-                            }
-                            else if (!string.IsNullOrEmpty(betType))
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&gameid={betType}&menutype={menutype}";
-                            }
-                            else if (SportType == "997")
-                            {
-                                // Saba Soccer deeplink
-                                oApiResult.Message = $"{url}?token={json.Data}&menutype=0&lang={langid}&act=1&leaguekey={act}";
-                            }
-                            else
-                            {
-                                oApiResult.Message = $"{url}?token={json.Data}&lang={langid}&act={act}&menutype={menutype}";
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    oApiResult.RawMessage = json.message;
-                    oApiResult.RawErrorCode = json.error_code.ToString();
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                }
+                    RawMessage = loginResult.message,
+                    RawErrorCode = loginResult.error_code.ToString(),
+                    ErrorCode = ErrorCode.Fail
+                };
             }
-            else
+
+            // 設定共用參數
+            var resultUrl = new StringBuilder(loginResult.Data);
+            resultUrl.Append($"{(tpCustInfo.TpUserName == null ? "?" : "&")}lang={TpLangId}");
+            var homeUrl = inputs.GetValueOrDefault("homeUrl");
+            var signupUrl = inputs.GetValueOrDefault("signupUrl");
+            var loginUrl = inputs.GetValueOrDefault("LoginUrl");
+            resultUrl.Append($"&homeUrl={homeUrl}&signupUrl={signupUrl}&LoginUrl={loginUrl}");
+
+            // 依裝置類型設定Deeplink
+            var sportType = inputs.GetValueOrDefault("gameId");
+            var menuType = inputs.GetValueOrDefault("menutype") ?? "0";
+            var matchId = inputs.GetValueOrDefault("matchid");
+            var betType = inputs.GetValueOrDefault("bettype");
+            if (sportType == "2001" || sportType == "2002" || sportType == "2003")
             {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = result;
+                sportType = "1";
+                menuType = menuTypeDic[sportType];
             }
 
-            return oApiResult;
+            var deeplink = appType switch
+            {
+                AppType.Desktop => GetDesktopDeeplink(sportType, menuType, matchId, betType),
+                AppType.Mobile => GetMobileDeeplink(sportType, menuType, matchId, betType),
+                AppType.Native => GetNativeDeeplink(matchId, betType),
+                _ => string.Empty,
+            };
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = resultUrl.Append(deeplink).ToString(),
+            };
         }
 
-        private static bool CheckSportType(string sportType)
+        private bool CheckSportType(string sportType)
         {
-            return sportType == "43" || sportType == "171" || sportType == "200" || sportType == "202" ||
-                   sportType == "220" || sportType == "222" || sportType == "223" || sportType == "245";
+            return sportType switch
+            {
+                "43" => true,   // 电子竞技
+                "171" => true,  // Vgaming
+                "200" => true,  // 沙巴俱乐部
+                "202" => true,  // 快乐彩
+                "220" => true,  // 彩票(Keno Lottery)
+                "222" => true,  // 桌面游戏
+                "223" => true,  // Togel 4D
+                "245" => true,  // 虚拟娱乐城
+                _ => false,
+            };
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
@@ -627,14 +540,14 @@ namespace ThirdParty.Saba
                 }
                 else if (json.error_code == 14 || json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 5 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
                 {
-                    apiResult.RawMessage= apiResult.Message = json.message;
+                    apiResult.RawMessage = apiResult.Message = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
                     apiResult.ErrorCode = ErrorCode.Fail;
                     apiResult.Data.Status = TransferStatus.Fail;
                 }
                 else
                 {
-                    apiResult.RawMessage= apiResult.Message = json.message;
+                    apiResult.RawMessage = apiResult.Message = json.message;
                     apiResult.RawErrorCode = json.error_code.ToString();
                     apiResult.ErrorCode = ErrorCode.TransferPending;
                     apiResult.Data.Status = TransferStatus.Pending;
@@ -642,7 +555,7 @@ namespace ThirdParty.Saba
             }
             else
             {
-                apiResult.RawMessage= apiResult.Message = "No Result";
+                apiResult.RawMessage = apiResult.Message = "No Result";
                 apiResult.RawErrorCode = "1";
                 apiResult.ErrorCode = ErrorCode.TransferPending;
                 apiResult.Data.Status = TransferStatus.Pending;
@@ -739,11 +652,15 @@ namespace ThirdParty.Saba
             {
                 "1", "2", "3", "5", "8", "10", "11", "43", "99", "99MP", "1MP"
             };
-            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"])
+                ? inputs["ApiUrl"]
+                : throw new Exception();
             var input = new SetMemberBetSettingReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"])
+                ? inputs["VendorId"]
+                : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
-            
+
             var betSetting = sportType.Select(type => new BetSetting()
             {
                 sport_type = type,
@@ -752,14 +669,14 @@ namespace ThirdParty.Saba
                 max_bet_per_match = maxBet
             }).ToList();
             input.bet_setting = JsonConvert.SerializeObject(betSetting);
-            
+
             var t = input.GetType();
             var props = t.GetProperties();
             var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(input)}"))}";
 
             apiUrl = $"{apiUrl}/SetMemberBetSetting";
             var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
-            
+
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
@@ -782,6 +699,101 @@ namespace ThirdParty.Saba
             }
 
             return oApiResult;
+        }
+
+        private LoginResult GetSabaUrl(SabaConfig config, string tpUserName, int platform)
+        {
+            var apiUrl = $"{config.ApiUrl}/GetSabaUrl";
+            var sParam = $"vendor_id={config.VendorId}&vendor_member_id={tpUserName}&platform={platform}";
+            var json = HttpPost(apiUrl, sParam, ContentType);
+            var result = FromJson<LoginResult>(json);
+            return result;
+        }
+
+        public class SabaConfig
+        {
+            public string ApiUrl { get; set; }
+            public string VendorId { get; set; }
+
+            public SabaConfig(Dictionary<string, string> inputs)
+            {
+                ApiUrl = inputs.GetValueOrDefault("NewApiUrl") ?? inputs.GetValue("ApiUrl");
+                VendorId = inputs.GetValue("VendorId");
+            }
+        }
+
+        private string GetDesktopDeeplink(string sportType, string menuType, string matchId, string betType)
+        {
+            var act = sportType != null ? sportTypeDic.GetValueOrDefault(sportType) : null;
+            if (CheckSportType(sportType))
+            {
+                if (!string.IsNullOrEmpty(betType))
+                {
+                    return $"&game={act}&gameid={betType}";
+                }
+                if (sportType == "997")
+                {
+                    // Saba Soccer deeplink
+                    return $"&menutype=0&sportid=1&leaguekey={act}";
+                } 
+                return $"&game={act}";              
+            }
+
+            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
+            {
+                return $"&act={act}&matchid={matchId}";
+            }
+            if (!string.IsNullOrEmpty(betType))
+            {
+                return $"&act={act}&gameid={betType}&menutype={menuType}";
+            }
+            if (sportType == "997")
+            {
+                // Saba Soccer deeplink
+                return $"&menutype=0&act=1&leaguekey={act}";
+            }
+   
+            return $"&act={act}&menutype={menuType}";                 
+        }
+
+        private string GetMobileDeeplink(string sportType, string menuType, string matchId, string betType)
+        {
+            var types = CheckSportType(sportType) ? sportTypeDic.GetValueOrDefault(sportType) : $"{sportType},{menuType},l";
+            if (sportType == "202")
+            {
+                types = "Keno";
+            }
+            if (sportType == "208")
+            {
+                types = "CL";
+            }
+
+            var result = $"&types={types}&isChinaView=true";
+            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
+            {
+                return $"{result}&matchid={matchId}";
+            }            
+            if (!string.IsNullOrEmpty(betType))
+            {
+                return $"{result}&gameid={betType}";
+            }
+
+            return result;
+        }
+
+        private string GetNativeDeeplink(string matchId, string betType)
+        {
+            if (!string.IsNullOrEmpty(matchId) && matchId != "0")
+            {
+                return $"&matchid={matchId}";
+            }
+
+            if (!string.IsNullOrEmpty(betType))
+            {
+                return $"&gameid={betType}";
+            }
+
+            return string.Empty;
         }
     }
 }

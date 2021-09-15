@@ -119,7 +119,7 @@ namespace CommonService.Service.BLL
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
             using var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
-            log2File.Info(result.Content.ReadAsStringAsync().Result, $"{siteName}_OTP");
+            log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -128,19 +128,19 @@ namespace CommonService.Service.BLL
 
                 if (resultResp.status == 0)
                 {
-                    log2File.Info($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
                     apiResult.ErrorCode = ErrorCode.Success;
                 }
                 else
                 {
-                    log2File.Error($"{PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
                     if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                     }
                     else
                     {
-                        logger.LogError($"Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                         apiResult.ErrorCode = ErrorCode.Fail;
                         //apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
                     }
@@ -148,7 +148,7 @@ namespace CommonService.Service.BLL
             }
             else
             {
-                log2File.Error(result.Content.ReadAsStringAsync().Result, $"{siteName}_OTP");
+                log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
             }
 
             return apiResult;
@@ -173,7 +173,7 @@ namespace CommonService.Service.BLL
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
             var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
-            log2File.Info(result.Content.ReadAsStringAsync().Result, $"{siteName}_DepositRejectSMS");
+            log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -181,26 +181,26 @@ namespace CommonService.Service.BLL
 
                 if (resultResp.status == 0)
                 {
-                    log2File.Info($"{PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
                     apiResult.ErrorCode = ErrorCode.Success;
                 }
                 else
                 {
-                    log2File.Error($"{PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
                     if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                     }
                     else
                     {
-                        logger.LogError($"Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                         apiResult.ErrorCode = ErrorCode.Fail;
                     }
                 }
             }
             else
             {
-                log2File.Error(result.Content.ReadAsStringAsync().Result, $"{siteName}_DepositRejectSMS");
+                log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
             }
             return apiResult;
         }

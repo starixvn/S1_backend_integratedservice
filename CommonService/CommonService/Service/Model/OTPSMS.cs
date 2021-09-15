@@ -36,4 +36,20 @@ namespace CommonService.Service.Model
         public string reason { get; set; }
     }
 
+    public class NxcloudSMSServiceTypeConfig
+    {
+        public NxcloudSMSServiceConfig OTP { get; set; }
+    }
+    public class NxcloudSMSServiceConfig
+    {
+        public string ResourceURL { get; set; }
+        public string Appkey { get; set; }
+        public string Secretkey { get; set; }
+    }
+    public class NxcloudSMSResponse
+    {
+        public string result { get; set; }
+        public string messageid { get; set; }
+        public string code { get; set; }
+    }
 }
