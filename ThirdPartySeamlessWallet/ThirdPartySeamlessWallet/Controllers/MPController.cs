@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -24,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly ILogger<MPController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IHostEnvironment _environment;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingBLL _bettingBLL;
@@ -35,12 +37,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         public MPController(
             IServiceProvider provider,
             ILogger<MPController> logger,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IHostEnvironment environment
         )
         {
             _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
             _configuration = configuration;
+            _environment = environment;
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
@@ -178,6 +182,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
+
+                if ( _environment.IsDevelopment() && transfer.requestAmount >= 300)
+                {
+                    System.Threading.Thread.Sleep(60000);
+                    sResult = DoEncrypt(Fatal, Deskey);
+                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+                    return sResult;
+                }
+
                 var result = _bettingBLL.MoneyOutPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
