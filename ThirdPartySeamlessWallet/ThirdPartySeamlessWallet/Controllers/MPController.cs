@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string Deskey = thirdPartySetting.TpSetting["Deskey"];
 
             string sResult;
-            var check = checkAuthorization(encrypt, Deskey, Agent);
+            var check = checkAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
             {
                 Response.StatusCode = check.StatusCode;
@@ -167,7 +167,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string Deskey = thirdPartySetting.TpSetting["Deskey"];
 
 
-            var check = checkAuthorization(encrypt, Deskey, Agent);
+            var check = checkAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
             {
                 Response.StatusCode = check.StatusCode;
@@ -243,7 +243,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string Agent = thirdPartySetting.TpSetting["Agent"];
             string Deskey = thirdPartySetting.TpSetting["Deskey"];
 
-            var check = checkAuthorization(encrypt, Deskey, Agent);
+            var check = checkAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)
             {
                 Response.StatusCode = check.StatusCode;
@@ -299,7 +299,64 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private CheckResp checkAuthorization(string param, string desKey, string Agent)
+        [HttpPost]
+        [Route("[controller]/cancel")]
+        public async Task<dynamic> CancelAsync([FromQuery] Dictionary<string, string> getReq)
+        {
+            Response.StatusCode = (int)Error.ERROR;
+            var Fatal = new
+            {
+                code = 500
+            };
+
+            string sResult;
+            string logName = $"{thisTp}_cancel";
+            var Content = JsonConvert.SerializeObject(getReq);
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var encrypt = await reader.ReadToEndAsync();
+
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            string Agent = thirdPartySetting.TpSetting["Agent"];
+            string Deskey = thirdPartySetting.TpSetting["Deskey"];
+
+            var check = checkAuthorization(encrypt, Deskey, Agent,false);
+            if (check.StatusCode != (int)Error.OK)
+            {
+                Response.StatusCode = check.StatusCode;
+                _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}", logName);
+                return check.Result;
+            }
+
+            try
+            {
+                var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
+                var result = _settledBLL.CancelMoneyInPK_MP(transfer, out _);
+                if (result > 0 || result == -1)
+                {
+                    Response.StatusCode = (int)Error.OK;
+                    var Param = new
+                    {
+                        code = 0
+                    };
+
+                    sResult = DoEncrypt(Param, Deskey);
+                    _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    return sResult;
+                }
+
+                sResult = DoEncrypt(Fatal, Deskey);
+                _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+                return sResult;
+            }
+            catch (Exception ex)
+            {
+                sResult = DoEncrypt(Fatal, Deskey);
+                _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}\r\n{ex.Message}", logName, ex);
+                return sResult;
+            }
+        }
+
+        private CheckResp checkAuthorization(string param, string desKey, string agent, bool checkOnline)
         {
             CheckResp resp = new CheckResp();
             resp.StatusCode = (int)Error.OK;
@@ -314,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var gameId = jsonParsedArray["gameId"]?.ToString();
                 var orderId = jsonParsedArray["orderId"]?.ToString();
 
-                if (string.IsNullOrEmpty(channelId) || channelId != Agent)
+                if (string.IsNullOrEmpty(channelId) || channelId != agent)
                 {
                     resp.StatusCode = (int)Error.UAUTHORIZED;
                     return resp;
@@ -335,24 +392,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string[] acc = account.Split('_');
                 string player = acc[1];
 
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, player);
-                if (tpCheck == null || tpCheck.Locked)
+                if (checkOnline)
                 {
-                    var Param = new
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, player);
+                    if (tpCheck == null || tpCheck.Locked)
                     {
-                        code = 11
-                    };
-                    resp.StatusCode = (int)Error.INVALID_DATA;
-                    resp.Result = DoEncrypt(Param, desKey);
-                    resp.Code = Param.code;
-                    return resp;
+                        var Param = new
+                        {
+                            code = 11
+                        };
+                        resp.StatusCode = (int)Error.INVALID_DATA;
+                        resp.Result = DoEncrypt(Param, desKey);
+                        resp.Code = Param.code;
+                        return resp;
+                    }
                 }
-
 
                 if (!string.IsNullOrEmpty(requestAmount))
                 {
                     decimal amount = Convert.ToDecimal(requestAmount);
-                    if (amount < 0)
+                    if (amount <= 0)
                     {
                         var Param = new
                         {
