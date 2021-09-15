@@ -58,9 +58,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var betSetting = _custBetLimitService.GetCustBetLimit(tpCustInfo.CustId);
             if (betSetting != null)
             {
+                logger.LogInformation($"{tpCustInfo.TpUserName} betSetting:{JsonConvert.SerializeObject(betSetting)}");
                 var outOfLimit = _betLimitService.SetBetLimit((int) tpCategory, tpId, betSetting).IsOutOfLimit(Math.Abs(amount));
                 if (outOfLimit)
+                {
+                    logger.LogInformation($"User {tpCustInfo.TpUserName} betAmount:{amount} minBet:{_betLimitService.MinBet} maxBet:{_betLimitService.MaxBet} out of bet limit");
                     return -9;
+                }
             }
 
             try
