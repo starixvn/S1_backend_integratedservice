@@ -1011,7 +1011,135 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+        #endregion
 
+        #region Sexy (AWC)
+
+        public int CancelBetLC_AWC_Sexy(CancelLC_Sexy cancelLC_Sexy, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, cancelLC_Sexy.txns.ElementAt(0).userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+
+            var result = settledService.CancelBetLC_AWC_Sexy(tpCustInfo, cancelLC_Sexy, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int CancelTipLC_AWC_Sexy(CancelTipLC_Sexy cancelTipLC_Sexy, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, cancelTipLC_Sexy.txns.ElementAt(0).userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+
+            var result = settledService.CancelTipLC_AWC_Sexy(tpCustInfo, cancelTipLC_Sexy, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int VoidBetLC_AWC_Sexy(VoidBetLC_Sexy voidBetLC_Sexy)
+        {
+            foreach (var item in voidBetLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                    item.gameInfo.realWinAmt *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.VoidBetLC_AWC_Sexy(voidBetLC_Sexy);
+            return result;
+        }
+
+        public int PayoutLC_AWC_Sexy(PayoutLC_Sexy payoutLC_Sexy, out decimal afterAmount)
+        {
+            foreach (var txn in payoutLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    txn.turnover *= tpCurrency.ExchangeRate;
+                    txn.betAmount *= tpCurrency.ExchangeRate;
+                    txn.winAmount *= tpCurrency.ExchangeRate;
+                    txn.gameInfo.winLoss *= tpCurrency.ExchangeRate;
+                }
+            }
+            
+            var result = settledService.PayoutLC_AWC_Sexy(payoutLC_Sexy, out afterAmount);
+            return result;
+        }
+
+        public int UnPayoutLC_AWC_Sexy(UnPayoutLC_Sexy unPayoutLC_Sexy)
+        {
+            foreach (var item in unPayoutLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.UnPayoutLC_AWC_Sexy(unPayoutLC_Sexy);
+            return result;
+        }
+
+        public int VoidSettleLC_AWC_Sexy(VoidSettleLC_Sexy voidSettleLC_Sexy)
+        {
+            foreach (var item in voidSettleLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.betAmount *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.VoidSettleLC_AWC_Sexy(voidSettleLC_Sexy);
+            return result;
+        }
+
+        public int RewardLC_AWC_Sexy(RewardLC_Sexy rewardLC_Sexy, out decimal afterAmount)
+        {
+            foreach (var item in rewardLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, item.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                item.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    item.amount *= tpCurrency.ExchangeRate;
+                }
+            }
+            var result = settledService.RewardLC_AWC_Sexy(rewardLC_Sexy, out afterAmount);
+            return result;
+        }
+
+        public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
+        {
+            return settledService.GetUnsettledListLC_AWC_Sexy();
+        }
+
+        public int SetSettleFlag_BettransLC_AWC_Sexy(string TransId)
+        {
+            return settledService.SetSettleFlag_BettransLC_AWC_Sexy(TransId);
+        }
         #endregion
 
         #region EBet
