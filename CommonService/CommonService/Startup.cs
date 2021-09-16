@@ -64,6 +64,7 @@ namespace CommonService
             services.AddSingleton<LiveStreamingBLL>();
             services.AddSingleton<FireBaseBLL>();
             services.AddSingleton<Tools>();
+            services.AddSingleton<OTPEmailBLL>(); 
 
             services.AddControllers();
 
