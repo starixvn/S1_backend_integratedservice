@@ -128,7 +128,7 @@ namespace ThirdParty.Saba
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             TransferReg input = new TransferReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_trans_id = TransID;
@@ -185,7 +185,7 @@ namespace ThirdParty.Saba
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             CreateMemberReq input = new CreateMemberReq();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
@@ -231,7 +231,7 @@ namespace ThirdParty.Saba
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             GetBalanceReg input = new GetBalanceReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_ids = tpCustInfo.TpUserName;
@@ -357,7 +357,7 @@ namespace ThirdParty.Saba
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             TransferReg input = new TransferReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
@@ -429,7 +429,7 @@ namespace ThirdParty.Saba
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             Req input = new Req();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
@@ -480,7 +480,7 @@ namespace ThirdParty.Saba
         }
         public ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, decimal lockedAmount, decimal rolloverAmount, long expiredDate, string transID, string thirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             BonusTransferReg input = new BonusTransferReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_id = tpCustInfo.TpUserName;
@@ -553,7 +553,7 @@ namespace ThirdParty.Saba
         /// <returns></returns>
         public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string ApiUrl = new SabaConfig(inputs).ApiUrl;
             GetBalanceReg input = new GetBalanceReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
             input.vendor_member_ids = tpUserNameString;
