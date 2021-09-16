@@ -170,7 +170,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
         public async override Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action)
         {
             var tpSetting = thirdPartyModel.TpSetting;
-            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
+            var getBetDetailUrl = $"{tpSetting["NewApiUrl"]}/GetBetDetail";
             Req req = new Req();
             req.version_key = syncParams.key;
             req.vendor_id = tpSetting["VendorId"];
