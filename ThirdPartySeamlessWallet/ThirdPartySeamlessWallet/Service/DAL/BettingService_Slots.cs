@@ -105,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                //category = TpCategory.LiveCasino;
+                category = TpCategory.LiveCasino;
                 result = conn.Execute("Service_BettransLC_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
             }
 
