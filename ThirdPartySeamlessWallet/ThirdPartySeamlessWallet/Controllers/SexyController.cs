@@ -442,15 +442,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [Route("[controller]/V2")]
+        [Route("[controller]/V2/{site?}")]
         [HttpPost]
-        public dynamic SeamlessWalletV2([FromForm] Req req)
+        public dynamic SeamlessWalletV2(string site, [FromForm] Req req)
         {
             string logName = $"{thisTp}";
             log2File.Info(JsonConvert.SerializeObject(req), logName);
 
+            string siteName = string.IsNullOrEmpty(site) ? "Nova88" : site;
+            Enum.TryParse<Site>(siteName, true, out var tempSite);
+            int siteId = (int)tempSite;
+
             GetSeamlessWalletResp resp = new GetSeamlessWalletResp();
 
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, siteId);
             if (req.key != thirdPartySetting.TpSetting["cert2"])
             {
                 resp.status = "9999";
