@@ -789,6 +789,87 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
         }
+        
         #endregion MG
+
+        #region EVO
+
+        public int PlaceBetLC_EVO(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            int bonusId = 0;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            bettingData_EVO.transaction.amount *= -1;
+            var p = new DynamicParameters(new
+            {
+                TransactionId = bettingData_EVO.transaction.id,
+                TransactionRefId = bettingData_EVO.transaction.refId,
+                userId = bettingData_EVO.userId,
+                uuid = bettingData_EVO.uuid,
+                currency = bettingData_EVO.currency,
+                amount = bettingData_EVO.transaction.amount,
+                transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
+                game = JsonConvert.SerializeObject(bettingData_EVO.game),
+                GameId = bettingData_EVO.game.id,
+                GameType = bettingData_EVO.game.type,
+                GameDetailsId = bettingData_EVO.game.details.table.id,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                CurrencyId = tpCustInfo.CurrencyId,
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = (int)SettleFlag.Running
+            });
+
+            try
+            {
+                var category = TpCategory.LiveCasino;
+                var gameType = (int)GameType.EVO_LiveCasino;
+                result = conn.Execute("Service_BettransLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && bettingData_EVO.transaction.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingData_EVO.transaction.amount,
+                        (int)Tp.EVO,
+                        bettingData_EVO.transaction.id,
+                        gameType,
+                        bettingData_EVO.transaction.refId,
+                        null,
+                        category,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }
