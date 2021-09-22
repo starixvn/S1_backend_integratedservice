@@ -421,7 +421,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    //category = TpCategory.LiveCasino;
+                    category = TpCategory.LiveCasino;
                     result = conn.Execute("Service_BettransLC_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 }
 
@@ -717,7 +717,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                //category = TpCategory.LiveCasino;
+                category = TpCategory.LiveCasino;
                 result = conn.Execute("Service_BettransLC_PP_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             }
 
