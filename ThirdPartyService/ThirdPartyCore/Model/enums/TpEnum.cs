@@ -34,6 +34,13 @@ namespace ThirdPartyCore.Model.enums
         V8 = 25,
         PT = 27,
         N2Live = 28,
-        NineW = 31
+        NineW = 31,
+        JILI = 32,
+        TCG = 33,
+        MG = 34,
+        MP = 35,
+        EVO = 36,
+        Netent = 37,
+        RedTiger = 38
     }
 }

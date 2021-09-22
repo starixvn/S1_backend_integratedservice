@@ -1096,7 +1096,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             }
 
                             // PP LC 原本已存SLOTS 故使用TpCategory.Slots
-                            settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
                             settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
                         }
                         catch (Exception ex1)
