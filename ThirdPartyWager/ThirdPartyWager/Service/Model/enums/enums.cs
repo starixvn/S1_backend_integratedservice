@@ -36,6 +36,9 @@ namespace ThirdPartyWager.Service.Model.enums
         TCG = 33,
         MG = 34,
         MP = 35,
+        EVO = 36,
+        Netent = 37,
+        RedTiger = 38
     }
 
     public enum GameType
