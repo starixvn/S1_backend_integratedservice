@@ -61,7 +61,8 @@ namespace ThirdPartyService.Service.BLL
             TpTransferBonusInfoService tpTransferBonusInfoService,
             ServerInfoService serverInfoService,
             TpCustBalanceService tpCustBalanceService,
-            AuthBLL authBLL
+            AuthBLL authBLL,
+            ServerInfoBLL serverInfoBLL
         )
         {
             this.env = env;
@@ -78,6 +79,7 @@ namespace ThirdPartyService.Service.BLL
             _tpCustBalanceService = tpCustBalanceService;
 
             ThirdPartyHelperBase.AuthProvider = authBLL;
+            ThirdPartyHelperBase.ServerInfoProvider = serverInfoBLL;
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
         }
 
