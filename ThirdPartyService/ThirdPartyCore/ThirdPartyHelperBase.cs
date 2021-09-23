@@ -50,6 +50,7 @@ namespace ThirdPartyCore
         public static int proxyPort;
         private bool _isHeathly;
         public event InsertLogEventHandler InsertLog;
+        public static IServerInfoProvider ServerInfoProvider { set; get; }
         public static IAuthProvider AuthProvider { set; get; }
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }

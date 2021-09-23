@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library.BonusService.Service.Library;
@@ -12,7 +13,7 @@ using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.BLL
 {
-    public class ServerInfoBLL
+    public class ServerInfoBLL : IServerInfoProvider
     {
         #region Fields
 
@@ -58,6 +59,12 @@ namespace ThirdPartyService.Service.BLL
         public IEnumerable<ServerInfo> GetServerInfoList()
         {
             return _serverInfoService.GetServiceInfoList();
+        }
+
+        public string getSiteName(int siteId)
+        {
+            var data = GetServerInfo(siteId);
+            return data.SiteName;
         }
 
         #endregion
