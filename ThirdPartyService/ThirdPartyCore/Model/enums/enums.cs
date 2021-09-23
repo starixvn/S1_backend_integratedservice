@@ -59,9 +59,9 @@ namespace ThirdPartyCore.Model.enums
     }
     public enum TransferStatus
     {
-        Success = 0, 
-        Fail = 1, 
-        Pending = 2, 
+        Success = 0,
+        Fail = 1,
+        Pending = 2,
         PendingD = 3
     }
     public enum Direction
