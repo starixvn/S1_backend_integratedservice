@@ -81,7 +81,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.MP", "ThirdParty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.EVO", "ThirdParty.EVO\ThirdParty.EVO.csproj", "{40F1E735-BF09-40AB-8979-7691CFEB4C2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Netent", "ThirdParty.Netent\ThirdParty.Netent.csproj", "{02286AD1-FB42-498B-86D6-0AB72025B068}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Netent", "ThirdParty.Netent\ThirdParty.Netent.csproj", "{02286AD1-FB42-498B-86D6-0AB72025B068}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.RedTiger", "ThirdParty.RedTiger\ThirdParty.RedTiger.csproj", "{73FCDED6-FA46-4CC1-9F9E-B893894CCD53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -245,6 +247,10 @@ Global
 		{02286AD1-FB42-498B-86D6-0AB72025B068}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02286AD1-FB42-498B-86D6-0AB72025B068}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02286AD1-FB42-498B-86D6-0AB72025B068}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73FCDED6-FA46-4CC1-9F9E-B893894CCD53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73FCDED6-FA46-4CC1-9F9E-B893894CCD53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73FCDED6-FA46-4CC1-9F9E-B893894CCD53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73FCDED6-FA46-4CC1-9F9E-B893894CCD53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -286,6 +292,7 @@ Global
 		{D3FC26FB-9E9B-457E-9402-71D4329A2396} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{40F1E735-BF09-40AB-8979-7691CFEB4C2F} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{02286AD1-FB42-498B-86D6-0AB72025B068} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{73FCDED6-FA46-4CC1-9F9E-B893894CCD53} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
