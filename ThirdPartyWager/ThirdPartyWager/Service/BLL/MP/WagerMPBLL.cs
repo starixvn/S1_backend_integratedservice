@@ -45,6 +45,7 @@ namespace ThirdPartyWager.Service.BLL
             //{506,GameType.MP_Poker_None },// 506	已关闭
             {509,GameType.MP_Poker },// 509	抽水5%
             {508,GameType.MP_Poker },// 508	抽水5%
+            {510,GameType.MP_Poker_None },// 510	无抽水
             {512,GameType.MP_Poker },// 512	抽水5%
             {1000,GameType.MP_Poker_None },// 1000	无抽水
         };

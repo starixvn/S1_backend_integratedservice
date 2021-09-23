@@ -239,13 +239,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
+                        if (environment.IsDevelopment() && getPointInoutReq.money == -40m)
+                        {
+                            System.Threading.Thread.Sleep(60000);
+                            //log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            //return pointInoutResp;
+                        }
                         try
                         {
                             result = bettingBLL.PlaceBetLC_WM(getPointInoutReq, out decimal tpAffterAmount);
-                            if (environment.IsDevelopment() && getPointInoutReq.money == -40m)
-                            {
-                                System.Threading.Thread.Sleep(60000);
-                            }
+                            
                             if (result > 0)
                             {
                                 pointInoutResp.errorCode = 0;

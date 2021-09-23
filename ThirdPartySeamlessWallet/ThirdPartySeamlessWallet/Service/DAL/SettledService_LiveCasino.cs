@@ -724,6 +724,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
+
         #region Sexy
         public int CancelBetLC_Sexy(TpCustInfo tpCustInfo, BettingDataLC_Sexy_CancelBet cancelBetTxn, out decimal afterAmount)
         {
@@ -1170,6 +1171,534 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
+        #region Sexy (AWC)
+
+        public int CancelBetLC_AWC_Sexy(TpCustInfo tpCustInfo, CancelLC_Sexy cancelLC_Sexy, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in cancelLC_Sexy.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    userId = item.userId,
+                    platform = item.platform,
+                    gameType = item.gameType,
+                    gameCode = item.gameCode,
+                    roundId = item.roundId,
+                    roundStartUnix = new DateTimeOffset((DateTime)item.gameInfo.roundStartTime).ToUnixTimeSeconds(),
+                    gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = (int)SettleFlag.Settled
+                });
+                p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal stake = p.Get<decimal>("out_stake");
+
+                    if (stake > 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            stake,
+                            (int)Tp.Sexy,
+                            item.platformTxId,
+                            (int)GameType.Sexy_LiveCasino,
+                            TpCategory.LiveCasino,
+                            item.platformTxId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                    conn.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var refBettransLC = p.Get<int>("out_result");
+
+                    if (refBettransLC == 2)
+                    {
+                        // insert cancel record
+                        trans.Commit();
+                    }
+                    result = -1;
+                }
+            }
+
+            return result;
+        }
+
+        public int CancelTipLC_AWC_Sexy(TpCustInfo tpCustInfo, CancelTipLC_Sexy cancelTipLC_Sexy, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in cancelTipLC_Sexy.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    userId = item.userId,
+                    platform = item.platform,
+                    gameType = item.gameType,
+                    gameCode = item.gameCode,
+                    gameName = item.gameName,
+                    betType = "",
+                    roundId = "",
+                    tipInfo = JsonConvert.SerializeObject(item.tipInfo),
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Tip,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = (int)SettleFlag.Settled
+                });
+                p.Add("out_tip", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal tip = p.Get<decimal>("out_tip");
+
+                    if (tip > 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            tip,
+                            (int)Tp.Sexy,
+                            TransType.Tip,
+                            $"CancelTip: {tip:#,##0.##}",
+                            item.platformTxId,
+                            out afterAmount,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                    conn.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var refBettransLC = p.Get<int>("out_result");
+
+                    if (refBettransLC == 2)
+                    {
+                        // insert cancel record
+                        trans.Commit();
+                    }
+                    result = -1;
+                }
+            }
+
+            return result;
+        }
+
+        public int VoidBetLC_AWC_Sexy(VoidBetLC_Sexy voidBetLC_Sexy)
+        {
+            var result = 0;
+            foreach (var item in voidBetLC_Sexy.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                try
+                {
+                    var p = new DynamicParameters(new
+                    {
+                        platformTxId = item.platformTxId,
+                        gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                        updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                        voidType = item.voidType,
+                        TicketType = (int)BettransType.CancelBet,
+                        TicketStatus = (int)TicketStatus.Refund,
+                        SettleFlag = (int)SettleFlag.EndGame
+                    });
+
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_VoidBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    if (result > 0)
+                    {
+                        decimal stake = Math.Abs(item.betAmount);
+                        result = PayoutV2(
+                            item.tpCustInfo,
+                            stake,
+                            (int)Tp.Sexy,
+                            item.platformTxId,
+                            (int)GameType.Sexy_LiveCasino,
+                            TpCategory.LiveCasino,
+                            item.platformTxId,
+                            TransType.Refunds,
+                            null,
+                            out _,
+                            "VoidBet",
+                            out _,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+        }
+
+        public int PayoutLC_AWC_Sexy(PayoutLC_Sexy payoutLC_Sexy, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            bool isError = false;
+            afterAmount = 0;
+            var result = 0;
+
+            foreach (var txn in payoutLC_Sexy.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                int ticketStatus;
+                ticketStatus = txn.gameInfo.status switch
+                {
+                    "WIN" => (int)TicketStatus.Win,
+                    "LOSE" => (int)TicketStatus.Lost,
+                    "DRAW" => (int)TicketStatus.Draw,
+                    "TIE" => (int)TicketStatus.Draw,
+                    "VOID" => (int)TicketStatus.Refund,
+                    "CANCEL" => (int)TicketStatus.Refund,
+                    _ => throw new NotImplementedException()
+                };
+
+                try
+                {
+                    var p = new DynamicParameters(new
+                    {
+                        platformTxId = txn.platformTxId,
+                        winAmount = txn.winAmount,
+                        turnover = txn.turnover,
+                        winLoss = txn.gameInfo.winLoss,
+                        roundId = txn.roundId,
+                        betType = txn.betType,
+                        status = txn.gameInfo.status,
+                        settleType = txn.settleType,
+                        refPlatformTxId = txn.refPlatformTxId,
+                        gameInfo = JsonConvert.SerializeObject(txn.gameInfo),
+                        betUnix = new DateTimeOffset(txn.betTime).ToUnixTimeSeconds(),
+                        txUnix = new DateTimeOffset(txn.txTime).ToUnixTimeSeconds(),
+                        updateUnix = new DateTimeOffset(txn.updateTime).ToUnixTimeSeconds(),
+                        TicketType = (int)BettransType.Payout,
+                        TicketStatus = ticketStatus,
+                        SettleFlag = (int)SettleFlag.EndGame
+                    });
+
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    decimal payout = txn.winAmount;
+                    if (result > 0)
+                    {
+                        if (payout != 0)
+                        {
+                            result = PayoutV2(
+                                txn.tpCustInfo,
+                                payout,
+                                (int)Tp.Sexy,
+                                txn.platformTxId,
+                                (int)GameType.Sexy_LiveCasino,
+                                TpCategory.LiveCasino,
+                                txn.platformTxId,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                "Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                           );
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(txn)}\r\n{mySqlEx}", $"{Tp.Sexy}_settle", mySqlEx);
+                }
+            }
+            return isError ? 0 : result;
+        }
+
+        public int UnPayoutLC_AWC_Sexy(UnPayoutLC_Sexy unPayoutLC_Sexy)
+        {
+            bool isError = false;
+            var result = 0;
+            foreach (var item in unPayoutLC_Sexy.txns)
+            {
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                    updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+                p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                try
+                {
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_UnPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    if (result > 0)
+                    {
+                        decimal payout = p.Get<decimal>("out_payout");
+
+                        if (payout != 0)
+                        {
+                            result = PayoutV2(
+                                item.tpCustInfo,
+                                payout * -1,
+                                (int)Tp.Sexy,
+                                item.platformTxId,
+                                (int)GameType.Sexy_LiveCasino,
+                                TpCategory.LiveCasino,
+                                item.platformTxId,
+                                TransType.Undo,
+                                null,
+                                out _,
+                                "UnSettle",
+                                out _,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                           );
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_unsettle", mySqlEx);
+                }
+            }
+
+            return isError ? 0 : result;
+        }
+
+        public int VoidSettleLC_AWC_Sexy(VoidSettleLC_Sexy voidSettleLC_Sexy)
+        {
+            bool isError = false;
+            var result = 0;
+            foreach (var item in voidSettleLC_Sexy.txns)
+            {
+                var p = new DynamicParameters(new
+                {
+                    platformTxId = item.platformTxId,
+                    voidType = item.voidType,
+                    updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+                p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+                try
+                {
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_VoidSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                    if (result > 0)
+                    {
+                        decimal payout = p.Get<decimal>("out_payout");
+                        payout = (payout > 0) ? (payout * -1) + item.betAmount : item.betAmount;
+
+                        if (payout != 0)
+                        {
+                            result = PayoutV2(
+                                item.tpCustInfo,
+                                payout,
+                                (int)Tp.Sexy,
+                                item.platformTxId,
+                                (int)GameType.Sexy_LiveCasino,
+                                TpCategory.LiveCasino,
+                                item.platformTxId,
+                                TransType.Refunds,
+                                null,
+                                out _,
+                                "VoidSettle",
+                                out _,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                           );
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_voidSettle", mySqlEx);
+                }
+            }
+
+            return isError ? 0 : result;
+        }
+
+        public int RewardLC_AWC_Sexy(RewardLC_Sexy rewardLC_Sexy, out decimal afterAmount)
+        {
+            bool isError = false;
+            afterAmount = 0;
+            var result = 0;
+            foreach (var item in rewardLC_Sexy.txns)
+            {
+                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                try
+                {
+                    var p = new DynamicParameters(new
+                    {
+                        promotionTxId = item.promotionTxId,
+                        promotionId = item.promotionId,
+                        promotionTypeId = item.promotionTypeId,
+                        platform = item.platform,
+                        userId = item.userId,
+                        amount = item.amount,
+                        txUnix = new DateTimeOffset(item.txTime).ToUnixTimeSeconds()
+                    });
+                    result = conn.Execute("Service_RewardLC_AWC_Sexy_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    decimal amount = item.amount;
+                    if (result > 0)
+                    {
+                        if (amount != 0)
+                        {
+                            result = PayoutV2(
+                                item.tpCustInfo,
+                                amount,
+                                (int)Tp.Sexy,
+                                item.promotionTxId,
+                                (int)GameType.Sexy_LiveCasino,
+                                TpCategory.LiveCasino,
+                                item.promotionTxId,
+                                TransType.Prize,
+                                null,
+                                out afterAmount,
+                                $"{item.promotionId} Prize",
+                                out _,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    if (mySqlEx.Number == 1062)
+                    {
+                        result = -1;
+                    }
+                    else
+                    {
+                        isError = true;
+                        log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_give", mySqlEx);
+                    }
+                }
+            }
+
+            return isError ? 0 : result;
+        }
+
+        public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
+        {
+            return _mainDbClient.Query<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get");
+        }
+
+        public int SetSettleFlag_BettransLC_AWC_Sexy(string TransId)
+        {
+            return _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+        #endregion
+
         #region EBet
         public int PayoutLC_EBet(TpCustInfo tpCustInfo, BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
@@ -1301,7 +1830,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Reserve
             });
-            
+
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
@@ -1756,7 +2285,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                return -1;
+                var p = new DynamicParameters(new
+                {
+                    TransId = mixUniqueId,
+                    user = bettingDataLC_WM.user,
+                    money = bettingDataLC_WM.money,
+                    dealid = bettingDataLC_WM.dealid,
+                    gtype = bettingDataLC_WM.gtype,
+                    type = bettingDataLC_WM.type,
+                    betdetail = bettingDataLC_WM.betdetail,
+                    gameno = bettingDataLC_WM.gameno,
+                    code = bettingDataLC_WM.code,
+                    category = bettingDataLC_WM.category,
+                    requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                    TicketType = bettingDataLC_WM.category == "1" ? (int)BettransType.Bet : (int)BettransType.Tip,
+                    TicketStatus = TicketStatus.Refund,
+                    SettleFlag = SettleFlag.Settled
+                });
+
+                p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                conn.Execute("Service_BettransLC_WM_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var refBettransLC = p.Get<int>("out_result");
+
+                if (refBettransLC == 2)
+                {
+                    // insert cancel record
+                    trans.Commit();
+                }
+                result = -1;
             }
 
             return result;
@@ -2356,7 +2912,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
         public async Task<MGPayoutResult> PayoutLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
@@ -2367,14 +2923,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             await using var trans = await conn.BeginTransactionAsync();
 
             bettingDataRNG_MG.TransType = "C";
-            bettingDataRNG_MG.TicketType = (int) BettransType.Payout;
-            bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int) TicketStatus.Draw : (int) TicketStatus.Win;
-            bettingDataRNG_MG.SettleFlag = (int) SettleFlag.EndGame;
+            bettingDataRNG_MG.TicketType = (int)BettransType.Payout;
+            bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int)TicketStatus.Draw : (int)TicketStatus.Win;
+            bettingDataRNG_MG.SettleFlag = (int)SettleFlag.EndGame;
             var p = new DynamicParameters(bettingDataRNG_MG);
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
-                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new {bettingDataRNG_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransLcMg.ExtTxnId != 0)
                 {
                     return new MGPayoutResult()
@@ -2384,26 +2940,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         ExtTxnId = bettransLcMg.ExtTxnId
                     };
                 }
-                
+
                 result = conn.Execute("Service_BettransLC_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
-                
+
                 if (result > 0 && bettingDataRNG_MG.amount > 0)
                 {
                     result = PayoutV2(
-                        tpCustInfo, 
-                        bettingDataRNG_MG.amount, 
-                        (int)Tp.MG, 
-                        bettingDataRNG_MG.betId, 
+                        tpCustInfo,
+                        bettingDataRNG_MG.amount,
+                        (int)Tp.MG,
+                        bettingDataRNG_MG.betId,
                         gameType,
-                        TpCategory.LiveCasino, 
-                        bettingDataRNG_MG.txnId, 
-                        TransType.Payout, 
-                        null, 
-                        out afterAmount, 
+                        TpCategory.LiveCasino,
+                        bettingDataRNG_MG.txnId,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
                         $"Payout: {Math.Abs(bettingDataRNG_MG.amount):#,##0.##}",
                         out bonusId,
-                        conn, 
+                        conn,
                         trans);
                 }
                 if (result > 0)
@@ -2423,7 +2979,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw;
             }
         }
-        
+
         public async Task<MGCancelResult> CancelBetLC_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG,
             int gameType)
         {
@@ -2436,8 +2992,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", 
-                    new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get",
+                    new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransLcMg == null)
                 {
                     return new MGCancelResult()
@@ -2452,7 +3008,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
-                if (bettransLcMg.TicketType == (int) BettransType.CancelBet)
+                if (bettransLcMg.TicketType == (int)BettransType.CancelBet)
                 {
                     return new MGCancelResult()
                     {
@@ -2462,8 +3018,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = conn.Execute("Service_CancelBetLC_MG_Set", 
-                    new {cancelDataRng_MG.txnId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = conn.Execute("Service_CancelBetLC_MG_Set",
+                    new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
                     if (cancelDataRng_MG.amount != 0)
@@ -2471,7 +3027,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(
                             tpCustInfo,
                             cancelDataRng_MG.amount,
-                            (int) Tp.MG,
+                            (int)Tp.MG,
                             bettransLcMg.RoundId,
                             gameType, TpCategory.LiveCasino,
                             cancelDataRng_MG.txnId,

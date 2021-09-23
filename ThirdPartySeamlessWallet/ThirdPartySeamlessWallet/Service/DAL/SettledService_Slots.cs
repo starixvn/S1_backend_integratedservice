@@ -421,7 +421,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    //category = TpCategory.LiveCasino;
+                    category = TpCategory.LiveCasino;
                     result = conn.Execute("Service_BettransLC_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 }
 
@@ -717,7 +717,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                //category = TpCategory.LiveCasino;
+                category = TpCategory.LiveCasino;
                 result = conn.Execute("Service_BettransLC_PP_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             }
 
@@ -1258,7 +1258,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         );
                     }
 
-                    if(afterAmount < 0)
+                    if (afterAmount < 0)
                     {
                         trans.Rollback();
                         return 0;
@@ -2591,10 +2591,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataRNG_MG.amount > 0)
                 {
                     result = PayoutV2(
-                        tpCustInfo, 
-                        bettingDataRNG_MG.amount, 
-                        (int)Tp.MG, 
-                        bettingDataRNG_MG.betId, 
+                        tpCustInfo,
+                        bettingDataRNG_MG.amount,
+                        (int)Tp.MG,
+                        bettingDataRNG_MG.betId,
                         gameType,
                         TpCategory.Slots,
                         bettingDataRNG_MG.txnId,
@@ -3155,24 +3155,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_JILI> GetUnsettledList_JILI(int category)
         {
-            string sp = "Service_BettransRng_JILI_Unsettle_Get";
-            if (category == (int)TpCategory.Fish)
-            {
-                sp = "Service_BettransFish_JILI_Unsettle_Get";
-            }
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_JILI>(sp, commandType: CommandType.StoredProcedure);
+            string sp = (category == (int)TpCategory.Fish) ? "Service_BettransFish_JILI_Unsettle_Get" : "Service_BettransRng_JILI_Unsettle_Get";
+            return _mainDbClient.Query<SettleData_JILI>(sp);
         }
 
         public int SetSettleFlag_JILI(int category, long TransId)
         {
-            string sp = "Service_BettransRng_JILI_Settle_Set";
-            if (category == (int)TpCategory.Fish)
-            {
-                sp = "Service_BettransFish_JILI_Settle_Set";
-            }
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute(sp, new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            string sp = (category == (int)TpCategory.Fish) ? "Service_BettransFish_JILI_Settle_Set" : "Service_BettransRng_JILI_Settle_Set";
+            return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
         #endregion

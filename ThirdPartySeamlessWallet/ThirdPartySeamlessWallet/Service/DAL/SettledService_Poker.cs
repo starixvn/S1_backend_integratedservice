@@ -438,7 +438,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
         #region KM
         public async Task<KmDbResult> CancelbetPK_KM(TpCustInfo tpCustInfo, KMCreditRequestTransaction creditTransaction)
         {
@@ -490,12 +490,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result == 0)
                     {
                         logger.LogInformation($"訂單已存在, trxid:{trxId}");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
                     else if (result == 2)
                     {
                         logger.LogInformation($"交易不存在, trxid:{trxId}");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
 
                     logger.LogError("exec Service_BettransPK_KM_Credit_Ins error");
@@ -510,7 +510,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
                         Math.Abs(creditTransaction.amt),
-                        (int) Tp.KM,
+                        (int)Tp.KM,
                         TransType.Refunds,
                         $"Cancel {creditTransaction.amt:#,##0.##}",
                         creditTransaction.ptxid,
@@ -587,7 +587,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 await conn.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-            
+
                 int result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -595,17 +595,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result == 0)
                     {
                         logger.LogInformation($"訂單已存在, trxid:{trxId}");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
                     else if (result == 2)
                     {
                         logger.LogInformation($"交易不存在, trxid:{trxId}");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
                     logger.LogError("exec Service_BettransPK_KM_Credit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
-                
+
                 var afterAmount = 0M;
                 if (creditTransaction.amt != 0)
                 {
@@ -628,7 +628,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         throw new KmException(KMErrorCode.SystemError);
                     }
                 }
-                trans.Commit(); 
+                trans.Commit();
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -691,7 +691,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 await conn.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-            
+
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -699,13 +699,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result == 0)
                     {
                         logger.LogInformation("訂單已存在");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
                     logger.LogError("exec Service_BettransPK_KM_Credit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
-                
-                trans.Commit(); 
+
+                trans.Commit();
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -727,10 +727,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledList_KM(string spName)
         {
-            return _wagerDbClient.Query<SettleData>(spName); 
+            return _wagerDbClient.Query<SettleData>(spName);
         }
 
-        public int SetSettleFlag_KM(string spName, string transId ,bool isSuccess)
+        public int SetSettleFlag_KM(string spName, string transId, bool isSuccess)
         {
             var parameters = new DynamicParameters(new { transId, isSuccess });
             return _wagerDbClient.Execute(spName, parameters: parameters);
@@ -739,7 +739,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region MP
-        
+
         public int MoneyInPK_MP(TpCustInfo tpCustInfo, TransferData_MP transferData_MP, out decimal afterAmount)
         {
             afterAmount = 0;
@@ -797,6 +797,70 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     throw mySqlEx;
                 }
+            }
+
+            return result;
+        }
+
+        public int CancelMoneyInPK_MP(TpCustInfo tpCustInfo, TransferData_MP transferData_MP, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+
+            var p = new DynamicParameters(new
+            {
+                channelId = transferData_MP.channelId,
+                account = transferData_MP.account,
+                orderId = transferData_MP.orderId,
+                TicketType = (int)BettransType.CancelBet,
+                TicketStatus = (int)TicketStatus.Refund,
+                SettleFlag = (int)SettleFlag.Settled
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BettransPK_MP_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                decimal stake = p.Get<decimal>("out_stake");
+
+                if (stake > 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        stake,
+                        (int)Tp.MP,
+                        TransType.Payout,
+                        $"Cancel: {stake:#,##0.##}",
+                        transferData_MP.orderId,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else
+            {
+                p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                conn.Execute("Service_BettransPK_MP_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var refBettransLC = p.Get<int>("out_result");
+
+                if (refBettransLC == 2)
+                {
+                    // insert cancel record
+                    trans.Commit();
+                }
+                result = -1;
             }
 
             return result;
