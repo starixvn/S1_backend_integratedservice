@@ -31,7 +31,6 @@ namespace ThirdPartyCore
     {
         ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
         //ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, string transID, string thirdPartyTransID);
-        ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet);
     }
 
     public interface IThirdPartyGetBalanceParticular
@@ -45,6 +44,12 @@ namespace ThirdPartyCore
         ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString);
     }
 
+    public interface IThirdPartyBetLimitParticular
+    {
+        ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting);
+        ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
+    
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper
     {
         public static string proxyHost;

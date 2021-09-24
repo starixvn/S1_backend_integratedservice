@@ -167,7 +167,26 @@ namespace ThirdPartyCore.Model
     {
         public int TpId { set; get; }
         public int CustId { set; get; }
-        public int MinBet { set; get; }
-        public int MaxBet { set; get; }
+        public string BetSetting { get; set; }
+    }
+    public class GetBetLimit
+    {
+        public int TpId { set; get; }
+        public int CustId { set; get; }
+    }
+
+    public class BetSettingLimit
+    {
+        public int error_code { get; set; }
+        public string message { get; set; }
+        public List<BetSetting> Data { get; set; }
+    }
+
+    public class BetSetting
+    {
+        public string sport_type { get; set; }
+        public decimal min_bet { get; set; }
+        public decimal max_bet { get; set; }
+        public decimal max_bet_per_match { get; set; }
     }
 }

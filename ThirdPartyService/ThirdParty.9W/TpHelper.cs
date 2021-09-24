@@ -188,11 +188,6 @@ namespace ThirdParty.NineW
             };
         }
 
-        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet)
-        {
-            throw new NotImplementedException();
-        }
-
         private string GetKey(string user, string currency, NineWConfig config)
         {
             var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/getKey";

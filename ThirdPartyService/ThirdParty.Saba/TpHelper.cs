@@ -10,7 +10,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.Saba
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
 
@@ -96,13 +96,13 @@ namespace ThirdParty.Saba
             public string bet_setting { get; set; }
         }
         
-        private class BetSetting
+        public class GetBetSettingLimitReq
         {
-            public string sport_type { get; set; }
-            public int min_bet { get; set; }
-            public int max_bet { get; set; }
-            public int max_bet_per_match { get; set; }
+            public string vendor_id { set; get; }
+            public string currency { set; get; }
         }
+        
+        
         
         private class SetMemberBetSettingResult
         {
@@ -646,33 +646,19 @@ namespace ThirdParty.Saba
             };
         }
 
-        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet)
+        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
-            var sportType = new List<string>()
+            var config = new SabaConfig(inputs);
+            var apiUrl = config.ApiUrl;
+            var req = new SetMemberBetSettingReq
             {
-                "1", "2", "3", "5", "8", "10", "11", "43", "99", "99MP", "1MP"
+                vendor_id = config.VendorId, 
+                vendor_member_id = tpCustInfo.TpUserName,
+                bet_setting = betSetting
             };
-            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"])
-                ? inputs["ApiUrl"]
-                : throw new Exception();
-            var input = new SetMemberBetSettingReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"])
-                ? inputs["VendorId"]
-                : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
-
-            var betSetting = sportType.Select(type => new BetSetting()
-            {
-                sport_type = type,
-                min_bet = minBet,
-                max_bet = maxBet,
-                max_bet_per_match = maxBet
-            }).ToList();
-            input.bet_setting = JsonConvert.SerializeObject(betSetting);
-
-            var t = input.GetType();
+            var t = req.GetType();
             var props = t.GetProperties();
-            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(input)}"))}";
+            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
 
             apiUrl = $"{apiUrl}/SetMemberBetSetting";
             var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
@@ -689,6 +675,47 @@ namespace ThirdParty.Saba
                 {
                     oApiResult.RawMessage = json.message;
                     oApiResult.RawErrorCode = json.error_code.ToString();
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result;
+            }
+
+            return oApiResult;
+        }
+
+        public ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var config = new SabaConfig(inputs);
+            var domain = config.ApiUrl;
+            var req = new GetBetSettingLimitReq
+            {
+                vendor_id = config.VendorId, 
+                currency = tpCustInfo.TpCurrencyId
+            };
+            var t = req.GetType();
+            var props = t.GetProperties();
+            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
+            
+            var apiUrl = $"{domain}/GetBetSettingLimit";
+            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
+            
+            var oApiResult = new ApiResult<List<BetSetting>>();
+            if (IsJSON(result))
+            {
+                var betSettingLimit = JsonConvert.DeserializeObject<BetSettingLimit>(result);
+                if (betSettingLimit.error_code == 0)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Data = betSettingLimit.Data;
+                }
+                else
+                {
+                    oApiResult.RawMessage = betSettingLimit.message;
+                    oApiResult.RawErrorCode = betSettingLimit.error_code.ToString();
                     oApiResult.ErrorCode = ErrorCode.Fail;
                 }
             }

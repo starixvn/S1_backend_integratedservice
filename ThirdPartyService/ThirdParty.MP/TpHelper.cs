@@ -451,10 +451,5 @@ namespace ThirdParty.MP
             }
             return oApiResult;
         }
-
-        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, int minBet, int maxBet)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
