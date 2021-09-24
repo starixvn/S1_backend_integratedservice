@@ -44,13 +44,16 @@ namespace ThirdPartyCore
         ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString);
     }
 
-    public abstract class ThirdPartyHelperBase : IThirdPartyHelper
+    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail
     {
         public static string proxyHost;
         public static int proxyPort;
         private bool _isHeathly;
         public event InsertLogEventHandler InsertLog;
         public static IAuthProvider AuthProvider { set; get; }
+
+        public static ITpBetRecordProvider TpBetRecordProvider { set; get; }
+
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }
         public static string ContentRootPath { set; get; }
@@ -476,6 +479,19 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
 
+        public virtual BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetailRequest request)
+        {
+            return TpBetRecordProvider.GetTpBetRecordDetail(request);
+        }
+    }
+    public interface IThirdPartyTpBetRecordDetail
+    {
+        BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
 }

@@ -8,7 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyCore.Model;
-using ThirdPartyService.Service.Library.BonusService.Service.Library;
+using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.DAL

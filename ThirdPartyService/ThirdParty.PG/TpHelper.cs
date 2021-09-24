@@ -5,6 +5,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.PG;
 
 namespace ThirdParty.PG
 {
@@ -69,6 +70,21 @@ namespace ThirdParty.PG
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detailObject = new GetDetailObject()
+            {
+                TpBetRecordDetail = GetTpBetRecordDetail(request),
+                TpCategoryId = (int)request.TpCategory,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                }
+            };
+            return new PGCasinoDetail(detailObject);
         }
     }
 }

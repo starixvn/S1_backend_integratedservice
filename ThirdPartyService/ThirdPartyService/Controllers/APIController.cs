@@ -210,5 +210,23 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+
+        [HttpPost]
+        public ActionResult<ApiResult<object>> GetBetDetail([FromBody] GetBetDetailRequest request)
+        {
+            try
+            {
+                return thirdPartyBLL.GetBetDetail(request);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new ApiResult<object>()
+                {
+                    ErrorCode = ErrorCode.SystemError,
+                    RawMessage = ex.Message,
+                };
+            }
+        }
     }
 }

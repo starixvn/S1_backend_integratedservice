@@ -14,6 +14,7 @@ using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 using ThirdPartyService.Extensions;
 using System.Transactions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyService.Service.BLL
 {
@@ -51,34 +52,24 @@ namespace ThirdPartyService.Service.BLL
 
         #region Constructors
 
-        public ThirdPartyBLL(IConfiguration configuration,
-            IWebHostEnvironment env,
-            ILogger<ThirdPartyBLL> logger,
-            Log2File log2File,
-            ThirdPartyHelper thirdPartyHelper,
-            TpTransferInfo tpTransferInfo,
-            TpCustInfoService tpCustInfoService,
-            TpTransferBonusInfoService tpTransferBonusInfoService,
-            ServerInfoService serverInfoService,
-            TpCustBalanceService tpCustBalanceService,
-            AuthBLL authBLL
-        )
+        public ThirdPartyBLL(IServiceProvider provider)
         {
-            this.env = env;
-            this.configuration = configuration;
-            _logger = logger;
-            this.log2File = log2File;
+            env = provider.GetRequiredService<IWebHostEnvironment>();
+            configuration = provider.GetRequiredService<IConfiguration>();
+            _logger = provider.GetRequiredService<ILogger<ThirdPartyBLL>>();
+            log2File = provider.GetRequiredService<Log2File>();
 
-            this.thirdPartyHelper = thirdPartyHelper;
-            this.tpTransferInfo = tpTransferInfo;
+            thirdPartyHelper = provider.GetRequiredService<ThirdPartyHelper>();
+            tpTransferInfo = provider.GetRequiredService<TpTransferInfo>(); ;
 
-            this.tpCustInfoService = tpCustInfoService;
-            this.tpTransferBonusInfoService = tpTransferBonusInfoService;
-            _serverInfoService = serverInfoService;
-            _tpCustBalanceService = tpCustBalanceService;
+            tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
+            tpTransferBonusInfoService = provider.GetRequiredService<TpTransferBonusInfoService>();
+            _serverInfoService = provider.GetRequiredService<ServerInfoService>();
+            _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
 
-            ThirdPartyHelperBase.AuthProvider = authBLL;
+            ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
+            ThirdPartyHelperBase.TpBetRecordProvider = provider.GetRequiredService<TpBetRecordService>();
         }
 
         #endregion
@@ -800,6 +791,25 @@ namespace ThirdPartyService.Service.BLL
             {
                 return Convert.ToDateTime(result);
             }
+        }
+
+        public ApiResult<object> GetBetDetail(GetBetDetailRequest request)
+        {
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, request.TpId);
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                return new ApiResult<object>()
+                {
+                    ErrorCode = tpCustInfoResult.ErrorCode,
+                    RawMessage = tpCustInfoResult.RawMessage
+                };
+            }
+
+            var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(request.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(request.TpId, tpCustInfoResult.Data.SiteId).Setting);
+            var result = tpHelper.GetBetDetail(request, tpCustInfoResult.Data, inputs);
+            return new ApiResult<object>(ErrorCode.Success, "success", result);
+
         }
 
         #region Private Methods

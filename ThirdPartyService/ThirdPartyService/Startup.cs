@@ -32,6 +32,8 @@ namespace ThirdPartyService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
+            services.AddDatabaseConnection(Configuration);
+
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<Common>();
@@ -48,6 +50,7 @@ namespace ThirdPartyService
             services.AddSingleton<ServerInfoService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<TpCustBalanceService>();
+            services.AddSingleton<TpBetRecordService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();

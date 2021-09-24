@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba;
 
 namespace ThirdParty.Saba
 {
@@ -720,6 +721,28 @@ namespace ThirdParty.Saba
             }
 
             return string.Empty;
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detailObject = new GetDetailObject()
+            {
+                TpBetRecordDetail = GetTpBetRecordDetail(request),
+                TpCategoryId = (int)request.TpCategory,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                }
+            };
+            return request.TpCategory switch
+            {
+                TpCategory.Sports => new SabaSportsDetail(detailObject),
+                TpCategory.Casino => new SabaCasinoDetail(detailObject),
+                TpCategory.Lottery => new SabaLotteryDetail(detailObject),
+                TpCategory.VirtualSports => new SabaVirtualSportsDetail(detailObject),
+                _ => new BaseDetail(detailObject)
+            };
         }
     }
 }
