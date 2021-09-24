@@ -481,18 +481,18 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
 
-        public virtual BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public virtual BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }
 
-        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetailRequest request)
+        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail)
         {
-            return TpBetRecordProvider.GetTpBetRecordDetail(request);
+            return TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
         }
     }
     public interface IThirdPartyTpBetRecordDetail
     {
-        BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 }

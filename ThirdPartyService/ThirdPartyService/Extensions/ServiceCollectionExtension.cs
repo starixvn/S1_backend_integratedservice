@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Extensions
@@ -25,7 +26,16 @@ namespace ThirdPartyService.Extensions
             });
             return services;
         }
-    
-      
+
+        public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
+        {
+            var provider = services.BuildServiceProvider();
+            var configService = provider.GetRequiredService<ConfigService>();
+            var option = configService.Query<T>(sql, parameters);
+            services.AddSingleton(typeof(IEnumerable<T>), p => option);
+            return services;
+        }
+
+
     }
 }

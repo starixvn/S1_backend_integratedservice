@@ -19,14 +19,14 @@ namespace ThirdPartyService.Service.DAL
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
 
-        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetailRequest request)
+        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail)
         {
             var p = new DynamicParameters(new
             {
-                TpId = request.TpId,
-                GameType = request.GameType,
-                TransId = request.TransId,
-                SettledTime = request.SettledTime
+                TpId = getBetDetail.TpGameTypeOption.TpId,
+                GameType = getBetDetail.TpGameTypeOption.Type,
+                TransId = getBetDetail.TransId,
+                SettledTime = getBetDetail.SettledTime
             });
 
             return _reportDbClient.QueryFirst<TpBetRecordDetailModel>("Service_TpBetRecordDetail_Get_V1", p);

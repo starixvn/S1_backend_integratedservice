@@ -6,7 +6,7 @@ namespace ThirdPartyCore.Model
 {
     public class GetDetailObject
     {
-        public int TpCategoryId { get; set; }
+        public TpGameTypeOption TpGameTypeOption { get; set; }
 
         public TpCurrency TpCurrency { get; set; }
 

@@ -8,6 +8,6 @@ namespace ThirdPartyCore
 {
     public interface ITpBetRecordProvider
     {
-        TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetailRequest request);
+        TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail);
     }
 }

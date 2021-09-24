@@ -12,6 +12,8 @@ namespace ThirdPartyCore.Model
 
         public int GameType { get; }
 
+        public string GameTypeName { get; }
+
         public string TransId { get; }
 
         public string Detail { get; }
@@ -21,8 +23,9 @@ namespace ThirdPartyCore.Model
         public BaseDetail(GetDetailObject detailObject)
         {
             TpId = detailObject.TpBetRecordDetail.TpId;
-            TpCategoryId = detailObject.TpCategoryId;
+            TpCategoryId = (int)detailObject.TpGameTypeOption.CategoryId;
             GameType = detailObject.TpBetRecordDetail.GameType;
+            GameTypeName = detailObject.TpGameTypeOption.TypeName;
             TransId = detailObject.TpBetRecordDetail.TransId;
             Detail = detailObject.TpBetRecordDetail.Detail;
             TpCurrency = detailObject.TpCurrency;

@@ -723,19 +723,19 @@ namespace ThirdParty.Saba
             return string.Empty;
         }
 
-        public override BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detailObject = new GetDetailObject()
             {
-                TpBetRecordDetail = GetTpBetRecordDetail(request),
-                TpCategoryId = (int)request.TpCategory,
+                TpBetRecordDetail = GetTpBetRecordDetail(getBetDetail),
+                TpGameTypeOption= getBetDetail.TpGameTypeOption,
                 TpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 }
             };
-            return request.TpCategory switch
+            return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Sports => new SabaSportsDetail(detailObject),
                 TpCategory.Casino => new SabaCasinoDetail(detailObject),

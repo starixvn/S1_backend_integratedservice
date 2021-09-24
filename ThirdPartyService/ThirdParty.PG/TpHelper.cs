@@ -72,12 +72,12 @@ namespace ThirdParty.PG
             throw new NotImplementedException();
         }
 
-        public override BaseDetail GetBetDetail(GetBetDetailRequest request, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detailObject = new GetDetailObject()
             {
-                TpBetRecordDetail = GetTpBetRecordDetail(request),
-                TpCategoryId = (int)request.TpCategory,
+                TpBetRecordDetail = GetTpBetRecordDetail(getBetDetail),
+                TpGameTypeOption= getBetDetail.TpGameTypeOption,
                 TpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
