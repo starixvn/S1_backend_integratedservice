@@ -68,6 +68,7 @@ namespace ThirdPartyService.Service.BLL
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
 
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
+            ThirdPartyHelperBase.ServerInfoProvider = provider.GetRequiredService<ServerInfoBLL>();
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
             ThirdPartyHelperBase.TpBetRecordProvider = provider.GetRequiredService<TpBetRecordService>();
         }
