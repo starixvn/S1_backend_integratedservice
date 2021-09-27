@@ -103,7 +103,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 msg = "FINISH";
                 log2File.AddResultLog(logName, guid, msg, null, "Info");
-                return true;
+                return false;
             }
             catch (Exception ex)
             {
