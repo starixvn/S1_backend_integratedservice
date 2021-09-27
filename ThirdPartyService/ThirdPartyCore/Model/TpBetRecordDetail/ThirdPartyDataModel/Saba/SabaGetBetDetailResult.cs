@@ -70,18 +70,18 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
         public int buyback_amount { get; set; }
         public int discount_stake { get; set; }
         public string esports_gameid { get; set; }
-        public DateTime match_datetime { get; set; }
+        public DateTime? match_datetime { get; set; }
         public int original_stake { get; set; }
         public string validbetamount { get; set; }
         public decimal winlost_amount { get; set; }
         public Colossusbetdata[] ColossusBetData { get; set; }
         public string lottery_bettype { get; set; }
-        public DateTime settlement_time { get; set; }
+        public DateTime? settlement_time { get; set; }
         public Singleparlaydata[] SingleParlayData { get; set; }
         public Resettlementinfo[] resettlementinfo { get; set; }
-        public DateTime transaction_time { get; set; }
+        public DateTime? transaction_time { get; set; }
         public string vendor_member_id { get; set; }
-        public DateTime winlost_datetime { get; set; }
+        public DateTime? winlost_datetime { get; set; }
     }
 
     public class Parlaydata
@@ -103,8 +103,8 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
         public string home_score { get; set; }
         public string sport_type { get; set; }
         public string ticket_status { get; set; }
-        public DateTime match_datetime { get; set; }
-        public DateTime winlost_datetime { get; set; }
+        public DateTime? match_datetime { get; set; }
+        public DateTime? winlost_datetime { get; set; }
     }
 
     public class Leaguename
@@ -117,13 +117,13 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
     {
         public string stake { get; set; }
         public string bet_type { get; set; }
-        public DateTime transdate { get; set; }
+        public DateTime? transdate { get; set; }
         public string cashout_id { get; set; }
         public string real_stake { get; set; }
         public string ticket_status { get; set; }
         public string buyback_amount { get; set; }
         public string winlost_amount { get; set; }
-        public DateTime winlost_datetime { get; set; }
+        public DateTime? winlost_datetime { get; set; }
     }
 
     public class Awayteamname
@@ -148,7 +148,7 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
         public string remains { get; set; }
         public string bet_type { get; set; }
         public string betcheck { get; set; }
-        public DateTime transdate { get; set; }
+        public DateTime? transdate { get; set; }
         public string winlost_amount { get; set; }
     }
 
@@ -162,7 +162,7 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
     public class Resettlementinfo
     {
         public string winlost { get; set; }
-        public DateTime actionDate { get; set; }
+        public DateTime? actionDate { get; set; }
         public string balancechange { get; set; }
         public string ticket_status { get; set; }
     }
@@ -195,9 +195,9 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
         public string last_ball_no { get; set; }
         public string ticket_status { get; set; }
         public decimal winlost_amount { get; set; }
-        public DateTime transaction_time { get; set; }
+        public DateTime? transaction_time { get; set; }
         public string vendor_member_id { get; set; }
-        public DateTime winlost_datetime { get; set; }
+        public DateTime? winlost_datetime { get; set; }
     }
 
     public class BetVirtualSportDetail
@@ -236,11 +236,11 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
         public string after_amount { get; set; }
         public int parlay_ref_no { get; set; }
         public string ticket_status { get; set; }
-        public DateTime match_datetime { get; set; }
+        public DateTime? match_datetime { get; set; }
         public decimal winlost_amount { get; set; }
-        public DateTime transaction_time { get; set; }
+        public DateTime? transaction_time { get; set; }
         public string vendor_member_id { get; set; }
-        public DateTime winlost_datetime { get; set; }
+        public DateTime? winlost_datetime { get; set; }
     }
 
     public class Parlaydata1
@@ -262,8 +262,8 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
         public string home_score { get; set; }
         public string sport_type { get; set; }
         public string ticket_status { get; set; }
-        public DateTime match_datetime { get; set; }
-        public DateTime winlost_datetime { get; set; }
+        public DateTime? match_datetime { get; set; }
+        public DateTime? winlost_datetime { get; set; }
     }
 
 }

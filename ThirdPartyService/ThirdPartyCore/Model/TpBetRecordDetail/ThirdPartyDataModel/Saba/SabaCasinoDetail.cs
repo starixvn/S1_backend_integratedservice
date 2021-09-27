@@ -21,9 +21,9 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
 
         public string TpUserName => _betDetail?.vendor_member_id;
 
-        public DateTime UTCBetTime => new DateTimeOffset(_betDetail.transaction_time, new TimeSpan(TimeZone, 0, 0)).DateTime;
+        public DateTime UTCBetTime => new DateTimeOffset(_betDetail?.transaction_time ?? DateTime.MinValue, new TimeSpan(TimeZone, 0, 0)).DateTime;
 
-        public DateTime UTCSettledTime => new DateTimeOffset(_betDetail.settlement_time, new TimeSpan(TimeZone, 0, 0)).DateTime;
+        public DateTime UTCSettledTime => new DateTimeOffset((DateTime)(_betDetail?.settlement_time ?? _betDetail?.transaction_time), new TimeSpan(TimeZone, 0, 0)).DateTime;
 
         public decimal Stake => _betDetail.stake * TpCurrency.ExchangeRate;
 
