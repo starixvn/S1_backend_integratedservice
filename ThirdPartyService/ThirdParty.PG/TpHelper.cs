@@ -82,7 +82,7 @@ namespace ThirdParty.PG
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
-            var model = JsonConvert.DeserializeObject<PGDetailModel>(tpBetRecordDetail.Detail);
+            var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
             return new CasinoDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
