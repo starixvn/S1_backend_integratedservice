@@ -20,7 +20,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
                 {
                     new BetSetting()
                     {
-                        TpCategory = 3,
+                        TpCategory = 49,
                         MinBet = 5,
                         MaxBet = 100
                     }
@@ -29,7 +29,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             var betAmount = 5.0m;
             var betLimitService = new BetLimitService();
             
-            var actual = betLimitService.SetBetLimit(3, 4, betSetting).IsOutOfLimit(betAmount);
+            var actual = betLimitService.SetBetLimit(49, 4, betSetting).IsOutOfLimit(betAmount);
             
             Assert.AreEqual(expected, actual);
         }
@@ -49,11 +49,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
                         TpCategory = 3,
                         MinBet = 5,
                         MaxBet = 100,
-                        TpBetLimits = new List<TpBetLimit>()
+                        TpBetSetting = new List<TpBetLimit>()
                         {
                             new TpBetLimit()
                             {
-                                TpId = 4,
+                                GameTypeId = 4,
                                 MinBet = 20,
                                 MaxBet = 50
                             }
