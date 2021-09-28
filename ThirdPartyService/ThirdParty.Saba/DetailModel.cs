@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.Saba
+namespace ThirdParty.Saba
 {
-    public class SabaGetBetDetailResult
+    public class DetailModel
     {
         public BetDetail[] BetDetails { get; set; }
         public BetNumberDetail[] BetNumberDetails { get; set; }

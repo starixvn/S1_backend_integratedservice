@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Web;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.PG;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.PG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly Dictionary<string, string> GameNameList;
+        public TpHelper()
+        {
+            GameNameList = TpBetRecordProvider.GetGameCasinoList(14).ToDictionary(d => d.AppId, d => d.Name);
+        }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -74,17 +81,36 @@ namespace ThirdParty.PG
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailObject = new GetDetailObject()
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+            var model = JsonConvert.DeserializeObject<PGDetailModel>(tpBetRecordDetail.Detail);
+            return new CasinoDetail(getBetDetail.TpGameTypeOption)
             {
-                TpBetRecordDetail = GetTpBetRecordDetail(getBetDetail),
-                TpGameTypeOption= getBetDetail.TpGameTypeOption,
+                TransId = getBetDetail.TransId,
+                Detail = tpBetRecordDetail.Detail,
                 TpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
-                }
+                },
+                RefTransId = model?.parentBetId.ToString(),
+                TpUserName = model?.playerName,
+                UTCBetTime = DateTimeOffset.FromUnixTimeMilliseconds(model?.betTime ?? 0).DateTime,
+                UTCSettledTime = DateTimeOffset.FromUnixTimeMilliseconds(model?.betEndTime ?? 0).DateTime,
+                Stake = model.betAmount * tpCustInfo.ExchangeRate,
+                WinlostAmount = (model.winAmount - model.betAmount) * tpCustInfo.ExchangeRate,
+                GameCode = model.gameId.ToString(),
+                GameName = GetGameName(model.gameId.ToString()),
             };
-            return new PGCasinoDetail(detailObject);
+        }
+
+        private string GetGameName(string gameId)
+        {
+            if (!GameNameList.TryGetValue(gameId, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
     }
 }

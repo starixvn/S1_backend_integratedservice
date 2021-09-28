@@ -1,95 +1,89 @@
 ﻿using System;
 
-namespace ThirdPartyCore.Model.TpBetRecordDetail.Interfaces
+namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
 {
-    public interface ISportsDetail
+    public class SportsDetail : BaseDetail
     {
-
-        /// <summary>
-        /// 注单识别码
-        /// </summary>
-        string TransId { get; }
+        public SportsDetail(TpGameTypeOption tpGameTypeOption) : base(tpGameTypeOption) { }
 
         /// <summary>
         /// 關聯單號
         /// </summary>
-        string RefTransId { get; }
+        public string RefTransId { get; set; }
 
         /// <summary>
         /// 会员识别码
         /// </summary>
-        string TpUserName { get; }
+        public string TpUserName { get; set; }
 
         /// <summary>
         /// 投注交易时间 (UTC+0)
         /// </summary>
-        DateTime UTCBetTime { get; }
+        public DateTime UTCBetTime { get; set; }
 
         /// <summary>
         /// 注单结算的时间 (UTC+0)
         /// </summary>
-        DateTime UTCSettledTime { get; }
+        public DateTime UTCSettledTime { get; set; }
 
         /// <summary>
         /// 注单赔率
         /// </summary>
-        string Odds { get; }
+        public string Odds { get; set; }
 
         /// <summary>
         /// 投注金额
         /// </summary>
-        decimal Stake { get; }
+        public decimal Stake { get; set; }
 
         /// <summary>
         /// 输赢金额
         /// </summary>
-        decimal WinlostAmount { get; }
+        public decimal WinlostAmount { get; set; }
 
         /// <summary>
         /// 联盟名称
         /// </summary>
-        string LeagueName { get; }
+        public string LeagueName { get; set; }
 
         /// <summary>
         /// 主队名称
         /// </summary>
-        string HomeTeamName { get; }
+        public string HomeTeamName { get; set; }
 
         /// <summary>
         /// 客队名称
         /// </summary>
-        string AwayTeamName { get; }
+        public string AwayTeamName { get; set; }
 
         /// <summary>
         /// 主队让球
         /// </summary>
-        string HomeHandicap { get; }
+        public string HomeHandicap { get; set; }
 
         /// <summary>
         /// 客队让球
         /// </summary>
-        string AwayHandicap { get; }
+        public string AwayHandicap { get; set; }
 
         /// <summary>
         /// 让球
         /// </summary>
-        string Handicap { get; }
+        public string Handicap { get; set; }
 
         /// <summary>
         /// 注单状态
         /// </summary>
-        string TicketStatus { get; }
-
-
+        public string TicketStatus { get; set; }
 
         /// <summary>
         /// 下注时客队得分
         /// </summary>
-        string AwayScore { get; }
+        public string AwayScore { get; set; }
 
         /// <summary>
         /// 下注时主队得分
         /// </summary>
-        string HomeyScore { get; }
+        public string HomeyScore { get; set; }
     }
 }

@@ -1,42 +1,39 @@
 ﻿using System;
 
-namespace ThirdPartyCore.Model.TpBetRecordDetail.Interfaces
+namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
 {
-    public interface ICasinoDetail
+    public class LotteryDetail : BaseDetail
     {
-        /// <summary>
-        /// 注单识别码
-        /// </summary>
-        string TransId { get; }
+        public LotteryDetail(TpGameTypeOption tpGameTypeOption) : base(tpGameTypeOption) { }
 
         /// <summary>
         /// 關聯單號
         /// </summary>
-        string RefTransId { get; }
+        public string RefTransId { get; set; }
 
         /// <summary>
         /// 会员识别码
         /// </summary>
-        string TpUserName { get; }
+        public string TpUserName { get; set; }
 
         /// <summary>
         /// 投注交易时间 (UTC+0)
         /// </summary>
-        DateTime UTCBetTime { get; }
+        public DateTime UTCBetTime { get; set; }
 
         /// <summary>
         /// 注单结算的时间 (UTC+0)
         /// </summary>
-        DateTime UTCSettledTime { get; }
+        public DateTime UTCSettledTime { get; set; }
 
         /// <summary>
         /// 投注金额
         /// </summary>
-        decimal Stake { get; }
+        public decimal Stake { get; set; }
 
         /// <summary>
         /// 输赢金额
         /// </summary>
-        decimal WinlostAmount { get; }
+        public decimal WinlostAmount { get; set; }
     }
 }

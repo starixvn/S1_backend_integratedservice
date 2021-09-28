@@ -1,6 +1,10 @@
-﻿namespace ThirdPartyCore.Model.TpBetRecordDetail.ThirdPartyDataModel.PG
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ThirdParty.PG
 {
-    public class PGDetailResult
+    public class DetailModel
     {
         public long betId { get; set; }
         public int gameId { get; set; }

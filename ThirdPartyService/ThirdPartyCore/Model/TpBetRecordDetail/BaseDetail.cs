@@ -8,27 +8,30 @@ namespace ThirdPartyCore.Model
     {
         public int TpId { get; }
 
-        public int TpCategoryId { get; }
+        public int TpCategoryId { get;  }
 
-        public int GameType { get; }
+        public int GameType { get;}
 
-        public string GameTypeName { get; }
+        public string GameTypeName { get;}
 
-        public string TransId { get; }
+        /// <summary>
+        /// 注单识别码
+        /// </summary>
+        public string TransId { get; set; }
 
-        public string Detail { get; }
+        /// <summary>
+        /// 第三方回傳細單資料(Json格式)
+        /// </summary>
+        public string Detail { get; set; }
 
-        public TpCurrency TpCurrency { get; }
+        public TpCurrency TpCurrency { get; set; }
 
-        public BaseDetail(GetDetailObject detailObject)
+        public BaseDetail(TpGameTypeOption tpGameTypeOption)
         {
-            TpId = detailObject.TpBetRecordDetail.TpId;
-            TpCategoryId = (int)detailObject.TpGameTypeOption.CategoryId;
-            GameType = detailObject.TpBetRecordDetail.GameType;
-            GameTypeName = detailObject.TpGameTypeOption.TypeName;
-            TransId = detailObject.TpBetRecordDetail.TransId;
-            Detail = detailObject.TpBetRecordDetail.Detail;
-            TpCurrency = detailObject.TpCurrency;
+            TpId =tpGameTypeOption.TpId;
+            TpCategoryId = (int)tpGameTypeOption.CategoryId;
+            GameType = tpGameTypeOption.Type;
+            GameTypeName = tpGameTypeOption.TypeName;
         }
 
     }

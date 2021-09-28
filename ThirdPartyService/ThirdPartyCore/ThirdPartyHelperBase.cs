@@ -485,11 +485,6 @@ namespace ThirdPartyCore
         {
             throw new NotImplementedException();
         }
-
-        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail)
-        {
-            return TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
-        }
     }
     public interface IThirdPartyTpBetRecordDetail
     {

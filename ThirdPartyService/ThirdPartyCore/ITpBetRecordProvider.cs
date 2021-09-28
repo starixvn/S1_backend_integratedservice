@@ -9,5 +9,7 @@ namespace ThirdPartyCore
     public interface ITpBetRecordProvider
     {
         TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail);
+
+        List<GameCasinoOption> GetGameCasinoList(int tpId);
     }
 }
