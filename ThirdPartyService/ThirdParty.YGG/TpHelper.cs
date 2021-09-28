@@ -52,7 +52,7 @@ namespace ThirdParty.YGG
             {
                 GameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception();
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{GameUrl}?lang={TpLangId}&gameid={gameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+                oApiResult.Message = $"{GameUrl}?lang={TpLangId}&gameid={gameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes";
                 return oApiResult;
             }
 
