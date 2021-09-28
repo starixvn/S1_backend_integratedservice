@@ -75,7 +75,6 @@ namespace ThirdPartyWager.Workers
 
                 var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
                 if (time.endUnix < cvTime)
                 {
                     bool result = await wagerRedoAGBLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix);

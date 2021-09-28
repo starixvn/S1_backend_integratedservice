@@ -75,7 +75,6 @@ namespace ThirdPartyWager.Workers
 
                     var time = dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                     var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                    log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
                     if (time.endUnix < cvTime)
                     {
                         bool result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);

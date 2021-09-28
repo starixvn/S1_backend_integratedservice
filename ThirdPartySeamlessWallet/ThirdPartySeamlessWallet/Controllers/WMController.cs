@@ -248,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         try
                         {
                             result = bettingBLL.PlaceBetLC_WM(getPointInoutReq, out decimal tpAffterAmount);
-                            
+
                             if (result > 0)
                             {
                                 pointInoutResp.errorCode = 0;

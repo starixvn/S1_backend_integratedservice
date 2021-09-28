@@ -40,6 +40,7 @@
     <ProjectReference Include="..\ThirdParty.KM\ThirdParty.KM.csproj" />
     <ProjectReference Include="..\ThirdParty.MP\ThirdParty.MP.csproj" />
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />
+    <ProjectReference Include="..\ThirdParty.Netent\ThirdParty.Netent.csproj" />
     <ProjectReference Include="..\ThirdParty.One789\ThirdParty.One789.csproj" />
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />
@@ -47,6 +48,7 @@
     <ProjectReference Include="..\ThirdParty.PG\ThirdParty.PG.csproj" />
     <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
     <ProjectReference Include="..\ThirdParty.PT\ThirdParty.PT.csproj" />
+    <ProjectReference Include="..\ThirdParty.RedTiger\ThirdParty.RedTiger.csproj" />
     <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.Sexy\ThirdParty.Sexy.csproj" />
