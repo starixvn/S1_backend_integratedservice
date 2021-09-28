@@ -644,7 +644,7 @@ namespace ThirdParty.Saba
 
             public SabaConfig(Dictionary<string, string> inputs)
             {
-                ApiUrl = inputs.GetValueOrDefault("NewApiUrl") ?? inputs.GetValue("ApiUrl");
+                ApiUrl = inputs.GetValue("ApiUrl");
                 VendorId = inputs.GetValue("VendorId");
             }
         }

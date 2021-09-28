@@ -53,21 +53,14 @@ namespace ThirdParty.Saba.Tests
 
         }
 
-        [TestCase("", ExpectedResult = "ApiUrl")]
-        [TestCase(null, ExpectedResult = "ApiUrl")]
-        [TestCase("NewApiUrl", ExpectedResult = "NewApiUrl")]
-        public string SabaConfig_Test(string newApiUrl)
+        [TestCase("ApiUrl", ExpectedResult = "ApiUrl")]
+        public string SabaConfig_Test(string apiUrl)
         {
             _inputs = new Dictionary<string, string>
             {
-                { "ApiUrl", "ApiUrl" },
+                { "ApiUrl", apiUrl},
                 { "VendorId", "aakx8ncolf" },
             };
-
-            if (!string.IsNullOrEmpty(newApiUrl))
-            {
-                _inputs.Add("NewApiUrl", newApiUrl);
-            }
 
             var config = new SabaConfig(_inputs);
             return config.ApiUrl;
