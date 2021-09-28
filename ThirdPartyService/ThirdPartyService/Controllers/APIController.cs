@@ -210,11 +210,10 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
-
+        
         public ActionResult<ApiResult> SetBetLimit(SetBetLimit setBetLimit)
         {
             var apiResult = new ApiResult();
-
             try
             {
                 apiResult = thirdPartyBLL.SetBetLimit(setBetLimit);
@@ -225,13 +224,12 @@ namespace ThirdPartyService.Controllers
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
-
             return apiResult;
         }
+
         public ActionResult<ApiResult> GetBetLimit(GetBetLimit setBetLimit)
         {
             var apiResult = new ApiResult();
-
             try
             {
                 apiResult = thirdPartyBLL.GetBetLimit(setBetLimit);
@@ -242,8 +240,25 @@ namespace ThirdPartyService.Controllers
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
-
             return apiResult;
+        }
+
+        [HttpPost]
+        public ActionResult<ApiResult<object>> GetBetDetail([FromBody] GetBetDetailRequest request)
+        {
+            try
+            {
+                return thirdPartyBLL.GetBetDetail(request);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new ApiResult<object>()
+                {
+                    ErrorCode = ErrorCode.SystemError,
+                    RawMessage = ex.Message,
+                };
+            }
         }
     }
 }

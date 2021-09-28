@@ -2155,6 +2155,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
+            var word = "_cancel";
+            if (bettingDataLC_WM.gameno.Contains(word))
+            {
+                mixUniqueId = $"{bettingDataLC_WM.gameno.Replace(word, "")}_{bettingDataLC_WM.user}";
+            }
+
             var p = new DynamicParameters(new
             {
                 TransId = mixUniqueId,
@@ -2328,6 +2334,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
+            var word = "_cancel";
+            if (bettingDataLC_WM.gameno.Contains(word))
+            {
+                mixUniqueId = $"{bettingDataLC_WM.gameno.Replace(word, "")}_{bettingDataLC_WM.user}";
+            }
             var p = new DynamicParameters(new
             {
                 TransId = mixUniqueId,

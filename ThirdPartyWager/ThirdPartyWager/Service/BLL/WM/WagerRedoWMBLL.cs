@@ -61,7 +61,7 @@ namespace ThirdPartyWager.Service.BLL
                     currencyList.Add("USD");
                     currencyList.Add("INR");
                 }
-
+                bool reCheck = false;
                 foreach (var curr in currencyList)
                 {
                     // count interval wagers
@@ -72,7 +72,6 @@ namespace ThirdPartyWager.Service.BLL
 
                     // error condition
                     var errorCode = dataWager.errorCode;
-                    var errorMsg = dataWager.errorMessage;
                     if (errorCode == 107)
                     {
                         msg = "NO_DATA";
@@ -109,14 +108,15 @@ namespace ThirdPartyWager.Service.BLL
                             msg = $"INSERT_WAGER(WAGERID: {bet.betId} )";
                             log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
                             return false;
-                            //continue;
                         }
                     }
+
+                    reCheck = true;
                 }
 
                 msg = "FINISH";
                 log2File.AddResultLog(logName, guid, msg, null, "Info");
-                return true;
+                return !(reCheck);
             }
             catch (Exception ex)
             {

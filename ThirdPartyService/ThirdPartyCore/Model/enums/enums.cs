@@ -59,9 +59,9 @@ namespace ThirdPartyCore.Model.enums
     }
     public enum TransferStatus
     {
-        Success = 0, 
-        Fail = 1, 
-        Pending = 2, 
+        Success = 0,
+        Fail = 1,
+        Pending = 2,
         PendingD = 3
     }
     public enum Direction
@@ -95,5 +95,21 @@ namespace ThirdPartyCore.Model.enums
     {
         Transfer = 0,
         Seamless = 1,
+    }
+    public enum DataBase
+    {
+        Main, //ConnectionString
+        Report,//ConnectionStringReport
+    }
+    public enum TpCategory
+    {
+        Sports = 1,
+        Casino = 2,
+        LiveCasino = 3,
+        Fishing = 4,
+        Cockfighting = 5,
+        Lottery = 6,
+        VirtualSports = 7,
+        Poker = 8,
     }
 }

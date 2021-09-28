@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ThirdPartyCore.Model;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -32,6 +33,8 @@ namespace ThirdPartyService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
+            services.AddDatabaseConnection(Configuration);
+
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<Common>();
@@ -48,6 +51,8 @@ namespace ThirdPartyService
             services.AddSingleton<ServerInfoService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<TpCustBalanceService>();
+            services.AddSingleton<TpBetRecordService>();
+            services.AddSingleton<ConfigService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -60,6 +65,9 @@ namespace ThirdPartyService
 
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();
+
+            services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
+            services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -136,7 +136,6 @@ namespace ThirdPartyWager.Workers
 
             var time = dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyyMMddHHmmss", timerTime);
             var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-            log2File.Error($"{logName}\r\n{time.endUnix}\r\n{cvTime}", "AA");
             if (time.endUnix < cvTime)
             {
                 bool result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);

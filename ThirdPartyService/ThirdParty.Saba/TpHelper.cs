@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.Saba
 {
@@ -744,7 +745,7 @@ namespace ThirdParty.Saba
 
             public SabaConfig(Dictionary<string, string> inputs)
             {
-                ApiUrl = inputs.GetValueOrDefault("NewApiUrl") ?? inputs.GetValue("ApiUrl");
+                ApiUrl = inputs.GetValue("ApiUrl");
                 VendorId = inputs.GetValue("VendorId");
             }
         }
@@ -762,8 +763,8 @@ namespace ThirdParty.Saba
                 {
                     // Saba Soccer deeplink
                     return $"&menutype=0&sportid=1&leaguekey={act}";
-                } 
-                return $"&game={act}";              
+                }
+                return $"&game={act}";
             }
 
             if (!string.IsNullOrEmpty(matchId) && matchId != "0")
@@ -779,8 +780,8 @@ namespace ThirdParty.Saba
                 // Saba Soccer deeplink
                 return $"&menutype=0&act=1&leaguekey={act}";
             }
-   
-            return $"&act={act}&menutype={menuType}";                 
+
+            return $"&act={act}&menutype={menuType}";
         }
 
         private string GetMobileDeeplink(string sportType, string menuType, string matchId, string betType)
@@ -799,7 +800,7 @@ namespace ThirdParty.Saba
             if (!string.IsNullOrEmpty(matchId) && matchId != "0")
             {
                 return $"{result}&matchid={matchId}";
-            }            
+            }
             if (!string.IsNullOrEmpty(betType))
             {
                 return $"{result}&gameid={betType}";
@@ -822,5 +823,98 @@ namespace ThirdParty.Saba
 
             return string.Empty;
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {  
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var gameType = getBetDetail.TpGameTypeOption.Type;
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+            var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
+            var betDetail = model?.BetDetails?.First();
+            var betNumberDetail = model?.BetNumberDetails?.First();
+            var betVirtualSportDetail = model?.BetVirtualSportDetails?.First();
+
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = tpBetRecordDetail.Detail,
+                    TpCurrency = tpCurrency,
+                    TpUserName = betDetail?.vendor_member_id,
+                    UTCBetTime = GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
+                    UTCSettledTime = GetUTCTime(betDetail?.settlement_time, DateTime.MinValue),
+                    Odds = betDetail?.odds,
+                    Stake = betDetail.stake * tpCurrency.ExchangeRate,
+                    WinlostAmount = betDetail.winlost_amount * tpCurrency.ExchangeRate,
+                    LeagueName = betDetail?.leaguename?.First()?.name,
+                    HomeTeamName = betDetail?.hometeamname?.First()?.name,
+                    AwayTeamName = betDetail?.awayteamname?.First()?.name,
+                    HomeHandicap = betDetail?.home_hdp,
+                    AwayHandicap = betDetail?.away_hdp,
+                    Handicap = betDetail?.hdp,
+                    TicketStatus = betDetail?.ticket_status,
+                    AwayScore = betDetail?.away_score,
+                    HomeyScore = betDetail?.home_score,
+                    RefTransId = betDetail?.parlay_ref_no,
+                },
+                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = tpBetRecordDetail.Detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = betDetail?.trans_id,
+                    TpUserName = betDetail?.vendor_member_id,
+                    UTCBetTime = GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
+                    UTCSettledTime = GetUTCTime(betDetail?.settlement_time, (DateTime)betDetail?.transaction_time),
+                    Stake = betDetail.stake * tpCurrency.ExchangeRate,
+                    WinlostAmount = betDetail.winlost_amount * tpCurrency.ExchangeRate,
+                    GameCode = string.Empty,
+                    GameName = string.Empty,
+                },
+                TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = tpBetRecordDetail.Detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = gameType == 2 ? betNumberDetail?.trans_id : betDetail?.trans_id,
+                    TpUserName = gameType == 2 ? betNumberDetail?.vendor_member_id : betDetail?.vendor_member_id,
+                    UTCBetTime = gameType == 2 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) : 
+                            GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
+                    UTCSettledTime = gameType == 2 ?　GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
+                            GetUTCTime(betDetail?.transaction_time, (DateTime)betDetail.transaction_time),
+                    Stake = gameType == 2 ? betNumberDetail.stake * tpCurrency.ExchangeRate : betDetail.stake * tpCurrency.ExchangeRate,
+                    WinlostAmount = gameType == 2 ? betNumberDetail.winlost_amount * tpCurrency.ExchangeRate : betDetail.winlost_amount * tpCurrency.ExchangeRate,
+                },
+                TpCategory.VirtualSports => new VirtualSportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = tpBetRecordDetail.Detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = betVirtualSportDetail?.trans_id,
+                    TpUserName = betVirtualSportDetail?.vendor_member_id,
+                    UTCBetTime = GetUTCTime(betVirtualSportDetail?.transaction_time, DateTime.MinValue),
+                    UTCSettledTime = GetUTCTime(betVirtualSportDetail?.match_datetime, (DateTime)betVirtualSportDetail?.transaction_time),
+                    Stake = betVirtualSportDetail.stake * tpCurrency.ExchangeRate,
+                    WinlostAmount = betVirtualSportDetail.winlost_amount * tpCurrency.ExchangeRate,
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = tpBetRecordDetail.Detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
+        }
+
+        private DateTime GetUTCTime(DateTime? target, DateTime defaultTime)
+        {
+            return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0)).DateTime;
+        }
+
     }
 }

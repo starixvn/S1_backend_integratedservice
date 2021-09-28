@@ -13,9 +13,4 @@ namespace ThirdPartyService.Service.Model
         public int Status { set; get; }
         public int WalletType { set; get; }
     }
-    public class TpCurrency
-    {
-        public string TpCurrencyId { set; get; }
-        public decimal ExchangeRate { set; get; }
-    }
 }
