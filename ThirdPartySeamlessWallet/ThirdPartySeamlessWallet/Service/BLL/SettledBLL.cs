@@ -388,7 +388,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleDataFish_YL> GetUnsettledListFish_YL()
+        public IEnumerable<SettleData> GetUnsettledListFish_YL()
         {
             return settledService.GetUnsettledListFish_YL();
         }
