@@ -49,9 +49,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
                         TpCategory = 3,
                         MinBet = 5,
                         MaxBet = 100,
-                        TpBetSetting = new List<TpBetLimit>()
+                        TpBetSetting = new List<TpBetSetting>()
                         {
-                            new TpBetLimit()
+                            new TpBetSetting()
                             {
                                 GameTypeId = 4,
                                 MinBet = 20,

@@ -21,10 +21,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TpCategory { get; set; }
         public int MinBet { get; set; }
         public int MaxBet { get; set; }
-        public List<TpBetLimit> TpBetSetting { get; set; }
+        public List<TpBetSetting> TpBetSetting { get; set; }
     }
 
-    public class TpBetLimit
+    public class TpBetSetting
     {
         public int GameTypeId { get; set; }
         public int MinBet { get; set; }

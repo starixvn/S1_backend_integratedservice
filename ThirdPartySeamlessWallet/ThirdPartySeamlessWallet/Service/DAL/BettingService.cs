@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -22,14 +23,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
         private BetLimitService _betLimitService;
-        private readonly CustBetLimitService _custBetLimitService;
+        private readonly ICustBetLimitService _custBetLimitService;
         private readonly Tools tools;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ThirdPartyService thirdPartyService;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, BetLimitService betLimitService, CustBetLimitService custBetLimitService)
+        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, BetLimitService betLimitService, ICustBetLimitService custBetLimitService)
         {
             this.configuration = configuration;
             this.walletService = walletService;

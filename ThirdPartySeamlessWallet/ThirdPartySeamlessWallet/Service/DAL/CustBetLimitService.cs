@@ -2,12 +2,13 @@
 using System.Data;
 using Dapper;
 using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
-    public class CustBetLimitService
+    public class CustBetLimitService : ICustBetLimitService
     {
         private readonly MySqlClient _sqlClient;
 
