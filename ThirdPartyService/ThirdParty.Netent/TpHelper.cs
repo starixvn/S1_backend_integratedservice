@@ -118,7 +118,7 @@ namespace ThirdParty.Netent
                         {
                             id = gameId
                         },
-                        //playMode = fun == "1" ? "play_for_fun" : "real_money"
+                        playMode = fun == "1" ? "play_for_fun" : "real_money"
                     },
                     channel = new
                     {
