@@ -8,17 +8,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int MinBet { get; set; }
         public int MaxBet { get; set; }
 
-        public BetLimitService SetBetLimit(int tpCategory, int tpId, CustBetLimit betLimit)
+        public BetLimitService SetBetLimit(int tpCategory, int gameTypeId, CustBetLimit betLimit)
         {
             var category = betLimit.BetSettings?.FirstOrDefault(a => a.TpCategory == tpCategory);
             if(category == null)
                 return this;
 
-            var tp = category.TpBetLimits?.FirstOrDefault(a => a.TpId == tpId);
-            if (tp != null)
+            var gameType = category.TpBetSetting?.FirstOrDefault(a => a.GameTypeId == gameTypeId);
+            if (gameType != null)
             {
-                MinBet = tp.MinBet;
-                MaxBet = tp.MaxBet;
+                MinBet = gameType.MinBet;
+                MaxBet = gameType.MaxBet;
                 return this;
             }
             MinBet = category.MinBet;

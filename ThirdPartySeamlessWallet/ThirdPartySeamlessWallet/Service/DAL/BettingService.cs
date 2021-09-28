@@ -59,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 _betLimitService = new BetLimitService();
                 logger.LogInformation($"{tpCustInfo.TpUserName} betSetting:{JsonConvert.SerializeObject(betSetting)}");
-                var outOfLimit = _betLimitService.SetBetLimit((int) tpCategory, tpId, betSetting).IsOutOfLimit(Math.Abs(amount));
+                var outOfLimit = _betLimitService.SetBetLimit((int) tpCategory, gameType, betSetting).IsOutOfLimit(Math.Abs(amount));
                 if (outOfLimit)
                 {
                     logger.LogInformation($"User {tpCustInfo.TpUserName} betAmount:{Math.Abs(amount)} minBet:{_betLimitService.MinBet} maxBet:{_betLimitService.MaxBet} out of bet limit");
