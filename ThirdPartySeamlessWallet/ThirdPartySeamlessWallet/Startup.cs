@@ -16,6 +16,7 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -70,7 +71,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
             services.AddTransient<RiskInspection>();
-            services.AddTransient(serviceProvider =>
+            services.AddTransient<ICustBetLimitService>(serviceProvider =>
             {
                 var sqlClient = serviceProvider.GetServices<MySqlClient>()
                     .First(item => item.DataBase == DataBase.Main);

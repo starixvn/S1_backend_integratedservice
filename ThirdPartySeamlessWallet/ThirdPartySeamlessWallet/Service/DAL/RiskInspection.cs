@@ -8,24 +8,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     public class RiskInspection
     {
         private readonly ICustBetLimitService _custBetLimitService;
-        public BetLimit BetSetting { get; private set; }
         public RiskInspection(ICustBetLimitService custBetLimitService)
         {
             _custBetLimitService = custBetLimitService;
         }
         
-        public bool IsOutOfLimit(int custId, int tpCategory, int gameTypeId, decimal amount)
+        public bool IsOutOfLimit(int custId, int tpCategory, int gameTypeId, decimal amount, out int minBet, out int maxBet)
         {
+            minBet = 0;
+            maxBet = 0;
             var custBetLimit = _custBetLimitService.GetCustBetLimit(custId);
             if(custBetLimit == null)
                 return false;
 
-            BetSetting = new BetLimit(custBetLimit.BetSettings)
+            var betSetting = new BetLimit(custBetLimit.BetSettings)
                 .SetBetLimit(tpCategory, gameTypeId);
 
-            if (BetSetting.MinBet != 0 && BetSetting.MaxBet != 0)
+            minBet = betSetting.MinBet;
+            maxBet = betSetting.MaxBet;
+            if (minBet != 0 && maxBet != 0)
             {
-                return amount < BetSetting.MinBet || amount > BetSetting.MaxBet;
+                return amount < minBet || amount > maxBet;
             }
             return false;
         }

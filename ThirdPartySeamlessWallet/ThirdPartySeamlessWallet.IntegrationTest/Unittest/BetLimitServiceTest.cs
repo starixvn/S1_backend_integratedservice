@@ -24,7 +24,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             custBetLimitSvc.GetCustBetLimit(Arg.Any<int>()).ReturnsNull();
             var betLimitService = new RiskInspection(custBetLimitSvc);
             
-            var actual = betLimitService.IsOutOfLimit(custId, tpCategory, gameTypeId, betAmount);
+            var actual = betLimitService.IsOutOfLimit(custId, tpCategory, gameTypeId, betAmount, out var minBet, out var maxBet);
             
             Assert.AreEqual(expected, actual);
         }
@@ -53,7 +53,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             });
             var betLimitService = new RiskInspection(custBetLimitSvc);
             
-            var actual = betLimitService.IsOutOfLimit(custId,tpCategory, gameTypeId, betAmount);
+            var actual = betLimitService.IsOutOfLimit(custId,tpCategory, gameTypeId, betAmount, out var minBet, out var maxBet);
             
             Assert.AreEqual(expected, actual);
         }
@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             });
             var betLimitService = new RiskInspection(custBetLimitSvc);
             
-            var actual = betLimitService.IsOutOfLimit(custId,tpCategory, gameTypeId, betAmount);
+            var actual = betLimitService.IsOutOfLimit(custId,tpCategory, gameTypeId, betAmount, out var minBet, out var maxBet);
             
             Assert.AreEqual(expected, actual);
         }
@@ -120,7 +120,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             });
             var betLimitService = new RiskInspection(custBetLimitSvc);
             
-            var actual = betLimitService.IsOutOfLimit(custId,tpCategory, gameTypeId, betAmount);
+            var actual = betLimitService.IsOutOfLimit(custId,tpCategory, gameTypeId, betAmount, out var minBet, out var maxBet);
             
             Assert.AreEqual(expected, actual);
         }
