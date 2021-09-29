@@ -3323,6 +3323,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public IEnumerable<SettleData> GetUnsettledList_Netent()
+        {
+            return _mainDbClient.Query<SettleData>("Service_BettransRng_Netent_Unsettle_Get");
+        }
+
+        public int SetSettleFlag_Netent(string TransId)
+        {
+            return _mainDbClient.Execute("Service_BettransRng_Netent_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
         public int CancelBetRNG_RedTiger(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -3479,7 +3489,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        
+
+        public IEnumerable<SettleData> GetUnsettledList_RedTiger()
+        {
+            return _mainDbClient.Query<SettleData>("Service_BettransRng_RedTiger_Unsettle_Get");
+        }
+
+        public int SetSettleFlag_RedTiger(string TransId)
+        {
+            return _mainDbClient.Execute("Service_BettransRng_RedTiger_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
         #endregion
     }
 }

@@ -105,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, PromotionCategory promotionCategory)
         {
-            var promoCategoryId = (int) promotionCategory;
+            var promoCategoryId = (int)promotionCategory;
             if (settledService.GetBonusIdByPromoCategoryId(tpCustInfo.CustId, promoCategoryId, out var bonusId))
             {
                 betRecordInfo.BonusId = bonusId;
@@ -1087,7 +1087,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     txn.gameInfo.winLoss *= tpCurrency.ExchangeRate;
                 }
             }
-            
+
             var result = settledService.PayoutLC_AWC_Sexy(payoutLC_Sexy, out afterAmount);
             return result;
         }
@@ -2099,6 +2099,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleData> GetUnsettledList_Netent()
+        {
+            return settledService.GetUnsettledList_Netent();
+        }
+
+        public int SetSettleFlag_Netent(string TransId)
+        {
+            return settledService.SetSettleFlag_Netent(TransId);
+        }
+
         public int CancelBetRNG_RedTiger(BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.RedTiger, bettingData_EVO.userId);
@@ -2133,6 +2143,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
+        }
+
+        public IEnumerable<SettleData> GetUnsettledList_RedTiger()
+        {
+            return settledService.GetUnsettledList_RedTiger();
+        }
+
+        public int SetSettleFlag_RedTiger(string TransId)
+        {
+            return settledService.SetSettleFlag_RedTiger(TransId);
         }
         #endregion
     }

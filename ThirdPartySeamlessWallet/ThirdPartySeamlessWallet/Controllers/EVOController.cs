@@ -271,11 +271,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             BetResp getApiResponse = new BetResp();
             getApiResponse.status = "UNKNOWN_ERROR";
 
-            if (_environment.IsDevelopment() && getReq.transaction.amount >= 300)
-            {
-                //System.Threading.Thread.Sleep(60000);
-                return getApiResponse;
-            }
+            //if (_environment.IsDevelopment() && getReq.transaction.amount >= 300)
+            //{
+            //    Response.StatusCode = (int)Error.ERROR;
+            //    //System.Threading.Thread.Sleep(60000);
+            //    return getApiResponse;
+            //}
 
             if (string.IsNullOrEmpty(getReq.sid))
             {
@@ -485,6 +486,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             BettingData_EVO getReq = JsonConvert.DeserializeObject<BettingData_EVO>(Content);
             BetResp getApiResponse = new BetResp();
             getApiResponse.status = "UNKNOWN_ERROR";
+
+            //if (_environment.IsDevelopment() && getReq.transaction.amount >= 300)
+            //{
+            //    Response.StatusCode = (int)Error.ERROR;
+            //    //System.Threading.Thread.Sleep(60000);
+            //    return getApiResponse;
+            //}
 
             if (string.IsNullOrEmpty(getReq.sid))
             {

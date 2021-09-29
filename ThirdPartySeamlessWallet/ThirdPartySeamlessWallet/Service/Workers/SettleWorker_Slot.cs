@@ -981,5 +981,157 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 timerSettleMG.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        private void DoSettleNetentWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.Netent;
+            var gameType = GameType.Netent_RNG;
+            var category = TpCategory.Slots;
+            string logName = "Settle_Netent_Rng";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledList_Netent();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId.ToString(),
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.SettleTime,
+                                SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId.ToString()),
+                            };
+
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            settledBLL.SetSettleFlag_Netent(unsettled.TransId);
+                        }
+                        catch (Exception ex1)
+                        {
+                            LogContext.PushProperty("TP", tpName);
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", tpName);
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleNetent.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private void DoSettleRedTigerWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.RedTiger;
+            var gameType = GameType.RedTiger_RNG;
+            var category = TpCategory.Slots;
+            string logName = "Settle_RedTiger_Rng";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledList_RedTiger();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.Stake;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId.ToString(),
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.SettleTime,
+                                SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId.ToString()),
+                            };
+
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            settledBLL.SetSettleFlag_RedTiger(unsettled.TransId);
+                        }
+                        catch (Exception ex1)
+                        {
+                            LogContext.PushProperty("TP", tpName);
+                            isError = true;
+                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", tpName);
+                log2File.Error(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleRedTiger.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
     }
 }

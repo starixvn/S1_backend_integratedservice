@@ -62,6 +62,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleTCGVN;
         private Timer timerSettleMP;
         private Timer timerSettleSexy;
+        private Timer timerSettleNetent;
+        private Timer timerSettleRedTiger;
 
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
@@ -127,6 +129,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleNetent = new Timer(DoSettleNetentWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleRedTiger = new Timer(DoSettleRedTigerWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1250,6 +1254,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleTCGVN?.Change(Timeout.Infinite, 0);
             timerSettleMP?.Change(Timeout.Infinite, 0);
             timerSettleSexy?.Change(Timeout.Infinite, 0);
+            timerSettleNetent?.Change(Timeout.Infinite, 0);
+            timerSettleRedTiger?.Change(Timeout.Infinite, 0);
 
             return Task.CompletedTask;
         }
