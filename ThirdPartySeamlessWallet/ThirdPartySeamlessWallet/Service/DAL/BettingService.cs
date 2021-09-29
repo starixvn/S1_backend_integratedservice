@@ -22,15 +22,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private BetLimitService _betLimitService;
-        private readonly ICustBetLimitService _custBetLimitService;
+        private readonly BetLimitService _betLimitService;
         private readonly Tools tools;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ThirdPartyService thirdPartyService;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, BetLimitService betLimitService, ICustBetLimitService custBetLimitService)
+        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, BetLimitService betLimitService)
         {
             this.configuration = configuration;
             this.walletService = walletService;
@@ -39,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.thirdPartyService = thirdPartyService;
             this.logger = logger;
             this.log2File = log2File;
-            _custBetLimitService = custBetLimitService;
+            _betLimitService = betLimitService;
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -55,17 +54,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             bool bHasBonusWallet = true;
 
-            var betSetting = _custBetLimitService.GetCustBetLimit(tpCustInfo.CustId);
-            if (betSetting != null)
+            if (_betLimitService.IsOutOfLimit(tpCustInfo.CustId, (int) tpCategory, gameType, Math.Abs(amount)))
             {
-                _betLimitService = new BetLimitService();
-                logger.LogInformation($"{tpCustInfo.TpUserName} betSetting:{JsonConvert.SerializeObject(betSetting)}");
-                var outOfLimit = _betLimitService.SetBetLimit((int) tpCategory, gameType, betSetting).IsOutOfLimit(Math.Abs(amount));
-                if (outOfLimit)
-                {
-                    logger.LogInformation($"User {tpCustInfo.TpUserName} betAmount:{Math.Abs(amount)} minBet:{_betLimitService.MinBet} maxBet:{_betLimitService.MaxBet} out of bet limit");
-                    return -9;
-                }
+                logger.LogInformation($"User {tpCustInfo.TpUserName} betAmount:{Math.Abs(amount)} minBet:{_betLimitService.MinBet} maxBet:{_betLimitService.MaxBet} out of bet limit");
+                return -9;
             }
 
             try

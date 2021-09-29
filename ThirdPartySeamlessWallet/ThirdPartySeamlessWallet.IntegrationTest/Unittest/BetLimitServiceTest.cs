@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using NSubstitute;
 using NUnit.Framework;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
@@ -12,24 +14,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
         public void Cust_Bet_10_And_In_Bet_Limit()
         {
             var expected = false;
-            var betSetting = new CustBetLimit()
-            {
-                CustId = 250032,
-                SiteId = 1,
-                BetSettings = new List<BetSetting>()
-                {
-                    new BetSetting()
-                    {
-                        TpCategory = 49,
-                        MinBet = 5,
-                        MaxBet = 100
-                    }
-                }
-            };
             var betAmount = 5.0m;
-            var betLimitService = new BetLimitService();
+            var custBetLimitSvc =  Substitute.For<ICustBetLimitService>();
+            custBetLimitSvc.GetCustBetLimit(Arg.Any<int>()).Returns(new CustBetLimit());
+            var betLimitService = new BetLimitService(custBetLimitSvc);
             
-            var actual = betLimitService.SetBetLimit(49, 4, betSetting).IsOutOfLimit(betAmount);
+            var actual = betLimitService.IsOutOfLimit(250032, 49, 4, betAmount);
             
             Assert.AreEqual(expected, actual);
         }
@@ -37,33 +27,16 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
         [Test]
         public void DG_LiveCasino_Bet_10_And_In_Bet_Limit()
         {
-            var expected = true;
-            var betSetting = new CustBetLimit()
+            var expected = false;
+            var custBetLimitSvc =  Substitute.For<ICustBetLimitService>();
+            custBetLimitSvc.GetCustBetLimit(Arg.Any<int>()).Returns(new CustBetLimit()
             {
-                CustId = 250032,
-                SiteId = 1,
-                BetSettings = new List<BetSetting>()
-                {
-                    new BetSetting()
-                    {
-                        TpCategory = 3,
-                        MinBet = 5,
-                        MaxBet = 100,
-                        TpBetSetting = new List<TpBetSetting>()
-                        {
-                            new TpBetSetting()
-                            {
-                                GameTypeId = 4,
-                                MinBet = 20,
-                                MaxBet = 50
-                            }
-                        }
-                    }
-                }
-            };
-            var betLimitService = new BetLimitService();
+                CustId = 250140,
+                SiteId = 1
+            });
+            var betLimitService = new BetLimitService(custBetLimitSvc);
             
-            var actual = betLimitService.SetBetLimit(3, 4, betSetting).IsOutOfLimit(60);
+            var actual = betLimitService.IsOutOfLimit(250140,3, 4, 60);
             
             Assert.AreEqual(expected, actual);
         }
