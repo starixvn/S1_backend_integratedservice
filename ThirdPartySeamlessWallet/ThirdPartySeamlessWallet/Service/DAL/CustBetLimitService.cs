@@ -21,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var p = new DynamicParameters(new { _CustId = custId });
             var result = _sqlClient.QueryFirst<CustBetLimitData>("Service_CustBetLimitByCustId_Get", p);
-            if (result == null)
+            if (result == null || result.BetSetting == null || result.BetSetting == "null")
                 return null;
             
             var custBetLimit = new CustBetLimit()

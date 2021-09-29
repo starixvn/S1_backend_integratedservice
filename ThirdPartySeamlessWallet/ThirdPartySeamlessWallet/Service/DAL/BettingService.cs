@@ -22,14 +22,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private readonly BetLimitService _betLimitService;
+        private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly ThirdPartyService thirdPartyService;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, BetLimitService betLimitService)
+        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, RiskInspection riskInspection)
         {
             this.configuration = configuration;
             this.walletService = walletService;
@@ -38,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             this.thirdPartyService = thirdPartyService;
             this.logger = logger;
             this.log2File = log2File;
-            _betLimitService = betLimitService;
+            _riskInspection = riskInspection;
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -53,10 +53,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             int result = 0;
             bool bHasBonusWallet = true;
-
-            if (_betLimitService.IsOutOfLimit(tpCustInfo.CustId, (int) tpCategory, gameType, Math.Abs(amount)))
+            
+            if (_riskInspection.IsOutOfLimit(tpCustInfo.CustId, (int) tpCategory, gameType, Math.Abs(amount)))
             {
-                logger.LogInformation($"User {tpCustInfo.TpUserName} betAmount:{Math.Abs(amount)} minBet:{_betLimitService.MinBet} maxBet:{_betLimitService.MaxBet} out of bet limit");
+                logger.LogInformation($"User:{tpCustInfo.TpUserName}, tpCategory:{(int)tpCategory}, gameType:{gameType}, betAmount:{Math.Abs(amount)} " +
+                                              $"minBet:{_riskInspection.BetSetting.MinBet} maxBet:{_riskInspection.BetSetting.MaxBet} out of bet limit");
                 return -9;
             }
 

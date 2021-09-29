@@ -17,7 +17,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             var betAmount = 5.0m;
             var custBetLimitSvc =  Substitute.For<ICustBetLimitService>();
             custBetLimitSvc.GetCustBetLimit(Arg.Any<int>()).Returns(new CustBetLimit());
-            var betLimitService = new BetLimitService(custBetLimitSvc);
+            var betLimitService = new RiskInspection(custBetLimitSvc);
             
             var actual = betLimitService.IsOutOfLimit(250032, 49, 4, betAmount);
             
@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
                 CustId = 250140,
                 SiteId = 1
             });
-            var betLimitService = new BetLimitService(custBetLimitSvc);
+            var betLimitService = new RiskInspection(custBetLimitSvc);
             
             var actual = betLimitService.IsOutOfLimit(250140,3, 4, 60);
             

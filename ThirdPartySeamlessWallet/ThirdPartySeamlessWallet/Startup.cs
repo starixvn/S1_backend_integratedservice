@@ -69,7 +69,7 @@ namespace ThirdPartySeamlessWallet
             /*DAL*/
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
-            services.AddTransient<BetLimitService>();
+            services.AddTransient<RiskInspection>();
             services.AddTransient(serviceProvider =>
             {
                 var sqlClient = serviceProvider.GetServices<MySqlClient>()
