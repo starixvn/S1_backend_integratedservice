@@ -716,7 +716,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region EVO
+        #region Netent
 
         public int PlaceBetRNG_Netent(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
@@ -729,7 +729,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             bettingData_EVO.transaction.amount *= -1;
-            var p = new DynamicParameters( new
+            var p = new DynamicParameters(new
             {
                 TransactionId = bettingData_EVO.transaction.id,
                 TransactionRefId = bettingData_EVO.transaction.refId,
@@ -749,7 +749,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = (int)TicketStatus.UnSettled,
                 SettleFlag = (int)SettleFlag.Running
             });
-            
+
             try
             {
                 var category = TpCategory.Slots;
@@ -794,6 +794,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        #endregion
+
+        #region RedTiger
 
         public int PlaceBetRNG_RedTiger(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
@@ -870,7 +873,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        
+
         #endregion
     }
 }

@@ -232,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
-        
+
         #region Sexy
 
         public int PlaceBetLC_Sexy(BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
@@ -511,6 +511,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        #endregion
+
+        #region Netent
+
         public int PlaceBetRNG_Netent(BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Netent, bettingData_EVO.userId);
@@ -528,6 +532,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+        #endregion
+
+        #region RedTiger
 
         public int PlaceBetRNG_RedTiger(BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {

@@ -3165,7 +3165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region EVO
+        #region Netent
 
         public int CancelBetRNG_Netent(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
@@ -3332,6 +3332,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Execute("Service_BettransRng_Netent_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
+
+        #endregion
+
+        #region RedTiger
 
         public int CancelBetRNG_RedTiger(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {

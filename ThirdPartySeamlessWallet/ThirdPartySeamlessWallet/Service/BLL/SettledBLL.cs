@@ -2063,6 +2063,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public IEnumerable<SettleData> GetUnsettledList_EVO()
+        {
+            return settledService.GetUnsettledList_EVO();
+        }
+
+        public int SetSettleFlag_EVO(string TransId)
+        {
+            return settledService.SetSettleFlag_EVO(TransId);
+        }
+
+        public SettleData GetSettle_TpWagerLC_EVO(string TransId)
+        {
+            return settledService.GetSettle_TpWagerLC_EVO(TransId);
+        }
+
+        #endregion
+
+        #region Netent
+
         public int CancelBetRNG_Netent(BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Netent, bettingData_EVO.userId);
@@ -2109,6 +2128,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_Netent(TransId);
         }
 
+        #endregion
+
+        #region RedTiger
+
         public int CancelBetRNG_RedTiger(BettingData_EVO bettingData_EVO, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.RedTiger, bettingData_EVO.userId);
@@ -2154,6 +2177,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlag_RedTiger(TransId);
         }
+
         #endregion
     }
 }

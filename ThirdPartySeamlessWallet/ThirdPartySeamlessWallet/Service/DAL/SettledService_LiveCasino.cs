@@ -3232,6 +3232,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public IEnumerable<SettleData> GetUnsettledList_EVO()
+        {
+            return _mainDbClient.Query<SettleData>("Service_BettransLC_EVO_Unsettle_Get");
+        }
+
+        public int SetSettleFlag_EVO(string TransId)
+        {
+            return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
+        public SettleData GetSettle_TpWagerLC_EVO(string TransId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerLC_EVO_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
         #endregion
     }
 }
