@@ -5,11 +5,21 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Text;
 using System.Web;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace ThirdParty.SG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> GameNameList;
+
+        public TpHelper()
+        {
+            GameNameList = TpBetRecordProvider.GetGameCasinoList(10).ToDictionary(d => d.GameId, d => d.Name);
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -68,5 +78,63 @@ namespace ThirdParty.SG
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var spName = getBetDetail.TpGameTypeOption.Type == 15 ? "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
+            var wagerDetail = TpBetRecordProvider.GetWagerDetail(spName, new { getBetDetail.TransId });
+            var detail = ToJson(wagerDetail);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("ticketId")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("acctId")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("gameCode")?.ToString(),
+                    GameName = GetGameName(wagerDetail.GetValueOrDefault("gameCode")?.ToString()),
+                },
+                TpCategory.Fishing => new FishingDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("ticketId")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("acctId")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
+                },       
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!GameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+        }
+
     }
 }

@@ -13,11 +13,13 @@ namespace ThirdParty.PG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<string, string> GameNameList;
+        private readonly IReadOnlyDictionary<string, string> GameNameList;
+
         public TpHelper()
         {
             GameNameList = TpBetRecordProvider.GetGameCasinoList(14).ToDictionary(d => d.AppId, d => d.Name);
         }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
