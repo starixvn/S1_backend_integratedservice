@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThirdPartyWager.Service.BLL;
@@ -24,17 +27,19 @@ namespace ThirdPartyWager.Workers
         private readonly HttpHelper httpHelper;
         private readonly CommonBLL commonBLL;
         private readonly LatestHighlightVideoBLL latestHighlightVideoBLL;
+        private readonly IConfiguration _configuration;
 
 
 
-        public LatestHighlightVideo(IHostEnvironment environment, ILogger<LatestHighlightVideo> logger, Log2File log2File, HttpHelper httpHelper, CommonBLL commonBLL, LatestHighlightVideoBLL latestHighlightVideoBLL)
+        public LatestHighlightVideo(IServiceProvider provider)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.log2File = log2File;
-            this.httpHelper = httpHelper;
-            this.commonBLL = commonBLL;
-            this.latestHighlightVideoBLL = latestHighlightVideoBLL;
+            environment = provider.GetRequiredService<IHostEnvironment>();
+            logger = provider.GetRequiredService<ILogger<LatestHighlightVideo>>();
+            log2File = provider.GetRequiredService<Log2File>();
+            httpHelper = provider.GetRequiredService<HttpHelper>();
+            commonBLL = provider.GetRequiredService<CommonBLL>();
+            latestHighlightVideoBLL = provider.GetRequiredService<LatestHighlightVideoBLL>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -60,7 +65,8 @@ namespace ThirdPartyWager.Workers
                 builder.Query = query.ToString();
                 string newurl = builder.ToString();
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
-                var result = await httpHelper.GetClient().SendAsync(data);
+                using var client = httpHelper.GetClientWithHandler(CreateHandler());
+                var result = await client.SendAsync(data);
                 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
@@ -135,6 +141,20 @@ namespace ThirdPartyWager.Workers
         {
             timerLatestHighlightVideo?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
+        }
+
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler();
+            if (_configuration.GetValue<string>("ProxyHost") != null)
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
+                handler.ServerCertificateCustomValidationCallback = delegate { return true; };
+            }
+
+            return handler;
         }
     }
 }
