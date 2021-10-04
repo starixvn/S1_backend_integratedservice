@@ -246,10 +246,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
@@ -260,6 +256,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus
                             };
