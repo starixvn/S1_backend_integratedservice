@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.PG
@@ -84,6 +85,12 @@ namespace ThirdParty.PG
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+
+            if (tpBetRecordDetail.Detail == null)
+            {
+                throw new DetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+            }
+
             var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
             return new CasinoDetail(getBetDetail.TpGameTypeOption)
             {
