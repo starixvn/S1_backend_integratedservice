@@ -324,7 +324,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var result = 0;
-                
+
                 switch (gameType)
                 {
                     case (int)GameType.Netent_RNG:
@@ -337,10 +337,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = _bettingBLL.PlaceBetLC_EVO(getReq, out tpAffterAmount);
                         break;
                 }
-                
+
                 if (result > 0)
                 {
-                    if(tpAffterAmount == 0)
+                    if (tpAffterAmount == 0)
                     {
                         var tpCustBalance = _tpCustInfoBLL.GetBalance(tpId, getReq.userId, gameType);
                         tpAffterAmount = tpCustBalance.Balance;
@@ -537,6 +537,99 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                     default:
                         result = _settledBLL.PayoutLC_EVO(getReq, out tpAffterAmount);
+                        break;
+                }
+
+                if (result > 0)
+                {
+                    if (tpAffterAmount == 0)
+                    {
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance(tpId, getReq.userId, gameType);
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+                    getApiResponse.status = "OK";
+                    getApiResponse.balance = tpAffterAmount;
+                    getApiResponse.retransmission = false;
+                    getApiResponse.uuid = getReq.uuid;
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                    return getApiResponse;
+                }
+                else if (result == -1)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+                    getApiResponse.status = "BET_ALREADY_SETTLED";
+                    getApiResponse.balance = tpCustBalance.Balance;
+                    getApiResponse.retransmission = false;
+                    getApiResponse.uuid = getReq.uuid;
+                }
+
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                return getApiResponse;
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
+                return getApiResponse;
+            }
+        }
+
+        [HttpPost]
+        [Route("[controller]/promo_payout")]
+        public async Task<dynamic> promoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
+        {
+            string logName = $"{thisTp}_common_promo_payout";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            _log2File.Info(Content, logName);
+
+            PromoData_EVO getReq = JsonConvert.DeserializeObject<PromoData_EVO>(Content);
+            BetResp getApiResponse = new BetResp();
+            getApiResponse.status = "UNKNOWN_ERROR";
+
+            if (string.IsNullOrEmpty(getReq.sid))
+            {
+                getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+
+            var tokenInfo = getTokenInfo(getReq.sid);
+            int tpId = tokenInfo.tpId;
+            int gameType = tokenInfo.gameType;
+            if (tpId == 0 || gameType == 0)
+            {
+                getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+
+            logName = $"{(Tp)tpId}_promo_payout";
+
+            var authToken = getQuery["authToken"];
+            var check = checkAuthorization(authToken);
+            if (check.status != "OK")
+            {
+                getApiResponse.status = check.status;
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                return getApiResponse;
+            }
+
+            decimal tpAffterAmount = 0;
+            try
+            {
+                var result = 0;
+
+                switch (gameType)
+                {
+                    case (int)GameType.Netent_RNG:
+                        result = _settledBLL.PromoPayoutRNG_Netent(getReq, out tpAffterAmount);
+                        break;
+                    case (int)GameType.RedTiger_RNG:
+                        result = _settledBLL.PromoPayoutRNG_RedTiger(getReq, out tpAffterAmount);
+                        break;
+                    default:
+                        result = _settledBLL.PromoPayoutLC_EVO(getReq, out tpAffterAmount);
                         break;
                 }
 
