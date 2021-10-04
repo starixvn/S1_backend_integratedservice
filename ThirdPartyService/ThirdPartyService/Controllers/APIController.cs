@@ -219,11 +219,19 @@ namespace ThirdPartyService.Controllers
             {
                 return thirdPartyBLL.GetBetDetail(request);
             }
-            catch (DetailNotFoundException ex)
+            catch (BetDetailNotFoundException ex)
             {
                 return new ApiResult<object>()
                 {
-                    ErrorCode = ErrorCode.Fail,
+                    ErrorCode = ErrorCode.BetDetailNotFound,
+                    RawMessage = ex.Message,
+                };
+            }
+            catch (GetBetDetailNotImplementedException ex)
+            {
+                return new ApiResult<object>()
+                {
+                    ErrorCode = ErrorCode.GetBetDetailNotImplemented,
                     RawMessage = ex.Message,
                 };
             }
