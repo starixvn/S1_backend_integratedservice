@@ -100,6 +100,7 @@ namespace ThirdPartyCore.Model.enums
     {
         Main, //ConnectionString
         Report,//ConnectionStringReport
+        Wager,//ConnectionStringWager
     }
     public enum TpCategory
     {

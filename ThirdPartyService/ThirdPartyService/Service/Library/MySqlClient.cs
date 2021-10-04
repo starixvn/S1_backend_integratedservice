@@ -248,6 +248,27 @@ namespace ThirdPartyService.Service.Library
             return result;
         }
 
+
+        public dynamic QueryFirst(string name, object parameters)
+        {
+            dynamic result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.QueryFirst(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
     }
 }
 

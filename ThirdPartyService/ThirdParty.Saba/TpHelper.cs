@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.Saba
@@ -732,6 +733,12 @@ namespace ThirdParty.Saba
             };
             var gameType = getBetDetail.TpGameTypeOption.Type;
             var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+
+            if (tpBetRecordDetail.Detail == null)
+            {
+                throw new DetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+            }
+
             var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
             var betDetail = model?.BetDetails?.First();
             var betNumberDetail = model?.BetNumberDetails?.First();

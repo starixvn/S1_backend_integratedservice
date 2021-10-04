@@ -24,6 +24,10 @@ namespace ThirdPartyService.Extensions
             {
                 DataBase = DataBase.Report
             });
+            services.AddSingleton(factory => new MySqlClient(config.GetConnectionString("ConnectionStringWager"), logger)
+            {
+                DataBase = DataBase.Wager
+            });
             return services;
         }
 
