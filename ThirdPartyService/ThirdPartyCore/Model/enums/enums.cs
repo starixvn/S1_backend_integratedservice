@@ -40,6 +40,12 @@ namespace ThirdPartyCore.Model.enums
         InvalidCurrency = 2002,
         InvalidLanguage = 2003,
         #endregion
+
+        #region BetDetail (3xxxx)
+        BetDetailNotFound = 3000,
+        GetBetDetailNotImplemented = 3001,
+        #endregion
+
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
         Not_allowed_environment = 5003,

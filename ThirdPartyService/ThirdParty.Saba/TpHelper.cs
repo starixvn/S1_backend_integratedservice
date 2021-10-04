@@ -736,7 +736,7 @@ namespace ThirdParty.Saba
 
             if (tpBetRecordDetail.Detail == null)
             {
-                throw new DetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
             }
 
             var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
