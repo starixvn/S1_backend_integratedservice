@@ -7,17 +7,20 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.PG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<string, string> GameNameList;
+        private readonly IReadOnlyDictionary<string, string> GameNameList;
+
         public TpHelper()
         {
             GameNameList = TpBetRecordProvider.GetGameCasinoList(14).ToDictionary(d => d.AppId, d => d.Name);
         }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -82,6 +85,12 @@ namespace ThirdParty.PG
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+
+            if (tpBetRecordDetail == null)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+            }
+
             var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
             return new CasinoDetail(getBetDetail.TpGameTypeOption)
             {

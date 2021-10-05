@@ -51,7 +51,20 @@ namespace ThirdPartyWager.Service.Model
         public string freezeTime { get; set; } = "";
         public int multiple { get; set; }
         public string remark { get; set; } = "";
-        public string playName { get; set; } = "";
+
+        public string playName
+        {
+            get
+            {
+                return _playName ?? "";
+            }
+            set
+            {
+                _playName = value;
+            }
+        }
+        private string _playName { get; set; }
+
         public string gameGroupName { get; set; } = "";
         public decimal winAmount { get; set; }
         public decimal netPNL { get; set; }
@@ -92,7 +105,20 @@ namespace ThirdPartyWager.Service.Model
         public string bettingTime { get; set; } = "";
         public string chase { get; set; } = "";
         public int multiple { get; set; }
-        public string playName { get; set; } = "";
+
+        public string playName 
+        {
+            get 
+            {
+                return _playName ?? "";
+            }
+            set 
+            {
+                _playName = value;
+            } 
+        } 
+        private string _playName { get; set; }
+
         public string remark { get; set; } = "";
         public decimal totalBet { get; set; }
         public int series { get; set; }

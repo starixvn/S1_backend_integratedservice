@@ -11,15 +11,17 @@ using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
 {
-    public class TpBetRecordService: ITpBetRecordProvider
+    public class TpBetRecordService : ITpBetRecordProvider
     {
         private readonly MySqlClient _reportDbClient;
-        private readonly Dictionary<int,List<GameCasinoOption>> _GameCasinoList;
+        private readonly MySqlClient _wagerDbClient;
+        private readonly IReadOnlyDictionary<int, List<GameCasinoOption>> _GameCasinoList;
 
         public TpBetRecordService(IServiceProvider provider)
         {
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
-            _GameCasinoList = provider.GetRequiredService<IEnumerable<GameCasinoOption>>().GroupBy(i =>i.TpId)
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _GameCasinoList = provider.GetRequiredService<IEnumerable<GameCasinoOption>>().GroupBy(i => i.TpId)
                 .ToDictionary(d => d.Key, d => d.ToList());
         }
 
@@ -45,7 +47,19 @@ namespace ThirdPartyService.Service.DAL
             }
             catch (Exception)
             {
-                return new TpBetRecordDetailModel();
+                return null;
+            }
+        }
+
+        public IReadOnlyDictionary<string, object> GetWagerDetail(string spName, object parameters = null)
+        {
+            try
+            {
+                return (IReadOnlyDictionary<string, object>)_wagerDbClient.QueryFirst(spName, parameters);
+            }
+            catch (Exception)
+            {
+                return default;
             }
         }
     }

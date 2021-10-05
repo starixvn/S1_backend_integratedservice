@@ -2527,10 +2527,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public IEnumerable<SettleDataFish_YL> GetUnsettledListFish_YL()
+        public IEnumerable<SettleData> GetUnsettledListFish_YL()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataFish_YL>("Service_BettransFish_YL_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransFish_YL_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
         public int SetSettleFlagFish_YL(string TransId)
         {

@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -249,6 +250,22 @@ namespace ThirdPartyService.Controllers
             try
             {
                 return thirdPartyBLL.GetBetDetail(request);
+            }
+            catch (BetDetailNotFoundException ex)
+            {
+                return new ApiResult<object>()
+                {
+                    ErrorCode = ErrorCode.BetDetailNotFound,
+                    RawMessage = ex.Message,
+                };
+            }
+            catch (GetBetDetailNotImplementedException ex)
+            {
+                return new ApiResult<object>()
+                {
+                    ErrorCode = ErrorCode.GetBetDetailNotImplemented,
+                    RawMessage = ex.Message,
+                };
             }
             catch (Exception ex)
             {

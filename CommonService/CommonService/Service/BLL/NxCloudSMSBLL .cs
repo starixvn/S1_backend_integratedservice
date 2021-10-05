@@ -86,12 +86,13 @@ namespace CommonService.Service.BLL
             string siteName = custInfo.SiteName;
             string userLang = custInfo.UserLang;
             string smsMessage = $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            string areaCode = custInfo.AreaCode;
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
             {
                 smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
             }
-            else if (userLang.Equals("id", StringComparison.OrdinalIgnoreCase) || PhoneNo.StartsWith("+62"))
+            else if (userLang.Equals("id", StringComparison.OrdinalIgnoreCase) || areaCode.StartsWith("+62") || PhoneNo.StartsWith("62"))
             {
                 smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", "id"), OTPNum);
             }
