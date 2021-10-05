@@ -2148,6 +2148,36 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int PromoPayoutRNG_Netent(PromoData_EVO promoData_EVO, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Netent, promoData_EVO.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Netent, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                promoData_EVO.promoTransaction.amount *= tpCurrency.ExchangeRate;
+                if (string.Equals(promoData_EVO.promoTransaction.type, "JackpotWin", StringComparison.OrdinalIgnoreCase))
+                {
+                    _ = promoData_EVO.promoTransaction.jackpots.Select(x =>
+                    {
+                        x.winAmount *= tpCurrency.ExchangeRate;
+                        return x;
+                    });
+                }
+                else if (string.Equals(promoData_EVO.promoTransaction.type, "RewardGamePlayableSpent", StringComparison.OrdinalIgnoreCase) || string.Equals(promoData_EVO.promoTransaction.type, "RewardGameWinCapReached", StringComparison.OrdinalIgnoreCase) || string.Equals(promoData_EVO.promoTransaction.type, "RewardGameMinBetLimitReached", StringComparison.OrdinalIgnoreCase))
+                {
+                    promoData_EVO.promoTransaction.playableBalance *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.PromoPayoutRNG_Netent(tpCustInfo, promoData_EVO, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public IEnumerable<SettleData> GetUnsettledList_Netent()
         {
             return settledService.GetUnsettledList_Netent();
@@ -2197,6 +2227,37 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
+        public int PromoPayoutRNG_RedTiger(PromoData_EVO promoData_EVO, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.RedTiger, promoData_EVO.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.RedTiger, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                promoData_EVO.promoTransaction.amount *= tpCurrency.ExchangeRate;
+                if (string.Equals(promoData_EVO.promoTransaction.type, "JackpotWin", StringComparison.OrdinalIgnoreCase))
+                {
+                    _ = promoData_EVO.promoTransaction.jackpots.Select(x =>
+                    {
+                        x.winAmount *= tpCurrency.ExchangeRate;
+                        return x;
+                    });
+                }
+                else if (string.Equals(promoData_EVO.promoTransaction.type, "RewardGamePlayableSpent", StringComparison.OrdinalIgnoreCase) || string.Equals(promoData_EVO.promoTransaction.type, "RewardGameWinCapReached", StringComparison.OrdinalIgnoreCase) || string.Equals(promoData_EVO.promoTransaction.type, "RewardGameMinBetLimitReached", StringComparison.OrdinalIgnoreCase))
+                {
+                    promoData_EVO.promoTransaction.playableBalance *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.PromoPayoutRNG_RedTiger(tpCustInfo, promoData_EVO, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
 
         public IEnumerable<SettleData> GetUnsettledList_RedTiger()
         {

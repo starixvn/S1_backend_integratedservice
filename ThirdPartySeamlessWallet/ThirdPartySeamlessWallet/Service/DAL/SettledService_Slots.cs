@@ -3323,6 +3323,75 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int PromoPayoutRNG_Netent(TpCustInfo tpCustInfo, PromoData_EVO promoData_EVO, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    PromoTransactionId = promoData_EVO.promoTransaction.id,
+                    userId = promoData_EVO.userId,
+                    currency = promoData_EVO.currency,
+                    amount = promoData_EVO.promoTransaction.amount,
+                    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
+                    game = JsonConvert.SerializeObject(promoData_EVO.game),
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = (int)TicketStatus.Win,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+
+                result = conn.Execute("Service_RewardRng_Netent_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (promoData_EVO.promoTransaction.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(promoData_EVO.promoTransaction.amount),
+                            (int)Tp.Netent,
+                            promoData_EVO.promoTransaction.id,
+                            (int)GameType.Netent_RNG,
+                            TpCategory.Slots,
+                            promoData_EVO.promoTransaction.id,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"{promoData_EVO.promoTransaction.id} Prize",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
         public IEnumerable<SettleData> GetUnsettledList_Netent()
         {
             return _mainDbClient.Query<SettleData>("Service_BettransRng_Netent_Unsettle_Get");
@@ -3478,6 +3547,75 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //{
                 //    result = -1;
                 //}
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
+        public int PromoPayoutRNG_RedTiger(TpCustInfo tpCustInfo, PromoData_EVO promoData_EVO, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    PromoTransactionId = promoData_EVO.promoTransaction.id,
+                    userId = promoData_EVO.userId,
+                    currency = promoData_EVO.currency,
+                    amount = promoData_EVO.promoTransaction.amount,
+                    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
+                    game = JsonConvert.SerializeObject(promoData_EVO.game),
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = (int)TicketStatus.Win,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+
+                result = conn.Execute("Service_RewardRng_RedTiger_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (promoData_EVO.promoTransaction.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(promoData_EVO.promoTransaction.amount),
+                            (int)Tp.RedTiger,
+                            promoData_EVO.promoTransaction.id,
+                            (int)GameType.RedTiger_RNG,
+                            TpCategory.Slots,
+                            promoData_EVO.promoTransaction.id,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"{promoData_EVO.promoTransaction.id} Prize",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
             }
             catch (MySqlException mySqlEx)
             {
