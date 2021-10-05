@@ -86,7 +86,7 @@ namespace ThirdParty.PG
         {
             var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
 
-            if (tpBetRecordDetail.Detail == null)
+            if (tpBetRecordDetail == null)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
             }

@@ -47,7 +47,7 @@ namespace ThirdPartyService.Service.DAL
             }
             catch (Exception)
             {
-                return new TpBetRecordDetailModel();
+                return null;
             }
         }
 

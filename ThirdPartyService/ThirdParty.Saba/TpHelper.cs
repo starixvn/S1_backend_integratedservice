@@ -734,7 +734,7 @@ namespace ThirdParty.Saba
             var gameType = getBetDetail.TpGameTypeOption.Type;
             var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
 
-            if (tpBetRecordDetail.Detail == null)
+            if (tpBetRecordDetail == null)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
             }
