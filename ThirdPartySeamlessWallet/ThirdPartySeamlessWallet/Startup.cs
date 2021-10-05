@@ -71,13 +71,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
             services.AddTransient<RiskInspection>();
-            services.AddTransient<ICustBetLimitService>(serviceProvider =>
-            {
-                var sqlClient = serviceProvider.GetServices<MySqlClient>()
-                    .First(item => item.DataBase == DataBase.Main);
-                return new CustBetLimitService(sqlClient);
-            });
-            //services.AddSingleton<CustBetLimitService>();
+            services.AddTransient<ICustBetLimitService>();
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();

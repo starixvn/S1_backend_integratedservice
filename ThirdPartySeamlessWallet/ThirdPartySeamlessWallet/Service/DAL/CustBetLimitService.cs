@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -12,9 +16,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly MySqlClient _sqlClient;
 
-        public CustBetLimitService(MySqlClient sqlClient)
+        public CustBetLimitService(IServiceProvider provider)
         {
-            _sqlClient = sqlClient;
+            _sqlClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public CustBetLimit GetCustBetLimit(int custId)

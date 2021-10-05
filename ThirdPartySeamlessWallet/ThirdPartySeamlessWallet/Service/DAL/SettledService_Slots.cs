@@ -2789,7 +2789,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     int bonusId = 0;
                     if (betAmount != 0)
                     {
-                        result = new BettingService(this.configuration, this.walletService, thirdPartyBLL, this.tools, null, betLogger, log2File, new RiskInspection(new CustBetLimitService(_mainDbClient))).PlaceBetV2(
+                        result = _bettingService.PlaceBetV2(
                             tpCustInfo,
                             betAmount,
                             (int)Tp.JILI,

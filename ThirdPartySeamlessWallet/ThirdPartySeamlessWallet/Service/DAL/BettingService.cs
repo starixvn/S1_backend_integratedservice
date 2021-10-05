@@ -10,6 +10,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -24,21 +25,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly WalletService walletService;
         private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly ThirdPartyService thirdPartyService;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File, RiskInspection riskInspection)
+        public BettingService(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.walletService = walletService;
-            this.tools = tools;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.thirdPartyService = thirdPartyService;
-            this.logger = logger;
-            this.log2File = log2File;
-            _riskInspection = riskInspection;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            walletService = provider.GetRequiredService<WalletService>();;
+            tools = provider.GetRequiredService<Tools>();;
+            logger = provider.GetRequiredService<ILogger<BettingService>>();
+            log2File = provider.GetRequiredService<Log2File>();
+            _riskInspection = provider.GetRequiredService<RiskInspection>();
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
