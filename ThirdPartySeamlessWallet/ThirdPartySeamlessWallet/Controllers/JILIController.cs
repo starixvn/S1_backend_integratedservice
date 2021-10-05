@@ -108,6 +108,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/auth")]
+        [Route("[controller]/goal123/auth")]
+        [Route("[controller]/bwing/auth")]
         public async Task<dynamic> authAsync()
         {
             string logName = $"{thisTp}_auth";
@@ -191,6 +193,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/bet")]
+        [Route("[controller]/goal123/bet")]
+        [Route("[controller]/bwing/bet")]
         public async Task<dynamic> betAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             var w1 = System.Diagnostics.Stopwatch.StartNew();
@@ -215,7 +219,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (check.errorCode != 0)
             {
                 w1.Stop();
-
                 log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}\r\nw1={w1.ElapsedMilliseconds}", logName);
                 return check;
             }
@@ -339,6 +342,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/cancelBet")]
+        [Route("[controller]/goal123/cancelBet")]
+        [Route("[controller]/bwing/cancelBet")]
         public async Task<dynamic> cancelBetAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_cancelBet";
@@ -420,7 +425,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getErrorResponse.message = "authorization is null";
                 return getErrorResponse;
             }
-
+            // all site use same username and password
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             byte[] authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username"]}:{thirdPartySetting.TpSetting["Password"]}");
             string authToken = Convert.ToBase64String(authTmp);
