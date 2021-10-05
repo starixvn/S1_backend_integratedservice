@@ -71,7 +71,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
             services.AddTransient<RiskInspection>();
-            services.AddTransient<ICustBetLimitService>();
+            services.AddTransient<ICustBetLimitService, CustBetLimitService>();
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();
