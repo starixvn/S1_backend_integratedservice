@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 cache.Set(key, dBonusMinBetList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
             }
 
-            return dBonusMinBetList.Where(x => x.GameType == gameType && x.CurrencyId == currencyId).FirstOrDefault();
+            return dBonusMinBetList.FirstOrDefault(x => x.GameType == gameType && x.CurrencyId == currencyId);
         }
 
         public int GetBonusCategoryId(int gameType)
