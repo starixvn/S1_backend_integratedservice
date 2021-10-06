@@ -7,6 +7,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.CQ9
 {
@@ -159,5 +160,43 @@ namespace ThirdParty.CQ9
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+            var token = inputs.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+
+            var url = $"{apiUrl}/gameboy/order/detail/v2";
+            var sParam = $"roundid={getBetDetail.TransId}&account={tpCustInfo.TpUserName}&lang=en";
+            var header = new Dictionary<string, string>()
+            {
+                { "Authorization", token }
+            };
+
+            var json = HttpGet(url, sParam, null, header);
+            var result = FromJson<DetailResult>(json);
+            if (result.status.code != "0")
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status.message}");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.data,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+        }
+
+        public class DetailResult
+        {
+            public string data { get; set; }
+            public Status status { get; set; }
+        }
+
     }
 }
