@@ -2715,9 +2715,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region JILI
-
-        private readonly ILogger<BettingService> betLogger;
-
+        
         public int BetAndPayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, ThirdPartyBLL thirdPartyBLL, out decimal afterAmount)
         {
             var result = 0;

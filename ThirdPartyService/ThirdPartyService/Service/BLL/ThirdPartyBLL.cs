@@ -764,10 +764,10 @@ namespace ThirdPartyService.Service.BLL
             return tpHelper.SetBetLimit(tpCustInfoResult.Data, inputs, setBetLimit.BetSetting);
 
         }
-        public ApiResult<List<BetSetting>> GetBetLimit(GetBetLimit setBetLimit)
+        public ApiResult<List<BetSetting>> GetBetLimit(GetBetLimit getBetLimit)
         {
             var apiResult = new ApiResult<List<BetSetting>>();
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(setBetLimit.CustId, setBetLimit.TpId);
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(getBetLimit.CustId, getBetLimit.TpId);
             if (tpCustInfoResult.Data == null)
             {
                 apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
@@ -779,10 +779,10 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
             
-            var tpHelper = (IThirdPartyBetLimitParticular) thirdPartyHelper.GetThirdPartyHelper(setBetLimit.TpId, 
+            var tpHelper = (IThirdPartyBetLimitParticular) thirdPartyHelper.GetThirdPartyHelper(getBetLimit.TpId, 
                 tpCustInfoResult.Data.SiteId);
             var oThirdPartyModel = 
-                thirdPartyHelper.GetThirdPartyBySite(setBetLimit.TpId, tpCustInfoResult.Data.SiteId);
+                thirdPartyHelper.GetThirdPartyBySite(getBetLimit.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             return tpHelper.GetBetLimit(tpCustInfoResult.Data, inputs);

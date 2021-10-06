@@ -228,12 +228,12 @@ namespace ThirdPartyService.Controllers
             return apiResult;
         }
 
-        public ActionResult<ApiResult> GetBetLimit(GetBetLimit setBetLimit)
+        public ActionResult<ApiResult> GetBetLimit(GetBetLimit getBetLimit)
         {
             var apiResult = new ApiResult();
             try
             {
-                apiResult = thirdPartyBLL.GetBetLimit(setBetLimit);
+                apiResult = thirdPartyBLL.GetBetLimit(getBetLimit);
             }
             catch (Exception ex)
             {

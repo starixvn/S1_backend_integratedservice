@@ -30,7 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly BettingService _bettingService;
         public SettledService(IServiceProvider provider)
         {
-            _bettingService = provider.GetRequiredService<BettingService>();;
+            _bettingService = provider.GetRequiredService<BettingService>();
             configuration = provider.GetRequiredService<IConfiguration>();
             walletService = provider.GetRequiredService<WalletService>();
             tools = provider.GetRequiredService<Tools>();

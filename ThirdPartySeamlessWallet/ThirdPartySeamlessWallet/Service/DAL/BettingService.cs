@@ -11,8 +11,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -31,8 +29,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public BettingService(IServiceProvider provider)
         {
             configuration = provider.GetRequiredService<IConfiguration>();
-            walletService = provider.GetRequiredService<WalletService>();;
-            tools = provider.GetRequiredService<Tools>();;
+            walletService = provider.GetRequiredService<WalletService>();
+            tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<BettingService>>();
             log2File = provider.GetRequiredService<Log2File>();
             _riskInspection = provider.GetRequiredService<RiskInspection>();
