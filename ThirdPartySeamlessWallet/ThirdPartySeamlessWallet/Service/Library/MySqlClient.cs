@@ -7,11 +7,13 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Serilog.Context;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Library
 {
     public sealed class MySqlClient
     {
+        public DataBase DataBase { get; set; }
         private readonly string _connectionString;
 
         private readonly ILogger<MySqlClient> _logger;
@@ -41,7 +43,28 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
+        
+        public T QueryFirst<T>(string name, SqlMapper.IDynamicParameters parameters)
+        {
+            T result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.QueryFirstOrDefault<T>(name, parameters,
+                    commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
 
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+        
         public int Execute(string name, CommandType commandType = CommandType.StoredProcedure, DynamicParameters parameters = null)
         {
             var sw = Stopwatch.StartNew();

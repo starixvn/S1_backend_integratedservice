@@ -10,7 +10,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.BLL;
+using Microsoft.Extensions.DependencyInjection;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -21,21 +21,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     {
         private readonly IConfiguration configuration;
         private readonly WalletService walletService;
+        private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly ThirdPartyService thirdPartyService;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
 
-        public BettingService(IConfiguration configuration, WalletService walletService, ThirdPartyBLL thirdPartyBLL, Tools tools, ThirdPartyService thirdPartyService, ILogger<BettingService> logger, Log2File log2File)
+        public BettingService(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.walletService = walletService;
-            this.tools = tools;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.thirdPartyService = thirdPartyService;
-            this.logger = logger;
-            this.log2File = log2File;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            walletService = provider.GetRequiredService<WalletService>();
+            tools = provider.GetRequiredService<Tools>();
+            logger = provider.GetRequiredService<ILogger<BettingService>>();
+            log2File = provider.GetRequiredService<Log2File>();
+            _riskInspection = provider.GetRequiredService<RiskInspection>();
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -50,6 +48,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             int result = 0;
             bool bHasBonusWallet = true;
+            
+            if (_riskInspection.IsOutOfLimit(tpCustInfo.CustId, (int) tpCategory, gameType, Math.Abs(amount),
+                                             out var minBet, out var maxBet))
+            {
+                logger.LogInformation($"User:{tpCustInfo.TpUserName}, tpCategory:{(int)tpCategory}, gameType:{gameType}, betAmount:{Math.Abs(amount)} " +
+                                              $"minBet:{minBet} maxBet:{maxBet} out of bet limit");
+                return -9;
+            }
 
             try
             {

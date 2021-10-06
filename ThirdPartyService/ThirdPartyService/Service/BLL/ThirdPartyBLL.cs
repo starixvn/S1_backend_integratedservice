@@ -740,6 +740,54 @@ namespace ThirdPartyService.Service.BLL
             return true;
         }
 
+        public ApiResult SetBetLimit(SetBetLimit setBetLimit)
+        {
+            var apiResult = new ApiResult<TransferResult>();
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(setBetLimit.CustId, setBetLimit.TpId);
+            if (tpCustInfoResult.Data == null)
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
+                return apiResult;
+            }
+            
+            var tpHelper = (IThirdPartyBetLimitParticular) thirdPartyHelper.GetThirdPartyHelper(setBetLimit.TpId, 
+                tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = 
+                thirdPartyHelper.GetThirdPartyBySite(setBetLimit.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            return tpHelper.SetBetLimit(tpCustInfoResult.Data, inputs, setBetLimit.BetSetting);
+
+        }
+        public ApiResult<List<BetSetting>> GetBetLimit(GetBetLimit getBetLimit)
+        {
+            var apiResult = new ApiResult<List<BetSetting>>();
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(getBetLimit.CustId, getBetLimit.TpId);
+            if (tpCustInfoResult.Data == null)
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
+                return apiResult;
+            }
+            
+            var tpHelper = (IThirdPartyBetLimitParticular) thirdPartyHelper.GetThirdPartyHelper(getBetLimit.TpId, 
+                tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = 
+                thirdPartyHelper.GetThirdPartyBySite(getBetLimit.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            return tpHelper.GetBetLimit(tpCustInfoResult.Data, inputs);
+        }
+        
         /// <summary>
         /// 新增餘額資料
         /// </summary>

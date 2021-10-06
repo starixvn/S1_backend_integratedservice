@@ -2715,9 +2715,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region JILI
-
-        private readonly ILogger<BettingService> betLogger;
-
+        
         public int BetAndPayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, ThirdPartyBLL thirdPartyBLL, out decimal afterAmount)
         {
             var result = 0;
@@ -2789,7 +2787,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     int bonusId = 0;
                     if (betAmount != 0)
                     {
-                        result = new BettingService(this.configuration, this.walletService, thirdPartyBLL, this.tools, null, betLogger, log2File).PlaceBetV2(
+                        result = _bettingService.PlaceBetV2(
                             tpCustInfo,
                             betAmount,
                             (int)Tp.JILI,

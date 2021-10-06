@@ -211,6 +211,38 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+        
+        public ActionResult<ApiResult> SetBetLimit(SetBetLimit setBetLimit)
+        {
+            var apiResult = new ApiResult();
+            try
+            {
+                apiResult = thirdPartyBLL.SetBetLimit(setBetLimit);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+            }
+            return apiResult;
+        }
+
+        public ActionResult<ApiResult> GetBetLimit(GetBetLimit getBetLimit)
+        {
+            var apiResult = new ApiResult();
+            try
+            {
+                apiResult = thirdPartyBLL.GetBetLimit(getBetLimit);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+            }
+            return apiResult;
+        }
 
         [HttpPost]
         public ActionResult<ApiResult<object>> GetBetDetail([FromBody] GetBetDetailRequest request)

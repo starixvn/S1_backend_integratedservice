@@ -12,7 +12,7 @@ using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.Saba
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
 
@@ -93,6 +93,25 @@ namespace ThirdParty.Saba
             public List<Datum> Data { get; set; }
         }
 
+        private class SetMemberBetSettingReq : Req
+        {
+            public string bet_setting { get; set; }
+        }
+        
+        public class GetBetSettingLimitReq
+        {
+            public string vendor_id { set; get; }
+            public string currency { set; get; }
+        }
+        
+        
+        
+        private class SetMemberBetSettingResult
+        {
+            public int error_code { get; set; }
+            public string message { get; set; }
+        }
+        
         public class Datum
         {
             public string vendor_member_id { get; set; }
@@ -627,6 +646,88 @@ namespace ThirdParty.Saba
             return new ApiResult<List<ReceiveTpUserBalanceModel>>()
             {
             };
+        }
+
+        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
+        {
+            var config = new SabaConfig(inputs);
+            var apiUrl = config.ApiUrl;
+            var req = new SetMemberBetSettingReq
+            {
+                vendor_id = config.VendorId, 
+                vendor_member_id = tpCustInfo.TpUserName,
+                bet_setting = betSetting
+            };
+            var t = req.GetType();
+            var props = t.GetProperties();
+            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
+
+            apiUrl = $"{apiUrl}/SetMemberBetSetting";
+            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
+
+            var oApiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<SetMemberBetSettingResult>(result);
+                if (json.error_code == 0)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    oApiResult.RawMessage = json.message;
+                    oApiResult.RawErrorCode = json.error_code.ToString();
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result;
+            }
+
+            return oApiResult;
+        }
+
+        public ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var config = new SabaConfig(inputs);
+            var domain = config.ApiUrl;
+            var req = new GetBetSettingLimitReq
+            {
+                vendor_id = config.VendorId, 
+                currency = tpCustInfo.TpCurrencyId
+            };
+            var t = req.GetType();
+            var props = t.GetProperties();
+            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
+            
+            var apiUrl = $"{domain}/GetBetSettingLimit";
+            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
+            
+            var oApiResult = new ApiResult<List<BetSetting>>();
+            if (IsJSON(result))
+            {
+                var betSettingLimit = JsonConvert.DeserializeObject<BetSettingLimit>(result);
+                if (betSettingLimit.error_code == 0)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Data = betSettingLimit.Data;
+                }
+                else
+                {
+                    oApiResult.RawMessage = betSettingLimit.message;
+                    oApiResult.RawErrorCode = betSettingLimit.error_code.ToString();
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result;
+            }
+
+            return oApiResult;
         }
 
         private LoginResult GetSabaUrl(SabaConfig config, string tpUserName, int platform)

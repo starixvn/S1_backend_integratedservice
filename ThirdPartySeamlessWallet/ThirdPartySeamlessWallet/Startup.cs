@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +11,7 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 
 namespace ThirdPartySeamlessWallet
@@ -59,6 +55,7 @@ namespace ThirdPartySeamlessWallet
             ////}
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
+            services.AddDatabaseConnection(Configuration);
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<HttpHelper>();
@@ -67,6 +64,8 @@ namespace ThirdPartySeamlessWallet
             /*DAL*/
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<WalletService>();
+            services.AddTransient<RiskInspection>();
+            services.AddTransient<ICustBetLimitService, CustBetLimitService>();
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();

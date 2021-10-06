@@ -1,0 +1,33 @@
+﻿using System.Collections.Generic;
+
+namespace ThirdPartySeamlessWallet.Service.Model
+{
+    public class CustBetLimitData
+    {
+        public int CustId { get; set; }
+        public int SiteId { get; set; }
+        public string BetSetting { get; set; }
+    }
+    
+    public class CustBetLimit
+    {
+        public int CustId { get; set; }
+        public int SiteId { get; set; }
+        public List<BetSetting> BetSettings { get; set; }
+    }
+
+    public class BetSetting
+    {
+        public int TpCategory { get; set; }
+        public int MinBet { get; set; }
+        public int MaxBet { get; set; }
+        public List<TpBetSetting> TpBetSetting { get; set; }
+    }
+
+    public class TpBetSetting
+    {
+        public int GameTypeId { get; set; }
+        public int MinBet { get; set; }
+        public int MaxBet { get; set; }
+    }
+}
