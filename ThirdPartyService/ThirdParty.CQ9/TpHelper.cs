@@ -165,6 +165,12 @@ namespace ThirdParty.CQ9
         {
             var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
             var token = inputs.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+            
+            var isTestHierarchy = IsDevelopment ? tpCustInfo.CustId == 1481 : (tpCustInfo.CustId == 90 || tpCustInfo.CustId == 31909);           
+            if (isTestHierarchy)
+            {
+                token = inputs.GetValueOrDefault($"API_Token_TEST") ?? throw new Exception();
+            }
 
             var url = $"{apiUrl}/gameboy/order/detail/v2";
             var sParam = $"roundid={getBetDetail.TransId}&account={tpCustInfo.TpUserName}&lang=en";
