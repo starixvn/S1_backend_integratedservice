@@ -24,6 +24,11 @@ namespace ThirdPartyCore.Model
         /// </summary>
         public string Detail { get; set; }
 
+        /// <summary>
+        /// 第三方細單連結
+        /// </summary>
+        public string DetailUrl { get; set; }
+
         public TpCurrency TpCurrency { get; set; }
 
         public BaseDetail(TpGameTypeOption tpGameTypeOption)

@@ -5,6 +5,8 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Text;
+using System.Security.Cryptography;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.PP
 {
@@ -127,5 +129,57 @@ namespace ThirdParty.PP
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+            var secureLogin = inputs.GetValueOrDefault("SecureLogin") ?? throw new Exception();
+            var secureKey = inputs.GetValueOrDefault("SecureKey") ?? throw new Exception();
+            
+            var gameId = TpBetRecordProvider.GetTpTableData("Service_Bettrans_PP_GameId_Get",
+                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }).GetValueOrDefault("gameId")?.ToString();
+
+            var url = $"{apiUrl}/v3/http/HistoryAPI/OpenHistoryExtended/";
+            var parameters = new Dictionary<string, string>()
+            {
+                { "secureLogin",secureLogin },
+                { "playerId",tpCustInfo.TpUserName },
+                { "gameId",gameId },
+                { "roundId",getBetDetail.TransId},
+                { "language","en"}
+            };
+
+            var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
+            sParam += $"&hash={ToMD5($"{sParam}{secureKey}")}";
+            var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
+            var result = FromJson<DetailResult>(json);
+            if (result.error != "0")
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.description}");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.url,
+                TpCurrency = tpCurrency,
+            };
+        }
+
+
+        public class DetailResult
+        {
+            public string error { get; set; }
+            public string description { get; set; }
+            public string url { get; set; }
+        }
+
     }
+
+
 }
