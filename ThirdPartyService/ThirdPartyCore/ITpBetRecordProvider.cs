@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using ThirdPartyCore.Model;
 
 namespace ThirdPartyCore
@@ -13,5 +10,7 @@ namespace ThirdPartyCore
         List<GameCasinoOption> GetGameCasinoList(int tpId);
 
         IReadOnlyDictionary<string, object> GetWagerDetail(string spName, object parameters = null);
+
+        IReadOnlyDictionary<string, object> GetTpTableData(string spName, object parameters = null);
     }
 }

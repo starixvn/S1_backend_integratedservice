@@ -62,5 +62,17 @@ namespace ThirdPartyService.Service.DAL
                 return default;
             }
         }
+
+        public IReadOnlyDictionary<string, object> GetTpTableData(string spName, object parameters = null)
+        {
+            try
+            {
+                return (IReadOnlyDictionary<string, object>)_reportDbClient.QueryFirst(spName, parameters);
+            }
+            catch (Exception)
+            {
+                return default;
+            }
+        }
     }
 }
