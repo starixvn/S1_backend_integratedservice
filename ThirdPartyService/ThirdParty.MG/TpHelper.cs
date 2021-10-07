@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.MG
 {
@@ -124,7 +125,54 @@ namespace ThirdParty.MG
         {
             throw new NotImplementedException();
         }
-        
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            try
+            {            
+                var apiUrl = GetInputValue(inputs, "ApiUrl");
+                var strAgents = GetInputValue(inputs, "Agent");
+                var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
+                var agent = mgAgents.SingleOrDefault(a => a.Currency == tpCustInfo.TpCurrencyId);
+                var token = GetToken(inputs, tpCustInfo.TpCurrencyId);
+
+                var url = $"{apiUrl}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/betVisualizers";
+                var sParam = $"betId={getBetDetail.TransId}&utcOffset=0&langCode=en-US";
+                var header = new Dictionary<string, string>()
+                {
+                     { "Authorization", $"Bearer {token}"}
+                };
+
+                var json = HttpPost(url, sParam, "application/x-www-form-urlencoded", header);
+                var result = FromJson<DetailResult>(json);
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = result.url,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            catch (WebException e)
+            {
+                var (code, message) = GetMgError(e.Response);
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = e.Message;
+                }
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {code} | {message}");
+            }
+        }
+
+        public class DetailResult
+        {
+            public string url { get; set; }
+        }
+
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
             if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
