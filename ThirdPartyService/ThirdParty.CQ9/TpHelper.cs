@@ -7,11 +7,19 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.CQ9
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly List<long> _testHierarchyCustId;
+
+        public TpHelper()
+        {
+            _testHierarchyCustId = IsDevelopment ? new List<long> { 1481 } : new List<long> { 90, 31909 };
+        }
+
         public class LoginReq
         {
             public string account { get; set; }
@@ -88,18 +96,7 @@ namespace ThirdParty.CQ9
             var paramToken = $"API_Token_{tpCustInfo.TpCurrencyId}";
             string API_Token = inputs.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(inputs[$"{paramToken}"]) ? inputs[$"{paramToken}"] : throw new Exception($"{paramToken}");
 
-            List<long> testHierarchyCustId = new List<long>();
-            if (IsDevelopment == true)
-            {
-                testHierarchyCustId.Add(1481);
-            }
-            else
-            {
-                testHierarchyCustId.Add(90);
-                testHierarchyCustId.Add(31909);
-            }
-            bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
-            if (isTestHierarchy == true)
+            if (_testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
                 API_Token = inputs.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(inputs["API_Token_TEST"]) ? inputs["API_Token_TEST"] : throw new Exception("API_Token_TEST");
             }
@@ -159,5 +156,47 @@ namespace ThirdParty.CQ9
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+            var token = inputs.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+            if (_testHierarchyCustId.Contains(tpCustInfo.CustId))
+            {
+                token = inputs.GetValueOrDefault($"API_Token_TEST") ?? throw new Exception();
+            }
+
+            var url = $"{apiUrl}/gameboy/order/detail/v2";
+            var sParam = $"roundid={getBetDetail.TransId}&account={tpCustInfo.TpUserName}&lang=en";
+            var header = new Dictionary<string, string>()
+            {
+                { "Authorization", token }
+            };
+
+            var json = HttpGet(url, sParam, null, header);
+            var result = FromJson<DetailResult>(json);
+            if (result.status.code != "0")
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status.message}");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.data,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+        }
+
+        public class DetailResult
+        {
+            public string data { get; set; }
+            public Status status { get; set; }
+        }
+
     }
 }
