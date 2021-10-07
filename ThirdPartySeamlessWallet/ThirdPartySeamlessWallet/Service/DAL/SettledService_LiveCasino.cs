@@ -3241,20 +3241,43 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
+                //var p = new DynamicParameters(new
+                //{
+                //    PromoTransactionId = promoData_EVO.promoTransaction.id,
+                //    userId = promoData_EVO.userId,
+                //    currency = promoData_EVO.currency,
+                //    amount = promoData_EVO.promoTransaction.amount,
+                //    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
+                //    game = JsonConvert.SerializeObject(promoData_EVO.game),
+                //    TicketType = (int)BettransType.Payout,
+                //    TicketStatus = (int)TicketStatus.Win,
+                //    SettleFlag = (int)SettleFlag.EndGame
+                //});
+
+                //result = conn.Execute("Service_RewardLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
                 var p = new DynamicParameters(new
                 {
-                    PromoTransactionId = promoData_EVO.promoTransaction.id,
+                    TransactionId = promoData_EVO.promoTransaction.id,
+                    TransactionRefId = promoData_EVO.promoTransaction.id,
                     userId = promoData_EVO.userId,
+                    uuid = promoData_EVO.uuid,
                     currency = promoData_EVO.currency,
                     amount = promoData_EVO.promoTransaction.amount,
-                    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
+                    transaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
                     game = JsonConvert.SerializeObject(promoData_EVO.game),
+                    GameId = promoData_EVO.game?.id,
+                    GameType = promoData_EVO.game?.type,
+                    GameDetailsId = promoData_EVO.game?.details.table.id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
                     TicketType = (int)BettransType.Payout,
                     TicketStatus = (int)TicketStatus.Win,
                     SettleFlag = (int)SettleFlag.EndGame
                 });
 
-                result = conn.Execute("Service_RewardLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {

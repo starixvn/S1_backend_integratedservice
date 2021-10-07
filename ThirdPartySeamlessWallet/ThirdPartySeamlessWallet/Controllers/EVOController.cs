@@ -161,12 +161,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
-            //if (!verify)
-            //{
-            //    getApiResponse.status = "INVALID_TOKEN_ID";
-            //    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-            //    return getApiResponse;
-            //}
+            if (!verify)
+            {
+                getApiResponse.status = "INVALID_TOKEN_ID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache(tpId, getReq.userId);
             if (tpCheck == null)
@@ -325,19 +325,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var result = 0;
 
-                switch (gameType)
+                result = gameType switch
                 {
-                    case (int)GameType.Netent_RNG:
-                        result = _bettingBLL.PlaceBetRNG_Netent(getReq, out tpAffterAmount);
-                        break;
-                    case (int)GameType.RedTiger_RNG:
-                        result = _bettingBLL.PlaceBetRNG_RedTiger(getReq, out tpAffterAmount);
-                        break;
-                    default:
-                        result = _bettingBLL.PlaceBetLC_EVO(getReq, out tpAffterAmount);
-                        break;
-                }
-
+                    (int)GameType.Netent_RNG => _bettingBLL.PlaceBetRNG_Netent(getReq, out tpAffterAmount),
+                    (int)GameType.RedTiger_RNG => _bettingBLL.PlaceBetRNG_RedTiger(getReq, out tpAffterAmount),
+                    _ => _bettingBLL.PlaceBetLC_EVO(getReq, out tpAffterAmount),
+                };
                 if (result > 0)
                 {
                     if (tpAffterAmount == 0)
@@ -426,20 +419,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var result = 0;
 
-                switch (gameType)
+                result = gameType switch
                 {
-                    case (int)GameType.Netent_RNG:
-                        result = _settledBLL.CancelBetRNG_Netent(getReq, out tpAffterAmount);
-                        break;
-                    case (int)GameType.RedTiger_RNG:
-                        result = _settledBLL.CancelBetRNG_RedTiger(getReq, out tpAffterAmount);
-                        break;
-                    default:
-                        result = _settledBLL.CancelBetLC_EVO(getReq, out tpAffterAmount);
-                        break;
-                }
-
-
+                    (int)GameType.Netent_RNG => _settledBLL.CancelBetRNG_Netent(getReq, out tpAffterAmount),
+                    (int)GameType.RedTiger_RNG => _settledBLL.CancelBetRNG_RedTiger(getReq, out tpAffterAmount),
+                    _ => _settledBLL.CancelBetLC_EVO(getReq, out tpAffterAmount),
+                };
                 if (result > 0)
                 {
                     if (tpAffterAmount == 0)
@@ -527,18 +512,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var result = 0;
 
-                switch (gameType)
+                result = gameType switch
                 {
-                    case (int)GameType.Netent_RNG:
-                        result = _settledBLL.PayoutRNG_Netent(getReq, out tpAffterAmount);
-                        break;
-                    case (int)GameType.RedTiger_RNG:
-                        result = _settledBLL.PayoutRNG_RedTiger(getReq, out tpAffterAmount);
-                        break;
-                    default:
-                        result = _settledBLL.PayoutLC_EVO(getReq, out tpAffterAmount);
-                        break;
-                }
+                    (int)GameType.Netent_RNG => _settledBLL.PayoutRNG_Netent(getReq, out tpAffterAmount),
+                    (int)GameType.RedTiger_RNG => _settledBLL.PayoutRNG_RedTiger(getReq, out tpAffterAmount),
+                    _ => _settledBLL.PayoutLC_EVO(getReq, out tpAffterAmount),
+                };
 
                 if (result > 0)
                 {
@@ -620,18 +599,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var result = 0;
 
-                switch (gameType)
+                result = gameType switch
                 {
-                    case (int)GameType.Netent_RNG:
-                        result = _settledBLL.PromoPayoutRNG_Netent(getReq, out tpAffterAmount);
-                        break;
-                    case (int)GameType.RedTiger_RNG:
-                        result = _settledBLL.PromoPayoutRNG_RedTiger(getReq, out tpAffterAmount);
-                        break;
-                    default:
-                        result = _settledBLL.PromoPayoutLC_EVO(getReq, out tpAffterAmount);
-                        break;
-                }
+                    (int)GameType.Netent_RNG => _settledBLL.PromoPayoutRNG_Netent(getReq, out tpAffterAmount),
+                    (int)GameType.RedTiger_RNG => _settledBLL.PromoPayoutRNG_RedTiger(getReq, out tpAffterAmount),
+                    _ => _settledBLL.PromoPayoutLC_EVO(getReq, out tpAffterAmount),
+                };
 
                 if (result > 0)
                 {
