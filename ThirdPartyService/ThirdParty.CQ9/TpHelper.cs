@@ -13,6 +13,13 @@ namespace ThirdParty.CQ9
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly List<long> _testHierarchyCustId;
+
+        public TpHelper()
+        {
+            _testHierarchyCustId = IsDevelopment ? new List<long> { 1481 } : new List<long> { 90, 31909 };
+        }
+
         public class LoginReq
         {
             public string account { get; set; }
@@ -89,18 +96,7 @@ namespace ThirdParty.CQ9
             var paramToken = $"API_Token_{tpCustInfo.TpCurrencyId}";
             string API_Token = inputs.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(inputs[$"{paramToken}"]) ? inputs[$"{paramToken}"] : throw new Exception($"{paramToken}");
 
-            List<long> testHierarchyCustId = new List<long>();
-            if (IsDevelopment == true)
-            {
-                testHierarchyCustId.Add(1481);
-            }
-            else
-            {
-                testHierarchyCustId.Add(90);
-                testHierarchyCustId.Add(31909);
-            }
-            bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
-            if (isTestHierarchy == true)
+            if (_testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
                 API_Token = inputs.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(inputs["API_Token_TEST"]) ? inputs["API_Token_TEST"] : throw new Exception("API_Token_TEST");
             }
@@ -165,9 +161,7 @@ namespace ThirdParty.CQ9
         {
             var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
             var token = inputs.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-            
-            var isTestHierarchy = IsDevelopment ? tpCustInfo.CustId == 1481 : (tpCustInfo.CustId == 90 || tpCustInfo.CustId == 31909);           
-            if (isTestHierarchy)
+            if (_testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
                 token = inputs.GetValueOrDefault($"API_Token_TEST") ?? throw new Exception();
             }
