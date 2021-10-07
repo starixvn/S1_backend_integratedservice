@@ -6,6 +6,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.JILI
 {
@@ -87,5 +88,58 @@ namespace ThirdParty.JILI
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+            var agentId = inputs.GetValueOrDefault("AgentId") ?? throw new Exception();
+            var agentKey = inputs.GetValueOrDefault("AgentKey") ?? throw new Exception();
+
+            var url = $"{apiUrl}/GetGameDetailUrl";
+            var current = new DateTimeOffset(DateTime.UtcNow).ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyMMd");
+            var g = ToMD5($"{current}{agentId}{agentKey}").ToLower();
+
+            var dic = new Dictionary<string, string>
+            {
+                { "WagersId",getBetDetail.TransId},
+                { "AgentId",agentId},
+            };
+            var sParam = string.Join("&", dic.Select(kp => $"{kp.Key}={kp.Value}"));
+            var key = $"{GetRandomString(6)}{ToMD5($"{sParam}{g}").ToLower()}{GetRandomString(6)}";
+            sParam += $"&Key={key}&Lang=en-US";
+
+            var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
+            var result = FromJson<DetailResult>(json);
+            if (result.ErrorCode != 0)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.ErrorCode} | {result.Message}");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.Data.Url,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+        }
+
+        public class DetailResult
+        {
+            public int ErrorCode { get; set; }
+
+            public string Message { get; set; }
+
+            public Data Data { get; set; }
+        }
+
+        public class Data
+        {
+            public string Url { get; set; }
+        }
+
     }
 }
