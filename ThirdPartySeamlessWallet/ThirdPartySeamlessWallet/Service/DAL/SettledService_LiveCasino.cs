@@ -3136,16 +3136,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                conn.Execute("Service_BettransLC_EVO_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                var refBettransLC = p.Get<int>("out_result");
-
-                if (refBettransLC == 2)
+                var check = conn.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", new { TransactionRefId = bettingData_EVO.transaction.refId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (!check.Any())
                 {
-                    // insert cancel record
-                    trans.Commit();
+                    // no bet data
+                    return -2;
                 }
-                result = -1;
+                var subChk = check.Where(x => x.TicketType == 2);
+                if (subChk.Any())
+                {
+                    // had cancel
+                    return -1;
+                }
             }
             return result;
         }
@@ -3159,6 +3161,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
+                var check = conn.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", new { TransactionRefId = bettingData_EVO.transaction.refId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (!check.Any())
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+
                 var p = new DynamicParameters(new
                 {
                     TransactionId = bettingData_EVO.transaction.id,
@@ -3204,7 +3213,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
-
                     }
 
                     if (result > 0)
@@ -3212,10 +3220,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans.Commit();
                     }
                 }
-                //else
-                //{
-                //    result = -1;
-                //}
             }
             catch (MySqlException mySqlEx)
             {

@@ -223,13 +223,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
             AuthResp getApiResponse = new AuthResp();
 
-            if (string.IsNullOrEmpty(getReq.sid))
-            {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            if (string.IsNullOrEmpty(getReq.userId))
+            if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
                 getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -241,6 +235,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (tpId == 0)
             {
                 getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (tokenInfo.tpUserName != getReq.userId)
+            {
+                getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
@@ -296,13 +296,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
             BalanceResp getApiResponse = new BalanceResp();
 
-            if (string.IsNullOrEmpty(getReq.sid))
-            {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            if (string.IsNullOrEmpty(getReq.userId))
+            if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
                 getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -318,6 +312,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
+            if (tokenInfo.tpUserName != getReq.userId)
+            {
+                getApiResponse.status = "INVALID_PARAMETER";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
 
             logName = $"{(Tp)tpId}_balance";
 
@@ -330,21 +330,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache(tpId, getReq.userId);
-            if (tpCheck == null)
-            {
-                getApiResponse.status = "INVALID_TOKEN_ID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            else if (tpCheck.Locked)
-            {
-                getApiResponse.status = "ACCOUNT_LOCKED";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance(tpId, getReq.userId, gameType);
             if (tpCustBalance != null)
             {
                 getApiResponse.status = "OK";
@@ -373,20 +359,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             BetResp getApiResponse = new BetResp();
             getApiResponse.status = "UNKNOWN_ERROR";
 
-            //if (_environment.IsDevelopment() && getReq.transaction.amount >= 300)
-            //{
-            //    Response.StatusCode = (int)Error.ERROR;
-            //    //System.Threading.Thread.Sleep(60000);
-            //    return getApiResponse;
-            //}
-
-            if (string.IsNullOrEmpty(getReq.sid))
-            {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            if (string.IsNullOrEmpty(getReq.userId))
+            if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
                 getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -399,6 +372,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (tpId == 0 || gameType == 0)
             {
                 getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (tokenInfo.tpUserName != getReq.userId)
+            {
+                getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
@@ -494,13 +473,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             BetResp getApiResponse = new BetResp();
             getApiResponse.status = "UNKNOWN_ERROR";
 
-            if (string.IsNullOrEmpty(getReq.sid))
-            {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            if (string.IsNullOrEmpty(getReq.userId))
+            if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
                 getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -513,6 +486,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (tpId == 0 || gameType == 0)
             {
                 getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (tokenInfo.tpUserName != getReq.userId)
+            {
+                getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
@@ -556,7 +535,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (result == -1)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
-                    getApiResponse.status = "OK";
+                    getApiResponse.status = "BET_ALREADY_SETTLED";
+                    getApiResponse.balance = tpCustBalance.Balance;
+                    getApiResponse.retransmission = false;
+                    getApiResponse.uuid = getReq.uuid;
+                }
+                else if (result == -2)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+                    getApiResponse.status = "BET_DOES_NOT_EXIST";
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
@@ -586,20 +573,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             BetResp getApiResponse = new BetResp();
             getApiResponse.status = "UNKNOWN_ERROR";
 
-            //if (_environment.IsDevelopment() && getReq.transaction.amount >= 300)
-            //{
-            //    Response.StatusCode = (int)Error.ERROR;
-            //    //System.Threading.Thread.Sleep(60000);
-            //    return getApiResponse;
-            //}
-
-            if (string.IsNullOrEmpty(getReq.sid))
-            {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            if (string.IsNullOrEmpty(getReq.userId))
+            if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
                 getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -612,6 +586,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (tpId == 0 || gameType == 0)
             {
                 getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (tokenInfo.tpUserName != getReq.userId)
+            {
+                getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
@@ -661,6 +641,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
                 }
+                else if (result == -2)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+                    getApiResponse.status = "BET_DOES_NOT_EXIST";
+                    getApiResponse.balance = tpCustBalance.Balance;
+                    getApiResponse.retransmission = false;
+                    getApiResponse.uuid = getReq.uuid;
+                }
 
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
                 return getApiResponse;
@@ -705,6 +693,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (tpId == 0 || gameType == 0)
             {
                 getApiResponse.status = "INVALID_SID";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            if (tokenInfo.tpUserName != getReq.userId)
+            {
+                getApiResponse.status = "INVALID_PARAMETER";
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }

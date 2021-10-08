@@ -75,71 +75,80 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal winAmount { get; set; }
     }
 
-    public class PromoDebitData_EVO : PromoDataCommon_EVO
+    public class BettransData_EVO
     {
-        public PromoTransactionDebit promoTransaction { get; set; }
+        public string TransactionId { get; set; }
+        public string TransactionRefId { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
     }
 
-    public class PromoTransactionDebit : PromoTransactionCommon_EVO
-    {
-        public string refId { get; set; }
-        public string voucherId { get; set; }
-        public int remainingRounds { get; set; }
-        public List<JackpotDebit> jackpots { get; set; }
-    }
+    //public class PromoDebitData_EVO : PromoDataCommon_EVO
+    //{
+    //    public PromoTransactionDebit promoTransaction { get; set; }
+    //}
 
-    public class JackpotDebit
-    {
-        public string id { get; set; }
-        public decimal contributionAmount { get; set; }
-        public List<ContributionDebit> contributions { get; set; }
-    }
+    //public class PromoTransactionDebit : PromoTransactionCommon_EVO
+    //{
+    //    public string refId { get; set; }
+    //    public string voucherId { get; set; }
+    //    public int remainingRounds { get; set; }
+    //    public List<JackpotDebit> jackpots { get; set; }
+    //}
 
-    public class ContributionDebit
-    {
-        public string pot { get; set; }
-        public decimal amount { get; set; }
-    }
+    //public class JackpotDebit
+    //{
+    //    public string id { get; set; }
+    //    public decimal contributionAmount { get; set; }
+    //    public List<ContributionDebit> contributions { get; set; }
+    //}
 
-    public class PromoCreditData_EVO : PromoDataCommon_EVO
-    {
-        public PromoTransactionCredit promoTransaction { get; set; }
-    }
+    //public class ContributionDebit
+    //{
+    //    public string pot { get; set; }
+    //    public decimal amount { get; set; }
+    //}
 
-    public class PromoTransactionCredit : PromoTransactionCommon_EVO
-    {
-        public string refId { get; set; }
-        public string voucherId { get; set; }
-        public int remainingRounds { get; set; }
-    }
+    //public class PromoCreditData_EVO : PromoDataCommon_EVO
+    //{
+    //    public PromoTransactionCredit promoTransaction { get; set; }
+    //}
 
-    public class PromoCancelData_EVO : PromoDataCommon_EVO
-    {
-        public PromoTransactionCancel promoTransaction { get; set; }
-    }
+    //public class PromoTransactionCredit : PromoTransactionCommon_EVO
+    //{
+    //    public string refId { get; set; }
+    //    public string voucherId { get; set; }
+    //    public int remainingRounds { get; set; }
+    //}
 
-    public class PromoTransactionCancel : PromoTransactionCommon_EVO
-    {
-        public string refId { get; set; }
-        public string voucherId { get; set; }
-        public int remainingRounds { get; set; }
-        public List<JackpotCancel> jackpots { get; set; }
-    }
+    //public class PromoCancelData_EVO : PromoDataCommon_EVO
+    //{
+    //    public PromoTransactionCancel promoTransaction { get; set; }
+    //}
 
-    public class JackpotCancel
-    {
-        public string id { get; set; }
-        public decimal contributionAmount { get; set; }
-    }
+    //public class PromoTransactionCancel : PromoTransactionCommon_EVO
+    //{
+    //    public string refId { get; set; }
+    //    public string voucherId { get; set; }
+    //    public int remainingRounds { get; set; }
+    //    public List<JackpotCancel> jackpots { get; set; }
+    //}
 
-    public class PromoPayoutData_EVO : PromoDataCommon_EVO
-    {
-        public PromoTransactionPayout promoTransaction { get; set; }
-    }
+    //public class JackpotCancel
+    //{
+    //    public string id { get; set; }
+    //    public decimal contributionAmount { get; set; }
+    //}
 
-    public class PromoTransactionPayout : PromoTransactionCommon_EVO
-    {
-        public string voucherId { get; set; }
-        public int remainingRounds { get; set; }
-    }
+    //public class PromoPayoutData_EVO : PromoDataCommon_EVO
+    //{
+    //    public PromoTransactionPayout promoTransaction { get; set; }
+    //}
+
+    //public class PromoTransactionPayout : PromoTransactionCommon_EVO
+    //{
+    //    public string voucherId { get; set; }
+    //    public int remainingRounds { get; set; }
+    //}
 }
