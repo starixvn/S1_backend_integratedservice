@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.RedTiger
 {
@@ -23,6 +25,16 @@ namespace ThirdParty.RedTiger
         {
             public string entry { get; set; }
             public string entryEmbedded { get; set; }
+        }
+
+        public class DetailResponse
+        {
+            public Result result { get; set; }
+        }
+
+        public class Result
+        {
+            public string link { get; set; }
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -153,6 +165,60 @@ namespace ThirdParty.RedTiger
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            string WagerUrl = inputs.ContainsKey("WagerUrl") && !string.IsNullOrEmpty(inputs["WagerUrl"]) ? inputs["WagerUrl"] : throw new Exception("WagerUrl is empty");
+            string BetDetailUrl = inputs.ContainsKey("BetDetailUrl") && !string.IsNullOrEmpty(inputs["BetDetailUrl"]) ? inputs["BetDetailUrl"] : throw new Exception("BetDetailUrl is empty");
+            string GameProvider = inputs.ContainsKey("GameProvider") && !String.IsNullOrEmpty(inputs["GameProvider"]) ? inputs["GameProvider"] : throw new Exception($"GameProvider is empty");
+            string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
+            string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
+            var ApiUrl = $"{WagerUrl}/gamehistory/v1/casino/games/stream";
+
+            var CreateTime = TpBetRecordProvider.GetTpTableData("Service_BettransRng_RedTiger_CreateTime_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
+
+            var BetDetail = new
+            {
+                startDate = CreateTime,
+                gameProvider = GameProvider,
+                transactionId = getBetDetail.TransId
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(BetDetail));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            Dictionary<string, string> header = new Dictionary<string, string>();
+            header.Add("Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{CasinoKey}:{Ua2Token}")));
+
+            var result = HttpGet(
+                ApiUrl,
+                sParam,
+                "text/plain",
+                header
+            );
+
+            if (!IsJSON(result))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result}");
+            }
+
+            var json = JsonConvert.DeserializeObject<DetailResponse>(result);
+            if (json.result == null || string.IsNullOrEmpty(json.result.link))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = $"{BetDetailUrl}{json.result.link}",
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
         }
     }
 }
