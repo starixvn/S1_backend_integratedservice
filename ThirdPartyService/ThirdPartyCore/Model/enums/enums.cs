@@ -44,6 +44,7 @@ namespace ThirdPartyCore.Model.enums
         #region BetDetail (3xxxx)
         BetDetailNotFound = 3000,
         GetBetDetailNotImplemented = 3001,
+        BetDetailIsUrl = 3002,
         #endregion
 
         Not_allowed_country = 5001,

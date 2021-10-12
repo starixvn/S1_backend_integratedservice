@@ -873,7 +873,8 @@ namespace ThirdPartyService.Service.BLL
             var getBetDetail = new GetBetDetail(request, gameTypeOption);
 
             var result = tpHelper.GetBetDetail(getBetDetail, tpCustInfoResult.Data, inputs);
-            return new ApiResult<object>(ErrorCode.Success, "success", result);
+            var resultCode = string.IsNullOrEmpty(result.DetailUrl) ? ErrorCode.Success : ErrorCode.BetDetailIsUrl;
+            return new ApiResult<object>(resultCode, "success", result);
 
         }
 
