@@ -4,6 +4,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Linq;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.YL
 {
@@ -169,6 +170,47 @@ namespace ThirdParty.YL
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            try
+            {
+                var apiUrl = inputs.GetValueOrDefault("ApiUrl")??  throw new Exception();
+                var cert = inputs.GetValueOrDefault("cert") ??  throw new Exception();
+
+                var url = $"{apiUrl}getGameReportByTxId";
+                var sParam = $"cert={cert}&txId={getBetDetail.TransId}";
+
+                var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
+                var result = FromJson<DetailResult>(json);
+
+                if (result.status != "1")
+                {
+                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
+                }
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = result.link,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            catch (Exception e)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
+            }
+        }
+
+        public class DetailResult
+        {
+            public string status { get; set; }
+            public string link { get; set; }
         }
     }
 }
