@@ -279,7 +279,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                         SiteTpTicketKey((int)Tp.Saba, tpCustInfo.SiteId, betRecord.TicketKey);
                     }
 
-                    _logger.LogInformation(JsonConvert.SerializeObject(betRecord));
+                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
                 }
                 catch (Exception ex)
                 {

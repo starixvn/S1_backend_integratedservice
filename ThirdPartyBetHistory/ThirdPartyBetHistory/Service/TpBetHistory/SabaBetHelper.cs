@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
+using ThirdPartyBetHistory.Service.Worker;
 
 namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
+        public SabaBetHelper(ILogger<WorkerService> logger)
+        {
+            Logger = logger;
+        }
         public interface ISabaBet
         {
             decimal odds { get; set; }

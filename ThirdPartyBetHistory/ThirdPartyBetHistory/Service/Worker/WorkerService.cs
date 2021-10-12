@@ -39,7 +39,8 @@ namespace ThirdPartyBetHistory.Service.Worker
             {
                 try
                 {
-                    var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.{tp.TpName}BetHelper"));
+                    var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(
+                        Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.{tp.TpName}BetHelper"), logger);
                     TpBetHelper.thirdPartyModel = tp;
                     TpBetHelper.syncParams = TpBetHelper.InitialSyncParams();
                     var timer = new Timer(DoTask, TpBetHelper, TimeSpan.Zero, TimeSpan.Zero);
@@ -66,7 +67,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                     _ = Task.Factory.StartNew(async () =>
                     {
                         LogContext.PushProperty("WorkerId", Guid.NewGuid());
-                        logger.LogInformation("AddBetRecord at: {time}", DateTimeOffset.Now);
+                        logger.LogDebug("AddBetRecord at: {time}", DateTimeOffset.Now);
                         try
                         {
                             await tpBetHelp.AddBetRecord((betRecordInfos) =>
@@ -91,7 +92,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                             }
 
                             tpBetHelp.syncParams.DoneTime = DateTime.Now;
-                            logger.LogInformation($"Success: {taskProperty}");
+                            logger.LogDebug($"Success: {taskProperty}");
                         }
                         catch (Exception ex)
                         {
