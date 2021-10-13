@@ -5,6 +5,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.Joker
 {
@@ -83,6 +84,67 @@ namespace ThirdParty.Joker
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            try
+            {
+                var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+                var appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+                var secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+                if (tpCustInfo.IsTest)
+                {
+                    appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
+                    secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
+                }
+                var gameCode = TpBetRecordProvider.GetTpTableData("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId })
+                    .GetValueOrDefault("gamecode")?.ToString();
+
+                var url = $"{apiUrl}/game-history-url";
+                var parameters = new Dictionary<string, string>()
+                {
+                    { "AppID",appID },
+                    { "Username",tpCustInfo.TpUserName },
+                    { "GameCode",gameCode},
+                    { "RoundID",getBetDetail.TransId},
+                    { "Language","en"},
+                    { "Timestamp",DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()}
+                };
+
+                var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key.ToLower()}={kp.Value}"));
+                parameters.Add("Hash", ToMD5($"{sParam}{secret}").ToLower());
+
+                var json = HttpPost(url, ToJson(parameters), "application/json");
+                var result = FromJson<DetailResult>(json);
+
+                if (result.Error != "0")
+                {
+                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.Error} | {result.Description}");
+                }
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = result.Url,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            catch (Exception e)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
+            }
+        }
+
+        public class DetailResult
+        {
+            public string Error { get; set; }
+            public string Description { get; set; }
+            public string Url { get; set; }
         }
     }
 }
