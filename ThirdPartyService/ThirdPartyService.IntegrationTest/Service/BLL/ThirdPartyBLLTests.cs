@@ -13,6 +13,7 @@ using ThirdPartyCore.Model.enums;
 using Microsoft.AspNetCore.Hosting;
 using ThirdPartyService.IntegrationTest.Models;
 using ThirdPartyService.Service.DAL;
+using Newtonsoft.Json;
 
 namespace ThirdPartyService.Service.BLL.Tests
 {
@@ -62,7 +63,7 @@ namespace ThirdPartyService.Service.BLL.Tests
                 GameType = gameType,
                 SettledTime = DateTime.Now,
             });
-            Console.WriteLine((actual.Data as BaseDetail).DetailUrl);
+            Console.WriteLine(JsonConvert.SerializeObject(actual));
             return actual.ErrorCode;
         }
     }

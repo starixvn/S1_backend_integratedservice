@@ -5,6 +5,7 @@ using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.PT
 {
@@ -526,6 +527,57 @@ namespace ThirdParty.PT
             }
 
             return apiResult;
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_PT_Detail_Get",
+                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type });
+            var detail = ToJson(wagerDetail);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("SESSIONID")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("PLAYERNAME")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("BET") * tpCurrency.ExchangeRate,
+                    WinlostAmount =((decimal)wagerDetail.GetValueOrDefault("WIN") + (decimal)wagerDetail.GetValueOrDefault("PROGRESSIVEWIN") 
+                    - (decimal)wagerDetail.GetValueOrDefault("BET")) * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
+                    GameName = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),               
+                },
+                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("SESSIONID")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("PLAYERNAME")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("BET") * tpCurrency.ExchangeRate,
+                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("WIN") + (decimal)wagerDetail.GetValueOrDefault("PROGRESSIVEWIN")
+                    - (decimal)wagerDetail.GetValueOrDefault("BET")) * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
+                    GameName = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
         }
 
         private ApiResult ChangePassword(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
