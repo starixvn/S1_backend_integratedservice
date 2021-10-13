@@ -69,6 +69,8 @@ namespace ThirdPartyBetHistory.Service.Model.enums
 
     public enum BetType
     {
+        [Description("串关(其他)")] Parlay = 29,
+        [Description("单场串关(足球)")] SingleMatchParlay = 38,
         [Description("比分让球盘(足球)")] FootballScoreHandicap = 468,
         [Description("比分大小盘(足球)")] FootballScoreOverUnder = 469
     }
