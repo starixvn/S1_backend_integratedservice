@@ -5,6 +5,7 @@ using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.PT
@@ -531,53 +532,64 @@ namespace ThirdParty.PT
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpCurrency = new TpCurrency()
+            try
             {
-                ExchangeRate = tpCustInfo.ExchangeRate,
-                TpCurrencyId = tpCustInfo.TpCurrencyId,
-            };
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_PT_Detail_Get",
-                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type });
-            var detail = ToJson(wagerDetail);
-            return getBetDetail.TpGameTypeOption.CategoryId switch
-            {
-                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                var timeSpan = 7;
+                var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+                var entityKey = inputs.GetValueOrDefault($"XEntityKey_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+                var pass = inputs.GetValueOrDefault($"Pass_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+  
+                apiUrl = $"{apiUrl}/player/games";
+                var header = new Dictionary<string, string>
                 {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("SESSIONID")?.ToString(),
-                    TpUserName = wagerDetail.GetValueOrDefault("PLAYERNAME")?.ToString(),
-                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("BET") * tpCurrency.ExchangeRate,
-                    WinlostAmount =((decimal)wagerDetail.GetValueOrDefault("WIN") + (decimal)wagerDetail.GetValueOrDefault("PROGRESSIVEWIN") 
-                    - (decimal)wagerDetail.GetValueOrDefault("BET")) * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
-                    GameName = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),               
-                },
-                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                    { "X_ENTITY_KEY", entityKey }
+                };
+                var certificate = new Dictionary<string, string>
                 {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("SESSIONID")?.ToString(),
-                    TpUserName = wagerDetail.GetValueOrDefault("PLAYERNAME")?.ToString(),
-                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GAMEDATE", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("BET") * tpCurrency.ExchangeRate,
-                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("WIN") + (decimal)wagerDetail.GetValueOrDefault("PROGRESSIVEWIN")
-                    - (decimal)wagerDetail.GetValueOrDefault("BET")) * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
-                    GameName = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),
-                },
-                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                    { "path", $@"{storagePath}\{tpCustInfo.TpCurrencyId}.p12" },
+                    { "password", pass }
+                };
+
+                var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_PT_Detail_Get",
+                   new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type });
+                var sParam = new Dictionary<string, string>
                 {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
+                    { "playername", wagerDetail.GetValueOrDefault("PLAYERNAME").ToString()},
+                    { "gametype", wagerDetail.GetValueOrDefault("SHORTNAME").ToString() },
+                    { "startdate", DateTime.Parse( wagerDetail.GetValueOrDefault("GAMEDATE").ToString()).AddHours(timeSpan).ToString("yyyy-MM-dd HH:mm:ss") },
+                    { "enddate", DateTime.Parse( wagerDetail.GetValueOrDefault("GAMEDATE").ToString()).AddHours(timeSpan).ToString("yyyy-MM-dd HH:mm:ss") },
+                    { "currency", wagerDetail.GetValueOrDefault("CURRENCYCODE").ToString() }
+                };
+
+                var json = HttpPostWithX509(
+                    apiUrl,
+                    string.Join("&", sParam.Select(kp => $"{kp.Key}={kp.Value}")),
+                    "application/x-www-form-urlencoded",
+                    header,
+                    certificate
+                );
+                var result = FromJson<DetailResult>(json);
+                var data = result.result.First();
+                if (!result.result.Any() && !string.IsNullOrEmpty(data.URL))
+                {
+                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
                 }
-            };
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = data.URL,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            catch (Exception e)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
+            }
         }
 
         private ApiResult ChangePassword(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -638,6 +650,17 @@ namespace ThirdParty.PT
                 oApiResult.RawErrorCode = "1";
             }
             return oApiResult;
+        }
+
+
+        public class DetailResult
+        {
+            public List<Result> result { get; set; }
+        }
+
+        public class Result
+        {
+            public string URL { get; set; }
         }
 
     }
