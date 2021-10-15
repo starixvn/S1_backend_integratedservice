@@ -9,6 +9,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Threading.Tasks;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.Iconic
 {
@@ -191,6 +192,51 @@ namespace ThirdParty.Iconic
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            try
+            {
+                var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+                var token = inputs.GetValueOrDefault($"token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+                var header = new Dictionary<string, string>()
+                {
+                     { "Authorization", $"Bearer {token}"}
+                };
+
+                var url = $"{apiUrl}/api/v1/profile/info/link";
+                var sParam = $"id={getBetDetail.TransId}&lang=en";
+
+                var json = HttpGet(url, sParam, "application/x-www-form-urlencoded", header);
+                var result = FromJson<DetailResult>(json);
+
+                if (string.IsNullOrEmpty(result.data))
+                {
+                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+                }
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = result.data,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            catch (Exception e)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
+            }
+        }
+
+        public class DetailResult
+        {
+            public string data { get; set; }
+        }
+
         private JwtToken GetJwtToken(string apiUrl, string username, string password)
         {
             // param
