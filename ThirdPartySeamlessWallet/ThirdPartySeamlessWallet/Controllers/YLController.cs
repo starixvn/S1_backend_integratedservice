@@ -142,8 +142,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                        resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
+                        resp.balance = tpAffterAmount.ToString("0.00");
                         resp.status = "500";
                         resp.msg = "code:9001";
                     }
