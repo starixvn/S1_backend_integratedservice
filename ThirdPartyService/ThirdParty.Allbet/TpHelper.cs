@@ -7,6 +7,7 @@ using System.Text;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.Allbet
 {
@@ -171,6 +172,41 @@ namespace ThirdParty.Allbet
             throw new NotImplementedException();
         }
 
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId });
+            var detail = ToJson(wagerDetail);
+            var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("gameRoundId")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("client")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("gameRoundEndTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winOrLoss") * tpCurrency.ExchangeRate,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };  
+        }
+
         private string random()
         {
             using RNGCryptoServiceProvider csp = new RNGCryptoServiceProvider();
@@ -216,6 +252,24 @@ namespace ThirdParty.Allbet
         {
             using MD5CryptoServiceProvider md5Crp = new MD5CryptoServiceProvider();
             return md5Crp.ComputeHash(data);
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "101" => "普通百家乐",
+                "102" => "VIP百家乐",
+                "103" => "快速百家乐",
+                "104" => "咪牌百家乐",
+                "201" => "骰宝(HiLo)",
+                "301" => "龙虎",
+                "401" => "轮盘",
+                "501" => "博丁",
+                "801" => "牛牛",
+                "901" => "炸金花",
+                _ => string.Empty,
+            };
         }
     }
 }
