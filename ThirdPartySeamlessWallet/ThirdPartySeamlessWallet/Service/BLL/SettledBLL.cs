@@ -357,16 +357,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataFish_YL.profit *= tpCurrency.ExchangeRate;
                 bettingDataFish_YL.validBet *= tpCurrency.ExchangeRate;
                 bettingDataFish_YL.commission *= tpCurrency.ExchangeRate;
+                custBalance.Balance *= tpCurrency.ExchangeRate;
             }
             if(custBalance.Balance < 0)
             {
-                afterAmount = custBalance.Balance;
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
                 return -2;
             }
             var checkBalance = custBalance.Balance + bettingDataFish_YL.profit;
             if (checkBalance < 0)
             {
-                afterAmount = checkBalance;
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
                 return -2;
             }
             var result = settledService.SettledFish_YL(tpCustInfo, bettingDataFish_YL, out afterAmount);
