@@ -87,7 +87,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
-                
+
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, getBalanceReq.userId);
 
                 if (tpCustBalance != null)
@@ -110,21 +110,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 SettleFishBetReq settleFishBetReq = JsonConvert.DeserializeObject<SettleFishBetReq>(req.message);
                 try
                 {
-                    var custBalance = tpCustInfoBLL.GetBalance((int)Tp.YL, settleFishBetReq.userId);
-                    if (custBalance.Balance < 0)
-                    {
-                        resp.balance = custBalance.Balance.ToString("0.00");
-                        resp.status = "500";
-                        resp.msg = "code:9001";
-                        log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                        return resp;
-                    }
-
                     int result = settledBLL.SettledFish_YL(settleFishBetReq, out decimal tpAffterAmount);
 
                     if (result > 0)
                     {
-                        if(tpAffterAmount == 0)
+                        if (tpAffterAmount == 0)
                         {
                             tpAffterAmount = tpCustInfoBLL.GetBalance((int)Tp.YL, settleFishBetReq.userId).Balance;
                         }
@@ -141,10 +131,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                         log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                         return resp;
                     }
+                    else if (result == -2)
+                    {
+                        // 計算餘額為負數 阻擋此次下注 遊戲會顯示餘額不足
+                        resp.balance = tpAffterAmount.ToString("0.00");
+                        resp.status = "500";
+                        resp.msg = "code:9001";
+                        log2File.Error($"check balance negative\r\n{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
-                        resp.balance = tpCustBalance.Balance.ToString("0.00");
+                        //var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YL, settleFishBetReq.userId);
+                        resp.balance = tpAffterAmount.ToString("0.00");
                         resp.status = "500";
                         resp.msg = "code:9001";
                     }
