@@ -54,12 +54,10 @@ namespace ThirdParty.EVO
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string GameUrl = inputs.ContainsKey("GameUrl") && !String.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception($"GameUrl is empty");
             string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
-            ApiUrl = $"{ApiUrl}/{CasinoKey}/{Ua2Token}";
+            string GameUrl = ApiUrl;
+            ApiUrl = $"{ApiUrl}/ua/v1/{CasinoKey}/{Ua2Token}";
 
             bool mobile = appType != AppType.Desktop;
             var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
@@ -127,7 +125,6 @@ namespace ThirdParty.EVO
                 }
             };
 
-            var tmp = JsonConvert.SerializeObject(Login);
             var result = HttpPost(
                  ApiUrl,
                  JsonConvert.SerializeObject(Login),

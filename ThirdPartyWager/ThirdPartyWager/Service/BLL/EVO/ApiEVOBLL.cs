@@ -31,10 +31,10 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiEVOBLL>>();
         }
 
-        public async Task<List<WagerEVOModel>> GetBetListByTime(string wagerUrl, string casinoKey, string ua2Token, string gameProvider, string startTime, string endTime, string guid)
+        public async Task<List<WagerEVOModel>> GetBetListByTime(string wagerUrl, string casinoKey, string gameHistoryApiToken, string gameProvider, string startTime, string endTime, string guid)
         {
             // param
-            string url = $"{wagerUrl}/gamehistory/v1/casino/games/stream";
+            string url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
             var param = new
             {
                 startDate = startTime,
@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Service.BLL
             _log2File.AddRequestLog(_logName, guid, url, sParam);
 
             // request
-            string r = await DoHttpClientAsync(url, sParam, casinoKey, ua2Token, guid);
+            string r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken, guid);
             var result = JsonConvert.DeserializeObject<List<WagerEVOModel>>(r);
             return result;
         }

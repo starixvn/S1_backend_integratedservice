@@ -92,7 +92,7 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
 
                 // get wager
-                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["WagerUrl"], setting["CasinoKey"], setting["Ua2Token"], setting["GameProvider"], startTime, endTime, guid);
+                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], startTime, endTime, guid);
 
                 // error condition
                 var error = dataWager.Select(x => x.error).FirstOrDefault();
