@@ -176,7 +176,7 @@ namespace ThirdParty.Netent
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
             var ApiUrl = $"{WagerUrl}/gamehistory/v1/casino/games/stream";
 
-            var CreateTime = TpBetRecordProvider.GetTpTableData("Service_BettransRng_Netent_CreateTime_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
+            var CreateTime = TpBetRecordProvider.GetTpTableData("Service_BettransRng_Netent_Detail_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
 
             var BetDetail = new
             {
