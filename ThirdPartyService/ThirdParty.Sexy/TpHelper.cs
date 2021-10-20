@@ -6,6 +6,7 @@ using ThirdPartyCore.Model.enums;
 using System.Linq;
 using System.Web;
 using Newtonsoft.Json;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.Sexy
 {
@@ -340,5 +341,57 @@ namespace ThirdParty.Sexy
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            try
+            {
+                if (tpCustInfo.TpCurrencyId == "INR" || IsDevelopment)
+                {
+                    var apiUrl = inputs.GetValueOrDefault("ApiUrl2") ?? throw new Exception();
+                    var cert = inputs.GetValueOrDefault("cert2") ?? throw new Exception();
+                    var agentId = inputs.GetValueOrDefault("AgentId") ?? throw new Exception();
+
+                    var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
+                    var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform=SEXYBCRT";
+
+                    var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
+                    var result = FromJson<DetailResult>(json);
+
+                    if (result.status != "0000")
+                    {
+                        throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
+                    }
+
+                    return new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        DetailUrl = result.txnUrl,
+                        TpCurrency = new TpCurrency()
+                        {
+                            ExchangeRate = tpCustInfo.ExchangeRate,
+                            TpCurrencyId = tpCustInfo.TpCurrencyId,
+                        },
+                    };
+                }
+                else
+                {
+                    throw new GetBetDetailNotImplementedException($"TpId:{getBetDetail.TpGameTypeOption.TpId} GetBetDetail NotImplemented.");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
+            }
+        }
+
+        public class DetailResult
+        {
+            public string url { get; set; }
+            public string txnUrl { get; set; }
+            public string roundUrl { get; set; }
+            public string status { get; set; }
+        }
+
     }
 }
