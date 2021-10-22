@@ -674,7 +674,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId });
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            var result = conn.Execute("Service_AutoCancelSeamlessBonus_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_AutoCancelSeamlessBonusV2_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
             decimal bonus = p.Get<decimal?>("Bonus") ?? 0;
 
             if (bonus > 0)

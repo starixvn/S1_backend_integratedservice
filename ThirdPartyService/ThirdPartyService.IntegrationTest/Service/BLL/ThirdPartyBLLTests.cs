@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Hosting;
 using ThirdPartyService.IntegrationTest.Models;
 using ThirdPartyService.Service.DAL;
 using Newtonsoft.Json;
+using ThirdPartyCore;
 
 namespace ThirdPartyService.Service.BLL.Tests
 {
@@ -32,11 +33,14 @@ namespace ThirdPartyService.Service.BLL.Tests
                 .AddJsonFile("appsettings.Local.json", false, false);
             _configuration = configBuilder.Build();
             services.AddSingleton(_configuration);
-            
+
             var env = new WebHostingEnvironment
             {
                 EnvironmentName = Environments.Development,
+                ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
             };
+            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
+
             services.AddSingleton<IWebHostEnvironment>(env);
             services.AddSingleton<IHostEnvironment>(env);
 
