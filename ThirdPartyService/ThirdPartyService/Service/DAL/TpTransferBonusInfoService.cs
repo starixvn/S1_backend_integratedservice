@@ -134,7 +134,7 @@ namespace ThirdPartyService.Service.DAL
             }
         }
         
-        public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer,ApiResult<TransferResult> transferResult)
+        public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer, ApiResult<TransferResult> transferResult)
         {
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
@@ -164,7 +164,7 @@ namespace ThirdPartyService.Service.DAL
                             tpBonusCancelTransfer.UserName,
                             tpBonusCancelTransfer.RefundAmount - tpBonusCancelTransfer.RemainingBonus,
                             tpBonusCancelTransfer.TpId,
-                            $"CancelBonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus}, " +
+                            $"CancelBonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus:#,##0.##}, " +
                             $"Refund Amount={tpBonusCancelTransfer.RefundAmount:#,##0.##}",
                             tpBonusCancelTransfer.BonusId.ToString(), out _,
                             conn, trans);
