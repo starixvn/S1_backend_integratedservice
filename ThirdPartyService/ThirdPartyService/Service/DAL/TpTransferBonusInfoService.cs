@@ -2,11 +2,10 @@
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
@@ -16,13 +15,19 @@ namespace ThirdPartyService.Service.DAL
     public class TpTransferBonusInfoService
     {
         private readonly IConfiguration configuration;
+        private readonly string _connectionString;
         private readonly Common common;
         private readonly BonusService bonusService;
-        public TpTransferBonusInfoService(IConfiguration configuration, Common common, BonusService bonusService)
+        private readonly WalletService _walletService;
+        private readonly MySqlClient _mainDbClient;
+        public TpTransferBonusInfoService(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.common = common;
-            this.bonusService = bonusService;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            _connectionString = configuration.GetConnectionString("ConnectionString");
+            common = provider.GetRequiredService<Common>();
+            bonusService = provider.GetRequiredService<BonusService>();
+            _walletService = provider.GetRequiredService<WalletService>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public ApiResult<TransferResult> TpTransferBonusReq(TpBonusTransfer tpBonusTransfer, TpCustInfo tpCustInfo, string thirdId, out string transId, out int BonusId)
@@ -30,7 +35,13 @@ namespace ThirdPartyService.Service.DAL
             var apiResult = new ApiResult<TransferResult>();
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
-                transId = conn.QueryFirstOrDefault<string>("Service_TpTransferBonusInfo_Ins", new { TpId = tpBonusTransfer.TpId, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, SiteId = tpCustInfo.SiteId, Memo = (string)null, ThirdId = thirdId, Prefix = $"V{common.GetEnv()}" }, commandType: CommandType.StoredProcedure);
+                transId = conn.QueryFirstOrDefault<string>("Service_TpTransferBonusInfo_Ins",
+                    new
+                    {
+                        TpId = tpBonusTransfer.TpId, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName,
+                        SiteId = tpCustInfo.SiteId, Memo = (string)null, ThirdId = thirdId,
+                        Prefix = $"V{common.GetEnv()}"
+                    }, commandType: CommandType.StoredProcedure);
                 conn.Open();
 
                 Match m = Regex.Match(transId, @"\d+");
@@ -120,6 +131,50 @@ namespace ThirdPartyService.Service.DAL
 
                 if (rwalletServiceResult)
                     trans.Commit();
+            }
+        }
+        
+        public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer,ApiResult<TransferResult> transferResult)
+        {
+            if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
+            {
+                using var conn = new MySqlConnection(_connectionString);
+                conn.Open();
+                using var trans = conn.BeginTransaction();
+
+                var result = _mainDbClient.Execute("Service_BonusExpired_Set",
+                    new DynamicParameters(new
+                    {
+                        tpBonusCancelTransfer.BonusId,
+                        tpBonusCancelTransfer.CustId,
+                        tpBonusCancelTransfer.UserName,
+                        tpBonusCancelTransfer.SiteId,
+                        TYPE = (int)FinancialType.CancelledBonus,
+                        tpBonusCancelTransfer.PromoCategoryId,
+                        Bonus = tpBonusCancelTransfer.RemainingBonus
+                    }), conn, trans);
+
+                if (result >= 0)
+                {
+                    if (tpBonusCancelTransfer.RemainingBonus > 0)
+                    {
+                        result = _walletService.SetBalance(
+                            tpBonusCancelTransfer.CustId,
+                            tpBonusCancelTransfer.SiteId,
+                            tpBonusCancelTransfer.UserName,
+                            tpBonusCancelTransfer.RefundAmount - tpBonusCancelTransfer.RemainingBonus,
+                            tpBonusCancelTransfer.TpId,
+                            $"CancelBonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus}, " +
+                            $"Refund Amount={tpBonusCancelTransfer.RefundAmount:#,##0.##}",
+                            tpBonusCancelTransfer.BonusId.ToString(), out _,
+                            conn, trans);
+                    }
+                }
+
+                if (result >= 0)
+                {
+                    trans.Commit();
+                }
             }
         }
     }

@@ -1,13 +1,11 @@
 ﻿using Dapper;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
@@ -28,14 +26,27 @@ namespace ThirdPartyService.Service.DAL
             this.walletService = walletService;
         }
 
-        public ApiResult<TransferResult> TpTransferReqV2(TpTransfer tpTransfer, TpCustInfo tpCustInfo, string thirdId, string prefix, out string transId)
+        public ApiResult<TransferResult> TpTransferReqV2(TpTransfer tpTransfer, TpCustInfo tpCustInfo, string thirdId, string prefix, object ExtensionInfo, out string transId)
         {
             var apiResult = new ApiResult<TransferResult>();
             int transferId = 0;
             var prefixName = $"{prefix}{common.GetEnv()}";
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
-                transId = conn.QueryFirstOrDefault<string>("TpTransferInfo_Ins", new { TpId = tpTransfer.TpId, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, SiteId = tpCustInfo.SiteId, Direction = (int)tpTransfer.direction, Amount = tpTransfer.Amount, Memo = (string)null, ThirdId = thirdId, Prefix = prefixName }, commandType: CommandType.StoredProcedure);
+                transId = conn.QueryFirstOrDefault<string>("TpTransferInfo_Ins",
+                    new
+                    {
+                        tpTransfer.TpId,
+                        tpCustInfo.CustId,
+                        tpCustInfo.UserName,
+                        tpCustInfo.SiteId,
+                        Direction = (int)tpTransfer.direction,
+                        tpTransfer.Amount,
+                        Memo = (string)null,
+                        ThirdId = thirdId,
+                        Prefix = prefixName,
+                        ExtensionInfo = ExtensionInfo != null ? JsonConvert.SerializeObject(ExtensionInfo) : null
+                    }, commandType: CommandType.StoredProcedure);
                 conn.Open();
 
                 Match m = Regex.Match(transId, @"\d+");
@@ -94,7 +105,7 @@ namespace ThirdPartyService.Service.DAL
                 }
                 else if (tpTransfer.direction == Direction.ToTp)
                 {
-                    var custBonus = conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { CustId = tpCustInfo.CustId, TpId = tpTransfer.TpId }, trans, commandType: CommandType.StoredProcedure);
+                    var custBonus = conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { tpCustInfo.CustId, tpTransfer.TpId }, trans, commandType: CommandType.StoredProcedure);
                     if (custBonus != null)
                     {
                         int bonusId = custBonus.BonusId;
@@ -102,9 +113,9 @@ namespace ThirdPartyService.Service.DAL
                         var withdrawalLimit = tpTransfer.Amount * -1;
                         var p = new DynamicParameters(new
                         {
-                            CustId = tpCustInfo.CustId,
-                            UserName = tpCustInfo.UserName,
-                            SiteId = tpCustInfo.SiteId,
+                            tpCustInfo.CustId,
+                            tpCustInfo.UserName,
+                            tpCustInfo.SiteId,
                             Memo = memo,
                             RefTransId = transId
                         });

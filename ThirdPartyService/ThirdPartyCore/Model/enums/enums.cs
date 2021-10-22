@@ -120,4 +120,9 @@ namespace ThirdPartyCore.Model.enums
         VirtualSports = 7,
         Poker = 8,
     }
+
+    public enum FinancialType
+    {
+        CancelledBonus = 7
+    }
 }

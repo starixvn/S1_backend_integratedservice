@@ -100,6 +100,17 @@ namespace ThirdPartyCore.Model
         public long ExpiryTime { set; get; }
         public Dictionary<string, string> inputs { set; get; }
     }
+    public class TpBonusCancelTransfer
+    {
+        public int TpId { set; get; }
+        public int CustId { set; get; }
+        public string UserName { set; get; }
+        public int SiteId { set; get; }
+        public int PromoCategoryId { set; get; }
+        public int BonusId { set; get; }
+        public decimal RemainingBonus { set; get; }
+        public decimal RefundAmount { set; get; }
+    }
     public class TpTransferUserList
     {
         public string TransId { set; get; }
