@@ -717,7 +717,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
         #region MG
 
         public async Task<MGPlaceBetResult> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
@@ -789,7 +789,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
         }
-        
+
         #endregion MG
 
         #region EVO
@@ -838,9 +838,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         bettingData_EVO.transaction.amount,
                         (int)Tp.EVO,
-                        bettingData_EVO.transaction.id,
-                        gameType,
                         bettingData_EVO.transaction.refId,
+                        gameType,
+                        bettingData_EVO.transaction.id,
                         null,
                         category,
                         out afterAmount,
