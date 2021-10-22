@@ -74,6 +74,7 @@ namespace ThirdPartyWager
             services.AddSingleton<SabaOddsService>();
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
+            services.AddSingleton<WagerEVOService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -142,7 +143,7 @@ namespace ThirdPartyWager
             //KM
             services.AddSingleton<ApiKMBLL>();
             services.AddSingleton<KMBLL>();
-            // MP
+            //MP
             services.AddSingleton<WagerMPBLL>();
             services.AddSingleton<ApiMPBLL>();
             //MG
@@ -151,6 +152,9 @@ namespace ThirdPartyWager
             services.AddTransient<IMGBLL, MGBLL>();
             //TCG
             services.AddSingleton<TCGBLL>();
+            //EVO
+            services.AddSingleton<WagerEVOBLL>();
+            services.AddSingleton<ApiEVOBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -184,6 +188,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerTCG>();
             services.AddHostedService<WagerMP>();
             services.AddHostedService<WagerRedoMP>();
+            services.AddHostedService<WagerEVO>();
+            services.AddHostedService<WagerRedoEVO>();
 
             /*
                 services.AddHostedService<CheckTicketAG>();

@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public int Execute(string name, DynamicParameters parameters, MySqlConnection connection, MySqlTransaction trans)
         {
             var result = 0;
@@ -102,6 +102,26 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
+        public T QueryFirst<T>(string name, DynamicParameters parameters)
+        {
+            T result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.QueryFirstOrDefault<T>(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
     }
