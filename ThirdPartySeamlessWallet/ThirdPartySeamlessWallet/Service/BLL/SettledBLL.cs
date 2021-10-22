@@ -364,7 +364,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
                 return -2;
             }
-            var checkBalance = custBalance.Balance + bettingDataFish_YL.profit;
+            var checkBalance = custBalance.Balance - bettingDataFish_YL.betAmount;
             if (checkBalance < 0)
             {
                 afterAmount = checkBalance / tpCurrency.ExchangeRate;
