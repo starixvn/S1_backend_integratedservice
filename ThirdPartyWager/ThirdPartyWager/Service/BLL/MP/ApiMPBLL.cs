@@ -21,7 +21,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiMPBLL> _logger;
-        private readonly int _tpId = (int)Tp.MP;
         private readonly string _logName = Tp.MP.ToString();
 
         public ApiMPBLL(IServiceProvider provider)

@@ -174,6 +174,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         bet.GameType = _gameTypeList.ContainsKey(bet.KindID) ? (int)_gameTypeList[bet.KindID] : 0;
                         var r = _wagerMPService.InsertWager(bet);
+                        _ = r.Result;
                     }
                     catch (Exception ex)
                     {

@@ -2924,6 +2924,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region MG
+
         public async Task<MGPayoutResult> PayoutLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
@@ -3069,5 +3071,278 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw;
             }
         }
+
+        #endregion
+
+        #region EVO
+
+        public int CancelBetLC_EVO(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(new
+            {
+                TransactionId = bettingData_EVO.transaction.id,
+                TransactionRefId = bettingData_EVO.transaction.refId,
+                userId = bettingData_EVO.userId,
+                uuid = bettingData_EVO.uuid,
+                currency = bettingData_EVO.currency,
+                amount = bettingData_EVO.transaction.amount,
+                transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
+                game = JsonConvert.SerializeObject(bettingData_EVO.game),
+                GameId = bettingData_EVO.game.id,
+                GameType = bettingData_EVO.game.type,
+                GameDetailsId = bettingData_EVO.game.details.table.id,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                CurrencyId = tpCustInfo.CurrencyId,
+                TicketType = (int)BettransType.CancelBet,
+                TicketStatus = (int)TicketStatus.Refund,
+                SettleFlag = (int)SettleFlag.Settled
+            });
+
+            result = conn.Execute("Service_BettransLC_EVO_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                if (bettingData_EVO.transaction.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(bettingData_EVO.transaction.amount),
+                        (int)Tp.EVO,
+                        bettingData_EVO.transaction.refId,
+                        (int)GameType.EVO_LiveCasino,
+                        TpCategory.LiveCasino,
+                        bettingData_EVO.transaction.id,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "CancelBet",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                }
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else
+            {
+                var check = conn.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", new { TransactionRefId = bettingData_EVO.transaction.refId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (!check.Any())
+                {
+                    // no bet data
+                    return -2;
+                }
+                var subChk = check.Where(x => x.TicketType == 2);
+                if (subChk.Any())
+                {
+                    // had cancel
+                    return -1;
+                }
+            }
+            return result;
+        }
+
+        public int PayoutLC_EVO(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var check = conn.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", new { TransactionRefId = bettingData_EVO.transaction.refId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (!check.Any())
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+
+                var p = new DynamicParameters(new
+                {
+                    TransactionId = bettingData_EVO.transaction.id,
+                    TransactionRefId = bettingData_EVO.transaction.refId,
+                    userId = bettingData_EVO.userId,
+                    uuid = bettingData_EVO.uuid,
+                    currency = bettingData_EVO.currency,
+                    amount = bettingData_EVO.transaction.amount,
+                    transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
+                    game = JsonConvert.SerializeObject(bettingData_EVO.game),
+                    GameId = bettingData_EVO.game.id,
+                    GameType = bettingData_EVO.game.type,
+                    GameDetailsId = bettingData_EVO.game.details.table.id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = bettingData_EVO.transaction.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+
+                result = conn.Execute("Service_BettransLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (bettingData_EVO.transaction.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(bettingData_EVO.transaction.amount),
+                            (int)Tp.EVO,
+                            bettingData_EVO.transaction.refId,
+                            (int)GameType.EVO_LiveCasino,
+                            TpCategory.LiveCasino,
+                            bettingData_EVO.transaction.id,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
+        public int PromoPayoutLC_EVO(TpCustInfo tpCustInfo, PromoData_EVO promoData_EVO, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                //var p = new DynamicParameters(new
+                //{
+                //    PromoTransactionId = promoData_EVO.promoTransaction.id,
+                //    userId = promoData_EVO.userId,
+                //    currency = promoData_EVO.currency,
+                //    amount = promoData_EVO.promoTransaction.amount,
+                //    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
+                //    game = JsonConvert.SerializeObject(promoData_EVO.game),
+                //    TicketType = (int)BettransType.Payout,
+                //    TicketStatus = (int)TicketStatus.Win,
+                //    SettleFlag = (int)SettleFlag.EndGame
+                //});
+
+                //result = conn.Execute("Service_RewardLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                var p = new DynamicParameters(new
+                {
+                    TransactionId = promoData_EVO.promoTransaction.id,
+                    TransactionRefId = promoData_EVO.promoTransaction.id,
+                    userId = promoData_EVO.userId,
+                    uuid = promoData_EVO.uuid,
+                    currency = promoData_EVO.currency,
+                    amount = promoData_EVO.promoTransaction.amount,
+                    transaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
+                    game = JsonConvert.SerializeObject(promoData_EVO.game),
+                    GameId = promoData_EVO.game?.id,
+                    GameType = promoData_EVO.game?.type,
+                    GameDetailsId = promoData_EVO.game?.details.table.id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = (int)TicketStatus.Win,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+
+                result = conn.Execute("Service_BettransLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (promoData_EVO.promoTransaction.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(promoData_EVO.promoTransaction.amount),
+                            (int)Tp.EVO,
+                            promoData_EVO.promoTransaction.id,
+                            (int)GameType.EVO_LiveCasino,
+                            TpCategory.LiveCasino,
+                            promoData_EVO.promoTransaction.id,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"{promoData_EVO.promoTransaction.id} Prize",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
+        public IEnumerable<SettleData> GetUnsettledList_EVO()
+        {
+            return _mainDbClient.Query<SettleData>("Service_BettransLC_EVO_Unsettle_Get");
+        }
+
+        public int SetSettleFlag_EVO(string TransId)
+        {
+            return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
+        public SettleData GetSettle_TpWagerLC_EVO(string TransId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerLC_EVO_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
+        #endregion
     }
 }
