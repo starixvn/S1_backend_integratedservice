@@ -9,6 +9,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.OneGaming
 {
@@ -184,6 +185,34 @@ namespace ThirdParty.OneGaming
             throw new NotImplementedException();
         }
 
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+            var agentCode = inputs.GetValueOrDefault($"agent_code_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+            var secret_key = inputs.GetValueOrDefault($"secret_key_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+
+            var url = $"{apiUrl}/singleGameHistory";
+            var sParam = $"agent_code={agentCode}&player_id={tpCustInfo.TpUserName}&period={getBetDetail.TransId}&bcode={HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{getBetDetail.TransId}", secret_key)}";
+
+            var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
+            var result = FromJson<DetailResult>(json);
+            if (result.status_code != "0")
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status_code} | {result.message}");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.link,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+        }
+
         private string HMACSHA256(string message, string key)
         {
             var encoding = new System.Text.UTF8Encoding();
@@ -194,6 +223,15 @@ namespace ThirdParty.OneGaming
                 byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
+        }
+
+        public class DetailResult
+        {
+            public string status_code { get; set; }
+
+            public string message { get; set; }
+
+            public string link { get; set; }
         }
     }
 }
