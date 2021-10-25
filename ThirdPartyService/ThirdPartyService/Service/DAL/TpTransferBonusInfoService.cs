@@ -154,20 +154,30 @@ namespace ThirdPartyService.Service.DAL
                         Bonus = tpBonusCancelTransfer.RemainingBonus
                     }), conn, trans);
 
-                if (result >= 0)
+                if (result >= 0 && tpBonusCancelTransfer.RemainingBonus > 0 && tpBonusCancelTransfer.RefundAmount > 0)
                 {
-                    if (tpBonusCancelTransfer.RemainingBonus > 0)
+                    var memo = $"CancelBonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus:#,##0.##}, " +
+                               $"Refund Amount={tpBonusCancelTransfer.RefundAmount:#,##0.##}";
+
+                    result = _walletService.SetBalance(
+                        tpBonusCancelTransfer.CustId,
+                        tpBonusCancelTransfer.SiteId,
+                        tpBonusCancelTransfer.UserName,
+                        tpBonusCancelTransfer.RefundAmount - tpBonusCancelTransfer.RemainingBonus,
+                        tpBonusCancelTransfer.TpId,
+                        memo,
+                        tpBonusCancelTransfer.BonusId.ToString(), 
+                        out _, conn, trans);
+
+                    if (result >= 0)
                     {
-                        result = _walletService.SetBalance(
-                            tpBonusCancelTransfer.CustId,
-                            tpBonusCancelTransfer.SiteId,
+                        result = _walletService.SetWithdrawalLimit(tpBonusCancelTransfer.CustId,
                             tpBonusCancelTransfer.UserName,
-                            tpBonusCancelTransfer.RefundAmount - tpBonusCancelTransfer.RemainingBonus,
-                            tpBonusCancelTransfer.TpId,
-                            $"CancelBonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus:#,##0.##}, " +
-                            $"Refund Amount={tpBonusCancelTransfer.RefundAmount:#,##0.##}",
-                            tpBonusCancelTransfer.BonusId.ToString(), out _,
-                            conn, trans);
+                            tpBonusCancelTransfer.SiteId, 
+                            tpBonusCancelTransfer.RefundAmount, 
+                            memo,
+                            tpBonusCancelTransfer.BonusId.ToString(),
+                            out _, conn, trans);
                     }
                 }
 
