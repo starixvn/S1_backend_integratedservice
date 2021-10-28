@@ -21,6 +21,7 @@ namespace ThirdPartyCore.Model
         public decimal Amount { set; get; }
         public Direction direction { set; get; }
         public Dictionary<string, string> inputs { set; get; }
+        public int BonusId { set; get; }
     }
     public class AdminTpTransfer : TpTransfer
     {
@@ -88,6 +89,7 @@ namespace ThirdPartyCore.Model
         public decimal Amount { set; get; }
         public int Status { set; get; }
         public DateTime CreateTime { set; get; }
+        public string ExtensionInfo { set; get; }
     }
     public class TpBonusTransfer
     {
