@@ -176,7 +176,7 @@ namespace ThirdParty.RedTiger
             string[] cutHost = ApiUrl.Split(word);
             string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
 
-            var CreateTime = TpBetRecordProvider.GetTpTableData("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
+            var CreateTime = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
 
             var BetDetail = new
             {

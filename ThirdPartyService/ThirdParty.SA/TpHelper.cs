@@ -239,7 +239,7 @@ namespace ThirdParty.SA
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var transIdList = getBetDetail.TransId.Split("_");
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] });
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] });
             var detail = ToJson(wagerDetail);
 
             return getBetDetail.TpGameTypeOption.CategoryId switch

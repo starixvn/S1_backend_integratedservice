@@ -141,7 +141,7 @@ namespace ThirdParty.PP
             var secureLogin = inputs.GetValueOrDefault("SecureLogin") ?? throw new Exception();
             var secureKey = inputs.GetValueOrDefault("SecureKey") ?? throw new Exception();
             
-            var gameId = TpBetRecordProvider.GetTpTableData("Service_Bettrans_PP_GameId_Get",
+            var gameId = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_PP_GameId_Get",
                 new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }).GetValueOrDefault("gameId")?.ToString();
 
             var url = $"{apiUrl}/v3/http/HistoryAPI/OpenHistoryExtended/";

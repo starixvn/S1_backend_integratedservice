@@ -107,7 +107,7 @@ namespace ThirdParty.One789
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_One789_Detail_Get", 
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_One789_Detail_Get", 
                 new { getBetDetail.TransId , GameType = getBetDetail.TpGameTypeOption.Type });
             var detail = ToJson(wagerDetail);
             

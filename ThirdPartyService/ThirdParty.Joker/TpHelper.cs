@@ -98,7 +98,7 @@ namespace ThirdParty.Joker
                     appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                     secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                 }
-                var gameCode = TpBetRecordProvider.GetTpTableData("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId })
+                var gameCode = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId })
                     .GetValueOrDefault("gamecode")?.ToString();
 
                 var url = $"{apiUrl}/game-history-url";

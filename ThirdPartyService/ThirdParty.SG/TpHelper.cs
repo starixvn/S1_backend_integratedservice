@@ -87,7 +87,7 @@ namespace ThirdParty.SG
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var spName = getBetDetail.TpGameTypeOption.Type == 15 ? "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail(spName, new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst(spName, new { getBetDetail.TransId });
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
