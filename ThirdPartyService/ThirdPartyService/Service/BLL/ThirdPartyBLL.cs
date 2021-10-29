@@ -525,7 +525,25 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
             
-            CheckAndSetAmount(tpBonusCancelTransfer, balanceApiResult, tpCustInfoResult, tpTransfer);
+            //檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
+            var thirdPartyBalance = balanceApiResult.Data.balance;
+            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+            {
+                thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
+            if (tpTransfer.Amount > thirdPartyBalance)
+            {
+                tpTransfer.Amount = thirdPartyBalance;
+                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - thirdPartyBalance;
+                if (tpBonusCancelTransfer.RefundAmount < 0)
+                {
+                    tpBonusCancelTransfer.RefundAmount = 0;
+                }
+
+                tpBonusCancelTransfer.RemainingBonus = thirdPartyBalance;
+            }
 
             if (tpTransfer.Amount > 0)
             {
@@ -568,36 +586,6 @@ namespace ThirdPartyService.Service.BLL
             }
 
             return apiResult;
-        }
-
-        /// <summary>
-        /// 檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
-        /// </summary>
-        /// <param name="tpBonusCancelTransfer"></param>
-        /// <param name="balanceApiResult"></param>
-        /// <param name="tpCustInfoResult"></param>
-        /// <param name="tpTransfer"></param>
-        private static void CheckAndSetAmount(TpBonusCancelTransfer tpBonusCancelTransfer, ApiResult<UserBalance> balanceApiResult,
-            ApiResult<TpCustInfo> tpCustInfoResult, TpTransfer tpTransfer)
-        {
-            var thirdPartyBalance = balanceApiResult.Data.balance;
-            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
-            {
-                thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;
-            }
-
-            thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
-            if (tpTransfer.Amount > thirdPartyBalance)
-            {
-                tpTransfer.Amount = thirdPartyBalance;
-                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - thirdPartyBalance;
-                if (tpBonusCancelTransfer.RefundAmount < 0)
-                {
-                    tpBonusCancelTransfer.RefundAmount = 0;
-                }
-
-                tpBonusCancelTransfer.RemainingBonus = thirdPartyBalance;
-            }
         }
 
         public ApiResult FixNegative(TpInfo tpInfo)
