@@ -20,7 +20,7 @@ namespace ThirdPartyCore.Model
         {
             get
             {
-                return BinaryDetail.Length > 0 ? GZipDecompress() : _detail;
+                return BinaryDetail?.Length > 0 ? GZipDecompress() : _detail;
             }
             set
             {
