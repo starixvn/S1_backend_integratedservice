@@ -20,7 +20,7 @@ namespace ThirdPartyCore.Model
         {
             get
             {
-                return _detail.IndexOf("gzip64") > -1 ? GZipDecompress() : _detail;
+                return BinaryDetail.Length > 0 ? GZipDecompress() : _detail;
             }
             set
             {
@@ -28,12 +28,13 @@ namespace ThirdPartyCore.Model
             }
         }
 
+        public byte[] BinaryDetail { get; set; }
+
         private string _detail;
 
         private string GZipDecompress()
         {
-            var gzip64 = JObject.Parse(_detail)["gzip64"].ToString();
-            using var msi = new MemoryStream(Convert.FromBase64String(gzip64));
+            using var msi = new MemoryStream(BinaryDetail);
             using var mso = new MemoryStream();
             using (var gs = new GZipStream(msi, CompressionMode.Decompress))
             {
