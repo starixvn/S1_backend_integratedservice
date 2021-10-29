@@ -43,7 +43,7 @@ namespace ThirdPartyService.Service.DAL
                     SettledTime = getBetDetail.SettledTime
                 });
 
-                return _reportDbClient.QueryFirst<TpBetRecordDetailModel>("Service_TpBetRecordDetail_Get_V1", p);
+                return _reportDbClient.QueryFirst<TpBetRecordDetailModel>("Service_TpBetRecordDetail_Get_V2", p);
             }
             catch (Exception)
             {
