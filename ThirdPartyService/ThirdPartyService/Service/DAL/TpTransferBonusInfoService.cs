@@ -66,7 +66,7 @@ namespace ThirdPartyService.Service.DAL
                 apiResult.Message = "No bonus can be transferred.";
 
                 _mainDbClient.Execute("Service_TpTransferBonusInfo_Set",
-                    new DynamicParameters(new
+                    new
                     {
                         TransferBonusId = transferId,
                         tpBonusTransfer.Bonus,
@@ -78,7 +78,7 @@ namespace ThirdPartyService.Service.DAL
                         Memo = $"{apiResult.Message}",
                         ForStatus = (int)TransferStatus.Pending,
                         Status = (int)TransferStatus.Fail
-                    }), conn, trans);
+                    }, conn, trans);
                 trans.Commit();
                 return apiResult;
             }
@@ -114,14 +114,14 @@ namespace ThirdPartyService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
-                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", new DynamicParameters(new
+                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", new
                 {
                     TransferBonusId = transferId,
                     transferResult.Data.ThirdId,
                     Memo = transferResult.RawMessage,
                     ForStatus = (int)TransferStatus.PendingD,
                     Status = (int)TransferStatus.Success
-                }), conn, trans) > 0;
+                }, conn, trans) > 0;
 
                 if (isSuccess)
                 {
@@ -178,7 +178,7 @@ namespace ThirdPartyService.Service.DAL
                 using var trans = conn.BeginTransaction();
 
                 var result = _mainDbClient.Execute("Service_BonusExpired_Set",
-                    new DynamicParameters(new
+                    new
                     {
                         tpBonusCancelTransfer.BonusId,
                         tpBonusCancelTransfer.CustId,
@@ -187,7 +187,7 @@ namespace ThirdPartyService.Service.DAL
                         TYPE = (int)FinancialType.CancelledBonus,
                         tpBonusCancelTransfer.PromoCategoryId,
                         Bonus = tpBonusCancelTransfer.RemainingBonus
-                    }), conn, trans);
+                    }, conn, trans);
 
                 if (result >= 0 && tpBonusCancelTransfer.RemainingBonus > 0 && tpBonusCancelTransfer.RefundAmount > 0)
                 {

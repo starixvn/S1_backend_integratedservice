@@ -84,12 +84,12 @@ namespace ThirdPartyService.Service.DAL
         public int SetBonusStatus(int bonusId, int status, int forStatus, MySqlConnection conn, MySqlTransaction trans)
         {
             return _mainDbClient.Execute("Common_BonusStatus_Set",
-                new DynamicParameters(new
+                new
                 {
                     BonusId = bonusId,
                     Status = status,
                     ForStatus = forStatus
-                }), conn, trans);
+                }, conn, trans);
         }
     }
 }
