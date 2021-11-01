@@ -63,15 +63,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             var content = JsonConvert.SerializeObject(req);
             log2File.Info(content, logName);
 
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
+            //var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.YL);
 
-            if (req.key != thirdPartySetting.TpSetting["cert"])
-            {
-                resp.status = "500";
-                resp.msg = "system busy";
-                log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                return resp;
-            }
+            //if (req.key != thirdPartySetting.TpSetting["cert"])
+            //{
+            //    resp.status = "500";
+            //    resp.msg = "system busy";
+            //    log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+            //    return resp;
+            //}
 
             ReqAction reqAction = JsonConvert.DeserializeObject<ReqAction>(req.message);
             logName = $"{logName}_{reqAction.action}";
