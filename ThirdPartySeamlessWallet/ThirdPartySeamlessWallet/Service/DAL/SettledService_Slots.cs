@@ -2539,6 +2539,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public TpBetFailureRecord GetTpBetFailureParam_YL(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, BettingDataFish_YL bettingDataFish_YL, TpCheckRecordCode Code, decimal AfterAmount)
+        {
+            DateTime.TryParse(bettingDataFish_YL.transTime, out DateTime dtTransTime);
+            var TransTime = tools.ConvertLocTime(dtTransTime, 8);
+
+            // BLL會經過匯率換算 下列還原為原始資料
+            TpBetFailureRecordInfo_YL InfoData = new TpBetFailureRecordInfo_YL
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                BetAmount = bettingDataFish_YL.betAmount / tpCurrency.ExchangeRate,
+                PayAmount = bettingDataFish_YL.payAmount / tpCurrency.ExchangeRate,
+                Profit = bettingDataFish_YL.profit / tpCurrency.ExchangeRate,
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+
+            return new TpBetFailureRecord
+            {
+                TransId = bettingDataFish_YL.txId,
+                TpId = (int)Tp.YL,
+                TpGameType = (int)GameType.YL_Fish,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = TransTime,
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
+        }
+
         #endregion
 
         #region PT
