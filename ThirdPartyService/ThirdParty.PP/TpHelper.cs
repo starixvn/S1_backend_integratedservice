@@ -4,9 +4,8 @@ using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Text;
-using System.Security.Cryptography;
 using ThirdPartyCore.Model.Exceptions;
+using Newtonsoft.Json;
 
 namespace ThirdParty.PP
 {
@@ -43,6 +42,14 @@ namespace ThirdParty.PP
             public string lobbyUrl { get; set; } //用于打开运营商网站大厅页面的 URL；
             public string operatorGameHistoryUrl { get; set; }  //用于在运营商侧打开游戏历史记录页面的 URL
             //public string secureLogin { get; set; }  //运营商在 Pragmatic Play 侧的唯一标识符。
+        }
+
+
+        public class LoginResult
+        {
+            public int error { get; set; }
+            public string description { get; set; }
+            public string gameURL { get; set; }
         }
 
         public class UserResult
@@ -86,42 +93,55 @@ namespace ThirdParty.PP
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            string ProviderId = inputs.ContainsKey("ProviderId") && !string.IsNullOrEmpty(inputs["ProviderId"]) ? inputs["ProviderId"] : throw new Exception();
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
             string SecureLogin = inputs.ContainsKey("SecureLogin") && !string.IsNullOrEmpty(inputs["SecureLogin"]) ? inputs["SecureLogin"] : throw new Exception();
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-            string funGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : "";
+            string SecureKey = inputs.ContainsKey("SecureKey") && !string.IsNullOrEmpty(inputs["SecureKey"]) ? inputs["SecureKey"] : throw new Exception("SecureKey");
+            string Uri = "/v3/http/CasinoGameAPI/game/url/";
+
+
+            var parameters = new Dictionary<string, string>()
+            {
+                { "secureLogin",SecureLogin },
+                { "token",ApplyToken(tpCustInfo) },
+                { "symbol",gameId },
+                { "technology","H5"},
+                { "platform",(appType == AppType.Desktop) ? "WEB" : "MOBILE" },
+                { "language",TpLangId },
+                { "lobbyUrl",lobbyUrl },
+                { "cashierUrl",cashierUrl },
+                { "playMode",(fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
+                { "stylename",SecureLogin },
+            };
+
+            var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
+            sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
+            var result = HttpPost($"{ApiUrl}{Uri}", sParam, "application/x-www-form-urlencoded");
 
             ApiResult oApiResult = new ApiResult();
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            if (!IsJSON(result))
             {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{funGameUrl}?lang={TpLangId}&gameSymbol={System.Web.HttpUtility.UrlEncode(gameId)}&lobbyURL={System.Web.HttpUtility.UrlEncode(lobbyUrl)}&stylename={SecureLogin}";
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
                 return oApiResult;
             }
 
-            string sParam = "";
-            LoginReq loginReq = new LoginReq();
+            var json = JsonConvert.DeserializeObject<LoginResult>(result);
+            if (json.error == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = json.gameURL;
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = json.description;
+                oApiResult.RawErrorCode = json.error.ToString();
+            }
 
-            //gameId = "vs10bookoftut";
-            loginReq.token = ApplyToken(tpCustInfo);
-            loginReq.symbol = gameId;
-            loginReq.technology = "H5";
-            //loginReq.technology
-            loginReq.platform = (appType == AppType.Desktop) ? "WEB" : "MOBILE";
-            loginReq.language = TpLangId;
-            loginReq.lobbyUrl = lobbyUrl;
-            loginReq.cashierUrl = cashierUrl;
-            //loginReq.operatorGameHistoryUrl = "";
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
-            sParam = System.Web.HttpUtility.UrlEncode(string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray()));
-            sParam = $"{sParam}&stylename={SecureLogin}";
-
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?key={sParam}";
             return oApiResult;
         }
 
