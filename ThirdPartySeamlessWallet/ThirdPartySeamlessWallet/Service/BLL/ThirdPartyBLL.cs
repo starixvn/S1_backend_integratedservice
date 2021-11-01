@@ -187,7 +187,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.JILI:
                     gameType = GameType.JILI_RNG;
 
-                    List<int> fish = new List<int>{1,20,42,32,60,74};
+                    List<int> fish = new List<int> { 1, 20, 42, 32, 60, 74 };
                     if (fish.Contains(Convert.ToInt32(gameId)))
                     {
                         gameType = GameType.JILI_Fish;
@@ -222,6 +222,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 settlementType = SettlementType.SettledForValidNotRollover;
             }
             return settlementType;
+        }
+
+        public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
+        {
+            return thirdPartyService.AddTpBetFailureRecord(tpBetFailureRecord);
         }
     }
 }
