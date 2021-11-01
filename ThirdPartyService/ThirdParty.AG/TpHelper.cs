@@ -5,6 +5,8 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Xml;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace ThirdParty.AG
 {
@@ -26,10 +28,6 @@ namespace ThirdParty.AG
             public string msg { get; set; }
         }
 
-        public class aa
-        {
-            public string ResponseCode { get; set; }
-        }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -204,11 +202,14 @@ namespace ThirdParty.AG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var billNo = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransLC_AGV2_Payout_Get",
-                new { transactionID = getBetDetail.TransId }).GetValueOrDefault("billNo")?.ToString();
+            var billNoList = TpBetRecordProvider.ReportDbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId })
+                .Select(item => item.GetValueOrDefault("billNo")?.ToString());
 
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_AG_Detail_Get", new { billNo });
-            var detail = ToJson(wagerDetail);
+            var wagerDetailList = TpBetRecordProvider.WagerDbQuery("Service_TpWager_AG_Detail_Get", 
+                new { billNoList = JsonConvert.SerializeObject(billNoList) });
+
+            var detail = ToJson(wagerDetailList);
+            var gameCode = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
@@ -216,14 +217,14 @@ namespace ThirdParty.AG
                     TransId = getBetDetail.TransId,
                     Detail = detail,
                     TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("billNo")?.ToString(),
-                    TpUserName = wagerDetail.GetValueOrDefault("playName")?.ToString(),
-                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("recalcuTime", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("bet") * tpCurrency.ExchangeRate,
-                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("gname")?.ToString(),
-                    GameName = wagerDetail.GetValueOrDefault("gname")?.ToString(),
+                    RefTransId = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("gameCode")?.ToString(),
+                    TpUserName = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("playName")?.ToString(),
+                    UTCBetTime = wagerDetailList.Min(i => (DateTime)i.GetValueOrDefault("betTime", DateTime.MinValue)),
+                    UTCSettledTime = wagerDetailList.Max(i => (DateTime)i.GetValueOrDefault("recalcuTime", DateTime.MinValue)),
+                    Stake = wagerDetailList.Sum(i => (decimal)i.GetValueOrDefault("betAmount")) * tpCurrency.ExchangeRate,
+                    WinlostAmount = wagerDetailList.Sum(i => (decimal)i.GetValueOrDefault("netAmount")) * tpCurrency.ExchangeRate,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -233,10 +234,27 @@ namespace ThirdParty.AG
                 }
             };
         }
-
-        public override string ToString()
+        private string GetGameName(string gameCode)
         {
-            return base.ToString();
+            return gameCode switch
+            {
+                "BAC" => "百家乐",
+                "CBAC" => "包桌百家乐",
+                "LINK" => "连环百家乐",
+                "DT" => "龙虎",
+                "SHB" => "骰宝",
+                "ROU" => "轮盘",
+                "FT" => "番摊",
+                "LBAC" => "竞咪百家乐",
+                "ULPK" => "终极德州扑克",
+                "SBAC" => "保险百家乐",
+                "NN"=> "牛牛",
+                "BJ" => "Blackjack",
+                "ZJH" => "炸金花",
+                "BF" => "斗牛",
+                "SG" => "三公",
+                _ => string.Empty,
+            };
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)

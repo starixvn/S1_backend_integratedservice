@@ -13,8 +13,8 @@ namespace ThirdPartyCore
 
         IReadOnlyDictionary<string, object> ReportDbQueryFirst(string spName, object parameters = null);
 
-        IEnumerable<T> WagerDbQuery<T>(string spName, object parameters = null);
+        IEnumerable<IReadOnlyDictionary<string, object>> WagerDbQuery(string spName, object parameters = null);
 
-        IEnumerable<T> ReportDbQuery<T>(string spName, object parameters = null);
+        IEnumerable<IReadOnlyDictionary<string, object>> ReportDbQuery(string spName, object parameters = null);
     }
 }

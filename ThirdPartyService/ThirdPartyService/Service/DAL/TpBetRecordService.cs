@@ -75,11 +75,11 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IEnumerable<T> WagerDbQuery<T>(string spName, object parameters = null)
+        public IEnumerable<IReadOnlyDictionary<string, object>> WagerDbQuery(string spName, object parameters = null)
         {
             try
             {
-                return _wagerDbClient.Query<T>(spName, parameters);
+                return (IEnumerable<IReadOnlyDictionary<string, object>>)_wagerDbClient.Query(spName, parameters);
             }
             catch (Exception)
             {
@@ -87,11 +87,11 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IEnumerable<T> ReportDbQuery<T>(string spName, object parameters = null)
+        public IEnumerable<IReadOnlyDictionary<string, object>> ReportDbQuery(string spName, object parameters = null)
         {
             try
             {
-                return _reportDbClient.Query<T>(spName, parameters);
+                return (IEnumerable<IReadOnlyDictionary<string, object>>)_reportDbClient.Query(spName, parameters);
             }
             catch (Exception)
             {
