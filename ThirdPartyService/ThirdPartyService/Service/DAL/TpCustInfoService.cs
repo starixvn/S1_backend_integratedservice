@@ -48,7 +48,7 @@ namespace ThirdPartyService.Service.DAL
             if (tpCustInfo == null)
             {
                 // pt development not available
-                if (environment.EnvironmentName != "Production" && tpId == 27 && custId != 249629)
+                if (environment.EnvironmentName != "Production" && tpId == 27)
                 {
                     apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
                     return apiResult;
