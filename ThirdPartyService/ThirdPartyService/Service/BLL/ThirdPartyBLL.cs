@@ -162,30 +162,10 @@ namespace ThirdPartyService.Service.BLL
             var apiResult = new ApiResult<TransferResult>();
             try
             {
-                string prefix = "T";
-
-                if (tpTransfer.direction != Direction.ToMain && tpTransfer.direction != Direction.ToTp)
+                var result = GetPrefix(tpTransfer, apiResult, out var prefix);
+                if (result.ErrorCode == ErrorCode.InvalidParameter || result.ErrorCode == ErrorCode.AutoTransferBonusFail)
                 {
-                    apiResult.ErrorCode = ErrorCode.InvalidParameter;
-                    return apiResult;
-                }
-                else if (tpTransfer.Amount <= 0)
-                {
-                    apiResult.ErrorCode = ErrorCode.InvalidParameter;
-                    return apiResult;
-                }
-
-                // source autotransfer running bonus failed
-                if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("Source") &&
-                    tpTransfer.inputs["Source"] == "Auto")
-                {
-                    prefix = "AT";
-                    var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
-                    if (custBonus != null)
-                    {
-                        apiResult.ErrorCode = ErrorCode.AutoTransferBonusFail;
-                        return apiResult;
-                    }
+                    return result;
                 }
 
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
@@ -236,7 +216,7 @@ namespace ThirdPartyService.Service.BLL
                 var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
                 string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
                 var tpTransferReqResult =
-                    tpTransferInfo.TpTransferReqV2(tpTransfer, tpCustInfoResult.Data, thirdId, prefix, out transId);
+                    tpTransferInfo.TpTransferReqV2(tpTransfer, tpCustInfoResult.Data, thirdId, prefix, null, out transId);
                 if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
                 {
                     return tpTransferReqResult;
@@ -263,6 +243,39 @@ namespace ThirdPartyService.Service.BLL
             {
                 _logger.LogError(ex, ex.Message);
                 throw;
+            }
+
+            return apiResult;
+        }
+
+        private ApiResult<TransferResult> GetPrefix(TpTransfer tpTransfer, ApiResult<TransferResult> apiResult, out string prefix)
+        {
+            prefix = TransferPrefix.T.ToString();
+
+            if ((tpTransfer.direction != Direction.ToMain && tpTransfer.direction != Direction.ToTp) ||
+                tpTransfer.Amount <= 0)
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                return apiResult;
+            }
+
+            // source autotransfer running bonus failed
+            if (tpTransfer.inputs != null && tpTransfer.inputs.ContainsKey("Source"))
+            {
+                if (tpTransfer.inputs["Source"] == "Auto")
+                {
+                    prefix = TransferPrefix.AT.ToString();
+                    var custBonus = thirdPartyHelper.CheckBonusWallet(tpTransfer.CustId, tpTransfer.TpId);
+                    if (custBonus != null)
+                    {
+                        apiResult.ErrorCode = ErrorCode.AutoTransferBonusFail;
+                        return apiResult;
+                    }
+                }
+                else if (tpTransfer.inputs["Source"] == "BonusCancel")
+                {
+                    prefix = TransferPrefix.BT.ToString();
+                }
             }
 
             return apiResult;
@@ -360,13 +373,23 @@ namespace ThirdPartyService.Service.BLL
                 var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount,
                     (Direction)tpTransferInfoModel.Direction, tpTransferInfoModel.TransId,
                     tpTransferInfoModel.ThirdId);
-                TpTransfer tpTransfer = new TpTransfer();
-                tpTransfer.direction = (Direction)tpTransferInfoModel.Direction;
-                tpTransfer.Amount = tpTransferInfoModel.Amount;
-                tpTransfer.TpId = tpTransferInfoModel.TpId;
+                var tpTransfer = new TpTransfer
+                {
+                    direction = (Direction)tpTransferInfoModel.Direction,
+                    Amount = tpTransferInfoModel.Amount,
+                    TpId = tpTransferInfoModel.TpId
+                };
 
                 tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer,
                     tpTransferInfoModel.TransId);
+
+                if (tpTransferInfoModel.TransId.StartsWith(TransferPrefix.BT.ToString()) 
+                    && !string.IsNullOrEmpty(tpTransferInfoModel.ExtensionInfo))
+                {
+                    tpTransferBonusInfoService.TpTransferBonusCancelCommit(
+                        JsonConvert.DeserializeObject<TpBonusCancelTransfer>(tpTransferInfoModel.ExtensionInfo),
+                        apiResult);
+                }
             }
         }
 
@@ -428,7 +451,7 @@ namespace ThirdPartyService.Service.BLL
                 rolloverAmount /= tpCustInfoResult.Data.ExchangeRate;
             }
 
-            apiResult = apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp,
+            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp,
                 transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
 
             tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId,
@@ -439,6 +462,126 @@ namespace ThirdPartyService.Service.BLL
                 Task.Run(() =>
                 {
                     tpCustInfoService.SetTpLastTradingTime(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
+                });
+            }
+
+            return apiResult;
+        }
+        
+        public ApiResult BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)
+        {
+            var apiResult = new ApiResult<TransferResult>();
+            var tpTransfer = new TpTransfer
+            {
+                TpId = tpBonusCancelTransfer.TpId,
+                CustId = tpBonusCancelTransfer.CustId,
+                direction = Direction.ToMain,
+                Amount = tpBonusCancelTransfer.RemainingBonus,
+                inputs = new Dictionary<string, string>()
+                {
+                    {"Source","BonusCancel"}
+                }
+            };
+
+            var result = GetPrefix(tpTransfer, apiResult, out var prefix);
+            if (result.ErrorCode == ErrorCode.InvalidParameter || result.ErrorCode == ErrorCode.AutoTransferBonusFail)
+            {
+                return result;
+            }
+
+            if (tpTransferInfo.Service_TpTransferInfo_Bonus_Get(tpBonusCancelTransfer.BonusId))
+            {
+                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.Message = "Transfer Processing.";
+                return apiResult;
+            }
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpBonusCancelTransfer.CustId, tpBonusCancelTransfer.TpId);
+
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode;
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
+                apiResult.RawMessage = tpCustInfoResult.RawMessage;
+                return apiResult;
+            }
+
+            var tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpBonusCancelTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpBonusCancelTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+            var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
+            if (balanceApiResult.ErrorCode != ErrorCode.Success)
+            {
+                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                apiResult.RawErrorCode = balanceApiResult.RawErrorCode;
+                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
+                    ? tpCustInfoResult.RawMessage
+                    : tpCustInfoResult.Message;
+                apiResult.RawMessage = balanceApiResult.RawMessage;
+                return apiResult;
+            }
+            
+            //檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
+            var thirdPartyBalance = balanceApiResult.Data.balance;
+            if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+            {
+                thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
+            if (tpTransfer.Amount > thirdPartyBalance)
+            {
+                tpTransfer.Amount = thirdPartyBalance;
+                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - thirdPartyBalance;
+                if (tpBonusCancelTransfer.RefundAmount < 0)
+                {
+                    tpBonusCancelTransfer.RefundAmount = 0;
+                }
+
+                tpBonusCancelTransfer.RemainingBonus = thirdPartyBalance;
+            }
+
+            if (tpTransfer.Amount > 0)
+            {
+                var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
+                var thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
+                tpTransfer.BonusId = tpBonusCancelTransfer.BonusId;
+                var tpTransferReqResult =
+                    tpTransferInfo.TpTransferReqV2(tpTransfer, tpCustInfoResult.Data, thirdId, prefix,
+                        tpBonusCancelTransfer, out var transId);
+                if (tpTransferReqResult.ErrorCode != ErrorCode.Success)
+                {
+                    return tpTransferReqResult;
+                }
+
+                var amount = tpTransfer.Amount;
+                if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                {
+                    amount /= tpCustInfoResult.Data.ExchangeRate;
+                }
+
+                apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, Direction.ToMain,
+                    transId, thirdId);
+
+                tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer, transId);
+            }
+            else
+            {
+                apiResult.Data.Status = TransferStatus.Success;
+                apiResult.ErrorCode = ErrorCode.Success;
+            }
+
+            tpTransferBonusInfoService.TpTransferBonusCancelCommit(tpBonusCancelTransfer, apiResult);
+
+            if (apiResult.ErrorCode == ErrorCode.Success)
+            {
+                Task.Run(() =>
+                {
+                    tpCustInfoService.SetTpLastTradingTime(tpBonusCancelTransfer.CustId, tpBonusCancelTransfer.TpId);
                 });
             }
 

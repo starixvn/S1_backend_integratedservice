@@ -189,6 +189,27 @@ namespace ThirdPartyService.Service.Library
             _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return true;
         }
+        
+        public int Execute(string name, object parameters, MySqlConnection connection,
+            MySqlTransaction trans)
+        {
+            var result = 0;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure,
+                    transaction: trans);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            return result;
+        }
 
         public bool Execute(string command)
         {

@@ -6,20 +6,25 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using ThirdPartyCore.Model.enums;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
 {
     public class BonusService
     {
-        private readonly IConfiguration configuration;
         private int typePosition = 1000;
-        public BonusService(IConfiguration configuration)
+        private readonly MySqlClient _mainDbClient;
+
+        public BonusService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+
         public bool BonusTransferOutAll(int custId, int siteId, string userName, int tpId, string Memo, string RefTransId, out int BonusId, out decimal Bonus, out decimal LockedAmount, out decimal BonusAmount, out decimal RolloverAmount, out long ExpiryTime, MySqlConnection conn, MySqlTransaction trans)
         {
-            int type = typePosition + tpId;
+            var type = typePosition + tpId;
             BonusId = 0;
             Bonus = 0;
             LockedAmount = 0;
@@ -27,14 +32,23 @@ namespace ThirdPartyService.Service.DAL
             ExpiryTime = 0;
             RolloverAmount = 0;
 
-            var p = new DynamicParameters(new { TpId = tpId, CustId = custId, SiteId = siteId, UserName = userName, Type = type, Memo, RefTransId });
+            var p = new DynamicParameters(new
+            {
+                TpId = tpId,
+                CustId = custId,
+                SiteId = siteId,
+                UserName = userName,
+                Type = type,
+                Memo,
+                RefTransId
+            });
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("LockedAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("RolloverAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ExpiryTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            var result = conn.Execute("Common_BonusTransferOutAll_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute("Common_BonusTransferOutAll_Set", p, conn, trans);
 
             if (result > 0)
             {
@@ -50,18 +64,32 @@ namespace ThirdPartyService.Service.DAL
         }
         public bool BonusTransferRollback(int custId, int siteId, string userName, decimal Bonus, int tpId, string Memo, string RefTransId, int bonusId, out decimal afterBonus, MySqlConnection conn, MySqlTransaction trans)
         {
-            int type = typePosition + tpId;
-            var p = new DynamicParameters(new { BonusId = bonusId, CustId = custId, SiteId = siteId, UserName = userName, Bonus = Bonus, Type = type, Memo = Memo, RefTransId = RefTransId });
+            var type = typePosition + tpId;
+            var p = new DynamicParameters(new
+            {
+                BonusId = bonusId, 
+                CustId = custId, 
+                SiteId = siteId, 
+                UserName = userName,
+                Bonus, 
+                Type = type,
+                Memo,
+                RefTransId
+            });
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            conn.Execute("Common_BonusTransferRollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Common_BonusTransferRollback_Set", p, conn, trans);
             afterBonus = p.Get<decimal>("AfterBonus");
             return afterBonus >= 0;
         }
         public int SetBonusStatus(int bonusId, int status, int forStatus, MySqlConnection conn, MySqlTransaction trans)
         {
-            int result = 0;
-            result = conn.Execute("Common_BonusStatus_Set", new { BonusId = bonusId, Status = status, ForStatus = forStatus }, transaction: trans, commandType: CommandType.StoredProcedure);
-            return result;
+            return _mainDbClient.Execute("Common_BonusStatus_Set",
+                new
+                {
+                    BonusId = bonusId,
+                    Status = status,
+                    ForStatus = forStatus
+                }, conn, trans);
         }
     }
 }
