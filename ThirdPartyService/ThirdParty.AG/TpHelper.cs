@@ -179,7 +179,7 @@ namespace ThirdParty.AG
                 dm = inputs["host"];
             }
 
-            var useLangId = (TpLangId == 'zh-cn') ? 1: 3;
+            var useLangId = (TpLangId == "zh-cn") ? 1: 3;
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/password={tpCustInfo.TpPwd}/\\\\/actype={actype}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}/\\\\/dm={dm}/\\\\/sid={cagent}{sTimestemp}/\\\\/lang={useLangId}";
 
             if (inputs.ContainsKey("gameType") && !string.IsNullOrEmpty(inputs["gameType"]))
