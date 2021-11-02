@@ -535,6 +535,10 @@ namespace ThirdPartyService.Service.BLL
             thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
             if (tpTransfer.Amount > thirdPartyBalance)
             {
+                _logger.LogInformation($"ThirdPartyBalance={thirdPartyBalance}, Original TransferAmount={tpTransfer.Amount}, " +
+                                       $"Original RemainingBonus={tpBonusCancelTransfer.RemainingBonus}, " +
+                                       $"Original RefundAmount={tpBonusCancelTransfer.RefundAmount}");
+                
                 tpTransfer.Amount = thirdPartyBalance;
                 tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - thirdPartyBalance;
                 if (tpBonusCancelTransfer.RefundAmount < 0)
