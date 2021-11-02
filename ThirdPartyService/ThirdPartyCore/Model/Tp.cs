@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using ThirdPartyCore.Model.enums;
 
@@ -110,7 +111,11 @@ namespace ThirdPartyCore.Model
         public int SiteId { set; get; }
         public int PromoCategoryId { set; get; }
         public int BonusId { set; get; }
+        
+        [Description("BonusAmount + LockedAmount + WinLossAmount")]
         public decimal RemainingBonus { set; get; }
+        
+        [Description("RemainingBonus - BonusAmount")]
         public decimal RefundAmount { set; get; }
     }
     public class TpTransferUserList
