@@ -380,6 +380,44 @@ namespace ThirdPartyCore
             return ret.ToString();
         }
 
+        protected string DESDecrypt(string pToDecrypt, string DES_Key)
+        {
+            using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
+            {
+
+                byte[] inputByteArray = new byte[pToDecrypt.Length / 2];
+                //反轉
+                for (int x = 0; x < pToDecrypt.Length / 2; x++)
+                {
+                    int i = (Convert.ToInt32(pToDecrypt.Substring(x * 2, 2), 16));
+                    inputByteArray[x] = (byte)i;
+                }
+                //設定加密金鑰(轉為Byte)
+                des.Key = Encoding.ASCII.GetBytes(DES_Key);
+                //設定初始化向量(轉為Byte)
+                des.IV = Encoding.ASCII.GetBytes(DES_Key);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, des.CreateDecryptor(), CryptoStreamMode.Write))
+                    {
+                        //例外處理
+                        try
+                        {
+                            cs.Write(inputByteArray, 0, inputByteArray.Length);
+                            cs.FlushFinalBlock();
+                            //輸出資料
+                            return System.Text.Encoding.Default.GetString(ms.ToArray());
+                        }
+                        catch (CryptographicException)
+                        {
+                            //若金鑰或向量錯誤，傳回N/A
+                            return "N/A";
+                        }
+                    }
+                }
+            }
+        }
+
         public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;
