@@ -112,10 +112,10 @@ namespace ThirdPartyCore.Model
         public int PromoCategoryId { set; get; }
         public int BonusId { set; get; }
         
-        [Description("BonusAmount + LockedAmount + WinLossAmount")]
+        [Description("剩餘紅利: BonusAmount + LockedAmount + WinLossAmount")]
         public decimal RemainingBonus { set; get; }
         
-        [Description("RemainingBonus - BonusAmount")]
+        [Description("退還本金: RemainingBonus - BonusAmount")]
         public decimal RefundAmount { set; get; }
     }
     public class TpTransferUserList
