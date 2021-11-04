@@ -186,13 +186,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
 
-                if (_environment.IsDevelopment() && transfer.requestAmount >= 300)
-                {
-                    System.Threading.Thread.Sleep(60000);
-                    sResult = DoEncrypt(Fatal, Deskey);
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
-                    return sResult;
-                }
+                //if (_environment.IsDevelopment() && transfer.requestAmount >= 300)
+                //{
+                //    System.Threading.Thread.Sleep(60000);
+                //    sResult = DoEncrypt(Fatal, Deskey);
+                //    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+                //    return sResult;
+                //}
 
                 var result = _bettingBLL.MoneyOutPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
