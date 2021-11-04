@@ -428,6 +428,17 @@ namespace ThirdPartyCore
             return result;
         }
 
+        public static string RSA(string data, string privateKey)
+        {
+            RSACryptoServiceProvider RSAProvider = new RSACryptoServiceProvider();
+            byte[] plaintext = Encoding.UTF8.GetBytes(data);
+            RSAProvider.FromXmlString(privateKey);
+            RSAParameters priKey = RSAProvider.ExportParameters(true);
+            RSAProvider.ImportParameters(priKey);
+            byte[] sign = RSAProvider.SignData(plaintext, CryptoConfig.MapNameToOID("MD5"));
+            return Convert.ToBase64String(sign);
+        }
+
 
         public void Info(string InfoContent, string PrefixName)
         {
