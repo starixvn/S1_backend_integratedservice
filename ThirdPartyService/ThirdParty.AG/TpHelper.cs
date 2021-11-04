@@ -4,6 +4,9 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Xml;
+using System.Security.Cryptography;
+using System.Text;
+using System.IO;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using System.Linq;
 using Newtonsoft.Json;
@@ -22,6 +25,15 @@ namespace ThirdParty.AG
             {"INR ","GF4A" }
         };
 
+        readonly Dictionary<string, int> langIdDic = new Dictionary<string, int>()
+        {
+            {"zh-tw", 2},
+            {"zh-cn", 1},
+            {"en-us", 3},
+            {"id", 11},
+            {"th", 6},
+            {"vi", 8},
+        };
         public class result
         {
             public string info { get; set; }
@@ -40,7 +52,7 @@ namespace ThirdParty.AG
             string cagent = inputs.ContainsKey("cagent") && !string.IsNullOrEmpty(inputs["cagent"]) ? inputs["cagent"] : throw new Exception();
             string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception();
-            
+
             string _oddtype = null;
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
@@ -136,7 +148,6 @@ namespace ThirdParty.AG
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
 
-            //string oddtype = "";
             string balance = "";
             string token = "";
             inputs.TryGetValue("Balance", out balance);
@@ -169,7 +180,7 @@ namespace ThirdParty.AG
                 }
             }
 
-
+            // parameter handle
             long sTimestemp = GetTimestemp1();
 
             string dm = "www.nova88.net";
@@ -178,13 +189,16 @@ namespace ThirdParty.AG
                 dm = inputs["host"];
             }
 
-            string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/password={tpCustInfo.TpPwd}/\\\\/actype={actype}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}/\\\\/dm={dm}/\\\\/sid={cagent}{sTimestemp}/\\\\/lang=1";
+            var langId = langIdDic.TryGetValue(TpLangId, out int _langId) ? _langId : 3;
+
+            string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/password={tpCustInfo.TpPwd}/\\\\/actype={actype}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}/\\\\/dm={dm}/\\\\/sid={cagent}{sTimestemp}/\\\\/lang={langId}";
 
             if (inputs.ContainsKey("gameType") && !string.IsNullOrEmpty(inputs["gameType"]))
             {
                 sParams = $"{sParams}/\\\\/gameType={inputs["gameType"]}";
             }
 
+            // encrypt
             string eParams = DESEncrypt(sParams, inputs["Deskey"]);
             string oMD5 = $"{eParams}{Md5key}";
             postParams = $"params={eParams}&key={ ToMD5(oMD5).ToLower() }";
@@ -290,5 +304,6 @@ namespace ThirdParty.AG
             XmlNodeList nodes = doc.DocumentElement.SelectNodes("/PlayerTicketResponse");
             return nodes[0].SelectSingleNode("ResponseCode").InnerText; ;
         }
+
     }
 }

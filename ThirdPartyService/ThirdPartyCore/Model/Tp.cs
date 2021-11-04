@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using ThirdPartyCore.Model.enums;
 
@@ -21,6 +22,7 @@ namespace ThirdPartyCore.Model
         public decimal Amount { set; get; }
         public Direction direction { set; get; }
         public Dictionary<string, string> inputs { set; get; }
+        public int BonusId { set; get; }
     }
     public class AdminTpTransfer : TpTransfer
     {
@@ -88,6 +90,7 @@ namespace ThirdPartyCore.Model
         public decimal Amount { set; get; }
         public int Status { set; get; }
         public DateTime CreateTime { set; get; }
+        public string ExtensionInfo { set; get; }
     }
     public class TpBonusTransfer
     {
@@ -99,6 +102,21 @@ namespace ThirdPartyCore.Model
         public decimal RolloverAmount { set; get; }
         public long ExpiryTime { set; get; }
         public Dictionary<string, string> inputs { set; get; }
+    }
+    public class TpBonusCancelTransfer
+    {
+        public int TpId { set; get; }
+        public int CustId { set; get; }
+        public string UserName { set; get; }
+        public int SiteId { set; get; }
+        public int PromoCategoryId { set; get; }
+        public int BonusId { set; get; }
+        
+        [Description("剩餘紅利: BonusAmount + LockedAmount + WinLossAmount")]
+        public decimal RemainingBonus { set; get; }
+        
+        [Description("退還本金: RemainingBonus - BonusAmount")]
+        public decimal RefundAmount { set; get; }
     }
     public class TpTransferUserList
     {

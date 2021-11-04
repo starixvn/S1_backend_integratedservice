@@ -390,13 +390,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
-                //settledDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
             }
-            else
-            {
-                result = -1;
-            }
-
+            
             return result;
         }
 

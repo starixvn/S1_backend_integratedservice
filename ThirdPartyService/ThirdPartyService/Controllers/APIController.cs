@@ -170,6 +170,29 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+        
+        [HttpPost]
+        public ActionResult<ApiResult> BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)
+        {
+            var apiResult = new ApiResult
+            {
+                ErrorCode = ErrorCode.SystemError
+            };
+
+            try
+            {
+                apiResult = thirdPartyBLL.BonusCancelTransfer(tpBonusCancelTransfer);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+                return apiResult;
+            }
+
+            return apiResult;
+        }
 
         [HttpPost]
         public ActionResult<ApiResult> FixNegative([FromBody] TpInfo tpInfo)

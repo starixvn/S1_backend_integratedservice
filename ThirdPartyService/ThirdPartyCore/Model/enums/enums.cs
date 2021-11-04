@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace ThirdPartyCore.Model.enums
@@ -71,6 +72,17 @@ namespace ThirdPartyCore.Model.enums
         Pending = 2,
         PendingD = 3
     }
+
+    public enum TransferPrefix
+    {
+        [Description("Transfer")]
+        T = 0,
+        [Description("Auto Transfer")]
+        AT = 1,
+        [Description("Bonus Cancel Transfer")]
+        BT = 2
+    }
+    
     public enum Direction
     {
         ToTp = 1,
@@ -119,5 +131,10 @@ namespace ThirdPartyCore.Model.enums
         Lottery = 6,
         VirtualSports = 7,
         Poker = 8,
+    }
+
+    public enum FinancialType
+    {
+        CancelledBonus = 7
     }
 }
