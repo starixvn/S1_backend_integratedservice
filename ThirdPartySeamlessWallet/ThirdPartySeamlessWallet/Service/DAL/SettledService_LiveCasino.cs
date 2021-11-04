@@ -304,6 +304,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerDG_Settle_Set", new { TransId = lTransId }, commandType: CommandType.StoredProcedure);
         }
+        public int SetSettleFlag_DG(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
+        }
+
+        public SettleData_DG GetSettle_TpWagerDG(string TransId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData_DG>("Service_TpWagerDG_Settle_Get_V2", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
         #endregion
 
         #region AG
@@ -437,11 +448,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", new { transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
-        }
-        public int SetSettleFlag_DG(string TransId)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
         }
         public int SetSettleFlag_AG(string transactionID, string transactionIDs)
         {
