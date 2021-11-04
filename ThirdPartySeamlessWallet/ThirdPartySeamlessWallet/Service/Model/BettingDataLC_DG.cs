@@ -15,4 +15,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public TicketStatus TicketStatus { get; set; }
     }
+
+    public class SettleData_DG : SettleData
+    {
+        public new long TransId { get; set; }
+        public int GameType { get; set; }
+        public new int GameId { get; set; }
+    }
 }

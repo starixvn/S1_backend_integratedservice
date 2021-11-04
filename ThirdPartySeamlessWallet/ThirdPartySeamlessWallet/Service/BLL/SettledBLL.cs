@@ -223,6 +223,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.Get_TpWagerDG_Settle(TransId, out stake, out validBet, out winLostAmount, out settleTime);
         }
+
+        public SettleData_DG GetSettle_TpWagerDG(string TransId)
+        {
+            return settledService.GetSettle_TpWagerDG(TransId);
+        }
+
         public int SetSettleFlag_DG(string TransId)
         {
             return settledService.SetSettleFlag_DG(TransId);
