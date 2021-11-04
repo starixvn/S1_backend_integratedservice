@@ -481,6 +481,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public SettleData GetSettle_TpWagerAG(string TransId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerAG_Settle_Get_V2", parameters: new DynamicParameters(new { billNoList = TransId }));
+        }
+
         #endregion
         #region Allbet
         public IEnumerable<UnsettleBettingDataLC_Allbet> GetUnsettledListLC_Allbet()
