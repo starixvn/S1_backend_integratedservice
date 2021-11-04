@@ -190,7 +190,7 @@ namespace ThirdParty.OneGaming
             var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
             var agentCode = inputs.GetValueOrDefault($"agent_code_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
             var secret_key = inputs.GetValueOrDefault($"secret_key_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-            var period = TpBetRecordProvider.GetWagerDetail("Service_TpWager_OneGaming_Detail_Get", new { getBetDetail.TransId }).GetValueOrDefault("period").ToString();
+            var period = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_OneGaming_Detail_Get", new { getBetDetail.TransId }).GetValueOrDefault("period").ToString();
 
             var url = $"{apiUrl}/singleGameHistory";
             var sParam = $"agent_code={agentCode}&player_id={tpCustInfo.TpUserName}&period={period}&bcode={HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{period}", secret_key)}";

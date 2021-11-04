@@ -179,7 +179,7 @@ namespace ThirdParty.Allbet
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId });
             var detail = ToJson(wagerDetail);
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
             return getBetDetail.TpGameTypeOption.CategoryId switch

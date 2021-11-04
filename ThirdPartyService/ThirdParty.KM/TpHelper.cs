@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.KM
 {
@@ -88,6 +89,41 @@ namespace ThirdParty.KM
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_KM_Detail_Get", new { getBetDetail.TransId });
+            var detail = ToJson(wagerDetail);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("txid")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("userid")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("beton", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("betupdatedon", DateTime.MinValue),
+                    Stake = Math.Abs((decimal)wagerDetail.GetValueOrDefault("riskamt")) * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winloss") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("gameid")?.ToString(),
+                    GameName = wagerDetail.GetValueOrDefault("gamename")?.ToString(),
+                    
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
         }
 
         private string GetInputValue(Dictionary<string, string> inputs, string key)

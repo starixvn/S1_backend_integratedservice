@@ -460,7 +460,7 @@ namespace ThirdParty.MP
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWagerPK_MP_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerPK_MP_Detail_Get", new { getBetDetail.TransId });
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {

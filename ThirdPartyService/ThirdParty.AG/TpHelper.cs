@@ -7,6 +7,9 @@ using System.Xml;
 using System.Security.Cryptography;
 using System.Text;
 using System.IO;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace ThirdParty.AG
 {
@@ -37,10 +40,6 @@ namespace ThirdParty.AG
             public string msg { get; set; }
         }
 
-        public class aa
-        {
-            public string ResponseCode { get; set; }
-        }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -209,9 +208,67 @@ namespace ThirdParty.AG
             return oApiResult;
         }
 
-        public override string ToString()
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            return base.ToString();
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var billNoList = TpBetRecordProvider.ReportDbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId })
+                .Select(item => item.GetValueOrDefault("billNo")?.ToString());
+
+            var wagerDetailList = TpBetRecordProvider.WagerDbQuery("Service_TpWager_AG_Detail_Get", 
+                new { billNoList = JsonConvert.SerializeObject(billNoList) });
+
+            var detail = ToJson(wagerDetailList);
+            var gameCode = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("gameCode")?.ToString(),
+                    TpUserName = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("playName")?.ToString(),
+                    UTCBetTime = wagerDetailList.Min(i => (DateTime)i.GetValueOrDefault("betTime", DateTime.MinValue)),
+                    UTCSettledTime = wagerDetailList.Max(i => (DateTime)i.GetValueOrDefault("recalcuTime", DateTime.MinValue)),
+                    Stake = wagerDetailList.Sum(i => (decimal)i.GetValueOrDefault("betAmount")) * tpCurrency.ExchangeRate,
+                    WinlostAmount = wagerDetailList.Sum(i => (decimal)i.GetValueOrDefault("netAmount")) * tpCurrency.ExchangeRate,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
+        }
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "BAC" => "百家乐",
+                "CBAC" => "包桌百家乐",
+                "LINK" => "连环百家乐",
+                "DT" => "龙虎",
+                "SHB" => "骰宝",
+                "ROU" => "轮盘",
+                "FT" => "番摊",
+                "LBAC" => "竞咪百家乐",
+                "ULPK" => "终极德州扑克",
+                "SBAC" => "保险百家乐",
+                "NN"=> "牛牛",
+                "BJ" => "Blackjack",
+                "ZJH" => "炸金花",
+                "BF" => "斗牛",
+                "SG" => "三公",
+                _ => string.Empty,
+            };
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
