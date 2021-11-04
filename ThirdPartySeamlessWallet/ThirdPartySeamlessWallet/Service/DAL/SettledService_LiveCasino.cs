@@ -2131,10 +2131,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return list;
         }
 
-        public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
+        public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_EBet>("Service_BettransLC_EBet_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_EBet(string TransId)

@@ -547,11 +547,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.username);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
-                            decimal stake = unsettled.totalBet;
-                            decimal validBet = unsettled.validBet;
-                            decimal winLostAmount = unsettled.payout - unsettled.totalBet;
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.ValidBet;
+                            decimal winLostAmount = unsettled.WinLostAmount;
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
@@ -561,8 +561,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 WinlostAmount = winLostAmount,
                                 TransId = unsettled.TransId,
                                 GameType = GameType.EBet_LiveCasino,
-                                TpUserName = unsettled.username,
-                                SettledTime = unsettled.payoutTime / 1000,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
