@@ -303,6 +303,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public SettleData GetSettle_TpWagerAG(string TransId)
+        {
+            return settledService.GetSettle_TpWagerAG(TransId);
+        }
+
         #endregion
 
         #region GPI
