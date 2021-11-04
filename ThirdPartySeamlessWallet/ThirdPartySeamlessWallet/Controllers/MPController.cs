@@ -120,6 +120,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var check = checkAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
             {
+                // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
                 Response.StatusCode = check.StatusCode;
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check.Result;
@@ -141,11 +142,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
 
                 sResult = DoEncrypt(Param, Deskey);
+                _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                 _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                 return sResult;
             }
 
             sResult = DoEncrypt(Fatal, Deskey);
+            _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
             _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
             return sResult;
         }
@@ -170,10 +173,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             string Agent = thirdPartySetting.TpSetting["Agent"];
             string Deskey = thirdPartySetting.TpSetting["Deskey"];
 
-
             var check = checkAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
             {
+                // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
                 Response.StatusCode = check.StatusCode;
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check.Result;
@@ -183,13 +186,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
 
-                if ( _environment.IsDevelopment() && transfer.requestAmount >= 300)
-                {
-                    System.Threading.Thread.Sleep(60000);
-                    sResult = DoEncrypt(Fatal, Deskey);
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
-                    return sResult;
-                }
+                //if (_environment.IsDevelopment() && transfer.requestAmount >= 300)
+                //{
+                //    System.Threading.Thread.Sleep(60000);
+                //    sResult = DoEncrypt(Fatal, Deskey);
+                //    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+                //    return sResult;
+                //}
 
                 var result = _bettingBLL.MoneyOutPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
@@ -208,6 +211,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
+                    _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                     _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
@@ -220,11 +224,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
+                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                     _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 
                 sResult = DoEncrypt(Fatal, Deskey);
+                _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
                 return sResult;
             }
@@ -259,6 +265,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var check = checkAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)
             {
+                // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
                 Response.StatusCode = check.StatusCode;
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check.Result;
@@ -284,6 +291,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
+                    _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                     _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
@@ -296,11 +304,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
+                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                     _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 
                 sResult = DoEncrypt(Fatal, Deskey);
+                _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
                 return sResult;
             }
@@ -332,9 +342,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             string Agent = thirdPartySetting.TpSetting["Agent"];
             string Deskey = thirdPartySetting.TpSetting["Deskey"];
 
-            var check = checkAuthorization(encrypt, Deskey, Agent,false);
+            var check = checkAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)
             {
+                // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
                 Response.StatusCode = check.StatusCode;
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check.Result;
@@ -343,21 +354,31 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
-                var result = _settledBLL.CancelMoneyInPK_MP(transfer, out _);
+                var result = _settledBLL.CancelMoneyInPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.account).Balance;
+                    }
+
                     Response.StatusCode = (int)Error.OK;
                     var Param = new
                     {
-                        code = 0
+                        isCanceled = true,
+                        channelId = Agent,
+                        account = transfer.account,
+                        balance = tpAffterAmount
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
+                    _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                     _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 
                 sResult = DoEncrypt(Fatal, Deskey);
+                _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
                 _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
                 return sResult;
             }
@@ -378,15 +399,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var decrypt = _tools.AesDecrypt(HttpUtility.UrlEncode(param), desKey);
                 var jsonParsedArray = JObject.Parse(decrypt);
+                _logger.LogInformation($"Request Decrypt: {JsonConvert.SerializeObject(jsonParsedArray)}");
+
                 var channelId = jsonParsedArray["channelId"]?.ToString();
                 var account = jsonParsedArray["account"]?.ToString();
                 var requestAmount = jsonParsedArray["requestAmount"]?.ToString();
-                var gameId = jsonParsedArray["gameId"]?.ToString();
+                var gameId = jsonParsedArray.ContainsKey("gameId") ? jsonParsedArray["gameId"].ToString() : "";//jsonParsedArray["gameId"]?.ToString();
                 var orderId = jsonParsedArray["orderId"]?.ToString();
 
                 if (string.IsNullOrEmpty(channelId) || channelId != agent)
                 {
                     resp.StatusCode = (int)Error.UAUTHORIZED;
+                    _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}");
                     return resp;
                 }
 
@@ -399,6 +423,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     resp.StatusCode = (int)Error.INVALID_DATA;
                     resp.Result = DoEncrypt(Param, desKey);
                     resp.Code = Param.code;
+                    _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}");
                     return resp;
                 }
 
@@ -417,6 +442,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.StatusCode = (int)Error.INVALID_DATA;
                         resp.Result = DoEncrypt(Param, desKey);
                         resp.Code = Param.code;
+                        _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}");
                         return resp;
                     }
                 }
@@ -433,6 +459,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.StatusCode = (int)Error.INVALID_DATA;
                         resp.Result = DoEncrypt(Param, desKey);
                         resp.Code = Param.code;
+                        _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}");
                         return resp;
                     }
                 }
@@ -442,16 +469,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 resp.requestAmount = requestAmount;
                 resp.gameId = gameId;
                 resp.orderId = orderId;
+                _logger.LogInformation($"Request Check: {JsonConvert.SerializeObject(resp)}");
                 return resp;
             }
             catch (CryptographicException ex)
             {
                 resp.StatusCode = (int)Error.UAUTHORIZED;
+                _logger.LogError(ex, ex.Message);
                 return resp;
             }
             catch (Exception ex)
             {
                 resp.StatusCode = (int)Error.ERROR;
+                _logger.LogError(ex, ex.Message);
                 return resp;
             }
         }
