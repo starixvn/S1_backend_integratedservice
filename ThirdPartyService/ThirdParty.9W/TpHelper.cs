@@ -6,6 +6,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.NineW
 {
@@ -159,6 +160,43 @@ namespace ThirdParty.NineW
                 Data = new TransferResult()
                 {
                     Status = TransferStatus.Success
+                }
+            };
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_9W_Detail_Get", new { getBetDetail.TransId });
+            var detail = ToJson(wagerDetail);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    TpUserName = wagerDetail.GetValueOrDefault("userId")?.ToString(),
+                    UTCBetTime = DateTime.Parse(wagerDetail.GetValueOrDefault("betPlaced").ToString()),
+                    UTCSettledTime = DateTime.Parse(wagerDetail.GetValueOrDefault("matchSettledDate").ToString()),
+                    Odds = wagerDetail.GetValueOrDefault("matchOddsReq")?.ToString(),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("matchStake") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("profitLoss") * tpCurrency.ExchangeRate,
+                    LeagueName = wagerDetail.GetValueOrDefault("eventTypeName")?.ToString(),
+                    TicketStatus = wagerDetail.GetValueOrDefault("betStatus")?.ToString(),
+                    RefTransId = wagerDetail.GetValueOrDefault("betId")?.ToString(),
+                    EventName = wagerDetail.GetValueOrDefault("eventName")?.ToString(),
+                    SelectionName = wagerDetail.GetValueOrDefault("selectionName")?.ToString(),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
                 }
             };
         }

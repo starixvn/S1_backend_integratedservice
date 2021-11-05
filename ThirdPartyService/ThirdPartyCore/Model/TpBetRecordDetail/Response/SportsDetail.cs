@@ -85,5 +85,16 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
         /// 下注时主队得分
         /// </summary>
         public string HomeyScore { get; set; }
+
+        /// <summary>
+        /// 賽事名稱
+        /// </summary>
+        public string EventName { get; set; }
+
+
+        /// <summary>
+        /// 下注名稱
+        /// </summary>
+        public string SelectionName { get; set; }
     }
 }
