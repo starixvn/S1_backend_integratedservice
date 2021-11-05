@@ -140,10 +140,9 @@ namespace ThirdParty.TCG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId });
+            var gameType = (GameType)getBetDetail.TpGameTypeOption.Type;
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId , GameType =(int)gameType });
             var detail = ToJson(wagerDetail);
-
-            var gameType =(GameType)getBetDetail.TpGameTypeOption.Type;
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
@@ -154,11 +153,11 @@ namespace ThirdParty.TCG
                     RefTransId = wagerDetail.GetValueOrDefault("orderNum")?.ToString(),
                     TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
                     UTCBetTime = gameType == GameType.SEALottery 
-                    ? ToUTC((DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue))
-                    : ToUTC((DateTime)wagerDetail.GetValueOrDefault("bettingTime", DateTime.MinValue)),
+                    ? ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("betTime").ToString()))
+                    : ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("bettingTime").ToString())),
                     UTCSettledTime = gameType == GameType.SEALottery
-                    ? ToUTC((DateTime)wagerDetail.GetValueOrDefault("settlementTime", DateTime.MinValue))
-                    : ToUTC((DateTime)wagerDetail.GetValueOrDefault("drawTime", DateTime.MinValue)),
+                    ? ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("settlementTime").ToString()))
+                    : ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("drawTime").ToString())),
                     Stake = gameType == GameType.SEALottery 
                     ? (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate 
                     : (decimal)wagerDetail.GetValueOrDefault("actualBetAmount") * tpCurrency.ExchangeRate,
@@ -338,7 +337,7 @@ namespace ThirdParty.TCG
 
         private DateTime ToUTC(DateTime time)
         {
-            return new DateTimeOffset(time, new TimeSpan(8, 0, 0)).DateTime;
+            return new DateTimeOffset(time, new TimeSpan(8, 0, 0)).UtcDateTime;
         }
     }
 }
