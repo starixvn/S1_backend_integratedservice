@@ -8,6 +8,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Extensions;
 using System.IO;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.TCG
 {
@@ -129,6 +130,48 @@ namespace ThirdParty.TCG
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
+            };
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId });
+            var detail = ToJson(wagerDetail);
+
+            var gameType =(GameType)getBetDetail.TpGameTypeOption.Type;
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("orderNum")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
+                    UTCBetTime = gameType == GameType.SEALottery 
+                    ? ToUTC((DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue))
+                    : ToUTC((DateTime)wagerDetail.GetValueOrDefault("bettingTime", DateTime.MinValue)),
+                    UTCSettledTime = gameType == GameType.SEALottery
+                    ? ToUTC((DateTime)wagerDetail.GetValueOrDefault("settlementTime", DateTime.MinValue))
+                    : ToUTC((DateTime)wagerDetail.GetValueOrDefault("drawTime", DateTime.MinValue)),
+                    Stake = gameType == GameType.SEALottery 
+                    ? (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate 
+                    : (decimal)wagerDetail.GetValueOrDefault("actualBetAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = gameType == GameType.SEALottery
+                    ? (decimal)wagerDetail.GetValueOrDefault("netPNL") * tpCurrency.ExchangeRate
+                    : ((decimal)wagerDetail.GetValueOrDefault("winAmount") - (decimal)wagerDetail.GetValueOrDefault("actualBetAmount")) * tpCurrency.ExchangeRate,        
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
             };
         }
 
@@ -291,6 +334,11 @@ namespace ThirdParty.TCG
             var inputBytes = Encoding.UTF8.GetBytes(input);
             var outputBytes = new SHA256CryptoServiceProvider().ComputeHash(inputBytes);
             return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
+        }
+
+        private DateTime ToUTC(DateTime time)
+        {
+            return new DateTimeOffset(time, new TimeSpan(8, 0, 0)).DateTime;
         }
     }
 }
