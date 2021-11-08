@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.GPI
 {
@@ -122,6 +124,163 @@ namespace ThirdParty.GPI
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_GPI_Detail_Get", new { getBetDetail.TransId })
+                .Where(i => (sbyte)i.GetValueOrDefault("type") != 2);
+            var detail = ToJson(detailList);
+
+            var gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("game_id")?.ToString();
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = string.Empty,
+                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("cust_id")?.ToString(),
+                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
+                    Stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("type") == 1)
+                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount") + (decimal)i.GetValueOrDefault("jackpot_win")) * tpCurrency.ExchangeRate,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "200008" => "Lantern Festival",
+                "200007" => "Legend of Nezha",
+                "200015" => "Golden Eggs",
+                "200011" => "Zeus",
+                "200017" => "World Of Warlords",
+                "200018" => "Pharaoh",
+                "200022" => "Qixi",
+                "200021" => "Samurai Sushi",
+                "200023" => "Fortune Cat",
+                "200025" => "Dimsumlicious",
+                "200028" => "God Of Gamblers",
+                "200030" => "Seven Wonders",
+                "200001" => "Underwater World",
+                "200004" => "Baseball",
+                "200002" => "Monkey King",
+                "200003" => "Bikini Beach",
+                "200005" => "Little Monsters",
+                "200006" => "Fruitilicious",
+                "200009" => "Desert Oasis",
+                "200012" => "Mafia",
+                "200013" => "Forbidden Chamber",
+                "200016" => "Boxing",
+                "200014" => "God Of Fortune",
+                "200020" => "Roman Empire",
+                "200019" => "Casino Royale",
+                "200024" => "Queen Bee",
+                "200031" => "Tokyo Hunter",
+                "200032" => "Fortune Koi",
+                "200034" => "Fortune Tree",
+                "200035" => "Seven Brothers",
+                "200033" => "Golden Wheel",
+                "200045" => "Panda",
+                "200044" => "Klassik",
+                "200046" => "Four Guardians",
+                "200047" => "Phoenix",
+                "200055" => "Fu Lu Shou",
+                "200059" => "Flora Secret",
+                "200058" => "Nutcracker",
+                "200056" => "Red Chamber",
+                "200050" => "Candylicious",
+                "200053" => "Fortune Dice",
+                "200048" => "Soccer",
+                "200043" => "Three Kingdoms",
+                "200049" => "Four Beauties",
+                "200065" => "Sweet Treats",
+                "200051" => "Cleopatra",
+                "200063" => "Lucky Bomber",
+                "200067" => "Lucky Royale",
+                "200069" => "Sky Strikers",
+                "200068" => "Monsters Cash",
+                "200071" => "Lion Dance",
+                "200070" => "Trick Or Treat",
+                "200073" => "Winter Wonderland",
+                "200064" => "Wilds and the Beanstalk",
+                "200075" => "Zodiac",
+                "200036" => "Lady Fortune",
+                "200072" => "Blossom Garden",
+                "200074" => "Hula Girl",
+                "200076" => "Wuxia Princess Mega Reels",
+                "200077" => "Phantom Thief",
+                "200080" => "Genies Luck",
+                "200081" => "World Soccer Slot 2",
+                "200079" => "Kungfu Furry",
+                "200086" => "Gem Forest",
+                "200083" => "Frost Dragon",
+                "200084" => "Jewel Land",
+                "200085" => "Money Monkey",
+                "200088" => "Moon Rabbit",
+                "200087" => "Alchemists Spell",
+                "200089" => "Chess Royale",
+                "200090" => "Vikings Mega Reels",
+                "200092" => "Space Neon",
+                "200091" => "Jazz It Up",
+                "200094" => "Fountain of Fortune",
+                "200095" => "Fa Fa Zhu",
+                "200097" => "Magic Paper",
+                "2000100" => "Panda Warrior",
+                "200096" => "Three Beauties",
+                "2000102" => "Strip' n Roll",
+                "2000103" => "Captain Rabbit",
+                "2000107" => "Fortune Hong Bao",
+                "200098" => "Nuwa and the Five Elements",
+                "2000105" => "Xuan Wu Blessing",
+                "2000104" => "Cosmic Boost",
+                "2000109" => "Wind Chimes",
+                "2000108" => "Lunar Legends",
+                "2000110" => "Nation - Double Play",
+                "2000111" => "Leap of Fortune",
+                "2000119" => "Golden Ink Rat",
+                "2000120" => "Cash and Kisses",
+                "2000101" => "Dino Age",
+                "2000112" => "Lucky Tarot",
+                "2000113" => "Chilli Surprise",
+                "2000118" => "Fortune Dragon",
+                "2000121" => "Legend of Thanh Giong",
+                "2000122" => "Songkran: Summer Splash",
+                "2000123" => "Bai Ye Xing Fu",
+                "2000124" => "Virus Invasion",
+                "2000117" => "God of Flames",
+                "2000126" => "Angry Bees",
+                "2000127" => "Lord Bao Bao",
+                "2000125" => "Double Greatness",
+                "2000128" => "Forest Hunter",
+                "2000131" => "Elf Surprise Jackpot",
+                "2000132" => "Mystical Bali",
+                "2000116" => "UFO Frenzy",
+                "2000129" => "Sacred Clash",
+                "2000130" => "Steampunk Bandits",
+                "2000133" => "Mine of Riches",
+                "2000134" => "Alpha and the Red Hood",
+                "2000137" => "Sweet Baker",
+                _ => string.Empty,
+            };
         }
     }
 }
