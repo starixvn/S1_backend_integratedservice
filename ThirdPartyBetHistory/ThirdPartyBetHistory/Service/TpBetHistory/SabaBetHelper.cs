@@ -281,6 +281,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.TicketKey = betDetial.version_key;
                             betRecordInfo.tokenmoney = betDetial.tokenmoney;
 
+                            CheckCashOut(betDetial, betRecordInfo);
+
                             CalculateAvailableBet(betDetial, betRecordInfo);
 
                             betRecordInfoList.Add(betRecordInfo);
@@ -536,6 +538,17 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             syncParams.timeOfFrequency = 3;
             //syncParams.DoneTime=DateT
             return syncParams;
+        }
+
+        private void CheckCashOut(BetDetail betDetial, BetRecordInfo betRecordInfo)
+        {
+            if (betDetial.CashOutData != null && betDetial.CashOutData.Any())
+            {
+                betRecordInfo.SettledTime = ConvertLocTime(betDetial.CashOutData.First().transdate);
+                betRecordInfo.Stake = betDetial.CashOutData.First().stake;
+                betRecordInfo.WinlostAmount = betDetial.CashOutData.First().buyback_amount - betDetial.CashOutData.First().real_stake;
+                betDetial.ticket_status = betDetial.CashOutData.First().ticket_status;
+            }
         }
     }
 }
