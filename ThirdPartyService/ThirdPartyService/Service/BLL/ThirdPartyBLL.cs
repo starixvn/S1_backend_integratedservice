@@ -479,7 +479,7 @@ namespace ThirdPartyService.Service.BLL
                 Amount = tpBonusCancelTransfer.RemainingBonus,
                 inputs = new Dictionary<string, string>()
                 {
-                    {"Source","BonusCancel"}
+                    { "Source", "BonusCancel" }
                 }
             };
 
@@ -533,6 +533,10 @@ namespace ThirdPartyService.Service.BLL
             }
 
             thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
+            if (tpTransfer.TpId == (int)TpEnum.Saba && thirdPartyBalance < 1)
+            {
+                thirdPartyBalance = 0;
+            }
             if (tpTransfer.Amount > thirdPartyBalance)
             {
                 tpTransfer.Amount = thirdPartyBalance;
