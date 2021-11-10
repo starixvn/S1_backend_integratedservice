@@ -391,7 +391,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.account).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.player).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
