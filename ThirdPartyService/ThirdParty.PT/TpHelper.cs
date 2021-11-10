@@ -550,7 +550,7 @@ namespace ThirdParty.PT
                     { "password", pass }
                 };
 
-                var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_PT_Detail_Get",
+                var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_PT_Detail_Get",
                    new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type });
                 var sParam = new Dictionary<string, string>
                 {

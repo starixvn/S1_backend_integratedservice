@@ -433,16 +433,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string balanceTs { get; set; }
         }
 
-        private class GetGiveResp : GetSeamlessWalletResp
-        {
-            public decimal balance { get; set; }
-            public string balanceTs { get; set; }
-        }
-
         #endregion
 
         [Route("[controller]/V2")]
-        [Route("[controller]/V2/{site?}")]
         [HttpPost]
         public dynamic SeamlessWalletV2(string site, [FromForm] Req req)
         {
@@ -451,17 +444,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             GetSeamlessWalletResp resp = new GetSeamlessWalletResp();
 
-            string siteName = string.IsNullOrEmpty(site) ? "Nova88" : site;
-            Enum.TryParse<Site>(siteName, true, out var tempSite);
-            int siteId = (int)tempSite;
-            if (siteId == 0)
-            {
-                resp.status = "9999";
-                resp.desc = "fail";
-                log2File.Error($"SITE_ERROR\r\n{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                return resp;
-            }
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, siteId);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             if (req.key != thirdPartySetting.TpSetting["cert2"])
             {
                 resp.status = "9999";
@@ -703,22 +686,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                     RewardLC_Sexy reward = JsonConvert.DeserializeObject<RewardLC_Sexy>(req.message);
 
                     int result = settledBLL.RewardLC_AWC_Sexy(reward, out decimal tpAffterAmount);
-                    if (result > 0)
+                    if (result > 0 || result == -1)
                     {
-                        GetGiveResp getGiveResp = new GetGiveResp();
+                        GetSeamlessWalletResp getGiveResp = new GetSeamlessWalletResp();
                         getGiveResp.status = "0000";
-                        getGiveResp.balance = tpAffterAmount;
-                        getGiveResp.balanceTs = getCurrentGameTime();
-                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getGiveResp)}", logName);
-                        return getGiveResp;
-                    }
-                    else if (result == -1)
-                    {
-                        GetGiveResp getGiveResp = new GetGiveResp();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, reward.txns.ElementAt(0).userId, gameType);
-                        getGiveResp.status = "0000";
-                        getGiveResp.balance = tpCustBalance.Balance;
-                        getGiveResp.balanceTs = getCurrentGameTime();
                         log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getGiveResp)}", logName);
                         return getGiveResp;
                     }

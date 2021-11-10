@@ -390,7 +390,7 @@ namespace ThirdParty.V8
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.GetWagerDetail("Service_TpWager_V8_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_V8_Detail_Get", new { getBetDetail.TransId });
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {

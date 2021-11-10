@@ -51,7 +51,7 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IReadOnlyDictionary<string, object> GetWagerDetail(string spName, object parameters = null)
+        public IReadOnlyDictionary<string, object> WagerDbQueryFirst(string spName, object parameters = null)
         {
             try
             {
@@ -63,11 +63,35 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IReadOnlyDictionary<string, object> GetTpTableData(string spName, object parameters = null)
+        public IReadOnlyDictionary<string, object> ReportDbQueryFirst(string spName, object parameters = null)
         {
             try
             {
                 return (IReadOnlyDictionary<string, object>)_reportDbClient.QueryFirst(spName, parameters);
+            }
+            catch (Exception)
+            {
+                return default;
+            }
+        }
+
+        public IEnumerable<IReadOnlyDictionary<string, object>> WagerDbQuery(string spName, object parameters = null)
+        {
+            try
+            {
+                return (IEnumerable<IReadOnlyDictionary<string, object>>)_wagerDbClient.Query(spName, parameters);
+            }
+            catch (Exception)
+            {
+                return default;
+            }
+        }
+
+        public IEnumerable<IReadOnlyDictionary<string, object>> ReportDbQuery(string spName, object parameters = null)
+        {
+            try
+            {
+                return (IEnumerable<IReadOnlyDictionary<string, object>>)_reportDbClient.Query(spName, parameters);
             }
             catch (Exception)
             {

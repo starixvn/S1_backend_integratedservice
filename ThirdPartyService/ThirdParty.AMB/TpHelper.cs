@@ -6,6 +6,7 @@ using System.Text;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.AMB
 {
@@ -146,6 +147,55 @@ namespace ThirdParty.AMB
         {
             throw new NotImplementedException();
         }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var apiUrl = inputs.GetValueOrDefault($"ApiUrl") ?? throw new Exception();
+            var agent = inputs.GetValueOrDefault($"Agent") ?? throw new Exception();
+            var secretKey = inputs.GetValueOrDefault($"SecretKey") ?? throw new Exception();
+            var roundId = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransPK_AMB_Detail_Get", new { getBetDetail.TransId })
+                .GetValueOrDefault("roundId").ToString();
+            var sParam = new
+            {
+                username = tpCustInfo.TpUserName,
+                roundId,
+                agent,
+                language = "en",
+            };
+
+            var param = ToJson(sParam);
+            var url = $"{apiUrl}/seamless/report";
+            var header = new Dictionary<string, string>
+            {
+                { "x-amb-signature", HMACSHA512(param, secretKey) }
+            };
+            var json = HttpPost(url, param, "application/json", header);
+            var result = FromJson<DetailResult>(json);
+            if (result.status.code != 0)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status.code} | {result.status.message}");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.data.url,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+        }
+
+        public class DetailResult
+        {
+            public Status status { get; set; }
+            public Data data { get; set; }
+        }
+
+
+
 
         private static string HMACSHA512(string input, string key)
         {
