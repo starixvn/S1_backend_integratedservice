@@ -201,69 +201,25 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 }
                 else
                 {
-                    List<BetRecordInfo> betRecordInfoList = new List<BetRecordInfo>();
+                    var betRecordInfoList = new List<BetRecordInfo>();
+
                     if (getBetDetail.Data?.BetDetails != null)
                     {
                         foreach (var betDetial in getBetDetail.Data?.BetDetails)
                         {
-                            BetRecordInfo betRecordInfo = new BetRecordInfo();
-                            betRecordInfo.GameType = GameType.Saba_Sports;
-                            if ((betDetial.sport_type ?? 0) == 56)
+                            var betRecordInfo = new BetRecordInfo
                             {
-                                betRecordInfo.GameType = GameType.Saba_ChinaLottery;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 69)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_Bitcoin;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 165)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_CardClub;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 171)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_Vgaming;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 200)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_SabaClub;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 202)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_Keno;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 212)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_MacauGame;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 220)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_Lottery;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 222)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_TableGame;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 223)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_Indo4D;
-                            }
-                            else if ((betDetial.sport_type ?? 0) == 245)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_VirtualGames;
-                            }
-                            else if ((betDetial.sport_type ?? 0) > 200)
-                            {
-                                betRecordInfo.GameType = betDetial.sport_type switch
-                                {
-                                    211 => GameType.Allbet,
-                                    248 => GameType.PP,
-                                    _ => GameType.Saba_RNG
-                                };
-                            }
+                                GameType = GetBetDetailGameType(betDetial.sport_type),
+                                TransId = betDetial.trans_id.ToString(),
+                                TransTime = ConvertLocTime(betDetial.transaction_time),
+                                OriginalState = betDetial.ticket_status,
+                                WinlostAmount = betDetial.winlost_amount,
+                                Stake = betDetial.stake,
+                                TpUserName = betDetial.vendor_member_id,
+                                TicketKey = betDetial.version_key,
+                                tokenmoney = betDetial.tokenmoney
+                            };
 
-                            betRecordInfo.TransId = betDetial.trans_id.ToString();
-                            betRecordInfo.TransTime = ConvertLocTime(betDetial.transaction_time);
                             if (betDetial.settlement_time != null)
                             {
                                 var settlementTime = DateTime.Parse(betDetial.settlement_time);
@@ -274,18 +230,14 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                 betRecordInfo.SettledTime = ConvertLocTime(betDetial.transaction_time > betDetial.winlost_datetime ? betDetial.transaction_time : betDetial.winlost_datetime);
                             }
 
-                            betRecordInfo.OriginalState = betDetial.ticket_status;
-                            betRecordInfo.WinlostAmount = betDetial.winlost_amount;
-                            betRecordInfo.Stake = betDetial.stake;
-                            betRecordInfo.TpUserName = betDetial.vendor_member_id;
-                            betRecordInfo.TicketKey = betDetial.version_key;
-                            betRecordInfo.tokenmoney = betDetial.tokenmoney;
-
-                            CheckCashOut(betDetial, betRecordInfo);
-
                             CalculateAvailableBet(betDetial, betRecordInfo);
-
                             betRecordInfoList.Add(betRecordInfo);
+
+                            // 處理CashOut的注單
+                            if (TryGetCashOut(betDetial, out var cashout))
+                            {
+                                betRecordInfoList.AddRange(cashout);
+                            }
                         }
                     }
 
@@ -293,28 +245,39 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     {
                         foreach (var betDetial in getBetDetail.Data?.BetNumberDetails)
                         {
-                            BetRecordInfo betRecordInfo = new BetRecordInfo();
-                            betRecordInfo.GameType = GameType.Saba_NumberGame;
-                            betRecordInfo.TransId = betDetial.trans_id.ToString();
-                            betRecordInfo.TransTime = ConvertLocTime(betDetial.transaction_time);
-
-                            betRecordInfo.SettledTime = ConvertLocTime(betDetial.transaction_time);
-
-                            betRecordInfo.OriginalState = betDetial.ticket_status;
-                            betRecordInfo.WinlostAmount = betDetial.winlost_amount;
-                            betRecordInfo.Stake = betDetial.stake;
-                            betRecordInfo.TpUserName = betDetial.vendor_member_id;
-                            betRecordInfo.TicketKey = betDetial.version_key;
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                GameType = GameType.Saba_NumberGame,
+                                TransId = betDetial.trans_id.ToString(),
+                                TransTime = ConvertLocTime(betDetial.transaction_time),
+                                SettledTime = ConvertLocTime(betDetial.transaction_time),
+                                OriginalState = betDetial.ticket_status,
+                                WinlostAmount = betDetial.winlost_amount,
+                                Stake = betDetial.stake,
+                                TpUserName = betDetial.vendor_member_id,
+                                TicketKey = betDetial.version_key
+                            };
 
                             CalculateAvailableBet(betDetial, betRecordInfo);
                             betRecordInfoList.Add(betRecordInfo);
                         }
                     }
+
                     if (getBetDetail.Data?.BetVirtualSportDetails != null)
                     {
                         foreach (var betDetial in getBetDetail.Data?.BetVirtualSportDetails)
                         {
-                            BetRecordInfo betRecordInfo = new BetRecordInfo();
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                OriginalState = betDetial.ticket_status,
+                                WinlostAmount = betDetial.winlost_amount,
+                                Stake = betDetial.stake,
+                                TpUserName = betDetial.vendor_member_id,
+                                TicketKey = betDetial.version_key,
+                                TransId = betDetial.trans_id.ToString(),
+                                TransTime = ConvertLocTime(betDetial.transaction_time),
+                            };
+
                             if (betDetial.sport_type >= 180 || betDetial.sport_type <= 189)
                             {
                                 betRecordInfo.GameType = GameType.Saba_VirtualSport;
@@ -324,20 +287,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                 betRecordInfo.GameType = GameType.Saba_VirtualSports2;
                             }
 
-                            betRecordInfo.TransId = betDetial.trans_id.ToString();
-                            betRecordInfo.TransTime = ConvertLocTime(betDetial.transaction_time);
-
                             if (betDetial.match_datetime != null)
                             {
                                 var settlementTime = DateTime.Parse(betDetial.match_datetime);
                                 betRecordInfo.SettledTime = ConvertLocTime(settlementTime);
                             }
-
-                            betRecordInfo.OriginalState = betDetial.ticket_status;
-                            betRecordInfo.WinlostAmount = betDetial.winlost_amount;
-                            betRecordInfo.Stake = betDetial.stake;
-                            betRecordInfo.TpUserName = betDetial.vendor_member_id;
-                            betRecordInfo.TicketKey = betDetial.version_key;
 
                             CalculateAvailableBet(betDetial, betRecordInfo);
                             betRecordInfoList.Add(betRecordInfo);
@@ -389,13 +343,13 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                     // Saba Club Se Die or Vgaming Se Die gives freebet
-                    if ((betDetial.bet_type==1613 && betDetial.tokenmoney =="freebet") || (betDetial.bet_type == 3803 && betDetial.tokenmoney == "freebet"))
-                    { 
-                        betRecordInfo.ValidBet = 0; 
+                    if ((betDetial.bet_type == 1613 && betDetial.tokenmoney == "freebet") || (betDetial.bet_type == 3803 && betDetial.tokenmoney == "freebet"))
+                    {
+                        betRecordInfo.ValidBet = 0;
                     }
                     else
-                    { 
-                        betRecordInfo.ValidBet = betRecordInfo.Stake; 
+                    {
+                        betRecordInfo.ValidBet = betRecordInfo.Stake;
                     }
                 }
                 else
@@ -407,7 +361,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         betRecordInfo.ValidBet = betDetial.discount_stake ?? 0;
                     }
 
-                    if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap || 
+                    if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap ||
                         (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder ||
                         (betDetial.bet_type ?? 0) == (int)BetType.Parlay ||
                         (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder) /*Cause Hard to Win So Cal to Valid*/
@@ -540,15 +494,66 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             return syncParams;
         }
 
-        private void CheckCashOut(BetDetail betDetial, BetRecordInfo betRecordInfo)
+        private bool TryGetCashOut(BetDetail betDetial, out List<BetRecordInfo> cashOuts)
         {
-            if (betDetial.CashOutData != null && betDetial.CashOutData.Any())
+            cashOuts = default;
+            if (betDetial.CashOutData == null || !betDetial.CashOutData.Any())
             {
-                betRecordInfo.SettledTime = ConvertLocTime(betDetial.CashOutData.First().transdate);
-                betRecordInfo.Stake = betDetial.CashOutData.First().stake;
-                betRecordInfo.WinlostAmount = betDetial.CashOutData.First().buyback_amount - betDetial.CashOutData.First().real_stake;
-                betDetial.ticket_status = betDetial.CashOutData.First().ticket_status;
+                return false;
             }
+
+            cashOuts = new List<BetRecordInfo>();
+            foreach (var cashOut in betDetial.CashOutData)
+            {
+                var betRecordInfo = new BetRecordInfo
+                {
+                    TransId = cashOut.cashout_id.ToString(),
+                    TransTime = ConvertLocTime(betDetial.transaction_time),
+                    SettledTime = ConvertLocTime(cashOut.transdate),
+                    Stake = cashOut.stake,
+                    WinlostAmount = cashOut.buyback_amount - cashOut.real_stake,
+                    OriginalState = cashOut.ticket_status,
+                    TpUserName = betDetial.vendor_member_id,
+                    TicketKey = betDetial.version_key,
+                    tokenmoney = betDetial.tokenmoney,
+                    GameType = GetBetDetailGameType(betDetial.sport_type),
+                };
+
+                // 使用cashOut的ticket_status狀態跑下面的流程
+                betDetial.ticket_status = cashOut.ticket_status;
+
+                // 計算 CashOut的 ValidBet 與設定 SettlementType
+                CalculateAvailableBet(betDetial, betRecordInfo);
+
+                cashOuts.Add(betRecordInfo);
+            }
+            return true;
+        }
+
+        private GameType GetBetDetailGameType(int? sport_type)
+        {
+            if (sport_type == null)
+            {
+                return GameType.Saba_Sports;
+            }
+
+            return sport_type switch
+            {
+                56 => GameType.Saba_ChinaLottery,
+                69 => GameType.Saba_Bitcoin,
+                165 => GameType.Saba_CardClub,
+                171 => GameType.Saba_Vgaming,
+                200 => GameType.Saba_SabaClub,
+                202 => GameType.Saba_Keno,
+                212 => GameType.Saba_MacauGame,
+                220 => GameType.Saba_Lottery,
+                222 => GameType.Saba_TableGame,
+                223 => GameType.Saba_Indo4D,
+                245 => GameType.Saba_VirtualGames,
+                211 => GameType.Allbet,
+                248 => GameType.PP,
+                _ => sport_type > 200 ? GameType.Saba_RNG : GameType.Saba_Sports,
+            };
         }
     }
 }
