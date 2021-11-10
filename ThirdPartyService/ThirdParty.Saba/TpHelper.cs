@@ -845,6 +845,16 @@ namespace ThirdParty.Saba
             var betNumberDetail = model?.BetNumberDetails?.First();
             var betVirtualSportDetail = model?.BetVirtualSportDetails?.First();
 
+            if (betDetail == null && betNumberDetail == null && betVirtualSportDetail == null)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = tpBetRecordDetail.Detail,
+                    TpCurrency = tpCurrency,
+                };
+            }
+
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
