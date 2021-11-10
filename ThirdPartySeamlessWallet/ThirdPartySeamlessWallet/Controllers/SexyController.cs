@@ -433,12 +433,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string balanceTs { get; set; }
         }
 
-        private class GetGiveResp : GetSeamlessWalletResp
-        {
-            public decimal balance { get; set; }
-            public string balanceTs { get; set; }
-        }
-
         #endregion
 
         [Route("[controller]/V2")]
@@ -692,22 +686,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                     RewardLC_Sexy reward = JsonConvert.DeserializeObject<RewardLC_Sexy>(req.message);
 
                     int result = settledBLL.RewardLC_AWC_Sexy(reward, out decimal tpAffterAmount);
-                    if (result > 0)
+                    if (result > 0 || result == -1)
                     {
-                        GetGiveResp getGiveResp = new GetGiveResp();
+                        GetSeamlessWalletResp getGiveResp = new GetSeamlessWalletResp();
                         getGiveResp.status = "0000";
-                        getGiveResp.balance = tpAffterAmount;
-                        getGiveResp.balanceTs = getCurrentGameTime();
-                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getGiveResp)}", logName);
-                        return getGiveResp;
-                    }
-                    else if (result == -1)
-                    {
-                        GetGiveResp getGiveResp = new GetGiveResp();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, reward.txns.ElementAt(0).userId, gameType);
-                        getGiveResp.status = "0000";
-                        getGiveResp.balance = tpCustBalance.Balance;
-                        getGiveResp.balanceTs = getCurrentGameTime();
                         log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(getGiveResp)}", logName);
                         return getGiveResp;
                     }
