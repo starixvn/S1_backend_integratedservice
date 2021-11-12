@@ -315,15 +315,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_PG.UpdatedTime /= 1000;
             bettingDataRNG_PG.CreateTime /= 1000;
             var p = new DynamicParameters(bettingDataRNG_PG);
-            //p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            //p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("BetAmount", bettingDataRNG_PG.TransferAmount);
+            p.Add("WinAmount", 0);
             try
             {
-                result = conn.Execute("Service_BettransRng_PGV2_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
                 {
-                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PG.TransferAmount).ToString("#,##0.##")}", bettingDataRNG_PG.TransactionId, out afterAmount, conn, trans);
                     result = PlaceBetV2(tpCustInfo, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, bettingDataRNG_PG.ParentBetId, gameType, bettingDataRNG_PG.TransactionId, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
                 }
 
@@ -340,7 +339,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    throw;
                 }
             }
 

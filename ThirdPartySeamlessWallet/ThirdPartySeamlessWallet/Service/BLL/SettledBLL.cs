@@ -960,6 +960,47 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int BetAndPayoutRNG_PG(TransferInOutDataRNG_PG transferInOutDataRNG_PG, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, transferInOutDataRNG_PG.PlayerName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+            var custBalance = tpCustInfoBLL.GetBalance((int)Tp.PG, transferInOutDataRNG_PG.PlayerName, (int)GameType.PG_RNG);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                transferInOutDataRNG_PG.BetAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.WinAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.TransferAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusBalanceAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusRatioAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.JackpotRtpContributionAmount *= tpCurrency.ExchangeRate;
+                custBalance.Balance *= tpCurrency.ExchangeRate;
+            }
+
+            // check
+            var checkBalance = custBalance.Balance - Math.Abs(transferInOutDataRNG_PG.BetAmount);
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                return 0;
+            }
+
+            var result = settledService.BetAndPayoutRNG_PG(tpCustInfo, transferInOutDataRNG_PG, thirdPartyBLL, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BetAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.WinAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.TransferAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusBalanceAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusRatioAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.JackpotRtpContributionAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         public IEnumerable<SettleData_PG> GetUnsettledList_PG()
         {
             return settledService.GetUnsettledList_PG();

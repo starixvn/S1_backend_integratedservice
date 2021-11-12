@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -1130,18 +1129,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_PG.UpdatedTime /= 1000;
             bettingDataRNG_PG.CreateTime /= 1000;
             var p = new DynamicParameters(bettingDataRNG_PG);
-            //p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            //p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
+            p.Add("BetAmount", 0);
+            p.Add("WinAmount", bettingDataRNG_PG.TransferAmount);
             try
             {
-                result = conn.Execute("Service_BettransRng_PGV2_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
                     if (bettingDataRNG_PG.TransferAmount > 0)
                     {
-                        //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, TransType.Settled, $"{bettingDataRNG_PG.type}: {Math.Abs(bettingDataRNG_PG.TransferAmount).ToString("#,##0.##")}", bettingDataRNG_PG.TransactionId, out afterAmount, conn, trans);
                         result = PayoutV2(tpCustInfo, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, bettingDataRNG_PG.ParentBetId, gameType, TpCategory.Slots, bettingDataRNG_PG.TransactionId, TransType.Payout, null, out afterAmount, $"{bettingDataRNG_PG.type}", out bonusId, conn, trans);
                     }
                     else
@@ -1149,34 +1146,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         GetTpBonus((int)Tp.PG, bettingDataRNG_PG.ParentBetId, gameType, TpCategory.Slots, out int custId, out bonusId);
                     }
 
-                    //if (result > 0)
-                    //{
-                    //    if (bettingDataRNG_PG.IsEndRound)
-                    //    {
-                    //        decimal Stake = p.Get<decimal>("Stake");
-                    //        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                    //        BetRecordInfo betRecordInfo = new BetRecordInfo
-                    //        {
-                    //            TpId = (int)Tp.PG,
-                    //            Stake = Stake,
-                    //            ValidBet = Stake,
-                    //            WinlostAmount = WinLostAmount,
-                    //            TransId = bettingDataRNG_PG.ParentBetId,
-                    //            GameType = GameType.PG_RNG,
-                    //            TpUserName = bettingDataRNG_PG.PlayerName,
-                    //            SettledTime = bettingDataRNG_PG.UpdatedTime,
-                    //            SettlementType = GetSettlementType(GameType.PG_RNG, bettingDataRNG_PG.GameId.ToString()),
-                    //            BonusId = bonusId
-                    //        };
-
-                    //        result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-                    //    }
-
                     if (result > 0)
                     {
                         trans.Commit();
                     }
-                    //}
                 }
                 else
                 {
@@ -1191,7 +1164,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    throw;
                 }
             }
 
@@ -1283,10 +1256,121 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int BetAndPayoutRNG_PG(TpCustInfo tpCustInfo, TransferInOutDataRNG_PG transferInOutDataRNG_PG, ThirdPartyBLL thirdPartyBLL, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            int bonusId = 0;
+            var category = TpCategory.Slots;
+            int gameType = (int)GameType.PG_RNG;
+
+            transferInOutDataRNG_PG.BetAmount = Math.Abs(transferInOutDataRNG_PG.BetAmount) * -1;
+            transferInOutDataRNG_PG.UpdatedTime /= 1000;
+            transferInOutDataRNG_PG.CreateTime /= 1000;
+            var p = new DynamicParameters(transferInOutDataRNG_PG);
+
+            try
+            {
+                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (transferInOutDataRNG_PG.BetAmount != 0)
+                    {
+                        result = _bettingService.PlaceBetV2(
+                            tpCustInfo,
+                            transferInOutDataRNG_PG.BetAmount,
+                            (int)Tp.PG,
+                            transferInOutDataRNG_PG.ParentBetId,
+                            gameType,
+                            transferInOutDataRNG_PG.TransactionId,
+                            null,
+                            category,
+                            out afterAmount,
+                            ref bonusId,
+                            conn,
+                            trans
+                       );
+                    }
+
+                    bool getBonus = false;
+                    if (transferInOutDataRNG_PG.WinAmount != 0)
+                    {
+                        if (bonusId > 0)
+                        {
+                            getBonus = true;
+                            result = PayoutWithBonusId(
+                                tpCustInfo,
+                                transferInOutDataRNG_PG.WinAmount,
+                                (int)Tp.PG,
+                                transferInOutDataRNG_PG.ParentBetId,
+                                gameType,
+                                category,
+                                transferInOutDataRNG_PG.TransactionId,
+                                TransType.Payout,
+                                out afterAmount,
+                                $"{transferInOutDataRNG_PG.type}",
+                                bonusId,
+                                conn,
+                                trans
+                            );
+                        }
+                        else
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                transferInOutDataRNG_PG.WinAmount,
+                                (int)Tp.PG,
+                                transferInOutDataRNG_PG.ParentBetId,
+                                gameType,
+                                category,
+                                transferInOutDataRNG_PG.TransactionId,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"{transferInOutDataRNG_PG.type}",
+                                out bonusId,
+                                conn,
+                                trans
+                           );
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                        if (getBonus)
+                        {
+                            //call Service_TpSlotsBonus_Get to set flag
+                            GetTpBonus((int)Tp.PG, transferInOutDataRNG_PG.ParentBetId, gameType, category, out int custId, out bonusId);
+                        }
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
         public IEnumerable<SettleData_PG> GetUnsettledList_PG()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_PG>("Service_UnsettledListRng_PG_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_PG>("Service_BettransRng_PG_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
         public int SetSettleFlag_PG(string TransactionIdList)
         {
