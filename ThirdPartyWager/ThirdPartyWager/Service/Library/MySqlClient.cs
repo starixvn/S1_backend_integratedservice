@@ -103,13 +103,13 @@ namespace ThirdPartyWager.Service.Library
             return result;
         }
 
-        public async Task<int> ExecuteAsync(string name, DynamicParameters parameters)
+        public async Task<int> ExecuteAsync(string name, object parameters)
         {
             var sw = Stopwatch.StartNew();
             int result;
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
+                await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
