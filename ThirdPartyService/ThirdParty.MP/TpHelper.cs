@@ -180,59 +180,8 @@ namespace ThirdParty.MP
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
-
-            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-
-            var Param = new
-            {
-                s = 7,
-                account = tpCustInfo.TpUserName,
-            };
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var Balance = new
-            {
-                agent = Agent,
-                timestamp = timestamp,
-                param = AesEncrypt(sParam, Deskey),
-                key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
-            };
-            dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
-            var sBalance = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var result = HttpGet(
-                ApiUrl,
-                sBalance,
-                "application/x-www-form-urlencoded"
-            );
-
             ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            if (!IsJSON(result))
-            {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                return oApiResult;
-            }
-
-            var json = JsonConvert.DeserializeObject<ApiResponse>(result);
-            if (json.d.code == 0)
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Data.balance = json.d.freeMoney; // 可下分余额
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = ErrorMassage[json.d.code];
-                oApiResult.RawErrorCode = json.d.code.ToString();
-            }
-
+            oApiResult.ErrorCode = ErrorCode.Fail;
             return oApiResult;
         }
 
