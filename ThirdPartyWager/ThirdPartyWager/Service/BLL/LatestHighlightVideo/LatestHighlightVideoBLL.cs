@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model;
+﻿using ThirdPartyWager.Service.DAL;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -12,9 +10,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             this.latestHighlightVideoService = latestHighlightVideoService;
         }
-        public int SetLatestHighlightVideo(List<LatestHighlightVideoData> data)
+        public int SetLatestHighlightVideo(string latestHighlightVideoJson)
         {
-            return latestHighlightVideoService.SetLatestHighlightVideo(data);
+            return latestHighlightVideoService.SetLatestHighlightVideo(latestHighlightVideoJson);
         }
         public int GetLatestHighlightVideo(int SiteId, string Date, string Title)
         {

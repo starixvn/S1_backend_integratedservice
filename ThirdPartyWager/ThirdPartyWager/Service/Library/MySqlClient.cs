@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -60,7 +60,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return true;
         }
 
@@ -99,7 +99,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(command);
+            _logger.LogInformation(command);
             return result;
         }
 
@@ -119,7 +119,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -139,7 +139,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(name);
+            _logger.LogInformation(name);
             return result;
         }
 
@@ -159,7 +159,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -181,7 +181,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -201,7 +201,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -224,7 +224,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
     }
