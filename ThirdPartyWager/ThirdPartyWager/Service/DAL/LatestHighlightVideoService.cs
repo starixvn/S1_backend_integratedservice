@@ -1,7 +1,9 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL
 {
@@ -13,10 +15,10 @@ namespace ThirdPartyWager.Service.DAL
         {
             this._configuration = configuration;
         }
-        public int SetLatestHighlightVideo(string latestHighlightVideoJson)
+        public int SetLatestHighlightVideo(List<LatestHighlightVideoData> data)
         {
             using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_LatestHighlightVideo_Set", new { LatestHighlightVideoJson = latestHighlightVideoJson }, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_LatestHighlightVideoV2_Set", data, commandType: CommandType.StoredProcedure);
         }
         public int GetLatestHighlightVideo(int siteId, string date, string title)
         {

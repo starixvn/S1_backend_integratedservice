@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -71,14 +72,16 @@ namespace ThirdPartyWager.Workers
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     IEnumerable<ServerInfo> siteList = commonBLL.GetSiteList().Where(x => x.SiteId == SiteId);
-                    var LatestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
+                    var latestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
 
-                    if (siteList.Any() && LatestHighlightVideo != null)
+                    if (siteList.Any() && latestHighlightVideo != null)
                     {
+                        var sw = new Stopwatch();
+                        sw.Start();
+                        
                         foreach (var siteListInfo in siteList)
                         {
-
-                            var check = latestHighlightVideoBLL.GetLatestHighlightVideo(siteListInfo.SiteId, LatestHighlightVideo.date, LatestHighlightVideo.title.en);
+                            var check = latestHighlightVideoBLL.GetLatestHighlightVideo(siteListInfo.SiteId, latestHighlightVideo.date, latestHighlightVideo.title.en);
 
                             if (check == 0)
                             {
@@ -86,16 +89,16 @@ namespace ThirdPartyWager.Workers
 
                                 foreach (var siteListInfoDetail in JsonSerializer.Deserialize<IEnumerable<string>>(siteListInfo.LangList))
                                 {
-                                    if (!string.IsNullOrEmpty(LatestHighlightVideo.m3u8))
+                                    if (!string.IsNullOrEmpty(latestHighlightVideo.m3u8))
                                     {
-                                        string title = siteListInfoDetail == "cs" ? LatestHighlightVideo.title.cs : LatestHighlightVideo.title.en;
+                                        string title = siteListInfoDetail == "cs" ? latestHighlightVideo.title.cs : latestHighlightVideo.title.en;
                                         LatestHighlightVideoData.Add(new LatestHighlightVideoData()
                                         {
                                             SiteId = SiteId,
                                             LangId = siteListInfoDetail,
-                                            Date = LatestHighlightVideo.date,
+                                            Date = latestHighlightVideo.date,
                                             Title = title,
-                                            Link = $"/api/Player?url=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}&v={timestamp}",
+                                            Link = $"/api/Player?url=https://glombi.accordde.com/video/{latestHighlightVideo.m3u8}&v={timestamp}",
                                             //Link = $"https://www.88novasoursop.com/api/Player?url=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}&v={timestamp}",
                                             //Link = $"https://89ksj.nova88.com/Streaming/HighlightsRecap?SportType=1&Title={title}&ShareUrl={LatestHighlightVideo.share}&ClipUrl=https://glombi.accordde.com/video/{LatestHighlightVideo.m3u8}?v={timestamp}",
                                             Operator = "Service Auto Create"
@@ -103,14 +106,17 @@ namespace ThirdPartyWager.Workers
                                     }
                                 }
 
-                                latestHighlightVideoBLL.SetLatestHighlightVideo(JsonSerializer.Serialize(LatestHighlightVideoData));
+                                latestHighlightVideoBLL.SetLatestHighlightVideo(LatestHighlightVideoData);
                             }
                             else
                             {
-                                log2File.Error($"{siteListInfo.SiteId}, {LatestHighlightVideo.date}, {LatestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
+                                log2File.Error($"{siteListInfo.SiteId}, {latestHighlightVideo.date}, {latestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
                             }
                         }
+                        sw.Stop();
+                        logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
                     }
+                   
                 }
             }
             catch (Exception ex)
