@@ -141,6 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
+                result = 0;
                 LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
                 var parameter = new
                 {
@@ -190,6 +191,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
+                result = 0;
                 LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
                 var parameter = new
                 {
