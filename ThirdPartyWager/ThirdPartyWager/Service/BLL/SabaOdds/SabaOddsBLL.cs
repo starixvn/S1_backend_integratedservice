@@ -1,4 +1,7 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -10,9 +13,13 @@ namespace ThirdPartyWager.Service.BLL
         {
             this.sabaOddsService = sabaOddsService;
         }
-        public int SetSabaOdds(string sabaOddsJson)
+        public Task<int> SetSabaOdds(IEnumerable<UpdateOdd> sabaOdds)
         {
-            return sabaOddsService.SetSabaOdds(sabaOddsJson);
+            return sabaOddsService.SetSabaOdds(sabaOdds);
+        }
+        public IEnumerable<int> GetSabaOddsMatchId()
+        {
+            return sabaOddsService.GetSabaOddsMatchId();
         }
     }
 }

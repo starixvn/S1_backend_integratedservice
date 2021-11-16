@@ -76,15 +76,14 @@ namespace ThirdPartyWager.Workers
 
                     if (siteList.Any() && latestHighlightVideo != null)
                     {
-                        var sw = new Stopwatch();
-                        sw.Start();
-                        
                         foreach (var siteListInfo in siteList)
                         {
                             var check = latestHighlightVideoBLL.GetLatestHighlightVideo(siteListInfo.SiteId, latestHighlightVideo.date, latestHighlightVideo.title.en);
 
                             if (check == 0)
                             {
+                                var sw = new Stopwatch();
+                                sw.Start();
                                 var LatestHighlightVideoData = new List<LatestHighlightVideoData>();
 
                                 foreach (var siteListInfoDetail in JsonSerializer.Deserialize<IEnumerable<string>>(siteListInfo.LangList))
@@ -107,16 +106,16 @@ namespace ThirdPartyWager.Workers
                                 }
 
                                 latestHighlightVideoBLL.SetLatestHighlightVideo(LatestHighlightVideoData);
+                                
+                                sw.Stop();
+                                logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
                             }
                             else
                             {
                                 log2File.Error($"{siteListInfo.SiteId}, {latestHighlightVideo.date}, {latestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
                             }
                         }
-                        sw.Stop();
-                        logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
                     }
-                   
                 }
             }
             catch (Exception ex)
