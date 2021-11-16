@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Service.DAL
         
         public IEnumerable<int> GetSabaOddsMatchId()
         {
-            return _mySqlClient.Query<int>("Service_SabaOddsMatchId_Get").ToList();
+            return _mySqlClient.Query<int>("Service_SabaOddsMatchId_Get");
         }
     }
 }

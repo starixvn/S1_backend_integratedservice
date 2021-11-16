@@ -80,7 +80,8 @@ namespace ThirdPartyWager.Workers
                         id = match.id, 
                         h = match.bookie.odd.FirstOrDefault()?.h,
                         o = match.bookie.odd.FirstOrDefault()?.o, 
-                        u = match.bookie.odd.FirstOrDefault()?.u}).ToList();
+                        u = match.bookie.odd.FirstOrDefault()?.u
+                    });
                     var listMatchId = _sabaOddsBll.GetSabaOddsMatchId();
                     
                     var updateOdds = updateList.Where(x => listMatchId.Contains(x.id));
@@ -90,8 +91,7 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 isError = true;
-                _logger.LogError(ex, GetCurrentAsyncMethod());
-                _log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
+                _logger.LogError(ex, GetCurrentAsyncMethod()); 
             }
             finally
             {
