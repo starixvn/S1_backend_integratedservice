@@ -2221,7 +2221,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    throw;
                 }
             }
 
