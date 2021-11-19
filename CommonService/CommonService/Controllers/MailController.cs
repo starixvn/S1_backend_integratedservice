@@ -119,5 +119,11 @@ namespace CommonService.Controllers
             var apiResult = await _otpEmailBll.SendOtpEmailAsync(req.custId, req.OTPEmailUrl);
             return apiResult;
         }
+
+        [HttpPost]
+        public ApiResult VerifyOTP(VerifyOTPEmailReq req)
+        {
+            return _otpEmailBll.VerifyOtp(req.CustId, req.InputOTP);
+        }
     }
 }

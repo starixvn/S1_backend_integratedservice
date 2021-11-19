@@ -28,7 +28,7 @@ namespace CommonService.Service.BLL
             var custInfo = _custInfoService.GetCustInfoProfile(custId);
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.Email))
             { 
-                var otpResult = _otpService.GetOTPVerifyinfo(custId);
+                var otpResult = _otpService.GetOTPVerifyinfo(custId, (int)OtpType.Email);
                 if (otpResult.Status != 1)
                 {
                     // 產生6位數驗證碼
@@ -38,7 +38,7 @@ namespace CommonService.Service.BLL
                     
                     if (sendMailResult.ErrorCode == ErrorCode.Success)
                     {
-                        var insertOtpResult = _otpService.OTPVerifyinfoIns(custId, code);
+                        var insertOtpResult = _otpService.OTPVerifyinfoIns(custId, code, (int)OtpType.Email);
                         apiResult.ErrorCode = (ErrorCode)insertOtpResult.Status;
                         apiResult.Data = new SendOTPEmailResult()
                         {
@@ -68,6 +68,16 @@ namespace CommonService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.UserNotExist;
             }
+            return apiResult;
+        }
+
+        public ApiResult VerifyOtp(int custId, string inputOtp)
+        {
+            var result = _otpService.VerifyOPT(new VerifyOTPReq() {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
+            var apiResult = new ApiResult
+            {
+                ErrorCode = (ErrorCode) (result)
+            };
             return apiResult;
         }
     }

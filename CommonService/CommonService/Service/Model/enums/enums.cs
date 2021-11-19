@@ -57,7 +57,13 @@ namespace CommonService.Service.Model.enums
         #endregion
         UM = 10
     }
-    
+
+    public enum OtpType
+    {
+        SMS,
+        Email
+    }
+
     public enum TemplateType
     {
         ResetPassword,
