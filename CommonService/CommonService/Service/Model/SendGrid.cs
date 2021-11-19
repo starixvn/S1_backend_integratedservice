@@ -9,6 +9,7 @@ namespace CommonService.Service.Model
         public string ApiKey { get; set; }
         public NameEmail mailFrom { get; set; }
         public Dictionary<string, string> ResetPasswordTemplate { get; set; }
+        public Dictionary<string, string> VerifyMailTemplate { get; set; }
         public string ResetPasswordUrl { get; set; }
     }
     public class NameEmail
@@ -53,4 +54,14 @@ namespace CommonService.Service.Model
         public string subject { get; set; }
     }
 
+    public class SendGridTemplateBody : SendMailBody
+    {
+        public List<TemplatePersonalization> personalizations { get; set; }
+        public string template_id { get; set; }
+    }
+
+    public class TemplatePersonalization : Personalization
+    {
+        public dynamic dynamic_template_data { get; set; }
+    }
 }

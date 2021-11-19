@@ -1,4 +1,5 @@
-﻿using CommonService.Service.BLL;
+﻿using System;
+using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -14,14 +15,16 @@ namespace CommonService.Controllers
         private readonly SendXBLL sendXBLL;
         private readonly SendGridBLL sendGridBLL;
         private readonly RestPasswordBLL restPasswordBLL;
+        private readonly OTPEmailBLL _otpEmailBll;
         private readonly ILogger<MailController> logger;
 
-        public MailController(ILogger<MailController> logger, CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, RestPasswordBLL restPasswordBLL)
+        public MailController(ILogger<MailController> logger, CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, RestPasswordBLL restPasswordBLL, OTPEmailBLL otpEmailBll)
         {
             this.custInfoBLL = custInfoBLL;
             this.sendXBLL = sendXBLL;
             this.sendGridBLL = sendGridBLL;
             this.restPasswordBLL = restPasswordBLL;
+            _otpEmailBll = otpEmailBll;
             this.logger = logger;
         }
         public class Req
@@ -107,6 +110,13 @@ namespace CommonService.Controllers
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
             }
+            return apiResult;
+        }
+        
+        [HttpPost]
+        public async Task<ApiResult<SendOTPEmailResult>> OTPEmail(OTPEmailReq req)
+        {
+            var apiResult = await _otpEmailBll.SendOtpEmailAsync(req.custId, req.OTPEmailUrl);
             return apiResult;
         }
     }

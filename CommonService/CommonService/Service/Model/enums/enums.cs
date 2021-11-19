@@ -57,4 +57,10 @@ namespace CommonService.Service.Model.enums
         #endregion
         UM = 10
     }
+    
+    public enum TemplateType
+    {
+        ResetPassword,
+        VerificationMail
+    }
 }
