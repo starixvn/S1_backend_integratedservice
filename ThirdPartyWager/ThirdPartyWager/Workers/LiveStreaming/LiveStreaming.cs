@@ -61,14 +61,14 @@ namespace ThirdPartyWager.Workers
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    liveStreamingBLL.SetLiveStreaming(JsonSerializer.Serialize(JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result)));
+                    var resultModel = JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result);
+                    await liveStreamingBLL.SetLiveStreaming(resultModel.Match);
                 }
             }
             catch (Exception ex)
             {
                 isError = true;
                 logger.LogError(ex, GetCurrentAsyncMethod());
-                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {
