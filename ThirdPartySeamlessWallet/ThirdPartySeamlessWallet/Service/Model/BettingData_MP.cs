@@ -16,6 +16,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal requestAmount { get; set; }
         public string gameId { get; set; }
         public string orderId { get; set; }
+        public string roundId { get; set; }
+        public string gameNo { get; set; }
         public string player
         {
             get
