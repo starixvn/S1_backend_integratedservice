@@ -753,6 +753,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 requestAmount = transferData_MP.requestAmount,
                 gameId = transferData_MP.gameId,
                 orderId = transferData_MP.orderId,
+                roundId = transferData_MP.roundId,
+                gameNo = transferData_MP.gameNo,
                 TicketType = (int)BettransType.Payout,
                 TicketStatus = (int)TicketStatus.UnSettled,
                 SettleFlag = (int)SettleFlag.Running
@@ -812,6 +814,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 channelId = transferData_MP.channelId,
                 account = transferData_MP.account,
                 orderId = transferData_MP.orderId,
+                roundId = transferData_MP.roundId,
+                gameNo = transferData_MP.gameNo,
                 TicketType = (int)BettransType.CancelBet,
                 TicketStatus = (int)TicketStatus.Refund,
                 SettleFlag = (int)SettleFlag.Settled

@@ -357,6 +357,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 requestAmount = transferData_MP.requestAmount,
                 gameId = transferData_MP.gameId,
                 orderId = transferData_MP.orderId,
+                roundId = transferData_MP.roundId,
+                gameNo = transferData_MP.gameNo,
                 TicketType = (int)BettransType.Bet,
                 TicketStatus = (int)TicketStatus.UnSettled,
                 SettleFlag = (int)SettleFlag.Running
