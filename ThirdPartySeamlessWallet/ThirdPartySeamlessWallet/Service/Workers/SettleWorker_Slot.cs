@@ -219,6 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = unsettled.SettleTime,
+                                        TransTime = unsettled.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ProgressiveBet = wager.ProgressiveBet,
                                         ProgressiveWin = wager.ProgressiveWin,

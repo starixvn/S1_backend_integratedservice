@@ -954,7 +954,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (gameType == (int)GameType.SG_RNG)
             {
                 using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                return conn.Query<SettleData_SG>("Service_BettransRng_SG_Unsettle_Get", commandType: CommandType.StoredProcedure);
+                return conn.Query<SettleData_SG>("Service_BettransRng_SG_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
             }
             else
             {
@@ -994,6 +994,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 GameType = GameType.SG_Fish,
                 TpUserName = settleData_SG.Account,
                 SettledTime = settleData_SG.SettleTime,
+                TransTime = settleData_SG.SettleTime,
                 SettlementType = SettlementType.SettledForValid
             };
 
