@@ -2,7 +2,8 @@
 
 namespace ThirdPartyWager.Service.Model
 {
-    public class GetLiveStreaming
+    public class 
+        GetLiveStreaming
     {
         public IEnumerable<LiveStreamingJson> Match { get; set; }
 

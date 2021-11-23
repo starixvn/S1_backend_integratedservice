@@ -16,8 +16,7 @@ namespace ThirdPartyWager.Workers
     public class LiveStreaming : BackgroundService
     {
         private readonly IHostEnvironment environment;
-        private readonly ILogger<LiveStreaming> logger;
-        private readonly Log2File log2File;
+        private readonly ILogger<LiveStreaming> logger; 
         private readonly HttpHelper httpHelper;
         private readonly LiveStreamingBLL liveStreamingBLL;
         private Timer timerLiveStreaming;
@@ -26,7 +25,6 @@ namespace ThirdPartyWager.Workers
         {
             this.environment = environment;
             this.logger = logger;
-            this.log2File = log2File;
             this.httpHelper = httpHelper;
             this.liveStreamingBLL = liveStreamingBLL;
         }
@@ -61,14 +59,15 @@ namespace ThirdPartyWager.Workers
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    liveStreamingBLL.SetLiveStreaming(JsonSerializer.Serialize(JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result)));
+                    liveStreamingBLL.TruncateLiveStreaming();
+                    var resultModel = JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result);
+                        await liveStreamingBLL.SetLiveStreaming(resultModel.Match);
                 }
             }
             catch (Exception ex)
             {
                 isError = true;
                 logger.LogError(ex, GetCurrentAsyncMethod());
-                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {

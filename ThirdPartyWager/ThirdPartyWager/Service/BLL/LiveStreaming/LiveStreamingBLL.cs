@@ -1,4 +1,7 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -10,9 +13,13 @@ namespace ThirdPartyWager.Service.BLL
         {
             this.liveStreamingService = liveStreamingService;
         }
-        public int SetLiveStreaming(string liveStreamingJson)
+        public Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {
-            return liveStreamingService.SetLiveStreaming(liveStreamingJson);
+            return liveStreamingService.SetLiveStreaming(liveStreaming);
+        }
+        public int TruncateLiveStreaming()
+        {
+            return liveStreamingService.TruncateLiveStreaming();
         }
     }
 }
