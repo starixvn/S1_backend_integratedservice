@@ -17,5 +17,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             return liveStreamingService.SetLiveStreaming(liveStreaming);
         }
+        public int TruncateLiveStreaming()
+        {
+            return liveStreamingService.TruncateLiveStreaming();
+        }
     }
 }
