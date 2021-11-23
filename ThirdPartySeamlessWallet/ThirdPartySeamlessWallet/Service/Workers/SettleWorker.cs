@@ -1001,6 +1001,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
