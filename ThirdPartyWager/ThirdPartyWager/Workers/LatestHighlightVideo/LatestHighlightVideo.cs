@@ -21,31 +21,31 @@ namespace ThirdPartyWager.Workers
 {
     public class LatestHighlightVideo : BackgroundService
     {
-        private Timer timerLatestHighlightVideo;
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<LatestHighlightVideo> logger;
-        private readonly Log2File log2File;
-        private readonly HttpHelper httpHelper;
-        private readonly CommonBLL commonBLL;
-        private readonly LatestHighlightVideoBLL latestHighlightVideoBLL;
+        private Timer _timerLatestHighlightVideo;
+        private readonly IHostEnvironment _environment;
+        private readonly ILogger<LatestHighlightVideo> _logger;
+        private readonly Log2File _log2File;
+        private readonly HttpHelper _httpHelper;
+        private readonly CommonBLL _commonBll;
+        private readonly LatestHighlightVideoBLL _latestHighlightVideoBll;
         private readonly IConfiguration _configuration;
 
 
 
         public LatestHighlightVideo(IServiceProvider provider)
         {
-            environment = provider.GetRequiredService<IHostEnvironment>();
-            logger = provider.GetRequiredService<ILogger<LatestHighlightVideo>>();
-            log2File = provider.GetRequiredService<Log2File>();
-            httpHelper = provider.GetRequiredService<HttpHelper>();
-            commonBLL = provider.GetRequiredService<CommonBLL>();
-            latestHighlightVideoBLL = provider.GetRequiredService<LatestHighlightVideoBLL>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _logger = provider.GetRequiredService<ILogger<LatestHighlightVideo>>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _commonBll = provider.GetRequiredService<CommonBLL>();
+            _latestHighlightVideoBll = provider.GetRequiredService<LatestHighlightVideoBLL>();
             _configuration = provider.GetRequiredService<IConfiguration>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            timerLatestHighlightVideo = new Timer(DoLatestHighlightVideoAsync, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerLatestHighlightVideo = new Timer(DoLatestHighlightVideoAsync, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -66,19 +66,19 @@ namespace ThirdPartyWager.Workers
                 builder.Query = query.ToString();
                 string newurl = builder.ToString();
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
-                using var client = httpHelper.GetClientWithHandler(CreateHandler());
+                using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var result = await client.SendAsync(data);
                 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    IEnumerable<ServerInfo> siteList = commonBLL.GetSiteList().Where(x => x.SiteId == SiteId);
+                    IEnumerable<ServerInfo> siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
                     var latestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
 
                     if (siteList.Any() && latestHighlightVideo != null)
                     {
                         foreach (var siteListInfo in siteList)
                         {
-                            var check = latestHighlightVideoBLL.GetLatestHighlightVideo(siteListInfo.SiteId, latestHighlightVideo.date, latestHighlightVideo.title.en);
+                            var check = _latestHighlightVideoBll.GetLatestHighlightVideo(siteListInfo.SiteId, latestHighlightVideo.date, latestHighlightVideo.title.en);
 
                             if (check == 0)
                             {
@@ -105,14 +105,14 @@ namespace ThirdPartyWager.Workers
                                     }
                                 }
 
-                                latestHighlightVideoBLL.SetLatestHighlightVideo(LatestHighlightVideoData);
+                                _latestHighlightVideoBll.SetLatestHighlightVideo(LatestHighlightVideoData);
                                 
                                 sw.Stop();
-                                logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
+                                _logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
                             }
                             else
                             {
-                                log2File.Error($"{siteListInfo.SiteId}, {latestHighlightVideo.date}, {latestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
+                                _log2File.Error($"{siteListInfo.SiteId}, {latestHighlightVideo.date}, {latestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
                             }
                         }
                     }
@@ -121,13 +121,13 @@ namespace ThirdPartyWager.Workers
             catch (Exception ex)
             {
                 isError = true;
-                logger.LogError(ex, GetCurrentAsyncMethod());
-                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
+                _logger.LogError(ex, GetCurrentAsyncMethod());
+                _log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {
                 TimeSpan dueTimeSpan = TimeSpan.FromMinutes(10);
-                if (environment.IsDevelopment())
+                if (_environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);
                     dueTimeSpan = TimeSpan.FromSeconds(30);
@@ -138,13 +138,13 @@ namespace ThirdPartyWager.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
 
-                timerLatestHighlightVideo.Change(dueTimeSpan, TimeSpan.Zero);
+                _timerLatestHighlightVideo.Change(dueTimeSpan, TimeSpan.Zero);
             }
 
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timerLatestHighlightVideo?.Change(Timeout.Infinite, 0);
+            _timerLatestHighlightVideo?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 

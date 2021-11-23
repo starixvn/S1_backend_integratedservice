@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using Dapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 using ThirdPartyWager.Service.Model;
 
@@ -11,9 +13,9 @@ namespace ThirdPartyWager.Service.DAL
     {
         private readonly IConfiguration _configuration;
 
-        public LatestHighlightVideoService(IConfiguration configuration)
+        public LatestHighlightVideoService(IServiceProvider provider)
         {
-            this._configuration = configuration;
+            _configuration = provider.GetRequiredService<IConfiguration>();
         }
         public int SetLatestHighlightVideo(List<LatestHighlightVideoData> data)
         {

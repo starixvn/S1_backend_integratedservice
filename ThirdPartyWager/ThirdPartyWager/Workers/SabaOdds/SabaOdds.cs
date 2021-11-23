@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -21,7 +20,6 @@ namespace ThirdPartyWager.Workers
     {
         private readonly IHostEnvironment _environment;
         private readonly ILogger<SabaOdds> _logger;
-        private readonly Log2File _log2File;
         private readonly HttpHelper _httpHelper;
         private readonly SabaOddsBLL _sabaOddsBll;
         private Timer _timerSabaOdds;
@@ -30,7 +28,6 @@ namespace ThirdPartyWager.Workers
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _logger = provider.GetRequiredService<ILogger<SabaOdds>>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _sabaOddsBll = provider.GetRequiredService<SabaOddsBLL>();
         }

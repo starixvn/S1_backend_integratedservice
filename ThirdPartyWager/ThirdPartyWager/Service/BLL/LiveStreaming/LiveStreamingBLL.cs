@@ -1,18 +1,27 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class LiveStreamingBLL
     {
-        private readonly LiveStreamingService liveStreamingService;
+        private readonly LiveStreamingService _liveStreamingService;
 
-        public LiveStreamingBLL(LiveStreamingService liveStreamingService)
+        public LiveStreamingBLL(IServiceProvider provider)
         {
-            this.liveStreamingService = liveStreamingService;
+            _liveStreamingService = provider.GetRequiredService<LiveStreamingService>();
         }
-        public int SetLiveStreaming(string liveStreamingJson)
+        public Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {
-            return liveStreamingService.SetLiveStreaming(liveStreamingJson);
+            return _liveStreamingService.SetLiveStreaming(liveStreaming);
+        }
+        public int TruncateLiveStreaming()
+        {
+            return _liveStreamingService.TruncateLiveStreaming();
         }
     }
 }
