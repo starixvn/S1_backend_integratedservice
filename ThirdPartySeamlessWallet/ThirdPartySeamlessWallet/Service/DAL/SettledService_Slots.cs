@@ -1897,7 +1897,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
@@ -1913,7 +1913,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListFish_CQ9()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)
