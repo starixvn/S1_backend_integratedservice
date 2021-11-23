@@ -191,7 +191,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             bool isError = false;
             int thisTp = (int)Tp.AMB;
             var gameType = GameType.AMB_Poker;
-            var category = TpCategory.Poker;
             string logName = "Settle_AMB";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 
@@ -211,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             decimal stake = unsettled.Stake;
                             decimal validBet = unsettled.ValidBet;
                             decimal winLostAmount = unsettled.WinLostAmount;
-                            decimal revenue = unsettled.Revenue;
+                            decimal revenue = (decimal)unsettled.Revenue;
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
@@ -224,14 +223,13 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
                             if (unsettled.IsRefund == 1)
                             {
-                                //betRecordInfo.WinlostAmount = 0;
-                                //betRecordInfo.Revenue = 0;
-                                betRecordInfo.TicketStatus = (TicketStatus)TicketStatus.Refund;
+                                betRecordInfo.TicketStatus = TicketStatus.Refund;
                             }
 
                             var result = settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
