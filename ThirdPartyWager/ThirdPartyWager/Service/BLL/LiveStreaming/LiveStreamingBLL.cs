@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 
@@ -7,19 +9,19 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class LiveStreamingBLL
     {
-        private readonly LiveStreamingService liveStreamingService;
+        private readonly LiveStreamingService _liveStreamingService;
 
-        public LiveStreamingBLL(LiveStreamingService liveStreamingService)
+        public LiveStreamingBLL(IServiceProvider provider)
         {
-            this.liveStreamingService = liveStreamingService;
+            _liveStreamingService = provider.GetRequiredService<LiveStreamingService>();
         }
         public Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {
-            return liveStreamingService.SetLiveStreaming(liveStreaming);
+            return _liveStreamingService.SetLiveStreaming(liveStreaming);
         }
         public int TruncateLiveStreaming()
         {
-            return liveStreamingService.TruncateLiveStreaming();
+            return _liveStreamingService.TruncateLiveStreaming();
         }
     }
 }
