@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Service.DAL
         }
         public int TruncateLiveStreaming()
         {
-            return _mySqlClient.Execute("Service_TruncateLiveStreaming_Set");
+            return _mySqlClient.Execute("Service_TruncateLiveStreaming_Del");
         }
     }
 }
