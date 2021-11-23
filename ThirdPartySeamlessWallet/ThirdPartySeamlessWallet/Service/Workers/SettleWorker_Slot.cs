@@ -32,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.account);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
                             decimal stake = unsettled.Stake;
                             decimal validBet = unsettled.Stake;
@@ -46,8 +46,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 WinlostAmount = winLostAmount,
                                 TransId = unsettled.roundid,
                                 GameType = GameType.CQ9_RNG,
-                                TpUserName = unsettled.account,
+                                TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
