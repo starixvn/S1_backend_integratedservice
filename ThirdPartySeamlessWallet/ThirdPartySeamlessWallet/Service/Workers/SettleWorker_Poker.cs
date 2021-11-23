@@ -51,6 +51,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.OneGaming_Poker,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.SettleTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
                             var result = settledBLL.Settled_OneGaming(tpCustInfo, betRecordInfo);
