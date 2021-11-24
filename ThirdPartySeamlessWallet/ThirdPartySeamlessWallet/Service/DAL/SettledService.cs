@@ -89,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        int[] TransTimeTpIds = { (int)Tp.MP, (int)Tp.SA, (int)Tp.Allbet, (int)Tp.WM, (int)Tp.JILI, (int)Tp.YL, (int)Tp.EVO, (int)Tp.Netent, (int)Tp.RedTiger, (int)Tp.Sexy, (int)Tp.PT, (int)Tp.OneGaming };
+        int[] TransTimeTpIds = { (int)Tp.MP, (int)Tp.SA, (int)Tp.Allbet, (int)Tp.WM, (int)Tp.JILI, (int)Tp.YL, (int)Tp.EVO, (int)Tp.Netent, (int)Tp.RedTiger, (int)Tp.Sexy, (int)Tp.PT, (int)Tp.OneGaming, (int)Tp.NineW };
 
         private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
