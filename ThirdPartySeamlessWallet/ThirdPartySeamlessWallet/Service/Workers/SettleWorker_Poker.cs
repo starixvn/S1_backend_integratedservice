@@ -303,6 +303,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.KM_Poker,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
                             };
 
