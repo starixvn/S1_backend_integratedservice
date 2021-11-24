@@ -2649,10 +2649,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw;
             }
         }
-        public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
+        public IEnumerable<SettleData> GetUnsettledList_MG(string spName)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_MG>(spName, commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>(spName, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_MG(string spName, string transId)
