@@ -43,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.BTI_Sports,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                             };
