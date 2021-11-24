@@ -935,6 +935,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             long unixTimestamp = unsettled.SettleTime - new DateTime(1970, 1, 1).Ticks;
                             unixTimestamp /= TimeSpan.TicksPerSecond;
 
+                            long transTime = unsettled.TransTime - new DateTime(1970, 1, 1).Ticks;
+                            transTime /= TimeSpan.TicksPerSecond;
+
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
@@ -945,6 +948,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unixTimestamp,
+                                TransTime = transTime,
                                 SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
