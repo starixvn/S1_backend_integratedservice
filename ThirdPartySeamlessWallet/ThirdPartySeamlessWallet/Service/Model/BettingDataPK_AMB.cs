@@ -53,15 +53,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
     }
 
-    public class SettleData_AMB
+    public class SettleData_AMB : SettleData
     {
-        public string TransId { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public decimal Revenue { get; set; }
-        public string Account { get; set; }
-        public long SettleTime { get; set; }
         public int IsRefund { get; set; }
     }
 }
