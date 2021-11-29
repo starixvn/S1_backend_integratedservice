@@ -1095,6 +1095,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
