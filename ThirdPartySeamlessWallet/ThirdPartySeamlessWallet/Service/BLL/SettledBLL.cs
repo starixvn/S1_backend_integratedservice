@@ -637,30 +637,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledListLC_PP();
         }
 
-        //public int SettledRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
-        //{
-        //    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
-        //    var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
-        //    var result = 0;
-        //    if (gameType == (int)GameType.PP_RNG)
-        //    {
-        //        result = settledService.SettledRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
-        //    }
-        //    else
-        //    {
-        //        result = settledService.SettledLC_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
-        //    }
-        //    if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-        //    {
-        //        afterAmount /= tpCurrency.ExchangeRate;
-        //    }
-
-        //    return result;
-        //}
-        //public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP(int gameType)
-        //{
-        //    return settledService.GetUnsettledListRNG_PP(gameType);
-        //}
         public int PromoBonus_PP(PromoBonus promoBonus, out decimal afterAmount)
         {
 
