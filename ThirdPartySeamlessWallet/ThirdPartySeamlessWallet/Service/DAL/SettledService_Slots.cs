@@ -523,7 +523,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int SetSettleFlag_BettransLC_PP_Payout(long roundId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_PP_Settle_Pre_Set", new { roundId = roundId }, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_BettransLC_PP_Settle_Pre_Set_V2", new { roundId = roundId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransLC_PP(long roundId, string Account)
@@ -819,7 +819,91 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        public int AdjustmentRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var p = new DynamicParameters(new
+            {
+                reference = bettingDataRNG_PP.reference,
+                roundId = bettingDataRNG_PP.roundId,
+                gameId = bettingDataRNG_PP.gameId ?? "",
+                amount = bettingDataRNG_PP.amount,
+                userId = bettingDataRNG_PP.userId,
+                roundDetails = bettingDataRNG_PP.roundDetails,
+                timestamp = bettingDataRNG_PP.timestamp,
+                bonusCode = bettingDataRNG_PP.bonusCode,
+                jackpotId = bettingDataRNG_PP.jackpotId,
+                jackpotContribution = bettingDataRNG_PP.jackpotContribution,
+                type = (int)BettransType.Payout,
+                TicketStatus = (int)TicketStatus.Refund,
+                promoWinAmount = bettingDataRNG_PP.promoWinAmount,
+                promoWinReference = bettingDataRNG_PP.promoWinReference,
+                promoCampaignID = bettingDataRNG_PP.promoCampaignID,
+                promoCampaignType = bettingDataRNG_PP.promoCampaignType
+            }
+            );
+            int result = 0;
+            try
+            {
+                var category = TpCategory.Slots;
+                if (gameType == (int)GameType.PP_RNG)
+                {
+                    result = conn.Execute("Service_BettransRng_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
+                else
+                {
+                    category = TpCategory.LiveCasino;
+                    result = conn.Execute("Service_BettransLC_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                }
 
+                if (result > 0)
+                {
+                    if (bettingDataRNG_PP.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_PP.amount,
+                            (int)Tp.PP,
+                            bettingDataRNG_PP.roundId.ToString(),
+                            gameType,
+                            category,
+                            bettingDataRNG_PP.reference,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Adjustment",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                        var setFlag = SetSettleFlag_BettransLC_PP_Payout(bettingDataRNG_PP.roundId);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
         #endregion
 
         #region SG
