@@ -1826,7 +1826,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 totalBet = bettingData_EBet.detail.totalBet,
                 validBet = bettingData_EBet.detail.validBet,
                 detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
-                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
+                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.withHoldingList),
                 TicketStatus = (int)TicketStatus.Refund,
                 TicketType = (int)BettransType.Reserve
             });
