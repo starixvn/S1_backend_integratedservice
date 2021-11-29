@@ -500,7 +500,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData_PP> GetUnsettledListRng_PP()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_PP>("Service_BettransRng_PP_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_PP>("Service_BettransRng_PP_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransLC_PP_Payout(long roundId)
@@ -518,7 +518,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData_PP> GetUnsettledListLC_PP()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_PP>("Service_BettransLC_PP_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_PP>("Service_BettransLC_PP_Unsettle_Get_V3", commandType: CommandType.StoredProcedure);
         }
 
         //public int SettledRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, out decimal afterAmount)
