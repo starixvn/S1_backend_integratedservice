@@ -586,6 +586,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int AdjustmentRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_PP.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.AdjustmentRNG_PP(tpCustInfo, bettingDataRNG_PP, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         public int SetSettleFlag_BettransRng_PP_Payout(long roundId, int gameType)
         {
             if (gameType == (int)GameType.PP_RNG)
