@@ -42,8 +42,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba_MacauGame = 26,
         Saba_ChinaLottery = 38,
         Saba_Vgaming = 59,
-        Saba_Bitcoin = 62,
-        Saba_SportsLottery = 169
+        Saba_Bitcoin = 62
     }
 
     public enum Tp
