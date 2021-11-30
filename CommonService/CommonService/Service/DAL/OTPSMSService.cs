@@ -22,7 +22,7 @@ namespace CommonService.Service.DAL
         {
             SendOTPSMSResult result = new SendOTPSMSResult();
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { CustId = custId, Type = type });
+            var p = new DynamicParameters(new { CustId = custId, _OTPType = type });
             p.Add("Request_id", dbType: DbType.String, direction: ParameterDirection.Output);
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -57,7 +57,7 @@ namespace CommonService.Service.DAL
             string request_id = null;
             SendOTPSMSResult result = new SendOTPSMSResult();
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { CustId = custId, OTPNum = sOTPNum, OTPType = type, TimeOutMin = 5});
+            var p = new DynamicParameters(new { CustId = custId, _OTPType = type, OTPNum = sOTPNum, TimeOutMin = 5});
             p.Add("Request_id",request_id, dbType: DbType.String, direction: ParameterDirection.InputOutput);
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -74,7 +74,7 @@ namespace CommonService.Service.DAL
         {
             SendOTPSMSResult result = new SendOTPSMSResult();
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { CustId = verifyOTPReq.CustId, OTPNumInput = verifyOTPReq.InputOTP, OTPType = type });
+            var p = new DynamicParameters(new { CustId = verifyOTPReq.CustId, _OTPType = type, OTPNumInput = verifyOTPReq.InputOTP });
             p.Add("OTPResult", dbType: DbType.Int32, direction: ParameterDirection.Output);
             conn.Execute("Service_VerifyOTPinfo_Get", p, commandType: CommandType.StoredProcedure);
 
