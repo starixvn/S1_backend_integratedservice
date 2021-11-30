@@ -337,6 +337,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string platform { get; set; }
         public string userId { get; set; }
         public decimal amount { get; set; }
+        public string currency { get; set; }
         public DateTime txTime { get; set; }
         public TpCustInfo tpCustInfo { get; set; }
     }

@@ -542,6 +542,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 56 => GameType.Saba_ChinaLottery,
                 69 => GameType.Saba_Bitcoin,
                 165 => GameType.Saba_CardClub,
+                169 => GameType.Saba_SportsLottery,
                 171 => GameType.Saba_Vgaming,
                 200 => GameType.Saba_SabaClub,
                 202 => GameType.Saba_Keno,

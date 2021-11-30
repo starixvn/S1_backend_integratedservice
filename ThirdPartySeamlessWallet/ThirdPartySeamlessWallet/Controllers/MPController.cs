@@ -93,6 +93,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string requestAmount { get; set; }
             public string gameId { get; set; }
             public string orderId { get; set; }
+            public string roundId { get; set; }
+            public string gameNo { get; set; }
         }
 
         #endregion
@@ -185,15 +187,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
-
-                //if (_environment.IsDevelopment() && transfer.requestAmount >= 300)
-                //{
-                //    System.Threading.Thread.Sleep(60000);
-                //    sResult = DoEncrypt(Fatal, Deskey);
-                //    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
-                //    return sResult;
-                //}
-
+                
                 var result = _bettingBLL.MoneyOutPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -386,6 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
+
                 var result = _settledBLL.CancelMoneyInPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -454,6 +449,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var requestAmount = jsonParsedArray["requestAmount"]?.ToString();
                 var gameId = jsonParsedArray.ContainsKey("gameId") ? jsonParsedArray["gameId"].ToString() : "";//jsonParsedArray["gameId"]?.ToString();
                 var orderId = jsonParsedArray["orderId"]?.ToString();
+                var roundId = jsonParsedArray["roundId"]?.ToString();
+                var gameNo = jsonParsedArray["gameNo"]?.ToString();
 
                 if (string.IsNullOrEmpty(channelId) || channelId != agent)
                 {
@@ -516,6 +513,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 resp.account = account;
                 resp.requestAmount = requestAmount;
                 resp.gameId = gameId;
+                resp.roundId = roundId;
+                resp.gameNo = gameNo;
                 resp.orderId = orderId;
                 _logger.LogInformation($"Request Check: {JsonConvert.SerializeObject(resp)}");
                 return resp;
