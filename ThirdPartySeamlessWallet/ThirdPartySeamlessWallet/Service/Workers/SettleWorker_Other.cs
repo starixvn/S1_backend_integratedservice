@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gametype,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.SettleTime,
+                                TransTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.TransTime).AddHours(-8).ToUnixTimeSeconds(),
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                             };
