@@ -128,7 +128,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
@@ -214,7 +215,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
