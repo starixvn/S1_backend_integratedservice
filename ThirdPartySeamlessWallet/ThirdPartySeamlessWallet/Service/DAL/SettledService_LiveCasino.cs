@@ -1806,35 +1806,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var result = 0;
-
-            string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
-            var p = new DynamicParameters(new
-            {
-                TransId = mixUniqueId,
-                username = bettingData_EBet.username,
-                channelId = bettingData_EBet.channelId,
-                money = bettingData_EBet.money,
-                type = bettingData_EBet.type,
-                platform = bettingData_EBet.platform,
-                currency = bettingData_EBet.currency,
-                seqNo = bettingData_EBet.seqNo,
-                Event = bettingData_EBet.Event,
-                timestamp = bettingData_EBet.timestamp,
-                tableCode = bettingData_EBet.detail.tableCode,
-                roundCode = bettingData_EBet.detail.roundCode,
-                betTime = bettingData_EBet.timestamp,
-                totalBet = bettingData_EBet.detail.totalBet,
-                validBet = bettingData_EBet.detail.validBet,
-                detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
-                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
-                TicketStatus = (int)TicketStatus.Refund,
-                TicketType = (int)BettransType.Reserve
-            });
-
             conn.Open();
             using var trans = conn.BeginTransaction();
+            
             try
             {
+                var betList = (bettingData_EBet.detail.withHoldingList != null) ? JsonConvert.SerializeObject(bettingData_EBet.detail.withHoldingList) : JsonConvert.SerializeObject(bettingData_EBet.detail.betList);
+                string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
+                var p = new DynamicParameters(new
+                {
+                    TransId = mixUniqueId,
+                    username = bettingData_EBet.username,
+                    channelId = bettingData_EBet.channelId,
+                    money = bettingData_EBet.money,
+                    type = bettingData_EBet.type,
+                    platform = bettingData_EBet.platform,
+                    currency = bettingData_EBet.currency,
+                    seqNo = bettingData_EBet.seqNo,
+                    Event = bettingData_EBet.Event,
+                    timestamp = bettingData_EBet.timestamp,
+                    tableCode = bettingData_EBet.detail.tableCode,
+                    roundCode = bettingData_EBet.detail.roundCode,
+                    betTime = bettingData_EBet.timestamp,
+                    totalBet = bettingData_EBet.detail.totalBet,
+                    validBet = bettingData_EBet.detail.validBet,
+                    detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
+                    betList = betList,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    TicketType = (int)BettransType.Reserve
+                });
+
                 result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
@@ -2130,10 +2131,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return list;
         }
 
-        public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
+        public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_EBet>("Service_BettransLC_EBet_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_EBet(string TransId)
