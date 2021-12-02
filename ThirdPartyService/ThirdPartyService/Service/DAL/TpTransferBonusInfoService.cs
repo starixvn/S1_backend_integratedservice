@@ -131,7 +131,7 @@ namespace ThirdPartyService.Service.DAL
                 if (isSuccess)
                     trans.Commit();
             }
-            else if (transferResult.Data.Status == TransferStatus.Fail)
+            else if (transferResult.Data.Status == TransferStatus.Fail || transferResult.Data.Status == TransferStatus.Pending)
             {
                 using var conn = new MySqlConnection(_connectionString);
                 conn.Open();
