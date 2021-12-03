@@ -16,53 +16,91 @@ namespace ThirdPartyService.Service.Worker
 {
     public class WorkerService : BackgroundService
     {
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<WorkerService> logger;
-        private readonly TpTransferInfo tpTransferInfo;
-        private readonly ThirdPartyBLL thirdPartyBLL;
+        private Timer _timer;
+        private Timer _bonusTimer;
+        private readonly ILogger<WorkerService> _logger;
+        private readonly TpTransferInfo _tpTransferInfo;
+        private readonly ThirdPartyBLL _thirdPartyBll;
 
-        public WorkerService(ILogger<WorkerService> logger, IHostEnvironment environment, TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBLL)
+        public WorkerService(ILogger<WorkerService> logger,TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBll)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.tpTransferInfo = tpTransferInfo;
-            this.thirdPartyBLL = thirdPartyBLL;
+            _logger = logger;
+            _tpTransferInfo = tpTransferInfo;
+            _thirdPartyBll = thirdPartyBll;
         }
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                DoTask();
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(30000, stoppingToken);
-            }
+            // _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _bonusTimer = new Timer(DoTaskForBonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
         }
 
-        private void DoTask()
+        // private void DoTask(object state)
+        // {
+        //     try
+        //     {
+        //         var tpTransferList = _tpTransferInfo.TpTransferPendingGet();
+        //
+        //         if (tpTransferList != null)
+        //         {
+        //             foreach (var tpTransfer in tpTransferList)
+        //             {
+        //                 try
+        //                 {
+        //                     _thirdPartyBll.CheckTransfer(tpTransfer);
+        //                 }
+        //                 catch (Exception ex)
+        //                 {
+        //                     _logger.LogError(ex, ex.Message);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, ex.Message);
+        //     }
+        //     finally
+        //     {
+        //         var dueTimeSpan = TimeSpan.FromMinutes(10);
+        //         _timer.Change(dueTimeSpan, TimeSpan.Zero);
+        //     }
+        // }
+
+        private void DoTaskForBonusTransfer(object state)
         {
             try
             {
-                var tpTransferList = tpTransferInfo.TpTransferPendingGet();
-
+                var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet();
+                
                 if (tpTransferList != null)
                 {
                     foreach (var tpTransfer in tpTransferList)
                     {
+                        var pendingTpBonusTransfer = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId ,  tpTransfer.Bonus);
                         try
                         {
-                            thirdPartyBLL.CheckTransfer(tpTransfer);
+                            if (pendingTpBonusTransfer != null)
+                            {
+                                _thirdPartyBll.BonusCheckTransfer(pendingTpBonusTransfer);
+                            }
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex, ex.Message);
+                            _logger.LogError(ex, ex.Message);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
+                _bonusTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
