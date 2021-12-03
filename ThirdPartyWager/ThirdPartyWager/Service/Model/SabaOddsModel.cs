@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.Model
 
     public class GetMatch
     {
-        public string id { get; set; }
+        public int id { get; set; }
         public string ge { get; set; }
         public string gt { get; set; }
         public string gs { get; set; }
@@ -63,5 +63,12 @@ namespace ThirdPartyWager.Service.Model
         public string u { get; set; }
         public string time { get; set; }
         public string timestamp { get; set; }
+    }
+    public class UpdateOdd
+    {
+        public int id { get; set; }
+        public string h { get; set; }
+        public string o { get; set; }
+        public string u { get; set; }
     }
 }

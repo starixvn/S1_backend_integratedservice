@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
@@ -94,8 +95,11 @@ namespace ThirdParty.EBet
             };
 
             var url = $"{apiUrl}/api/userBetTracer";
-            var json = HttpPost(url, ToJson(sParam), "application/json");
+            var content = new StringContent(ToJson(sParam), Encoding.UTF8, "application/json");
+            using var client = new HttpClient();
+            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
             var result = FromJson<DetailResult>(json);
+            
             if (result.status != 200)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");

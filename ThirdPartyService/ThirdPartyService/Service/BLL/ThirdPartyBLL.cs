@@ -479,7 +479,7 @@ namespace ThirdPartyService.Service.BLL
                 Amount = tpBonusCancelTransfer.RemainingBonus,
                 inputs = new Dictionary<string, string>()
                 {
-                    {"Source","BonusCancel"}
+                    { "Source", "BonusCancel" }
                 }
             };
 
@@ -527,6 +527,10 @@ namespace ThirdPartyService.Service.BLL
             
             //檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
             var thirdPartyBalance = balanceApiResult.Data.balance;
+            if (tpTransfer.TpId == (int)TpEnum.Saba && thirdPartyBalance < 1)
+            {
+                thirdPartyBalance = 0;
+            }
             if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
             {
                 thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;

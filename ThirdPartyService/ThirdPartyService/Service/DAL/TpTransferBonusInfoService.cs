@@ -189,9 +189,9 @@ namespace ThirdPartyService.Service.DAL
                         Bonus = tpBonusCancelTransfer.RemainingBonus
                     }, conn, trans);
 
-                if (result >= 0 && tpBonusCancelTransfer.RemainingBonus > 0 && tpBonusCancelTransfer.RefundAmount > 0)
+                if (result >= 0 && tpBonusCancelTransfer.RemainingBonus > 0)
                 {
-                    var memo = $"CancelBonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus:#,##0.##}, " +
+                    var memo = $"Cancel Bonus: BonusId={tpBonusCancelTransfer.BonusId}, Remaining Bonus={tpBonusCancelTransfer.RemainingBonus:#,##0.##}, " +
                                $"Refund Amount={tpBonusCancelTransfer.RefundAmount:#,##0.##}";
 
                     result = _walletService.SetBalance(
@@ -204,7 +204,7 @@ namespace ThirdPartyService.Service.DAL
                         tpBonusCancelTransfer.BonusId.ToString(), 
                         out _, conn, trans);
 
-                    if (result >= 0)
+                    if (result >= 0 && tpBonusCancelTransfer.RefundAmount > 0)
                     {
                         result = _walletService.SetWithdrawalLimit(tpBonusCancelTransfer.CustId,
                             tpBonusCancelTransfer.UserName,

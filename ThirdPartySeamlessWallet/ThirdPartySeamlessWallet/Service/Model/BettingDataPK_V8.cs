@@ -12,15 +12,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long timestamp { get; set; }
     }
 
-    public class SettleDataPK_V8
+    public class SettleDataPK_V8 : SettleData
     {
         public string GameID { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal Revenue { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
-        public long SettleTime { get; set; }
         public int KindID { get; set; }
     }
 

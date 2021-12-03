@@ -1,22 +1,31 @@
-﻿using System.Data;
-using Dapper;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class LiveStreamingService
     {
-        private readonly IConfiguration _configuration;
+        private readonly MySqlClient _mySqlClient;
 
-        public LiveStreamingService(IConfiguration configuration)
+        public LiveStreamingService(IServiceProvider provider)
         {
-            this._configuration = configuration;
+            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
+            var conn = provider.GetRequiredService<IConfiguration>().GetConnectionString("ConnectionString");
+            _mySqlClient = new MySqlClient(conn, log);
         }
-        public int SetLiveStreaming(string liveStreamingJson)
+        public async Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {
-            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_LiveStreaming_Set", new { LiveStreamingJson = liveStreamingJson }, commandType: CommandType.StoredProcedure);
+            return await _mySqlClient.ExecuteAsync("Service_LiveStreaming_Set_V2", liveStreaming );
+        }
+        public int TruncateLiveStreaming()
+        {
+            return _mySqlClient.Execute("Service_TruncateLiveStreaming_Del");
         }
     }
 }

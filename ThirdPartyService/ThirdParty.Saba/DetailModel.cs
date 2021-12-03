@@ -48,7 +48,7 @@ namespace ThirdParty.Saba
         public string combo_type { get; set; }
         public string home_score { get; set; }
         public Leaguename[] leaguename { get; set; }
-        public int percentage { get; set; }
+        public double percentage { get; set; }
         public string sport_type { get; set; }
         public string tokenmoney { get; set; }
         public Cashoutdata[] CashOutData { get; set; }
@@ -62,17 +62,17 @@ namespace ThirdParty.Saba
         public string total_score { get; set; }
         public string version_key { get; set; }
         public string wallet_type { get; set; }
-        public string after_amount { get; set; }
+        public decimal after_amount { get; set; }
         public Awayteamname[] awayteamname { get; set; }
         public Hometeamname[] hometeamname { get; set; }
         public string parlay_ref_no { get; set; }
         public string ticket_status { get; set; }
-        public int buyback_amount { get; set; }
-        public int discount_stake { get; set; }
+        public decimal buyback_amount { get; set; }
+        public decimal discount_stake { get; set; }
         public string esports_gameid { get; set; }
         public DateTime? match_datetime { get; set; }
-        public int original_stake { get; set; }
-        public string validbetamount { get; set; }
+        public decimal original_stake { get; set; }
+        public decimal validbetamount { get; set; }
         public decimal winlost_amount { get; set; }
         public Colossusbetdata[] ColossusBetData { get; set; }
         public string lottery_bettype { get; set; }
@@ -115,14 +115,14 @@ namespace ThirdParty.Saba
 
     public class Cashoutdata
     {
-        public string stake { get; set; }
-        public string bet_type { get; set; }
+        public decimal stake { get; set; }
+        public int bet_type { get; set; }
         public DateTime? transdate { get; set; }
         public string cashout_id { get; set; }
-        public string real_stake { get; set; }
+        public decimal real_stake { get; set; }
         public string ticket_status { get; set; }
-        public string buyback_amount { get; set; }
-        public string winlost_amount { get; set; }
+        public decimal buyback_amount { get; set; }
+        public decimal winlost_amount { get; set; }
         public DateTime? winlost_datetime { get; set; }
     }
 
@@ -143,13 +143,13 @@ namespace ThirdParty.Saba
         public string line { get; set; }
         public string sold { get; set; }
         public string cb_id { get; set; }
-        public string stake { get; set; }
+        public decimal stake { get; set; }
         public string status { get; set; }
         public string remains { get; set; }
         public string bet_type { get; set; }
         public string betcheck { get; set; }
         public DateTime? transdate { get; set; }
-        public string winlost_amount { get; set; }
+        public decimal winlost_amount { get; set; }
     }
 
     public class Singleparlaydata

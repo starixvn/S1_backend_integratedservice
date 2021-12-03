@@ -693,6 +693,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.SettleTime,
                                 SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId)
                             };
 

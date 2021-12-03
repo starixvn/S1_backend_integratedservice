@@ -128,7 +128,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
@@ -214,7 +215,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
@@ -300,6 +302,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gametype,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.TransTime).AddHours(-8).ToUnixTimeSeconds(),
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                             };

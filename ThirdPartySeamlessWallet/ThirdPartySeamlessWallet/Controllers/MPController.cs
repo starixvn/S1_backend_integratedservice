@@ -93,6 +93,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string requestAmount { get; set; }
             public string gameId { get; set; }
             public string orderId { get; set; }
+            public string roundId { get; set; }
+            public string gameNo { get; set; }
         }
 
         #endregion
@@ -185,15 +187,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
-
-                //if (_environment.IsDevelopment() && transfer.requestAmount >= 300)
-                //{
-                //    System.Threading.Thread.Sleep(60000);
-                //    sResult = DoEncrypt(Fatal, Deskey);
-                //    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
-                //    return sResult;
-                //}
-
+                
                 var result = _bettingBLL.MoneyOutPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -386,12 +380,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
+
                 var result = _settledBLL.CancelMoneyInPK_MP(transfer, out decimal tpAffterAmount);
-                if (result > 0 || result == -1)
+                if (result > 0)
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.account).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.player).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
@@ -406,6 +401,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                     sResult = DoEncrypt(Param, Deskey);
                     _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
                     _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    return sResult;
+                }
+                else if (result == -1)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.player);
+
+                    Response.StatusCode = (int)Error.INVALID_DATA;
+                    var Param = new
+                    {
+                        code = 34,
+                        balance = tpCustBalance.Balance
+                    };
+
+                    sResult = DoEncrypt(Param, Deskey);
+                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
+                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 
@@ -438,6 +449,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var requestAmount = jsonParsedArray["requestAmount"]?.ToString();
                 var gameId = jsonParsedArray.ContainsKey("gameId") ? jsonParsedArray["gameId"].ToString() : "";//jsonParsedArray["gameId"]?.ToString();
                 var orderId = jsonParsedArray["orderId"]?.ToString();
+                var roundId = jsonParsedArray["roundId"]?.ToString();
+                var gameNo = jsonParsedArray["gameNo"]?.ToString();
 
                 if (string.IsNullOrEmpty(channelId) || channelId != agent)
                 {
@@ -500,6 +513,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 resp.account = account;
                 resp.requestAmount = requestAmount;
                 resp.gameId = gameId;
+                resp.roundId = roundId;
+                resp.gameNo = gameNo;
                 resp.orderId = orderId;
                 _logger.LogInformation($"Request Check: {JsonConvert.SerializeObject(resp)}");
                 return resp;

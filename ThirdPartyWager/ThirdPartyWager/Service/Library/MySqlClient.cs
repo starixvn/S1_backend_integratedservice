@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -60,7 +60,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return true;
         }
 
@@ -99,17 +99,17 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation(command);
+            _logger.LogDebug(command);
             return result;
         }
 
-        public async Task<int> ExecuteAsync(string name, DynamicParameters parameters)
+        public async Task<int> ExecuteAsync(string name, object parameters)
         {
             var sw = Stopwatch.StartNew();
             int result;
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
+                await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
@@ -119,7 +119,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -139,7 +139,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation(name);
+            _logger.LogDebug(name);
             return result;
         }
 
@@ -159,7 +159,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -181,7 +181,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -201,7 +201,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -224,7 +224,7 @@ namespace ThirdPartyWager.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
     }

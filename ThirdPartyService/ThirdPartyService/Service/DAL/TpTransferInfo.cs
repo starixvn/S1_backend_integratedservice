@@ -144,11 +144,11 @@ namespace ThirdPartyService.Service.DAL
                         p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                         p.Add("WithdrawalLimit", withdrawalLimit, dbType: DbType.Decimal, direction: ParameterDirection.InputOutput);
                         var res = conn.Execute("Service_WithdrawalLimit_Set", p, trans, commandType: CommandType.StoredProcedure);
-                        if (res > 0)
-                        {
-                            var rollover = p.Get<decimal>("WithdrawalLimit");
-                            conn.Execute("Service_BonusAmount_Set", new { BonusId = bonusId, LockedAmount = tpTransfer.Amount, Rollover = Math.Abs(rollover) }, trans, commandType: CommandType.StoredProcedure);
-                        }
+                        // if (res > 0)
+                        // {
+                        //     var rollover = p.Get<decimal>("WithdrawalLimit");
+                        //     conn.Execute("Service_BonusAmount_Set", new { BonusId = bonusId, LockedAmount = tpTransfer.Amount, Rollover = Math.Abs(rollover) }, trans, commandType: CommandType.StoredProcedure);
+                        // }
                     }
                 }
 
