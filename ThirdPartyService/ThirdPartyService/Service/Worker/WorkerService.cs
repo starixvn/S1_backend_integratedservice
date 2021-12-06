@@ -1,14 +1,8 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ThirdPartyCore.Model;
-using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 
@@ -31,42 +25,42 @@ namespace ThirdPartyService.Service.Worker
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             _bonusTimer = new Timer(DoTaskForBonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        // private void DoTask(object state)
-        // {
-        //     try
-        //     {
-        //         var tpTransferList = _tpTransferInfo.TpTransferPendingGet();
-        //
-        //         if (tpTransferList != null)
-        //         {
-        //             foreach (var tpTransfer in tpTransferList)
-        //             {
-        //                 try
-        //                 {
-        //                     _thirdPartyBll.CheckTransfer(tpTransfer);
-        //                 }
-        //                 catch (Exception ex)
-        //                 {
-        //                     _logger.LogError(ex, ex.Message);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError(ex, ex.Message);
-        //     }
-        //     finally
-        //     {
-        //         var dueTimeSpan = TimeSpan.FromMinutes(10);
-        //         _timer.Change(dueTimeSpan, TimeSpan.Zero);
-        //     }
-        // }
+        private void DoTask(object state)
+        {
+            try
+            {
+                var tpTransferList = _tpTransferInfo.TpTransferPendingGet();
+        
+                if (tpTransferList != null)
+                {
+                    foreach (var tpTransfer in tpTransferList)
+                    {
+                        try
+                        {
+                            _thirdPartyBll.CheckTransfer(tpTransfer);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
 
         private void DoTaskForBonusTransfer(object state)
         {
