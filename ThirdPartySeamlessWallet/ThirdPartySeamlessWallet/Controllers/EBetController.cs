@@ -242,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBalanceResp.currency = tpCustBalance.TpCurrencyId;
             getBalanceResp.Event = syncCreditReq.Event;
             getBalanceResp.seqNo = syncCreditReq.seqNo;
-            getBalanceResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getBalanceResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             log2File.Info($"{JsonConvert.SerializeObject(syncCreditReq)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
 
@@ -264,13 +264,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             getBetResp.seqNo = getBetReq.seqNo;
             getBetResp.username = getBetReq.username;
             getBetResp.Event = getBetReq.Event;
-            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             // check signature
             if (string.IsNullOrEmpty(getBetReq.signature))
             {
                 getBetResp.status = 4026;
-                getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         if (tpCheck == null || tpCheck.Locked)
                         {
                             getBetResp.status = 4037;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -308,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         if (tpCheck.Token != HttpUtility.UrlDecode(getBetReq.sessionToken))
                         {
                             getBetResp.status = 410;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -319,14 +319,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                             //if (environment.IsDevelopment() && getBetReq.type == 1 && getBetReq.money == -40m)
                             //{
                             //    getBetResp.status = 500;
-                            //    getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            //    getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             //    log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             //    return getBetResp;
                             //}
                             getBetResp.status = 200;
                             getBetResp.money = tpAffterAmount;
                             getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (result == -1)
                         {
@@ -334,12 +334,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (tpAffterAmount < 0)
                         {
                             getBetResp.status = 500;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -356,7 +356,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (result == -1)
                         {
@@ -364,14 +364,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 201;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -388,7 +388,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (result == -1)
                         {
@@ -396,14 +396,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 201;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -420,7 +420,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (result == -1)
                         {
@@ -429,14 +429,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -453,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else if (result == -1)
                         {
@@ -461,14 +461,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.status = 201;
                             getBetResp.money = tpCustBalance.Balance;
                             getBetResp.moneyBefore = tpCustBalance.Balance - getBetReq.money;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                         }
                         else
                         {
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 500;
                             getBetResp.money = tpCustBalance.Balance;
-                            getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
@@ -483,7 +483,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", $"EBet_increaseCredit", ex);
                 return getBetResp;
             }
@@ -503,7 +503,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getCreditRecordResp.status = 200;
             getCreditRecordResp.seqNo = getCreditRecordReq.seqNo;
             getCreditRecordResp.Event = getCreditRecordReq.Event;
-            getCreditRecordResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            getCreditRecordResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             getCreditRecordResp.username = getCreditRecordReq.username;
 
             var data = settledBLL.GetCreditRecordLC_EBet(getCreditRecordReq.username, getCreditRecordReq.querySeqNo);
@@ -578,13 +578,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return getRefundSingleWalletResp;
                     }
                 }
-                getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getRefundSingleWalletResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}", logName);
                 return getRefundSingleWalletResp;
             }
             catch (Exception ex)
             {
-                getRefundSingleWalletResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getRefundSingleWalletResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getRefundSingleWalletResp)}\r\n{ex}", logName, ex);
                 return getRefundSingleWalletResp;
             }
@@ -636,13 +636,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 getAutoBatchRefundResp.refundResultList = keyValuePairs.Values.ToList();
                 getAutoBatchRefundResp.status = 200;
-                getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getAutoBatchRefundResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}", logName);
                 return getAutoBatchRefundResp;
             }
             catch (Exception ex)
             {
-                getAutoBatchRefundResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getAutoBatchRefundResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getAutoBatchRefundResp)}\r\n{ex}", logName, ex);
                 return getAutoBatchRefundResp;
             }
@@ -650,7 +650,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {
-            //UnicodeEncoding ByteConverter = new UnicodeEncoding();
             var encoder = new UTF8Encoding();
             using var RSAalg = new RSACryptoServiceProvider();
             RSAParameters priKey = RSAalg.ExportParameters(true);

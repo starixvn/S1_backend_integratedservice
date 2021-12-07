@@ -78,11 +78,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? payoutTime { get; set; }
         public long betStopTime { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IList<WithHoldingListEbet> withHoldingList { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string withHoldingSeqNo { get; set; }
     }
 
     public class BetListEbet
     {
-        public int betType { get; set; }
+        public long betType { get; set; }
         public decimal betMoney { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -90,6 +96,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public decimal? payout { get; set; }
+    }
+
+    public class WithHoldingListEbet
+    {
+        public long betType { get; set; }
+        public decimal withHolding { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string seqNo { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int status { get; set; } // 1: 成功、0: 失败或没有金额需要返还、11:退款、13:退款失败
+        
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string withHoldingId { get; set; }
     }
 
     public class CreditRecordData_EBet

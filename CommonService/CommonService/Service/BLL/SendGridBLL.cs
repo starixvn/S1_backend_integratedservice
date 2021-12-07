@@ -112,5 +112,65 @@ namespace CommonService.Service.BLL
 
             return apiResult;
         }
+        
+        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, dynamic dynamicTemplateData, TemplateType type)
+        {
+            var apiResult = new ApiResult();
+
+            if (!sendGridConfig.Value.ContainsKey(custInfo.SiteName))
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+            }
+
+            var config = sendGridConfig.Value[custInfo.SiteName];
+
+            var headerParams = new Dictionary<string, string> {
+                { "Authorization", $"Bearer {config.ApiKey}"}
+            };
+
+            var apiUrl = config.ApiUrl;
+            var sendGridResetPasswordBody = new SendGridTemplateBody
+            {
+                from = new NameEmail() {name = config.mailFrom.name, email = config.mailFrom.email},
+                personalizations = new List<TemplatePersonalization>()
+                {
+                    new TemplatePersonalization()
+                    {
+                        to = new List<NameEmail>()
+                        {
+                            new NameEmail {name = custInfo.UserName, email = custInfo.Email}
+                        },
+                        dynamic_template_data = dynamicTemplateData
+                    }
+                },
+                template_id = CreateTemplate(type, config, custInfo.UserLang)
+            };
+            
+            using var result = await httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
+            if (result.StatusCode == System.Net.HttpStatusCode.Accepted)
+            {
+                apiResult.ErrorCode = 0;
+            }
+            else
+            {
+                var resultResp = JsonConvert.DeserializeObject<Result>(result.Content.ReadAsStringAsync().Result);
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Message = resultResp.errors[0].message;
+                apiResult.RawMessage = resultResp.errors[0].message;
+            }
+            return apiResult;
+        }
+
+        private string CreateTemplate(TemplateType type, SendGridConfig config, string userLang)
+        {
+            return type switch
+            {
+                TemplateType.ResetPassword => config.ResetPasswordTemplate[userLang],
+                TemplateType.VerificationMail => config.VerifyMailTemplate[userLang],
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, @"template type not define")
+            };
+        }
+        
+        
     }
 }
