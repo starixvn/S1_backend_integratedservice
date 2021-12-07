@@ -1,22 +1,32 @@
-﻿using System.Data;
-using Dapper;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class SabaOddsService
     {
-        private readonly IConfiguration _configuration;
+        private readonly MySqlClient _mySqlClient;
 
-        public SabaOddsService(IConfiguration configuration)
+        public SabaOddsService(IServiceProvider provider)
         {
-            this._configuration = configuration;
+            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
+            var conn = provider.GetRequiredService<IConfiguration>().GetConnectionString("ConnectionString");
+            _mySqlClient = new MySqlClient(conn, log);
         }
-        public int SetSabaOdds(string sabaOddsJson)
+        public async Task<int> SetSabaOdds(IEnumerable<UpdateOdd> sabaOdds)
         {
-            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_SabaOdds_Set", new { SabaOddsJson = sabaOddsJson }, commandType: CommandType.StoredProcedure);
+            return await _mySqlClient.ExecuteAsync("Service_SabaOdds_Set_V2", sabaOdds);
+        }
+        
+        public IEnumerable<int> GetSabaOddsMatchId()
+        {
+            return _mySqlClient.Query<int>("Service_SabaOddsMatchId_Get");
         }
     }
 }

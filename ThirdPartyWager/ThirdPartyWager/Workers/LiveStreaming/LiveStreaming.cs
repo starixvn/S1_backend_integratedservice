@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThirdPartyWager.Service.BLL;
@@ -15,25 +16,23 @@ namespace ThirdPartyWager.Workers
 {
     public class LiveStreaming : BackgroundService
     {
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<LiveStreaming> logger;
-        private readonly Log2File log2File;
-        private readonly HttpHelper httpHelper;
-        private readonly LiveStreamingBLL liveStreamingBLL;
-        private Timer timerLiveStreaming;
+        private readonly IHostEnvironment _environment;
+        private readonly ILogger<LiveStreaming> _logger; 
+        private readonly HttpHelper _httpHelper;
+        private readonly LiveStreamingBLL _liveStreamingBll;
+        private Timer _timerLiveStreaming;
 
-        public LiveStreaming(IHostEnvironment environment, ILogger<LiveStreaming> logger, Log2File log2File, HttpHelper httpHelper, LiveStreamingBLL liveStreamingBLL)
+        public LiveStreaming(IServiceProvider provider)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.log2File = log2File;
-            this.httpHelper = httpHelper;
-            this.liveStreamingBLL = liveStreamingBLL;
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _logger = provider.GetRequiredService<ILogger<LiveStreaming>>();
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _liveStreamingBll = provider.GetRequiredService<LiveStreamingBLL>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            timerLiveStreaming = new Timer(DoLiveStreamingAsync, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerLiveStreaming = new Timer(DoLiveStreamingAsync, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -57,23 +56,24 @@ namespace ThirdPartyWager.Workers
                 string newurl = builder.ToString();
 
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
-                var result = await httpHelper.GetClient().SendAsync(data);
+                var result = await _httpHelper.GetClient().SendAsync(data);
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    liveStreamingBLL.SetLiveStreaming(JsonSerializer.Serialize(JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result)));
+                    _liveStreamingBll.TruncateLiveStreaming();
+                    var resultModel = JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result);
+                        await _liveStreamingBll.SetLiveStreaming(resultModel.Match);
                 }
             }
             catch (Exception ex)
             {
                 isError = true;
-                logger.LogError(ex, GetCurrentAsyncMethod());
-                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
+                _logger.LogError(ex, GetCurrentAsyncMethod());
             }
             finally
             {
                 TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-                if (environment.IsDevelopment())
+                if (_environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);
                     dueTimeSpan = TimeSpan.FromSeconds(30);
@@ -84,13 +84,13 @@ namespace ThirdPartyWager.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
 
-                timerLiveStreaming.Change(dueTimeSpan, TimeSpan.Zero);
+                _timerLiveStreaming.Change(dueTimeSpan, TimeSpan.Zero);
             }
 
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timerLiveStreaming?.Change(Timeout.Infinite, 0);
+            _timerLiveStreaming?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

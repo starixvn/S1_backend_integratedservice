@@ -86,6 +86,7 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang)
         {
             var apiResult = new ApiResult();
+            string areaCode = custInfo.AreaCode;
             string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
             var Config = SkyLineSMSServiceTypeConfig.Value[custInfo.SiteName].OTP;
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
@@ -101,6 +102,10 @@ namespace CommonService.Service.BLL
             else if (userLang.Equals("id", StringComparison.OrdinalIgnoreCase) || PhoneNo.StartsWith("+62"))
             {
                 smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", "id"), OTPNum);
+            }
+            else if (areaCode.StartsWith("+91") || PhoneNo.StartsWith("91"))//skyline指定
+            {
+                smsMessage = $"Your Verification Code is {OTPNum},Valid for 2 minutes.";
             }
             else if (userLang.Equals("hi", StringComparison.OrdinalIgnoreCase))
             {

@@ -1,39 +1,40 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers
 {
     public class SabaOdds : BackgroundService
     {
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<SabaOdds> logger;
-        private readonly Log2File log2File;
-        private readonly HttpHelper httpHelper;
-        private readonly SabaOddsBLL sabaOddsBLL;
-        private Timer timerSabaOdds;
+        private readonly IHostEnvironment _environment;
+        private readonly ILogger<SabaOdds> _logger;
+        private readonly HttpHelper _httpHelper;
+        private readonly SabaOddsBLL _sabaOddsBll;
+        private Timer _timerSabaOdds;
 
-        public SabaOdds(IHostEnvironment environment, ILogger<SabaOdds> logger, Log2File log2File, HttpHelper httpHelper, SabaOddsBLL sabaOddsBLL)
+        public SabaOdds(IServiceProvider provider)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.log2File = log2File;
-            this.httpHelper = httpHelper;
-            this.sabaOddsBLL = sabaOddsBLL;
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _logger = provider.GetRequiredService<ILogger<SabaOdds>>();
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _sabaOddsBll = provider.GetRequiredService<SabaOddsBLL>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            timerSabaOdds = new Timer(DoSabaOddsAsync, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSabaOdds = new Timer(DoSabaOddsAsync, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -58,7 +59,7 @@ namespace ThirdPartyWager.Workers
                 string newurl = builder.ToString();
 
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
-                var result = await httpHelper.GetClient().SendAsync(data);
+                var result = await _httpHelper.GetClient().SendAsync(data);
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
@@ -69,23 +70,31 @@ namespace ThirdPartyWager.Workers
                     xmlDoc.LoadXml(Content);
                     string sabaOddsJson = JsonConvert.SerializeXmlNode(xmlDoc, Newtonsoft.Json.Formatting.None, true);
                     sabaOddsJson = sabaOddsJson.Replace("@", "");
-                    //GetSabaOddsJson response = JsonConvert.DeserializeObject<GetSabaOddsJson>(json);
-                    //var b = "";
-                    sabaOddsBLL.SetSabaOdds(sabaOddsJson);
+                    var response = JsonConvert.DeserializeObject<GetSabaOddsJson>(sabaOddsJson);
+                    
+                    var updateList = response.Matches.match.Select(match => new UpdateOdd()
+                    {
+                        id = match.id, 
+                        h = match.bookie.odd.FirstOrDefault()?.h,
+                        o = match.bookie.odd.FirstOrDefault()?.o, 
+                        u = match.bookie.odd.FirstOrDefault()?.u
+                    });
+                    var listMatchId = _sabaOddsBll.GetSabaOddsMatchId();
+                    
+                    var updateOdds = updateList.Where(x => listMatchId.Contains(x.id));
+                    await _sabaOddsBll.SetSabaOdds(updateOdds);
                 }
             }
             catch (Exception ex)
             {
                 isError = true;
-                logger.LogError(ex, GetCurrentAsyncMethod());
-                log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
+                _logger.LogError(ex, GetCurrentAsyncMethod()); 
             }
             finally
             {
                 TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-                if (environment.IsDevelopment())
+                if (_environment.IsDevelopment())
                 {
-                    //dueTimeSpan = TimeSpan.FromMinutes(1);
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
@@ -94,13 +103,13 @@ namespace ThirdPartyWager.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
 
-                timerSabaOdds.Change(dueTimeSpan, TimeSpan.Zero);
+                _timerSabaOdds.Change(dueTimeSpan, TimeSpan.Zero);
             }
 
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timerSabaOdds?.Change(Timeout.Infinite, 0);
+            _timerSabaOdds?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

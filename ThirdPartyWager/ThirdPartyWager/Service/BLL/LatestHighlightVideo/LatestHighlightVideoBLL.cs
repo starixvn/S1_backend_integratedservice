@@ -1,22 +1,26 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class LatestHighlightVideoBLL
     {
-        private readonly LatestHighlightVideoService latestHighlightVideoService;
+        private readonly LatestHighlightVideoService _latestHighlightVideoService;
 
-        public LatestHighlightVideoBLL(LatestHighlightVideoService latestHighlightVideoService)
+        public LatestHighlightVideoBLL(IServiceProvider provider)
         {
-            this.latestHighlightVideoService = latestHighlightVideoService;
+            _latestHighlightVideoService = provider.GetRequiredService<LatestHighlightVideoService>();
         }
-        public int SetLatestHighlightVideo(string latestHighlightVideoJson)
+        public int SetLatestHighlightVideo(List<LatestHighlightVideoData> data)
         {
-            return latestHighlightVideoService.SetLatestHighlightVideo(latestHighlightVideoJson);
+            return _latestHighlightVideoService.SetLatestHighlightVideo(data);
         }
         public int GetLatestHighlightVideo(int SiteId, string Date, string Title)
         {
-            return latestHighlightVideoService.GetLatestHighlightVideo(SiteId, Date, Title);
+            return _latestHighlightVideoService.GetLatestHighlightVideo(SiteId, Date, Title);
         }
     }
 }
