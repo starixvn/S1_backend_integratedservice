@@ -34,7 +34,7 @@ namespace CommonService.Service.BLL
                     // 產生6位數驗證碼
                     var code = _tools.GetRandomNumString(6);
                     var verificationUrl = $"{url}?code={code}";
-                    var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new {resetpwdurl=verificationUrl}, TemplateType.VerificationMail);
+                    var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new {verifyemailurl=verificationUrl}, TemplateType.VerificationMail);
                     
                     if (sendMailResult.ErrorCode == ErrorCode.Success)
                     {
