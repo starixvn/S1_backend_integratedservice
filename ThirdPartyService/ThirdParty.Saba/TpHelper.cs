@@ -376,76 +376,88 @@ namespace ThirdParty.Saba
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
-        {
+        { 
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            string ApiUrl = new SabaConfig(inputs).ApiUrl;
-            TransferReg input = new TransferReg();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
-            input.vendor_trans_id = TransID;
-            input.amount = Amount;
-
-            if (input.amount <= 0)
+            
+            try 
             {
-                apiResult.RawMessage = "Please submit amount granter than 0";
-                apiResult.RawErrorCode = "Please submit amount granter than 0";
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Data.Status = TransferStatus.Fail;
-            }
+                string ApiUrl = new SabaConfig(inputs).ApiUrl;
+                TransferReg input = new TransferReg();
+                input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
+                input.vendor_member_id = tpCustInfo.TpUserName;
+                input.vendor_trans_id = TransID;
+                input.amount = Amount;
 
-            if (tpCustInfo.IsTest)
-                input.currency = 20;
-            else
-                input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
-            input.direction = direction == Direction.ToTp ? 1 : 0;
-            input.wallet_id = 1;
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
-
-            ApiUrl = $"{ApiUrl}/FundTransfer";
-            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
-
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<TransResult>(result);
-                if (json.error_code == 0 && json.Data.status == 0)
+                if (input.amount <= 0)
                 {
-                    apiResult.ErrorCode = ErrorCode.Success;
-                    apiResult.Data.Status = TransferStatus.Success;
-                    apiResult.Data.ThirdId = json.Data.trans_id.ToString();
-                }
-                else if (json.error_code == 0 && json.Data.status == 1)
-                {
-                    apiResult.RawMessage = apiResult.Message = json.message;
-                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.RawMessage = "Please submit amount granter than 0";
+                    apiResult.RawErrorCode = "Please submit amount granter than 0";
                     apiResult.ErrorCode = ErrorCode.Fail;
                     apiResult.Data.Status = TransferStatus.Fail;
                 }
-                else if (json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 5 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
+
+                if (tpCustInfo.IsTest)
+                    input.currency = 20;
+                else
+                    input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
+                input.direction = direction == Direction.ToTp ? 1 : 0;
+                input.wallet_id = 1;
+
+                var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
+                string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+
+                ApiUrl = $"{ApiUrl}/FundTransfer";
+                var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
+
+                if (IsJSON(result))
                 {
-                    apiResult.RawMessage = apiResult.Message = json.message;
-                    apiResult.RawErrorCode = json.error_code.ToString();
-                    apiResult.ErrorCode = ErrorCode.Fail;
-                    apiResult.Data.Status = TransferStatus.Fail;
+                    var json = JsonConvert.DeserializeObject<TransResult>(result);
+                    if (json.error_code == 0 && json.Data.status == 0)
+                    {
+                        apiResult.ErrorCode = ErrorCode.Success;
+                        apiResult.Data.Status = TransferStatus.Success;
+                        apiResult.Data.ThirdId = json.Data.trans_id.ToString();
+                    }
+                    else if (json.error_code == 0 && json.Data.status == 1)
+                    {
+                        apiResult.RawMessage = apiResult.Message = json.message;
+                        apiResult.RawErrorCode = json.error_code.ToString();
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.Data.Status = TransferStatus.Fail;
+                    }
+                    else if (json.error_code == 2 || json.error_code == 3 || json.error_code == 4 || json.error_code == 5 || json.error_code == 6 || json.error_code == 8 || json.error_code == 9 || json.error_code == 10 || json.error_code == 13)
+                    {
+                        apiResult.RawMessage = apiResult.Message = json.message;
+                        apiResult.RawErrorCode = json.error_code.ToString();
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.Data.Status = TransferStatus.Fail;
+                    }
+                    else
+                    {
+                        apiResult.RawMessage = apiResult.Message = json.message;
+                        apiResult.RawErrorCode = json.error_code.ToString();
+                        apiResult.ErrorCode = ErrorCode.TransferPending;
+                        apiResult.Data.Status = TransferStatus.Pending;
+                    }
                 }
                 else
                 {
-                    apiResult.RawMessage = apiResult.Message = json.message;
-                    apiResult.RawErrorCode = json.error_code.ToString();
+                    apiResult.RawMessage = apiResult.Message = "No Result";
+                    apiResult.RawErrorCode = "1";
                     apiResult.ErrorCode = ErrorCode.TransferPending;
                     apiResult.Data.Status = TransferStatus.Pending;
                 }
+
+                return apiResult;
             }
-            else
+            catch (Exception e)
             {
-                apiResult.RawMessage = apiResult.Message = "No Result";
+                apiResult.RawMessage = e.Message;
                 apiResult.RawErrorCode = "1";
                 apiResult.ErrorCode = ErrorCode.TransferPending;
                 apiResult.Data.Status = TransferStatus.Pending;
+                return apiResult;
             }
-
-            return apiResult;
         }
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
