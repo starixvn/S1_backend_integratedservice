@@ -1,8 +1,14 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 
@@ -10,91 +16,53 @@ namespace ThirdPartyService.Service.Worker
 {
     public class WorkerService : BackgroundService
     {
-        private Timer _timer;
-        private Timer _bonusTimer;
-        private readonly ILogger<WorkerService> _logger;
-        private readonly TpTransferInfo _tpTransferInfo;
-        private readonly ThirdPartyBLL _thirdPartyBll;
+        private readonly IHostEnvironment environment;
+        private readonly ILogger<WorkerService> logger;
+        private readonly TpTransferInfo tpTransferInfo;
+        private readonly ThirdPartyBLL thirdPartyBLL;
 
-        public WorkerService(ILogger<WorkerService> logger,TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBll)
+        public WorkerService(ILogger<WorkerService> logger, IHostEnvironment environment, TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBLL)
         {
-            _logger = logger;
-            _tpTransferInfo = tpTransferInfo;
-            _thirdPartyBll = thirdPartyBll;
+            this.environment = environment;
+            this.logger = logger;
+            this.tpTransferInfo = tpTransferInfo;
+            this.thirdPartyBLL = thirdPartyBLL;
         }
-        
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
-            _bonusTimer = new Timer(DoTaskForBonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
-            return Task.CompletedTask;
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                DoTask();
+                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                await Task.Delay(30000, stoppingToken);
+            }
         }
 
-        private void DoTask(object state)
+        private void DoTask()
         {
             try
             {
-                var tpTransferList = _tpTransferInfo.TpTransferPendingGet();
-        
+                var tpTransferList = tpTransferInfo.TpTransferPendingGet();
+
                 if (tpTransferList != null)
                 {
                     foreach (var tpTransfer in tpTransferList)
                     {
                         try
                         {
-                            _thirdPartyBll.CheckTransfer(tpTransfer);
+                            thirdPartyBLL.CheckTransfer(tpTransfer);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, ex.Message);
+                            logger.LogError(ex, ex.Message);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                var dueTimeSpan = TimeSpan.FromMinutes(10);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoTaskForBonusTransfer(object state)
-        {
-            try
-            {
-                var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet();
-                
-                if (tpTransferList != null)
-                {
-                    foreach (var tpTransfer in tpTransferList)
-                    {
-                        var pendingTpBonusTransfer = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId ,  tpTransfer.Bonus);
-                        try
-                        {
-                            if (pendingTpBonusTransfer != null)
-                            {
-                                _thirdPartyBll.BonusCheckTransfer(pendingTpBonusTransfer);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, ex.Message);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                var dueTimeSpan = TimeSpan.FromMinutes(10);
-                _bonusTimer.Change(dueTimeSpan, TimeSpan.Zero);
+                logger.LogError(ex, ex.Message);
             }
         }
     }

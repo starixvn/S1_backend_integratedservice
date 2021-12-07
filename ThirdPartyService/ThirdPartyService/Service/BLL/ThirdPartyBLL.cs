@@ -411,8 +411,10 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
-            var tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            IThirdPartyHelper tpHelper =
+                thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel =
+                thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
@@ -452,7 +454,8 @@ namespace ThirdPartyService.Service.BLL
             apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp,
                 transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
 
-            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
+            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId,
+                bonusId);
 
             if (apiResult.ErrorCode == ErrorCode.Success)
             {
@@ -463,34 +466,6 @@ namespace ThirdPartyService.Service.BLL
             }
 
             return apiResult;
-        }
-        
-        public void BonusCheckTransfer(TpPendingBonusTransferInfoModel tpTransferInfoModel)
-        {
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
-            var tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
-            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
-            var amount = tpTransferInfoModel.Bonus;
-            
-            var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount, Direction.ToTp, tpTransferInfoModel.TransId, tpTransferInfoModel.ThirdId);
-
-            var req = new TpBonusTransfer
-            {
-                TpId  = tpTransferInfoModel.TpId,
-                CustId =tpTransferInfoModel.CustId,
-                Bonus =tpTransferInfoModel.Bonus,
-                BonusAmount= tpTransferInfoModel.BonusAmount,
-                LockedAmount =tpTransferInfoModel.LockedAmount,
-                RolloverAmount =tpTransferInfoModel.RolloverAmount,
-                ExpiryTime =tpTransferInfoModel.ExpiredDate
-            };
-            tpTransferBonusInfoService.TpTransferBonusCheckCommit(apiResult, tpCustInfoResult.Data, req, tpTransferInfoModel.TransId, tpTransferInfoModel.BonusId);
-
-            if (apiResult.Data.Status == TransferStatus.Fail)
-            {
-                BonusTransfer(req);
-            }
         }
         
         public ApiResult BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)
