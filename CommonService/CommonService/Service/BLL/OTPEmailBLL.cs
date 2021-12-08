@@ -12,14 +12,16 @@ namespace CommonService.Service.BLL
         private readonly OTPSMSService _otpService;
         private readonly CustInfoService _custInfoService;
         private readonly Tools _tools;
+        private readonly AuthBLL _authBLL;
 
-        public OTPEmailBLL(SendGridBLL sendGridBll, OTPSMSService otpService, Tools tools, CustInfoService custInfoService)
+        public OTPEmailBLL(SendGridBLL sendGridBll, OTPSMSService otpService, Tools tools, CustInfoService custInfoService, AuthBLL authBll)
         {
             
             _sendGridBll = sendGridBll;
             _otpService = otpService;
             _tools = tools;
             _custInfoService = custInfoService;
+            _authBLL = authBll;
         }
         
         public async Task<ApiResult<SendOTPEmailResult>> SendOtpEmailAsync(int custId, string url)
@@ -33,7 +35,9 @@ namespace CommonService.Service.BLL
                 {
                     // 產生6位數驗證碼
                     var code = _tools.GetRandomNumString(6);
-                    var verificationUrl = $"{url}?code={code}";
+                    var key = _authBLL.ApplyToken(custInfo);
+                    var verificationUrl = $"{url}?key={key}&code={code}";
+                    
                     var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new {verifyemailurl=verificationUrl}, TemplateType.VerificationMail);
                     
                     if (sendMailResult.ErrorCode == ErrorCode.Success)
