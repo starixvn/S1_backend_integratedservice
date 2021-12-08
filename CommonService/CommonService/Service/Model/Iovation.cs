@@ -22,6 +22,7 @@ namespace CommonService.Service.Model
 
     public class IovationResult
     {
+     
         public int accountCode { get; set; }
         public Dictionary<string, dynamic> details { get; set; }
         public string id { get; set; }
