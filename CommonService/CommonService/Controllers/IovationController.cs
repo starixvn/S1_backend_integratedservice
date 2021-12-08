@@ -20,8 +20,6 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
-            
-
             ApiResult apiResult = new ApiResult();
 
             var resultResp = await iovationBLL.IovationChecksAsync(iovationChecksRequest);
