@@ -528,7 +528,7 @@ namespace ThirdPartyService.Service.BLL
 
             if (tpTransferInfo.Service_TpTransferInfo_Bonus_Get(tpBonusCancelTransfer.BonusId))
             {
-                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.ErrorCode = ErrorCode.Fail;
                 apiResult.Message = "Transfer Processing.";
                 return apiResult;
             }
