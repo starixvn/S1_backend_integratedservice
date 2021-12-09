@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet.IntegrationTest", "ThirdPartySeamlessWallet.IntegrationTest\ThirdPartySeamlessWallet.IntegrationTest.csproj", "{257694CA-7877-410B-81ED-39006513DD0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartySettleWorker", "ThirdPartySettleWorker\ThirdPartySettleWorker.csproj", "{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySettleWorker", "ThirdPartySettleWorker\ThirdPartySettleWorker.csproj", "{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
