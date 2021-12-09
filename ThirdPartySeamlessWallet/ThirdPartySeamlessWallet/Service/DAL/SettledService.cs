@@ -28,6 +28,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
         private readonly BettingService _bettingService;
+        private readonly TpUnsettleService _tpUnsettleService;
+
         public SettledService(IServiceProvider provider)
         {
             _bettingService = provider.GetRequiredService<BettingService>();
@@ -36,6 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             tools = provider.GetRequiredService<Tools>();
             log2File = provider.GetRequiredService<Log2File>();
             logger = provider.GetRequiredService<ILogger<SettledService>>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
