@@ -193,6 +193,14 @@ namespace ThirdPartyService.Service.DAL
                 return conn.Query<TpTransferInfoModel>("TpTransferInfo_Pending_Get", commandType: CommandType.StoredProcedure);
             }
         }
+        public IEnumerable<TpPendingBonusTransferModel> TpBonusTransferPendingGet()
+        {
+            return _mainDbClient.Query<TpPendingBonusTransferModel>("Admin_PendingBonusList_Get");
+        }
+        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , decimal bonus , int status)
+        {
+            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("Service_TpTransferBonusInfoPendingByCustId_Get",new DynamicParameters(new {_CustId = custId , _Bonus = bonus , _Status = status}));
+        }
         public bool SetTransferFail(string transId)
         {
             var transferId = 0;
