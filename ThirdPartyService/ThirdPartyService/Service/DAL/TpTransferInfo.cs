@@ -197,9 +197,9 @@ namespace ThirdPartyService.Service.DAL
         {
             return _mainDbClient.Query<TpPendingBonusTransferModel>("Admin_PendingBonusList_Get");
         }
-        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , decimal bonus)
+        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , decimal bonus , int status)
         {
-            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("TpTransferBonusInfoPendingByCustId_Get",new DynamicParameters(new {_CustId = custId , _Bonus = bonus}));
+            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("Service_TpTransferBonusInfoPendingByCustId_Get",new DynamicParameters(new {_CustId = custId , _Bonus = bonus , _Status = status}));
         }
         public bool SetTransferFail(string transId)
         {

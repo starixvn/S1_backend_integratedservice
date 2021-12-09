@@ -34,6 +34,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
         private readonly ServerInfoService _serverInfoService;
         private readonly TpCustBalanceService _tpCustBalanceService;
+        private readonly TpTransferInfo _tpTransferInfo;
 
         private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
@@ -68,6 +69,7 @@ namespace ThirdPartyService.Service.BLL
             tpTransferBonusInfoService = provider.GetRequiredService<TpTransferBonusInfoService>();
             _serverInfoService = provider.GetRequiredService<ServerInfoService>();
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
+            _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
 
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.ServerInfoProvider = provider.GetRequiredService<ServerInfoBLL>();
@@ -396,7 +398,17 @@ namespace ThirdPartyService.Service.BLL
         public ApiResult BonusTransfer(TpBonusTransfer tpBonusTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
+            var checkResult = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpBonusTransfer.CustId, tpBonusTransfer.Bonus, (int) TransferStatus.PendingD);
 
+            if (checkResult != null)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.RawErrorCode = ErrorCode.Fail.ToString();
+                apiResult.Message = "Transfer processing";
+                apiResult.RawMessage = "Transfer processing";
+                return apiResult;
+            }
+            
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
 
             // Test account create 3rd party only for saba
