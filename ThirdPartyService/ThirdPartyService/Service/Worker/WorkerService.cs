@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 
@@ -72,7 +73,7 @@ namespace ThirdPartyService.Service.Worker
                 {
                     foreach (var tpTransfer in tpTransferList)
                     {
-                        var pendingTpBonusTransfer = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId ,  tpTransfer.Bonus);
+                        var pendingTpBonusTransfer = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId ,tpTransfer.Bonus ,(int)TransferStatus.Pending);
                         try
                         {
                             if (pendingTpBonusTransfer != null)
