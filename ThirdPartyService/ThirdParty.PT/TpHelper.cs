@@ -14,6 +14,15 @@ namespace ThirdParty.PT
     {
         private readonly string storagePath = $@"{ContentRootPath}\Storage\PT";
 
+        private readonly Dictionary<string, int> timeZoneList = new Dictionary<string, int>() {
+            {"MYR",8},
+            {"CNY",8},
+            {"IDR",8},
+            {"THB",7},
+            {"VND",7},
+            {"INR",5},
+        };
+
         #region Param
 
         private class DepositParam
@@ -534,7 +543,8 @@ namespace ThirdParty.PT
         {
             try
             {
-                var timeSpan = 7;
+                int timeSpan = timeZoneList[tpCustInfo.TpCurrencyId];
+
                 var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
                 var entityKey = inputs.GetValueOrDefault($"XEntityKey_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
                 var pass = inputs.GetValueOrDefault($"Pass_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();

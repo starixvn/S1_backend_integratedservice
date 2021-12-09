@@ -143,7 +143,7 @@ namespace CommonService.Service.BLL
                         dynamic_template_data = dynamicTemplateData
                     }
                 },
-                template_id = CreateTemplate(type, config, custInfo.UserLang)
+                template_id = CreateTemplate(type, config, GetUserLang(custInfo.UserLang))
             };
             
             using var result = await httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
@@ -170,7 +170,11 @@ namespace CommonService.Service.BLL
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, @"template type not define")
             };
         }
-        
-        
+
+        public string GetUserLang(string langId)
+        {
+            var lang = langId.Split('_');
+            return lang.Length > 1 ? lang[1] : lang[0];
+        }
     }
 }
