@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -68,12 +70,15 @@ namespace ThirdPartyService.Service.Worker
             try
             {
                 var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet();
+                var statusList = new List<int> { (int)TransferStatus.Pending, (int)TransferStatus.PendingD };
                 
                 if (tpTransferList != null)
                 {
                     foreach (var tpTransfer in tpTransferList)
                     {
-                        var pendingTpBonusTransfer = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId ,tpTransfer.Bonus ,(int)TransferStatus.Pending);
+                        var pendingTpBonusTransfer =
+                            _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId,
+                                JsonConvert.SerializeObject(statusList));
                         try
                         {
                             if (pendingTpBonusTransfer != null)
