@@ -1,11 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Exceptions;
-using System;
-using System.Linq;
 using ThirdPartySeamlessWallet;
 using ThirdPartySettleWorker.Workers;
 
@@ -48,7 +43,6 @@ namespace ThirdPartySettleWorker
                })
                .ConfigureServices((hostContext, services) =>
                {
-                    //新增第三方Worker
                     services.AddHostedService<JokerWorker>();
                });              
     }

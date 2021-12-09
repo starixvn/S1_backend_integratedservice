@@ -1,13 +1,4 @@
-using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -42,8 +33,8 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timerRNG = new Timer(Test, GameType.Joker_RNG, TimeSpan.Zero, TimeSpan.Zero);
-            timerFish = new Timer(Test, GameType.Joker_Fish, TimeSpan.Zero, TimeSpan.Zero);
+            timerRNG = new Timer(Settle, GameType.Joker_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            //timerFish = new Timer(Settle, GameType.Joker_Fish, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -54,20 +45,14 @@ namespace ThirdPartySettleWorker.Workers
             return Task.CompletedTask;
         }
 
-        private void Test(object state)
-        {
-            _logger.LogInformation($"gametype:{(GameType)state} || {DateTime.Now:yyyy:mm:dd}");
-        }
         private void Settle(object state)
         {
             var forContinue = false;
-            var isError = false;
-           
+            var isError = false;        
             var gametype = (GameType)state;
-            var tpCategory = gametype == GameType.Joker_RNG ? TpCategory.Slots : TpCategory.Fish;          
-            var type = gametype == GameType.Joker_RNG ? "Rng" : "Fish";         
-            var getSP = $"Service_Bettrans{type}_Joker_Unsettle_Get";
-            var setSP = $"Service_Bettrans{type}_Joker_Settle_Set";
+            
+            var tpCategory = gametype == GameType.Joker_RNG ? TpCategory.Slots : TpCategory.Fish;              
+            var getSP = $"Service_Bettrans{(gametype == GameType.Joker_RNG ? "Rng" : "Fish")}_Joker_Unsettle_Get";
 
             try
             {
@@ -82,38 +67,38 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<JokerSettleData>(getSP, new { TransId = transId },DataBase.Main).First();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId },DataBase.Main).First();
                         
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, unsettled.Account);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, settleData.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)thisTp, tpCustInfo.CurrencyId);
                         
                         if (tpCurrency.ExchangeRate > 0)
                         {
-                            unsettled.Stake *= tpCurrency.ExchangeRate;
-                            unsettled.ValidBet *= tpCurrency.ExchangeRate;
-                            unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            settleData.Stake *= tpCurrency.ExchangeRate;
+                            settleData.ValidBet *= tpCurrency.ExchangeRate;
+                            settleData.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)thisTp,
-                            Stake = unsettled.Stake,
-                            ValidBet = unsettled.ValidBet,
-                            WinlostAmount = unsettled.WinLostAmount,
-                            TransId = unsettled.TransId,
+                            Stake = settleData.Stake,
+                            ValidBet = settleData.ValidBet,
+                            WinlostAmount = settleData.WinLostAmount,
+                            TransId = settleData.TransId,
                             GameType = gametype,
-                            TpUserName = unsettled.Account,
-                            SettledTime = unsettled.SettleTime,
-                            TransTime = unsettled.TransTime,
-                            SettlementType = _settledBLL.GetSettlementType(gametype, unsettled.GameCode),
-                            TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                            TpUserName = settleData.Account,
+                            SettledTime = settleData.SettleTime,
+                            TransTime = settleData.TransTime,
+                            SettlementType = _settledBLL.GetSettlementType(gametype, settleData.GameId),
+                            TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlagBySpName(setSP, unsettled.TransId);
+                                _tpUnSettledBLL.SetTpUnsettle(thisTp, gametype, transId, isSuccess: true);
                             });
                         }
                     }
@@ -121,7 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetSettleFlagBySpName(setSP, transId, isSuccess: false);
+                            _tpUnSettledBLL.SetTpUnsettle(thisTp, gametype, transId, isSuccess: false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");
@@ -153,11 +138,6 @@ namespace ThirdPartySettleWorker.Workers
                 timerRNG?.Change(dueTimeSpan, TimeSpan.Zero) :
                 timerFish?.Change(dueTimeSpan, TimeSpan.Zero);
             }
-        }
-
-        public class JokerSettleData : SettleData
-        {
-            public string GameCode { get; set; }
         }
     }
 }

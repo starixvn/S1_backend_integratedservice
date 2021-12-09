@@ -45,7 +45,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
                 DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
                 DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
-                _ => throw new System.NotImplementedException(),
+                _ => throw new NotImplementedException(),
             };
         }
 
@@ -53,7 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<string>("Service_TpUnsettle_Get", parameters: new { TpId = (int)tp, GameType = (int)gameType, LimitCount });
         }
-
+     
         public IEnumerable<TResult> GetTpUnsettleDataBySpName<TResult>(string spName, object parameters, DataBase dataBase)
         {
             return dataBase switch
@@ -63,6 +63,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 DataBase.Wager => _wagerDbClient.Query<TResult>(spName, parameters: parameters),
                 _ => throw new NotImplementedException(),
             };
+        }
+
+        public int SetTpUnsettle(Tp tp, GameType gameType, string transId, bool isSuccess)
+        {
+            return _mainDbClient.Execute("Service_TpUnsettle_Set", parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, IsSuccess = isSuccess });
         }
     }
 }
