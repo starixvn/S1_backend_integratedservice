@@ -73,6 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ILogger<SettleWorker> _logger;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
 
         #endregion
 

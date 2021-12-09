@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29806.167
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet", "ThirdPartySeamlessWallet\ThirdPartySeamlessWallet.csproj", "{492DEE35-660A-41DA-8C3E-5C3E7C683776}"
 EndProject
@@ -10,7 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartySeamlessWallet.IntegrationTest", "ThirdPartySeamlessWallet.IntegrationTest\ThirdPartySeamlessWallet.IntegrationTest.csproj", "{257694CA-7877-410B-81ED-39006513DD0C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet.IntegrationTest", "ThirdPartySeamlessWallet.IntegrationTest\ThirdPartySeamlessWallet.IntegrationTest.csproj", "{257694CA-7877-410B-81ED-39006513DD0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartySettleWorker", "ThirdPartySettleWorker\ThirdPartySettleWorker.csproj", "{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,10 @@ Global
 		{257694CA-7877-410B-81ED-39006513DD0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{257694CA-7877-410B-81ED-39006513DD0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{257694CA-7877-410B-81ED-39006513DD0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

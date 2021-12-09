@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "ThirdPartySettleWorker": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Local"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

@@ -275,7 +275,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName<TCGSettleData>(unsettleSP, DataBase.Wager);
+                var unsettledList = _tpUnSettledBLL.GetTpUnsettledList<TCGSettleData>(unsettleSP, DataBase.Wager);
                 if (unsettledList != null)
                 {
                     forContinue = unsettledList.Count() == 200;
@@ -311,14 +311,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(setSP, new DynamicParameters(
+                                    _tpUnSettledBLL.SetSettleFlagBySpName(setSP, 
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
                                         orderNum = unsettled.OrderNum,
                                         username = unsettled.Account,
                                         isSuccess = true
-                                    }), dataBase: DataBase.Wager);
+                                    }, dataBase: DataBase.Wager);
                                 });
                             }
 
@@ -327,14 +327,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(setSP, new DynamicParameters(
+                                    _tpUnSettledBLL.SetSettleFlagBySpName(setSP, 
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
                                         orderNum = unsettled.OrderNum,
                                         username = unsettled.Account,
                                         isSuccess = false
-                                    }), dataBase: DataBase.Wager);
+                                    }, dataBase: DataBase.Wager);
                                 });
 
                             LogContext.PushProperty("TP", tpName);
