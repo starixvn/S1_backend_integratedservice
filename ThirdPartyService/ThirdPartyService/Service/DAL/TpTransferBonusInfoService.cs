@@ -249,25 +249,6 @@ namespace ThirdPartyService.Service.DAL
                 if (isSuccess) 
                     trans.Commit();
             }
-            // else if (transferResult.Data.Status == TransferStatus.Pending) 
-            // {
-            //     string memo = null;
-            //     if (!string.IsNullOrEmpty(transferResult.RawMessage))
-            //     {
-            //         memo = transferResult.RawMessage;
-            //     }
-            //     var p = new DynamicParameters(new
-            //     {
-            //         TransferBonusId = transferId, 
-            //         transferResult.Data.ThirdId, 
-            //         ForStatus = (int)TransferStatus.Pending,
-            //         Status = (int)TransferStatus.Pending
-            //     });
-            //     p.Add("Memo", memo, DbType.String, ParameterDirection.Input, 100);
-            //     var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", p, conn, trans) > 0;
-            //     if (isSuccess) 
-            //         trans.Commit();
-            // }
         }
         
         public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer, ApiResult<TransferResult> transferResult)
