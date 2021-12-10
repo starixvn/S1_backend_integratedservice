@@ -124,6 +124,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.GPI_RNG,
                                 TpUserName = unsettled.cust_id,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id)
                             };
 
@@ -218,6 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = unsettled.SettleTime,
+                                        TransTime = unsettled.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ProgressiveBet = wager.ProgressiveBet,
                                         ProgressiveWin = wager.ProgressiveWin,
@@ -533,6 +535,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
