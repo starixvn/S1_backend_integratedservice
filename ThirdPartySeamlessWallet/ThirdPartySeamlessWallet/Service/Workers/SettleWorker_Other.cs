@@ -311,7 +311,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlagBySpName(setSP, 
+                                    _tpUnSettledBLL.SetSettleFlag(setSP, 
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
@@ -327,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlagBySpName(setSP, 
+                                    _tpUnSettledBLL.SetSettleFlag(setSP, 
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
