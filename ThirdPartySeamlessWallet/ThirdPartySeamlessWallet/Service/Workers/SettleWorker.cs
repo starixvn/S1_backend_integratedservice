@@ -86,6 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<SettleWorker>>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
