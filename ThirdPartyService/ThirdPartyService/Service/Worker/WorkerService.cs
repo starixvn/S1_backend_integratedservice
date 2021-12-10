@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 
@@ -49,14 +50,14 @@ namespace ThirdPartyService.Service.Worker
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, ex.Message);
+                            _logger.LogError(ex, MethodExtension.GetCurrentMethod());
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
             }
             finally
             {
@@ -88,14 +89,14 @@ namespace ThirdPartyService.Service.Worker
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, ex.Message);
+                            _logger.LogError(ex, MethodExtension.GetCurrentMethod());
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
             }
             finally
             {
