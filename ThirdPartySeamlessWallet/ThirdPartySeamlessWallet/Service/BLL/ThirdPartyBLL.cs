@@ -193,6 +193,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.JILI_Fish;
                     }
                     break;
+                case (int)Tp.PP:
+                    gameType = GameType.PP_RNG;
+                    if (int.TryParse(gameId, out int tempGameId))
+                    {
+                        gameType = GameType.PP_LiveCasino;
+                    }
+                    break;
+                case (int)Tp.SG:
+                    gameType = GameType.SG_RNG;
+                    if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.SG_Fish;
+                    }
+                    break;
                 default:
                     break;
             }
