@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, dataBase: DataBase.Wager);
+                                    _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, dataBase: DataBase.Wager);
                                 });
                             }
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
+                                _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
                             });
                             LogContext.PushProperty("TP", tpName);
                             isError = true;

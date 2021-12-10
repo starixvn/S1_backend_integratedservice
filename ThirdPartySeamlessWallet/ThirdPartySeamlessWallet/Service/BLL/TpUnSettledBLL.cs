@@ -35,14 +35,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return _tpUnsettleService.SetTpUnsettle(tp, gameType, transId, isSuccess);
         }
 
-        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
+        public int SetSettleFlag(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
         {
-            return _tpUnsettleService.SetSettleFlagBySpName(spName, new { transId, isSuccess }, dataBase);
+            return _tpUnsettleService.SetSettleFlag(spName, new { transId, isSuccess }, dataBase);
         }
 
-        public int SetSettleFlagBySpName(string spName, object parameters, DataBase dataBase = DataBase.Main)
+        public int SetSettleFlag(string spName, object parameters, DataBase dataBase = DataBase.Main)
         {
-            return _tpUnsettleService.SetSettleFlagBySpName(spName, parameters, dataBase);
+            return _tpUnsettleService.SetSettleFlag(spName, parameters, dataBase);
         }      
     }
 }

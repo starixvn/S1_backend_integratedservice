@@ -38,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        public int SetSettleFlagBySpName(string spName, object parameters, DataBase dataBase = DataBase.Main)
+        public int SetSettleFlag(string spName, object parameters, DataBase dataBase = DataBase.Main)
         {
             return dataBase switch
             {
