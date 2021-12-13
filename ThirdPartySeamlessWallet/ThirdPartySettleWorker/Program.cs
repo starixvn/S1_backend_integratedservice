@@ -7,6 +7,8 @@ using Serilog.Exceptions;
 using System;
 using System.Linq;
 using ThirdPartySeamlessWallet;
+using ThirdPartySeamlessWallet.Service.Workers;
+using ThirdPartySettleWorker.Model.Interfaces;
 using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySettleWorker
@@ -48,7 +50,16 @@ namespace ThirdPartySettleWorker
                })
                .ConfigureServices((hostContext, services) =>
                {
-                    services.AddHostedService<JokerWorker>();
+                   // ThirdPartySeamlessWallet.SettleWorker
+                   //services.AddHostedService<BonusWorker>();
+                   //services.AddHostedService<SettleWorker>();
+
+                   //ISettleWorker
+                   var settleWorkers = typeof(ISettleWorker).Assembly.GetTypes().Where(item => item.GetInterfaces().Contains(typeof(ISettleWorker)));
+                   foreach (var worker in settleWorkers)
+                   {
+                       services.AddHostedService(provider => (ISettleWorker)Activator.CreateInstance(worker, new object[] { provider }));
+                   }
                });              
     }
 }
