@@ -350,6 +350,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YL, bettingDataFish_YL.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YL, tpCustInfo.CurrencyId);
             var custBalance = tpCustInfoBLL.GetBalance((int)Tp.YL, bettingDataFish_YL.userId);
+
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataFish_YL.betAmount *= tpCurrency.ExchangeRate;
@@ -359,15 +360,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataFish_YL.commission *= tpCurrency.ExchangeRate;
                 custBalance.Balance *= tpCurrency.ExchangeRate;
             }
-            if(custBalance.Balance < 0)
+
+            if (custBalance.Balance < 0)
             {
                 afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = settledService.GetTpBetFailureParam_YL(tpCustInfo, custBalance, tpCurrency, bettingDataFish_YL, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
                 return -2;
             }
+
             var checkBalance = custBalance.Balance - bettingDataFish_YL.betAmount;
             if (checkBalance < 0)
             {
                 afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = settledService.GetTpBetFailureParam_YL(tpCustInfo, custBalance, tpCurrency, bettingDataFish_YL, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
                 return -2;
             }
             var result = settledService.SettledFish_YL(tpCustInfo, bettingDataFish_YL, out afterAmount);
@@ -391,7 +398,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 afterAmount /= tpCurrency.ExchangeRate;
             }
-            
+
             return result;
         }
 
@@ -579,6 +586,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int AdjustmentRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_PP.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.AdjustmentRNG_PP(tpCustInfo, bettingDataRNG_PP, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         public int SetSettleFlag_BettransRng_PP_Payout(long roundId, int gameType)
         {
             if (gameType == (int)GameType.PP_RNG)
@@ -611,30 +637,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledListLC_PP();
         }
 
-        //public int SettledRNG_PP(BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
-        //{
-        //    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PP, bettingDataRNG_PP.userId);
-        //    var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PP, tpCustInfo.CurrencyId);
-        //    var result = 0;
-        //    if (gameType == (int)GameType.PP_RNG)
-        //    {
-        //        result = settledService.SettledRNG_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
-        //    }
-        //    else
-        //    {
-        //        result = settledService.SettledLC_PP(tpCustInfo, bettingDataRNG_PP, out afterAmount);
-        //    }
-        //    if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-        //    {
-        //        afterAmount /= tpCurrency.ExchangeRate;
-        //    }
-
-        //    return result;
-        //}
-        //public IEnumerable<BettingDataRNG_PP> GetUnsettledListRNG_PP(int gameType)
-        //{
-        //    return settledService.GetUnsettledListRNG_PP(gameType);
-        //}
         public int PromoBonus_PP(PromoBonus promoBonus, out decimal afterAmount)
         {
 
@@ -1799,6 +1801,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, payoutDataLC_N2Live.request.userid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+            payoutDataLC_N2Live.IsVoid = false;
 
             if (tpCurrency.ExchangeRate > 0)
             {
@@ -1809,6 +1812,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (item.hand != null)
                     {
                         item.hand.text *= tpCurrency.ExchangeRate;
+                    }
+                    //牌局取消(void) - 牌局取消并获得退还
+                    if (item.resultstatus != null && item.resultstatus == "void")
+                    {
+                        payoutDataLC_N2Live.IsVoid = true;
                     }
                 }
             }

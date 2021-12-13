@@ -45,4 +45,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
     }
 
+    public class TpBetFailureRecordInfo_YL
+    {
+        public decimal CurrentBalance { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal PayAmount { get; set; }
+        public decimal Profit { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal InsufficientBalance { get; set; }
+    }
 }

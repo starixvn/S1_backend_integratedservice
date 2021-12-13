@@ -822,6 +822,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = (GameType)gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ReferenceNo = wager.betid // for fix cant mapping bonusid when data fixed can remove
                                     };
@@ -914,6 +915,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = (GameType)gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
                                 ReferenceNo = unsettled.schemeid // for smart bet mapping
                             };
@@ -1095,6 +1097,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
@@ -1104,7 +1107,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
                             }
 
-                            // PP LC 原本已存SLOTS 故使用TpCategory.Slots
                             settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
                             settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
                         }
