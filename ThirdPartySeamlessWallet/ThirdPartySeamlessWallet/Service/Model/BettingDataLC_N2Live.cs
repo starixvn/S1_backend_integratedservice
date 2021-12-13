@@ -67,6 +67,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class PayoutDataLC_N2Live
     {
         public PayoutReq_N2Live request { get; set; }
+        public bool IsVoid { get; set; }
     }
 
     public class PayoutReq_N2Live : CommDataLC_N2Live
