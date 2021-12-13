@@ -10,11 +10,14 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySettleWorker.Model.Exceptions;
+using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class JokerWorker : BackgroundService
+    public class JokerWorker : BackgroundService, ISettleWorker
     {
+        public Tp Tp { get => Tp.Joker; }
+
         private Timer timerRNG;
         private Timer timerFish;
 
@@ -23,9 +26,8 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<JokerWorker> _logger;
-        private readonly Tp thisTp = Tp.Joker;
         private readonly string _tpName;
-        
+
 
         public JokerWorker(IServiceProvider provider)
         {
@@ -34,7 +36,7 @@ namespace ThirdPartySettleWorker.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<JokerWorker>>();
-            _tpName = Enum.GetName(typeof(Tp), thisTp);
+            _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
 
@@ -63,7 +65,7 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleTransIdList = _tpUnSettledBLL.GetTpUnsettleTransIdList(thisTp, gametype);
+                var tpUnsettleTransIdList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
                 if (!tpUnsettleTransIdList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -76,8 +78,8 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId },DataBase.Main).First();
                         
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, settleData.Account);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)thisTp, tpCustInfo.CurrencyId);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         
                         if (tpCurrency.ExchangeRate > 0)
                         {
@@ -88,7 +90,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         var betRecordInfo = new BetRecordInfo
                         {
-                            TpId = (int)thisTp,
+                            TpId = (int)Tp,
                             Stake = settleData.Stake,
                             ValidBet = settleData.ValidBet,
                             WinlostAmount = settleData.WinLostAmount,
@@ -105,7 +107,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(thisTp, gametype, transId, isSuccess: true);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: true);
                             });
                         }
                     }
@@ -113,7 +115,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(thisTp, gametype, transId, isSuccess: false);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");
