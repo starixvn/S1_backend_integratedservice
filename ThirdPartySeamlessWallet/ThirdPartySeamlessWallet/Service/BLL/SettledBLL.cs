@@ -1801,6 +1801,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.N2Live, payoutDataLC_N2Live.request.userid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.N2Live, tpCustInfo.CurrencyId);
+            payoutDataLC_N2Live.IsVoid = false;
 
             if (tpCurrency.ExchangeRate > 0)
             {
@@ -1811,6 +1812,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (item.hand != null)
                     {
                         item.hand.text *= tpCurrency.ExchangeRate;
+                    }
+                    //牌局取消(void) - 牌局取消并获得退还
+                    if (item.resultstatus != null && item.resultstatus == "void")
+                    {
+                        payoutDataLC_N2Live.IsVoid = true;
                     }
                 }
             }

@@ -1808,7 +1808,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             conn.Open();
             using var trans = conn.BeginTransaction();
-            
+
             try
             {
                 var betList = (bettingData_EBet.detail.withHoldingList != null) ? JsonConvert.SerializeObject(bettingData_EBet.detail.withHoldingList) : JsonConvert.SerializeObject(bettingData_EBet.detail.betList);
@@ -2503,6 +2503,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             string TransId = $"{payoutDataLC_N2Live.request.gameid}_{payoutDataLC_N2Live.request.userid}";
 
+            var ticketStatus = (int)TicketStatus.UnSettled;
+            var settleFlag = (int)SettleFlag.EndGame;
+            if (payoutDataLC_N2Live.IsVoid)
+            {
+                ticketStatus = (int)TicketStatus.Refund;
+                settleFlag = (int)SettleFlag.Settled;
+            }
+
             var p = new DynamicParameters(new
             {
                 TransId = TransId,
@@ -2517,8 +2525,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //trades = JsonConvert.SerializeObject(payoutDataLC_N2Live.request.trades),
                 timeUnix = new DateTimeOffset(DateTime.Parse(payoutDataLC_N2Live.request.timestamp), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
                 TicketType = (int)BettransType.Payout,
-                TicketStatus = (int)TicketStatus.UnSettled,
-                SettleFlag = 2
+                TicketStatus = ticketStatus,
+                SettleFlag = settleFlag
             });
 
             conn.Open();
