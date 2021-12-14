@@ -381,7 +381,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData_YGG> GetUnsettledList_YGG()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_YGG>("Service_UnsettledListRng_YGG_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_YGG>("Service_BettransRng_YGG_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_YGG(string reference, string subReference)
