@@ -34,6 +34,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
         private readonly ServerInfoService _serverInfoService;
         private readonly TpCustBalanceService _tpCustBalanceService;
+        private readonly TpTransferInfo _tpTransferInfo;
 
         private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
@@ -68,6 +69,7 @@ namespace ThirdPartyService.Service.BLL
             tpTransferBonusInfoService = provider.GetRequiredService<TpTransferBonusInfoService>();
             _serverInfoService = provider.GetRequiredService<ServerInfoService>();
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
+            _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
 
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.ServerInfoProvider = provider.GetRequiredService<ServerInfoBLL>();
@@ -396,7 +398,17 @@ namespace ThirdPartyService.Service.BLL
         public ApiResult BonusTransfer(TpBonusTransfer tpBonusTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
+            var checkResult = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpBonusTransfer.CustId, tpBonusTransfer.Bonus, (int) TransferStatus.PendingD);
 
+            if (checkResult != null)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.RawErrorCode = ErrorCode.Fail.ToString();
+                apiResult.Message = "Transfer processing";
+                apiResult.RawMessage = "Transfer processing";
+                return apiResult;
+            }
+            
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
 
             // Test account create 3rd party only for saba
@@ -411,10 +423,8 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
-            IThirdPartyHelper tpHelper =
-                thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel =
-                thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpBonusTransfer.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
@@ -454,8 +464,7 @@ namespace ThirdPartyService.Service.BLL
             apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, bonus, direction: Direction.ToTp,
                 transId, thirdId); /*tpHelperParticular.BonusTransfer(tpCustInfoResult.Data, inputs, bonusAmount, transId, thirdId);*/
 
-            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId,
-                bonusId);
+            tpTransferBonusInfoService.TpTransferBonusCommit(apiResult, tpCustInfoResult.Data, tpBonusTransfer, transId, bonusId);
 
             if (apiResult.ErrorCode == ErrorCode.Success)
             {
@@ -466,6 +475,34 @@ namespace ThirdPartyService.Service.BLL
             }
 
             return apiResult;
+        }
+        
+        public void BonusCheckTransfer(TpPendingBonusTransferInfoModel tpTransferInfoModel)
+        {
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
+            var tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+            var amount = tpTransferInfoModel.Bonus;
+            
+            var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount, Direction.ToTp, tpTransferInfoModel.TransId, tpTransferInfoModel.ThirdId);
+
+            var req = new TpBonusTransfer
+            {
+                TpId  = tpTransferInfoModel.TpId,
+                CustId =tpTransferInfoModel.CustId,
+                Bonus =tpTransferInfoModel.Bonus,
+                BonusAmount= tpTransferInfoModel.BonusAmount,
+                LockedAmount =tpTransferInfoModel.LockedAmount,
+                RolloverAmount =tpTransferInfoModel.RolloverAmount,
+                ExpiryTime =tpTransferInfoModel.ExpiredDate
+            };
+            tpTransferBonusInfoService.TpTransferBonusCheckCommit(apiResult, tpCustInfoResult.Data, req, tpTransferInfoModel.TransId, tpTransferInfoModel.BonusId);
+
+            if (apiResult.Data.Status == TransferStatus.Fail)
+            {
+                BonusTransfer(req);
+            }
         }
         
         public ApiResult BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)

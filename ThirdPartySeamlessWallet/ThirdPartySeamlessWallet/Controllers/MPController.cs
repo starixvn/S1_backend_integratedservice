@@ -495,7 +495,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (!string.IsNullOrEmpty(requestAmount))
                 {
                     decimal amount = Convert.ToDecimal(requestAmount);
-                    if (amount <= 0)
+                    if (amount < 0)
                     {
                         var Param = new
                         {

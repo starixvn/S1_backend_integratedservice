@@ -949,7 +949,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return data;
         }
 
-        public IEnumerable<SettleLT_One789> GetUnsettledList_One789(int gameType)
+        public IEnumerable<SettleData> GetUnsettledList_One789(int gameType)
         {
             string sp = "";
             switch (gameType)
@@ -967,10 +967,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     break;
             }
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleLT_One789>($"{sp}", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>($"{sp}", commandType: CommandType.StoredProcedure);
         }
 
-        public SettleLT_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
+        public SettleData GetSettle_TpWagerOne789(int gameType, string TransId)
         {
             string sp = "";
             switch (gameType)
@@ -988,7 +988,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     break;
             }
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleLT_One789>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<SettleData>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerOne789(int gameType, string TransId)

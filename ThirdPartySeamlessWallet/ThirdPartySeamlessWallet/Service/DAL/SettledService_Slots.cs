@@ -152,24 +152,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        decimal Stake = p.Get<decimal>("Stake");
-                        decimal WinLostAmount = p.Get<decimal>("WinLostAmount");
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp.Joker,
-                            Stake = Stake,
-                            ValidBet = Stake,
-                            WinlostAmount = WinLostAmount,
-                            TransId = bettingDataRNG_Joker.roundid,
-                            GameType = GameType.Joker_RNG,
-                            TpUserName = bettingDataRNG_Joker.username,
-                            SettledTime = bettingDataRNG_Joker.timestamp / 1000,
-                            SettlementType = GetSettlementType(GameType.Joker_RNG, bettingDataRNG_Joker.gamecode),
-                            BonusId = bonusId
-                        };
-
-                        result = SettleTicket(tpCustInfo, betRecordInfo, bettingDataRNG_Joker.amount, out _, conn, trans, false/*Don't need Payout*/);
-
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_RNG, bettingDataRNG_Joker.roundid);
                         if (result > 0)
                         {
                             trans.Commit();
@@ -2606,6 +2589,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans);
                 }
+
+                if (bettingDataRNG_MG.completed)
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId);
+                }
+
                 if (result > 0)
                 {
                     trans.Commit();

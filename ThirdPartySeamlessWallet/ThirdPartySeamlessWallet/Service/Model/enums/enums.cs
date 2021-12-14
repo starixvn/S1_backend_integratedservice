@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         EVO_LiveCasino = 63,
         Netent_RNG = 64,
         RedTiger_RNG = 65,
+        Joker_Fish = 66,
         AP_RNG = 67
     }
     public enum Tp

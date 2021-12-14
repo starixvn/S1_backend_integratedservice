@@ -128,7 +128,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
@@ -214,7 +215,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
@@ -273,7 +275,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName<TCGSettleData>(unsettleSP, DataBase.Wager);
+                var unsettledList = _tpUnSettledBLL.GetTpUnsettledList<TCGSettleData>(unsettleSP, DataBase.Wager);
                 if (unsettledList != null)
                 {
                     forContinue = unsettledList.Count() == 200;
@@ -309,14 +311,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(setSP, new DynamicParameters(
+                                    _tpUnSettledBLL.SetSettleFlag(setSP, 
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
                                         orderNum = unsettled.OrderNum,
                                         username = unsettled.Account,
                                         isSuccess = true
-                                    }), dataBase: DataBase.Wager);
+                                    }, dataBase: DataBase.Wager);
                                 });
                             }
 
@@ -325,14 +327,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                                 {
-                                    settledBLL.SetSettleFlagBySpName(setSP, new DynamicParameters(
+                                    _tpUnSettledBLL.SetSettleFlag(setSP, 
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
                                         orderNum = unsettled.OrderNum,
                                         username = unsettled.Account,
                                         isSuccess = false
-                                    }), dataBase: DataBase.Wager);
+                                    }, dataBase: DataBase.Wager);
                                 });
 
                             LogContext.PushProperty("TP", tpName);

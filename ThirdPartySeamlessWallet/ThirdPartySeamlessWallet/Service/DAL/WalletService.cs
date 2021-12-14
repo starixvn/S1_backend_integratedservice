@@ -96,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            int result = conn.Execute("Service_BonusSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            int result = conn.Execute("Service_BonusSettle_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
@@ -107,7 +107,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 if (result > 0)
+                {
                     trans.Commit();
+                }
             }
 
             return result;

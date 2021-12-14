@@ -73,6 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ILogger<SettleWorker> _logger;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
 
         #endregion
 
@@ -85,6 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<SettleWorker>>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -125,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -547,11 +549,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.username);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
-                            decimal stake = unsettled.totalBet;
-                            decimal validBet = unsettled.validBet;
-                            decimal winLostAmount = unsettled.payout - unsettled.totalBet;
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.ValidBet;
+                            decimal winLostAmount = unsettled.WinLostAmount;
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
@@ -561,8 +563,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 WinlostAmount = winLostAmount,
                                 TransId = unsettled.TransId,
                                 GameType = GameType.EBet_LiveCasino,
-                                TpUserName = unsettled.username,
-                                SettledTime = unsettled.payoutTime / 1000,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
@@ -732,7 +735,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TransId = wager.TransId,
                                         GameType = (GameType)gameType,
                                         TpUserName = wager.Account,
-                                        SettledTime = unsettled.SettleTime,
+                                        SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid
                                     };
 

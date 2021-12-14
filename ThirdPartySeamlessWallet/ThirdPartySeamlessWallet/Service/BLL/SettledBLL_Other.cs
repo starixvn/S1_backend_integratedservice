@@ -253,12 +253,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetRecordLT_One789(source);
         }
 
-        public IEnumerable<SettleLT_One789> GetUnsettledList_One789(int gameType)
+        public IEnumerable<SettleData> GetUnsettledList_One789(int gameType)
         {
             return settledService.GetUnsettledList_One789(gameType);
         }
 
-        public SettleLT_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
+        public SettleData GetSettle_TpWagerOne789(int gameType, string TransId)
         {
             return settledService.GetSettle_TpWagerOne789(gameType, TransId);
         }
@@ -287,26 +287,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_BTI(account, transId, isSuccess);
         }
         
-        #endregion
-
-        #region 共用
-
-        public IEnumerable<TResult> GetUnsettledListBySpName<TResult>(string spName, DataBase dataBase = DataBase.Main)
-        {
-            return settledService.GetUnsettledListBySpName<TResult>(spName, dataBase);
-        }
-
-        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
-        {
-            return settledService.SetSettleFlagBySpName(spName, transId, isSuccess, dataBase);
-        }
-
-        public int SetSettleFlagBySpName(string spName, DynamicParameters parameters, DataBase dataBase = DataBase.Main)
-        {
-            return settledService.SetSettleFlagBySpName(spName, parameters, dataBase);
-        }
-
-        #endregion
+        #endregion 
 
         #region KM
 

@@ -28,6 +28,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
         private readonly BettingService _bettingService;
+        private readonly TpUnsettleService _tpUnsettleService;
+
         public SettledService(IServiceProvider provider)
         {
             _bettingService = provider.GetRequiredService<BettingService>();
@@ -36,6 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             tools = provider.GetRequiredService<Tools>();
             log2File = provider.GetRequiredService<Log2File>();
             logger = provider.GetRequiredService<ILogger<SettledService>>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
@@ -89,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        int[] TransTimeTpIds = { (int)Tp.MP, (int)Tp.SA, (int)Tp.Allbet, (int)Tp.WM, (int)Tp.JILI, (int)Tp.YL, (int)Tp.EVO, (int)Tp.Netent, (int)Tp.RedTiger, (int)Tp.Sexy, (int)Tp.PT, (int)Tp.OneGaming, (int)Tp.NineW, (int)Tp.AMB, (int)Tp.TCG, (int)Tp.BTI };
+        int[] TransTimeTpIds = { (int)Tp.MP, (int)Tp.SA, (int)Tp.Allbet, (int)Tp.WM, (int)Tp.JILI, (int)Tp.YL, (int)Tp.EVO, (int)Tp.Netent, (int)Tp.RedTiger, (int)Tp.Sexy, (int)Tp.PT, (int)Tp.OneGaming, (int)Tp.NineW, (int)Tp.AMB, (int)Tp.TCG, (int)Tp.BTI, (int)Tp.One789, (int)Tp.V8, (int)Tp.KM, (int)Tp.EBet };
 
         private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
@@ -730,5 +733,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<dynamic>("Service_TpBetRecordUnsettle_Get", new { TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
         }
+
+
     }
 }

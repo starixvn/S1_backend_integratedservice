@@ -1298,7 +1298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData_EBet> GetUnsettledListLC_EBet()
+        public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
             return settledService.GetUnsettledListLC_EBet();
         }
