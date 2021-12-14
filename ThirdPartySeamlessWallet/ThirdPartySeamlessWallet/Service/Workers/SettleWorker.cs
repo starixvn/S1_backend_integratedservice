@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);

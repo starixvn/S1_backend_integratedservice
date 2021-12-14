@@ -770,6 +770,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans);
                 }
 
+                if (bettingDataRNG_MG.completed)
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_LiveCasino, bettingDataRNG_MG.betId);
+                }
+
                 if (result > 0)
                 {
                     trans.Commit();
