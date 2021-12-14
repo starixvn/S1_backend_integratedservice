@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public BettingService(IServiceProvider provider)
         {
@@ -34,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             logger = provider.GetRequiredService<ILogger<BettingService>>();
             log2File = provider.GetRequiredService<Log2File>();
             _riskInspection = provider.GetRequiredService<RiskInspection>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
