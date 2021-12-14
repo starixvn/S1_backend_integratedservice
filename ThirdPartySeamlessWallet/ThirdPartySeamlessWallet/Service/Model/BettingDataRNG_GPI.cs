@@ -48,13 +48,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string round_id { get; set; }
     }
 
-    public class SettleDataRNG_GPI
+    public class SettleDataRNG_GPI : SettleData
     {
-        public decimal Stake { get; set; }
-        public decimal WinLostAmount { get; set; }
         public string cust_id { get; set; }
         public string round_id { get; set; }
         public string game_id { get; set; }
-        public long SettleTime { get; set; }
     }
 }

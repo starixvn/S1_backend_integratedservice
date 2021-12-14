@@ -216,4 +216,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Goal123 = 2,
         Bwing = 3
     }
+
+    public enum TpCheckRecordCode
+    {
+        InsufficientBalance = 1,
+    }
 }
