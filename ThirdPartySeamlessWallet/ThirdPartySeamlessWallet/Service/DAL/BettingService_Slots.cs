@@ -875,5 +875,57 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region AP
+        public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingData_AP bettingDataRNG_AP, out decimal afterAmount, out int sq)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.AP_RNG;
+            bettingDataRNG_AP.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingDataRNG_AP.TicketType = (int)BettransType.Bet;
+            afterAmount = 0;
+            sq = 0;
+            var p = new DynamicParameters(new
+            {
+                seq = bettingDataRNG_AP.seq,
+                sitecode = bettingDataRNG_AP.sitecode,
+                gamecode = bettingDataRNG_AP.gamecode,
+                gameroundid = bettingDataRNG_AP.gameroundid,
+                stake = bettingDataRNG_AP.stake,
+                bettime = bettingDataRNG_AP.bettime,
+                timestamp = bettingDataRNG_AP.timestamp,
+                ispromo = bettingDataRNG_AP.ispromo ? 1 : 0,
+                playerid = bettingDataRNG_AP.playerid,
+                ip = bettingDataRNG_AP.ip,
+                TicketType = bettingDataRNG_AP.TicketType,
+                TicketStatus = bettingDataRNG_AP.TicketStatus
+            }); ;
+            p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var bettransAP = conn.QueryFirstOrDefault<BettransLC_MG>("Service_BettransLC_MG_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            if (bettransAP != null)
+            {
+                return 0;
+            }
+
+            var result = 0;
+            result = conn.Execute("Service_BettransRng_AP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            if (result > 0 && bettingDataRNG_AP.stake != 0)
+            {
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_AP.stake, (int)Tp.Joker, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                sq = p.Get<int>("SQ");
+                trans.Commit();
+            }
+
+            return result;
+        }
+        #endregion
     }
 }

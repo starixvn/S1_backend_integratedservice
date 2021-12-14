@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         EVO_LiveCasino = 63,
         Netent_RNG = 64,
         RedTiger_RNG = 65,
+        AP_RNG = 67
     }
     public enum Tp
     {
@@ -135,7 +136,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         MP = 35,
         EVO = 36,
         Netent = 37,
-        RedTiger = 38
+        RedTiger = 38,
+        AP = 39
     }
     public enum TransferType : int
     {

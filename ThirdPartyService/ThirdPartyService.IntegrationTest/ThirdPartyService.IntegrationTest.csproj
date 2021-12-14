@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
+    <ProjectReference Include="..\ThirdParty.AP\ThirdParty.AP.csproj" />
     <ProjectReference Include="..\ThirdParty.TCG\ThirdParty.TCG.csproj" />
     <ProjectReference Include="..\ThirdPartyService\ThirdPartyService.csproj" />
   </ItemGroup>

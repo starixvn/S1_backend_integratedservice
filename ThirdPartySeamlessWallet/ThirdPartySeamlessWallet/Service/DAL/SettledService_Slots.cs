@@ -3698,5 +3698,60 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region AP
+        public int CancelBetRNG_AP(TpCustInfo tpCustInfo, CancelBetDataRNG_AP cancelBetDataRNG_AP, out decimal afterAmount)
+        {
+            var result = 0;
+            int bonusId = 0;
+            int gameType = (int)GameType.AP_RNG;
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(new
+            {
+                playerid = cancelBetDataRNG_AP.playerid,
+                gameroundid = cancelBetDataRNG_AP.gameroundid,
+                sitecode = cancelBetDataRNG_AP.sitecode,
+                gamecode = cancelBetDataRNG_AP.gamecode,
+                TotalStake = cancelBetDataRNG_AP.totalstake,              
+            });
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            result = conn.Execute("Service_CancelBetRng_AP_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0)
+            {
+                if (cancelBetDataRNG_AP.totalstake != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(cancelBetDataRNG_AP.totalstake),
+                        (int)Tp.AP,
+                        cancelBetDataRNG_AP.gameroundid,
+                        (int)GameType.AP_RNG,
+                        TpCategory.Slots,
+                        cancelBetDataRNG_AP.seq,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+        #endregion
     }
 }
