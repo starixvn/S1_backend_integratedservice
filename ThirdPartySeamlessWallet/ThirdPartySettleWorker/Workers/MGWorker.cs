@@ -54,9 +54,9 @@ namespace ThirdPartySettleWorker.Workers
         private void DoSettleRng(object state)
         {
             var forContinue = false;
-            var isError = false;        
-            var gametype = GameType.MG_RNG;      
-            var tpCategory = TpCategory.Slots;              
+            var isError = false;
+            var gametype = GameType.MG_RNG;
+            var tpCategory = TpCategory.Slots;
 
             try
             {
@@ -72,17 +72,9 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransRng_MG_Unsettle_Get_V2",
-                            new { TransId = transId },DataBase.Main).First();
-                        
+                            new { TransId = transId }, DataBase.Main).First();
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
-                        
-                        if (tpCurrency.ExchangeRate > 0)
-                        {
-                            settleData.Stake *= tpCurrency.ExchangeRate;
-                            settleData.ValidBet *= tpCurrency.ExchangeRate;
-                            settleData.WinLostAmount *= tpCurrency.ExchangeRate;
-                        }
 
                         long settleTime = settleData.SettleTime - new DateTime(1970, 1, 1).Ticks;
                         settleTime /= TimeSpan.TicksPerSecond;
@@ -128,14 +120,14 @@ namespace ThirdPartySettleWorker.Workers
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");
                     }
-                }               
+                }
             }
             catch (UnsettleNotFoundException ex)
             {
                 _logger.LogInformation(ex, ex.Message);
             }
             catch (Exception ex)
-            {        
+            {
                 _logger.LogError(ex, ex.Message);
                 isError = true;
             }

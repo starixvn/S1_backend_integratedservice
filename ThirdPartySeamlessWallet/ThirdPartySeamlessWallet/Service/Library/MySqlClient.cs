@@ -45,14 +45,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return result;
         }    
         
-        public int Execute(string name, CommandType commandType = CommandType.StoredProcedure, object parameters = null)
+        public int Execute(string name, CommandType commandType = CommandType.StoredProcedure, object parameters = null, IDbTransaction transaction = null)
         {
             var sw = Stopwatch.StartNew();
             var result = 0;
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(name, parameters, commandType: commandType);
+                result = connection.Execute(name, parameters, transaction, commandType: commandType);
             }
             catch (Exception e)
             {
@@ -73,6 +73,71 @@ namespace ThirdPartySeamlessWallet.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 result = connection.QueryFirstOrDefault<T>(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
+        public MySqlConnection GetMySqlConnection()
+        {
+            return new MySqlConnection(_connectionString);
+        }
+
+        public async Task<IEnumerable<T>> QueryAsync<T>(string spName, CommandType commandType = CommandType.StoredProcedure, object parameters = null, int? commandTimeout = null)
+        {
+            IEnumerable<T> result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = await connection.QueryAsync<T>(spName, parameters, commandTimeout: commandTimeout, commandType: commandType);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, spName);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{spName} {sw.Elapsed:c}");
+            return result;
+        }
+
+        public async Task<IEnumerable<dynamic>> QueryAsync(string spName, CommandType commandType = CommandType.StoredProcedure, object parameters = null, int? commandTimeout = null)
+        {
+            IEnumerable<dynamic> result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = await connection.QueryAsync(spName, parameters, commandTimeout: commandTimeout, commandType: commandType);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, spName);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{spName} {sw.Elapsed:c}");
+            return result;
+        }
+
+        public async Task<int> ExecuteAsync(string name, CommandType commandType = CommandType.StoredProcedure, IDbTransaction transaction = null, object parameters = null)
+        {
+            var sw = Stopwatch.StartNew();
+            var result = 0;
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = await connection.ExecuteAsync(name, parameters,transaction, commandType: commandType);
             }
             catch (Exception e)
             {

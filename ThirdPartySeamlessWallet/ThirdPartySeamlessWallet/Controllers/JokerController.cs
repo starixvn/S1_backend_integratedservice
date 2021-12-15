@@ -21,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class JokerController : ControllerBase
     {
         private readonly AuthBLL authBLL;
-        private readonly ILogger<JokerController> logger;
+        private readonly ILogger<JokerController> _logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public JokerController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools)
         {
             this.authBLL = authBLL;
-            this.logger = logger;
+            this._logger = logger;
             this.thirdPartyBLL = thirdPartyBLL;
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.bettingBLL = bettingBLL;
@@ -623,39 +623,125 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/transaction")]
-        public Rep Transaction([FromForm]Dictionary<string, string> transactionReqq)
+        public Rep Transaction([FromForm]Dictionary<string, string> parameter)
         {
-            log2File.Info(JsonConvert.SerializeObject(transactionReqq), "Joker_Transaction");
-
-            Rep rep = new Rep();
-            rep.Status = 1000;
-            rep.Message = "Other";
-
-            return rep;
+            return FishBet(JokerFishTransType.Transaction, parameter);
         }
 
         [Route("[controller]/withdraw")]
-        public Rep Withdraw([FromForm]Dictionary<string, string> withdrawReqq)
+        public Rep Withdraw([FromForm]Dictionary<string, string> parameter)
         {
-            log2File.Info(JsonConvert.SerializeObject(withdrawReqq), "Joker_Withdraw");
-
-            Rep rep = new Rep();
-            rep.Status = 1000;
-            rep.Message = "Other";
-
-            return rep;
+            return FishBet(JokerFishTransType.Withdraw, parameter);
         }
 
         [Route("[controller]/deposit")]
-        public Rep Deposit([FromForm]Dictionary<string, string> depositReqq)
+        public Rep Deposit([FromForm]Dictionary<string, string> parameter)
         {
-            log2File.Info(JsonConvert.SerializeObject(depositReqq), "Joker_Deposit");
-
-            Rep rep = new Rep();
-            rep.Status = 1000;
-            rep.Message = "Other";
-
-            return rep;
+            return FishBet(JokerFishTransType.Deposit, parameter);
         }
-    }
+
+        private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter)
+        {
+            try
+            {     
+                log2File.Info(JsonConvert.SerializeObject(parameter), $"Joker_{transType}");
+                var request = JsonConvert.DeserializeObject<BettingDataFish_Joker>(JsonConvert.SerializeObject(parameter));
+
+                if (request.amount < 0)
+                {
+                    return new Rep
+                    {
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, gameType).Balance,
+                        Status = 4,
+                        Message = "InvalidParameters"
+                    };
+                }
+
+                request.amount = tools.Floor(request.amount, 2);
+                parameter["amount"] = request.amount.ToString("0.00");
+
+                if (!CheckSign(request.appid, request.hash, parameter))
+                {
+                    return new Rep
+                    {
+                        Status = 5,
+                        Message = "Invalid signature"
+                    };
+                }
+
+                decimal tpAffterAmount;            
+                var result = transType switch
+                {
+                    JokerFishTransType.Withdraw => bettingBLL.WithdrawFish_Joker(request, out tpAffterAmount),
+                    JokerFishTransType.Deposit => settledBLL.DepositFish_Joker(request, out tpAffterAmount),
+                    JokerFishTransType.Transaction => settledBLL.TransactionFish_Joker(request, out tpAffterAmount),
+                    _ => throw new NotImplementedException(),
+                };
+
+                if (result > 0)
+                {
+                    return new Rep
+                    {
+                        Balance = tpAffterAmount,
+                        Status = 0,
+                        Message = "Success"
+                    };
+                }
+                // InsufficientFund
+                if (result == 0)
+                {
+                    return new Rep
+                    {
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, gameType).Balance,
+                        Status = 100,
+                        Message = "InsufficientFund"
+                    };
+                }
+                // Duplicated
+                if (result == -1)
+                {
+                    return new Rep
+                    {
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, gameType).Balance,
+                        Status = 0,
+                        Message = "Success"
+                    };
+                }
+
+                return new Rep
+                {
+                    Status = 1000,
+                    Message = "Other"
+                };
+            }
+            catch (Exception ex)
+            {
+               _logger.LogError(ex, ex.Message);
+               return new Rep
+               {
+                    Status = 1000,
+                    Message = "Other"
+               };
+            }
+        }
+
+    private bool CheckSign(string appid ,string hash, Dictionary<string, string> data)
+        {                 
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.Joker);
+            var secret = "";
+            foreach (var setting in thirdPartySetting.TpSetting)
+            {
+                if (setting.Value == appid)
+                {
+                    secret = thirdPartySetting.TpSetting[$"Secret_{setting.Key.Substring(6)}"];
+                    break;
+                }
+            }
+
+            data.Remove("hash");
+            var rawData = $"{string.Join("&", data.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"))}{secret}";
+
+            return GetMD5Signature(rawData) == hash;
+        }
+}
 }

@@ -29,6 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _wagerDbClient;
         private readonly BettingService _bettingService;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly PartitionService _partitionService;
 
         public SettledService(IServiceProvider provider)
         {
@@ -43,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _partitionService = provider.GetRequiredService<PartitionService>();
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()

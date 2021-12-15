@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -70,9 +71,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_TpUnsettle_Set", parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, IsSuccess = isSuccess });
         }
 
-        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId)
+        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, IDbTransaction transaction = null)
         {
-            return _mainDbClient.Execute("Service_TpUnsettle_Ins", parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId });
+            return _mainDbClient.Execute("Service_TpUnsettle_Ins", 
+                transaction: transaction,
+                parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId });
         }
     }
 }

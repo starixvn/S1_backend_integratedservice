@@ -78,6 +78,58 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int WithdrawFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;                    
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
+                if (check.Any())
+                {
+                    return -1;//Duplicated
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                bettingDataFish_Joker.TicketType = (int)BettransType.Debit;         
+                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans );
+                
+                if (result > 0 && bettingDataFish_Joker.amount != 0)
+                {
+                    var bonusId = 0;
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bettingDataFish_Joker.amount) * -1,
+                        (int)Tp.Joker, 
+                        bettingDataFish_Joker.roundid,
+                        (int)GameType.Joker_Fish,
+                        bettingDataFish_Joker.id,
+                        null,
+                        TpCategory.Fish,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+           
+            return result;
+        }
+
+
         public int PlaceBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
             int bonusId = 0;
