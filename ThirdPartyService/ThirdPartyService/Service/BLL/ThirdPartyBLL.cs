@@ -398,7 +398,9 @@ namespace ThirdPartyService.Service.BLL
         public ApiResult BonusTransfer(TpBonusTransfer tpBonusTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
-            var checkResult = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpBonusTransfer.CustId, tpBonusTransfer.Bonus, (int) TransferStatus.PendingD);
+            var statusList = new List<int> { (int)TransferStatus.PendingD };
+            var checkResult = _tpTransferInfo.TpBonusTransferInfoPendingGet(tpBonusTransfer.CustId,
+                JsonConvert.SerializeObject(statusList));
 
             if (checkResult != null)
             {
@@ -497,7 +499,8 @@ namespace ThirdPartyService.Service.BLL
                 RolloverAmount =tpTransferInfoModel.RolloverAmount,
                 ExpiryTime =tpTransferInfoModel.ExpiredDate
             };
-            tpTransferBonusInfoService.TpTransferBonusCheckCommit(apiResult, tpCustInfoResult.Data, req, tpTransferInfoModel.TransId, tpTransferInfoModel.BonusId);
+            tpTransferBonusInfoService.TpTransferBonusCheckCommit(apiResult, tpCustInfoResult.Data, req,
+                tpTransferInfoModel);
 
             if (apiResult.Data.Status == TransferStatus.Fail)
             {
@@ -528,7 +531,7 @@ namespace ThirdPartyService.Service.BLL
 
             if (tpTransferInfo.Service_TpTransferInfo_Bonus_Get(tpBonusCancelTransfer.BonusId))
             {
-                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.ErrorCode = ErrorCode.Fail;
                 apiResult.Message = "Transfer Processing.";
                 return apiResult;
             }

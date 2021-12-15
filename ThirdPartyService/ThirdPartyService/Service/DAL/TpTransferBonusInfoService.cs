@@ -195,9 +195,9 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public void TpTransferBonusCheckCommit(ApiResult<TransferResult> transferResult, TpCustInfo tpCustInfo, TpBonusTransfer tpBonusTransfer, string transId, int bonusId)
+        public void TpTransferBonusCheckCommit(ApiResult<TransferResult> transferResult, TpCustInfo tpCustInfo, TpBonusTransfer tpBonusTransfer, TpPendingBonusTransferInfoModel tpTransferInfoModel)
         {
-            var m = Regex.Match(transId, @"\d+");
+            var m = Regex.Match(tpTransferInfoModel.TransId, @"\d+");
             int.TryParse(m.Value, out var transferId);
             
             using var conn = new MySqlConnection(_connectionString);
@@ -207,7 +207,7 @@ namespace ThirdPartyService.Service.DAL
             {
                 //歸零
                 var rWalletServiceResult = bonusService.BonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId,
-                    tpCustInfo.UserName, tpBonusTransfer.TpId, null, transId, out _, out _, out _, out _, out _, out _, conn, trans);
+                    tpCustInfo.UserName, tpBonusTransfer.TpId, null, tpTransferInfoModel.TransId, out _, out _, out _, out _, out _, out _, conn, trans);
 
                 if (rWalletServiceResult)
                 {
@@ -216,13 +216,13 @@ namespace ThirdPartyService.Service.DAL
                         TransferBonusId = transferId,
                         transferResult.Data.ThirdId,
                         Memo = transferResult.RawMessage,
-                        ForStatus = (int)TransferStatus.Pending,
+                        ForStatus = tpTransferInfoModel.Status,
                         Status = (int)TransferStatus.Success
                     }, conn, trans) > 0;
 
                     if (isSuccess)
                     {
-                        bonusService.SetBonusStatus(bonusId, 5, 1, conn, trans);
+                        bonusService.SetBonusStatus(tpTransferInfoModel.BonusId, 5, 1, conn, trans);
                     }
 
                     if (isSuccess)
@@ -241,7 +241,7 @@ namespace ThirdPartyService.Service.DAL
                 {
                     TransferBonusId = transferId, 
                     transferResult.Data.ThirdId, 
-                    ForStatus = (int)TransferStatus.Pending,
+                    ForStatus = tpTransferInfoModel.Status,
                     Status = (int)transferResult.Data.Status
                 });
                 p.Add("Memo", memo, DbType.String, ParameterDirection.Input, 100);

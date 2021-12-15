@@ -38,14 +38,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long Timestamp { get; set; }
     }
 
-    public class SettleData_PP
+    public class SettleData_PP : SettleData
     {
-        public long TransId { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
-        public long SettleTime { get; set; }
+        public new long TransId { get; set; }
         public string gameId { get; set; }
     }
 }

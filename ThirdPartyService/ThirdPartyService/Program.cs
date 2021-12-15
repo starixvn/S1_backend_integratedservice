@@ -47,7 +47,11 @@ namespace ThirdPartyService
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<WorkerService>();
+                    if (Configuration.GetSection("RunWorkerService").Get<bool>())
+                    {
+                        services.AddHostedService<WorkerService>();
+                    }
+
                     if (Configuration.GetSection("GetTpBalanceParam:RunGetBalanceWorker").Get<bool>())
                     {
                         services.AddHostedService<GetBalanceWorker>();

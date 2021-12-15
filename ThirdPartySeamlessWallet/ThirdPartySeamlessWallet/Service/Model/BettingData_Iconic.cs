@@ -28,23 +28,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
     }
 
-    public class SettleDataRng_Iconic
+    public class SettleDataRng_Iconic : SettleData
     {
         public long transactionId { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
-        public long SettleTime { get; set; }
     }
 
-    public class SettleDataFish_Iconic
+    public class SettleDataFish_Iconic : SettleData
     {
         public string transactionId { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
-        public long SettleTime { get; set; }
     }
 }

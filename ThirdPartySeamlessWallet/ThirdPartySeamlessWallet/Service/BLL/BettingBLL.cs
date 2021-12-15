@@ -263,7 +263,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
             var custBalance = tpCustInfoBLL.GetBalance((int)Tp.Sexy, userId, (int)GameType.Sexy_LiveCasino);
-
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                custBalance.Balance *= tpCurrency.ExchangeRate;
+            }
             foreach (var item in betLC_Sexy.txns)
             {
                 if (item.userId != userId)
@@ -273,9 +276,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 if (tpCurrency.ExchangeRate > 0)
                 {
                     item.betAmount *= tpCurrency.ExchangeRate;
-                    custBalance.Balance *= tpCurrency.ExchangeRate;
                 }
             }
+
             // check
             var totalBetAmount = betLC_Sexy.txns.Sum(x => x.betAmount);
             var checkBalance = custBalance.Balance - Math.Abs(totalBetAmount);
