@@ -137,15 +137,4 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public decimal AfterAmount { get; set; }
     }
-    
-    public class SettleData_MG
-    {
-        public string TransId { get; set; }
-        public string Account { get; set; }
-        public string GameId { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public long SettleTime { get; set; }
-    }
 }
