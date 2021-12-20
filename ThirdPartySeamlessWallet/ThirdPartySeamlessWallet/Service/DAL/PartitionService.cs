@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -44,11 +45,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int Execute(DateTime partitionTime, string spName, object parameters, IDbTransaction transaction = null)
+        public int Execute(DateTime partitionTime, string spName, object parameters, IDbTransaction transaction)
         {
             var p = new DynamicParameters(parameters);
             p.Add("YYYYMM", partitionTime.GetPartitionKey());
-            return _mainDbClient.QueryFirstAsync<int>(spName,p, transaction).Result;
+            return _mainDbClient.QueryFirstAsync<int>(spName, transaction, p).Result;
         }
 
         public IEnumerable<IReadOnlyDictionary<string, object>> GetUnsettleDataList(string spName, TpUnsettle tpUnsettle, int partitionCheckDay = 3)
