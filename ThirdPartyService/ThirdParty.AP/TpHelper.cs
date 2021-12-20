@@ -37,8 +37,10 @@ namespace ThirdParty.AP
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             #region token
-            var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
+            //var key = ApplyToken(tpCustInfo);
+            //inputs.TryGetValue("Token", out string token);
+            string key = "3Lqoby7lVU68DbJJdMoAUQ";
+            string token = "0vckrjNh0OYKTRYzePRNw";
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
@@ -52,7 +54,7 @@ namespace ThirdParty.AP
             
             string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}";
 
-            string sResponse = HttpGet($"{WebUrl}LaunchGame", Params, "application/x-www-form-urlencoded");
+            //string sResponse = HttpGet($"{WebUrl}LaunchGame", Params, "application/x-www-form-urlencoded");
 
             ApiResult oApiResult = new ApiResult();
             return oApiResult;

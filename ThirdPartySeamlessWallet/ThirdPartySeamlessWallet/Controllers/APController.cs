@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -52,12 +53,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         { 
             public string Timestamp { get; set; }
             public string Seq { get; set; }
-            public string SiteCode { get; set; }
+            //public string SiteCode { get; set; }
             public int ErrorCode { get; set; }
             public string ErrorDescription { get; set; }
         }
         public class GetPlayerInfoResp: Resp
         {
+            public string SiteCode { get; set; }
             public string OPToken { get; set; }
             public string GameCode { get; set; }
             public string PlayerId { get; set; }
@@ -80,14 +82,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         public class SettleResp : Resp
         {
-            public string GameCode { get; set; }
-            public string GameRoundId { get; set; }
-            public string PlayerId { get; set; }
-            public decimal TotalStake { get; set; }
-            public decimal TotalWin { get; set; }
-            public string SettleTime { get; set; }
-            public string StatusCode { get; set; }
-            public int HitJackpot { get; set; }
+            public decimal Balance { get; set; }
         }
         public class JPSettleResp : Resp
         {
@@ -186,7 +181,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string Content = await reader.ReadToEndAsync();
             var getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq>(Content);
-
+            string authToken = string.Empty;
+            string sessionToken = string.Empty;
             #region InitResult
             GetPlayerInfoResp result = new GetPlayerInfoResp()
             {
@@ -217,10 +213,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             #endregion
 
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.OPToken));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0];
-            string sessionToken = sessionKeyArr[1];
+            try
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getReq.OPToken)));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                authToken = sessionKeyArr[0];
+                sessionToken = sessionKeyArr[1];
+            }
+            catch(Exception ex)
+            {
+                result.ErrorCode = (int)ErrorCode.TokenInvalid;
+                result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+            }
+            
 
             //string authToken = "test";
             //string sessionToken = "test";
@@ -237,8 +242,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpCheck.Token != sessionToken)
                     {
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
+                        result.ErrorCode = (int)ErrorCode.TokenInvalid;
+                        result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
                     }
                     else if (tpCheck.Locked)
                     {
@@ -282,6 +287,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             string Content = await reader.ReadToEndAsync();
             var getReq = JsonConvert.DeserializeObject<PlaceBetReq>(Content);
+            string authToken = string.Empty;
+            string sessionToken = string.Empty;
+            string TpUserName = string.Empty;
             #region InitResult
             PlaceBetResp result = new PlaceBetResp()
             {
@@ -305,81 +313,83 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             #endregion
 
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.OPToken));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0];
-            string sessionToken = sessionKeyArr[1];
-           
-            if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+            try
             {
-                try
-                {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null)
-                    {
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                    }
-                    else if (tpCheck.Token != sessionToken)
-                    {
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                    }
-                    else
-                    {
-                        if(getReq.Stake < 0)
-                        {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
-                            result.Balance = tpCustBalance.Balance;
-                            result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
-                            result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
-                        }
-                        BettingData_AP betReq = new BettingData_AP() { 
-                            seq = getReq.Seq,
-                            sitecode = getReq.SiteCode,
-                            gamecode = getReq.GameCode,
-                            gameroundid = getReq.GameRoundId,
-                            stake  = getReq.Stake,
-                            bettime = getReq.BetTime,
-                            ispromo = getReq.IsPromo,
-                            ip = getReq.Ip,
-                            timestamp = getReq.Timestamp,
-                            playerid = getReq.PlayerId
-                        };
-
-                        if (bettingBLL.PlaceBet_AP(betReq, out decimal tpAffterAmount, out int seq) > 0)
-                        {
-                            result.Balance = tpAffterAmount;
-                            result.ErrorCode = (int)ErrorCode.Success;
-                            result.ErrorDescription = "";
-                            result.OPTransId = seq.ToString();
-                        }
-                        else
-                        {
-                            result.ErrorCode = (int)ErrorCode.APIError;
-                            result.ErrorDescription = ErrorCode.APIError.ToString();
-                            result.OPTransId = "";
-                            result.Balance = 0;
-                        }
-                    }
-                }
-                catch(Exception ex)
-                {
-                    result.ErrorCode = (int)ErrorCode.APIError;
-                    result.ErrorDescription = ErrorCode.APIError.ToString();
-                    log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}", "AP_PlaceBet", ex);
-                }
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getReq.OPToken)));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                authToken = sessionKeyArr[0];
+                sessionToken = sessionKeyArr[1];
+                TpUserName = sessionKeyArr[2];
             }
-            else
+            catch(Exception ex)
             {
                 result.ErrorCode = (int)ErrorCode.TokenInvalid;
                 result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+            }
 
+
+            try
+            {
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, TpUserName);
+                if (tpCheck == null)
+                {
+                    result.ErrorCode = (int)ErrorCode.APIError;
+                    result.ErrorDescription = ErrorCode.APIError.ToString();
+                }
+                else if (tpCheck.Token != sessionToken)
+                {
+                    result.ErrorCode = (int)ErrorCode.TokenInvalid;
+                    result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+                }
+                else if (tpCheck.Locked)
+                {
+                    result.ErrorCode = (int)ErrorCode.APIError;
+                    result.ErrorDescription = ErrorCode.APIError.ToString();
+                }
+                else
+                {
+                    if (getReq.Stake < 0)
+                    {
+                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, TpUserName, gameType);
+                        result.Balance = tpCustBalance.Balance;
+                        result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
+                        result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
+                    }
+                    BettingData_AP betReq = new BettingData_AP()
+                    {
+                        seq = getReq.Seq,
+                        sitecode = getReq.SiteCode,
+                        gamecode = getReq.GameCode,
+                        gameroundid = getReq.GameRoundId,
+                        stake = getReq.Stake,
+                        bettime = getReq.BetTime,
+                        ispromo = getReq.IsPromo,
+                        ip = getReq.Ip,
+                        timestamp = getReq.Timestamp,
+                        playerid = getReq.PlayerId
+                    };
+
+                    if (bettingBLL.PlaceBet_AP(betReq, out decimal tpAffterAmount, out int seq) > 0)
+                    {
+                        result.Balance = tpAffterAmount;
+                        result.ErrorCode = (int)ErrorCode.Success;
+                        result.ErrorDescription = "";
+                        result.OPTransId = seq.ToString();
+                    }
+                    else
+                    {
+                        result.ErrorCode = (int)ErrorCode.APIError;
+                        result.ErrorDescription = ErrorCode.APIError.ToString();
+                        result.OPTransId = "";
+                        result.Balance = 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                result.ErrorCode = (int)ErrorCode.APIError;
+                result.ErrorDescription = ErrorCode.APIError.ToString();
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}", "AP_PlaceBet", ex);
             }
             log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}", "AP_PlaceBet");
             return result;
@@ -466,13 +476,43 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/Settle")]
-        public async Task<SettleResp> SettleAsync([FromQuery] Dictionary<string, string> getReq)
+        public async Task<SettleResp> SettleAsync()
         {
-            SettleResp result = new SettleResp();
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string Content = await reader.ReadToEndAsync();
+            var getReq = JsonConvert.DeserializeObject<SettleReq>(Content);
 
-            var json = JsonConvert.SerializeObject(getReq);
-            var apiReq = JsonConvert.DeserializeObject<SettleReq>(json);
+            #region InitResult
+            SettleResp result = new SettleResp()
+            {
+                Timestamp = getReq.Timestamp,
+                Seq = getReq.Seq
+            };
+            #endregion
 
+            #region Check Hash
+            Request.Headers.TryGetValue("ap-hash", out var ApHash);
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
+            string reqJson = JsonConvert.SerializeObject(getReq);
+            string Hash = tools.ToMD5($"{SecretKey}{reqJson}").ToLower();
+            if (ApHash != Hash)
+            {
+                result.ErrorCode = (int)ErrorCode.HashInvalid;
+                result.ErrorDescription = ErrorCode.HashInvalid.ToString();
+                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}", "Settle");
+                return result;
+            }
+            #endregion
+
+            if(getReq.TotalWin < 0 || getReq.TotalStake < 0)
+            {
+                result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
+                result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
+                result.Balance = 0;
+                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}", "Settle");
+                return result;
+            }
             return result;
         }
 
