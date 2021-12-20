@@ -6,6 +6,7 @@ using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.MP
@@ -89,6 +90,7 @@ namespace ThirdParty.MP
             public decimal totalMoney { get; set; }
             public decimal freeMoney { get; set; }
             public int status { get; set; }
+            public string data { get; set; }
         }
         #endregion
 
@@ -404,13 +406,70 @@ namespace ThirdParty.MP
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            string WagerUrl = inputs.ContainsKey("WagerUrl") && !string.IsNullOrEmpty(inputs["WagerUrl"]) ? inputs["WagerUrl"] : throw new Exception("WagerUrl");
+            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
+            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
+            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+
+            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+
             var tpCurrency = new TpCurrency()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerPK_MP_Detail_Get", new { getBetDetail.TransId });
-            var detail = ToJson(wagerDetail);
+            Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
+            foreach (var item in wagerDetail.Select((val, i) => new { i, val }))
+            {
+                keyValuePairs.Add(item.val.Key, item.val.Value.ToString());
+            }
+
+            var Param = new
+            {
+                s = 10,
+                account = wagerDetail.GetValueOrDefault("Accounts")?.ToString(),
+                gameUserNO = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
+                kindID = wagerDetail.GetValueOrDefault("KindID")?.ToString(),
+                currency = tpCustInfo.TpCurrencyId,
+            };
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
+
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            var GetDetail = new
+            {
+                agent = Agent,
+                timestamp = timestamp,
+                param = AesEncrypt(sParam, Deskey),
+                key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower(),
+                lang = "en"
+            };
+            dicP = FromJson<Dictionary<string, string>>(ToJson(GetDetail));
+
+            var sDetail = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            var result = HttpGet(
+                WagerUrl,
+                sDetail,
+                "application/x-www-form-urlencoded"
+            );
+
+            if (!IsJSON(result))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result}");
+            }
+
+            var json = JsonConvert.DeserializeObject<ApiResponse>(result);
+            if (json.d.code != 0)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
+            }
+
+            keyValuePairs.Add("Info", json.d.data.Split("\r\n\r\n")[1]);
+
+            var detail = ToJson(keyValuePairs);
+
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
