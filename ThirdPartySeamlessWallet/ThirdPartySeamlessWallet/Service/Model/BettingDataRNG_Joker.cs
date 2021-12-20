@@ -55,7 +55,5 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal startbalance { get; set; }
         public decimal endbalance { get; set; }
         public int TicketType { get; set; }
-        public DateTime? CreateTime { get; set; } = null;
-
     }
 }
