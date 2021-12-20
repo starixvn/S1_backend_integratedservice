@@ -221,7 +221,7 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerRNG?.Change(dueTimeSpan, TimeSpan.Zero);
+                timerFish?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
