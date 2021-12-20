@@ -48,10 +48,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal result { get; set; }
         public string username { get; set; }
         public long timestamp { get; set; }
-        public string gamecode { get; set; }
-        public string roundid { get; set; }
-        public string description { get; set; }
-        public string type { get; set; }
+        public string gamecode { get; set; } = string.Empty;
+        public string roundid { get; set; } = string.Empty;
+        public string description { get; set; } = string.Empty;
+        public string type { get; set; } = string.Empty;
         public decimal startbalance { get; set; }
         public decimal endbalance { get; set; }
         public int TicketType { get; set; }
