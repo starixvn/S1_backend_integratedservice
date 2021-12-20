@@ -130,14 +130,14 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return result;
         }
 
-        public async Task<int> ExecuteAsync(string name, CommandType commandType = CommandType.StoredProcedure, IDbTransaction transaction = null, object parameters = null)
+        public async Task<T> QueryFirstAsync<T>(string name, object parameters = null, IDbTransaction transaction = null)
         {
             var sw = Stopwatch.StartNew();
-            var result = 0;
+            var result = default(T);
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = await connection.ExecuteAsync(name, parameters,transaction, commandType: commandType);
+                result = await connection.QueryFirstAsync<T>(name, parameters, transaction, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
             {
