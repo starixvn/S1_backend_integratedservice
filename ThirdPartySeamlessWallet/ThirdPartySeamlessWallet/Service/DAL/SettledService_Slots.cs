@@ -230,7 +230,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             try
             {
-                var partitionTime = DateTime.UtcNow;
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
                 var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
                 if (check.Any())
                 {
@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
 
-                bettingDataFish_Joker.TicketType = (int)BettransType.Credit;
+                bettingDataFish_Joker.TicketType = (int)BettransType.Payout;
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
 
                 if (result > 0 && bettingDataFish_Joker.amount != 0)
@@ -283,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             try
             {
-                var partitionTime = DateTime.UtcNow;
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
                 var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
                 if (check.Any())
                 {
@@ -299,7 +299,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid, trans);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid,  trans, partitionTime);
                 }
 
                 if (result > 0)
@@ -2632,7 +2632,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (bettingDataRNG_MG.completed)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId, trans);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId,  trans);
                 }
 
                 if (result > 0)

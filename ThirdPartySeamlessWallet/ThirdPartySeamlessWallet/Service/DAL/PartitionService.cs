@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -16,25 +18,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly ILogger<PartitionService> _logger;
         private readonly MySqlClient _mainDbClient;
 
-
         public PartitionService(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<PartitionService>>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
-        public IEnumerable<T> Query<T>(DateTime PartitionTime, string spName, object parameters, int partitionCheckDay = 3)
+        public IEnumerable<T> Query<T>(DateTime partitionTime, string spName, object parameters, int partitionCheckDay = 3)
         {
             var tasks = new List<Task<IEnumerable<T>>>();
-            var p1 = new DynamicParameters(parameters);
-            p1.Add("YYYYMM", PartitionTime.ToString("yyyyMM"));
-            tasks.Add(_mainDbClient.QueryAsync<T>(spName, parameters: p1));
-
-            if (PartitionTime.Day < partitionCheckDay)
+            foreach (var partitionKey in partitionTime.GetPartitionRange(partitionCheckDay))
             {
-                var p2 = new DynamicParameters(parameters);
-                p2.Add("YYYYMM", PartitionTime.AddMonths(-1).ToString("yyyyMM"));
-                tasks.Add(_mainDbClient.QueryAsync<T>(spName, parameters: p2));
+                var p = new DynamicParameters(parameters);
+                p.Add("YYYYMM", partitionKey);
+                tasks.Add(_mainDbClient.QueryAsync<T>(spName, parameters: p));
             }
 
             Task.WhenAll(tasks);
@@ -47,18 +44,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<IReadOnlyDictionary<string, object>> Query(DateTime PartitionTime, string spName, object parameters, int partitionCheckDay = 3)
+        public int Execute(DateTime partitionTime, string spName, object parameters, IDbTransaction transaction = null)
+        {
+            var p = new DynamicParameters(parameters);
+            p.Add("YYYYMM", partitionTime.GetPartitionKey());
+            return _mainDbClient.ExecuteAsync(spName, transaction: transaction, parameters: p).Result;
+        }
+
+        public IEnumerable<IReadOnlyDictionary<string, object>> GetUnsettleDataList(string spName, TpUnsettle tpUnsettle, int partitionCheckDay = 3)
         {
             var tasks = new List<Task<IEnumerable<dynamic>>>();
-            var p1 = new DynamicParameters(parameters);
-            p1.Add("YYYYMM", PartitionTime.ToString("yyyyMM"));
-            tasks.Add(_mainDbClient.QueryAsync(spName, parameters: p1));
-
-            if (PartitionTime.Day < partitionCheckDay)
+            foreach (var partitionKey in tpUnsettle.PartitionTime.GetPartitionRange(partitionCheckDay))
             {
-                var p2 = new DynamicParameters(parameters);
-                p2.Add("YYYYMM", PartitionTime.AddMonths(-1).ToString("yyyyMM"));
-                tasks.Add(_mainDbClient.QueryAsync(spName, parameters: p2));
+                tasks.Add(_mainDbClient.QueryAsync(spName, parameters: new { tpUnsettle.TransId, YYYYMM = partitionKey }));
             }
 
             Task.WhenAll(tasks);
@@ -70,14 +68,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
-
-        public int Execute(DateTime PartitionTime, string spName, object parameters, IDbTransaction transaction = null)
-        {
-            var p = new DynamicParameters(parameters);
-            p.Add("YYYYMM", PartitionTime.ToString("yyyyMM"));
-            return _mainDbClient.ExecuteAsync(spName, transaction: transaction, parameters: p).Result;
-        }
-
-
     }
 }

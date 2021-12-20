@@ -156,9 +156,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Bonus = 7,
         Jackpot = 8,
         ConfirmReserve = 9,
-        Debit = 10,    //扣除主帳戶餘額
-        Credit = 11,   //新增主帳戶餘額
-        EndRound = 12, //回合結束
+        EndRound = 10, //回合結束
     }
     public enum AllowNegative
     {

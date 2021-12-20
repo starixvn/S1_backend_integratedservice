@@ -65,19 +65,19 @@ namespace ThirdPartySettleWorker.Workers
             var gametype = (GameType)state;
             try
             {
-                var tpUnsettleTransIdList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
-                if (!tpUnsettleTransIdList.Any())
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
+                if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gametype} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleTransIdList.Count() == 200;
-                foreach (var transId in tpUnsettleTransIdList)
+                forContinue = tpUnsettleList.Count() == 200;
+                foreach (var tpUnsettle in tpUnsettleList)
                 {
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransRng_Joker_Unsettle_Get",
-                            new { TransId = transId }, DataBase.Main).First();
+                            new { tpUnsettle.TransId }, DataBase.Main).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
 
                         var betRecordInfo = new BetRecordInfo
@@ -100,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: true);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: true);
                             });
                         }
                     }
@@ -108,7 +108,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: false);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");
@@ -147,28 +147,27 @@ namespace ThirdPartySettleWorker.Workers
             var gametype = (GameType)state;
             try
             {
-                var tpUnsettleTransIdList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
-                if (!tpUnsettleTransIdList.Any())
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
+                if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gametype} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleTransIdList.Count() == 200;
-                var partitionTime = DateTime.UtcNow;
-                foreach (var transId in tpUnsettleTransIdList)
+                forContinue = tpUnsettleList.Count() == 200;
+                foreach (var tpUnsettle in tpUnsettleList)
                 {
                     try
                     {
                         //先取出所有的Bettrans資料
-                        var settleDataList = _partitionService.Query(partitionTime, "Service_BettransFish_Joker_Unsettle_Get",
-                            new { TransId = transId });
+                        var settleDataList = _partitionService.GetUnsettleDataList("Service_BettransFish_Joker_Unsettle_Get", tpUnsettle);
 
                         //整理settle資料
                         var tpUserName = settleDataList.FirstOrDefault()?.GetValueOrDefault("username")?.ToString();
-                        var stake = settleDataList.Where(i => (int)i.GetValueOrDefault("TicketType") == (int)BettransType.Debit)
+                        var stake = settleDataList.Where(i => (int)i.GetValueOrDefault("TicketType") == (int)BettransType.Bet)
                             .Sum(i => (decimal)i.GetValueOrDefault("amount"));
-                        var winLostAmount = settleDataList.Where(i => (int)i.GetValueOrDefault("TicketType") == (int)BettransType.Credit)
+                        var PayoutAmount = settleDataList.Where(i => (int)i.GetValueOrDefault("TicketType") == (int)BettransType.Payout)
                             .Sum(i => (decimal)i.GetValueOrDefault("amount"));
+                        var winLostAmount = PayoutAmount - stake;
                         var settleTime = settleDataList.Max(i => long.Parse(i.GetValueOrDefault("timestamp").ToString()));
                         var transTime = settleDataList.Min(i => long.Parse(i.GetValueOrDefault("timestamp").ToString()));
 
@@ -179,7 +178,7 @@ namespace ThirdPartySettleWorker.Workers
                             Stake = stake,
                             ValidBet = stake,
                             WinlostAmount = winLostAmount,
-                            TransId = transId,
+                            TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = tpUserName,
                             SettledTime = settleTime / 1000,
@@ -192,7 +191,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: true);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: true);
                             });
                         }
                     }
@@ -200,7 +199,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: false);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");

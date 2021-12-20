@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;                    
             try
             {
-                var partitionTime = DateTime.UtcNow;
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
                 var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
                 if (check.Any())
                 {
@@ -95,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
 
-                bettingDataFish_Joker.TicketType = (int)BettransType.Debit;         
+                bettingDataFish_Joker.TicketType = (int)BettransType.Bet;         
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans );
                 
                 if (result > 0 && bettingDataFish_Joker.amount != 0)
