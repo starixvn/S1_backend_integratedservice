@@ -109,6 +109,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
@@ -168,7 +169,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.account);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
                             decimal stake = unsettled.Stake;
                             decimal validBet = unsettled.ValidBet;
@@ -182,8 +183,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.roundid,
                                 GameType = gameType,
-                                TpUserName = unsettled.account,
+                                TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 

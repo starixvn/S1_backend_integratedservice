@@ -53,7 +53,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
-
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

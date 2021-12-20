@@ -32,13 +32,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int tickets { get; set; }
     }
 
-    public class SettleData_YGG
+    public class SettleData_YGG :SettleData
     {
         public string subreference { get; set; }
         public string reference { get; set; }
-        public string Account { get; set; }
-        public decimal Stake { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public long SettleTime { get; set; }
     }
 }

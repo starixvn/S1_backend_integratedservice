@@ -197,10 +197,15 @@ namespace ThirdPartyService.Service.DAL
         {
             return _mainDbClient.Query<TpPendingBonusTransferModel>("Admin_PendingBonusList_Get");
         }
-        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , decimal bonus)
+        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , string status)
         {
-            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("TpTransferBonusInfoPendingByCustId_Get",new DynamicParameters(new {_CustId = custId , _Bonus = bonus}));
+            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("Service_TpTransferBonusInfoPendingByCustId_Get_V2",new DynamicParameters(new {_CustId = custId , _Status = status}));
         }
+        public IEnumerable<TpRemainingTransferBonusModel> TpRemainingTransferBonusGet()
+        {
+            return _mainDbClient.Query<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get");
+        }
+        
         public bool SetTransferFail(string transId)
         {
             var transferId = 0;

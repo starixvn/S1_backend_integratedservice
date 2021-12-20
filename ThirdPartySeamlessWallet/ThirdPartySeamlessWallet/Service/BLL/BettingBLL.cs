@@ -263,7 +263,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
             var custBalance = tpCustInfoBLL.GetBalance((int)Tp.Sexy, userId, (int)GameType.Sexy_LiveCasino);
-
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                custBalance.Balance *= tpCurrency.ExchangeRate;
+            }
             foreach (var item in betLC_Sexy.txns)
             {
                 if (item.userId != userId)
@@ -273,9 +276,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 if (tpCurrency.ExchangeRate > 0)
                 {
                     item.betAmount *= tpCurrency.ExchangeRate;
-                    custBalance.Balance *= tpCurrency.ExchangeRate;
                 }
             }
+
             // check
             var totalBetAmount = betLC_Sexy.txns.Sum(x => x.betAmount);
             var checkBalance = custBalance.Balance - Math.Abs(totalBetAmount);
@@ -561,6 +564,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 afterAmount /= tpCurrency.ExchangeRate;
             }
+            return result;
+        }
+
+        #endregion
+
+        #region Joker Fish
+
+        public int WithdrawFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.WithdrawFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.amount /= tpCurrency.ExchangeRate;
+            }
+
             return result;
         }
 

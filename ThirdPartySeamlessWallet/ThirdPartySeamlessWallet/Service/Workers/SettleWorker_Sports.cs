@@ -104,7 +104,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledListBySpName<SettleData>("Service_TpWager9W_Unsettle_Get", DataBase.Wager);
+                var unsettledList = _tpUnSettledBLL.GetTpUnsettledList<SettleData>("Service_TpWager9W_Unsettle_Get", DataBase.Wager);
 
                 if (unsettledList != null)
                 {
@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                   settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, dataBase: DataBase.Wager);
+                                    _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, dataBase: DataBase.Wager);
                                 });
                             }
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             Task.Run(() =>
                             {
-                               settledBLL.SetSettleFlagBySpName(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
+                                _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
                             });
                             LogContext.PushProperty("TP", tpName);
                             isError = true;

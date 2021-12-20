@@ -32,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.account);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
                             decimal stake = unsettled.Stake;
                             decimal validBet = unsettled.Stake;
@@ -46,8 +46,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 WinlostAmount = winLostAmount,
                                 TransId = unsettled.roundid,
                                 GameType = GameType.CQ9_RNG,
-                                TpUserName = unsettled.account,
+                                TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
@@ -124,6 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.GPI_RNG,
                                 TpUserName = unsettled.cust_id,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id)
                             };
 
@@ -218,6 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = unsettled.SettleTime,
+                                        TransTime = unsettled.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ProgressiveBet = wager.ProgressiveBet,
                                         ProgressiveWin = wager.ProgressiveWin,
@@ -533,6 +536,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
@@ -607,6 +611,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
                             };
 
@@ -776,6 +781,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = settledBLL.GetSettlementType(gameType, unsettled.gameId),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
@@ -930,6 +936,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             long unixTimestamp = unsettled.SettleTime - new DateTime(1970, 1, 1).Ticks;
                             unixTimestamp /= TimeSpan.TicksPerSecond;
 
+                            long transTime = unsettled.TransTime - new DateTime(1970, 1, 1).Ticks;
+                            transTime /= TimeSpan.TicksPerSecond;
+
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
@@ -940,6 +949,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unixTimestamp,
+                                TransTime = transTime,
                                 SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
