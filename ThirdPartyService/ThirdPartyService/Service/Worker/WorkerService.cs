@@ -68,7 +68,7 @@ namespace ThirdPartyService.Service.Worker
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(10);
+                var dueTimeSpan = TimeSpan.FromMinutes(5);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
@@ -147,8 +147,8 @@ namespace ThirdPartyService.Service.Worker
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(10);
-                _bonusTimer.Change(dueTimeSpan, TimeSpan.Zero);
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
+                _remainingBonusTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
