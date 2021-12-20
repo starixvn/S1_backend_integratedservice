@@ -71,6 +71,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<SettledService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<TpUnsettleService>();
+            services.AddSingleton<PartitionService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();

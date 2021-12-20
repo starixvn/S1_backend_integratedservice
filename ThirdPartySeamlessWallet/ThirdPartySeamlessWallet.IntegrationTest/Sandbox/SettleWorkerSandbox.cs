@@ -112,7 +112,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public SettleWorkerSandbox SettleFlagShouldBeSettled(string sqlScript)
         {
-            var actual = _mySqlClient.Query<Settle>(sqlScript, CommandType.Text).First();
+            var actual = _mySqlClient.Query<TpUnsettle>(sqlScript, CommandType.Text).First();
             actual.SettleFlag.Should().Be((int)SettleFlag.Settled);
             return this;
         }

@@ -152,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_RNG, bettingDataRNG_Joker.roundid);
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_RNG, bettingDataRNG_Joker.roundid, trans);
                         if (result > 0)
                         {
                             trans.Commit();
@@ -219,6 +219,97 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             else
             {
                 return -1;
+            }
+
+            return result;
+        }
+
+        public int DepositFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
+                var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
+                if (check.Any())
+                {
+                    return -1;//Duplicated
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                bettingDataFish_Joker.TicketType = (int)BettransType.Payout;
+                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
+
+                if (result > 0 && bettingDataFish_Joker.amount != 0)
+                {
+                    result = PayoutV2(
+                         tpCustInfo: tpCustInfo,
+                         amount: bettingDataFish_Joker.amount,
+                         tpId: (int)Tp.Joker,
+                         tpTransId: bettingDataFish_Joker.roundid,
+                         gameType: (int)GameType.Joker_Fish,
+                         tpCategory: TpCategory.Fish,
+                         refId: bettingDataFish_Joker.id,
+                         TransType.Payout,
+                         betData: null,
+                         out afterAmount,
+                         "Payout",
+                         out var bonusId,
+                         conn,
+                         trans,
+                         AllowNegative.Allow);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+
+            return result;
+        }
+
+        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
+                var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
+                if (check.Any())
+                {
+                    return -1;//Duplicated
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                bettingDataFish_Joker.TicketType = (int)BettransType.EndRound;
+                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
+
+                if (result > 0)
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid,  trans, partitionTime);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
             }
 
             return result;
@@ -2541,13 +2632,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (bettingDataRNG_MG.completed)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId,  trans);
                 }
 
                 if (result > 0)
                 {
                     trans.Commit();
                 }
+
                 return new MGPayoutResult()
                 {
                     Result = result,

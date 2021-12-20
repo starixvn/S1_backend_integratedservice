@@ -54,35 +54,27 @@ namespace ThirdPartySettleWorker.Workers
         private void DoSettleRng(object state)
         {
             var forContinue = false;
-            var isError = false;        
-            var gametype = GameType.MG_RNG;      
-            var tpCategory = TpCategory.Slots;              
+            var isError = false;
+            var gametype = GameType.MG_RNG;
+            var tpCategory = TpCategory.Slots;
 
             try
             {
-                var tpUnsettleTransIdList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
-                if (!tpUnsettleTransIdList.Any())
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
+                if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleTransIdList.Count() == 200;
-                foreach (var transId in tpUnsettleTransIdList)
+                forContinue = tpUnsettleList.Count() == 200;
+                foreach (var tpUnsettle in tpUnsettleList)
                 {
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransRng_MG_Unsettle_Get_V2",
-                            new { TransId = transId },DataBase.Main).First();
-                        
+                            new { tpUnsettle.TransId }, DataBase.Main).First();
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
-                        
-                        if (tpCurrency.ExchangeRate > 0)
-                        {
-                            settleData.Stake *= tpCurrency.ExchangeRate;
-                            settleData.ValidBet *= tpCurrency.ExchangeRate;
-                            settleData.WinLostAmount *= tpCurrency.ExchangeRate;
-                        }
 
                         long settleTime = settleData.SettleTime - new DateTime(1970, 1, 1).Ticks;
                         settleTime /= TimeSpan.TicksPerSecond;
@@ -115,7 +107,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlag("Service_BettransRng_MG_Settle_Set_V2", transId, isSuccess: true);
+                                _tpUnSettledBLL.SetSettleFlag("Service_BettransRng_MG_Settle_Set_V2", tpUnsettle.TransId, isSuccess: true);
                             });
                         }
                     }
@@ -123,19 +115,19 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetSettleFlag("Service_BettransRng_MG_Settle_Set_V2", transId, isSuccess: false);
+                            _tpUnSettledBLL.SetSettleFlag("Service_BettransRng_MG_Settle_Set_V2", tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");
                     }
-                }               
+                }
             }
             catch (UnsettleNotFoundException ex)
             {
                 _logger.LogInformation(ex, ex.Message);
             }
             catch (Exception ex)
-            {        
+            {
                 _logger.LogError(ex, ex.Message);
                 isError = true;
             }
