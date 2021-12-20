@@ -158,31 +158,25 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        //先取出所有的Bettrans資料
-                        var settleDataList = _partitionService.GetUnsettleDataList("Service_BettransFish_Joker_Unsettle_Get", tpUnsettle);
+                        //Get all Bettrans data
+                        var settleData = _partitionService.GetUnsettleDataList<BettingDataFish_Joker>("Service_BettransFish_Joker_Unsettle_Get", tpUnsettle)
+                            .FirstOrDefault(i => i.TicketType == (int)BettransType.EndRound);
 
-                        //整理settle資料
-                        var tpUserName = settleDataList.FirstOrDefault()?.GetValueOrDefault("username")?.ToString();
-                        var stake = settleDataList.Where(i => (int)i.GetValueOrDefault("TicketType") == (int)BettransType.Bet)
-                            .Sum(i => (decimal)i.GetValueOrDefault("amount"));
-                        var PayoutAmount = settleDataList.Where(i => (int)i.GetValueOrDefault("TicketType") == (int)BettransType.Payout)
-                            .Sum(i => (decimal)i.GetValueOrDefault("amount"));
-                        var winLostAmount = PayoutAmount - stake;
-                        var settleTime = settleDataList.Max(i => long.Parse(i.GetValueOrDefault("timestamp").ToString()));
-                        var transTime = settleDataList.Min(i => long.Parse(i.GetValueOrDefault("timestamp").ToString()));
-
+                        var winLostAmount = settleData.result - settleData.amount;
+                        var tpUserName = settleData.username;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
+
                         var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
                         {
                             TpId = (int)Tp,
-                            Stake = stake,
-                            ValidBet = stake,
+                            Stake = settleData.amount,
+                            ValidBet = settleData.amount,
                             WinlostAmount = winLostAmount,
                             TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = tpUserName,
-                            SettledTime = settleTime / 1000,
-                            TransTime = transTime / 1000,
+                            SettledTime = new DateTimeOffset(settleData.CreateTime.Value,new TimeSpan(0,0,0)).ToUnixTimeSeconds(),
+                            TransTime = settleData.timestamp / 1000,
                             SettlementType = SettlementType.SettledForValid,
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                         },  TpCategory.Fish);
