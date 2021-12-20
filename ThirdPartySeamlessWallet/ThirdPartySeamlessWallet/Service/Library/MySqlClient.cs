@@ -43,16 +43,35 @@ namespace ThirdPartySeamlessWallet.Service.Library
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogInformation($"{spName} {sw.Elapsed:c}");
             return result;
-        }    
-        
-        public int Execute(string name, CommandType commandType = CommandType.StoredProcedure, object parameters = null, IDbTransaction transaction = null)
+        }
+
+        public int Execute(string name, CommandType commandType = CommandType.StoredProcedure, object parameters = null)
         {
             var sw = Stopwatch.StartNew();
             var result = 0;
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(name, parameters, transaction, commandType: commandType);
+                result = connection.Execute(name, parameters, commandType: commandType);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
+        public int Execute(string name, IDbTransaction transaction, object parameters = null)
+        {
+            var sw = Stopwatch.StartNew();
+            int result;
+            try
+            {
+                result = transaction.Connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
             {
@@ -130,14 +149,13 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return result;
         }
 
-        public async Task<T> QueryFirstAsync<T>(string name, object parameters = null, IDbTransaction transaction = null)
+        public async Task<T> QueryFirstAsync<T>(string name, IDbTransaction transaction, object parameters = null)
         {
             var sw = Stopwatch.StartNew();
-            var result = default(T);
+            T result;
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryFirstAsync<T>(name, parameters, transaction, commandType: CommandType.StoredProcedure);
+                result = await transaction.Connection.QueryFirstAsync<T>(name, parameters, transaction, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
             {

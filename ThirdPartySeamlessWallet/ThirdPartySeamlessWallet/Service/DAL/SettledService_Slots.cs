@@ -253,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          tpTransId: bettingDataFish_Joker.roundid,
                          gameType: (int)GameType.Joker_Fish,
                          tpCategory: TpCategory.Fish,
-                         refId: bettingDataFish_Joker.id,
+                         refId: bettingDataFish_Joker.id.Substring(0, 45),
                          TransType.Payout,
                          betData: null,
                          out afterAmount,
@@ -295,7 +295,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var trans = conn.BeginTransaction();
 
                 bettingDataFish_Joker.TicketType = (int)BettransType.EndRound;
-                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
+                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker,trans);
 
                 if (result > 0)
                 {
