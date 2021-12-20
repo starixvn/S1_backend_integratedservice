@@ -175,7 +175,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = tpUserName,
-                            SettledTime = new DateTimeOffset(settleData.CreateTime.Value,new TimeSpan(0,0,0)).ToUnixTimeSeconds(),
+                            SettledTime = settleData.timestamp / 1000,
                             TransTime = settleData.timestamp / 1000,
                             SettlementType = SettlementType.SettledForValid,
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
