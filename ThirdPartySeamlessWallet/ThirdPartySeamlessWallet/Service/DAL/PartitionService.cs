@@ -52,20 +52,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.QueryFirstAsync<int>(spName, transaction, p).Result;
         }
 
-        public IEnumerable<IReadOnlyDictionary<string, object>> GetUnsettleDataList(string spName, TpUnsettle tpUnsettle, int partitionCheckDay = 3)
+        public IEnumerable<T> GetUnsettleDataList<T>(string spName, TpUnsettle tpUnsettle, int partitionCheckDay = 3)
         {
-            var tasks = new List<Task<IEnumerable<dynamic>>>();
+            var tasks = new List<Task<IEnumerable<T>>>();
             foreach (var partitionKey in tpUnsettle.PartitionTime.GetPartitionRange(partitionCheckDay))
             {
-                tasks.Add(_mainDbClient.QueryAsync(spName, parameters: new { tpUnsettle.TransId, YYYYMM = partitionKey }));
+                tasks.Add(_mainDbClient.QueryAsync<T>(spName, parameters: new { tpUnsettle.TransId, YYYYMM = partitionKey }));
             }
 
             Task.WhenAll(tasks);
 
-            var result = new List<IReadOnlyDictionary<string, object>>();
+            var result = new List<T>();
             foreach (var item in tasks)
             {
-                result.AddRange((IEnumerable<IReadOnlyDictionary<string, object>>)item.Result);
+                result.AddRange(item.Result);
             }
             return result;
         }

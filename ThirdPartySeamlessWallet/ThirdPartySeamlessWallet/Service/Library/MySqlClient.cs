@@ -129,26 +129,6 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return result;
         }
 
-        public async Task<IEnumerable<dynamic>> QueryAsync(string spName, CommandType commandType = CommandType.StoredProcedure, object parameters = null, int? commandTimeout = null)
-        {
-            IEnumerable<dynamic> result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryAsync(spName, parameters, commandTimeout: commandTimeout, commandType: commandType);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, spName);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{spName} {sw.Elapsed:c}");
-            return result;
-        }
-
         public async Task<T> QueryFirstAsync<T>(string name, IDbTransaction transaction, object parameters = null)
         {
             var sw = Stopwatch.StartNew();
