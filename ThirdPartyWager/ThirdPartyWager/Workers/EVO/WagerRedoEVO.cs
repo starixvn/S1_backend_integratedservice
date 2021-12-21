@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers
         private Timer timer;
         private readonly int tpType = 2;
         private readonly int timeRange = 60; //in minutes 
-        private readonly int quickTime = 120; // in seconds
+        private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 2; // in hours
 
         public WagerRedoEVO(IServiceProvider provider)
