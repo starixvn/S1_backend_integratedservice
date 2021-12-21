@@ -911,7 +911,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            var bettransAP = conn.QueryFirstOrDefault<BettransLC_MG>("Service_BettransLC_MG_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var bettransAP = conn.QueryFirstOrDefault<BettransRNG_AP>("Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid }, transaction: trans, commandType: CommandType.StoredProcedure);
             if (bettransAP != null)
             {
                 return 0;

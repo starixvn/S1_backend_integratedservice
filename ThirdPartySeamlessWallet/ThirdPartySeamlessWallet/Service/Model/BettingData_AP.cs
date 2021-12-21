@@ -31,4 +31,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string playerid { get; set; }
         public decimal totalstake { get; set; }
     }
+    public class BettransRNG_AP 
+    { 
+        public int SQ { get; set; }
+    }
+
 }
