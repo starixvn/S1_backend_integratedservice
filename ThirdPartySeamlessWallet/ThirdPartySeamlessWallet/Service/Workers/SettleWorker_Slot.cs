@@ -124,6 +124,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = GameType.GPI_RNG,
                                 TpUserName = unsettled.cust_id,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id)
                             };
 
@@ -218,6 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = unsettled.SettleTime,
+                                        TransTime = unsettled.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ProgressiveBet = wager.ProgressiveBet,
                                         ProgressiveWin = wager.ProgressiveWin,
@@ -533,6 +535,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid
                             };
 
@@ -776,6 +779,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = settledBLL.GetSettlementType(gameType, unsettled.gameId),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
@@ -897,89 +901,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleJILIRng.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoSettleMGRngWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.MG;
-            var gameType = GameType.MG_RNG;
-            var category = TpCategory.Slots;
-            var logName = "Settle_MG_Rng";
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
-
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledList_MG("Service_BettransRng_MG_Unsettle_Get");
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-
-                            long unixTimestamp = unsettled.SettleTime - new DateTime(1970, 1, 1).Ticks;
-                            unixTimestamp /= TimeSpan.TicksPerSecond;
-
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unixTimestamp,
-                                SettlementType = thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
-                            };
-
-                            if (betRecordInfo.WinlostAmount == 0)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Draw;
-                            }
-
-                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_MG("Service_BettransRng_MG_Settle_Set", unsettled.TransId);
-                        }
-                        catch (Exception ex1)
-                        {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", tpName);
-                log2File.Error(ex.ToString(), logName);
-                isError = true;
-            }
-            finally
-            {
-                var dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-                timerSettleMG.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

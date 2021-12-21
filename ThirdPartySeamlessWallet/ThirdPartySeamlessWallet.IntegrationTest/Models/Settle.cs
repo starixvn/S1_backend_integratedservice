@@ -5,17 +5,6 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Models
 {
-    public class TpUnsettle
-    {
-        public string TransId { get; set; }
-        public int SettleFlag { get; set; }
-    }
-
-    public class Settle
-    {
-        public int SettleFlag { get; set; }
-    }
-
     public class TpBetRecord
     {
         public int TpId { get; set; }

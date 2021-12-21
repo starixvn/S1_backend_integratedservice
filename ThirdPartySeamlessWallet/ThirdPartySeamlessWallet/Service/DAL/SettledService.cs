@@ -29,6 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _wagerDbClient;
         private readonly BettingService _bettingService;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly PartitionService _partitionService;
 
         public SettledService(IServiceProvider provider)
         {
@@ -43,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _partitionService = provider.GetRequiredService<PartitionService>();
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()
@@ -92,7 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        int[] TransTimeTpIds = { (int)Tp.MP, (int)Tp.SA, (int)Tp.Allbet, (int)Tp.WM, (int)Tp.JILI, (int)Tp.YL, (int)Tp.EVO, (int)Tp.Netent, (int)Tp.RedTiger, (int)Tp.Sexy, (int)Tp.PT, (int)Tp.OneGaming, (int)Tp.NineW, (int)Tp.AMB, (int)Tp.TCG, (int)Tp.BTI, (int)Tp.One789, (int)Tp.V8, (int)Tp.KM, (int)Tp.EBet };
+        int[] TransTimeTpIds = { (int)Tp.MP, (int)Tp.SA, (int)Tp.Allbet, (int)Tp.WM, (int)Tp.JILI, (int)Tp.YL, (int)Tp.EVO, (int)Tp.Netent, (int)Tp.RedTiger, (int)Tp.Sexy, (int)Tp.PT, (int)Tp.OneGaming, (int)Tp.NineW, (int)Tp.AMB, (int)Tp.TCG, (int)Tp.BTI, (int)Tp.One789, (int)Tp.V8, (int)Tp.KM, (int)Tp.EBet, (int)Tp.PP, (int)Tp.Iconic, (int)Tp.N2Live, (int)Tp.GPI, (int)Tp.SG, (int)Tp.MG, (int)Tp.Joker };
 
         private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {

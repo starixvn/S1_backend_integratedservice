@@ -58,16 +58,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int sequence { get; set; }
     }
 
-    public class SettleData_SG
+    public class SettleData_SG : SettleData
     {
         public string transferIdList { get; set; }
-        public decimal Stake { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
         public string referenceId { get; set; }
         public string ticketId { get; set; }
-        public long SettleTime { get; set; }
-        public decimal ProgressiveBet { get; set; }
-        public decimal ProgressiveWin { get; set; }
     }
 }

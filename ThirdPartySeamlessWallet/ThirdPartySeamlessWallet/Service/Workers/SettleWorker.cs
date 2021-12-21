@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Org.BouncyCastle.Asn1.Cms;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -57,7 +56,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleKM;
         private Timer timerSettleJILIRng;
         private Timer timerSettleJILIFish;
-        private Timer timerSettleMG;
         private Timer timerSettleTCGSEA;
         private Timer timerSettleTCGVN;
         private Timer timerSettleMP;
@@ -127,7 +125,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleMG = new Timer(DoSettleMGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -824,6 +821,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = (GameType)gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ReferenceNo = wager.betid // for fix cant mapping bonusid when data fixed can remove
                                     };
@@ -916,6 +914,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = (GameType)gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
                                 ReferenceNo = unsettled.schemeid // for smart bet mapping
                             };
@@ -1097,6 +1096,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
@@ -1106,7 +1106,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
                             }
 
-                            // PP LC 原本已存SLOTS 故使用TpCategory.Slots
                             settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
                             settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
                         }
@@ -1352,7 +1351,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAMB?.Change(Timeout.Infinite, 0);
             timerSettleJILIRng?.Change(Timeout.Infinite, 0);
             timerSettleJILIFish?.Change(Timeout.Infinite, 0);
-            timerSettleMG?.Change(Timeout.Infinite, 0);
             timerSettleTCGSEA?.Change(Timeout.Infinite, 0);
             timerSettleTCGVN?.Change(Timeout.Infinite, 0);
             timerSettleMP?.Change(Timeout.Infinite, 0);

@@ -3,8 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -49,11 +51,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        public IEnumerable<string> GetTpUnsettleList(Tp tp, GameType gameType, int LimitCount)
+        public IEnumerable<TpUnsettle> GetTpUnsettleList(Tp tp, GameType gameType, int LimitCount)
         {
-            return _mainDbClient.Query<string>("Service_TpUnsettle_Get", parameters: new { TpId = (int)tp, GameType = (int)gameType, LimitCount });
+            return _mainDbClient.Query<TpUnsettle>("Service_TpUnsettle_Get", parameters: new { TpId = (int)tp, GameType = (int)gameType, LimitCount });
         }
-     
+
         public IEnumerable<TResult> GetTpUnsettleDataBySpName<TResult>(string spName, object parameters, DataBase dataBase)
         {
             return dataBase switch
@@ -70,9 +72,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_TpUnsettle_Set", parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, IsSuccess = isSuccess });
         }
 
-        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId)
+        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, IDbTransaction transaction = null, DateTime? partitionTime = null)
         {
-            return _mainDbClient.Execute("Service_TpUnsettle_Ins", parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId });
+            return _mainDbClient.Execute("Service_TpUnsettle_Ins_V2",
+                transaction: transaction,
+                parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId , PartitionTime = partitionTime });
         }
     }
 }
