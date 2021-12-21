@@ -479,8 +479,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.result *= tpCurrency.ExchangeRate;
+            }
 
             var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+            
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
