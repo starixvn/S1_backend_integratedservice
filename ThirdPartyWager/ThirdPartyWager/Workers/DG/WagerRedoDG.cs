@@ -68,7 +68,7 @@ namespace ThirdPartyWager.Workers
                     last = intervalMins;
                 }
 
-                var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime, 0);
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                 if (time.endUnix < cvTime)
                 {
@@ -94,7 +94,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(120);
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
