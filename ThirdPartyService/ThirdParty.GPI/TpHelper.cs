@@ -95,7 +95,7 @@ namespace ThirdParty.GPI
             switch (gameType.ToLower())
             {
                 case "slots":
-                    oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&fundsURL={cashierUrl}&homeURL={homeUrl}&lobbyURL={lobbyUrl}";//&hidelobby=1
+                    oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&fundsURL={cashierUrl}&homeURL={homeUrl}&lobbyURL={lobbyUrl}&hidelobby=1";
                     break;
                 case "livecasino":
                     if (appType == AppType.Native)
