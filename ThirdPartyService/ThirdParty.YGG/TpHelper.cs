@@ -64,7 +64,7 @@ namespace ThirdParty.YGG
             string sessionKey = Convert.ToBase64String(bytes);
 
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+            oApiResult.Message = $"{GameUrl}?key={sessionKey}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
             return oApiResult;
         }
 
