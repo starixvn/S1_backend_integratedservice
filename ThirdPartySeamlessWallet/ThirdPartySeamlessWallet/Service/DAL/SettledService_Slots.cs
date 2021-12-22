@@ -299,7 +299,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid,  trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid, trans, partitionTime);
                 }
 
                 if (result > 0)

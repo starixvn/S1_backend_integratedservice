@@ -21,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return _tpUnsettleService.GetUnsettledListBySpName<TResult>(spName, dataBase);
         }
 
-        public IEnumerable<TpUnsettle> GetTpUnsettleTransIdList(Tp tp, GameType gameType, int LimitCount = 200)
+        public IEnumerable<TpUnsettle> GetTpUnsettleList(Tp tp, GameType gameType, int LimitCount = 200)
         {
             return _tpUnsettleService.GetTpUnsettleList(tp, gameType, LimitCount);
         }
