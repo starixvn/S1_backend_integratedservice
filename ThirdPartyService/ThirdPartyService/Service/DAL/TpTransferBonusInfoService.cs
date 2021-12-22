@@ -299,7 +299,7 @@ namespace ThirdPartyService.Service.DAL
                     }
 
                     
-                    if (result >= 0 && tpBonusCancelTransfer.UpdateBonusTransferStatus)
+                    if (result >= 0)
                     {
                         var cp = new DynamicParameters(
                             new
