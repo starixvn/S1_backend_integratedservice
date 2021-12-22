@@ -25,6 +25,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
+        private readonly MySqlClient _mainDbClient;
+        private readonly PartitionService _partitionService;
 
         public BettingService(IServiceProvider provider)
         {
@@ -34,7 +36,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             logger = provider.GetRequiredService<ILogger<BettingService>>();
             log2File = provider.GetRequiredService<Log2File>();
             _riskInspection = provider.GetRequiredService<RiskInspection>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _partitionService = provider.GetRequiredService<PartitionService>();
         }
+
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
             if (bonusId == 0)

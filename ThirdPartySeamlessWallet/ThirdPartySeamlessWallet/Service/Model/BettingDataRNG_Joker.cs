@@ -31,4 +31,29 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string type { get; set; }
         public int TicketStatus { get; set; }
     }
+
+    public enum JokerFishTransType
+    {
+        Transaction,
+        Withdraw,
+        Deposit,
+    }
+
+    public class BettingDataFish_Joker
+    {
+        public string appid { get; set; }
+        public string hash { get; set; }
+        public string id { get; set; }
+        public decimal amount { get; set; }
+        public decimal result { get; set; }
+        public string username { get; set; }
+        public long timestamp { get; set; }
+        public string gamecode { get; set; } = string.Empty;
+        public string roundid { get; set; } = string.Empty;
+        public string description { get; set; } = string.Empty;
+        public string type { get; set; } = string.Empty;
+        public decimal startbalance { get; set; }
+        public decimal endbalance { get; set; }
+        public int TicketType { get; set; }
+    }
 }

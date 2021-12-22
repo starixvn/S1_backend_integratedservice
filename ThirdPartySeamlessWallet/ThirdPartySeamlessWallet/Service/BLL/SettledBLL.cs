@@ -449,12 +449,56 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int CancelBetRNG_Joker(CancelBetDataRNG_Joker cancelBetDataRNG_Joker, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, cancelBetDataRNG_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
 
             var result = settledService.CancelBetRNG_Joker(tpCustInfo, cancelBetDataRNG_Joker, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int DepositFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.DepositFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int TransactionFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.result *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+            
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

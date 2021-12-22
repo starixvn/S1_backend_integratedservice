@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -98,16 +99,17 @@ namespace ThirdParty.Joker
                     appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                     secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                 }
-                var gameCode = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId })
-                    .GetValueOrDefault("gamecode")?.ToString();
+                var data = getBetDetail.TpGameTypeOption.Type == 13 ?
+                    TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }) :
+                    TpBetRecordProvider.ReportDbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
 
                 var url = $"{apiUrl}/game-history-url";
                 var parameters = new Dictionary<string, string>()
                 {
-                    { "AppID",appID },
-                    { "Username",tpCustInfo.TpUserName },
-                    { "GameCode",gameCode},
-                    { "RoundID",getBetDetail.TransId},
+                    { "AppID", appID },
+                    { "Username", tpCustInfo.TpUserName },
+                    { "GameCode", data.GetValueOrDefault("gamecode")?.ToString()},
+                    { "RoundID", getBetDetail.TransId},
                     { "Language","en"},
                     { "Timestamp",DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()}
                 };

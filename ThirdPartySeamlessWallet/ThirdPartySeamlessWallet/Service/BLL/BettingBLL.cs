@@ -569,5 +569,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region Joker Fish
+
+        public int WithdrawFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.WithdrawFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        #endregion
+
     }
 }

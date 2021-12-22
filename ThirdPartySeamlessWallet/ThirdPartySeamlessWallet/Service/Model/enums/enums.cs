@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         EVO_LiveCasino = 63,
         Netent_RNG = 64,
         RedTiger_RNG = 65,
+        Joker_Fish = 66,
     }
     public enum Tp
     {
@@ -154,7 +155,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Tip = 6,
         Bonus = 7,
         Jackpot = 8,
-        ConfirmReserve = 9
+        ConfirmReserve = 9,
+        EndRound = 10, //回合結束
     }
     public enum AllowNegative
     {
