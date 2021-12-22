@@ -60,7 +60,7 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");

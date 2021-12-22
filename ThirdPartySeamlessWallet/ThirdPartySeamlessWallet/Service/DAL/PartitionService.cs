@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -16,12 +15,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public class PartitionService
     {
-        private readonly ILogger<PartitionService> _logger;
         private readonly MySqlClient _mainDbClient;
 
         public PartitionService(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<PartitionService>>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 

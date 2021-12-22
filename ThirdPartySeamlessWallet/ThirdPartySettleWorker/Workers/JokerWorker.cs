@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +24,6 @@ namespace ThirdPartySettleWorker.Workers
 
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<JokerWorker> _logger;
         private readonly string _tpName;
@@ -36,7 +34,6 @@ namespace ThirdPartySettleWorker.Workers
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<JokerWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
@@ -65,7 +62,7 @@ namespace ThirdPartySettleWorker.Workers
             var gametype = (GameType)state;
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gametype} no unsettle data.");
@@ -147,7 +144,7 @@ namespace ThirdPartySettleWorker.Workers
             var gametype = (GameType)state;
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleTransIdList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gametype} no unsettle data.");
