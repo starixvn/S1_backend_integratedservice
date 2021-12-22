@@ -651,7 +651,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return new Rep
                     {
-                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, gameType).Balance,
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, (int)GameType.Joker_Fish).Balance,
                         Status = 4,
                         Message = "InvalidParameters"
                     };
@@ -692,7 +692,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return new Rep
                     {
-                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, gameType).Balance,
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, (int)GameType.Joker_Fish).Balance,
                         Status = 100,
                         Message = "InsufficientFund"
                     };
@@ -702,7 +702,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return new Rep
                     {
-                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, gameType).Balance,
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, (int)GameType.Joker_Fish).Balance,
                         Status = 0,
                         Message = "Success"
                     };
