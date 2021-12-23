@@ -262,7 +262,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          out var bonusId,
                          conn,
                          trans,
-                         AllowNegative.Allow);
+                         AllowNegative.NotAllow);
                 }
 
                 if (result > 0)
@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid,  trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Joker, GameType.Joker_Fish, bettingDataFish_Joker.roundid, trans, partitionTime);
                 }
 
                 if (result > 0)
