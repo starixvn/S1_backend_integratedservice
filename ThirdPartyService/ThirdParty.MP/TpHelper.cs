@@ -455,18 +455,14 @@ namespace ThirdParty.MP
                 "application/x-www-form-urlencoded"
             );
 
-            if (!IsJSON(result))
+            if (IsJSON(result))
             {
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result}");
+                var json = JsonConvert.DeserializeObject<ApiResponse>(result);
+                if (json.d.code == 0)
+                {
+                    keyValuePairs.Add("Info", json.d.data.Split("\r\n\r\n")[1]);
+                }
             }
-
-            var json = JsonConvert.DeserializeObject<ApiResponse>(result);
-            if (json.d.code != 0)
-            {
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
-            }
-
-            keyValuePairs.Add("Info", json.d.data.Split("\r\n\r\n")[1]);
 
             var detail = ToJson(keyValuePairs);
 
