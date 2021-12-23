@@ -495,6 +495,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
                 bettingDataFish_Joker.result *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.startbalance *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.endbalance *= tpCurrency.ExchangeRate;
             }
 
             var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
