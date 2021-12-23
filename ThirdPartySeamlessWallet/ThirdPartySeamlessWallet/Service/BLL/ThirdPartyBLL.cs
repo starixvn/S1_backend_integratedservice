@@ -207,6 +207,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.SG_Fish;
                     }
                     break;
+                case (int)Tp.Joker:
+                    gameType = GameType.Joker_RNG;
+                    var jokerfish = new List<string>
+                    {
+                        "kk8nqm3cfwtng",
+                        "st5cmuqnaxycn",
+                        "1jeqx59c7ztqg"
+                    };
+                    if (jokerfish.Contains(gameId))
+                    {
+                        gameType = GameType.Joker_Fish;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -230,7 +243,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             SettlementType settlementType = SettlementType.SettledForValid;
             var casino = GetGameCasinoWithCache(tpId);
-            var check = casino.Where(x => x.GameId == gameId && x.TypeId == 3).FirstOrDefault();
+            var check = casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
             if (check != null)
             {
                 settlementType = SettlementType.SettledForValidNotRollover;

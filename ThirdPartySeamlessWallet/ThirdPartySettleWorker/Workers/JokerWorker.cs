@@ -28,6 +28,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<JokerWorker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
 
 
         public JokerWorker(IServiceProvider provider)
@@ -39,6 +40,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
             _partitionService = provider.GetRequiredService<PartitionService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -88,7 +90,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = settleData.Account,
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
-                            SettlementType = _settledBLL.GetSettlementType(gametype, settleData.GameId),
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.GameId),
                             TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                         };                      
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);

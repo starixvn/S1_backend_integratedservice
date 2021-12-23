@@ -261,7 +261,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          out var bonusId,
                          conn,
                          trans,
-                         AllowNegative.Allow);
+                         AllowNegative.NotAllow);
                 }
 
                 if (result > 0)
