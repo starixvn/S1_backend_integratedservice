@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using System.Globalization;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -926,6 +927,78 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        #endregion
+
+        #region AP
+        public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount, out int sq)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.AP_RNG;
+            bettingDataRNG_AP.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingDataRNG_AP.TicketType = (int)BettransType.Bet;
+            afterAmount = 0;
+            sq = 0;
+            CultureInfo culture = CultureInfo.InvariantCulture;
+            DateTime partitionTime = DateTime.Parse(bettingDataRNG_AP.timestamp, culture, DateTimeStyles.None);
+            long unixbettime = ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.bettime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
+            long unixtimestamp = ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.timestamp, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
+
+            var p = new DynamicParameters(new
+            {
+                seq = bettingDataRNG_AP.seq,
+                sitecode = bettingDataRNG_AP.sitecode,
+                gamecode = bettingDataRNG_AP.gamecode,
+                gameroundid = bettingDataRNG_AP.gameroundid,
+                stake = bettingDataRNG_AP.stake,
+                totalstake = bettingDataRNG_AP.totalstake,
+                totalwin = bettingDataRNG_AP.totalwin,
+                bettime = unixbettime,
+                settletime = 0,
+                jpsettletime = 0,
+                timestamp = unixtimestamp,
+                ispromo = bettingDataRNG_AP.ispromo ? 1 : 0,
+                playerid = bettingDataRNG_AP.playerid,
+                hitjackpot = bettingDataRNG_AP.hitjackpot,
+                ip = bettingDataRNG_AP.ip,
+                TicketType = bettingDataRNG_AP.TicketType,
+                TicketStatus = bettingDataRNG_AP.TicketStatus
+            }); ;
+            p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            
+            //using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            //conn.Open();
+            //using var trans = conn.BeginTransaction();
+
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            //var bettransAP = conn.QueryFirstOrDefault<BettransRNG_AP>("Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid })?.FirstOrDefault();
+            if (bettransAP != null)
+            {
+                return 0;
+            }
+
+            var result = 0;
+            //result = conn.Execute(partitionTime,"Service_BettransRng_AP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Ins", p, trans);
+
+            if (result > 0 && bettingDataRNG_AP.stake != 0)
+            {
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_AP.stake, (int)Tp.Joker, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                sq = p.Get<int>("SQ");
+                trans.Commit();
+            }
+
+            return result;
+        }
         #endregion
     }
 }

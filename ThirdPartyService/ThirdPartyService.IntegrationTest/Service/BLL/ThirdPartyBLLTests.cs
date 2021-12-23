@@ -15,6 +15,7 @@ using ThirdPartyService.IntegrationTest.Models;
 using ThirdPartyService.Service.DAL;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using System.Collections.Generic;
 
 namespace ThirdPartyService.Service.BLL.Tests
 {
@@ -66,6 +67,25 @@ namespace ThirdPartyService.Service.BLL.Tests
                 TransId = transId,
                 GameType = gameType,
                 SettledTime = DateTime.Now,
+            });
+            Console.WriteLine(JsonConvert.SerializeObject(actual));
+            return actual.ErrorCode;
+        }
+        [TestCase(39, 250072, "en", ExpectedResult = ErrorCode.Success)]
+        public ErrorCode GotoGameTest(int TpId,int CustId,string LangId)
+        {
+            var actual = _thirdPartyBLL.GotoGame(new TpInfo
+            {
+                TpId = TpId,
+                CustId = CustId,
+                LangId = LangId,
+                AppType = 1,
+                SiteId = 1,
+                inputs = new Dictionary<string, string>
+                {
+                    { "LangId", "en-US" },
+                    { "gameId", "10001" }
+                }
             });
             Console.WriteLine(JsonConvert.SerializeObject(actual));
             return actual.ErrorCode;

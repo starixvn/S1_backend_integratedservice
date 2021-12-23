@@ -13,6 +13,7 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using System.Globalization;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -3727,6 +3728,168 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransRng_RedTiger_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
+        #endregion
+
+        #region AP
+        public int CancelBetRNG_AP(TpCustInfo tpCustInfo, CancelBetDataRNG_AP cancelBetDataRNG_AP, out decimal afterAmount)
+        {
+            var result = 0;
+            int bonusId = 0;
+            //int gameType = (int)GameType.AP_RNG;
+            CultureInfo culture = CultureInfo.InvariantCulture;
+            DateTime partitionTime = DateTime.Parse(cancelBetDataRNG_AP.timestamp, culture, DateTimeStyles.None);
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(new
+            {
+                playerid = cancelBetDataRNG_AP.playerid,
+                gameroundid = cancelBetDataRNG_AP.gameroundid,
+                sitecode = cancelBetDataRNG_AP.sitecode,
+                gamecode = cancelBetDataRNG_AP.gamecode          
+            });
+            //p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+
+            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Check", p)?.FirstOrDefault();
+            if (bettransAP == null)
+            {
+                return -2;
+            }
+            else if (bettransAP.TicketStatus != 0)
+            {
+                return -1;
+            }
+            var para = new DynamicParameters(new
+            {
+                playerid = cancelBetDataRNG_AP.playerid,
+                gameroundid = cancelBetDataRNG_AP.gameroundid,
+                sitecode = cancelBetDataRNG_AP.sitecode,
+                gamecode = cancelBetDataRNG_AP.gamecode,
+                SQ = bettransAP.SQ
+            });
+            result = _partitionService.Execute(partitionTime, "Service_CancelBetRng_AP_Set", para, trans);
+
+
+            if (result > 0)
+            {
+                if (cancelBetDataRNG_AP.totalstake != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(cancelBetDataRNG_AP.totalstake),
+                        (int)Tp.AP,
+                        cancelBetDataRNG_AP.gameroundid,
+                        (int)GameType.AP_RNG,
+                        TpCategory.Slots,
+                        cancelBetDataRNG_AP.seq,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        public int SettledRNG_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var result = 0;
+            afterAmount = 0;
+            try
+            {
+                CultureInfo culture = CultureInfo.InvariantCulture;
+                DateTime partitionTime = DateTime.Parse(bettingDataRNG_AP.timestamp, culture, DateTimeStyles.None);
+                long unixsettletime = string.IsNullOrWhiteSpace(bettingDataRNG_AP.settletime)? 0 : ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.settletime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
+                long unixjpsettletime = string.IsNullOrWhiteSpace(bettingDataRNG_AP.jpsettletime) ? 0 : ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.jpsettletime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
+                long unixtimestamp = ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.timestamp, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
+                //var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
+                var check = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid });
+                if (check.Any())
+                {
+                    return -1;//Duplicated
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+                var win = bettingDataRNG_AP.jpwin > 0 ? bettingDataRNG_AP.jpwin : bettingDataRNG_AP.totalwin;
+                bettingDataRNG_AP.TicketStatus = win > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                bettingDataRNG_AP.TicketType = (int)BettransType.EndRound;
+
+                var p = new DynamicParameters(new
+                {
+                    seq = bettingDataRNG_AP.seq,
+                    sitecode = bettingDataRNG_AP.sitecode,
+                    gamecode = bettingDataRNG_AP.gamecode,
+                    gameroundid = bettingDataRNG_AP.gameroundid,
+                    stake = bettingDataRNG_AP.stake,
+                    totalstake = bettingDataRNG_AP.totalstake,
+                    totalwin = bettingDataRNG_AP.totalwin,
+                    jpwin =  bettingDataRNG_AP.jpwin,
+                    bettime = 0,
+                    settletime = unixsettletime,
+                    jpsettletime = unixjpsettletime,
+                    timestamp = unixtimestamp,
+                    ispromo = bettingDataRNG_AP.ispromo ? 1 : 0,
+                    playerid = bettingDataRNG_AP.playerid,
+                    hitjackpot = bettingDataRNG_AP.hitjackpot,
+                    ip = bettingDataRNG_AP.ip,
+                    TicketType = bettingDataRNG_AP.TicketType,
+                    TicketStatus = bettingDataRNG_AP.TicketStatus
+                    
+                }); ;
+                p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Ins", p, trans);
+
+                if (result > 0 && (bettingDataRNG_AP.totalwin > 0 || bettingDataRNG_AP.jpwin > 0))
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataRNG_AP.jpwin > 0 ? bettingDataRNG_AP.jpwin : bettingDataRNG_AP.totalwin,
+                        (int)Tp.AP,
+                        bettingDataRNG_AP.gameroundid,
+                        (int)GameType.AP_RNG,
+                        TpCategory.Slots,
+                        bettingDataRNG_AP.seq,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans);
+                }
+
+                if (result > 0)
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.AP, GameType.AP_RNG, bettingDataRNG_AP.gameroundid, trans, partitionTime);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+            }
+
+            return result;
+        }
         #endregion
     }
 }
