@@ -37,10 +37,10 @@ namespace ThirdParty.AP
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             #region token
-            //var key = ApplyToken(tpCustInfo);
-            //inputs.TryGetValue("Token", out string token);
-            string key = "3Lqoby7lVU68DbJJdMoAUQ";
-            string token = "0vckrjNh0OYKTRYzePRNw";
+            var key = ApplyToken(tpCustInfo);
+            inputs.TryGetValue("Token", out string token);
+            //string key = "3Lqoby7lVU68DbJJdMoAUQ";
+            //string token = "0vckrjNh0OYKTRYzePRNw";
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
@@ -67,26 +67,33 @@ namespace ThirdParty.AP
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //#region token
-            //var key = ApplyToken(tpCustInfo);
-            //inputs.TryGetValue("Token", out string token);
-            //var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
-            //var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            //var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
-            //#endregion
+            #region token
+            var key = ApplyToken(tpCustInfo);
+            inputs.TryGetValue("Token", out string token);
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
+            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
+            #endregion
+            string WebUrl = inputs.ContainsKey("WebUrl") && !string.IsNullOrEmpty(inputs["WebUrl"]) ? inputs["WebUrl"] : throw new Exception();
+            string LangId = inputs.ContainsKey("LangId") && !string.IsNullOrEmpty(inputs["LangId"]) ? inputs["LangId"] : throw new Exception();
+            string SiteCode = inputs.ContainsKey("SiteCode") && !string.IsNullOrEmpty(inputs["SiteCode"]) ? inputs["SiteCode"] : throw new Exception();
+            string GameRoundId = getBetDetail.TransId;
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
 
-            //string SiteCode = inputs.ContainsKey("SiteCode") && !string.IsNullOrEmpty(inputs["SiteCode"]) ? inputs["SiteCode"] : throw new Exception();
-            //string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            //string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&GameRoundId={getBetDetail.TransId}";
-            //string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
-            //string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            //Dictionary<string, string> header = new Dictionary<string, string>();
-            //header["ap-hash"] = ToMD5(SecretKey + Params);
+            string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&GameRoundId={GameRoundId}&LangCode={LangId}";
 
-            //string sResponse = HttpGet(GameUrl, Params, "application/x-www-form-urlencoded", header);
-            //BaseDetail oApiResult = new BaseDetail(getBetDetail.TpGameTypeOption);
-            //return oApiResult;
-            throw new NotImplementedException();
+            string requrl = HttpGet($"{WebUrl}GameDetail", Params, "application/x-www-form-urlencoded");
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = requrl,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
         }
     }
 }
