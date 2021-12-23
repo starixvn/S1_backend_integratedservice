@@ -217,7 +217,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (betReq.amount < 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username, (int)GameType.Joker_RNG);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.Joker, betReq.username, gameType);
                 rep.Balance = tpCustBalance.Balance;
                 rep.Status = 4;
                 rep.Message = "InvalidParameters";
