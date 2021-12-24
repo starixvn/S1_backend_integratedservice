@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -28,11 +29,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly int gameType = 0;
         private readonly Tools tools;
+        private readonly ILogger<APController> logger;
 
         #endregion
 
         #region Constructors
-        public APController(AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools)
+        public APController(AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools, ILogger<APController> logger)
         {
             this.authBLL = authBLL;
             this.thirdPartyBLL = thirdPartyBLL;
@@ -41,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.settledBLL = settledBLL;
             this.log2File = log2File;
             this.tools = tools;
+            this.logger = logger;
             thisTp = Tp.AP;
             gameType = (int)GameType.AP_RNG;
         }
@@ -211,6 +214,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.ErrorCode = (int)ErrorCode.HashInvalid;
                 result.ErrorDescription = ErrorCode.HashInvalid.ToString();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}", "AP_GetPlayerInfo");
+                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n ApHash:{ApHash}\r\n Hash:{Hash}", "AP_GetPlayerInfo");
                 return result;
             }
             #endregion
@@ -226,6 +230,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.TokenInvalid;
                 result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}", "AP_GetPlayerInfo");
             }
 
             if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
@@ -237,16 +242,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         result.ErrorCode = (int)ErrorCode.APIError;
                         result.ErrorDescription = ErrorCode.APIError.ToString();
+                        logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}", "AP_GetPlayerInfo");
                     }
                     else if (tpCheck.Token != sessionToken)
                     {
                         result.ErrorCode = (int)ErrorCode.TokenInvalid;
                         result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+                        logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken}", "AP_GetPlayerInfo");
                     }
                     else if (tpCheck.Locked)
                     {
                         result.ErrorCode = (int)ErrorCode.APIError;
                         result.ErrorDescription = ErrorCode.APIError.ToString();
+                        logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked", "AP_GetPlayerInfo");
                     }
                     else
                     {
@@ -266,13 +274,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
                     log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}", "AP_GetPlayerInfo", ex);
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}", "AP_GetPlayerInfo");
                 }
             }
             else
             {
                 result.ErrorCode = (int)ErrorCode.TokenInvalid;
                 result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                
+                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}", "AP_GetPlayerInfo");
             }
             log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}", "AP_GetPlayerInfo");
             return result;
