@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -30,11 +31,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int gameType = 0;
         private readonly Tools tools;
         private readonly ILogger<APController> logger;
-
+        private readonly int isTestAccount;
         #endregion
 
         #region Constructors
-        public APController(AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools, ILogger<APController> logger)
+        public APController(AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools, ILogger<APController> logger, IConfiguration configuration)
         {
             this.authBLL = authBLL;
             this.thirdPartyBLL = thirdPartyBLL;
@@ -46,6 +47,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.logger = logger;
             thisTp = Tp.AP;
             gameType = (int)GameType.AP_RNG;
+            this.isTestAccount = configuration.GetValue<int>("IsAPTestAccount");
         }
         #endregion
 
@@ -53,23 +55,23 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #region Resp
         public class Resp
-        { 
-            public string Timestamp { get; set; }
-            public string Seq { get; set; }
+        {
+            public string Timestamp { get; set; } = "";
+            public string Seq { get; set; } = "";
             //public string SiteCode { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorDescription { get; set; }
+            public int ErrorCode { get; set; } = 0;
+            public string ErrorDescription { get; set; } = "";
         }
         public class GetPlayerInfoResp: Resp
         {
-            public string SiteCode { get; set; }
-            public string OPToken { get; set; }
-            public string GameCode { get; set; }
-            public string PlayerId { get; set; }
-            public string PlayerName { get; set; }
-            public string PlayerCountry { get; set; }
-            public string Currency { get; set; }
-            public decimal Balance { get; set; }
+            public string SiteCode { get; set; } = "";
+            public string OPToken { get; set; } = "";
+            public string GameCode { get; set; } = "";
+            public string PlayerId { get; set; } = "";
+            public string PlayerName { get; set; } = "";
+            public string PlayerCountry { get; set; } = "";
+            public string Currency { get; set; } = "";
+            public decimal Balance { get; set; } = 0;
             public int TestAccount { get; set; }
         }
         public class PlaceBetResp: Resp
@@ -180,40 +182,28 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/GetPlayerInfo")]
         public async Task<GetPlayerInfoResp> GetPlayerInfoAsync()
         {
-            #region InitResult
-            //上限要把TestAccount拿掉
-            GetPlayerInfoResp result = new GetPlayerInfoResp()
-            {
-                Timestamp = "",
-                Seq = "",
-                OPToken = "",
-                SiteCode = "",
-                PlayerId = "",
-                PlayerName = "",
-                Currency = "",
-                Balance = 0,
-                TestAccount = 1
-            };
-            #endregion
-
+            #region Initial
+            GetPlayerInfoResp result = new GetPlayerInfoResp();
             GetPlayerInfoReq getReq = new GetPlayerInfoReq();
+            #endregion
 
             try
             {
+                string authToken = string.Empty;
+                string sessionToken = string.Empty;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string Content = await reader.ReadToEndAsync();
                 getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq>(Content);
-                string authToken = string.Empty;
-                string sessionToken = string.Empty;
                 result.Timestamp = getReq.Timestamp;
                 result.Seq = getReq.Seq;
+                result.TestAccount = isTestAccount;
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
                 string reqJson = JsonConvert.SerializeObject(getReq);
-                string Hash = tools.ToMD5($"{SecretKey}{reqJson}");
+                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
@@ -222,7 +212,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
                 #endregion
-
+              
                 try
                 {
                     string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getReq.OPToken)));
