@@ -115,7 +115,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string GameRoundId { get; set; }
             public decimal Stake { get; set; }
             public string BetTime { get; set; }
-            public bool IsPromo { get; set; }
             public string Ip { get; set; }
             public string OPToken { get; set; }
             public string PlayerId { get; set; }
@@ -370,7 +369,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         gameroundid = getReq.GameRoundId,
                         stake = getReq.Stake,
                         bettime = getReq.BetTime,
-                        ispromo = getReq.IsPromo,
                         ip = getReq.Ip,
                         timestamp = getReq.Timestamp,
                         playerid = getReq.PlayerId

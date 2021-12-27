@@ -18,7 +18,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string bettime { get; set; } = null;
         public string settletime { get; set; } = null;
         public string jpsettletime { get; set; } = null;
-        public bool ispromo { get; set; } = false;
         public string ip { get; set; } = null;
         public string timestamp { get; set; }
         public string playerid { get; set; }
@@ -54,7 +53,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long bettime { get; set; }
         public long settletime { get; set; }
         public long jpsettletime { get; set; }
-        public bool ispromo { get; set; } = false;
         public string ip { get; set; } = null;
         public long timestamp { get; set; }
         public string playerid { get; set; }
