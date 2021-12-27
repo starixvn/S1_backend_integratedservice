@@ -180,18 +180,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/GetPlayerInfo")]
         public async Task<GetPlayerInfoResp> GetPlayerInfoAsync()
         {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            string Content = await reader.ReadToEndAsync();
-            var getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq>(Content);
-            string authToken = string.Empty;
-            string sessionToken = string.Empty;
             #region InitResult
-
             //上限要把TestAccount拿掉
             GetPlayerInfoResp result = new GetPlayerInfoResp()
             {
-                Timestamp = getReq.Timestamp,
-                Seq = getReq.Seq,
+                Timestamp = "",
+                Seq = "",
                 OPToken = "",
                 SiteCode = "",
                 PlayerId = "",
@@ -202,87 +196,96 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
             #endregion
 
-            #region Check Hash
-            Request.Headers.TryGetValue("ap-hash", out var ApHash);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-            string reqJson = JsonConvert.SerializeObject(getReq);
-            string Hash = tools.ToMD5($"{SecretKey}{reqJson}");
-            if (ApHash != Hash)
-            {
-                result.ErrorCode = (int)ErrorCode.HashInvalid;
-                result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}", "AP_GetPlayerInfo");
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n ApHash:{ApHash}\r\n Hash:{Hash}", "AP_GetPlayerInfo");
-                return result;
-            }
-            #endregion
+            GetPlayerInfoReq getReq = new GetPlayerInfoReq();
 
             try
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getReq.OPToken)));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                authToken = sessionKeyArr[0];
-                sessionToken = sessionKeyArr[1];
-            }
-            catch(Exception ex)
-            {
-                result.ErrorCode = (int)ErrorCode.TokenInvalid;
-                result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}", "AP_GetPlayerInfo");
-            }
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                string Content = await reader.ReadToEndAsync();
+                getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq>(Content);
+                string authToken = string.Empty;
+                string sessionToken = string.Empty;
+                result.Timestamp = getReq.Timestamp;
+                result.Seq = getReq.Seq;
 
-            if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-            {
+                #region Check Hash
+                Request.Headers.TryGetValue("ap-hash", out var ApHash);
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
+                string reqJson = JsonConvert.SerializeObject(getReq);
+                string Hash = tools.ToMD5($"{SecretKey}{reqJson}");
+                if (ApHash != Hash)
+                {
+                    result.ErrorCode = (int)ErrorCode.HashInvalid;
+                    result.ErrorDescription = ErrorCode.HashInvalid.ToString();
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n ApHash:{ApHash}\r\n Hash:{Hash}\r\n AP_GetPlayerInfo");
+                    return result;
+                }
+                #endregion
+
                 try
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null)
-                    {
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                        logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}", "AP_GetPlayerInfo");
-                    }
-                    else if (tpCheck.Token != sessionToken)
-                    {
-                        result.ErrorCode = (int)ErrorCode.TokenInvalid;
-                        result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                        logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken}", "AP_GetPlayerInfo");
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                        logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked", "AP_GetPlayerInfo");
-                    }
-                    else
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
-                        result.ErrorCode = (int)ErrorCode.Success;
-                        result.ErrorDescription = "";
-                        result.OPToken = getReq.OPToken;
-                        result.SiteCode = getReq.SiteCode;
-                        result.PlayerId = tpCustInfoAuth.TpUserName;
-                        result.PlayerName = tpCustInfoAuth.TpUserName;
-                        result.Currency = tpCustInfoAuth.TpCurrencyId;
-                        result.Balance = tpCustBalance.Balance;
-                    }               
+                    string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getReq.OPToken)));
+                    var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                    authToken = sessionKeyArr[0];
+                    sessionToken = sessionKeyArr[1];
                 }
                 catch (Exception ex)
                 {
+                    result.ErrorCode = (int)ErrorCode.TokenInvalid;
+                    result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_GetPlayerInfo");
+                    return result;
+                }
+
+                if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    result.ErrorCode = (int)ErrorCode.TokenInvalid;
+                    result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n AP_GetPlayerInfo");
+                    return result;
+                }
+                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                if (tpCheck == null)
+                {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}", "AP_GetPlayerInfo", ex);
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}", "AP_GetPlayerInfo");
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}\r\n AP_GetPlayerInfo");
+                    return result;
+                }
+                else if (tpCheck.Token != sessionToken)
+                {
+                    result.ErrorCode = (int)ErrorCode.TokenInvalid;
+                    result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken} \r\n AP_GetPlayerInfo");
+                    return result;
+                }
+                else if (tpCheck.Locked)
+                {
+                    result.ErrorCode = (int)ErrorCode.APIError;
+                    result.ErrorDescription = ErrorCode.APIError.ToString();
+                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked\r\n AP_GetPlayerInfo");
+                    return result;
+                }
+                else
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
+                    result.ErrorCode = (int)ErrorCode.Success;
+                    result.ErrorDescription = "";
+                    result.OPToken = getReq.OPToken;
+                    result.SiteCode = getReq.SiteCode;
+                    result.PlayerId = tpCustInfoAuth.TpUserName;
+                    result.PlayerName = tpCustInfoAuth.TpUserName;
+                    result.Currency = tpCustInfoAuth.TpCurrencyId;
+                    result.Balance = tpCustBalance.Balance;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                result.ErrorCode = (int)ErrorCode.TokenInvalid;
-                result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}", "AP_GetPlayerInfo");
+                result.ErrorCode = (int)ErrorCode.APIError;
+                result.ErrorDescription = ErrorCode.APIError.ToString();
+                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_GetPlayerInfo");
             }
-            log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}", "AP_GetPlayerInfo");
             return result;
         }
 
