@@ -63,9 +63,11 @@ namespace ThirdParty.AP
             
             string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}";
 
-            string sResponse = HttpGet($"{WebUrl}LaunchGame", Params, "application/x-www-form-urlencoded");
-
+            //string sResponse = HttpGet($"{WebUrl}LaunchGame", Params, "application/x-www-form-urlencoded");
+            string URL = $"{WebUrl}LaunchGame?{Params}";
             ApiResult oApiResult = new ApiResult();
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = URL;
             return oApiResult;
         }
 
