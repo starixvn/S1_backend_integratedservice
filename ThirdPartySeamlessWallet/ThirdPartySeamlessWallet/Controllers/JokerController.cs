@@ -669,6 +669,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
                 }
 
+                if (transType == JokerFishTransType.Withdraw)
+                {
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.Joker, request.username);
+                    if (tpCheck == null || tpCheck.Locked)
+                    {
+                        return new Rep
+                        {
+                            Status = 1000,
+                            Message = "Other"
+                        };
+                    }
+                }
+               
                 decimal tpAffterAmount;
                 var result = transType switch
                 {
