@@ -3843,7 +3843,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     settletime = unixsettletime,
                     jpsettletime = unixjpsettletime,
                     timestamp = unixtimestamp,
-                    ispromo = bettingDataRNG_AP.ispromo ? 1 : 0,
                     playerid = bettingDataRNG_AP.playerid,
                     hitjackpot = bettingDataRNG_AP.hitjackpot,
                     ip = bettingDataRNG_AP.ip,
