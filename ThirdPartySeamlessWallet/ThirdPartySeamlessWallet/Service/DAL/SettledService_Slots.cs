@@ -254,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          tpTransId: bettingDataFish_Joker.roundid,
                          gameType: (int)GameType.Joker_Fish,
                          tpCategory: TpCategory.Fish,
-                         refId: bettingDataFish_Joker.id.Substring(0, 45),
+                         refId: bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
                          TransType.Payout,
                          betData: null,
                          out afterAmount,
@@ -273,6 +273,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
 
             return result;
@@ -311,6 +312,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
 
             return result;
