@@ -279,10 +279,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker)
         {
             var result = 0;
-            afterAmount = 0;
             try
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
