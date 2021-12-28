@@ -687,6 +687,86 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}", $"{thisTp}_refund");
             return refundResp;
         }
+
+        public class AdjustmentReq : BettingDataRNG_PP
+        {
+            public string hash { get; set; }
+            public string token { get; set; }
+            public string providerId { get; set; }
+        }
+
+        public class AdjustmentResp
+        {
+            public string transactionId { get; set; }
+            public string currency { get; set; }
+            public decimal cash { get; set; }
+            public decimal bonus { get; set; }
+            public int error { get; set; }
+            public string description { get; set; }
+        }
+
+        [Route("[controller]/adjustment")]
+        public AdjustmentResp adjustment([FromForm] Dictionary<string, string> adjustmentReqq)
+        {
+            AdjustmentResp adjustmentResp = new AdjustmentResp();
+            adjustmentResp.error = 100;
+            adjustmentResp.description = "Internal server error.";
+            string logName = $"{thisTp}_adjustment";
+            try
+            {
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
+
+                if (!hashCheck(adjustmentReqq, secureKey))
+                {
+                    adjustmentResp.error = 5;
+                    adjustmentResp.description = "Invalid hash code.";
+                    log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
+                    return adjustmentResp;
+                }
+
+                AdjustmentReq adjustmentReq = JsonConvert.DeserializeObject<AdjustmentReq>(JsonConvert.SerializeObject(adjustmentReqq));
+                adjustmentResp.transactionId = adjustmentReq.reference;
+                adjustmentResp.bonus = 0;
+
+                var gameType = thirdPartyBLL.GetGameType((int)thisTp, adjustmentReq.gameId);
+
+                var result = settledBLL.AdjustmentRNG_PP(adjustmentReq, (int)gameType, out decimal tpAffterAmount);
+                if (result > 0 || result == -1)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, adjustmentReq.userId, (int)gameType);
+                    if (tpAffterAmount == 0)
+                    {
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReq.userId, (int)gameType);
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+
+                    adjustmentResp.cash = tpAffterAmount;
+                    adjustmentResp.currency = tpCustBalance.TpCurrencyId;
+                    adjustmentResp.error = 0;
+                    adjustmentResp.description = "Success.";
+                    log2File.Info($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
+                    return adjustmentResp;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReq.userId, (int)gameType);
+                    adjustmentResp.currency = tpCustBalance.TpCurrencyId;
+                    adjustmentResp.cash = tpCustBalance.Balance;
+                    adjustmentResp.error = 1;
+                    adjustmentResp.description = "Insufficient balance.";
+                }
+            }
+            catch (Exception ex)
+            {
+                adjustmentResp.error = 100;
+                log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}\r\n{ex.Message}", logName, ex);
+            }
+
+            log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
+            return adjustmentResp;
+        }
+
         private bool hashCheck(Dictionary<string, string> req, string secureKey)
         {
             var hashKey = req["hash"];

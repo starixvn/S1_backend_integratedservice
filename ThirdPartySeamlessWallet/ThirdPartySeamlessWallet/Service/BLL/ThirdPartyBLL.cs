@@ -187,10 +187,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.JILI:
                     gameType = GameType.JILI_RNG;
 
-                    List<int> fish = new List<int>{1,20,42,32,60,74};
+                    List<int> fish = new List<int> { 1, 20, 42, 32, 60, 74 };
                     if (fish.Contains(Convert.ToInt32(gameId)))
                     {
                         gameType = GameType.JILI_Fish;
+                    }
+                    break;
+                case (int)Tp.PP:
+                    gameType = GameType.PP_RNG;
+                    if (int.TryParse(gameId, out int tempGameId))
+                    {
+                        gameType = GameType.PP_LiveCasino;
+                    }
+                    break;
+                case (int)Tp.SG:
+                    gameType = GameType.SG_RNG;
+                    if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.SG_Fish;
                     }
                     break;
                 default:
@@ -222,6 +236,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 settlementType = SettlementType.SettledForValidNotRollover;
             }
             return settlementType;
+        }
+
+        public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
+        {
+            return thirdPartyService.AddTpBetFailureRecord(tpBetFailureRecord);
         }
     }
 }

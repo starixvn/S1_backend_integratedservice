@@ -177,9 +177,9 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 if (betList.Count > 0 && betList.Sum(x => x.Value) == payoutList.Sum(x => x.ValidBetAmount))
                                 {
                                     var billNoList = payoutList.Select(x => x.BillNo).ToArray();
-                                    var result = settledBLL.Get_TpWagerAG_Settle(JsonConvert.SerializeObject(billNoList), out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
+                                    var wager = settledBLL.GetSettle_TpWagerAG(JsonConvert.SerializeObject(billNoList));
 
-                                    if (result > 0)
+                                    if (wager != null)
                                     {
                                         string username = unsettled.Playname.Substring(unsettled.AgentCode.Length);
 
@@ -188,27 +188,28 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                                         if (tpCurrency.ExchangeRate > 1)
                                         {
-                                            stake *= tpCurrency.ExchangeRate;
-                                            validBet *= tpCurrency.ExchangeRate;
-                                            winLostAmount *= tpCurrency.ExchangeRate;
+                                            wager.Stake *= tpCurrency.ExchangeRate;
+                                            wager.ValidBet *= tpCurrency.ExchangeRate;
+                                            wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                         }
 
-                                        if (betList.Sum(x => x.Value) == stake)
+                                        if (betList.Sum(x => x.Value) == wager.Stake)
                                         {
                                             BetRecordInfo betRecordInfo = new BetRecordInfo
                                             {
                                                 TpId = (int)Tp.AG,
-                                                Stake = stake,
-                                                ValidBet = validBet,
-                                                WinlostAmount = winLostAmount,
+                                                Stake = wager.Stake,
+                                                ValidBet = wager.ValidBet,
+                                                WinlostAmount = wager.WinLostAmount,
                                                 TransId = unsettled.TransactionID,
                                                 GameType = GameType.AG_LiveCasino,
                                                 TpUserName = username,
-                                                SettledTime = settleTime,
+                                                SettledTime = wager.SettleTime,
+                                                TransTime = wager.TransTime,
                                                 SettlementType = SettlementType.SettledForValid
                                             };
 
-                                            result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                                            var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                             Task.Run(() =>
                                             {
@@ -278,34 +279,46 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     {
                         try
                         {
-                            var result = settledBLL.Get_TpWagerDG_Settle(unsettled.TransId, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime);
+                            var wager = settledBLL.GetSettle_TpWagerDG(unsettled.TransId);
 
-                            if (result > 0)
+                            if (wager != null)
                             {
+                                //会员抢红包
+                                if (wager.GameType == 2 && wager.GameId == 2)
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
+                                        settledBLL.SetSettleFlag_DG(unsettled.TransId);
+                                    });
+                                    continue;
+                                }
+
                                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Username);
                                 var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
 
                                 if (tpCurrency.ExchangeRate > 1)
                                 {
-                                    stake *= tpCurrency.ExchangeRate;
-                                    validBet *= tpCurrency.ExchangeRate;
-                                    winLostAmount *= tpCurrency.ExchangeRate;
+                                    wager.Stake *= tpCurrency.ExchangeRate;
+                                    wager.ValidBet *= tpCurrency.ExchangeRate;
+                                    wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
 
                                 BetRecordInfo betRecordInfo = new BetRecordInfo
                                 {
                                     TpId = thisTp,
-                                    Stake = stake,
-                                    ValidBet = validBet,
-                                    WinlostAmount = winLostAmount,
+                                    Stake = wager.Stake,
+                                    ValidBet = wager.ValidBet,
+                                    WinlostAmount = wager.WinLostAmount,
                                     TransId = unsettled.TransId,
                                     GameType = GameType.DG_LiveCasino,
                                     TpUserName = unsettled.Username,
-                                    SettledTime = settleTime,
+                                    SettledTime = wager.SettleTime,
+                                    TransTime = wager.TransTime,
                                     SettlementType = SettlementType.SettledForValid
                                 };
 
-                                result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                                var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                 Task.Run(() =>
                                 {
@@ -313,14 +326,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     settledBLL.SetSettleFlag_DG(unsettled.TransId);
                                 });
                             }
-                            else if (result == -1)
-                            {
-                                Task.Run(() =>
-                                {
-                                    settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
-                                    settledBLL.SetSettleFlag_DG(unsettled.TransId);
-                                });
-                            }
+
                         }
                         catch (Exception ex1)
                         {
@@ -822,6 +828,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         GameType = (GameType)gameType,
                                         TpUserName = unsettled.Account,
                                         SettledTime = wager.SettleTime,
+                                        TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
                                         ReferenceNo = wager.betid // for fix cant mapping bonusid when data fixed can remove
                                     };
@@ -914,6 +921,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = (GameType)gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
                                 ReferenceNo = unsettled.schemeid // for smart bet mapping
                             };
@@ -1095,6 +1103,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
+                                TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid,
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             };
@@ -1104,7 +1113,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
                             }
 
-                            // PP LC 原本已存SLOTS 故使用TpCategory.Slots
                             settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
                             settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
                         }

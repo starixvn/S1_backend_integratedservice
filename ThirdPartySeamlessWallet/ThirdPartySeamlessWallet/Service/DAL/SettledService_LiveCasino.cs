@@ -304,6 +304,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerDG_Settle_Set", new { TransId = lTransId }, commandType: CommandType.StoredProcedure);
         }
+        public int SetSettleFlag_DG(string TransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
+        }
+
+        public SettleData_DG GetSettle_TpWagerDG(string TransId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData_DG>("Service_TpWagerDG_Settle_Get_V2", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
         #endregion
 
         #region AG
@@ -438,11 +449,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", new { transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
         }
-        public int SetSettleFlag_DG(string TransId)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
-        }
         public int SetSettleFlag_AG(string transactionID, string transactionIDs)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -481,6 +487,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public SettleData GetSettle_TpWagerAG(string TransId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerAG_Settle_Get_V2", parameters: new DynamicParameters(new { billNoList = TransId }));
+        }
+
         #endregion
         #region Allbet
         public IEnumerable<UnsettleBettingDataLC_Allbet> GetUnsettledListLC_Allbet()
@@ -1808,7 +1820,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             conn.Open();
             using var trans = conn.BeginTransaction();
-            
+
             try
             {
                 var betList = (bettingData_EBet.detail.withHoldingList != null) ? JsonConvert.SerializeObject(bettingData_EBet.detail.withHoldingList) : JsonConvert.SerializeObject(bettingData_EBet.detail.betList);
@@ -2503,6 +2515,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             string TransId = $"{payoutDataLC_N2Live.request.gameid}_{payoutDataLC_N2Live.request.userid}";
 
+            var ticketStatus = (int)TicketStatus.UnSettled;
+            var settleFlag = (int)SettleFlag.EndGame;
+            if (payoutDataLC_N2Live.IsVoid)
+            {
+                ticketStatus = (int)TicketStatus.Refund;
+                settleFlag = (int)SettleFlag.Settled;
+            }
+
             var p = new DynamicParameters(new
             {
                 TransId = TransId,
@@ -2517,8 +2537,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //trades = JsonConvert.SerializeObject(payoutDataLC_N2Live.request.trades),
                 timeUnix = new DateTimeOffset(DateTime.Parse(payoutDataLC_N2Live.request.timestamp), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds(),
                 TicketType = (int)BettransType.Payout,
-                TicketStatus = (int)TicketStatus.UnSettled,
-                SettleFlag = 2
+                TicketStatus = ticketStatus,
+                SettleFlag = settleFlag
             });
 
             conn.Open();
