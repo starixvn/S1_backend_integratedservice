@@ -660,6 +660,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 request.amount = tools.Floor(request.amount, 2);
                 parameter["amount"] = request.amount.ToString("0.00");
 
+                if (transType == JokerFishTransType.Transaction)
+                {
+                    request.result = tools.Floor(request.result, 2);
+                    parameter["result"] = request.result.ToString("0.00");
+
+                    request.startbalance = tools.Floor(request.startbalance, 2);
+                    parameter["startbalance"] = request.startbalance.ToString("0.00");
+
+                    request.endbalance = tools.Floor(request.endbalance, 2);
+                    parameter["endbalance"] = request.endbalance.ToString("0.00");
+                }
+
                 if (!CheckSign(request.appid, request.hash, parameter))
                 {
                     return new Rep
