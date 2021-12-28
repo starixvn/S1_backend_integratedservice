@@ -58,7 +58,7 @@ namespace ThirdParty.AP
             string SiteCode = inputs.ContainsKey("SiteCode") && !string.IsNullOrEmpty(inputs["SiteCode"]) ? inputs["SiteCode"] : throw new Exception();
 
 
-            string LangId = inputs.ContainsKey("LangId") && !string.IsNullOrEmpty(inputs["LangId"]) ? inputs["LangId"] : throw new Exception();
+            string LangId = TpLangId;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
             
             string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}";
