@@ -477,6 +477,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int TransactionFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
         {
+            afterAmount = 0;
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
             
@@ -488,13 +489,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataFish_Joker.endbalance *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
-            
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker);
+          
+            if (result > 0 )
             {
-                afterAmount /= tpCurrency.ExchangeRate;
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Joker, bettingDataFish_Joker.username, (int)GameType.Joker_Fish).Balance;
             }
-
+            
             return result;
         }
 
