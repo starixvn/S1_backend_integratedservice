@@ -952,6 +952,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 stake = bettingDataRNG_AP.stake,
                 totalstake = bettingDataRNG_AP.totalstake,
                 totalwin = bettingDataRNG_AP.totalwin,
+                jpwin = bettingDataRNG_AP.jpwin,
                 bettime = unixbettime,
                 settletime = 0,
                 jpsettletime = 0,
@@ -960,8 +961,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 hitjackpot = bettingDataRNG_AP.hitjackpot,
                 ip = bettingDataRNG_AP.ip,
                 TicketType = bettingDataRNG_AP.TicketType,
-                TicketStatus = bettingDataRNG_AP.TicketStatus
-            }); ;
+                TicketStatus = bettingDataRNG_AP.TicketStatus,
+            });
             p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
             
             //using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
