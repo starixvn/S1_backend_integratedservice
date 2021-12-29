@@ -988,7 +988,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_AP.stake != 0)
             {
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_AP.stake, (int)Tp.Joker, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_AP.stake) * -1, (int)Tp.Joker, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
