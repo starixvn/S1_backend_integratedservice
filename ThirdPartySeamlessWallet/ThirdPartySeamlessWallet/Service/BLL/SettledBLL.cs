@@ -2365,7 +2365,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
-                //bettingDataRNG_Joker.amount /= tpCurrency.ExchangeRate;
             }
 
             return result;
