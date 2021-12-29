@@ -965,17 +965,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = bettingDataRNG_AP.TicketStatus,
             });
             p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            
-            //using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            //conn.Open();
-            //using var trans = conn.BeginTransaction();
-
-
+           
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
 
-            //var bettransAP = conn.QueryFirstOrDefault<BettransRNG_AP>("Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid }, transaction: trans, commandType: CommandType.StoredProcedure);
             var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid })?.FirstOrDefault();
             if (bettransAP != null)
             {
@@ -983,13 +977,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             var result = 0;
-            //result = conn.Execute(partitionTime,"Service_BettransRng_AP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Ins", p, trans);
 
             if (result > 0 && bettingDataRNG_AP.stake != 0)
             {
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_AP.stake) * -1, (int)Tp.Joker, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_AP.stake) * -1, (int)Tp.AP, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
