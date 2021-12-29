@@ -240,39 +240,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
 
-        public IEnumerable<TResult> GetUnsettledListBySpName<TResult>(string spName, DataBase dataBase = DataBase.Main)
-        {
-            return dataBase switch
-            {
-                DataBase.Main => _mainDbClient.Query<TResult>(spName),
-                DataBase.Report => _reportDbClient.Query<TResult>(spName),
-                DataBase.Wager => _wagerDbClient.Query<TResult>(spName),
-                _ => throw new System.NotImplementedException(),
-            };
-        }
-
-        public int SetSettleFlagBySpName(string spName, string transId, bool isSuccess, DataBase dataBase = DataBase.Main)
-        {
-            var parameters = new DynamicParameters(new { transId, isSuccess });
-            return dataBase switch
-            {
-                DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
-                DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
-                DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
-                _ => throw new System.NotImplementedException(),
-            };
-        }
-
-        public int SetSettleFlagBySpName(string spName, DynamicParameters parameters, DataBase dataBase = DataBase.Main)
-        {
-            return dataBase switch
-            {
-                DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
-                DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
-                DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
-                _ => throw new System.NotImplementedException(),
-            };
-        }
+      
 
     }
 }
