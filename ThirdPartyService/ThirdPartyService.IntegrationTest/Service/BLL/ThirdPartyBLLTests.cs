@@ -57,8 +57,8 @@ namespace ThirdPartyService.Service.BLL.Tests
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
-        [Ignore("dev")]
-        [TestCase(250140, "4117638194", 29, ExpectedResult = ErrorCode.Success)]
+        //[Ignore("dev")]
+        [TestCase(250072, "4Ei9yfdzKGJll1", 67, ExpectedResult = ErrorCode.Success)]
         public ErrorCode GetBetDetailTest(int custId, string transId, int gameType)
         {
             var actual = _thirdPartyBLL.GetBetDetail(new GetBetDetailRequest
