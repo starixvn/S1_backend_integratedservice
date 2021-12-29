@@ -110,6 +110,22 @@ namespace ThirdPartyCore.Model
         public int CustId { get; set; }
         public int TpId { get; set; }
     }
+    
+    public class TpRemainingTransferBonusModel
+    {
+        public int BonusId { get; set; }
+        public int CustId { get; set; }
+        public int SiteId { get; set; }
+        public string UserName { get; set; }
+        public decimal Bonus { get; set; }
+        public decimal BonusAmount { get; set; }
+        public decimal LockedAmount { get; set; }
+        public int TpId { get; set; }
+        public int PromotionType { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public int PromoCategoryId { get; set; }
+        public int TransferStatus { get; set; }
+    }
 
     public class TpPendingBonusTransferInfoModel
     {
@@ -156,6 +172,8 @@ namespace ThirdPartyCore.Model
         
         [Description("退還本金: RemainingBonus - BonusAmount")]
         public decimal RefundAmount { set; get; }
+
+        public bool UpdateBonusTransferStatus { set; get; }
     }
     public class TpTransferUserList
     {

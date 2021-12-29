@@ -254,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          tpTransId: bettingDataFish_Joker.roundid,
                          gameType: (int)GameType.Joker_Fish,
                          tpCategory: TpCategory.Fish,
-                         refId: bettingDataFish_Joker.id.Substring(0, 45),
+                         refId: bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
                          TransType.Payout,
                          betData: null,
                          out afterAmount,
@@ -273,15 +273,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
 
             return result;
         }
 
-        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker)
         {
             var result = 0;
-            afterAmount = 0;
             try
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
@@ -311,6 +311,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
 
             return result;
@@ -456,7 +457,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData_YGG> GetUnsettledList_YGG()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_YGG>("Service_UnsettledListRng_YGG_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_YGG>("Service_BettransRng_YGG_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_YGG(string reference, string subReference)
@@ -1972,7 +1973,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
@@ -1988,7 +1989,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListFish_CQ9()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)
@@ -2731,10 +2732,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw;
             }
         }
-        public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
+        public IEnumerable<SettleData> GetUnsettledList_MG(string spName)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_MG>(spName, commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>(spName, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_MG(string spName, string transId)

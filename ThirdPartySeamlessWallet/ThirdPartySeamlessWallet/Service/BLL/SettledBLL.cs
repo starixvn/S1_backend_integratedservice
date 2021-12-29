@@ -223,6 +223,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.Get_TpWagerDG_Settle(TransId, out stake, out validBet, out winLostAmount, out settleTime);
         }
+
+        public SettleData_DG GetSettle_TpWagerDG(string TransId)
+        {
+            return settledService.GetSettle_TpWagerDG(TransId);
+        }
+
         public int SetSettleFlag_DG(string TransId)
         {
             return settledService.SetSettleFlag_DG(TransId);
@@ -301,6 +307,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var result = settledService.Get_TpWagerAG_Settle(billNoList, out stake, out validBet, out winLostAmount, out settleTime);
             return result;
+        }
+
+        public SettleData GetSettle_TpWagerAG(string TransId)
+        {
+            return settledService.GetSettle_TpWagerAG(TransId);
         }
 
         #endregion
@@ -477,6 +488,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int TransactionFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
         {
+            afterAmount = 0;
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
             
@@ -488,13 +500,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataFish_Joker.endbalance *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
-            
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker);
+          
+            if (result > 0 )
             {
-                afterAmount /= tpCurrency.ExchangeRate;
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Joker, bettingDataFish_Joker.username, (int)GameType.Joker_Fish).Balance;
             }
-
+            
             return result;
         }
 
@@ -2004,7 +2016,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region MG
-        public IEnumerable<SettleData_MG> GetUnsettledList_MG(string spName)
+        public IEnumerable<SettleData> GetUnsettledList_MG(string spName)
         {
             return settledService.GetUnsettledList_MG(spName);
         }
