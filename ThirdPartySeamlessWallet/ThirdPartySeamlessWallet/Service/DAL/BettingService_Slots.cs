@@ -81,7 +81,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int WithdrawFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
         {
             var result = 0;
-            afterAmount = 0;                    
+            afterAmount = 0;
             try
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
@@ -95,19 +95,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
 
-                bettingDataFish_Joker.TicketType = (int)BettransType.Bet;         
-                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker,trans );
-                
+                bettingDataFish_Joker.TicketType = (int)BettransType.Bet;
+                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
+
                 if (result > 0 && bettingDataFish_Joker.amount != 0)
                 {
                     var bonusId = 0;
                     result = PlaceBetV2(
                         tpCustInfo,
                         Math.Abs(bettingDataFish_Joker.amount) * -1,
-                        (int)Tp.Joker, 
+                        (int)Tp.Joker,
                         bettingDataFish_Joker.roundid,
                         (int)GameType.Joker_Fish,
-                        bettingDataFish_Joker.id.Substring(0,45),
+                        bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
                         null,
                         TpCategory.Fish,
                         out afterAmount,
@@ -124,8 +124,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
-           
+
             return result;
         }
 

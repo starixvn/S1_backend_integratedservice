@@ -253,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          tpTransId: bettingDataFish_Joker.roundid,
                          gameType: (int)GameType.Joker_Fish,
                          tpCategory: TpCategory.Fish,
-                         refId: bettingDataFish_Joker.id.Substring(0, 45),
+                         refId: bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
                          TransType.Payout,
                          betData: null,
                          out afterAmount,
@@ -272,15 +272,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
 
             return result;
         }
 
-        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        public int TransactionFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker)
         {
             var result = 0;
-            afterAmount = 0;
             try
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
@@ -310,6 +310,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
+                result = 0;
             }
 
             return result;
