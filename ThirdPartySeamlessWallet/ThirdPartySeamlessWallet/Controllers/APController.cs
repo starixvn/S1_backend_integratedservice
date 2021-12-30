@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -27,7 +28,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
-        private readonly Log2File log2File;
         private readonly Tp thisTp;
         private readonly int gameType = 0;
         private readonly Tools tools;
@@ -36,19 +36,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         #region Constructors
-        public APController(AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools, ILogger<APController> logger, IConfiguration configuration)
+        public APController(IServiceProvider provider)
         {
-            this.authBLL = authBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            this.tools = tools;
-            this.logger = logger;
+            var configuration = provider.GetRequiredService<IConfiguration>();
+            authBLL = provider.GetRequiredService<AuthBLL>();
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>(); ;
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>(); ;
+            bettingBLL = provider.GetRequiredService<BettingBLL>(); ;
+            settledBLL = provider.GetRequiredService<SettledBLL>(); ;
+            tools = provider.GetRequiredService<Tools>();
+            logger = provider.GetRequiredService<ILogger<APController>>();
             thisTp = Tp.AP;
             gameType = (int)GameType.AP_RNG;
-            this.isTestAccount = configuration.GetValue<int>("IsAPTestAccount");
+            isTestAccount = configuration.GetValue<int>("IsAPTestAccount");
         }
         #endregion
 
@@ -59,7 +59,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string Timestamp { get; set; } = "";
             public string Seq { get; set; } = "";
-            //public string SiteCode { get; set; }
             public int ErrorCode { get; set; } = 0;
             public string ErrorDescription { get; set; } = "";
         }
@@ -396,7 +395,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}", "AP_PlaceBet", ex);
+                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}\r\n AP_PlaceBet");
             }
 
             return result;

@@ -90,8 +90,8 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = tpUserName,
-                            SettledTime = settleData.Where(x=> x.settletime > 0).FirstOrDefault().settletime / 1000,
-                            TransTime = settleData.Where(x => x.settletime > 0).FirstOrDefault().settletime / 1000,
+                            SettledTime = settleData.Where(x=> x.settletime > 0).FirstOrDefault().settletime,
+                            TransTime = settleData.Where(x => x.settletime > 0).FirstOrDefault().settletime,
                             SettlementType = SettlementType.SettledForValid,
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                         },  TpCategory.Slots);
