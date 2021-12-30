@@ -1,12 +1,19 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as builder
-
-COPY . .
-WORKDIR ThirdPartySeamlessWallet/ThirdPartySeamlessWallet
-RUN dotnet publish -c Release -o /app
-
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/aspnet:3.1 AS base
 WORKDIR /app
-COPY --from=builder /app .
 EXPOSE 59259
 
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
+WORKDIR /src
+COPY ["ThirdPartySeamlessWallet/ThirdPartySeamlessWallet.csproj", "ThirdPartySeamlessWallet/"]
+RUN dotnet restore "ThirdPartySeamlessWallet/ThirdPartySeamlessWallet.csproj"
+COPY . .
+WORKDIR "/src/ThirdPartySeamlessWallet"
+RUN dotnet build "ThirdPartySeamlessWallet.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "ThirdPartySeamlessWallet.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "ThirdPartySeamlessWallet.dll"]
