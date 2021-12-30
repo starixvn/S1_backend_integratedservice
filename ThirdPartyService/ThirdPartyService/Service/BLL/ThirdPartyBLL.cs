@@ -1062,8 +1062,6 @@ namespace ThirdPartyService.Service.BLL
             var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(gameTypeOption.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(gameTypeOption.TpId, tpCustInfoResult.Data.SiteId).Setting);
             var getBetDetail = new GetBetDetail(request, gameTypeOption);
-            var custinfo = JsonConvert.SerializeObject(tpCustInfoResult.Data);
-            _logger.LogInformation($"CustId:{request.CustId} \r\n CustInfo:{custinfo} \r\n GetBetDetail");
             var result = tpHelper.GetBetDetail(getBetDetail, tpCustInfoResult.Data, inputs);
             var resultCode = string.IsNullOrEmpty(result.DetailUrl) ? ErrorCode.Success : ErrorCode.BetDetailIsUrl;
             return new ApiResult<object>(resultCode, "success", result);
