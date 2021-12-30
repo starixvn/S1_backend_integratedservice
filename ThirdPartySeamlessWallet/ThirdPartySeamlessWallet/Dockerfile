@@ -4,7 +4,7 @@ EXPOSE 59259
 
 FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build
 WORKDIR /src
-COPY ["ThirdPartySeamlessWallet/ThirdPartySeamlessWallet.csproj", "ThirdPartySeamlessWallet/"]
+COPY ["ThirdPartySeamlessWallet/ThirdPartySeamlessWallet/ThirdPartySeamlessWallet.csproj", "ThirdPartySeamlessWallet/"]
 RUN dotnet restore "ThirdPartySeamlessWallet/ThirdPartySeamlessWallet.csproj"
 COPY . .
 WORKDIR "/src/ThirdPartySeamlessWallet"
