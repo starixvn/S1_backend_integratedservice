@@ -50,8 +50,8 @@ namespace ThirdPartySettleWorker
                })
                .ConfigureServices((hostContext, services) =>
                {
-                   //services.AddHostedService<BonusWorker>();
-                   //services.AddHostedService<SettleWorker>();
+                   services.AddHostedService<BonusWorker>();
+                   services.AddHostedService<SettleWorker>();
 
                    services.AddHostedService<JokerWorker>();
                    services.AddHostedService<MGWorker>();
