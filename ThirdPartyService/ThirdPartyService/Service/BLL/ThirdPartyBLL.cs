@@ -566,6 +566,7 @@ namespace ThirdPartyService.Service.BLL
             }
             
             //檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
+            var checkTransferAmount = tpTransfer.Amount;
             var thirdPartyBalance = balanceApiResult.Data.balance;
             if (tpTransfer.TpId == (int)TpEnum.Saba && thirdPartyBalance < 1)
             {
@@ -574,22 +575,29 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
             {
                 thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;
+                checkTransferAmount /= tpCustInfoResult.Data.ExchangeRate;
+            }
+
+            if (tpTransfer.TpId == (int)TpEnum.Saba && checkTransferAmount < 1)
+            {
+                checkTransferAmount = 0;
             }
 
             thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
-            if (tpTransfer.Amount > thirdPartyBalance)
+            if (tpTransfer.Amount > thirdPartyBalance || checkTransferAmount == 0)
             {
-                tpTransfer.Amount = thirdPartyBalance;
-                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - thirdPartyBalance;
+                var amount = Math.Min(thirdPartyBalance, checkTransferAmount);
+                tpTransfer.Amount = amount;
+                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - amount;
                 if (tpBonusCancelTransfer.RefundAmount < 0)
                 {
                     tpBonusCancelTransfer.RefundAmount = 0;
                 }
 
-                tpBonusCancelTransfer.RemainingBonus = thirdPartyBalance;
+                tpBonusCancelTransfer.RemainingBonus = amount;
                 
                 _logger.LogInformation($"After Calculate: CustId={tpTransfer.CustId}, BonusId={tpBonusCancelTransfer.BonusId}, " +
-                                       $"ThirdPartyBalance={thirdPartyBalance}, TransferAmount={tpTransfer.Amount}, " +
+                                       $"ThirdPartyBalance={thirdPartyBalance}, CheckTransferAmount={checkTransferAmount}, TransferAmount={tpTransfer.Amount}, " +
                                        $"RemainingBonus={tpBonusCancelTransfer.RemainingBonus}, " +
                                        $"RefundAmount={tpBonusCancelTransfer.RefundAmount}");
             }
