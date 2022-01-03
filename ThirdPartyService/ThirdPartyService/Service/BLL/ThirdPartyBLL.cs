@@ -578,20 +578,26 @@ namespace ThirdPartyService.Service.BLL
                 checkTransferAmount *= tpCustInfoResult.Data.ExchangeRate;
             }
 
-            thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
-            if (tpTransfer.Amount > thirdPartyBalance)
+            if (tpTransfer.TpId == (int)TpEnum.Saba && checkTransferAmount < 1)
             {
-                tpTransfer.Amount = thirdPartyBalance;
-                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - thirdPartyBalance;
+                checkTransferAmount = 0;
+            }
+
+            thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
+            if (tpTransfer.Amount > thirdPartyBalance || tpTransfer.Amount > checkTransferAmount)
+            {
+                var amount = Math.Min(thirdPartyBalance, checkTransferAmount);
+                tpTransfer.Amount = amount;
+                tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - amount;
                 if (tpBonusCancelTransfer.RefundAmount < 0)
                 {
                     tpBonusCancelTransfer.RefundAmount = 0;
                 }
 
-                tpBonusCancelTransfer.RemainingBonus = thirdPartyBalance;
+                tpBonusCancelTransfer.RemainingBonus = amount;
                 
                 _logger.LogInformation($"After Calculate: CustId={tpTransfer.CustId}, BonusId={tpBonusCancelTransfer.BonusId}, " +
-                                       $"ThirdPartyBalance={thirdPartyBalance}, TransferAmount={tpTransfer.Amount}, " +
+                                       $"ThirdPartyBalance={thirdPartyBalance}, CheckTransferAmount={checkTransferAmount}, TransferAmount={tpTransfer.Amount}, " +
                                        $"RemainingBonus={tpBonusCancelTransfer.RemainingBonus}, " +
                                        $"RefundAmount={tpBonusCancelTransfer.RefundAmount}");
             }
