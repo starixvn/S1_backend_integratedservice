@@ -588,7 +588,8 @@ namespace ThirdPartyService.Service.BLL
 
                 tpBonusCancelTransfer.RemainingBonus = thirdPartyBalance;
                 
-                _logger.LogInformation($"After Calculate: ThirdPartyBalance={thirdPartyBalance}, TransferAmount={tpTransfer.Amount}, " +
+                _logger.LogInformation($"After Calculate: CustId={tpTransfer.CustId}, BonusId={tpBonusCancelTransfer.BonusId}, " +
+                                       $"ThirdPartyBalance={thirdPartyBalance}, TransferAmount={tpTransfer.Amount}, " +
                                        $"RemainingBonus={tpBonusCancelTransfer.RemainingBonus}, " +
                                        $"RefundAmount={tpBonusCancelTransfer.RefundAmount}");
             }
