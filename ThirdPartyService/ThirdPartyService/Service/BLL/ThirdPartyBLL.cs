@@ -594,7 +594,8 @@ namespace ThirdPartyService.Service.BLL
                                        $"RefundAmount={tpBonusCancelTransfer.RefundAmount}");
             }
 
-            if (tpTransfer.Amount > 0)
+            if (tpTransfer.TpId == (int)TpEnum.Saba && tpTransfer.Amount >= 1 ||
+                tpTransfer.TpId != (int)TpEnum.Saba && tpTransfer.Amount > 0)
             {
                 var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
                 var thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
