@@ -127,19 +127,22 @@ namespace ThirdPartyService.Service.Worker
                 var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet();
                 foreach (var tpTransfer in tpTransferList)
                 {
-                    var tpBonusCancelTransfer = new TpBonusCancelTransfer
+                    Task.Run(() =>
                     {
-                        TpId = tpTransfer.TpId,
-                        CustId = tpTransfer.CustId,
-                        UserName = tpTransfer.UserName,
-                        SiteId = tpTransfer.SiteId,
-                        PromoCategoryId = tpTransfer.PromoCategoryId,
-                        BonusId = tpTransfer.BonusId,
-                        RemainingBonus = tpTransfer.RemainingAmount,
-                        RefundAmount = 0,
-                        UpdateBonusTransferStatus = true
-                    };
-                    _thirdPartyBll.BonusCancelTransfer(tpBonusCancelTransfer);
+                        var tpBonusCancelTransfer = new TpBonusCancelTransfer
+                        {
+                            TpId = tpTransfer.TpId,
+                            CustId = tpTransfer.CustId,
+                            UserName = tpTransfer.UserName,
+                            SiteId = tpTransfer.SiteId,
+                            PromoCategoryId = tpTransfer.PromoCategoryId,
+                            BonusId = tpTransfer.BonusId,
+                            RemainingBonus = tpTransfer.RemainingAmount,
+                            RefundAmount = 0,
+                            UpdateBonusTransferStatus = true
+                        };
+                        _thirdPartyBll.BonusCancelTransfer(tpBonusCancelTransfer);
+                    });
                 }
             }catch (Exception ex)
             {

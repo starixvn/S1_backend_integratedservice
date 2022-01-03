@@ -566,6 +566,7 @@ namespace ThirdPartyService.Service.BLL
             }
             
             //檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
+            var checkTransferAmount = tpTransfer.Amount;
             var thirdPartyBalance = balanceApiResult.Data.balance;
             if (tpTransfer.TpId == (int)TpEnum.Saba && thirdPartyBalance < 1)
             {
@@ -574,6 +575,7 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
             {
                 thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;
+                checkTransferAmount *= tpCustInfoResult.Data.ExchangeRate;
             }
 
             thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
@@ -594,8 +596,8 @@ namespace ThirdPartyService.Service.BLL
                                        $"RefundAmount={tpBonusCancelTransfer.RefundAmount}");
             }
 
-            if (tpTransfer.TpId == (int)TpEnum.Saba && tpTransfer.Amount >= 1 ||
-                tpTransfer.TpId != (int)TpEnum.Saba && tpTransfer.Amount > 0)
+            if (tpTransfer.TpId == (int)TpEnum.Saba && checkTransferAmount >= 1 ||
+                tpTransfer.TpId != (int)TpEnum.Saba && checkTransferAmount > 0)
             {
                 var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
                 var thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
