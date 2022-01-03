@@ -405,7 +405,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         private int AutoCancelBonusV2(int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var parameters = new DynamicParameters(new { BonusId = bonusId });
-            return _mainDbClient.Execute("Service_AutoCancelBonusV2_Set", parameters, conn, trans);
+            return _mainDbClient.Execute("Service_AutoCancelBonus_Set_V3", parameters, conn, trans);
         }
     }
 }

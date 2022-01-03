@@ -707,7 +707,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         private int AutoCancelTransferBonus(int bonusId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_AutoCancelTransferBonus_Set", new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType }, trans, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_AutoCancelTransferBonus_Set_V2", new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType }, trans, commandType: CommandType.StoredProcedure);
         }
         public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, MySqlConnection conn, MySqlTransaction trans)
         {
