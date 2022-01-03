@@ -575,7 +575,7 @@ namespace ThirdPartyService.Service.BLL
             if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
             {
                 thirdPartyBalance *= tpCustInfoResult.Data.ExchangeRate;
-                checkTransferAmount *= tpCustInfoResult.Data.ExchangeRate;
+                checkTransferAmount /= tpCustInfoResult.Data.ExchangeRate;
             }
 
             if (tpTransfer.TpId == (int)TpEnum.Saba && checkTransferAmount < 1)
@@ -584,7 +584,7 @@ namespace ThirdPartyService.Service.BLL
             }
 
             thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
-            if (tpTransfer.Amount > thirdPartyBalance || tpTransfer.Amount > checkTransferAmount)
+            if (tpTransfer.Amount > thirdPartyBalance || checkTransferAmount == 0)
             {
                 var amount = Math.Min(thirdPartyBalance, checkTransferAmount);
                 tpTransfer.Amount = amount;
@@ -602,8 +602,7 @@ namespace ThirdPartyService.Service.BLL
                                        $"RefundAmount={tpBonusCancelTransfer.RefundAmount}");
             }
 
-            if (tpTransfer.TpId == (int)TpEnum.Saba && checkTransferAmount >= 1 ||
-                tpTransfer.TpId != (int)TpEnum.Saba && checkTransferAmount > 0)
+            if (tpTransfer.Amount > 0)
             {
                 var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
                 var thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
