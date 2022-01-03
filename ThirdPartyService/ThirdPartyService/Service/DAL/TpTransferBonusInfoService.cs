@@ -297,20 +297,18 @@ namespace ThirdPartyService.Service.DAL
                             tpBonusCancelTransfer.BonusId.ToString(),
                             out _, conn, trans);
                     }
-
-                    
-                    if (result >= 0)
-                    {
-                        var cp = new DynamicParameters(
-                            new
-                            {
-                                _BonusId = tpBonusCancelTransfer.BonusId,
-                                _CancelBonus = tpBonusCancelTransfer.RemainingBonus - tpBonusCancelTransfer.RefundAmount
-                            });
-                        result = conn.Execute("Service_CancelBonusAmount_Set", cp, trans,
-                            commandType: CommandType.StoredProcedure);
-                    }
-
+                }
+                
+                if (result >= 0)
+                {
+                    var cp = new DynamicParameters(
+                        new
+                        {
+                            _BonusId = tpBonusCancelTransfer.BonusId,
+                            _CancelBonus = tpBonusCancelTransfer.RemainingBonus - tpBonusCancelTransfer.RefundAmount
+                        });
+                    result = conn.Execute("Service_CancelBonusAmount_Set", cp, trans,
+                        commandType: CommandType.StoredProcedure);
                 }
 
                 if (result >= 0)
