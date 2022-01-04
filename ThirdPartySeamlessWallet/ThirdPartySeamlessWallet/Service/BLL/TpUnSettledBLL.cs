@@ -7,7 +7,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
-    public  class TpUnSettledBLL
+    public class TpUnSettledBLL
     {
         private readonly TpUnsettleService _tpUnsettleService;
 
@@ -44,6 +44,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag(string spName, object parameters, DataBase dataBase = DataBase.Main)
         {
             return _tpUnsettleService.SetSettleFlag(spName, parameters, dataBase);
-        }      
+        }
+
+        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId)
+        {
+            return _tpUnsettleService.InsertTpUnsettle(tp, gameType, transId);
+        }
     }
 }
