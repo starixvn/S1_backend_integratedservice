@@ -118,8 +118,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTLC = new Timer(DoSettlePTLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettlePPRng = new Timer(DoSettlePPRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettlePPLC = new Timer(DoSettlePPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettlePPRng = new Timer(DoSettlePPRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettlePPLC = new Timer(DoSettlePPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
