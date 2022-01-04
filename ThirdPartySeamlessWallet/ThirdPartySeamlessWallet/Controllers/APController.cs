@@ -377,10 +377,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (bettingBLL.PlaceBet_AP(betReq, out decimal tpAffterAmount, out int seq) > 0)
                     {
-                        result.Balance = tpAffterAmount;
-                        result.ErrorCode = (int)ErrorCode.Success;
-                        result.ErrorDescription = "";
-                        result.OPTransId = seq.ToString();
+                        //result.Balance = tpAffterAmount;
+                        //result.ErrorCode = (int)ErrorCode.Success;
+                        //result.ErrorDescription = "";
+                        //result.OPTransId = seq.ToString();
+                        result.ErrorCode = (int)ErrorCode.APIError;
+                        result.ErrorDescription = ErrorCode.APIError.ToString();
+                        result.OPTransId = "";
+                        result.Balance = 0;
                     }
                     else
                     {
