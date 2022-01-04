@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -17,27 +15,28 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class PPController : ControllerBase
     {
         private readonly Tp thisTp;
-        private readonly Log2File log2File;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly AuthBLL authBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly IHostEnvironment environment;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly Tools tools;
+        private readonly Log2File _log2File;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly AuthBLL _authBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Tools _tools;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
 
-        public PPController(IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Tools tools)
+        public PPController(IServiceProvider provider)
         {
             thisTp = Tp.PP;
-            this.log2File = log2File;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.authBLL = authBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.environment = environment;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.tools = tools;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tools = provider.GetRequiredService<Tools>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
         }
+
         public class AuthenticateResp
         {
             public string userId { get; set; }
@@ -65,16 +64,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(authenticateReqq, secureKey))
                 {
                     AuthenticateReq authenticateReq = JsonConvert.DeserializeObject<AuthenticateReq>(JsonConvert.SerializeObject(authenticateReqq));
 
-                    if (authBLL.Authenticate(authenticateReq.token, out TpCustInfoAuth tpCustInfoAuth))
+                    if (_authBLL.Authenticate(authenticateReq.token, out TpCustInfoAuth tpCustInfoAuth))
                     {
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
                         if (tpCheck == null)
                         {
                             authenticateResp.error = 2;
@@ -87,9 +86,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            var gameType = thirdPartyBLL.GetGameType_PP(authenticateReq.gameId);
-                            tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)thisTp, (int)gameType);
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
+                            var gameType = _thirdPartyBLL.GetGameType_PP(authenticateReq.gameId);
+                            _tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)thisTp, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                             authenticateResp.userId = tpCustInfoAuth.TpUserName;
                             authenticateResp.currency = tpCustInfoAuth.TpCurrencyId;
                             authenticateResp.cash = tpCustBalance.Balance;
@@ -113,10 +112,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 authenticateResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}\r\n{ex}", $"{thisTp}_Authenticate", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}\r\n{ex}", $"{thisTp}_Authenticate", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}", $"{thisTp}_Authenticate");
+            _log2File.Info($"{JsonConvert.SerializeObject(authenticateReqq)}\r\n{JsonConvert.SerializeObject(authenticateResp)}", $"{thisTp}_Authenticate");
             return authenticateResp;
         }
         public class BalanceResp
@@ -144,14 +143,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(balanceReqq, secureKey))
                 {
                     BalanceReq balanceReq = JsonConvert.DeserializeObject<BalanceReq>(JsonConvert.SerializeObject(balanceReqq));
 
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, balanceReq.userId);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, balanceReq.userId);
                     if (tpCheck == null)
                     {
                         balanceResp.error = 2;
@@ -165,9 +164,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else
                     {
                         //var gameType = thirdPartyBLL.GetGameType_PP(balanceReq.gameId);
-                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, balanceReq.userId);
-                        var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)thisTp);
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balanceReq.userId, gameType);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, balanceReq.userId);
+                        var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)thisTp);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balanceReq.userId, gameType);
 
                         balanceResp.currency = tpCustBalance.TpCurrencyId;
                         balanceResp.cash = tpCustBalance.Balance;
@@ -185,10 +184,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 balanceResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}\r\n{ex}", $"{thisTp}_Balance", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}\r\n{ex}", $"{thisTp}_Balance", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}", $"{thisTp}_Balance");
+            _log2File.Info($"{JsonConvert.SerializeObject(balanceReqq)}\r\n{JsonConvert.SerializeObject(balanceResp)}", $"{thisTp}_Balance");
             return balanceResp;
         }
 
@@ -219,7 +218,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(betReqq, secureKey))
@@ -233,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     //    betReq = JsonConvert.DeserializeObject<BetReq>(Content);
                     //}
 
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, betReq.userId);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, betReq.userId);
                     if (tpCheck == null)
                     {
                         betResp.error = 2;
@@ -246,18 +245,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                        if (bettingBLL.PlaceBetRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
+                        var gameType = _thirdPartyBLL.GetGameType_PP(betReq.gameId);
+                        if (_bettingBLL.PlaceBetRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
                         {
                             if (betReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                                 betResp.cash = tpCustBalance.Balance;
                                 betResp.currency = tpCustBalance.TpCurrencyId;
                             }
                             else
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                                 betResp.cash = tpAffterAmount;
                                 betResp.currency = tpCustBalance.TpCurrencyId;
                             }
@@ -267,7 +266,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             betResp.cash = tpCustBalance.Balance;
                             betResp.currency = tpCustBalance.TpCurrencyId;
                             betResp.bonus = 0;
@@ -276,7 +275,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             betResp.cash = tpCustBalance.Balance;
                             betResp.currency = tpCustBalance.TpCurrencyId;
                             betResp.bonus = 0;
@@ -294,10 +293,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 betResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}\r\n{ex}", $"{thisTp}_Bet", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}\r\n{ex}", $"{thisTp}_Bet", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}", $"{thisTp}_Bet");
+            _log2File.Info($"{JsonConvert.SerializeObject(betReqq)}\r\n{JsonConvert.SerializeObject(betResp)}", $"{thisTp}_Bet");
             return betResp;
         }
 
@@ -321,7 +320,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(resultReqq, secureKey))
@@ -336,18 +335,18 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     resultResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Payout;
-                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (settledBLL.PayoutRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
+                    var gameType = _thirdPartyBLL.GetGameType_PP(betReq.gameId);
+                    if (_settledBLL.PayoutRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             resultResp.cash = tpCustBalance.Balance;
                             resultResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                             resultResp.cash = tpAffterAmount;
                             resultResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -357,7 +356,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         resultResp.cash = tpCustBalance.Balance;
                         resultResp.currency = tpCustBalance.TpCurrencyId;
                         resultResp.bonus = 0;
@@ -366,7 +365,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         resultResp.cash = tpCustBalance.Balance;
                         resultResp.currency = tpCustBalance.TpCurrencyId;
                         resultResp.bonus = 0;
@@ -383,10 +382,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 resultResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}\r\n{ex}", $"{thisTp}_Result", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}\r\n{ex}", $"{thisTp}_Result", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}", $"{thisTp}_Result");
+            _log2File.Info($"{JsonConvert.SerializeObject(resultReqq)}\r\n{JsonConvert.SerializeObject(resultResp)}", $"{thisTp}_Result");
             return resultResp;
         }
 
@@ -400,7 +399,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(bonusWinReqq, secureKey))
@@ -409,8 +408,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Bonus;
                     var gameType = (int)GameType.PP_RNG;
-                    settledBLL.BonusWinRNG_PP(betReq, out decimal tpAffterAmount);
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
+                    _settledBLL.BonusWinRNG_PP(betReq, out decimal tpAffterAmount);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                     payoutResp.cash = tpAffterAmount;
                     payoutResp.currency = tpCustBalance.TpCurrencyId;
                     payoutResp.bonus = 0;
@@ -426,10 +425,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_BonusWin", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_BonusWin", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_BonusWin");
+            _log2File.Info($"{JsonConvert.SerializeObject(bonusWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_BonusWin");
             return payoutResp;
         }
 
@@ -443,7 +442,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(jackpotWinReqq, secureKey))
@@ -451,18 +450,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(jackpotWinReqq));
                     payoutResp.transactionId = betReq.reference;
                     betReq.type = BettransType.Jackpot;
-                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    if (settledBLL.PayoutRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
+                    var gameType = _thirdPartyBLL.GetGameType_PP(betReq.gameId);
+                    if (_settledBLL.PayoutRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
                         if (betReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                             payoutResp.cash = tpCustBalance.Balance;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, betReq.userId, (int)gameType);
                             payoutResp.cash = tpAffterAmount;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -472,7 +471,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -481,7 +480,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, betReq.userId, (int)gameType);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -498,10 +497,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_JackpotWin", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_JackpotWin", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_JackpotWin");
+            _log2File.Info($"{JsonConvert.SerializeObject(jackpotWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_JackpotWin");
             return payoutResp;
         }
 
@@ -520,7 +519,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(promoWinReqq, secureKey))
@@ -528,17 +527,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                     PromoWinReq promoWinReq = JsonConvert.DeserializeObject<PromoWinReq>(JsonConvert.SerializeObject(promoWinReqq));
                     payoutResp.transactionId = promoWinReq.Reference;
 
-                    if (settledBLL.PromoBonus_PP(promoWinReq, out decimal tpAffterAmount) > 0)
+                    if (_settledBLL.PromoBonus_PP(promoWinReq, out decimal tpAffterAmount) > 0)
                     {
                         if (promoWinReq.Amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                             payoutResp.cash = tpCustBalance.Balance;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                             payoutResp.cash = tpAffterAmount;
                             payoutResp.currency = tpCustBalance.TpCurrencyId;
                         }
@@ -548,7 +547,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAffterAmount < 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -557,7 +556,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, promoWinReq.UserId, (int)GameType.PP_RNG);
                         payoutResp.cash = tpCustBalance.Balance;
                         payoutResp.currency = tpCustBalance.TpCurrencyId;
                         payoutResp.bonus = 0;
@@ -574,10 +573,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 payoutResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_PromoWin", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}\r\n{ex}", $"{thisTp}_PromoWin", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_PromoWin");
+            _log2File.Info($"{JsonConvert.SerializeObject(promoWinReqq)}\r\n{JsonConvert.SerializeObject(payoutResp)}", $"{thisTp}_PromoWin");
             return payoutResp;
         }
 
@@ -592,27 +591,31 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/endRound")]
         public EndRoundResp EndRound([FromForm] Dictionary<string, string> endRoundReqq)
         {
-            //log2File.Info(JsonConvert.SerializeObject(endRoundReqq), $"{thisTp}_EndRound");
-            EndRoundResp endRoundResp = new EndRoundResp();
-            endRoundResp.error = 100;
-            endRoundResp.description = "Internal server error.";
+            var endRoundResp = new EndRoundResp
+            {
+                error = 100,
+                description = "Internal server error."
+            };
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(endRoundReqq, secureKey))
-                {
+                {   
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(endRoundReqq));
-                    var gameType = thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    //int result = settledBLL.SettledRNG_PP(betReq, (int)gameType, out decimal tpAffterAmount);
-                    int result = settledBLL.SetSettleFlag_BettransRng_PP_Payout(betReq.roundId, (int)gameType);
+                    var gameType = _thirdPartyBLL.GetGameType_PP(betReq.gameId);
+                    //int result = _settledBLL.SetSettleFlag_BettransRng_PP_Payout(betReq.roundId, (int)gameType);         
 
-                    endRoundResp.cash = 0;
-                    endRoundResp.bonus = 0;
-                    endRoundResp.error = 0;
-                    endRoundResp.description = "Success.";
+                    var result = _tpUnSettledBLL.InsertTpUnsettle(thisTp, gameType, betReq.roundId.ToString());
+                    if (result > 0)
+                    {
+                        endRoundResp.cash = 0;
+                        endRoundResp.bonus = 0;
+                        endRoundResp.error = 0;
+                        endRoundResp.description = "Success.";
+                    }
                 }
                 else
                 {
@@ -623,10 +626,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 endRoundResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}\r\n{ex}", $"{thisTp}_EndRound", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}\r\n{ex}", $"{thisTp}_EndRound", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}", $"{thisTp}_EndRound");
+            _log2File.Info($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}", $"{thisTp}_EndRound");
             return endRoundResp;
         }
 
@@ -651,7 +654,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(refundReqq, secureKey))
@@ -660,8 +663,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     RefundReq refundReq = JsonConvert.DeserializeObject<RefundReq>(JsonConvert.SerializeObject(refundReqq));
                     refundResp.transactionId = $"{refundReq.reference}_refund";
                     //BetReq betReq = JsonConvert.DeserializeObject<BetReq>(Content);
-                    var gameType = thirdPartyBLL.GetGameType_PP(refundReq.gameId);
-                    if (settledBLL.CancelBetRNG_PP(refundReq, (int)gameType, out decimal tpAffterAmount) > 0)
+                    var gameType = _thirdPartyBLL.GetGameType_PP(refundReq.gameId);
+                    if (_settledBLL.CancelBetRNG_PP(refundReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
                         refundResp.error = 0;
                         refundResp.description = "Success.";
@@ -681,10 +684,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 refundResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}\r\n{ex}", $"{thisTp}_refund", ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}\r\n{ex}", $"{thisTp}_refund", ex);
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}", $"{thisTp}_refund");
+            _log2File.Info($"{JsonConvert.SerializeObject(refundReqq)}\r\n{JsonConvert.SerializeObject(refundResp)}", $"{thisTp}_refund");
             return refundResp;
         }
 
@@ -714,14 +717,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{thisTp}_adjustment";
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (!hashCheck(adjustmentReqq, secureKey))
                 {
                     adjustmentResp.error = 5;
                     adjustmentResp.description = "Invalid hash code.";
-                    log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
                     return adjustmentResp;
                 }
 
@@ -729,15 +732,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 adjustmentResp.transactionId = adjustmentReq.reference;
                 adjustmentResp.bonus = 0;
 
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, adjustmentReq.gameId);
+                var gameType = _thirdPartyBLL.GetGameType((int)thisTp, adjustmentReq.gameId);
 
-                var result = settledBLL.AdjustmentRNG_PP(adjustmentReq, (int)gameType, out decimal tpAffterAmount);
+                var result = _settledBLL.AdjustmentRNG_PP(adjustmentReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, adjustmentReq.userId, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, adjustmentReq.userId, (int)gameType);
                     if (tpAffterAmount == 0)
                     {
-                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReq.userId, (int)gameType);
+                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReq.userId, (int)gameType);
                         tpAffterAmount = tpCustBalance.Balance;
                     }
 
@@ -745,12 +748,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     adjustmentResp.currency = tpCustBalance.TpCurrencyId;
                     adjustmentResp.error = 0;
                     adjustmentResp.description = "Success.";
-                    log2File.Info($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
                     return adjustmentResp;
                 }
                 else if (tpAffterAmount < 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReq.userId, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)thisTp, adjustmentReq.userId, (int)gameType);
                     adjustmentResp.currency = tpCustBalance.TpCurrencyId;
                     adjustmentResp.cash = tpCustBalance.Balance;
                     adjustmentResp.error = 1;
@@ -760,10 +763,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 adjustmentResp.error = 100;
-                log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}\r\n{ex.Message}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}\r\n{ex.Message}", logName, ex);
             }
 
-            log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
+            _log2File.Error($"{JsonConvert.SerializeObject(adjustmentReqq)}\r\n{JsonConvert.SerializeObject(adjustmentResp)}", logName);
             return adjustmentResp;
         }
 
@@ -775,7 +778,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             //log2File.Info($"{p}\r\n{hashKey}\r\n{tools.ToMD5(p)}", $"{thisTp}_hashCheck");
 
-            return hashKey.Equals(tools.ToMD5(p), StringComparison.OrdinalIgnoreCase);
+            return hashKey.Equals(_tools.ToMD5(p), StringComparison.OrdinalIgnoreCase);
         }
     }
 }
