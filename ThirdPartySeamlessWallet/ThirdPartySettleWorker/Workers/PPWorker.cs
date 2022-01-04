@@ -63,6 +63,7 @@ namespace ThirdPartySettleWorker.Workers
             var type = gametype == GameType.PP_RNG ? "Rng" : "LC";
             var logName = $"Settle_PP_{type}";
             var getSP = $"Service_Bettrans{type}_PP_Unsettle_Get_V4";
+            var setSP = $"Service_Bettrans{type}_PP_Settle_Set_V4";
 
             try
             {
@@ -121,7 +122,13 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: true);
+                                _tpUnSettledBLL.SetSettleFlag(setSP, new
+                                {
+                                    TpId = (int)Tp,
+                                    GameType = (int)gametype,
+                                    TransId = transId,
+                                    isSuccess = true
+                                });
                             });
                         }
                     }
@@ -129,7 +136,13 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, isSuccess: false);
+                            _tpUnSettledBLL.SetSettleFlag(setSP, new
+                            {
+                                TpId = (int)Tp,
+                                GameType = (int)gametype,
+                                TransId = transId,
+                                isSuccess = false
+                            });
                         });
                         isError = true;
                         _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
