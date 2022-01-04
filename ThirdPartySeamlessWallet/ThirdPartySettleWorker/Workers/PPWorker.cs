@@ -51,6 +51,7 @@ namespace ThirdPartySettleWorker.Workers
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             timerRNG?.Change(Timeout.Infinite, 0);
+            timerLC?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -170,7 +171,9 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                timerRNG?.Change(dueTimeSpan, TimeSpan.Zero);
+                _ = gametype == GameType.PP_RNG ?
+                timerRNG?.Change(dueTimeSpan, TimeSpan.Zero) :
+                timerLC?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
