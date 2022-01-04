@@ -3740,20 +3740,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             CultureInfo culture = CultureInfo.InvariantCulture;
             DateTime partitionTime = DateTime.Parse(cancelBetDataRNG_AP.timestamp, culture, DateTimeStyles.None);
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
+           
 
-            var p = new DynamicParameters(new
-            {
-                playerid = cancelBetDataRNG_AP.playerid,
-                gameroundid = cancelBetDataRNG_AP.gameroundid,
-                sitecode = cancelBetDataRNG_AP.sitecode,
-                gamecode = cancelBetDataRNG_AP.gamecode          
-            });
-            //p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
-            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Check", p)?.FirstOrDefault();
+            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Check", cancelBetDataRNG_AP)?.FirstOrDefault();
             if (bettransAP == null)
             {
                 return -2;
@@ -3770,7 +3759,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 gamecode = cancelBetDataRNG_AP.gamecode,
                 SQ = bettransAP.SQ
             });
-            result = _partitionService.Execute(partitionTime, "Service_CancelBetRng_AP_Set", para, trans);
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Cancel", para, trans);
 
 
             if (result > 0)
