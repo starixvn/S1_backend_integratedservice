@@ -35,8 +35,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("amount")]
         public decimal Amount { get; set; }
 
-        [JsonProperty("betNum")]
+        [JsonProperty("betNum", NullValueHandling = NullValueHandling.Ignore)]
         public long BetNum { get; set; }
+
+        [JsonProperty("eventRecordNum", NullValueHandling = NullValueHandling.Ignore)]
+        public long EventRecordNum { get; set; }
     }
 
     public class UnsettleBettingDataLC_Allbet
