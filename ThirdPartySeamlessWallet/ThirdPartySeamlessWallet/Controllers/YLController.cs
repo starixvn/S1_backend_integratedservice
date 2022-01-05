@@ -69,7 +69,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 resp.status = "500";
                 resp.msg = "system busy";
-                log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}\r\ncert error", logName);
                 return resp;
             }
 
@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}\r\ncheck user error", logName);
                     return resp;
                 }
 
@@ -101,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     resp.status = "500";
                     resp.msg = "system busy";
-                    log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(resp)}\r\nfatal error", logName);
                     return resp;
                 }
             }
