@@ -24,7 +24,6 @@ namespace ThirdPartySettleWorker.Workers
 
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<APWorker> _logger;
         private readonly string _tpName;
@@ -35,7 +34,6 @@ namespace ThirdPartySettleWorker.Workers
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<APWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
@@ -75,7 +73,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         //Get all Bettrans data
                         var settleData = _partitionService.GetUnsettleDataList<SettleDataRNG_AP>("Service_BettransRng_AP_Unsettle_Get", tpUnsettle)
-                            .Where(i => i.TicketType == (int)BettransType.EndRound).Select(x=> x);
+                            .Where(i => i.TicketType == (int)BettransType.EndRound);
 
                         var winLostAmount = settleData.Sum(x => x.totalwin) + settleData.Sum(x => x.jpwin);
                         var tpUserName = settleData.FirstOrDefault().playerid;

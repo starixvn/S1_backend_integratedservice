@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -32,23 +33,22 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int gameType = 0;
         private readonly Tools tools;
         private readonly ILogger<APController> logger;
-        private readonly int isTestAccount;
+        private readonly IHostEnvironment environment;
         #endregion
 
         #region Constructors
         public APController(IServiceProvider provider)
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             authBLL = provider.GetRequiredService<AuthBLL>();
-            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>(); ;
-            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>(); ;
-            bettingBLL = provider.GetRequiredService<BettingBLL>(); ;
-            settledBLL = provider.GetRequiredService<SettledBLL>(); ;
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>(); 
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>(); 
+            bettingBLL = provider.GetRequiredService<BettingBLL>(); 
+            settledBLL = provider.GetRequiredService<SettledBLL>(); 
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<APController>>();
             thisTp = Tp.AP;
             gameType = (int)GameType.AP_RNG;
-            isTestAccount = configuration.GetValue<int>("IsAPTestAccount");
+            environment = provider.GetRequiredService<IHostEnvironment>();
         }
         #endregion
 
@@ -196,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq>(Content);
                 result.Timestamp = getReq.Timestamp;
                 result.Seq = getReq.Seq;
-                result.TestAccount = isTestAccount;
+                result.TestAccount = environment.IsDevelopment() ? 1 : 0; ;
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
@@ -224,7 +224,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_GetPlayerInfo");
+                    logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_GetPlayerInfo");
                     return result;
                 }
 
@@ -274,7 +274,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_GetPlayerInfo");
+                logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_GetPlayerInfo");
             }
             return result;
         }
@@ -395,7 +395,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}\r\n AP_PlaceBet");
+                logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_PlaceBet");
             }
 
             return result;
@@ -473,7 +473,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}\r\n AP_RefundBet");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_RefundBet");
             }
             
             return result;
@@ -564,7 +564,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
                 result.Balance = 0;
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}\r\n AP_Settle");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_Settle");
             }
             return result;
         }
@@ -650,7 +650,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
                 result.Balance = 0;
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}\r\n AP_JPSettle");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_JPSettle");
             }
 
             return result;
@@ -740,7 +740,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_GetBalance");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_GetBalance");
             }
       
             return result;

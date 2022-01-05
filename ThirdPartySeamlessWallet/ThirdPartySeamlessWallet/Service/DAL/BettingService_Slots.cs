@@ -970,8 +970,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             var trans = conn.BeginTransaction();
 
-            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid })?.FirstOrDefault();
-            if (bettransAP != null)
+            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid });
+            if (bettransAP.Any())
             {
                 return 0;
             }
