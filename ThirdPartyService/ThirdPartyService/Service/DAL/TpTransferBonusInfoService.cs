@@ -251,7 +251,7 @@ namespace ThirdPartyService.Service.DAL
             }
         }
         
-        public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer, ApiResult<TransferResult> transferResult)
+        public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer, ApiResult<TransferResult> transferResult , ApiResult<TpCustInfo> tpCustInfoResult)
         {
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
@@ -301,11 +301,17 @@ namespace ThirdPartyService.Service.DAL
                 
                 if (result >= 0)
                 {
+                    var cancelBonus = tpBonusCancelTransfer.RemainingBonus - tpBonusCancelTransfer.RefundAmount;
+                    if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                    {
+                        cancelBonus /= tpCustInfoResult.Data.ExchangeRate;
+                    }
+                    
                     var cp = new DynamicParameters(
                         new
                         {
                             _BonusId = tpBonusCancelTransfer.BonusId,
-                            _CancelBonus = tpBonusCancelTransfer.RemainingBonus - tpBonusCancelTransfer.RefundAmount
+                            _CancelBonus = cancelBonus
                         });
                     result = conn.Execute("Service_CancelBonusAmount_Set", cp, trans,
                         commandType: CommandType.StoredProcedure);
