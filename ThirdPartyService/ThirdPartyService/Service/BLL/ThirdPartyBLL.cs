@@ -390,8 +390,7 @@ namespace ThirdPartyService.Service.BLL
                 {
                     tpTransferBonusInfoService.TpTransferBonusCancelCommit(
                         JsonConvert.DeserializeObject<TpBonusCancelTransfer>(tpTransferInfoModel.ExtensionInfo),
-                        apiResult,
-                        tpCustInfoResult);
+                        apiResult);
                 }
             }
         }
@@ -633,7 +632,7 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.ErrorCode = ErrorCode.Success;
             }
 
-            tpTransferBonusInfoService.TpTransferBonusCancelCommit(tpBonusCancelTransfer, apiResult ,tpCustInfoResult);
+            tpTransferBonusInfoService.TpTransferBonusCancelCommit(tpBonusCancelTransfer, apiResult);
 
             if (apiResult.ErrorCode == ErrorCode.Success)
             {
