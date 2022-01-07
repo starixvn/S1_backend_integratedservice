@@ -528,7 +528,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (bonusId > 0)
                             {
                                 if (betRecord.TpId == (int)Tp.PT)
-                                    AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                    AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                 else
                                     AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
 
@@ -553,7 +553,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (bonusId > 0)
                             {
                                 if (RefBetRecord.TpId == (int)Tp.PT)
-                                    AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                    AutoCancelTransferBonus(bonusId,betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                 else
                                     AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                             }
@@ -582,7 +582,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 if (bonusId > 0)
                                 {
                                     if (RefBetRecord.TpId == (int)Tp.PT)
-                                        AutoCancelTransferBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
+                                        AutoCancelTransferBonus(bonusId,betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                     else
                                         AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
                                 }
@@ -705,9 +705,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
-        private int AutoCancelTransferBonus(int bonusId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
+        private int AutoCancelTransferBonus(int bonusId,string transId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_AutoCancelTransferBonus_Set", new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType }, trans, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_AutoCancelTransferBonus_Set_V2", new { BonusId = bonusId,TransId =transId, CurrencyId = currencyId, GameType = gameType }, trans, commandType: CommandType.StoredProcedure);
         }
         public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, MySqlConnection conn, MySqlTransaction trans)
         {
