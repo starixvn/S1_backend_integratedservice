@@ -764,7 +764,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw;
                 }
             }
-
             return result;
         }
 

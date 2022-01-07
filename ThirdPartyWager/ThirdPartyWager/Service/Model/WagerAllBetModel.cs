@@ -72,4 +72,53 @@ namespace ThirdPartyWager.Service.Model
     {
         public int wagerCount { get; set; }
     }
+
+    public class RewardAllBetModel
+    {
+        public DateTime endTime { get; set; }
+        public string error_code { get; set; }
+        public string message { get; set; }
+        public RewardPage page { get; set; }
+        public DateTime startTime { get; set; }
+    }
+
+    public class RewardPage
+    {
+        public int count { get; set; }
+        public IList<RewardAllBet> datas { get; set; }
+    }
+
+    public class RewardAllBet
+    {
+        public string agent { get; set; }
+        public decimal amount { get; set; }
+        public string client { get; set; }
+        public string currency { get; set; }
+        public string eventCode { get; set; }
+        public long eventRecordNum { get; set; }
+        public int eventType { get; set; }
+        public decimal exchangeRate { get; set; }
+        public DateTime settleTime { get; set; }
+        public int status { get; set; }
+
+        public long settleUnix
+        {
+            get
+            {
+                return new DateTimeOffset(settleTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+    }
+
+    public class RewardAllBetData
+    {
+        public long tranId { get; set; }
+        public int transferType { get; set; }
+        public string client { get; set; }
+        public string currency { get; set; }
+        public decimal amount { get; set; }
+        public long eventRecordNum { get; set; }
+        public dynamic details { get; set; }
+        public int SettleFlag { get; set; }
+    }
 }
