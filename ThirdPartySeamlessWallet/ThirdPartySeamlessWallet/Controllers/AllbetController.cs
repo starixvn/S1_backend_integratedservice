@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -21,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly Tools tools;
         private readonly Log2File log2File;
+        private readonly ILogger<AllbetController> _logger;
         private readonly Tp thisTp;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
@@ -37,9 +39,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             EventSettle = 40
         }
 
-        public AllbetController(IHostEnvironment environment, BettingBLL bettingBLL, ThirdPartyBLL thirdPartyBLL, SettledBLL settledBLL, TpCustInfoBLL tpCustInfoBLL, Log2File log2File, Tools tools)
+        public AllbetController(
+            IHostEnvironment environment,
+            BettingBLL bettingBLL,
+            ThirdPartyBLL thirdPartyBLL,
+            SettledBLL settledBLL,
+            TpCustInfoBLL tpCustInfoBLL,
+            Log2File log2File,
+            Tools tools,
+            ILogger<AllbetController> logger
+        )
         {
             this.tools = tools;
+            _logger = logger;
             this.log2File = log2File;
             thisTp = Tp.Allbet;
             this.thirdPartyBLL = thirdPartyBLL;
@@ -91,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Content-MD5", out var md5);
             Request.Headers.TryGetValue("Content-Type", out var cType);
             Request.Headers.TryGetValue("Date", out var dtDate);
-            //var absoluteUri = $"{Request.Scheme}://{Request.Host.ToUriComponent()}{Request.PathBase.ToUriComponent()}{Request.Path.ToUriComponent()}{Request.QueryString.ToUriComponent()}";
+
             string propertyId = "";
             string sign = "";
             string sAuthorization = authorization.ToString();
@@ -112,8 +124,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             string signString = $"POST\n{md5}\n{cType}\n{dtDate}\n/transfer";
-
-            //log2File.Info($"{Sign(signString, thirdPartySetting.TpSetting["SHA1key"])}\r\n{signString}\r\n{authorization}", $"{thisTp}_transfer_Sign");
+            _logger.LogInformation($"{authorization}\r\n{accept}\r\n{md5}\r\n{cType}\r\n{dtDate}\r\n{signString}");
 
             if (Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) != sign)
             {
@@ -718,6 +729,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             //log2File.Info($"{JsonConvert.SerializeObject(client)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Balance");
             return resp;
         }
+
         private string Sign(string EncryptText, string EncryptKey)
         {
             using HMACSHA1 myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
