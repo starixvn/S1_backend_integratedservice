@@ -51,23 +51,20 @@ namespace ThirdParty.AP
             #region token
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
-            //string key = "3Lqoby7lVU68DbJJdMoAUQ";
-            //string token = "0vckrjNh0OYKTRYzePRNw";
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             #endregion
-            string WebUrl = inputs.ContainsKey("WebUrl") && !string.IsNullOrEmpty(inputs["WebUrl"]) ? inputs["WebUrl"] : throw new Exception();
+            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
             string SiteCode = inputs.ContainsKey("SiteCode") && !string.IsNullOrEmpty(inputs["SiteCode"]) ? inputs["SiteCode"] : throw new Exception();
-
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
             string LangId = TpLangId;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            
-            string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}";
+            bool FunPlay = fun == "1" ? true : false;
+            string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}&FunPlay={FunPlay}";
 
-            //string sResponse = HttpGet($"{WebUrl}LaunchGame", Params, "application/x-www-form-urlencoded");
-            string URL = $"{WebUrl}LaunchGame?{Params}";
+            string URL = $"{GameUrl}LaunchGame?{Params}";
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = URL;
@@ -104,15 +101,13 @@ namespace ThirdParty.AP
             var param = ToJson(sParam);
             var result = HttpPost($"{ApiUrl}/GetPlayerToken", param, "application/json");
 
-            if (IsJSON(result))
-            {
-                var response = JsonConvert.DeserializeObject<GetPlayerTokenrep>(result);
-                PlayerToken = response.Token;
-            }
-            else
+            if (!IsJSON(result))
             {
                 throw new BetDetailNotFoundException();
             }
+
+            var response = JsonConvert.DeserializeObject<GetPlayerTokenrep>(result);
+            PlayerToken = response.Token;
             #endregion
 
             string Params = $"Token={PlayerToken}&SiteCode={SiteCode}&GameCode={gamecode}&GameRoundId={GameRoundId}";

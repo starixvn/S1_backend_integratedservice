@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string seq { get; set; }
         public string sitecode { get; set; }
-        public string gamecode { get; set; } = null;
+        public string gamecode { get; set; }
         public string gameroundid { get; set; }
         public decimal stake { get; set; } = 0;
         public decimal totalstake { get; set; } = 0;

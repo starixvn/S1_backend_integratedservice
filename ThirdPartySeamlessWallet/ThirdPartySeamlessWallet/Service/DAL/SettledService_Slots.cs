@@ -3843,7 +3843,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     TicketType = bettingDataRNG_AP.TicketType,
                     TicketStatus = bettingDataRNG_AP.TicketStatus
                     
-                }); ;
+                });
                 p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Ins", p, trans);
 
