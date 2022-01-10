@@ -28,6 +28,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<APWorker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
 
 
         public APWorker(IServiceProvider provider)
@@ -39,6 +40,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
             _partitionService = provider.GetRequiredService<PartitionService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -75,22 +77,24 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = _partitionService.GetUnsettleDataList<SettleDataRNG_AP>("Service_BettransRng_AP_Unsettle_Get", tpUnsettle)
                             .Where(i => i.TicketType == (int)BettransType.EndRound);
 
-                        var winLostAmount = settleData.Sum(x => x.totalwin) + settleData.Sum(x => x.jpwin);
+                        
                         var tpUserName = settleData.FirstOrDefault().playerid;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
-
+                        var stake = settleData.Sum(x => x.totalstake);
+                        var winLostAmount = settleData.Sum(x => x.totalwin) + settleData.Sum(x => x.jpwin) - stake;
+                        var settledTime = settleData.Where(x => x.settletime > 0).FirstOrDefault().settletime;
                         var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
                         {
                             TpId = (int)Tp,
-                            Stake = settleData.Sum(x=> x.totalstake),
-                            ValidBet = settleData.Sum(x => x.totalstake),
+                            Stake = stake,
+                            ValidBet = stake,
                             WinlostAmount = winLostAmount,
                             TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = tpUserName,
-                            SettledTime = settleData.Where(x=> x.settletime > 0).FirstOrDefault().settletime,
-                            TransTime = settleData.Where(x => x.settletime > 0).FirstOrDefault().settletime,
-                            SettlementType = SettlementType.SettledForValid,
+                            SettledTime = settledTime,
+                            TransTime = settledTime,
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                         },  TpCategory.Slots);
 

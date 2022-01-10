@@ -2335,10 +2335,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #region AP
         public int CancelBetRNG_AP(CancelBetDataRNG_AP cancelBetDataRNG_AP, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, cancelBetDataRNG_AP.playerid);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetDataRNG_AP.playerid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                cancelBetDataRNG_AP.totalstake *= tpCurrency.ExchangeRate;
+            }
 
             var result = settledService.CancelBetRNG_AP(tpCustInfo, cancelBetDataRNG_AP, out afterAmount);
+
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
