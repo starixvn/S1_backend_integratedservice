@@ -202,7 +202,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                //string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
@@ -303,7 +302,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                //string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
@@ -433,7 +431,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                //string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
@@ -511,7 +508,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                //string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
@@ -601,7 +597,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                //string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
 
                 if (ApHash != Hash)
@@ -691,7 +686,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                //string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
