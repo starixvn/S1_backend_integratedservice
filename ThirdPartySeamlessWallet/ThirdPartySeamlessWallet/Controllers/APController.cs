@@ -196,19 +196,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq>(Content);
                 result.Timestamp = getReq.Timestamp;
                 result.Seq = getReq.Seq;
-                result.TestAccount = environment.IsDevelopment() ? 1 : 0; ;
+                result.TestAccount = environment.IsDevelopment() ? 1 : 0;
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n ApHash:{ApHash}\r\n Hash:{Hash}\r\n AP_GetPlayerInfo");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n ApHash:{ApHash}\r\n Hash:{Hash}");
                     return result;
                 }
                 #endregion
@@ -224,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_GetPlayerInfo");
+                    logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
                     return result;
                 }
 
@@ -232,7 +231,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n AP_GetPlayerInfo");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}");
                     return result;
                 }
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
@@ -240,21 +239,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}\r\n AP_GetPlayerInfo");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}");
                     return result;
                 }
                 else if (tpCheck.Token != sessionToken)
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken} \r\n AP_GetPlayerInfo");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken}");
                     return result;
                 }
                 else if (tpCheck.Locked)
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked\r\n AP_GetPlayerInfo");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked");
                     return result;
                 }
                 else
@@ -274,7 +273,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_GetPlayerInfo");
+                logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
             }
             return result;
         }
@@ -303,13 +302,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}\r\n AP_PlaceBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -326,7 +324,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_PlaceBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}");
                 }
 
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, TpUserName);
@@ -334,21 +332,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}\r\n AP_PlaceBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n authToken:{authToken}");
                     return result;
                 }
                 else if (tpCheck.Token != sessionToken)
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken} \r\n AP_PlaceBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken}");
                     return result;
                 }
                 else if (tpCheck.Locked)
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked\r\n AP_PlaceBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked");
                     return result;
                 }
                 else if(getReq.Stake < 0)
@@ -357,7 +355,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result.Balance = tpCustBalance.Balance;
                     result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
                     result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Stake < 0\r\n AP_PlaceBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Stake < 0");
                     return result;
                 }
                 else
@@ -389,13 +387,24 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result.OPTransId = "";
                         result.Balance = 0;
                     }
+
+                    #region CancelBet測試用
+                    if (environment.IsDevelopment() && getReq.Stake >= 6000)
+                    {
+                        System.Threading.Thread.Sleep(60000);
+                        result.ErrorCode = (int)ErrorCode.APIError;
+                        result.ErrorDescription = ErrorCode.APIError.ToString();
+                        logger.LogError($"CancelBet Test\r\n{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
+                        return result;
+                    }
+                    #endregion
                 }
             }
             catch (Exception ex)
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_PlaceBet");
+                logger.LogError(ex,$"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
             }
 
             return result;
@@ -422,13 +431,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}\r\n AP_RefundBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -443,29 +451,29 @@ namespace ThirdPartySeamlessWallet.Controllers
                     playerid = getReq.PlayerId,
                     totalstake = getReq.TotalStake
                 };
-                var cancelesult = settledBLL.CancelBetRNG_AP(cancel, out decimal tpAffterAmount);
+                var cancelresult = settledBLL.CancelBetRNG_AP(cancel, out decimal tpAffterAmount);
 
-                if (cancelesult > 0)
+                if (cancelresult > 0)
                 {
                     result.ErrorCode = (int)ErrorCode.Success;
                     result.ErrorDescription = "";
                     result.Balance = tpAffterAmount;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n cancelesult:{cancelesult}\r\n AP_RefundBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n cancelesult:{cancelresult}");
                     return result;
                 }
-                else if (cancelesult == -1)
+                else if (cancelresult == -1)
                 {
                     result.ErrorCode = (int)ErrorCode.DuplicateRequest;
                     result.ErrorDescription = ErrorCode.DuplicateRequest.ToString();
                     result.Balance = 0;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n cancelesult:{cancelesult}\r\n AP_RefundBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n cancelesult:{cancelresult}");
                     return result;
                 }
-                else if (cancelesult == -2)
+                else if (cancelresult == -2)
                 {
                     result.ErrorCode = (int)ErrorCode.GameNotFound;
                     result.ErrorDescription = ErrorCode.GameNotFound.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n cancelesult:{cancelesult}\r\n AP_RefundBet");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n cancelesult:{cancelresult}");
                     return result;
                 }
             }
@@ -473,7 +481,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_RefundBet");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
             }
             
             return result;
@@ -500,13 +508,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}\r\n AP_Settle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -516,7 +523,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
                     result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
                     result.Balance = 0;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_Settle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
                     return result;
                 }
 
@@ -541,21 +548,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result.ErrorCode = (int)ErrorCode.Success;
                     result.ErrorDescription = "";
                     result.Balance = tpAffterAmount;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}\r\n AP_Settle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else if (SettleResult == -1)
                 {
                     result.ErrorCode = (int)ErrorCode.Success;
                     result.ErrorDescription = "";
                     result.Balance = tpAffterAmount;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}\r\n AP_Settle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
                     result.Balance = 0;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}\r\n AP_Settle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
 
             }
@@ -564,7 +571,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
                 result.Balance = 0;
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_Settle");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
             }
             return result;
         }
@@ -590,14 +597,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
 
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}\r\n AP_JPSettle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -606,7 +612,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
                     result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_JPSettle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
                     return result;
                 }
 
@@ -628,21 +634,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result.ErrorCode = (int)ErrorCode.Success;
                     result.ErrorDescription = "";
                     result.Balance = tpAffterAmount;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}\r\n AP_JPSettle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else if (SettleResult == -1)
                 {
                     result.ErrorCode = (int)ErrorCode.Success;
                     result.ErrorDescription = "";
                     result.Balance = tpAffterAmount;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}\r\n AP_JPSettle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
                     result.Balance = 0;
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}\r\n AP_JPSettle");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
             }
             catch (Exception ex)
@@ -650,7 +656,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
                 result.Balance = 0;
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_JPSettle");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
             }
 
             return result;
@@ -680,13 +686,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string reqJson = JsonConvert.SerializeObject(getReq);
                 string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
                 if (ApHash != Hash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}\r\n AP_GetBalance");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -703,7 +708,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}\r\n AP_GetBalance");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}");
                     return result;
                 }
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, TpUserName);
@@ -711,21 +716,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{TpUserName}\r\n AP_GetBalance");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{TpUserName}");
                     return result;
                 }
                 else if (tpCheck.Token != sessionToken)
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken} \r\n AP_GetBalance");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}\r\n sessionToken:{sessionToken}");
                     return result;
                 }
                 else if (tpCheck.Locked)
                 {
                     result.ErrorCode = (int)ErrorCode.APIError;
                     result.ErrorDescription = ErrorCode.APIError.ToString();
-                    logger.LogInformation($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked\r\n AP_GetBalance");
+                    logger.LogError($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked");
                     return result;
                 }
                 else
@@ -740,7 +745,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.ErrorCode = (int)ErrorCode.APIError;
                 result.ErrorDescription = ErrorCode.APIError.ToString();
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}\r\n AP_GetBalance");
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(result)}");
             }
       
             return result;
