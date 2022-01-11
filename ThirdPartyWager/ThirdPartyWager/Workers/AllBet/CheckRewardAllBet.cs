@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -17,12 +19,13 @@ namespace ThirdPartyWager.Workers
 
         private Timer timer;
         private readonly int tpType = 3;
-        private readonly int timeRange = 60; //in minutes
+        private readonly int timeRange = 20; //in minutes
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 180; // in seconds
 
         public CheckRewardAllBet(IServiceProvider provider)
         {
+            LogContext.PushProperty("Tp", Tp.Allbet);
             _logger = provider.GetRequiredService<ILogger<CheckRewardAllBet>>();
             _rewardAllBetBLL = provider.GetRequiredService<RewardAllBetBLL>();
         }

@@ -2,13 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Security;
-using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,7 +22,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IConfiguration configuration;
         private readonly Log2File log2File;
         private readonly ILogger<ApiPTBLL> logger;
-        private readonly string logName = Tp.PT.ToString();
+        private readonly string tpName = Tp.PT.ToString();
 
         public ApiPTBLL(
             HttpHelper httpHelper,
@@ -63,7 +60,7 @@ namespace ThirdPartyWager.Service.BLL
             var cert = new { currency = certificate["currency"], site = certificate["site"] };
 
             // log
-            log2File.AddRequestLog(logName, guid, url, param, cert);
+            log2File.AddRequestLog(tpName, guid, url, param, cert);
 
             // request
             string r = await DoHttpClientAsync(url, param, entityKey, certificate, guid);
@@ -99,8 +96,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
+                LogContext.PushProperty("Tp", tpName);
+                this.logger.LogError($"StatusCode : {response.StatusCode}");
+                this.logger.LogError($"ReasonPhrase : {response.ReasonPhrase}");
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                {
+                    return "{\"error\":\"SYSTEM_MATAINING\",\"errorcode\":999999}";
+                }
                 var result = "{\"error\":\"fatal error\",\"errorcode\":999999}";
-                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error", request.Headers, certificate);
+                log2File.AddResponseLog(tpName, guid, url, sParam, response, "Error", request.Headers, certificate);
                 return result;
             }
         }

@@ -3,8 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Globalization;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,8 +25,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAllBetBLL> _logger;
-        private readonly string logName = Tp.Allbet.ToString();
-        private readonly IHostEnvironment _environment;
+        private readonly string tpName = Tp.Allbet.ToString();
 
         public ApiAllBetBLL(
             IServiceProvider provider,
@@ -36,7 +37,6 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
-            _environment = environment;
             _seamlessUrl = configuration.GetValue<string>("TpSWserviceUrl");
         }
 
@@ -55,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            _log2File.AddRequestLog(logName, guid, url, parameter, param);
+            _log2File.AddRequestLog(tpName, guid, url, parameter, param);
 
             // request
             var r = await DoHttpClientAsync(url, param, guid);
@@ -84,7 +84,7 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            _log2File.AddRequestLog(logName, guid, url, parameter, param);
+            _log2File.AddRequestLog(tpName, guid, url, parameter, param);
 
             // request
             var r = await DoHttpClientAsync(url, param, guid);
@@ -105,7 +105,6 @@ namespace ThirdPartyWager.Service.BLL
             string uri = "/query_event_records";
             string url = $"{apiUrl}{uri}";
             int pageSize = 1000;
-            startTime = "2022-01-05 00:00:00";
             string parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
 
             // encrype param
@@ -114,7 +113,7 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            _log2File.AddRequestLog(logName, guid, url, parameter, param);
+            _log2File.AddRequestLog(tpName, guid, url, parameter, param);
 
             // request
             var r = await DoHttpClientAsync(url, param, guid);
@@ -140,7 +139,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                _log2File.AddResponseLog(logName, guid, url, param, response);
+                LogContext.PushProperty("Tp", tpName);
+                _logger.LogError($"StatusCode : {response.StatusCode}");
+                _logger.LogError($"ReasonPhrase : {response.ReasonPhrase}");
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                {
+                    return "{\"error_code\":\"SYSTEM_MATAINING\",\"message\":\"System under maintenance\"}";
+                }
+
+                _log2File.AddResponseLog(tpName, guid, url, param, response);
                 return null;
             }
         }
