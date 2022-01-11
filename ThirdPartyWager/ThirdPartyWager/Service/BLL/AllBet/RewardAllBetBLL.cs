@@ -108,6 +108,12 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             var reward = _wagerAllBetService.GetRewardRecord(item.eventRecordNum).Result;
+                            if(item.status != 3)
+                            {
+                                //活动记录状态 2: 未结算(Not settled) 3: 已结算(Settled)
+                                _logger.LogWarning($"Reward Not Settled: {item.eventRecordNum} {item.settleTime}");
+                                continue;
+                            }
                             if (reward == null)
                             {
                                 // call sw reward api
@@ -134,7 +140,7 @@ namespace ThirdPartyWager.Service.BLL
                                 }
                                 else
                                 {
-                                    _logger.LogWarning($"System Reward : {item.eventRecordNum}");
+                                    _logger.LogWarning($"System Reward Settled: {item.eventRecordNum}");
                                 }
                             }
                         }
