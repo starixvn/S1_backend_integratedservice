@@ -7,6 +7,7 @@ using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -41,7 +42,8 @@ namespace ThirdPartyWager.Service.BLL
         {
             var wokerTime = GetWorkerTime(type, 0);
             bool quick = CheckQuick(wokerTime, 5);
-            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
+            wokerTime = wokerTime.AddMinutes(-3);
+            var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
@@ -96,7 +98,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (pageRowCnt == 0)
                     {
                         msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
+                        _logger.LogInformation($"GetRewardsAsync {msg}\r\n{JsonConvert.SerializeObject(data)}");
                         break;
                     }
 
@@ -152,13 +154,13 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH";
-                _logger.LogInformation($"{msg}\r\n{startTime} ~ {endTime}");
+                _logger.LogInformation($"GetRewardsAsync {msg}\r\n{startTime} ~ {endTime}");
                 return success;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"{ex.Message}");
+                _logger.LogError($"GetRewardsAsync\r\n{ex.Message}");
                 return false;
             }
         }
