@@ -134,7 +134,7 @@ namespace ThirdPartyWager.Service.BLL
                                 }
                                 else
                                 {
-                                    _logger.LogWarning($"{item.eventRecordNum}");
+                                    _logger.LogWarning($"System Reward : {item.eventRecordNum}");
                                 }
                             }
                         }
