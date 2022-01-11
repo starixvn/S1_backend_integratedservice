@@ -126,7 +126,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 (int)Tp.YGG, 
                 (int)Tp.AG, 
                 (int)Tp.DG, 
-                (int)Tp.Joker
+                (int)Tp.Joker,
+                (int)Tp.PG
         };
 
         private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
