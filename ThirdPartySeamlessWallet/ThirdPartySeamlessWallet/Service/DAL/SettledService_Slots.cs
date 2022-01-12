@@ -3764,7 +3764,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_Cancel", para, trans);
+            result = _partitionService.Execute(partitionTime, "Service_BettransRng_AP_CancelBet_Set", para, trans);
 
 
             if (result > 0)
