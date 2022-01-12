@@ -101,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSGRng = new Timer(DoSettleSGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSGFish = new Timer(DoSettleSGFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettlePG = new Timer(DoSettlePGWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettlePG = new Timer(DoSettlePGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleKiss918 = new Timer(DoSettleKiss918Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);

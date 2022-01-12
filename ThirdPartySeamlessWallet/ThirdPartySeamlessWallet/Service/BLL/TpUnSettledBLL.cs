@@ -41,6 +41,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return _tpUnsettleService.SetSettleFlag(spName, new { transId, isSuccess }, dataBase);
         }
 
+        public int SetSettleFlag(string spName, Tp tp, GameType gameType, string transId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
+        {
+            return _tpUnsettleService.SetSettleFlag(spName, new
+            {
+                TpId = (int)tp,
+                GameType = (int)gameType,
+                TransId = transId,
+                IsSuccess = isSuccess
+            }, dataBase);
+        }
+
         public int SetSettleFlag(string spName, object parameters, DataBase dataBase = DataBase.Main)
         {
             return _tpUnsettleService.SetSettleFlag(spName, parameters, dataBase);
