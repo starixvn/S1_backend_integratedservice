@@ -62,7 +62,6 @@ namespace ThirdPartyWager.Service.BLL
 
                     // error condition
                     var errorCode = dataWager.error_code;
-                    var errorMsg = dataWager.message;
                     if (errorCode != "OK")
                     {
                         msg = "THIRD_PARTY_ERROR";
@@ -83,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            wagerAllBetService.InsertWager(bet);
+                            var r = wagerAllBetService.InsertWager(bet);
                         }
                         catch (Exception ex)
                         {
@@ -114,7 +113,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            wagerAllBetService.InsertWager(bet);
+                            var r = wagerAllBetService.InsertWager(bet);
                         }
                         catch (Exception ex)
                         {

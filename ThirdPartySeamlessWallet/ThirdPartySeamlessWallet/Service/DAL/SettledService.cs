@@ -127,6 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 (int)Tp.AG, 
                 (int)Tp.DG, 
                 (int)Tp.Joker,
+                (int)Tp.PG,
                 (int)Tp.AP
         };
 

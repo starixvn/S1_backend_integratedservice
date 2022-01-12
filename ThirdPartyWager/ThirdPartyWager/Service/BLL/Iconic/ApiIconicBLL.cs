@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common common;
         private readonly Log2File log2File;
         private readonly ILogger<ApiIconicBLL> logger;
-        private readonly string logName = Tp.Iconic.ToString();
+        private readonly string tpName = Tp.Iconic.ToString();
 
         public ApiIconicBLL(
             HttpHelper httpHelper,
@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // log
-            log2File.AddRequestLog(logName, guid, url, param);
+            log2File.AddRequestLog(tpName, guid, url, param);
 
             // request
             string r = await DoHttpClientAsync(url, param, "GET", true, token, guid);
@@ -97,15 +97,22 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             var response = await httpHelper.GetClient().SendAsync(request);
-
             if (response.IsSuccessStatusCode)
             {
                 return response.Content.ReadAsStringAsync().Result;
             }
             else
             {
+                LogContext.PushProperty("Tp", tpName);
+                this.logger.LogError($"StatusCode : {response.StatusCode}");
+                this.logger.LogError($"ReasonPhrase : {response.ReasonPhrase}");
+                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+                {
+                    return "{\"error\":{\"status\":503,\"message\":\"Service Unavailable\",\"ip\":\"-1\"}}";
+                }
+
                 var result = response.Content.ReadAsStringAsync().Result;
-                log2File.AddResponseLog(logName, guid, tmpUrl, sParam, response, "Error", tmpHeader);
+                log2File.AddResponseLog(tpName, guid, tmpUrl, sParam, response, "Error", tmpHeader);
                 return result;
             }
         }

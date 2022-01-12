@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/Auth")]
         [HttpPost]
-        public VerifySessionResp VerifySession(string traceId, [FromForm] Dictionary<string, string> reqq)
+        public VerifySessionResp VerifySession(string trace_id, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_VerifySession";
             VerifySessionResp resp = new VerifySessionResp();
@@ -161,8 +161,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                             respData.reminder_time = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
                             resp.error = null;
                         }
-
-
                     }
                     else
                     {
@@ -228,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/GetUserBalance")]
         [HttpPost]
-        public Resp GetBalance(string traceId, [FromForm] Dictionary<string, string> reqq)
+        public Resp GetBalance(string trace_id, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_GetBalance";
             Resp resp = new Resp();
@@ -372,7 +370,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/PlaceBet")]
         [HttpPost]
-        public Resp TransferOut(string traceId, [FromForm] Dictionary<string, string> reqq)
+        public Resp TransferOut(string trace_id, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_TransferOut";
             Resp resp = new Resp();
@@ -472,6 +470,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
 
                     transferOutReqq.type = TransferType.PlaceBet;
+                    transferOutReqq.TraceId = trace_id;
                     //transferOutReqq.BetTransactionId = transferOutReqq.BetTransactionId ?? transferOutReqq.TransactionId;
                     BalanceData respData = new BalanceData();
                     resp.data = respData;
@@ -598,7 +597,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/Payout")]
         [HttpPost]
-        public Resp TransferIn(string traceId, [FromForm] Dictionary<string, string> reqq)
+        public Resp TransferIn(string trace_id, [FromForm] Dictionary<string, string> reqq)
         {
             string logName = $"{thisTp}_TransferIn";
             Resp resp = new Resp();
@@ -657,6 +656,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 transferInReqq.type = GetType(transferInReqq.TransactionId);
+                transferInReqq.TraceId = trace_id;
                 int result = settledBLL.SettledRNG_PG(transferInReqq, out decimal tpAffterAmount);
 
                 if (result > 0)
@@ -705,6 +705,183 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
+        public class TransferInOutReqq : TransferInOutDataRNG_PG
+        {
+            [JsonProperty("operator_token")]
+            public string OperatorToken { get; set; }
+
+            [JsonProperty("secret_key")]
+            public string SecretKey { get; set; }
+
+            [JsonProperty("operator_player_session")]
+            public string OperatorPlayerSession { get; set; }
+        }
+
+        [Route("[controller]/TransferInOut")]
+        [HttpPost]
+        public Resp TransferInOut(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        {
+            string logName = $"{thisTp}_TransferInOut";
+            Resp resp = new Resp();
+            resp.error = new Error
+            {
+                code = "1034",
+                message = "Invalid request."
+            };
+
+            var transferInOutReqq = JsonConvert.DeserializeObject<TransferInOutReqq>(JsonConvert.SerializeObject(reqq));
+
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+
+            string secret_key = thirdPartySetting.TpSetting["secret_key"];
+            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+
+            if (string.IsNullOrEmpty(transferInOutReqq.PlayerName) || !transferInOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, transferInOutReqq.PlayerName);
+            if (tpCustInfo == null)
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transferInOutReqq.PlayerName, gameType);
+            if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(transferInOutReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            if (!string.IsNullOrEmpty(transferInOutReqq.OperatorPlayerSession) || transferInOutReqq.IsAdjustment || transferInOutReqq.IsValidateBet)
+            {
+                try
+                {
+                    if (!transferInOutReqq.IsAdjustment && !transferInOutReqq.IsValidateBet)
+                    {
+                        string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(transferInOutReqq.OperatorPlayerSession)));
+                        var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                        string authToken = sessionKeyArr[0]; /* 1 Time*/
+                        string sessionToken = sessionKeyArr[1];/* Long Time*/
+
+                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferInOutReqq.PlayerName);
+                        if (tpCheck == null || tpCheck.Token != sessionToken)
+                        {
+                            resp.error = new Error
+                            {
+                                code = "1308",
+                                message = "Player session is expired"
+                            };
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                            return resp;
+                        }
+                        else if (tpCheck.Locked)
+                        {
+                            resp.error = new Error
+                            {
+                                code = "1309",
+                                message = "Player is inactive"
+                            };
+                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                            return resp;
+                        }
+                    }
+
+                    BalanceData respData = new BalanceData();
+                    resp.data = respData;
+                    respData.updated_time = transferInOutReqq.UpdatedTime;
+                    transferInOutReqq.type = GetType(transferInOutReqq.TransactionId);
+                    transferInOutReqq.TraceId = trace_id;
+                    int result = settledBLL.BetAndPayoutRNG_PG(transferInOutReqq, out decimal tpAffterAmount);
+
+                    if (result > 0)
+                    {
+                        if (transferInOutReqq.TransferAmount == 0)
+                        {
+                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInOutReqq.PlayerName, gameType);
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpCustBalance.Balance;
+                            resp.error = null;
+                        }
+                        else
+                        {
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpAffterAmount;
+                            resp.error = null;
+                        }
+                    }
+                    else if (result == -1)
+                    {
+                        if (environment.IsDevelopment())
+                        {
+                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInOutReqq.PlayerName, gameType);
+                        }
+                        respData.currency_code = tpCustBalance.TpCurrencyId;
+                        respData.balance_amount = tpCustBalance.Balance;
+                        resp.error = null;
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        resp.data = null;
+                        resp.error = new Error
+                        {
+                            code = "3202",
+                            message = "No enough cash balance to bet."
+                        };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+                    else
+                    {
+                        resp.data = null;
+                        resp.error = new Error
+                        {
+                            code = "1034",
+                            message = "Invalid request."
+                        };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                    throw;
+                }
+            }
+            else
+            {
+                resp.error = new Error
+                {
+                    code = "1300",
+                    message = "Invalid player session"
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+            return resp;
+        }
+
         public class AdjustmentResp
         {
             public AdjustmentBalanceData data { get; set; }
@@ -721,7 +898,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/Adjustment")]
         [HttpPost]
-        public AdjustmentResp Adjustment(string traceId, [FromForm] Dictionary<string, string> reqq)
+        public AdjustmentResp Adjustment(string trace_id, [FromForm] Dictionary<string, string> reqq)
         {
             // api used for future certain PG event only , such as Cash Tournament.
             string logName = $"{thisTp}_Adjustment";
@@ -780,6 +957,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var balanceBefore = tpCustBalance.Balance;
+                adjustmentReqq.TraceId = trace_id;
                 int result = settledBLL.RewardRNG_PG(adjustmentReqq, out decimal tpAffterAmount);
 
                 if (result > 0)
@@ -849,11 +1027,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (transactionType == "400")
             {
+                //400: BonusToCash
                 return TransferType.Bonus;
             }
             else if (transactionType == "403")
             {
+                //403: FreeGameToCash
                 return TransferType.PlaceBet;
+            }
+            else if (transactionType == "106")
+            {
+                //106: BetPayout
+                return TransferType.Payout;
             }
             else
             {
