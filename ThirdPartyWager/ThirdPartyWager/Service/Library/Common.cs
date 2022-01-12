@@ -136,5 +136,13 @@ namespace ThirdPartyWager.Service.Library
 
             return isEncodeUrl ? System.Web.HttpUtility.UrlEncode(base64Str) : base64Str;
         }
+
+        public string Sign(string EncryptText, string EncryptKey)
+        {
+            using HMACSHA1 myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
+            byte[] RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
+
+            return Convert.ToBase64String(RstRes);
+        }
     }
 }
