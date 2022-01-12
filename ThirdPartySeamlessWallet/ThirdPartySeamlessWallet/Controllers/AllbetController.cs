@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -21,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly Tools tools;
         private readonly Log2File log2File;
+        private readonly ILogger<AllbetController> _logger;
         private readonly Tp thisTp;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
@@ -33,12 +35,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             Bet = 10,
             Cancel = 11,
             Settle = 20,
-            ReSettle = 21
+            ReSettle = 21,
+            EventSettle = 40
         }
 
-        public AllbetController(IHostEnvironment environment, BettingBLL bettingBLL, ThirdPartyBLL thirdPartyBLL, SettledBLL settledBLL, TpCustInfoBLL tpCustInfoBLL, Log2File log2File, Tools tools)
+        public AllbetController(
+            IHostEnvironment environment,
+            BettingBLL bettingBLL,
+            ThirdPartyBLL thirdPartyBLL,
+            SettledBLL settledBLL,
+            TpCustInfoBLL tpCustInfoBLL,
+            Log2File log2File,
+            Tools tools,
+            ILogger<AllbetController> logger
+        )
         {
             this.tools = tools;
+            _logger = logger;
             this.log2File = log2File;
             thisTp = Tp.Allbet;
             this.thirdPartyBLL = thirdPartyBLL;
@@ -90,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Content-MD5", out var md5);
             Request.Headers.TryGetValue("Content-Type", out var cType);
             Request.Headers.TryGetValue("Date", out var dtDate);
-            //var absoluteUri = $"{Request.Scheme}://{Request.Host.ToUriComponent()}{Request.PathBase.ToUriComponent()}{Request.Path.ToUriComponent()}{Request.QueryString.ToUriComponent()}";
+
             string propertyId = "";
             string sign = "";
             string sAuthorization = authorization.ToString();
@@ -111,8 +124,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             string signString = $"POST\n{md5}\n{cType}\n{dtDate}\n/transfer";
-
-            //log2File.Info($"{Sign(signString, thirdPartySetting.TpSetting["SHA1key"])}\r\n{signString}\r\n{authorization}", $"{thisTp}_transfer_Sign");
+            _logger.LogInformation($"{authorization}\r\n{accept}\r\n{md5}\r\n{cType}\r\n{dtDate}\r\n{signString}");
 
             if (Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) != sign)
             {
@@ -122,7 +134,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null || transferReq.Details.Any(bet => bet.BetNum <= 0))
+            if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null)
+            {
+                resp.error_code = "40000";
+                resp.message = "invalid request parameter";
+                log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
+                return resp;
+            }
+            if (transferType == TransferType.EventSettle && transferReq.Details.Any(bet => bet.EventRecordNum <= 0) || transferType != TransferType.EventSettle && transferReq.Details.Any(bet => bet.BetNum <= 0))
             {
                 resp.error_code = "40000";
                 resp.message = "invalid request parameter";
@@ -423,13 +442,68 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.message = "invalid request parameter";
                     }
                 }
+                else if (transferType == TransferType.EventSettle)
+                {
+                    decimal amountSum = 0;
+                    bool valid = true;
+
+                    if (transferReq.Details.Count > 1)
+                    {
+                        // 批量活动结算是无效和禁止的
+                        valid = false;
+                    }
+                    else
+                    {
+                        foreach (var betAmt in transferReq.Details)
+                        {
+                            amountSum += betAmt.Amount;
+                        }
+
+                        if (amountSum != transferReq.Amount)
+                        {
+                            valid = false;
+                        }
+                    }
+
+                    if (valid)
+                    {
+                        int result = settledBLL.RewardLC_Allbet(transferReq, out decimal tpAffterAmount);
+
+                        if (result > 0)
+                        {
+                            if (transferReq.Amount == 0)
+                            {
+                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.Client, gameType);
+                                tpAffterAmount = tpCustBalance.Balance;
+                            }
+                            resp.balance = tpAffterAmount;
+                            resp.error_code = "0";
+                            resp.message = "success";
+                        }
+                        else if (result == 0)
+                        {
+                            resp.error_code = "10006";
+                            resp.message = "transaction not existed";
+                        }
+                        else if (result == -1)
+                        {
+                            resp.error_code = "10007";
+                            resp.message = "invalid status: transaction had already been cancelled/settled";
+                        }
+                    }
+                    else
+                    {
+                        resp.error_code = "40000";
+                        resp.message = "invalid request parameter";
+                    }
+                }
             }
             catch (Exception ex)
             {
                 resp.error_code = "50000";
                 resp.message = "server error";
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer", ex);
-                throw ex;
+                throw;
             }
 
             log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
@@ -467,8 +541,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             TransferType transferType = TransferType.Bet;
             Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
 
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
- 
             if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null || transferReq.Details.Any(bet => bet.BetNum <= 0))
             {
                 resp.error_code = "40000";
@@ -566,7 +638,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 resp.error_code = "50000";
                 resp.message = "server error";
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_{transferType}_Transfer", ex);
-                throw ex;
+                throw;
             }
 
             log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
@@ -657,6 +729,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             //log2File.Info($"{JsonConvert.SerializeObject(client)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_Balance");
             return resp;
         }
+
         private string Sign(string EncryptText, string EncryptKey)
         {
             using HMACSHA1 myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));

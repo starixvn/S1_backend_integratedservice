@@ -92,7 +92,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            wagerAllBetService.InsertWager(bet);
+                            var r = wagerAllBetService.InsertWager(bet);
                         }
                         catch (Exception ex)
                         {
