@@ -2567,6 +2567,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataFish_YL.profit * -1, (int)Tp.YL, TransType.Refunds, $"Void: {bettingDataFish_YL.profit.ToString("#,##0.##")}", bettingDataFish_YL.txId, out afterAmount, conn, trans, AllowNegative.NotAllow);
                 }
+                else
+                {
+                    // need exec update bettrans to refund status
+                    result = 1;
+                }
 
                 if (result > 0)
                 {
@@ -2580,28 +2585,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         trans.Commit();
                     }
-
-                    //if (result > 0)
-                    //{
-                    //    BetRecordInfo betRecordInfo = new BetRecordInfo();
-                    //    betRecordInfo.TpId = (int)Tp.YL;
-                    //    betRecordInfo.Stake = bettingDataFish_YL.validBet;
-                    //    betRecordInfo.ValidBet = 0;
-                    //    betRecordInfo.WinlostAmount = bettingDataFish_YL.profit;
-                    //    betRecordInfo.TransId = bettingDataFish_YL.txId;
-                    //    betRecordInfo.GameType = GameType.YL_Fish;
-                    //    betRecordInfo.TpUserName = bettingDataFish_YL.userId;
-                    //    betRecordInfo.SettledTime = updateTime;
-                    //    betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
-                    //    betRecordInfo.TicketStatus = TicketStatus.Refund;
-
-                    //    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                    //    if (result > 0)
-                    //    {
-                    //        trans.Commit();
-                    //    }
-                    //}
                 }
 
                 if (result > 0 && bettingDataFish_YL.profit == 0)
