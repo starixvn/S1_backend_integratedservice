@@ -1,13 +1,9 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -111,23 +107,13 @@ namespace ThirdPartyWager.Service.BLL
                             if(item.status != 3)
                             {
                                 //活动记录状态 2: 未结算(Not settled) 3: 已结算(Settled)
-                                _logger.LogWarning($"Reward Not Settled: {item.eventRecordNum} {item.settleTime}");
+                                _logger.LogError($"Reward Not Settled: {item.eventRecordNum} {item.settleTime}");
                                 continue;
                             }
                             if (reward == null)
                             {
                                 // call sw reward api
-                                var rewardParam = new RewardAllBetData();
-                                rewardParam.details = new List<RewardAllBet>();
-                                rewardParam.tranId = item.eventRecordNum;
-                                rewardParam.transferType = 40;
-                                rewardParam.client = item.client;
-                                rewardParam.currency = item.currency;
-                                rewardParam.amount = item.amount;
-                                rewardParam.eventRecordNum = item.eventRecordNum;
-                                rewardParam.details.Add(item);
-
-                                var response = _apiAllBetBLL.doReward(rewardParam, setting["SHA1key"], setting["PropertyId"]).Result;
+                                var response = _apiAllBetBLL.callSeamlessApi("Reward", item, setting["SHA1key"], setting["PropertyId"]).Result;
                                 var result = JsonConvert.DeserializeObject<RewardAllBetModel>(response);
                                 if (result.error_code != "0")
                                 {
@@ -140,7 +126,7 @@ namespace ThirdPartyWager.Service.BLL
                                 }
                                 else
                                 {
-                                    _logger.LogWarning($"System Reward Settled: {item.eventRecordNum}");
+                                    _logger.LogInformation($"System Reward Settled: {item.eventRecordNum}");
                                 }
                             }
                         }

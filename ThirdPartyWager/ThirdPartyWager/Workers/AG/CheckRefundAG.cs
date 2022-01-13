@@ -1,26 +1,30 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
-    public class CheckTicketAG : BackgroundService
+    public class CheckRefundAG : BackgroundService
     {
-        private readonly ILogger<CheckTicketAG> logger;
-        private readonly TicketAGBLL ticketAGBLL;
-        private readonly IHostEnvironment environment;
+        private readonly ILogger<CheckRefundAG> _logger;
+        private readonly IHostEnvironment _environment;
+        private readonly TicketAGBLL _ticketAGBLL;
         private Timer timer;
 
-        public CheckTicketAG(ILogger<CheckTicketAG> logger, IHostEnvironment environment, TicketAGBLL ticketAGBLL)
+        public CheckRefundAG(IServiceProvider provider, IHostEnvironment environment)
         {
-            this.logger = logger;
-            this.ticketAGBLL = ticketAGBLL;
-            this.environment = environment;
+            LogContext.PushProperty("Tp", Tp.AG);
+            _logger = provider.GetRequiredService<ILogger<CheckRefundAG>>();
+            _ticketAGBLL = provider.GetRequiredService<TicketAGBLL>();
+            _environment = environment;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,22 +37,21 @@ namespace ThirdPartyWager.Workers
         {
             try
             {
-                await ticketAGBLL.CheckTicketAsync();
+                await _ticketAGBLL.CheckTicketAsync();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
                 TimeSpan dueTimeSpan = TimeSpan.FromMinutes(5);
-
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
