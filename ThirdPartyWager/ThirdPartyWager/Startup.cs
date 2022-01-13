@@ -167,6 +167,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoSA>();
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
+            services.AddHostedService<CheckRefundAG>();
             services.AddHostedService<WagerSG>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
@@ -194,7 +195,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoEVO>();
 
             /*
-                services.AddHostedService<CheckTicketAG>();
                 services.AddHostedService<WagerCF>();
                 services.AddHostedService<WagerKiss918>();
                 services.AddHostedService<WagerRedoKiss918>();
