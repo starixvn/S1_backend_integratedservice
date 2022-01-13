@@ -101,7 +101,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class WithHoldingListEbet
     {
         public long betType { get; set; }
+        
         public decimal withHolding { get; set; }
+
+        public decimal refund { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string seqNo { get; set; }
