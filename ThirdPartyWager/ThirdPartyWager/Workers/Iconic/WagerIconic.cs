@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Workers
         private Timer timerVND;
         private Timer timerCNY;
         private Timer timerINR;
+        private Timer timerUSDT;
         private int intervalMins = 3;
         private int iRangMins = 20;
         private int tpId = (int)Tp.Iconic;
@@ -63,6 +64,7 @@ namespace ThirdPartyWager.Workers
             timerVND = new Timer(DoTaskVND, null, TimeSpan.Zero, TimeSpan.Zero);
             timerCNY = new Timer(DoTaskCNY, null, TimeSpan.Zero, TimeSpan.Zero);
             timerINR = new Timer(DoTaskINR, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerUSDT = new Timer(DoTaskUSDT, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -420,15 +422,76 @@ namespace ThirdPartyWager.Workers
             }
         }
 
+        private async void DoTaskUSDT(object state)
+        {
+            int quick = 0;
+            try
+            {
+                var currency = "USDT";
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                DateTime timerTime;
+                int last;
+                if (dataTpTimer == null)
+                {
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime;
+                    last = iRangMins - 1;
+                }
+
+                if (timerTime < DateTime.Now)
+                {
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                    if (time.endUnix < cvTime)
+                    {
+                        bool result = await wagerIconicBLL.GetWagersAsync(tpId, time.startUnix, time.endUnix, currency);
+                        if (result)
+                        {
+                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        }
+                    }
+                }
+                TimeSpan ts = DateTime.Now - timerTime;
+                int diffMin = (int)ts.TotalMinutes;
+                if (diffMin > beyond)
+                {
+                    quick = 1;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                log2File.Error(ex.ToString(), logName);
+            }
+            finally
+            {
+                if (quick == 1)
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    timerUSDT.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    timerUSDT.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+            }
+        }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timerTHB?.Change(Timeout.Infinite, 0);
             timerMYR?.Change(Timeout.Infinite, 0);
             timerIDR?.Change(Timeout.Infinite, 0);
             timerVND?.Change(Timeout.Infinite, 0);
             timerCNY?.Change(Timeout.Infinite, 0);
             timerINR?.Change(Timeout.Infinite, 0);
+            timerUSDT?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

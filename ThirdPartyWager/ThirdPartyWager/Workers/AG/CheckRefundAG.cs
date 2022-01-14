@@ -35,9 +35,13 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            if (!_environment.IsProduction())
+            {
+                return;
+            }
             try
             {
-                await _ticketAGBLL.CheckTicketAsync();
+                await _ticketAGBLL.ExecRefundWorker();
             }
             catch (Exception ex)
             {

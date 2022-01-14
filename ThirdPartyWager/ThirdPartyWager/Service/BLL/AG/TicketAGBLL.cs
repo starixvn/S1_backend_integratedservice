@@ -31,10 +31,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecRefundWorker()
         {
             return await CheckTicketAsync();
-
         }
 
-        public async Task<dynamic> CheckTicketAsync()
+        public async Task<bool> CheckTicketAsync()
         {
             string func = "GetRefundAsync";
             string msg = "FATAL_ERROR";
@@ -50,7 +49,6 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-                setting["CommonUrl"] = "https://swapi.agingames.com";
 
                 foreach (var pending in pendingList)
                 {
@@ -75,6 +73,7 @@ namespace ThirdPartyWager.Service.BLL
                         }
                         else
                         {
+                            LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
                             _logger.LogInformation($"System Refund : {pending.transactionID}");
                         }
                     }
