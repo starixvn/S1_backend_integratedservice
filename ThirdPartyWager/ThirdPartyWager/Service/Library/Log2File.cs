@@ -75,7 +75,7 @@ namespace ThirdPartyWager.Service.Library
             {
                 if (response.ReasonPhrase != null || response.ReasonPhrase != "")
                 {
-                    _logger.LogError($"StatusCode : {response.StatusCode} ReasonPhrase : {response.ReasonPhrase}");
+                    _logger.LogError($"StatusCode : {response.StatusCode}, ReasonPhrase : {response.ReasonPhrase}");
                 }
 
                 Error(JsonConvert.SerializeObject(resp), logName);

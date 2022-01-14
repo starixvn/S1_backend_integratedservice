@@ -79,6 +79,7 @@ namespace ThirdPartyWager
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
+            services.AddSingleton<TpRefundBLL>();
             // DG
             services.AddSingleton<WagerDGBLL>();
             services.AddSingleton<ApiDGBLL>();
@@ -193,6 +194,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoMP>();
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
+            services.AddHostedService<TpRefundWorker>();
 
             /*
                 services.AddHostedService<WagerCF>();
