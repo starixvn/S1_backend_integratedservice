@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
@@ -92,6 +93,55 @@ namespace ThirdPartyWager.Service.BLL
                 quick = true;
             }
             return quick;
+        }
+
+        // TpRefundWorker
+        public IEnumerable<BettransDataAG> GetPendingList(int gameType)
+        {
+            return _wagerAGService.GetPendingList();
+        }
+
+        // TpRefundWorker
+        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
+        {
+            LogContext.PushProperty("Tp", _tpName);
+            string func = "CheckTicketStatusAsync";
+            var msg = "";
+            bool task = true;
+
+            setting["CommonUrl"] = "https://swapi.agingames.com";
+            var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
+
+            if (data == null)
+            {
+                msg = $"{func} NO_DATA";
+                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
+                return task;
+            }
+
+            if (data.result.row[0].status == "3")
+            {
+                // call sw api
+                var response = _apiAGBLL.callSeamlessApi("Refund", pending).Result;
+                var result = JsonConvert.DeserializeObject<SeamlessAgResponse>(response);
+                if (result.TransferResponse.ResponseCode != "OK")
+                {
+                    task = false;
+                    msg = $"{func} SEAMLESS_ERROR";
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
+                }
+                else
+                {
+                    LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
+                    _logger.LogInformation($"System Refund : {pending.transactionID}");
+                }
+            }
+            else
+            {
+                task = false;
+                _logger.LogError($"Refund Not Match: {pending.transactionID}\r\n{JsonConvert.SerializeObject(data)}");
+            }
+            return task;
         }
     }
 }
