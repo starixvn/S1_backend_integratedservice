@@ -126,6 +126,7 @@ namespace ThirdPartyWager.Service.BLL
                                 }
                                 else
                                 {
+                                    LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
                                     _logger.LogInformation($"System Reward Settled: {item.eventRecordNum}");
                                 }
                             }
@@ -133,8 +134,8 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {item.eventRecordNum} )";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(item)}");
-                            _logger.LogError($"{ex.Message}");
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
+                            _logger.LogError(ex, ex.Message);
                             return false;
                         }
                     }
