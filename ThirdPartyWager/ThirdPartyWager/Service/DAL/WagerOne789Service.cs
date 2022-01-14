@@ -67,7 +67,7 @@ namespace ThirdPartyWager.Service.DAL
                 default:
                     break;
             }
-            string sp = $"Service_Bettrans{game}_Pending_Get";
+            string sp = $"Service_Bettrans{game}_Bet_Pending_Get";
             return _mainDbClient.Query<BettransDataOne789>(sp);
         }
     }

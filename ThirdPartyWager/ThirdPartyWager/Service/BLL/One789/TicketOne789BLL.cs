@@ -25,6 +25,8 @@ namespace ThirdPartyWager.Service
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<TicketOne789BLL>>();
+            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
+            LogContext.PushProperty("Tp", _tpName);
         }
 
         // TpRefundWorker
@@ -36,7 +38,6 @@ namespace ThirdPartyWager.Service
         // TpRefundWorker
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
-            LogContext.PushProperty("Tp", _tpName);
             string func = "CheckTicketStatusAsync";
             _logger.LogError($"Data Need Refund: {JsonConvert.SerializeObject(pending)}");
             return true;

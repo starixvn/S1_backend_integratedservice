@@ -56,10 +56,10 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(35);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(20);
                 if (!task)
                 {
-                    dueTimeSpan = TimeSpan.FromMinutes(10);
+                    dueTimeSpan = TimeSpan.FromMinutes(5);
                 }
                 switch ((GameType)state)
                 {
