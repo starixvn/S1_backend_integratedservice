@@ -27,72 +27,8 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
-        }
-
-        public async Task<bool> ExecRefundWorker()
-        {
-            return await CheckTicketAsync();
-        }
-
-        public async Task<bool> CheckTicketAsync()
-        {
-            string func = "GetRefundAsync";
-            string msg = "FATAL_ERROR";
-            bool quick = false;
+            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             LogContext.PushProperty("Tp", _tpName);
-            try
-            {
-                var pendingList = _wagerAGService.GetPendingList();
-
-                if (pendingList == null)
-                {
-                    return quick;
-                }
-
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
-                foreach (var pending in pendingList)
-                {
-                    var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
-
-                    if (data == null)
-                    {
-                        msg = $"{func} NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
-                        return quick;
-                    }
-
-                    if (data.result.row[0].status == "3")
-                    {
-                        // call sw api
-                        var response = _apiAGBLL.callSeamlessApi("Refund", pending).Result;
-                        var result = JsonConvert.DeserializeObject<SeamlessAgResponse>(response);
-                        if (result.TransferResponse.ResponseCode != "OK")
-                        {
-                            msg = $"{func} SEAMLESS_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
-                        }
-                        else
-                        {
-                            LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
-                            _logger.LogInformation($"System Refund : {pending.transactionID}");
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogError($"Refund Not Match: {pending.transactionID}\r\n{JsonConvert.SerializeObject(data)}");
-                    }
-                }
-
-                msg = $"{func} FINISH";
-                _logger.LogInformation(msg);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                quick = true;
-            }
-            return quick;
         }
 
         // TpRefundWorker
@@ -104,12 +40,10 @@ namespace ThirdPartyWager.Service.BLL
         // TpRefundWorker
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
-            LogContext.PushProperty("Tp", _tpName);
             string func = "CheckTicketStatusAsync";
             var msg = "";
             bool task = true;
 
-            setting["CommonUrl"] = "https://swapi.agingames.com";
             var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
 
             if (data == null)
@@ -122,24 +56,30 @@ namespace ThirdPartyWager.Service.BLL
             if (data.result.row[0].status == "3")
             {
                 // call sw api
-                var response = _apiAGBLL.callSeamlessApi("Refund", pending).Result;
-                var result = JsonConvert.DeserializeObject<SeamlessAgResponse>(response);
-                if (result.TransferResponse.ResponseCode != "OK")
+                try
                 {
-                    task = false;
-                    msg = $"{func} SEAMLESS_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
+                    var response = _apiAGBLL.callSeamlessApi("Refund", pending).Result;
+                    var result = JsonConvert.DeserializeObject<SeamlessAgResponse>(response);
+                    if (result.TransferResponse.ResponseCode != "OK")
+                    {
+                        task = false;
+                        msg = $"{func} SEAMLESS_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"System Refund : {pending.transactionID}");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
-                    _logger.LogInformation($"System Refund : {pending.transactionID}");
+                    _logger.LogError(ex, ex.Message);
                 }
             }
             else
             {
                 task = false;
-                _logger.LogError($"Refund Not Match: {pending.transactionID}\r\n{JsonConvert.SerializeObject(data)}");
+                _logger.LogError($"Refund Not Match: {pending.transactionID} {JsonConvert.SerializeObject(data)}");
             }
             return task;
         }

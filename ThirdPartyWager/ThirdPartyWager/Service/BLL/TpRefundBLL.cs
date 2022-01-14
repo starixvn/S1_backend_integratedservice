@@ -27,51 +27,58 @@ namespace ThirdPartyWager.Service.BLL
         {
             dynamic _bll = "";
             int tpId = 0;
-
-            // get bll
-            switch (gameType)
+            try
             {
-                case (int)GameType.AG_LiveCasino:
-                    tpId = (int)Tp.AG;
-                    _bll = new TicketAGBLL(_provider);
-                    break;
-                case (int)GameType.One789_Lottery:
-                case (int)GameType.One789_Lottery_789:
-                case (int)GameType.One789_LiveCasino:
-                    tpId = (int)Tp.One789;
-                    _bll = new TicketOne789BLL(_provider);
-                    break;
-                default:
-                    _logger.LogError($"Refund Not Support: {tpId}");
-                    break;
-            }
-
-            if (tpId == 0)
-            {
-                return false;
-            }
-
-            // get list
-            var pendingList = _bll.GetPendingList(gameType);
-            if (pendingList == null)
-            {
-                return false;
-            }
-
-            // get setting
-            var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
-
-            // process
-            var result = true;
-            foreach (var pending in pendingList)
-            {
-                var check = _bll.CheckTicketStatusAsync(setting, pending).Result;
-                if (!check)
+                // get bll
+                switch (gameType)
                 {
-                    result = false;
+                    case (int)GameType.AG_LiveCasino:
+                        tpId = (int)Tp.AG;
+                        _bll = new TicketAGBLL(_provider);
+                        break;
+                    case (int)GameType.One789_Lottery:
+                    case (int)GameType.One789_Lottery_789:
+                    case (int)GameType.One789_LiveCasino:
+                        tpId = (int)Tp.One789;
+                        _bll = new TicketOne789BLL(_provider);
+                        break;
+                    default:
+                        _logger.LogError($"Refund Not Support: {tpId}");
+                        break;
                 }
+
+                if (tpId == 0)
+                {
+                    return true;
+                }
+
+                // get list
+                var pendingList = _bll.GetPendingList(gameType);
+                if (pendingList == null)
+                {
+                    return false;
+                }
+
+                // get setting
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+
+                // process
+                var result = true;
+                foreach (var pending in pendingList)
+                {
+                    var check = _bll.CheckTicketStatusAsync(setting, pending).Result;
+                    if (!check)
+                    {
+                        result = false;
+                    }
+                }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return false;
+            }
         }
     }
 }
