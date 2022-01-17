@@ -363,14 +363,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     #region CancelBet測試用
-                    if (environment.IsDevelopment() && getReq.Stake >= 10)
-                    {
-                        System.Threading.Thread.Sleep(60000);
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                        logger.LogError($"CancelBet Test\r\n{Content}\r\n{JsonConvert.SerializeObject(result)}");
-                        return result;
-                    }
+                    //if (environment.IsDevelopment() && getReq.Stake >= 6000)
+                    //{
+                    //    System.Threading.Thread.Sleep(60000);
+                    //    result.ErrorCode = (int)ErrorCode.APIError;
+                    //    result.ErrorDescription = ErrorCode.APIError.ToString();
+                    //    logger.LogError($"CancelBet Test\r\n{Content}\r\n{JsonConvert.SerializeObject(result)}");
+                    //    return result;
+                    //}
                     #endregion
 
                     BettingDataRNG_AP betReq = new BettingDataRNG_AP()
