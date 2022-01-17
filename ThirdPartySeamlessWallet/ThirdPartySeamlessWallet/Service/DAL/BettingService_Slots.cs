@@ -964,7 +964,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketType = bettingDataRNG_AP.TicketType,
                 TicketStatus = bettingDataRNG_AP.TicketStatus,
             });
-            p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
            
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
