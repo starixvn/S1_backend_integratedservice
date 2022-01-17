@@ -398,73 +398,87 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2", new
-            {
-                TransId = mixUniqueId,
-                username = bettingData_EBet.username,
-                channelId = bettingData_EBet.channelId,
-                money = bettingData_EBet.money,
-                type = bettingData_EBet.type,
-                platform = bettingData_EBet.platform,
-                currency = bettingData_EBet.currency,
-                seqNo = bettingData_EBet.seqNo,
-                Event = bettingData_EBet.Event,
-                timestamp = bettingData_EBet.timestamp,
-                tableCode = bettingData_EBet.detail.tableCode,
-                roundCode = bettingData_EBet.detail.roundCode,
-                betTime = bettingData_EBet.detail.betTime,
-                totalBet = bettingData_EBet.detail.totalBet,
-                validBet = bettingData_EBet.detail.validBet,
-                detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
-                betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
-                TicketStatus = (int)TicketStatus.UnSettled,
-                TicketType = (bettingData_EBet.type == 1) ? (int)BettransType.Bet : (int)BettransType.Reserve
-            },
-            transaction: trans,
-            commandType: CommandType.StoredProcedure
-            );
 
-            if (result > 0)
+            try
             {
-                result = PlaceBetV2(
-                    tpCustInfo,
-                    Math.Abs(bettingData_EBet.money) * -1,
-                    (int)Tp.EBet,
-                    mixUniqueId,
-                    gameType,
-                    mixUniqueId,
-                    null,
-                    TpCategory.LiveCasino,
-                    out afterAmount,
-                    ref bonusId,
-                    conn,
-                    trans
+                result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2",
+                    new {
+                        TransId = mixUniqueId,
+                        username = bettingData_EBet.username,
+                        channelId = bettingData_EBet.channelId,
+                        money = bettingData_EBet.money,
+                        type = bettingData_EBet.type,
+                        platform = bettingData_EBet.platform,
+                        currency = bettingData_EBet.currency,
+                        seqNo = bettingData_EBet.seqNo,
+                        Event = bettingData_EBet.Event,
+                        timestamp = bettingData_EBet.timestamp,
+                        tableCode = bettingData_EBet.detail.tableCode,
+                        roundCode = bettingData_EBet.detail.roundCode,
+                        betTime = bettingData_EBet.detail.betTime,
+                        totalBet = bettingData_EBet.detail.totalBet,
+                        validBet = bettingData_EBet.detail.validBet,
+                        detail = JsonConvert.SerializeObject(bettingData_EBet.detail),
+                        betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
+                        TicketStatus = (int)TicketStatus.UnSettled,
+                        TicketType = (bettingData_EBet.type == 1) ? (int)BettransType.Bet : (int)BettransType.Reserve
+                    },
+                    transaction: trans,
+                    commandType: CommandType.StoredProcedure
                 );
-
-                if (bonusId > 0 && result > 0)
-                {
-                    AddTpBonus(
-                        (int)Tp.EBet,
-                        bettingData_EBet.seqNo,
-                        gameType,
-                        tpCustInfo.CustId,
-                        tpCustInfo.UserName,
-                        tpCustInfo.CurrencyId,
-                        tpCustInfo.SiteId,
-                        Math.Abs(bettingData_EBet.money),
-                        bonusId,
-                        TpCategory.LiveCasino,
-                        conn,
-                        trans
-                    );
-                }
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bettingData_EBet.money) * -1,
+                        (int)Tp.EBet,
+                        mixUniqueId,
+                        gameType,
+                        mixUniqueId,
+                        null,
+                        TpCategory.LiveCasino,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (bonusId > 0 && result > 0)
+                    {
+                        AddTpBonus(
+                            (int)Tp.EBet,
+                            bettingData_EBet.seqNo,
+                            gameType,
+                            tpCustInfo.CustId,
+                            tpCustInfo.UserName,
+                            tpCustInfo.CurrencyId,
+                            tpCustInfo.SiteId,
+                            Math.Abs(bettingData_EBet.money),
+                            bonusId,
+                            TpCategory.LiveCasino,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
                 }
             }
-
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
             return result;
         }
         #endregion
