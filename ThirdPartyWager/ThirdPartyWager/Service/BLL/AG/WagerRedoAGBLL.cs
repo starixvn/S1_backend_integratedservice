@@ -53,7 +53,6 @@ namespace ThirdPartyWager.Service.BLL
 
                 // error condition
                 var errorCode = arrSummary.info;
-                var errorMsg = arrSummary.Code ?? "";
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
@@ -104,7 +103,6 @@ namespace ThirdPartyWager.Service.BLL
 
                         // error condition
                         errorCode = arrWager.info;
-                        errorMsg = arrWager.Code ?? "";
                         if (errorCode != 0)
                         {
                             msg = "THIRD_PARTY_ERROR";
