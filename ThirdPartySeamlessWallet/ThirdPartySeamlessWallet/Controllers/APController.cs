@@ -363,14 +363,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     #region CancelBet測試用
-                    if (environment.IsDevelopment() && getReq.Stake >= 6000)
-                    {
-                        System.Threading.Thread.Sleep(60000);
-                        result.ErrorCode = (int)ErrorCode.APIError;
-                        result.ErrorDescription = ErrorCode.APIError.ToString();
-                        logger.LogError($"CancelBet Test\r\n{Content}\r\n{JsonConvert.SerializeObject(result)}");
-                        return result;
-                    }
+                    //if (environment.IsDevelopment() && getReq.Stake >= 6000)
+                    //{
+                    //    System.Threading.Thread.Sleep(60000);
+                    //    result.ErrorCode = (int)ErrorCode.APIError;
+                    //    result.ErrorDescription = ErrorCode.APIError.ToString();
+                    //    logger.LogError($"CancelBet Test\r\n{Content}\r\n{JsonConvert.SerializeObject(result)}");
+                    //    return result;
+                    //}
                     #endregion
 
                     BettingDataRNG_AP betReq = new BettingDataRNG_AP()
@@ -386,7 +386,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         playerid = getReq.PlayerId
                     };
 
-                    if (bettingBLL.PlaceBet_AP(betReq, out decimal tpAffterAmount, out int seq) > 0)
+                    if (bettingBLL.PlaceBet_AP(betReq, out decimal tpAffterAmount, out long seq) > 0)
                     {
                         result.Balance = tpAffterAmount;
                         result.ErrorCode = (int)ErrorCode.Success;

@@ -930,7 +930,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region AP
-        public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount, out int sq)
+        public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount, out long sq)
         {
             int bonusId = 0;
             int gameType = (int)GameType.AP_RNG;
@@ -963,7 +963,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketType = bettingDataRNG_AP.TicketType,
                 TicketStatus = bettingDataRNG_AP.TicketStatus,
             });
-            p.Add("SQ", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
            
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -986,7 +986,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                sq = p.Get<int>("SQ");
+                sq = p.Get<long>("SQ");
                 trans.Commit();
             }
 

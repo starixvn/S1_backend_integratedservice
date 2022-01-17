@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     public class BettransRNG_AP 
     { 
-        public int SQ { get; set; }
+        public long SQ { get; set; }
         public int TicketStatus { get; set; }
     }
     public class SettleDataRNG_AP 

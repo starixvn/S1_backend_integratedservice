@@ -594,7 +594,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region AP
-        public int PlaceBet_AP(BettingDataRNG_AP bettingData_AP, out decimal afterAmount, out int seq)
+        public int PlaceBet_AP(BettingDataRNG_AP bettingData_AP, out decimal afterAmount, out long seq)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, bettingData_AP.playerid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
