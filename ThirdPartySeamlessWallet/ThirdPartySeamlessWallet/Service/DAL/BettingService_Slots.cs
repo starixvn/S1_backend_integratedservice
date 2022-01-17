@@ -931,7 +931,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region AP
-        public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount, out int sq)
+        public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount, out long sq)
         {
             int bonusId = 0;
             int gameType = (int)GameType.AP_RNG;
@@ -987,7 +987,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                sq = p.Get<int>("SQ");
+                sq = p.Get<long>("SQ");
                 trans.Commit();
             }
 

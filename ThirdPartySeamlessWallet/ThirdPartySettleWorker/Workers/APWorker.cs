@@ -74,15 +74,16 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         //Get all Bettrans data
-                        var settleData = _partitionService.GetUnsettleDataList<SettleDataRNG_AP>("Service_BettransRng_AP_Unsettle_Get", tpUnsettle)
-                            .Where(i => i.TicketType == (int)BettransType.EndRound);
+                        var UnsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_AP>("Service_BettransRng_AP_Unsettle_Get", tpUnsettle);                         
+                        var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
+                        var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
 
-                        
                         var tpUserName = settleData.FirstOrDefault().playerid;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var stake = settleData.Sum(x => x.totalstake);
                         var winLostAmount = settleData.Sum(x => x.totalwin) + settleData.Sum(x => x.jpwin) - stake;
                         var settledTime = settleData.Where(x => x.settletime > 0).FirstOrDefault().settletime;
+                        var betTime = betData.Where(x => x.bettime > 0).FirstOrDefault().bettime;
                         var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -93,9 +94,9 @@ namespace ThirdPartySettleWorker.Workers
                             GameType = gametype,
                             TpUserName = tpUserName,
                             SettledTime = settledTime,
-                            TransTime = settledTime,
+                            TransTime = betTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                            TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                            TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
                         },  TpCategory.Slots);
 
                         if (result == 1)
