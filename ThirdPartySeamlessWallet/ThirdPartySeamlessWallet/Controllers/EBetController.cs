@@ -275,6 +275,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBetResp;
             }
 
+            // verify signature
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             string sign = $"{getBetReq.seqNo}{getBetReq.Event}{getBetReq.channelId}{getBetReq.timestamp}{getBetReq.username}{getBetReq.money}";
             string privateKey = thirdPartySetting.TpSetting[$"PrivateKey_{getBetReq.currency}"];
@@ -282,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (!check)
             {
                 getBetResp.status = 4026;
-                getBetResp.timestamp = (long)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
