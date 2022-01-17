@@ -3830,10 +3830,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             var para = new DynamicParameters(new
             {
-                playerid = cancelBetDataRNG_AP.playerid,
-                gameroundid = cancelBetDataRNG_AP.gameroundid,
-                sitecode = cancelBetDataRNG_AP.sitecode,
-                gamecode = cancelBetDataRNG_AP.gamecode,
                 SQ = bettransAP.SQ
             });
 
