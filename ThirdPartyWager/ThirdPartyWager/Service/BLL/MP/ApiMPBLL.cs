@@ -78,7 +78,6 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     result = sr.ReadToEnd();
                 }
-                _log2File.AddResponseLog(_logName, guid, tmpUrl, param, result, "Info");
                 return result;
             }
             else
