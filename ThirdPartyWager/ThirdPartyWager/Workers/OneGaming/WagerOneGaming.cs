@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Workers
             timerIDR = new Timer(DoTaskIDR, null, TimeSpan.Zero, TimeSpan.Zero);
             timerCNY = new Timer(DoTaskCNY, null, TimeSpan.Zero, TimeSpan.Zero);
             timerVND = new Timer(DoTaskVND, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerUSD = new Timer(DoTaskUSD, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerUSD = new Timer(DoTaskUSD, null, TimeSpan.Zero, TimeSpan.Zero);
             timerINR = new Timer(DoTaskINR, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }

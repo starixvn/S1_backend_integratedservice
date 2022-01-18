@@ -20,7 +20,6 @@ namespace ThirdPartyWager.Workers
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
         private Timer timer;
-        //private int intervalMins = 2;
         private int iRangMins = 20;
         private int tpId = (int)Tp.SG;
         private int tpType = 1;

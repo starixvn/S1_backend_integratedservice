@@ -16,38 +16,35 @@ namespace ThirdPartyWager.Service.Library
     {
         private readonly string LogFolder = "";
         private readonly ILogger<Log2File> _logger;
-        
+
         public Log2File(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<Log2File>>();
             var environment = provider.GetRequiredService<IHostEnvironment>();
             LogFolder = $@"{environment.ContentRootPath}\Logs";
         }
-        
+
         public void Info(string InfoContent, string PrefixName)
         {
-            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now:yyyyMMdd}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{InfoContent}\r\n");
-            });
+            LogContext.PushProperty("PrefixName", PrefixName);
+            _logger.LogInformation(InfoContent);
         }
-        public void Error(string ErrorContent, string PrefixName)
+        public void Error(string ErrorContent, string PrefixName, Exception ex = null)
         {
-            var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now:yyyyMMdd}.log";
-            Task.Run(() =>
+            LogContext.PushProperty("PrefixName", PrefixName);
+            if (ex != null)
             {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{ErrorContent}\r\n");
-            });
+                _logger.LogError(ex, ErrorContent);
+            }
+            else
+            {
+                _logger.LogError(ErrorContent);
+            }
         }
 
-        public void AddRequestLog(string logName, string guid, string url, dynamic param, dynamic extra = null )
+        public void AddRequestLog(string tpName, string guid, string url, dynamic param, dynamic extra = null)
         {
-            logName = $"{logName}_Request";
+            var logName = $"Request";
             var req = new
             {
                 Guid = guid,
@@ -56,13 +53,13 @@ namespace ThirdPartyWager.Service.Library
                 Extra = extra,
             };
 
+            LogContext.PushProperty("Tp", tpName);
             Info(JsonConvert.SerializeObject(req), logName);
         }
 
-        public void AddResponseLog(string logName, string guid, string url, dynamic param, dynamic response, string logType = "Error", dynamic header = null, dynamic extra = null)
+        public void AddResponseLog(string tpName, string guid, string url, dynamic param, dynamic response, string logType = "Error", dynamic header = null, dynamic extra = null)
         {
-            var tp = logName;
-            logName = $"{logName}_Response";
+            var logName = $"Response";
             var resp = new
             {
                 Guid = guid,
@@ -73,10 +70,14 @@ namespace ThirdPartyWager.Service.Library
                 Extra = extra,
             };
 
+            LogContext.PushProperty("Tp", tpName);
             if (string.Equals(logType, "Error", StringComparison.OrdinalIgnoreCase))
             {
-                LogContext.PushProperty("Tp", tp);
-                _logger.LogError(JsonConvert.SerializeObject(resp));
+                if (response.ReasonPhrase != null || response.ReasonPhrase != "")
+                {
+                    _logger.LogError($"StatusCode : {response.StatusCode}, ReasonPhrase : {response.ReasonPhrase}");
+                }
+
                 Error(JsonConvert.SerializeObject(resp), logName);
             }
             else
@@ -85,10 +86,9 @@ namespace ThirdPartyWager.Service.Library
             }
         }
 
-        public void AddResultLog(string logName, string guid, string message, string response, string logType = "Error", string exception = null)
+        public void AddResultLog(string tpName, string guid, string message, string response, string logType = "Error", string exception = null)
         {
-            var tp = logName;
-            logName = $"{logName}_Result";
+            var logName = $"Result";
             var res = new
             {
                 Guid = guid,
@@ -97,10 +97,9 @@ namespace ThirdPartyWager.Service.Library
                 Exception = exception
             };
 
+            LogContext.PushProperty("Tp", tpName);
             if (string.Equals(logType, "Error", StringComparison.OrdinalIgnoreCase))
             {
-                LogContext.PushProperty("Tp", tp);
-                _logger.LogError(JsonConvert.SerializeObject(res));
                 Error(JsonConvert.SerializeObject(res), logName);
             }
             else

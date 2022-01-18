@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -152,17 +153,42 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<string> doReward(object parameter, string sha1key, string propertyId)
+        public async Task<string> callSeamlessApi(string type, dynamic parameter, string sha1key, string propertyId)
         {
             // param
             string url = $"{_seamlessUrl}/Allbet";
-            string uri = "/transfer";
+            string uri = null;
+            dynamic param = "";
+
+            switch (type)
+            {
+                case "Reward":
+                    uri = "/transfer";
+                    param = new RewardAllBetData();
+                    param.details = new List<RewardAllBet>();
+                    param.tranId = parameter.eventRecordNum;
+                    param.transferType = 40;
+                    param.client = parameter.client;
+                    param.currency = parameter.currency;
+                    param.amount = parameter.amount;
+                    param.eventRecordNum = parameter.eventRecordNum;
+                    param.details.Add(parameter);
+                    break;
+                default:
+                    _logger.LogWarning($"{type} not found");
+                    break;
+            }
+
+            if (uri == null)
+            {
+                return null;
+            }
 
             // request
-            return await DoSeamlessHttpClientAsync(url, uri, parameter, sha1key, propertyId);
+            return await DoSeamlessHttpClientAsync(url, uri, param, sha1key, propertyId);
         }
 
-        public async Task<string> DoSeamlessHttpClientAsync(string url, string uri, object param, string sha1key, string propertyId)
+        public async Task<string> DoSeamlessHttpClientAsync(string url, string uri, dynamic param, string sha1key, string propertyId)
         {
             try
             {
@@ -184,6 +210,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return ex.Message;
             }
         }

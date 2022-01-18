@@ -1,0 +1,152 @@
+﻿using NUnit.Framework;
+using System.Collections.Generic;
+using ThirdPartyCore.Model;
+using FluentAssertions;
+using ThirdPartyCore.Model.enums;
+using Newtonsoft.Json;
+using System.Web;
+using System.Diagnostics;
+using System;
+using ThirdParty.AP;
+
+namespace ThirdParty.AP.Tests
+{
+    [TestFixture()]
+    public class APTpHelperTests
+    {
+        private TpHelper _tpHelper;
+        private TpCustInfo _tpCustInfo;
+        private Dictionary<string, string> _inputs;
+
+        [SetUp]
+        public void Setup()
+        {
+            //Arrange
+            _tpHelper = new TpHelper();
+
+            //_tpCustInfo = new TpCustInfo()
+            //{
+            //    TpId = 33,
+            //    CustId = 249951,
+            //    SiteId = 1,
+            //    UserName = "hanstest01",
+            //    TpUserName = "xnova88x249951",
+            //    TpPwd = "h5N3Bjn",
+            //    TpCurrencyId = "MYR",
+            //    ExchangeRate = 1.0000m,
+            //    IsTest = false,
+            //    ActStatus = 2,
+            //    Status = 1,
+            //    CStatus = 1,
+            //};
+
+            _tpCustInfo = new TpCustInfo()
+            {
+                TpId = 39,
+                CustId = 250072,
+                SiteId = 1,
+                UserName = "willie1016",
+                TpUserName = "nova88_willie1016",
+                TpPwd = "!12345678",
+                TpCurrencyId = "MYR",
+                ExchangeRate = 1.0000m,
+                IsTest = false,
+                ActStatus = 2,
+                Status = 1,
+                CStatus = 1,
+            };
+
+            //_inputs = new Dictionary<string, string>
+            //{
+            //    { "GameUrl_MYR", "https://tcgmyr.nova88asia.com/" },
+            //    { "ApiUrl", "http://www.connect6play.com/doBusiness.do" },
+            //    { "HomeUrl", "https://www.nova88.net/" },
+            //    { "MerchantCode_MYR", "xpnovamyr" },
+            //    { "DESKey_MYR", "dHJoyySB" },
+            //    { "SHA256Key_MYR", "70tOVKomTbE5booC" },
+            //};
+
+            _inputs = new Dictionary<string, string>
+            {
+                { "WebUrl", "https://sit.pypc.net/web/nova88/" },
+                { "SiteCode", "nova88" },
+                { "LangId", "en-US" },
+                { "gameId", "10001" },
+            };
+        }
+
+        [Test()]
+        public void CreateMemberTest()
+        {
+            //Act
+            var actual = _tpHelper.CreateMember(_tpCustInfo, _inputs);
+
+            //Assert
+            actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+
+        [Test()]
+        public void LoginTest()
+        {
+            //Arrange
+            var appType = AppType.Desktop;
+            var tpLangId = "1";
+
+            //Act
+            var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);
+
+            //Assert
+            actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+
+        //[Test()]
+        //public void DesEncryptTest()
+        //{
+        //    //Arrange
+        //    //var sParam = new
+        //    //{
+        //    //    method = "cm",
+        //    //    username = _tpCustInfo.TpUserName,
+        //    //    password = _tpCustInfo.TpPwd,
+        //    //    currency = _tpCustInfo.TpCurrencyId
+        //    //};
+
+        //    var sParam = new
+        //    {
+        //        method = "sgb",
+        //        username = _tpCustInfo.TpUserName,
+        //        product_type = "384",//420,
+        //        request_time = DateTime.Now.ToFileTime(),
+        //    };
+
+        //    var merchantCode = _inputs["MerchantCode_MYR"];
+        //    var desKey = _inputs["DESKey_MYR"];
+        //    var SignKey = _inputs["SHA256Key_MYR"];
+        //    var hashString = ToJson(sParam);
+
+        //    //Act
+        //    var desEncrypt = _tpHelper.DesEncrypt(hashString, desKey);
+        //    var sign = _tpHelper.SHA256($"{desEncrypt}{SignKey}");
+
+        //    var requestBody = $"?merchant_code={HttpUtility.UrlEncode(merchantCode)}&params={HttpUtility.UrlEncode(desEncrypt)}&sign={HttpUtility.UrlEncode(sign)}";
+
+        //    //Assert
+        //    var result = _tpHelper.DesDecrypt(desEncrypt, desKey);
+        //    result.Should().Be(hashString);
+
+
+        //    var resultdesEncrypt = _tpHelper.DesEncrypt(result, desKey);
+        //    var checkSing = _tpHelper.SHA256($"{resultdesEncrypt}{SignKey}");
+        //    sign.Should().Be(checkSing);
+        //}
+
+
+        private string ToJson(object t)
+        {
+            return JsonConvert.SerializeObject(t, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+        }
+    }
+}
