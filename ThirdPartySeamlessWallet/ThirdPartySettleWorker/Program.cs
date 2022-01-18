@@ -56,6 +56,8 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<JokerWorker>();
                    services.AddHostedService<MGWorker>();
                    services.AddHostedService<APWorker>();
+                   services.AddHostedService<PPWorker>();
+                   services.AddHostedService<PGWorker>();
                });              
     }
 }

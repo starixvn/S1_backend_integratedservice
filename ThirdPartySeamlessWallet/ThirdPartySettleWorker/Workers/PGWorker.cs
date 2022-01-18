@@ -1,0 +1,139 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Model.Exceptions;
+using ThirdPartySettleWorker.Model.Interfaces;
+
+namespace ThirdPartySettleWorker.Workers
+{
+    public class PGWorker : BackgroundService, ISettleWorker
+    {
+        public Tp Tp { get => Tp.PG; }
+
+        private Timer timer;
+
+        private readonly SettledBLL _settledBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ILogger<PGWorker> _logger;
+        private readonly string _tpName;
+
+
+        public PGWorker(IServiceProvider provider)
+        {
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _logger = provider.GetRequiredService<ILogger<PGWorker>>();
+            _tpName = Enum.GetName(typeof(Tp), Tp);
+            LogContext.PushProperty("TP", _tpName);
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            timer = new Timer(DoSettle, GameType.PG_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+
+        private void DoSettle(object state)
+        {
+            var forContinue = false;
+            var isError = false;
+            var gametype = (GameType)state;
+            var tpCategory = TpCategory.Slots;
+
+            var logName = $"SettlePG";
+            var getSP = $"Service_BettransRng_PG_Unsettle_Get_V2";
+            var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
+
+            try
+            {
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+                if (!tpUnsettleList.Any())
+                {
+                    throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+                }
+
+                forContinue = tpUnsettleList.Count() == 200;
+                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
+                {
+                    try
+                    {
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = settleData.Stake,
+                            ValidBet = settleData.Stake,
+                            WinlostAmount = settleData.WinLostAmount,
+                            TransId = settleData.TransId,
+                            GameType = gametype,
+                            TpUserName = settleData.Account,
+                            SettledTime = settleData.SettleTime,
+                            TransTime = settleData.TransTime,
+                            SettlementType = SettlementType.SettledForValid,
+                            TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                        };
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId);
+                            });
+                        }
+                    }
+                    catch (Exception ex1)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId, false);
+                        });
+                        isError = true;
+                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
+                    }
+                }
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{logName} exMessage:{ex.Message}");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(30);
+                }
+
+                timer?.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+    }
+}
