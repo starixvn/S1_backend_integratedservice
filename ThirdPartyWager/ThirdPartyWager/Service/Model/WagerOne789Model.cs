@@ -55,4 +55,14 @@ namespace ThirdPartyWager.Service
         }
     }
 
+    public class BettransDataOne789
+    {
+        public string Username { get; set; }
+        public string Tx { get; set; }
+        public decimal Amount { get; set; }
+        public long CreatedAt { get; set; }
+        public string Source { get; set; }
+        public string Type { get; set; }
+        public string RefSource { get; set; }
+    }
 }

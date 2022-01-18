@@ -14,7 +14,6 @@ namespace ThirdPartyWager.Workers
     public class WagerRedoV8 : BackgroundService
     {
         private readonly ILogger<WagerRedoV8> logger;
-        //private readonly WagerRedoV8BLL wagerRedoV8BLL;
         private readonly WagerV8BLL wagerV8BLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
@@ -31,7 +30,6 @@ namespace ThirdPartyWager.Workers
 
         public WagerRedoV8(
             ILogger<WagerRedoV8> logger,
-            //WagerRedoV8BLL wagerRedoV8BLL,
             WagerV8BLL wagerV8BLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
@@ -40,7 +38,6 @@ namespace ThirdPartyWager.Workers
         )
         {
             this.logger = logger;
-            //this.wagerRedoV8BLL = wagerRedoV8BLL;
             this.wagerV8BLL = wagerV8BLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
@@ -78,7 +75,6 @@ namespace ThirdPartyWager.Workers
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                 if (time.endUnix < cvTime)
                 {
-                    //bool result = await wagerRedoV8BLL.RedoWagersAsync(tpId, time.startUnix, time.endUnix);
                     bool result = await wagerV8BLL.GetWagersAsync(tpId, time.startUnix, time.endUnix);
                     if (result)
                     {
