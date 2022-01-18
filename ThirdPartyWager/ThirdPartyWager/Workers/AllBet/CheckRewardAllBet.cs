@@ -25,7 +25,6 @@ namespace ThirdPartyWager.Workers
 
         public CheckRewardAllBet(IServiceProvider provider)
         {
-            LogContext.PushProperty("Tp", Tp.Allbet);
             _logger = provider.GetRequiredService<ILogger<CheckRewardAllBet>>();
             _rewardAllBetBLL = provider.GetRequiredService<RewardAllBetBLL>();
         }

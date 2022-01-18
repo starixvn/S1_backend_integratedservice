@@ -47,11 +47,8 @@ namespace ThirdPartyWager.Service.BLL
             string key = _common.ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
 
-            // log
-            _log2File.AddRequestLog(_tpName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(httpMethod, url, param, "row", guid);
+            var r = await DoHttpClientAsync(httpMethod, url, param, "row");
             var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
             return result;
         }
@@ -65,16 +62,13 @@ namespace ThirdPartyWager.Service.BLL
             string key = _common.ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
             string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&key={key}";
 
-            // log
-            _log2File.AddRequestLog(_tpName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(httpMethod, url, param, "row", guid);
+            var r = await DoHttpClientAsync(httpMethod, url, param, "row");
             var result = JsonConvert.DeserializeObject<WagerAGModel>(r);
             return result;
         }
 
-        public async Task<TicketAGModel> CheckTicketStatus(string apiUrl, string transactionID)
+        public async Task<TicketDataAG> CheckTicketStatus(string apiUrl, string transactionID)
         {
             // param
             var httpMethod = "Get";
@@ -83,44 +77,43 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"transactionID={transactionID}";
 
             // request
-            var r = await DoHttpClientAsync(httpMethod, url, param, "row", "");
-            var result = JsonConvert.DeserializeObject<TicketAGModel>(r);
+            var r = await DoHttpClientAsync(httpMethod, url, param, "row");
+            var result = JsonConvert.DeserializeObject<TicketDataAG>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string method, string url, string param, string tagName, string guid)
+        private async Task<string> DoHttpClientAsync(string method, string url, string param, string tagName)
         {
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
             var httpMethod = (method == "Get") ? HttpMethod.Get : HttpMethod.Post;
             var request = new HttpRequestMessage(httpMethod, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
+
             var response = await _httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
             {
-                var result = response.Content.ReadAsStringAsync().Result;
-
-                // xml to json
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(result);
-
-                // single data force to array
-                var eleTag = xmlDoc.GetElementsByTagName(tagName);
-                if (eleTag.Count == 1)
-                {
-                    var attribute = xmlDoc.CreateAttribute("json", "Array", "http://james.newtonking.com/projects/json");
-                    attribute.InnerText = "true";
-                    var node = eleTag.Item(0) as XmlElement;
-                    node.Attributes.Append(attribute);
-                }
-
-                string json = JsonConvert.SerializeXmlNode(xmlDoc);
-                return json;
-            }
-            else
-            {
-                LogContext.PushProperty("Tp", _tpName);
-                _log2File.AddResponseLog(_tpName, guid, url, param, response);
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
                 return null;
             }
+
+            // xml to json
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(result);
+
+            // single data force to array
+            var eleTag = xmlDoc.GetElementsByTagName(tagName);
+            if (eleTag.Count == 1)
+            {
+                var attribute = xmlDoc.CreateAttribute("json", "Array", "http://james.newtonking.com/projects/json");
+                attribute.InnerText = "true";
+                var node = eleTag.Item(0) as XmlElement;
+                node.Attributes.Append(attribute);
+            }
+
+            return JsonConvert.SerializeXmlNode(xmlDoc);
         }
 
         public async Task<string> callSeamlessApi(string type, BettransDataAG bettransDataAG)
@@ -142,7 +135,7 @@ namespace ThirdPartyWager.Service.BLL
                             new XElement("ticketStatus", type),
                             new XElement("sessionToken", ""),
                             new XElement("currency", bettransDataAG.currency),
-                            new XElement("value", bettransDataAG.Amount),
+                            new XElement("value", Math.Abs(bettransDataAG.Amount)),
                             new XElement("playname", bettransDataAG.playname),
                             new XElement("agentCode", cagent),
                             new XElement("betTime", bettransDataAG.betTime),
@@ -182,16 +175,24 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
+                _log2File.InsertRequestLog(_tpName, url, param, "1");
                 HttpRequestMessage request;
                 request = new HttpRequestMessage(HttpMethod.Post, url);
-                request.Content = new StringContent(param.ToString(), Encoding.UTF8, "application/xml");
+                request.Content = new StringContent(param, Encoding.UTF8, "application/xml");
 
                 var response = await _httpHelper.GetClient().SendAsync(request);
-                var result = response.Content.ReadAsStringAsync().Result;
+                var content = response.Content.ReadAsStringAsync().Result;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, url, param, content);
+                    return content;
+                }
 
                 // xml to json
                 XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(result);
+                xmlDoc.LoadXml(content);
                 return JsonConvert.SerializeXmlNode(xmlDoc);
             }
             catch (Exception ex)

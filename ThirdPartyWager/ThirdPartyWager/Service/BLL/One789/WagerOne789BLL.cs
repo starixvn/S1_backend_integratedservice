@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -15,41 +16,31 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class WagerOne789BLL
     {
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly WagerOne789Service wagerOne789Service;
-        private readonly ApiOne789BLL apiOne789BLL;
-        private readonly Log2File log2File;
-        private readonly ILogger<WagerOne789BLL> logger;
-        private readonly IHostEnvironment environment;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiOne789BLL _apiOne789BLL;
+        private readonly WagerOne789Service _wagerOne789Service;
+        private readonly ILogger<WagerOne789BLL> _logger;
 
-        public WagerOne789BLL(
-            ThirdPartyBLL thirdPartyBLL,
-            WagerOne789Service wagerOne789Service,
-            ApiOne789BLL apiOne789BLL,
-            Log2File log2File,
-            ILogger<WagerOne789BLL> logger,
-            IHostEnvironment environment
-        )
+        private readonly int _tpId = (int)Tp.One789;
+        private readonly string _tpName = Tp.One789.ToString();
+
+        public WagerOne789BLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.wagerOne789Service = wagerOne789Service;
-            this.apiOne789BLL = apiOne789BLL;
-            this.log2File = log2File;
-            this.logger = logger;
-            this.environment = environment;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
+            _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
+            _logger = provider.GetRequiredService<ILogger<WagerOne789BLL>>();
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, int gameType)
         {
             string msg = "FATAL_ERROR";
-            string logName = Tp.One789.ToString();
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", logName);
-
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 int page = 1;
                 int totalPage = 1;
@@ -57,18 +48,18 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await apiOne789BLL.GetBetListByTime(setting["ApiUrl"], setting["ApiKey"], startTime, endTime, page, perPage, gameType, guid);
+                    var dataWager = await _apiOne789BLL.GetBetListByTime(setting, startTime, endTime, page, perPage, gameType, guid);
 
                     if (dataWager.Count > 0 && dataWager[0]["ErrorCode"] != null)
                     {
                         msg = "THIRD_PARTY_ERROR";
-                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return false;
                     }
                     if (dataWager.Count == 0)
                     {
                         msg = "NO_DATA";
-                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return true;
                     }
 
@@ -88,12 +79,12 @@ namespace ThirdPartyWager.Service.BLL
                                 record.Numbers = JsonConvert.SerializeObject(record.Numbers);
                                 record.TransId = $"{record.Term}_{record.GameType}_{record.Username}";
                             }
-                            wagerOne789Service.InsertWagerOne789(record, gameType);
+                            _wagerOne789Service.InsertWagerOne789(record, gameType);
                         }
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER";
-                            log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -101,13 +92,13 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,58 +42,54 @@ namespace ThirdPartyWager.Service.BLL
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            // log
-            _log2File.AddRequestLog(_tpName, guid, url, sParam);
-
             // request
-            string r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken, guid);
+            string r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken);
             var result = JsonConvert.DeserializeObject<List<WagerEVOModel>>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string casinoKey, string ua2Token, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, string param, string casinoKey, string ua2Token)
         {
             string tmpUrl = url;
             url = $"{url}?{param}";
+            _log2File.InsertRequestLog(_tpName, tmpUrl, param, "1");
+
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{casinoKey}:{ua2Token}")));
-            var response = await _httpHelper.GetClient().SendAsync(request);
-            string result = null;
-            string tmp = null;
-            if (response.IsSuccessStatusCode)
-            {
-                result = response.Content.ReadAsStringAsync().Result;
-                _log2File.AddResponseLog(_tpName, guid, tmpUrl, param, result, "Info");
 
-                if (string.IsNullOrEmpty(result))
-                {
-                    tmp = "{\"error\":\"nodata\"}";
-                    result = $"[{tmp}]";
-                }
-                else
-                {
-                    string word = "error";
-                    if (!result.Contains(word))
-                    {
-                        word = "}\n{";
-                        if (result.Contains(word))
-                        {
-                            tmp = result.Replace(word, "},{");
-                            result = $"[{tmp}]";
-                        }
-                        else
-                        {
-                            result = $"[{result}]";
-                        }
-                    }
-                }
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            string result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
                 return result;
             }
-            LogContext.PushProperty("Tp", _tpName);
-            _logger.LogError($"StatusCode : {response.StatusCode}");
-            _logger.LogError($"ReasonPhrase : {response.ReasonPhrase}");
-            _log2File.AddResponseLog(_tpName, guid, tmpUrl, param, response, "Error");
-            return string.IsNullOrEmpty(response.Content.ReadAsStringAsync().Result) ? null : response.Content.ReadAsStringAsync().Result;
+
+            if (string.IsNullOrEmpty(result))
+            {
+                var tmp = "{\"error\":\"nodata\"}";
+                result = $"[{tmp}]";
+            }
+            else
+            {
+                string word = "error";
+                if (!result.Contains(word))
+                {
+                    word = "}\n{";
+                    if (result.Contains(word))
+                    {
+                        var tmp = result.Replace(word, "},{");
+                        result = $"[{tmp}]";
+                    }
+                    else
+                    {
+                        result = $"[{result}]";
+                    }
+                }
+            }
+            return result;
         }
     }
 }
