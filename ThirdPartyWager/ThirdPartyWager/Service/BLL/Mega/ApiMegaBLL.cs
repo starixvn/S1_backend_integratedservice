@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
@@ -15,11 +16,11 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiMegaBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiMegaBLL> logger;
-        private readonly string logName = Tp.Mega.ToString();
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiMegaBLL> _logger;
+        private readonly string _tpName = Tp.Mega.ToString();
 
         private class ErrorResponse
         {
@@ -38,17 +39,12 @@ namespace ThirdPartyWager.Service.BLL
             public string action { get; set; }
         }
 
-        public ApiMegaBLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiMegaBLL> logger
-        )
+        public ApiMegaBLL(IServiceProvider provider)
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiMegaBLL>>();
         }
 
         public async Task<WagerMegaReport> GetReportPlayerListByTime(string apiUrl, string sn, string secretCode, string agentLoginId, string startTime, string endTime, string guid)
@@ -65,7 +61,7 @@ namespace ThirdPartyWager.Service.BLL
                 @params = new
                 {
                     random = uuid,
-                    digest = this.common.ToMD5(sign).ToUpper(),
+                    digest = _common.ToMD5(sign).ToUpper(),
                     sn = sn,
                     agentLoginId = agentLoginId,
                     type = 1,
@@ -75,11 +71,8 @@ namespace ThirdPartyWager.Service.BLL
                 jsonrpc = "2.0",
             };
 
-            // log
-            log2File.AddRequestLog(logName, guid, apiUrl, param);
-
             // request
-            string r = await DoHttpClientAsync(apiUrl, param, guid);
+            string r = await DoHttpClientAsync(apiUrl, param);
             var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
             if (error.error != null)
             {
@@ -95,29 +88,25 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, object param)
         {
             var sParam = JsonConvert.SerializeObject(param);
 
+            _log2File.InsertRequestLog(_tpName, url, sParam, "1");
+
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/json");
-            var response = await httpHelper.GetClient().SendAsync(request);
+            
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
 
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                return response.Content.ReadAsStringAsync().Result;
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, sParam, result);
             }
-            else
-            {
-                var result = response.Content.ReadAsStringAsync().Result;
-                LogContext.PushProperty("Tp", logName);
-                logger.LogError($"URL {url}");
-                logger.LogError($"REQUEST: {sParam}");
-                logger.LogError($"RESPONSE: {result}");
-                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error");
-                return result;
-                //return null;
-            }
+
+            return result;
         }
     }
 }

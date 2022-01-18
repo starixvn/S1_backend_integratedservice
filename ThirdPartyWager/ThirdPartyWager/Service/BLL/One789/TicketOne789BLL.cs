@@ -25,8 +25,6 @@ namespace ThirdPartyWager.Service
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<TicketOne789BLL>>();
-            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
-            LogContext.PushProperty("Tp", _tpName);
         }
 
         // TpRefundWorker
@@ -38,8 +36,66 @@ namespace ThirdPartyWager.Service
         // TpRefundWorker
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
+            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
+            LogContext.PushProperty("Tp", _tpName);
             string func = "CheckTicketStatusAsync";
-            _logger.LogError($"Data Need Refund: {JsonConvert.SerializeObject(pending)}");
+            var msg = "";
+
+            var param = new List<string>();
+            param.Add(pending.Tx);
+
+            var data = await _apiOne789BLL.CheckTicketStatus(setting, param);
+            TicketDataOne789 ticketData = JsonConvert.DeserializeObject<TicketDataOne789>(data);
+
+            if (ticketData.ErrorCode != null)
+            {
+                msg = $"{func} THIRD_PARTY_ERROR";
+                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(ticketData)}");
+                return false;
+            }
+
+            // data not exists 
+            if (ticketData.Result.Count == 0)
+            {
+                // call sw api
+                try
+                {
+                    var response = _apiOne789BLL.callSeamlessApi("Refund", pending).Result;
+                    if (response == null)
+                    {
+                        msg = $"{func} SEAMLESS_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresponse={JsonConvert.SerializeObject(response)}");
+                        return false;
+                    }
+
+                    SeamlessOne789Response result = JsonConvert.DeserializeObject<SeamlessOne789Response>(response);
+                    if (result == null || result.ErrorCode != null)
+                    {
+                        msg = $"{func} SEAMLESS_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
+                        return false;
+                    }
+                    else if (result.Tx == pending.Source)
+                    {
+                        _logger.LogInformation($"System Refund : {pending.Tx}");
+                    }
+                    else
+                    {
+                        msg = $"{func} UNKNOW_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(pending)}\r\nresult={JsonConvert.SerializeObject(result)}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                }
+            }
+            else
+            {
+                _logger.LogError($"Refund Not Match: {pending.Tx} {JsonConvert.SerializeObject(ticketData)}");
+                return false;
+            }
+
             return true;
         }
     }
