@@ -1146,6 +1146,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         GetTpBonus((int)Tp.PG, bettingDataRNG_PG.ParentBetId, gameType, TpCategory.Slots, out int custId, out bonusId);
                     }
 
+                    if (bettingDataRNG_PG.IsEndRound)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.PG, GameType.PG_RNG, bettingDataRNG_PG.ParentBetId, trans);
+                    }
+
                     if (result > 0)
                     {
                         trans.Commit();
@@ -1338,6 +1343,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 trans
                            );
                         }
+                    }
+
+                    if (transferInOutDataRNG_PG.IsEndRound)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.PG, GameType.PG_RNG, transferInOutDataRNG_PG.ParentBetId, trans);
                     }
 
                     if (result > 0)
