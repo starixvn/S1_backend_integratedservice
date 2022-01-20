@@ -586,7 +586,7 @@ namespace ThirdPartyService.Service.BLL
             thirdPartyBalance = thirdPartyBalance < 0 ? 0 : thirdPartyBalance;
             if (tpTransfer.Amount > thirdPartyBalance || checkTransferAmount == 0)
             {
-                var amount = Math.Min(thirdPartyBalance, checkTransferAmount);
+                var amount = Math.Min(thirdPartyBalance, checkTransferAmount * tpCustInfoResult.Data.ExchangeRate);
                 tpTransfer.Amount = amount;
                 tpBonusCancelTransfer.RefundAmount -= tpBonusCancelTransfer.RemainingBonus - amount;
                 if (tpBonusCancelTransfer.RefundAmount < 0)
