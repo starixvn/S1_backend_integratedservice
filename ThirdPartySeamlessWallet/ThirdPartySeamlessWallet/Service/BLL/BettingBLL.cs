@@ -615,10 +615,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             //    bettingData_AP.stake *= tpCurrency.ExchangeRate;
             //}
             var result = bettingService.PlaceBet_AP(tpCustInfo, bettingData_AP, out afterAmount, out seq);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
+            //if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            //{
+            //    afterAmount /= tpCurrency.ExchangeRate;
+            //}
             return result;
         }
         #endregion

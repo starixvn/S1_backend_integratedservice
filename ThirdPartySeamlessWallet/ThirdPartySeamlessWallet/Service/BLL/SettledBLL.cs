@@ -2415,10 +2415,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             var result = settledService.CancelBetRNG_AP(tpCustInfo, cancelBetDataRNG_AP, out afterAmount);
 
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
+            //if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            //{
+            //    afterAmount /= tpCurrency.ExchangeRate;
+            //}
 
             return result;
         }
@@ -2438,10 +2438,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             var result = settledService.SettledRNG_AP(tpCustInfo, bettingDataRNG_AP, out afterAmount);
 
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
+            //if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            //{
+            //    afterAmount /= tpCurrency.ExchangeRate;
+            //}
 
             return result;
         }
