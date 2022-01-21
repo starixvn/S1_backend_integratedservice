@@ -1,54 +1,48 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoAGBLL
     {
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly WagerAGService wagerAGService;
-        private readonly ApiAGBLL apiAGBLL;
-        private readonly Log2File log2File;
-        private readonly ILogger<WagerRedoAGBLL> logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiAGBLL _apiAGBLL;
+        private readonly WagerAGService _wagerAGService;
+        private readonly ILogger<WagerAGBLL> _logger;
 
-        public WagerRedoAGBLL(
-            ThirdPartyBLL thirdPartyBLL,
-            WagerAGService wagerAGService,
-            ApiAGBLL apiAGBLL,
-            Log2File log2File,
-            ILogger<WagerRedoAGBLL> logger
-        )
+        private readonly int _tpId = (int)Tp.AG;
+        private readonly string _tpName = Tp.AG.ToString();
+
+        public WagerRedoAGBLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.wagerAGService = wagerAGService;
-            this.apiAGBLL = apiAGBLL;
-            this.log2File = log2File;
-            this.logger = logger;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
+            _wagerAGService = provider.GetRequiredService<WagerAGService>();
+            _logger = provider.GetRequiredService<ILogger<WagerAGBLL>>();
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
             string msg = "FATAL_ERROR";
-            string logName = Tp.AG.ToString();
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", logName);
+            LogContext.PushProperty("Tp", _tpName);
 
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // count interval wagers
-                var getWagerCount = wagerAGService.GetWagerTotal(startUnix, endUnix);
+                var getWagerCount = _wagerAGService.GetWagerTotal(startUnix, endUnix);
                 int wagerCount = getWagerCount.wagerCount;
 
-                var getWagerSummary = await apiAGBLL.GetBetSummaryByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime, guid);
+                var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime, guid);
                 var arrSummary = getWagerSummary.result;
 
                 // error condition
@@ -56,14 +50,14 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(getWagerSummary));
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return false;
                 }
 
                 if (errorCode == 0 && arrSummary.row == null)
                 {
                     msg = "NO_DATA";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(getWagerSummary), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return true;
                 }
 
@@ -76,7 +70,7 @@ namespace ThirdPartyWager.Service.BLL
                 if (totalNum == wagerCount)
                 {
                     msg = "MATCH";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(getWagerSummary), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return true;
                 }
 
@@ -98,7 +92,7 @@ namespace ThirdPartyWager.Service.BLL
                     fn = ed.ToString("yyyy-MM-dd HH:mm:ss");
                     while (page <= totalPage)
                     {
-                        var dataWager = await apiAGBLL.GetBetListByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], bg, fn, page, guid);
+                        var dataWager = await _apiAGBLL.GetBetListByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], bg, fn, page, guid);
                         var arrWager = dataWager.result;
 
                         // error condition
@@ -106,7 +100,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (errorCode != 0)
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
                         }
 
@@ -117,7 +111,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (totalNo == 0)
                         {
                             msg = "NO_DATA";
-                            log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             continue;
                         }
 
@@ -125,14 +119,13 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             try
                             {
-                                wagerAGService.InsertWager(bet);
+                                _wagerAGService.InsertWager(bet);
                             }
                             catch (Exception ex)
                             {
-                                msg = $"INSERT_WAGER(WAGERID: {bet.billNo.ToString()} )";
-                                log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
+                                msg = $"INSERT_WAGER(WAGERID: {bet.billNo} )";
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                                 return false;
-                                //continue;
                             }
                         }
                         page++;
@@ -140,14 +133,14 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH_REDO";
-                log2File.AddResultLog(logName, guid, msg, null, "Error");
+                _logger.LogInformation($"RedoWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return false;
 
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError($"RedoWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

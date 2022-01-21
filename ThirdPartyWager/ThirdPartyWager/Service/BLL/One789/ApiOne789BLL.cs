@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,26 +14,26 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiOne789BLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiOne789BLL> logger;
-        private readonly string logName = Tp.One789.ToString();
+        private readonly string _seamlessUrl;
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiOne789BLL> _logger;
+        private readonly string _tpName = Tp.One789.ToString();
 
         public ApiOne789BLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiOne789BLL> logger
+            IServiceProvider provider,
+            IConfiguration configuration
         )
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiOne789BLL>>();
+            _seamlessUrl = configuration.GetValue<string>("TpSWserviceUrl");
         }
 
-        public async Task<dynamic> GetBetListByTime(string apiUrl, string apiKey, string startTime, string endTime, int page, int perPage, int gameType, string guid)
+        public async Task<dynamic> GetBetListByTime(dynamic setting, string startTime, string endTime, int page, int perPage, int gameType, string guid)
         {
             // param
             var uri = "";
@@ -53,35 +52,109 @@ namespace ThirdPartyWager.Service.BLL
                     break;
             }
 
-            string url = $"{apiUrl}{uri}";
+            string url = $"{setting["ApiUrl"]}{uri}";
             string param = $"?from={startTime}&to={endTime}&type=1&size={perPage}&page={page}";
 
-            // log
-            log2File.AddRequestLog(logName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(url, param, apiKey, guid);
+            var r = await DoHttpClientAsync(HttpMethod.Get, setting, url, param);
             dynamic result = JsonConvert.DeserializeObject(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string apiKey, string guid = null)
+        public async Task<dynamic> CheckTicketStatus(dynamic setting, dynamic parameters)
         {
-            var path = url + param;
-            var request = new HttpRequestMessage(HttpMethod.Get, path);
-            request.Headers.Add("x-one-api-key", HttpUtility.UrlEncode(apiKey));
+            // param
+            string uri = "/transaction/exists";
+            string url = $"{setting["ApiUrl"]}{uri}";
 
-            var response = await httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            // param
+            string param = JsonConvert.SerializeObject(new { TXList = parameters });
+
+            // request
+            return await DoHttpClientAsync(HttpMethod.Post, setting, url, param);
+        }
+
+        private async Task<string> DoHttpClientAsync(HttpMethod method, dynamic setting, string url, string param)
+        {
+            var path = (method == HttpMethod.Get) ? $"{url}{param}" : url;
+
+            _log2File.InsertRequestLog(_tpName, path, param, "1");
+
+            var request = new HttpRequestMessage(method, path);
+            request.Headers.Add("x-one-api-key", HttpUtility.UrlEncode(setting["ApiKey"]));
+            if (method == HttpMethod.Post)
             {
-                return response.Content.ReadAsStringAsync().Result;
+                request.Content = new StringContent(param, Encoding.UTF8, "application/json");
             }
-            else
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
             {
-                var result = $"[{response.Content.ReadAsStringAsync().Result}]";
-                log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers);
-                return result;
+                result = $"[{response.Content.ReadAsStringAsync().Result}]";
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, path, param, result);
             }
+
+            return result;
+        }
+
+        public async Task<string> callSeamlessApi(string type, BettransDataOne789 bettransDataOne789)
+        {
+            // param
+            string url = $"{_seamlessUrl}/One789";
+            string uri = "/balance_transactions";
+            bool tag = true;
+            var param = string.Empty;
+
+            switch (type)
+            {
+                case "Refund":
+                    var data = new
+                    {
+                        Tx = bettransDataOne789.Source,
+                        Username = bettransDataOne789.Username,
+                        Amount = Math.Abs(bettransDataOne789.Amount),
+                        Type = type.ToLower(),
+                        CreatedAt = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                        Source = bettransDataOne789.Tx,
+                    };
+                    param = JsonConvert.SerializeObject(data);
+                    break;
+                default:
+                    tag = false;
+                    _logger.LogWarning($"{type} not found");
+                    break;
+            }
+
+            if (!tag || param == string.Empty)
+            {
+                return null;
+            }
+
+            // request
+            var seamlessApi = $"{url}{uri}";
+            return await DoSeamlessHttpClientAsync(seamlessApi, param);
+        }
+
+        public async Task<string> DoSeamlessHttpClientAsync(string url, dynamic param)
+        {
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
+
+            HttpRequestMessage request;
+            request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Content = new StringContent(param, Encoding.UTF8, "application/json");
+
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
+            }
+
+            return result;
         }
     }
 }

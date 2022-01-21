@@ -22,16 +22,16 @@ namespace ThirdPartyWager.Workers
         private Timer timerLT;
         private Timer timerLT_789;
         private Timer timerLC;
-        private int tpId = (int)Tp.One789;
-        private int tpType = 1;
-        private int intervalMins = 3;
-        private int overlap = 5;
-        private int iRangMins = 20;
+        private readonly int tpId = (int)Tp.One789;
+        private readonly int tpType = 1;
+        private readonly int intervalMins = 3;
+        private readonly int overlap = 5;
+        private readonly int iRangMins = 20;
         private int quickLT = 0;
         private int quickLT_789 = 0;
         private int quickLC = 0;
         private readonly int timeZone = 0;
-        private string logName = Tp.One789.ToString();
+        private readonly string logName = Tp.One789.ToString();
 
         public WagerOne789(
             ILogger<WagerOne789> logger,

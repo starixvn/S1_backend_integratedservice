@@ -29,6 +29,7 @@ namespace ThirdPartyWager.Service.Library
             LogContext.PushProperty("PrefixName", PrefixName);
             _logger.LogInformation(InfoContent);
         }
+
         public void Error(string ErrorContent, string PrefixName, Exception ex = null)
         {
             LogContext.PushProperty("PrefixName", PrefixName);
@@ -41,71 +42,34 @@ namespace ThirdPartyWager.Service.Library
                 _logger.LogError(ErrorContent);
             }
         }
-
-        public void AddRequestLog(string tpName, string guid, string url, dynamic param, dynamic extra = null)
+       
+        public void InsertRequestLog(string tpName, string url, string input, string output)
         {
-            var logName = $"Request";
-            var req = new
-            {
-                Guid = guid,
-                Url = url,
-                Param = param,
-                Extra = extra,
-            };
-
+            LogContext.PushProperty("PrefixName", "Request");
             LogContext.PushProperty("Tp", tpName);
-            Info(JsonConvert.SerializeObject(req), logName);
+            var content = $"Url={url}, Input={input}, Output={output}";
+            _logger.LogInformation(content);
         }
 
-        public void AddResponseLog(string tpName, string guid, string url, dynamic param, dynamic response, string logType = "Error", dynamic header = null, dynamic extra = null)
+        public void InsertResponseLog(string tpName, string url, string input, string output, bool error = true)
         {
-            var logName = $"Response";
-            var resp = new
-            {
-                Guid = guid,
-                Url = url,
-                Header = header,
-                Param = param,
-                Response = response,
-                Extra = extra,
-            };
-
+            LogContext.PushProperty("PrefixName", "Response");
             LogContext.PushProperty("Tp", tpName);
-            if (string.Equals(logType, "Error", StringComparison.OrdinalIgnoreCase))
+            var content = $"Url={url}, Input={input}, Output={output}";
+            if (error)
             {
-                if (response.ReasonPhrase != null || response.ReasonPhrase != "")
-                {
-                    _logger.LogError($"StatusCode : {response.StatusCode}, ReasonPhrase : {response.ReasonPhrase}");
-                }
-
-                Error(JsonConvert.SerializeObject(resp), logName);
+                _logger.LogError(content);
             }
             else
             {
-                Info(JsonConvert.SerializeObject(resp), logName);
+                _logger.LogInformation(content);
             }
         }
 
-        public void AddResultLog(string tpName, string guid, string message, string response, string logType = "Error", string exception = null)
+        public void InsertHttpErrorLog(string tpName, dynamic statusCode, dynamic reasonPhrase)
         {
-            var logName = $"Result";
-            var res = new
-            {
-                Guid = guid,
-                Message = message,
-                Response = response,
-                Exception = exception
-            };
-
             LogContext.PushProperty("Tp", tpName);
-            if (string.Equals(logType, "Error", StringComparison.OrdinalIgnoreCase))
-            {
-                Error(JsonConvert.SerializeObject(res), logName);
-            }
-            else
-            {
-                Info(JsonConvert.SerializeObject(res), logName);
-            }
+            _logger.LogError($"StatusCode={statusCode}, ReasonPhrase={reasonPhrase}");
         }
     }
 }

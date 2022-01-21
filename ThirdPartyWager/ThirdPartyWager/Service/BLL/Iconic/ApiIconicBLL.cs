@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -15,23 +17,18 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiIconicBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiIconicBLL> logger;
-        private readonly string tpName = Tp.Iconic.ToString();
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiIconicBLL> _logger;
+        private readonly string _tpName = Tp.Iconic.ToString();
 
-        public ApiIconicBLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiIconicBLL> logger
-        )
+        public ApiIconicBLL(IServiceProvider provider)
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiIconicBLL>>();
         }
 
         public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage, string guid)
@@ -47,11 +44,8 @@ namespace ThirdPartyWager.Service.BLL
                 page = page
             };
 
-            // log
-            log2File.AddRequestLog(tpName, guid, url, param);
-
             // request
-            string r = await DoHttpClientAsync(url, param, "GET", true, token, guid);
+            string r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
             var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
             return result;
         }
@@ -67,54 +61,44 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param, "POST", false);
+            string r = await DoHttpClientAsync(url, param, HttpMethod.Post, false);
             var result = JsonConvert.DeserializeObject<JwtTokenIconic>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param, string method, bool header, string token = null, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, object param, HttpMethod method, bool header, string token = null)
         {
-            HttpRequestMessage request;
-            var dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(param));
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var tmpUrl = url;
-            if (method == "GET")
+            _log2File.InsertRequestLog(_tpName, url, sParam, "1");
+
+            HttpRequestMessage request;
+            if (method == HttpMethod.Get)
             {
                 url = $"{url}?{sParam}";
-                request = new HttpRequestMessage(HttpMethod.Get, url);
+                request = new HttpRequestMessage(method, url);
             }
             else
             {
-                request = new HttpRequestMessage(HttpMethod.Post, url);
+                request = new HttpRequestMessage(method, url);
                 request.Content = new StringContent(sParam, Encoding.UTF8, "application/x-www-form-urlencoded");
             }
 
-            dynamic tmpHeader = null;
             if (header)
             {
                 request.Headers.Add("Authorization", $"Bearer {token}");
-                tmpHeader = request.Headers;
             }
 
-            var response = await httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                return response.Content.ReadAsStringAsync().Result;
-            }
-            else
-            {
-                LogContext.PushProperty("Tp", tpName);
-                this.logger.LogError($"StatusCode : {response.StatusCode}");
-                this.logger.LogError($"ReasonPhrase : {response.ReasonPhrase}");
-                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
-                {
-                    return "{\"error\":{\"status\":503,\"message\":\"Service Unavailable\",\"ip\":\"-1\"}}";
-                }
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
 
-                var result = response.Content.ReadAsStringAsync().Result;
-                log2File.AddResponseLog(tpName, guid, tmpUrl, sParam, response, "Error", tmpHeader);
-                return result;
+            if (!response.IsSuccessStatusCode)
+            {
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, sParam, result);
             }
+
+            return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"error\":{\"status\":503,\"message\":\"Service Unavailable\",\"ip\":\"-1\"}}" : result;
         }
     }
 }

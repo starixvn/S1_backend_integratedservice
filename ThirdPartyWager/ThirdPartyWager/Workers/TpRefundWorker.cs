@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Workers
             var gametype = (GameType)state;
             try
             {
-                task = await _tpRefundBLL.ExecRefundWorker((int)gametype);
+                task = _tpRefundBLL.ExecRefundWorker((int)gametype);
             }
             catch (Exception ex)
             {
@@ -59,7 +59,7 @@ namespace ThirdPartyWager.Workers
                 TimeSpan dueTimeSpan = TimeSpan.FromMinutes(20);
                 if (!task)
                 {
-                    dueTimeSpan = TimeSpan.FromMinutes(5);
+                    dueTimeSpan = TimeSpan.FromMinutes(10);
                 }
                 switch ((GameType)state)
                 {
@@ -67,6 +67,11 @@ namespace ThirdPartyWager.Workers
                         timer8.Change(dueTimeSpan, TimeSpan.Zero);
                         break;
                     case GameType.One789_Lottery:
+                        dueTimeSpan = TimeSpan.FromHours(2);
+                        if (!task)
+                        {
+                            dueTimeSpan = TimeSpan.FromHours(1);
+                        }
                         timer35.Change(dueTimeSpan, TimeSpan.Zero);
                         break;
                     case GameType.One789_Lottery_789:

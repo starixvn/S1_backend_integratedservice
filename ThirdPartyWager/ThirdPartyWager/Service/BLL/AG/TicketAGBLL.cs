@@ -27,8 +27,6 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
-            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
-            LogContext.PushProperty("Tp", _tpName);
         }
 
         // TpRefundWorker
@@ -40,6 +38,8 @@ namespace ThirdPartyWager.Service.BLL
         // TpRefundWorker
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
+            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
+            LogContext.PushProperty("Tp", _tpName);
             string func = "CheckTicketStatusAsync";
             var msg = "";
             bool task = true;
