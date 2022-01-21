@@ -610,6 +610,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, bettingData_AP.playerid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_AP.stake *= tpCurrency.ExchangeRate;
+            }
             var result = bettingService.PlaceBet_AP(tpCustInfo, bettingData_AP, out afterAmount, out seq);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
