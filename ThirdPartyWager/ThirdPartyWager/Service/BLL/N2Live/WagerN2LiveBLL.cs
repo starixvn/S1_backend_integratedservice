@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,55 +17,45 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class WagerN2LiveBLL
     {
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly WagerN2LiveService wagerN2LiveService;
-        private readonly ApiN2LiveBLL apiN2LiveBLL;
-        private readonly Log2File log2File;
-        private readonly ILogger<WagerN2LiveBLL> logger;
-        private readonly IHostEnvironment environment;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiN2LiveBLL _apiN2LiveBLL;
+        private readonly WagerN2LiveService _wagerN2LiveService;
+        private readonly ILogger<WagerN2LiveBLL> _logger;
 
-        public WagerN2LiveBLL(
-            ILogger<WagerN2LiveBLL> logger,
-            WagerN2LiveService wagerN2LiveService,
-            ApiN2LiveBLL apiN2LiveBLL,
-            Log2File log2File,
-            ThirdPartyBLL thirdPartyBLL,
-            IHostEnvironment environment
-        )
+        private readonly int _tpId = (int)Tp.N2Live;
+        private readonly string _tpName = Tp.N2Live.ToString();
+
+        public WagerN2LiveBLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.wagerN2LiveService = wagerN2LiveService;
-            this.apiN2LiveBLL = apiN2LiveBLL;
-            this.log2File = log2File;
-            this.logger = logger;
-            this.environment = environment;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiN2LiveBLL = provider.GetRequiredService<ApiN2LiveBLL>();
+            _wagerN2LiveService = provider.GetRequiredService<WagerN2LiveService>();
+            _logger = provider.GetRequiredService<ILogger<WagerN2LiveBLL>>();
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string apiUrl, string vendorId, string merchantCode, string startTime, string endTime)
         {
             string msg = "FATAL_ERROR";
-            string logName = Tp.N2Live.ToString();
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", logName);
-
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get wager
-                var dataWager = await apiN2LiveBLL.GetBetListByTime(apiUrl, vendorId, merchantCode, startTime, endTime, guid);
+                var dataWager = await _apiN2LiveBLL.GetBetListByTime(apiUrl, vendorId, merchantCode, startTime, endTime, guid);
 
                 // error condition
                 if (dataWager.message.status != "success")
                 {
                     // 506是有牌局未完成结算，startdate enddate这段时间的牌局结算完成就能返回
                     msg = "THIRD_PARTY_ERROR";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
 
                 if (dataWager.message.result.gameinfo == null)
                 {
                     msg = "NO_DATA";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
@@ -100,26 +91,26 @@ namespace ThirdPartyWager.Service.BLL
                                     dealdetail = JsonConvert.SerializeObject(dealItem.dealdetails.dealdetail),
                                     result = (dealItem.results != null) ? JsonConvert.SerializeObject(dealItem.results.result) : null,
                                 };
-                                wagerN2LiveService.InsertWager(bet);
+                                _wagerN2LiveService.InsertWager(bet);
                             }
                         }
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {dealItem.id} )";
-                            log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dealItem), "Error", ex.Message);
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dealItem)}\r\n{ex.Message}");
                             return false;
                         }
                     }
 
                 }
                 msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

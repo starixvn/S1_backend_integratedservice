@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,23 +13,18 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiOneGamingBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiOneGamingBLL> logger;
-        private readonly string logName = Tp.OneGaming.ToString();
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiOneGamingBLL> _logger;
+        private readonly string _tpName = Tp.OneGaming.ToString();
 
-        public ApiOneGamingBLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiOneGamingBLL> logger
-        )
+        public ApiOneGamingBLL(IServiceProvider provider)
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiOneGamingBLL>>();
         }
 
         public async Task<WagerOneGamingModel> GetBetListByTime(string apiUrl, string agentCode, string secretKey, string startTime, string endTime, string guid)
@@ -44,36 +37,35 @@ namespace ThirdPartyWager.Service.BLL
                 agent_code = agentCode,
                 date_start = startTime,
                 date_end = endTime,
-                bcode = common.HMACSHA256($"{agentCode}{startTime}{endTime}", secretKey)
+                bcode = _common.HMACSHA256($"{agentCode}{startTime}{endTime}", secretKey)
             };
 
-            // log
-            log2File.AddRequestLog(logName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerOneGamingModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, object param)
         {
             var sParam = JsonConvert.SerializeObject(param);
+            _log2File.InsertRequestLog(_tpName, url, sParam, "1");
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/json");
 
-            var response = await httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
             {
-                log2File.AddResponseLog(logName, guid, url, sParam, response.Content.ReadAsStringAsync().Result, "Info");
-                return response.Content.ReadAsStringAsync().Result;
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, sParam, result);
+                return result;
             }
-            else
-            {
-                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error");
-                return null;
-            }
+
+            _log2File.InsertResponseLog(_tpName, url, sParam, result, false);
+            return result;
         }
     }
 }

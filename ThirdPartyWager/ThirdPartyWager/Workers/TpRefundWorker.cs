@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Workers
             var gametype = (GameType)state;
             try
             {
-                task = await _tpRefundBLL.ExecRefundWorker((int)gametype);
+                task = _tpRefundBLL.ExecRefundWorker((int)gametype);
             }
             catch (Exception ex)
             {

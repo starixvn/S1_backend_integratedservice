@@ -23,10 +23,11 @@ namespace ThirdPartyWager.Service.BLL
             _provider = provider;
         }
 
-        public async Task<bool> ExecRefundWorker(int gameType)
+        public bool ExecRefundWorker(int gameType)
         {
             dynamic _bll = "";
             int tpId = 0;
+            var result = true;
             try
             {
                 // get bll
@@ -63,7 +64,6 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // process
-                var result = true;
                 foreach (var pending in pendingList)
                 {
                     var check = _bll.CheckTicketStatusAsync(setting, pending).Result;
@@ -72,13 +72,16 @@ namespace ThirdPartyWager.Service.BLL
                         result = false;
                     }
                 }
-                return result;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return false;
+                result = false;
             }
+
+            _logger.LogInformation($"Refund Worker Execute End {tpId}");
+            return result;
         }
     }
 }
