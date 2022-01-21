@@ -48,7 +48,7 @@ namespace ThirdPartyService
                 .ConfigureServices((hostContext, services) =>
                 {
                     var serviceType = Environment.GetEnvironmentVariable("ServiceType");
-                    if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker"))
+                    if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringComparison.OrdinalIgnoreCase))
                     {
                         services.AddHostedService<WorkerService>();
                         services.AddHostedService<GetBalanceWorker>();
