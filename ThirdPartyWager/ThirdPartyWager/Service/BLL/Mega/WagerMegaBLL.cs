@@ -1,13 +1,11 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -15,57 +13,46 @@ namespace ThirdPartyWager.Service.BLL
 
     public class WagerMegaBLL
     {
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly WagerMegaService wagerMegaService;
-        private readonly ApiMegaBLL apiMegaBLL;
-        private readonly Log2File log2File;
-        private readonly ILogger<WagerMegaBLL> logger;
-        private readonly IHostEnvironment environment;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiMegaBLL _apiMegaBLL;
+        private readonly WagerMegaService _wagerMegaService;
+        private readonly ILogger<WagerMegaBLL> _logger;
 
-        public WagerMegaBLL(
-            ThirdPartyBLL thirdPartyBLL,
-            WagerMegaService wagerMegaService,
-            ApiMegaBLL apiMegaBLL,
-            Log2File log2File,
-            ILogger<WagerMegaBLL> logger,
-            IHostEnvironment environment
-        )
+        private readonly int _tpId = (int)Tp.Mega;
+        private readonly string _tpName = Tp.Mega.ToString();
+
+        public WagerMegaBLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.wagerMegaService = wagerMegaService;
-            this.apiMegaBLL = apiMegaBLL;
-            this.log2File = log2File;
-            this.logger = logger;
-            this.environment = environment;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiMegaBLL = provider.GetRequiredService<ApiMegaBLL>();
+            _wagerMegaService = provider.GetRequiredService<WagerMegaService>();
+            _logger = provider.GetRequiredService<ILogger<WagerMegaBLL>>();
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, string currency)
         {
             string msg = "FATAL_ERROR";
-            string logName = Tp.Mega.ToString();
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", logName);
-
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // get report player
-                var dataReportPlayer = await apiMegaBLL.GetReportPlayerListByTime(setting["ApiUrl"], setting["sn"], setting[$"secretCode_{currency}"], setting[$"agentLoginId_{currency}"], startTime, endTime, guid);
+                var dataReportPlayer = await _apiMegaBLL.GetReportPlayerListByTime(setting["ApiUrl"], setting["sn"], setting[$"secretCode_{currency}"], setting[$"agentLoginId_{currency}"], startTime, endTime, guid);
 
                 if (dataReportPlayer.code != null)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    logger.LogError($"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(dataReportPlayer)}");
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataReportPlayer));
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataReportPlayer)}");
                     return false;
                 }
 
                 if (/*dataReportPlayer.success == true &&*/ dataReportPlayer.result.Count() == 0)
                 {
                     msg = "NO_DATA";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataReportPlayer), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataReportPlayer)}");
                     return true;
                 }
 
@@ -76,26 +63,24 @@ namespace ThirdPartyWager.Service.BLL
                         reportList.win = reportList.win * -1;
                         reportList.Currency = currency;
                         reportList.WagerDate = Convert.ToDateTime(startTime);
-                        wagerMegaService.InsertWager(reportList);
+                        _wagerMegaService.InsertWager(reportList);
                     }
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {reportList.loginId} )";
-                        logger.LogError(ex, $"MESSAGE: {msg}, RESPONSE: {JsonConvert.SerializeObject(reportList)}, EXCEPTION: {ex.Message}");
-                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(reportList), "Error", ex.Message);
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(reportList)}\r\n{ex.Message}");
                         return false;
                     }
                 }
 
                 msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                logger.LogError(ex, $"MESSAGE: {msg}, EXCEPTION: {ex.Message}");
-                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

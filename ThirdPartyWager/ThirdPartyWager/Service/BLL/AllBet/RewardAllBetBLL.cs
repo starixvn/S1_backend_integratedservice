@@ -56,9 +56,9 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> GetRewardsAsync(string startTime, string endTime)
         {
+            LogContext.PushProperty("Tp", _tpName);
             string msg = "FATAL_ERROR";
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
 
             try
             {

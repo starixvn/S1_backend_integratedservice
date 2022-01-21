@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +20,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiMPBLL> _logger;
-        private readonly string _logName = Tp.MP.ToString();
+        private readonly string _tpName = Tp.MP.ToString();
 
         public ApiMPBLL(IServiceProvider provider)
         {
@@ -46,6 +45,9 @@ namespace ThirdPartyWager.Service.BLL
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
+            // log
+            _logger.LogInformation(JsonConvert.SerializeObject(param));
+
             var wager = new
             {
                 agent = agent,
@@ -56,35 +58,33 @@ namespace ThirdPartyWager.Service.BLL
             dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(wager));
             sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            // log
-            _log2File.AddRequestLog(_logName, guid, url, sParam);
-
             // request
-            string r = await DoHttpClientAsync(url, sParam, guid);
+            string r = await DoHttpClientAsync(url, sParam);
             var result = JsonConvert.DeserializeObject<WagerMPModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, string param)
         {
-            string tmpUrl = url;
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
+
             url = $"{url}?{param}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             var response = await _httpHelper.GetClient().SendAsync(request);
             string result = null;
-            if (response.IsSuccessStatusCode)
+
+            if (!response.IsSuccessStatusCode)
             {
-                using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
-                {
-                    result = sr.ReadToEnd();
-                }
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
                 return result;
             }
-            else
+
+            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
             {
-                _log2File.AddResponseLog(_logName, guid, tmpUrl, param, response, "Error");
-                return null;
+                result = sr.ReadToEnd();
             }
+            return result;
         }
     }
 }
