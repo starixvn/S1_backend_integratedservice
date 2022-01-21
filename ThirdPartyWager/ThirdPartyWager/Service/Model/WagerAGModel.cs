@@ -130,7 +130,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal Amount => (currency == "IDR" || currency == "VND") ? value / 1000 : value;
     }
 
-    public class TicketAGModel
+    public class TicketDataAG
     {
         public TicketResult result { get; set; }
     }

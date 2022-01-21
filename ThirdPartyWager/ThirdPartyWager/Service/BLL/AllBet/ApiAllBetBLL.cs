@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAllBetBLL> _logger;
-        private readonly string tpName = Tp.Allbet.ToString();
+        private readonly string _tpName = Tp.Allbet.ToString();
 
         public ApiAllBetBLL(
             IServiceProvider provider,
@@ -56,10 +56,10 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            _log2File.AddRequestLog(tpName, guid, url, parameter, param);
+            _logger.LogInformation(parameter);
 
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -85,10 +85,10 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            _log2File.AddRequestLog(tpName, guid, url, parameter, param);
+            _logger.LogInformation(parameter);
 
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -114,10 +114,10 @@ namespace ThirdPartyWager.Service.BLL
             string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            _log2File.AddRequestLog(tpName, guid, url, parameter, param);
+            _logger.LogInformation(parameter);
 
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -129,28 +129,23 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, string param)
         {
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
+
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
-            var response = await _httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                return response.Content.ReadAsStringAsync().Result;
-            }
-            else
-            {
-                LogContext.PushProperty("Tp", tpName);
-                _logger.LogError($"StatusCode : {response.StatusCode}");
-                _logger.LogError($"ReasonPhrase : {response.ReasonPhrase}");
-                if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
-                {
-                    return "{\"error_code\":\"SYSTEM_MATAINING\",\"message\":\"System under maintenance\"}";
-                }
 
-                _log2File.AddResponseLog(tpName, guid, url, param, response);
-                return null;
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
             }
+
+            return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"error_code\":\"SYSTEM_MATAINING\",\"message\":\"System under maintenance\"}" : result;
         }
 
         public async Task<string> callSeamlessApi(string type, dynamic parameter, string sha1key, string propertyId)
@@ -190,23 +185,32 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<string> DoSeamlessHttpClientAsync(string url, string uri, dynamic param, string sha1key, string propertyId)
         {
+            var json = JsonConvert.SerializeObject(param);
+            var date = DateTime.UtcNow.AddHours(8).ToString("ddd, dd MMM yyy HH:mm:ss 'GMT'", CultureInfo.CreateSpecificCulture("en-US"));
+            var md5 = "";
+            var str = $"POST\n{md5}\napplication/json; charset=utf-8\n{date}\n{uri}";
+            var sign = _common.Sign(str, sha1key);
+            var seamlessApi = $"{url}{uri}";
+
             try
             {
-                var json = JsonConvert.SerializeObject(param);
-                var date = DateTime.UtcNow.AddHours(8).ToString("ddd, dd MMM yyy HH:mm:ss 'GMT'", CultureInfo.CreateSpecificCulture("en-US"));
-                var md5 = "";
-                var str = $"POST\n{md5}\napplication/json; charset=utf-8\n{date}\n{uri}";
-                var sign = _common.Sign(str, sha1key);
-                var seamlessApi = $"{url}{uri}";
+                _log2File.InsertRequestLog(_tpName, url, json, "1");
+
                 HttpRequestMessage request;
                 request = new HttpRequestMessage(HttpMethod.Post, seamlessApi);
-
                 request.Content = new StringContent(json, Encoding.UTF8, "application/json");//, Encoding.UTF8, "application/json"
                 request.Headers.Add("Authorization", $"AB {propertyId}:{sign}");
                 request.Headers.Add("Date", date);
 
                 var response = await _httpHelper.GetClient().SendAsync(request);
-                return response.Content.ReadAsStringAsync().Result;
+                var result = response.Content.ReadAsStringAsync().Result;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, url, param, result);
+                }
+                return result;
             }
             catch (Exception ex)
             {
