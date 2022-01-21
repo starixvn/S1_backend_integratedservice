@@ -2408,17 +2408,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetDataRNG_AP.playerid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
-            //if (tpCurrency.ExchangeRate > 0)
-            //{
-            //    cancelBetDataRNG_AP.totalstake *= tpCurrency.ExchangeRate;
-            //}
-
             var result = settledService.CancelBetRNG_AP(tpCustInfo, cancelBetDataRNG_AP, out afterAmount);
 
-            //if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            //{
-            //    afterAmount /= tpCurrency.ExchangeRate;
-            //}
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
 
             return result;
         }
@@ -2429,19 +2424,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
-            //if (tpCurrency.ExchangeRate > 0)
-            //{
-            //    bettingDataRNG_AP.totalwin *= tpCurrency.ExchangeRate;
-            //    bettingDataRNG_AP.totalstake *= tpCurrency.ExchangeRate;
-            //    bettingDataRNG_AP.jpwin *= tpCurrency.ExchangeRate;
-            //}
-
             var result = settledService.SettledRNG_AP(tpCustInfo, bettingDataRNG_AP, out afterAmount);
 
-            //if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            //{
-            //    afterAmount /= tpCurrency.ExchangeRate;
-            //}
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
 
             return result;
         }
