@@ -47,13 +47,10 @@ namespace ThirdPartyService
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    if (Configuration.GetSection("RunWorkerService").Get<bool>())
+                    var serviceType = Environment.GetEnvironmentVariable("ServiceType");
+                    if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker"))
                     {
                         services.AddHostedService<WorkerService>();
-                    }
-
-                    if (Configuration.GetSection("GetTpBalanceParam:RunGetBalanceWorker").Get<bool>())
-                    {
                         services.AddHostedService<GetBalanceWorker>();
                     }
                 });
