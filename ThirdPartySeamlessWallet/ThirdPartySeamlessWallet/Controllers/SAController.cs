@@ -170,35 +170,34 @@ namespace ThirdPartySeamlessWallet.Controllers
                     resp.error = (int)Error.CurrencyInvaild;
                     return resp;
                 }
-                /* dev testing*/
-                if (_environment.IsDevelopment() && bettingDataLC_SA.amount == 25)
-                {
-                    System.Threading.Thread.Sleep(3000);
-                }
 
                 decimal tpAffterAmount = 0;
                 if (bettingDataLC_SA.amount > 0)
                 {
                     _logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_SA));
-                    if (_bettingBLL.PlaceBetLC_SA(bettingDataLC_SA, out tpAffterAmount) > 0)
+                    var result = _bettingBLL.PlaceBetLC_SA(bettingDataLC_SA, out tpAffterAmount);
+                    if (result > 0)
                     {
                         resp.error = (int)Error.Success;
                         resp.currency = bettingDataLC_SA.currency;
                         resp.amount = tpAffterAmount;
                         resp.username = bettingDataLC_SA.username;
-                        //throw new NotImplementedException();
                     }
                     else if (tpAffterAmount < 0)
                     {
                         tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, bettingDataLC_SA.username, _gameType);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.BalanceNotEnough;
+                        _log2File.Error($"{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\ntpAffterAmount={tpAffterAmount}", logName);
+                        return resp;
                     }
                     else
                     {
                         tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, bettingDataLC_SA.username, _gameType);
                         resp.amount = tpCustBalance.Balance;
                         resp.error = (int)Error.Error;
+                        _log2File.Error($"{uriQuery}\r\n{JsonConvert.SerializeObject(resp)}\r\nresult={result}", logName);
+                        return resp;
                     }
                 }
                 else
