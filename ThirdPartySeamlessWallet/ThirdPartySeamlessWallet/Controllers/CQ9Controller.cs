@@ -240,7 +240,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Error : param invalid";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -253,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Error : wtoken";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -265,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Success";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
