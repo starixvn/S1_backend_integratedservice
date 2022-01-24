@@ -359,6 +359,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 result = PayoutV2(tpCustInfo, insertData.bonusprize, (int)Tp.YGG, insertData.reference, gameType, TpCategory.Slots, insertData.subreference, TransType.Prize, null, out afterAmount, "Bonus", out bonusId, conn, trans);
                             }
 
+                            if (insertData.SettleFlag == (int)SettleFlag.EndGame)
+                            {
+                                result = _tpUnsettleService.InsertTpUnsettle(Tp.YGG, GameType.YGG_RNG, insertData.reference, trans);
+                            }
+
                             if (result > 0)
                             {
                                 trans.Commit();
