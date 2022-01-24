@@ -44,21 +44,6 @@ namespace ThirdPartySeamlessWallet
                             .Enrich.WithExceptionDetails();
                     })
                     .UseStartup<Startup>();
-                })
-                .ConfigureServices((hostContext, services) =>
-                {
-                    //services.AddHostedService<AG_EnquireWorkerService>();
-                    //services.AddHostedService<PP_EndRoundWorkerService>();
-                    if (Configuration.GetSection("RunBonusWorker").Get<bool>())
-                    {
-                        services.AddHostedService<BonusWorker>();
-                    }
-
-                    if (Configuration.GetSection("RunSettleWorker").Get<bool>())
-                    {
-                        services.AddHostedService<SettleWorker>();
-                    }
-                    //services.AddHostedService<CF_SettleWorker>();
                 });
     }
 }
