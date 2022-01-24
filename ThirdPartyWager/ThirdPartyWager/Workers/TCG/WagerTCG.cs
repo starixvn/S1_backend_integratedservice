@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private Timer _settleTimerCNY;
         private Timer _settleTimerVNDK;
         private Timer _settleTimerIDRK;
+        private Timer _settleTimerINR;
 
         private readonly int tpId = (int)Tp.TCG;
         private readonly int TimeZone = 8;
@@ -42,6 +43,7 @@ namespace ThirdPartyWager.Workers
             _settleTimerCNY = new Timer(DoSettle, "CNY", TimeSpan.FromSeconds(5), TimeSpan.Zero);
             _settleTimerVNDK = new Timer(DoSettle, "VNDK", TimeSpan.FromSeconds(7), TimeSpan.Zero);
             _settleTimerIDRK = new Timer(DoSettle, "IDRK", TimeSpan.FromSeconds(9), TimeSpan.Zero);
+            _settleTimerINR = new Timer(DoSettle, "INR", TimeSpan.FromSeconds(11), TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -100,6 +102,9 @@ namespace ThirdPartyWager.Workers
                     case "IDRK":
                         _settleTimerIDRK.Change(nextTimeSpan, TimeSpan.Zero);
                         break;
+                    case "INR":
+                        _settleTimerINR.Change(nextTimeSpan, TimeSpan.Zero);
+                        break;
                     default:
                         break;
                 }
@@ -114,6 +119,7 @@ namespace ThirdPartyWager.Workers
             _settleTimerCNY?.Change(Timeout.Infinite, 0);
             _settleTimerVNDK?.Change(Timeout.Infinite, 0);
             _settleTimerIDRK?.Change(Timeout.Infinite, 0);
+            _settleTimerINR?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
