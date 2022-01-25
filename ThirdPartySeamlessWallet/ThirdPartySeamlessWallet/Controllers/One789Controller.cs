@@ -101,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.ErrorCode = "ValidationException";
                 getApiResponse.ErrorMessage = "Invalid user Id";
-                log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -109,7 +109,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.ErrorCode = "ValidationException";
                 getApiResponse.ErrorMessage = "Account is Lock";
-                log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -150,7 +150,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     result = settledBLL.PayoutLT_One789(getReq, (int)gameType, out decimal tpAffterAmount);
@@ -176,7 +176,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.Username);
@@ -184,14 +184,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         getApiResponse.ErrorCode = "ValidationException";
                         getApiResponse.ErrorMessage = "Invalid user Id";
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     if (tpCheck.Locked)
                     {
                         getApiResponse.ErrorCode = "ValidationException";
                         getApiResponse.ErrorMessage = "Account is Lock";
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     try
@@ -229,14 +229,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var payoutBettrans = settledBLL.GetRecordLT_One789(getReq.Source);
                     if (payoutBettrans.Source == null)
                     {
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     gameType = thirdPartyBLL.GetGameType((int)thisTp, payoutBettrans.Source);
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     getReq.RefSource = payoutBettrans.Source;
@@ -261,14 +261,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var refundBettrans = settledBLL.GetRecordLT_One789(getReq.Source);
                     if (refundBettrans.Source == null)
                     {
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     gameType = thirdPartyBLL.GetGameType((int)thisTp, refundBettrans.Source);
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     getReq.RefSource = refundBettrans.Source;
@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
         }
