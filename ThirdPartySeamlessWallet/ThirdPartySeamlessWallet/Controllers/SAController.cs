@@ -33,6 +33,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly int _thisTp;
         private readonly int _gameType = 0;
+        private readonly string _tpName = Tp.SA.ToString();
         private readonly IHostEnvironment _environment;
 
         public SAController(IServiceProvider provider)
@@ -136,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public async Task<requestReturn> PlaceBetAsync()
         {
-            string logName = $"{_thisTp}_PlaceBet";
+            string logName = $"{_tpName}_PlaceBet";
             string Content = "";
             string uriQuery = "";
             var resp = new requestReturn();
@@ -222,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public async Task<requestReturn> PlayerWinAsync()
         {
-            string logName = $"{_thisTp}_PlayerWin";
+            string logName = $"{_tpName}_PlayerWin";
             string Content = "";
             string uriQuery = "";
             var resp = new requestReturn();
@@ -285,7 +286,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public async Task<requestReturn> PlayerLostAsync()
         {
-            string logName = $"{_thisTp}_PlayerLost";
+            string logName = $"{_tpName}_PlayerLost";
             string Content = "";
             string uriQuery = "";
             var resp = new requestReturn();
@@ -339,7 +340,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public async Task<requestReturn> PlaceBetCancelAsync()
         {
-            string logName = $"{_thisTp}_PlaceBetCancel";
+            string logName = $"{_tpName}_PlaceBetCancel";
             string Content = "";
             string uriQuery = "";
             var resp = new requestReturn();
@@ -408,7 +409,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public async Task<requestReturn> PlaceBetCancelFixAsync()
         {
-            string logName = $"{_thisTp}_PlaceBetCancelFix";
+            string logName = $"{_tpName}_PlaceBetCancelFix";
             string Content = "";
             string uriQuery = "";
             var resp = new requestReturn();
