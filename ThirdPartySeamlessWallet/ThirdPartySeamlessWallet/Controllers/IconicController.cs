@@ -528,7 +528,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             // 對方補派資料不會使用username而是player參數
-            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.username))
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
             {
                 getReq.username = getReq.player;
             }
@@ -785,7 +785,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             // 對方補派資料不會使用username而是player參數
-            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.username))
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
             {
                 getReq.username = getReq.player;
             }
