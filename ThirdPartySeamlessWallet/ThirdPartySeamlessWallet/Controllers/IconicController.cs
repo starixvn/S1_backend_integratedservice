@@ -511,7 +511,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataRNG_Iconic getReq = JsonConvert.DeserializeObject<BettingDataRNG_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
@@ -520,8 +520,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
+            if (!string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                getReq.username = sessionKeyArr[2];/* User Name*/
+            }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(getReq.username) || string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
             {
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
@@ -530,26 +537,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0]; /* 1 Time*/
-            string sessionToken = sessionKeyArr[1];/* Long Time*/
-            string tpUserName = sessionKeyArr[2];/* User Name*/
-
             GetApiResp getPayoutResp = new GetApiResp();
 
             var gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.productId);
-            getReq.username = tpUserName;
 
             var result = settledBLL.PayoutRNG_Iconic(getReq, out decimal tpAffterAmount);
             if (result > 0 || result == -1)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username, (int)gameType);
                 Response.StatusCode = (int)Error.OK;
                 getPayoutResp.data.statusCode = 0;
-                getPayoutResp.data.username = tpUserName;
+                getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{ getReq.username}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }
@@ -762,7 +762,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataFish_Iconic getReq = JsonConvert.DeserializeObject<BettingDataFish_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
@@ -771,8 +771,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
+            if (!string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                getReq.username = sessionKeyArr[2];/* User Name*/
+            }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(getReq.username) || string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
             {
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
@@ -781,36 +788,29 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0]; /* 1 Time*/
-            string sessionToken = sessionKeyArr[1];/* Long Time*/
-            string tpUserName = sessionKeyArr[2];/* User Name*/
-
             GetApiResp getPayoutResp = new GetApiResp();
 
             var gameType = GameType.Iconic_Fish;
-            getReq.username = tpUserName;
 
             var result = settledBLL.PayoutFish_Iconic(getReq, out decimal tpAffterAmount);
             if (result > 0)
             {
                 Response.StatusCode = (int)Error.OK;
                 getPayoutResp.data.statusCode = 0;
-                getPayoutResp.data.username = tpUserName;
+                getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpAffterAmount);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpAffterAmount)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.username}{Math.Truncate(tpAffterAmount)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }
             else if (result == -1)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username, (int)gameType);
                 Response.StatusCode = (int)Error.OK;
                 getPayoutResp.data.statusCode = 0;
-                getPayoutResp.data.username = tpUserName;
+                getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.username}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }
