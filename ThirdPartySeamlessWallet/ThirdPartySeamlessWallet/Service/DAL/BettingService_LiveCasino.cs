@@ -26,32 +26,35 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            result = conn.Execute("Service_BettransLC_SAV2_Ins", new { Txnid = bettingDataLC_SA.txnid, TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", Currency = bettingDataLC_SA.currency, Username = bettingDataLC_SA.username, Gametype = bettingDataLC_SA.gametype, Amount = bettingDataLC_SA.amount, Betdetails = bettingDataLC_SA.Betdetails, Gameid = bettingDataLC_SA.gameid }, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            if (result > 0)
+            try
             {
-                ////BetRecordInfo betRecordInfo = new BetRecordInfo();
-                ////betRecordInfo.TpId = (int)Tp.SA;
-                ////betRecordInfo.Stake = bettingDataLC_SA.amount;
-                ////betRecordInfo.TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}";
-                ////betRecordInfo.GameType = GameType.SA_LiveCasino;
-                ////betRecordInfo.TpUserName = bettingDataLC_SA.username;
-
-                ////result = PlaceBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);
-                //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", out afterAmount, conn, trans);
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", gameType, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", null, TpCategory.LiveCasino, out afterAmount, ref bonusId, conn, trans);
-
-                if (bonusId > 0)
-                {
-                    AddTpBonus((int)Tp.SA, bettingDataLC_SA.txnid, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bettingDataLC_SA.amount, bonusId, TpCategory.LiveCasino, conn, trans);
-                }
+                result = conn.Execute("Service_BettransLC_SAV2_Ins", new { Txnid = bettingDataLC_SA.txnid, TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", Currency = bettingDataLC_SA.currency, Username = bettingDataLC_SA.username, Gametype = bettingDataLC_SA.gametype, Amount = bettingDataLC_SA.amount, Betdetails = bettingDataLC_SA.Betdetails, Gameid = bettingDataLC_SA.gameid }, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataLC_SA.amount) * -1, (int)Tp.SA, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", gameType, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", null, TpCategory.LiveCasino, out afterAmount, ref bonusId, conn, trans);
+
+                    if (bonusId > 0)
+                    {
+                        AddTpBonus((int)Tp.SA, bettingDataLC_SA.txnid, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bettingDataLC_SA.amount, bonusId, TpCategory.LiveCasino, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
                 }
             }
-
+            catch (MySqlException mySqlEx)
+            {
+                logger.LogError(mySqlEx.Message);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+            }
             return result;
         }
         #endregion
@@ -402,7 +405,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2",
-                    new {
+                    new
+                    {
                         TransId = mixUniqueId,
                         username = bettingData_EBet.username,
                         channelId = bettingData_EBet.channelId,
