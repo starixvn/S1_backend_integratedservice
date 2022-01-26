@@ -511,7 +511,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataRNG_Iconic getReq = JsonConvert.DeserializeObject<BettingDataRNG_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username) && string.IsNullOrEmpty(getReq.player))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
@@ -527,8 +527,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getReq.username = sessionKeyArr[2];/* User Name*/
             }
 
+            // 對方補派資料不會使用username而是player參數
+            bool repair = false;
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                repair = true;
+                getReq.username = getReq.player;
+            }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (string.IsNullOrEmpty(getReq.username) || string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(getReq.username) || (!repair && (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))))
             {
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
@@ -762,7 +770,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataFish_Iconic getReq = JsonConvert.DeserializeObject<BettingDataFish_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username) && string.IsNullOrEmpty(getReq.player))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
@@ -778,8 +786,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getReq.username = sessionKeyArr[2];/* User Name*/
             }
 
+            // 對方補派資料不會使用username而是player參數
+            bool repair = false;
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                repair = true;
+                getReq.username = getReq.player;
+            }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (string.IsNullOrEmpty(getReq.username) || string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(getReq.username) || (!repair && (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))))
             {
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
