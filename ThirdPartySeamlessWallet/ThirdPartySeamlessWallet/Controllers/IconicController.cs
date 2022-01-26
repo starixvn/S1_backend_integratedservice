@@ -511,7 +511,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataRNG_Iconic getReq = JsonConvert.DeserializeObject<BettingDataRNG_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username) && string.IsNullOrEmpty(getReq.player))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
@@ -525,6 +525,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 getReq.username = sessionKeyArr[2];/* User Name*/
+            }
+
+            // 對方補派資料不會使用username而是player參數
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                getReq.username = getReq.player;
             }
 
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -762,7 +768,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataFish_Iconic getReq = JsonConvert.DeserializeObject<BettingDataFish_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username) && string.IsNullOrEmpty(getReq.player))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
@@ -776,6 +782,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 getReq.username = sessionKeyArr[2];/* User Name*/
+            }
+
+            // 對方補派資料不會使用username而是player參數
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                getReq.username = getReq.player;
             }
 
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
