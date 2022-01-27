@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string hash { get; set; }
         public string username { get; set; }
+        public string player { get; set; }
     }
 
     public class BettingDataFish_Iconic
@@ -26,6 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string hash { get; set; }
         public string username { get; set; }
+        public string player { get; set; }
     }
 
     public class SettleDataRng_Iconic : SettleData
