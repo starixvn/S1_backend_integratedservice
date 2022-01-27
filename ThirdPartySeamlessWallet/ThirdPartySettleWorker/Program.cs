@@ -58,6 +58,7 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<APWorker>();
                    services.AddHostedService<PPWorker>();
                    services.AddHostedService<PGWorker>();
+                   services.AddHostedService<YGGWorker>();
                });              
     }
 }

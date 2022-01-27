@@ -111,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleIconicFish = new Timer(DoSettleIconicFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOneGaming = new Timer(DoSettleOneGamingWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleV8 = new Timer(DoSettleV8Work, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleYGG = new Timer(DoSettleYGGWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettleYGG = new Timer(DoSettleYGGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleYLFish = new Timer(DoSettleYLFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
