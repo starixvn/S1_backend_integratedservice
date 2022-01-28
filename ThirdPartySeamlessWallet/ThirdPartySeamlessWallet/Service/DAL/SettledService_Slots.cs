@@ -2678,7 +2678,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int)TicketStatus.Draw : (int)TicketStatus.Win;
             bettingDataRNG_MG.SettleFlag = (int)SettleFlag.EndGame;
 
-            if (bettingDataRNG_MG.txnEventType.Equals("MG Promotions", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(bettingDataRNG_MG.betId))
             {
                 bettingDataRNG_MG.betId = bettingDataRNG_MG.txnId;
             }
