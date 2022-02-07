@@ -57,7 +57,7 @@ namespace ThirdPartySettleWorker.Workers
             var gametype = (GameType)state;
             var tpCategory = TpCategory.Slots;
 
-            var logName = $"SettlePG";
+            var logName = $"SettleYGG";
             var getSP = $"Service_BettransRng_YGG_Unsettle_Get_V3";
             var setSP = $"Service_BettransRng_YGG_Settle_Set_V3";
 
