@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -29,8 +30,7 @@ namespace ThirdPartyWager.Workers
         private readonly CommonBLL _commonBll;
         private readonly LatestHighlightVideoBLL _latestHighlightVideoBll;
         private readonly IConfiguration _configuration;
-
-
+        private readonly string _tpName = "LatestHighlightVideo";
 
         public LatestHighlightVideo(IServiceProvider provider)
         {
@@ -51,6 +51,7 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoLatestHighlightVideoAsync(object state)
         {
+            LogContext.PushProperty("Tp", _tpName);
             bool isError = false;
             try
             {
