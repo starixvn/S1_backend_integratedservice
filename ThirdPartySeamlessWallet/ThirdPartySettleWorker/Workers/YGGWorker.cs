@@ -24,7 +24,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly ILogger<PGWorker> _logger;
+        private readonly ILogger<YGGWorker> _logger;
         private readonly string _tpName;
 
 
@@ -33,7 +33,7 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _logger = provider.GetRequiredService<ILogger<PGWorker>>();
+            _logger = provider.GetRequiredService<ILogger<YGGWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
