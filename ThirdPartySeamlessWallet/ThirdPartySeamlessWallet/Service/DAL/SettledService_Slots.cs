@@ -2677,6 +2677,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketType = (int)BettransType.Payout;
             bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int)TicketStatus.Draw : (int)TicketStatus.Win;
             bettingDataRNG_MG.SettleFlag = (int)SettleFlag.EndGame;
+
+            if (string.IsNullOrEmpty(bettingDataRNG_MG.betId))
+            {
+                bettingDataRNG_MG.betId = bettingDataRNG_MG.txnId;
+            }
+
             var p = new DynamicParameters(bettingDataRNG_MG);
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
