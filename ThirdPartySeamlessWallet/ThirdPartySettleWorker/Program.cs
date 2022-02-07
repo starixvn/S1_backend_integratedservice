@@ -8,7 +8,6 @@ using System;
 using System.Linq;
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Service.Workers;
-using ThirdPartySettleWorker.Model.Interfaces;
 using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySettleWorker
@@ -59,6 +58,7 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<PPWorker>();
                    services.AddHostedService<PGWorker>();
                    services.AddHostedService<YGGWorker>();
+                   services.AddHostedService<TCGWorker>();
                });              
     }
 }
