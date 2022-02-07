@@ -14,14 +14,11 @@ namespace ThirdPartyWager.Service.Library
 {
     public class Log2File
     {
-        private readonly string LogFolder = "";
         private readonly ILogger<Log2File> _logger;
 
         public Log2File(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<Log2File>>();
-            var environment = provider.GetRequiredService<IHostEnvironment>();
-            LogFolder = $@"{environment.ContentRootPath}\Logs";
         }
 
         public void Info(string InfoContent, string PrefixName)
