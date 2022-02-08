@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -23,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private readonly HttpHelper _httpHelper;
         private readonly SabaOddsBLL _sabaOddsBll;
         private Timer _timerSabaOdds;
+        private readonly string _tpName = "SabaOdds";
 
         public SabaOdds(IServiceProvider provider)
         {
@@ -40,6 +42,7 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoSabaOddsAsync(object state)
         {
+            LogContext.PushProperty("Tp", _tpName);
             bool isError = false;
             try
             {

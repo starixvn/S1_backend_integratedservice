@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -23,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private readonly int tpId = (int)Tp.NineW;
         private readonly int tpType = 51;
         private readonly int TimeZone = 8;
+        private readonly string _tpName = Tp.NineW.ToString();
 
         public WagerNineW(IServiceProvider provider)
         {
@@ -42,6 +44,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettle(object state)
         {
+            LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 1;
             var dataRangeMins = 15;
@@ -79,6 +82,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettleByDate(object state)
         {
+            LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 2;
             var dataRangeMins = 1441;
@@ -117,6 +121,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReSettle(object state)
         {
+            LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 3;
             var dataRangeMins = 180;
