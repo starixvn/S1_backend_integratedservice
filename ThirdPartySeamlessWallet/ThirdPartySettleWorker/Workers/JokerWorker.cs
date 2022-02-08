@@ -59,6 +59,9 @@ namespace ThirdPartySettleWorker.Workers
 
         private void SettleRNG(object state)
         {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;
@@ -141,6 +144,9 @@ namespace ThirdPartySettleWorker.Workers
 
         private void SettleFish(object state)
         {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;
