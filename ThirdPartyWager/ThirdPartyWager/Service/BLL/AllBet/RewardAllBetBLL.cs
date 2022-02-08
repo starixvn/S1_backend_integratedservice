@@ -56,7 +56,6 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> GetRewardsAsync(string startTime, string endTime)
         {
-            LogContext.PushProperty("Tp", _tpName);
             string msg = "FATAL_ERROR";
             string guid = Guid.NewGuid().ToString();
 
@@ -134,8 +133,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {item.eventRecordNum} )";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
-                            _logger.LogError(ex, ex.Message);
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -153,7 +151,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetRewardsAsync\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetRewardsAsync\r\n{ex.Message}");
                 return false;
             }
         }

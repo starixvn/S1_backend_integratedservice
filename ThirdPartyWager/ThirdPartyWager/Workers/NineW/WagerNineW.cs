@@ -22,9 +22,9 @@ namespace ThirdPartyWager.Workers
         private Timer _reSttleTimer;
 
         private readonly int tpId = (int)Tp.NineW;
+        private readonly string _tpName = Tp.NineW.ToString();
         private readonly int tpType = 51;
         private readonly int TimeZone = 8;
-        private readonly string _tpName = Tp.NineW.ToString();
 
         public WagerNineW(IServiceProvider provider)
         {
@@ -44,6 +44,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettle(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 1;
@@ -82,6 +83,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettleByDate(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 2;
@@ -121,6 +123,7 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReSettle(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 3;

@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -23,6 +22,7 @@ namespace ThirdPartyWager.Workers
         private Timer timerIDR;
         private int intervalMins = 60;
         private int tpId = (int)Tp.Kiss918;
+        private readonly string _tpName = Tp.Kiss918.ToString();
         private int tpType = 2;
         private int quickTHB = 0;
         private int quickMYR = 0;
@@ -52,6 +52,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskTHB(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var currency = "THB";
@@ -108,6 +110,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskMYR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var currency = "MYR";
@@ -164,6 +168,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskIDR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var currency = "IDR";

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +18,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerRedoKiss918BLL> _logger;
 
         private readonly int _tpId = (int)Tp.Kiss918;
-        private readonly string _tpName = Tp.Kiss918.ToString();
 
         public WagerRedoKiss918BLL(IServiceProvider provider)
         {
@@ -33,7 +31,6 @@ namespace ThirdPartyWager.Service.BLL
         {
             string msg = "FATAL_ERROR";
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get api info
@@ -119,7 +116,7 @@ namespace ThirdPartyWager.Service.BLL
                             catch (Exception ex)
                             {
                                 msg = $"INSERT_WAGER(WAGERID: {bet.uuid} )";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                                 return false;
                             }
                         }
@@ -134,7 +131,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"RedoWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

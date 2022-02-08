@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -25,7 +24,6 @@ namespace ThirdPartyWager.Workers
         private Timer _timerLatestHighlightVideo;
         private readonly IHostEnvironment _environment;
         private readonly ILogger<LatestHighlightVideo> _logger;
-        private readonly Log2File _log2File;
         private readonly HttpHelper _httpHelper;
         private readonly CommonBLL _commonBll;
         private readonly LatestHighlightVideoBLL _latestHighlightVideoBll;
@@ -36,7 +34,6 @@ namespace ThirdPartyWager.Workers
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _logger = provider.GetRequiredService<ILogger<LatestHighlightVideo>>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _commonBll = provider.GetRequiredService<CommonBLL>();
             _latestHighlightVideoBll = provider.GetRequiredService<LatestHighlightVideoBLL>();
@@ -51,6 +48,7 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoLatestHighlightVideoAsync(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             bool isError = false;
             try

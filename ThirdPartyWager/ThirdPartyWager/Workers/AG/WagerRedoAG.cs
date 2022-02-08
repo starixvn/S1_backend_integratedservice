@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -22,10 +21,10 @@ namespace ThirdPartyWager.Workers
         private Timer timer;
         private int intervalMins = 60;
         private int tpId = (int)Tp.AG;
+        private readonly string _tpName = Tp.AG.ToString();
         private int tpType = 2;
         private int quick = 0;
         private readonly int timeZone = -4;
-        private string logName = Tp.AG.ToString();
 
         public WagerRedoAG(
             ILogger<WagerRedoAG> logger,
@@ -55,6 +54,9 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
+            
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
 
             try
             {
@@ -92,8 +94,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {

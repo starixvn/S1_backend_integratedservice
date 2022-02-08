@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -19,15 +19,14 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper dateTimeHelper;
         private readonly CommonBLL commonBLL;
         private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
         private int intervalDays = 1;
         private int iRangMins = 1440;
         private int tpId = (int)Tp.OneGaming;
+        private readonly string _tpName = Tp.OneGaming.ToString();
         private int tpType = 2;
         private int iDays = 2;
         private readonly int timeZone = 8;
-        private string logName = Tp.OneGaming.ToString();
 
         public WagerRedoOneGaming(
             ILogger<WagerRedoOneGaming> logger,
@@ -35,8 +34,7 @@ namespace ThirdPartyWager.Workers
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
             CommonBLL commonBLL,
-            IHostEnvironment environment,
-            Log2File log2File
+            IHostEnvironment environment
         )
         {
             this.logger = logger;
@@ -45,7 +43,6 @@ namespace ThirdPartyWager.Workers
             this.dateTimeHelper = dateTimeHelper;
             this.commonBLL = commonBLL;
             this.environment = environment;
-            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -55,7 +52,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             int quick = 0;
             int failed = 0;
             var tasks = new List<Task>();
@@ -86,7 +84,7 @@ namespace ThirdPartyWager.Workers
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex, logName);
+                            logger.LogError(ex, ex.Message);
                             Interlocked.Increment(ref failed);
                         }
                     }));
@@ -101,8 +99,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {

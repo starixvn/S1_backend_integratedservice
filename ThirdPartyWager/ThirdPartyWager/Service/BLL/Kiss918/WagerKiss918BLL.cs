@@ -1,14 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -21,7 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerKiss918BLL> _logger;
 
         private readonly int _tpId = (int)Tp.Kiss918;
-        private readonly string _tpName = Tp.Kiss918.ToString();
 
         public WagerKiss918BLL(IServiceProvider provider)
         {
@@ -35,7 +30,6 @@ namespace ThirdPartyWager.Service.BLL
         {
             string msg = "FATAL_ERROR";
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get api info
@@ -106,7 +100,7 @@ namespace ThirdPartyWager.Service.BLL
                             catch (Exception ex)
                             {
                                 msg = $"INSERT_WAGER(WAGERID: {bet.uuid} )";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}\r\n{ex.Message}");
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}\r\n{ex.Message}");
                                 return false;
                             }
                         }
@@ -121,7 +115,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

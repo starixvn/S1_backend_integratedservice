@@ -7,6 +7,7 @@ using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -21,6 +22,7 @@ namespace ThirdPartyWager.Workers
         private readonly HttpHelper _httpHelper;
         private readonly LiveStreamingBLL _liveStreamingBll;
         private Timer _timerLiveStreaming;
+        private readonly string _tpName = "LiveStreaming";
 
         public LiveStreaming(IServiceProvider provider)
         {
@@ -38,6 +40,8 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoLiveStreamingAsync(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             bool isError = false;
             try
             {

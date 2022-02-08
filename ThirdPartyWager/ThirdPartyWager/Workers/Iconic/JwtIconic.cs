@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -16,22 +15,19 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<JwtIconic> logger;
         private readonly ApiIconicBLL apiIconicBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly IHostEnvironment environment;
         private Timer timer;
         private int tpId = (int)Tp.Iconic;
-
+        private readonly string _tpName = Tp.Iconic.ToString();
 
         public JwtIconic(
             ILogger<JwtIconic> logger,
             ApiIconicBLL apiIconicBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            IHostEnvironment environment
+            ThirdPartyBLL thirdPartyBLL
         )
         {
             this.logger = logger;
             this.apiIconicBLL = apiIconicBLL;
             this.thirdPartyBLL = thirdPartyBLL;
-            this.environment = environment;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -41,6 +37,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskJWT(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get setting

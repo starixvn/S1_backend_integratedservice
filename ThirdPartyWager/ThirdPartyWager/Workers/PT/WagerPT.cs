@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -18,7 +17,6 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timerTHB;
         private Timer timerMYR;
         private Timer timerIDR;
@@ -30,17 +28,16 @@ namespace ThirdPartyWager.Workers
         private int intervalMins = 2;
         private int iRangMins = 20;
         private int tpId = (int)Tp.PT;
+        private readonly string _tpName = Tp.PT.ToString();
         private int tpType = 1;
         private int beyond = 6;
-        private string logName = Tp.PT.ToString();
 
         public WagerPT(
             ILogger<WagerPT> logger,
             WagerPTBLL wagerPTBLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment,
-            Log2File log2File
+            IHostEnvironment environment
         )
         {
             this.logger = logger;
@@ -48,7 +45,6 @@ namespace ThirdPartyWager.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
-            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -65,6 +61,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskTHB(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -117,8 +115,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -137,6 +134,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskMYR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -189,8 +188,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -209,6 +207,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskIDR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -261,8 +261,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -281,6 +280,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskVNDGoal(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -333,8 +334,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -353,6 +353,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskVNDBwing(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -405,8 +407,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -425,6 +426,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskUSD(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -477,8 +480,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -497,6 +499,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskCNY(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -549,8 +553,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -569,6 +572,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskINR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             if (!environment.IsProduction())
             {
                 return;
@@ -622,8 +627,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
