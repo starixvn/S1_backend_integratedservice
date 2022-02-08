@@ -58,6 +58,8 @@ namespace ThirdPartySettleWorker.Workers
 
         public void DoSettleTCGWork(object state)
         {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             var forContinue = false;
             var isError = false;
 
@@ -65,7 +67,6 @@ namespace ThirdPartySettleWorker.Workers
             var tpCategory = TpCategory.Lottery;
 
             var type = gametype == GameType.TCG_SEA_Lottery ? "SEA" : "VN";
-            var logName = $"Settle_TCG_Lottery_{type}";
             var unsettleSP = $"Service_TpWagerTCG_{type}_Unsettle_Get";
             var setSP = $"Service_TpWagerTCG_{type}_Settle_Set";
 
@@ -128,17 +129,13 @@ namespace ThirdPartySettleWorker.Workers
                             username = unsettled.Account,
                             isSuccess = false
                         }, dataBase: DataBase.Wager);
-
-
-                        LogContext.PushProperty("TP", _tpName);
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message} ||¡@{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }                
             }
             catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", _tpName);
+            {             
                 _logger.LogError(ex, ex.Message);
                 isError = true;
             }
