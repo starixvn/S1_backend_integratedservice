@@ -21,11 +21,11 @@ namespace ThirdPartyWager.Workers
         private int intervalDays = 1;
         private int iRangMins = 1440;
         private int tpId = (int)Tp.N2Live;
+        private readonly string _tpName = Tp.N2Live.ToString();
         private int tpType = 2;
         private int quick = 0;
         private int iDays = 2;
         private readonly int timeZone = 0;
-        private readonly string _tpName = Tp.MP.ToString();
 
         public WagerRedoN2Live(
             ILogger<WagerRedoN2Live> logger,
