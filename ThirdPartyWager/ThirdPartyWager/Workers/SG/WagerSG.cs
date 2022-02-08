@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -17,31 +16,25 @@ namespace ThirdPartyWager.Workers
         private readonly WagerSGBLL wagerSGBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
         private int iRangMins = 20;
         private int tpId = (int)Tp.SG;
+        private readonly string _tpName = Tp.SG.ToString();
         private int tpType = 1;
         private int quick = 0;
         private readonly int timeZone = 8;
-        private string logName = Tp.SG.ToString();
 
         public WagerSG(
             ILogger<WagerSG> logger,
             WagerSGBLL wagerSGBLL,
             ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment,
-            Log2File log2File
+            DateTimeHelper dateTimeHelper
         )
         {
             this.logger = logger;
             this.wagerSGBLL = wagerSGBLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
-            this.log2File = log2File;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,6 +45,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 quick = 0;
@@ -90,8 +85,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {

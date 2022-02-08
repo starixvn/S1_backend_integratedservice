@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -17,13 +16,13 @@ namespace ThirdPartyWager.Workers
         private readonly WagerMegaBLL wagerMegaBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
         private Timer timerTHB;
         private Timer timerMYR;
         private Timer timerIDR;
         private int intervalDays = 1;
         private int iRangMins = 1440;
         private int tpId = (int)Tp.Mega;
+        private readonly string _tpName = Tp.Mega.ToString();
         private int tpType = 1;
         private int quickTHB = 0;
         private int quickMYR = 0;
@@ -42,7 +41,6 @@ namespace ThirdPartyWager.Workers
             this.wagerMegaBLL = wagerMegaBLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -54,6 +52,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskTHB(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var currency = "THB";
@@ -106,6 +106,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskMYR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var currency = "MYR";
@@ -158,6 +160,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskIDR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var currency = "IDR";

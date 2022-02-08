@@ -4,7 +4,6 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 

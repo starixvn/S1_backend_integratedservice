@@ -35,13 +35,12 @@ namespace ThirdPartyWager.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-
             _timerSabaOdds = new Timer(DoSabaOddsAsync, null, TimeSpan.Zero, TimeSpan.Zero);
-
             return Task.CompletedTask;
         }
         private async void DoSabaOddsAsync(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             bool isError = false;
             try

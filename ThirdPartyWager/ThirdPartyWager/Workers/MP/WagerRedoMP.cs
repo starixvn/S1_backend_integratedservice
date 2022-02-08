@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -20,6 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly int timeRange = 60; //in minutes 
         private readonly int quickTime = 73; // in seconds
         private readonly int runTime = 3697; // in seconds
+        private readonly string _tpName = Tp.MP.ToString();
 
         public WagerRedoMP(IServiceProvider provider)
         {
@@ -34,6 +35,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             bool quick = false;
             try
             {

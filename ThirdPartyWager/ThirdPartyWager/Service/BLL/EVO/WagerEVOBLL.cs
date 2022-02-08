@@ -1,8 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +21,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerEVOBLL> _logger;
 
         private readonly int _tpId = (int)Tp.EVO;
-        private readonly string _tpName = Tp.EVO.ToString();
         private readonly int _timeZone = 0;
         private readonly string _timeFormat = "yyyy-MM-dd'T'HH:mm:ss.fffZ";//2021-09-28T23:59:59.000Z
 
@@ -83,7 +80,6 @@ namespace ThirdPartyWager.Service.BLL
         {
             string msg = "FATAL_ERROR";
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
@@ -182,7 +178,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER({name}: {field} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(round)}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(round)}\r\n{ex.Message}");
                         return false;
                     }
                 }
@@ -200,7 +196,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

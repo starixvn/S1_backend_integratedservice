@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,9 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL _apiAllBetBLL;
         private readonly WagerAllBetService _wagerAllBetService;
         private readonly ILogger<WagerAllBetBLL> _logger;
-
         private readonly int _tpId = (int)Tp.Allbet;
-        private readonly string _tpName = Tp.Allbet.ToString();
 
         public WagerAllBetBLL(IServiceProvider provider)
         {
@@ -32,7 +29,6 @@ namespace ThirdPartyWager.Service.BLL
         {
             string msg = "FATAL_ERROR";
             string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get api info
@@ -80,7 +76,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -110,7 +106,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -124,7 +120,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

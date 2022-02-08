@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,11 +16,11 @@ namespace ThirdPartyWager.Workers
         private readonly WagerCFBLL wagerCFBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
         private Timer timer;
         private int intervalMins = 3;
         private int iRangMins = 20;
         private int tpId = (int)Tp.CF;
+        private readonly string _tpName = Tp.CF.ToString();
         private int tpType = 1;
         private int quick = 0;
 
@@ -27,15 +28,13 @@ namespace ThirdPartyWager.Workers
             ILogger<WagerCF> logger,
             WagerCFBLL wagerCFBLL,
             ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
+            DateTimeHelper dateTimeHelper
         )
         {
             this.logger = logger;
             this.wagerCFBLL = wagerCFBLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,6 +45,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 quick = 0;

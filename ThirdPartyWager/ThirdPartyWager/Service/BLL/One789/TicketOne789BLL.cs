@@ -18,7 +18,6 @@ namespace ThirdPartyWager.Service
         private readonly ILogger<TicketOne789BLL> _logger;
 
         private readonly int _tpId = (int)Tp.One789;
-        private readonly string _tpName = Tp.One789.ToString();
 
         public TicketOne789BLL(IServiceProvider provider)
         {
@@ -37,7 +36,6 @@ namespace ThirdPartyWager.Service
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
-            LogContext.PushProperty("Tp", _tpName);
             string func = "CheckTicketStatusAsync";
             var msg = "";
 

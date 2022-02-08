@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -16,21 +14,18 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<WagerDG> logger;
         private readonly WagerDGBLL wagerDGBLL;
         private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
-        private string logName = Tp.DG.ToString();
+        private readonly string _tpName = Tp.DG.ToString();
 
         public WagerDG(
             ILogger<WagerDG> logger, 
             IHostEnvironment environment, 
-            WagerDGBLL wagerDGBLL,
-            Log2File log2File
+            WagerDGBLL wagerDGBLL
         )
         {
             this.logger = logger;
             this.wagerDGBLL = wagerDGBLL;
             this.environment = environment;
-            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -39,6 +34,8 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             var isContinue = false;
             try
             {
@@ -46,8 +43,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {

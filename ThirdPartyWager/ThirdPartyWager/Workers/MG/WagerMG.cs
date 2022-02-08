@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ThirdPartyWager.Service.BLL;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL.MG;
-using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers.MG
 {
@@ -16,7 +15,7 @@ namespace ThirdPartyWager.Workers.MG
         private readonly ILogger<WagerMG> _logger;
         private readonly IMGBLL _mgBll;
         private Timer _timer;
-        
+        private readonly string _tpName = Tp.MG.ToString();
 
         public WagerMG(IServiceProvider provider)
         {
@@ -31,6 +30,8 @@ namespace ThirdPartyWager.Workers.MG
 
         private async void DoTask(object? state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 await _mgBll.ReSettle();

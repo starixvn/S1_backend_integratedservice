@@ -1,14 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ThirdPartyWager.Service.Library
 {
@@ -27,19 +20,6 @@ namespace ThirdPartyWager.Service.Library
             _logger.LogInformation(InfoContent);
         }
 
-        public void Error(string ErrorContent, string PrefixName, Exception ex = null)
-        {
-            LogContext.PushProperty("PrefixName", PrefixName);
-            if (ex != null)
-            {
-                _logger.LogError(ex, ErrorContent);
-            }
-            else
-            {
-                _logger.LogError(ErrorContent);
-            }
-        }
-       
         public void InsertRequestLog(string tpName, string url, string input, string output)
         {
             LogContext.PushProperty("PrefixName", "Request");
