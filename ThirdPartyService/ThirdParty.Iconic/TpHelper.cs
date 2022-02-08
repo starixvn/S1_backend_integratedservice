@@ -157,7 +157,7 @@ namespace ThirdParty.Iconic
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{FunGameUrl}/{gameId}?language={TpLangId}&openExternalBrowser=1";
+                oApiResult.Message = $"{FunGameUrl}/{gameId}?lang={TpLangId}&openExternalBrowser=1";
                 return oApiResult;
             }
 
