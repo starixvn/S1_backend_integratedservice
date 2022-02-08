@@ -27,7 +27,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<TCGWorker> _logger;
-        private readonly Log2File _log2File;
         private readonly string _tpName;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
@@ -38,7 +37,6 @@ namespace ThirdPartySettleWorker.Workers
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGWorker>>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -135,7 +133,6 @@ namespace ThirdPartySettleWorker.Workers
                         LogContext.PushProperty("TP", _tpName);
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message} ||¡@{JsonConvert.SerializeObject(unsettled)}");
-                        _log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                     }
                 }                
             }
@@ -143,7 +140,6 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", _tpName);
                 _logger.LogError(ex, ex.Message);
-                _log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally
