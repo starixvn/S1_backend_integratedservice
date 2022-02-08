@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Workers
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var result = await client.SendAsync(data);
                 
-                if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                if (result.StatusCode == HttpStatusCode.OK)
                 {
                     IEnumerable<ServerInfo> siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
                     var latestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
@@ -83,8 +83,6 @@ namespace ThirdPartyWager.Workers
 
                             if (check == 0)
                             {
-                                var sw = new Stopwatch();
-                                sw.Start();
                                 var LatestHighlightVideoData = new List<LatestHighlightVideoData>();
 
                                 foreach (var siteListInfoDetail in JsonSerializer.Deserialize<IEnumerable<string>>(siteListInfo.LangList))
@@ -107,13 +105,6 @@ namespace ThirdPartyWager.Workers
                                 }
 
                                 _latestHighlightVideoBll.SetLatestHighlightVideo(LatestHighlightVideoData);
-                                
-                                sw.Stop();
-                                _logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
-                            }
-                            else
-                            {
-                                _log2File.Error($"{siteListInfo.SiteId}, {latestHighlightVideo.date}, {latestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
                             }
                         }
                     }
@@ -123,7 +114,6 @@ namespace ThirdPartyWager.Workers
             {
                 isError = true;
                 _logger.LogError(ex, GetCurrentAsyncMethod());
-                _log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {
