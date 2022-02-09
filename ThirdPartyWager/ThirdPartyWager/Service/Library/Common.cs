@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Service.Library
         public string random()
         {
             using var csp = new RNGCryptoServiceProvider();
-            byte[] byteCsp = new byte[5];
+            var byteCsp = new byte[5];
             csp.GetBytes(byteCsp);
             return BitConverter.ToString(byteCsp);
         }
@@ -33,14 +33,14 @@ namespace ThirdPartyWager.Service.Library
             des.Key = Convert.FromBase64String(base64Key);
             des.IV = base64edIv == null ? NULL_IV : Convert.FromBase64String(base64edIv);
 
-            byte[] dataBytes = Encoding.UTF8.GetBytes(data);
+            var dataBytes = Encoding.UTF8.GetBytes(data);
 
-            using MemoryStream stream = new MemoryStream();
-            using CryptoStream encStream = new CryptoStream(stream, des.CreateEncryptor(), CryptoStreamMode.Write);
+            using var stream = new MemoryStream();
+            using var encStream = new CryptoStream(stream, des.CreateEncryptor(), CryptoStreamMode.Write);
             encStream.Write(dataBytes, 0, dataBytes.Length);
             encStream.FlushFinalBlock();
 
-            string result = Convert.ToBase64String(stream.ToArray());
+            var result = Convert.ToBase64String(stream.ToArray());
             encStream.Close();
             stream.Close();
             return result;
@@ -68,11 +68,11 @@ namespace ThirdPartyWager.Service.Library
         }
         public string encrypt(string data, string base64Key)
         {
-            byte[] btIv = Encoding.UTF8.GetBytes(base64Key);
-            byte[] btKey = Encoding.UTF8.GetBytes(base64Key);
+            var btIv = Encoding.UTF8.GetBytes(base64Key);
+            var btKey = Encoding.UTF8.GetBytes(base64Key);
             using var des = new DESCryptoServiceProvider();
             using var ms = new MemoryStream();
-            byte[] inData = Encoding.UTF8.GetBytes(data);
+            var inData = Encoding.UTF8.GetBytes(data);
 
             using var cs = new CryptoStream(ms, des.CreateEncryptor(btKey, btIv), CryptoStreamMode.Write);
             cs.Write(inData, 0, inData.Length);
@@ -105,11 +105,11 @@ namespace ThirdPartyWager.Service.Library
         public string HMACSHA256(string message, string key)
         {
             var encoding = new System.Text.UTF8Encoding();
-            byte[] keyByte = encoding.GetBytes(key);
-            byte[] messageBytes = encoding.GetBytes(message);
+            var keyByte = encoding.GetBytes(key);
+            var messageBytes = encoding.GetBytes(message);
             using (var hmacSHA256 = new HMACSHA256(keyByte))
             {
-                byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
+                var hashMessage = hmacSHA256.ComputeHash(messageBytes);
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
         }
@@ -117,17 +117,17 @@ namespace ThirdPartyWager.Service.Library
         public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;
-            byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+            var toEncryptArray = Encoding.UTF8.GetBytes(str);
 
-            RijndaelManaged rm = new RijndaelManaged
+            var rm = new RijndaelManaged
             {
                 Key = Encoding.UTF8.GetBytes(key),
                 Mode = CipherMode.ECB,
                 Padding = PaddingMode.PKCS7
             };
 
-            ICryptoTransform cTransform = rm.CreateEncryptor();
-            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            var cTransform = rm.CreateEncryptor();
+            var resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
 
             var base64Str = Convert.ToBase64String(resultArray, 0, resultArray.Length);
 
@@ -136,8 +136,8 @@ namespace ThirdPartyWager.Service.Library
 
         public string Sign(string EncryptText, string EncryptKey)
         {
-            using HMACSHA1 myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
-            byte[] RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
+            using var myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
+            var RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
 
             return Convert.ToBase64String(RstRes);
         }

@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage, string guid)
         {
             // param
-            string url = $"{apiUrl}/api/v1/profile/sets";
+            var url = $"{apiUrl}/api/v1/profile/sets";
             var param = new
             {
                 updatedStart = startUnix * 1000,
@@ -44,7 +44,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
+            var r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
             var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
             return result;
         }
@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<JwtTokenIconic> GetJwtToken(string apiUrl, string username, string password)
         {
             // param
-            string url = $"{apiUrl}/login";
+            var url = $"{apiUrl}/login";
             var param = new
             {
                 username = username,
@@ -60,7 +60,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param, HttpMethod.Post, false);
+            var r = await DoHttpClientAsync(url, param, HttpMethod.Post, false);
             var result = JsonConvert.DeserializeObject<JwtTokenIconic>(r);
             return result;
         }

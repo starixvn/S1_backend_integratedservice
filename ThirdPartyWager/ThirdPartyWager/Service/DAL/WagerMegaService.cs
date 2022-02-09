@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public int InsertWager(ReportMega bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerMega_Ins", bet, commandType: CommandType.StoredProcedure);
         }
     }

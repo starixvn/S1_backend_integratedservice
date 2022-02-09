@@ -27,8 +27,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
 
             try
             {
@@ -37,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerAGService.GetWagerTotal(startUnix, endUnix);
-                int wagerCount = getWagerCount.wagerCount;
+                var wagerCount = getWagerCount.wagerCount;
 
                 var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime, guid);
                 var arrSummary = getWagerSummary.result;
@@ -76,10 +76,10 @@ namespace ThirdPartyWager.Service.BLL
                 var ed = Convert.ToDateTime(startTime).AddMinutes(10).AddMilliseconds(-1);
                 var bg = "";
                 var fn = "";
-                for (int i = 1; i <= 6; i++)
+                for (var i = 1; i <= 6; i++)
                 {
-                    int page = 1;
-                    int totalPage = 1;
+                    var page = 1;
+                    var totalPage = 1;
                     if (i > 1)
                     {
                         st = st.AddMinutes(10);

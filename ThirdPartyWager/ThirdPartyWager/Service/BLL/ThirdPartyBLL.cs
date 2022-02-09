@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         }
         public Dictionary<string, string> GetThirdPartySetting(int tpId)
         {
-            string key = $"Setting_{tpId}";
+            var key = $"Setting_{tpId}";
             var setting = cache.Get<Dictionary<string, string>>(key);
             if (setting == null)
             {
@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
         }
         public Dictionary<string, string> GetThirdPartyBySite(int tpId, int siteId)
         {
-            string key = $"Setting_{tpId}_{siteId}";
+            var key = $"Setting_{tpId}_{siteId}";
             var setting = cache.Get<Dictionary<string, string>>(key);
             if (setting == null)
             {
@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public int SetThirdPartySetting(int tpId, Dictionary<string, string> setting)
         {
-            string key = $"Setting_{tpId}";
+            var key = $"Setting_{tpId}";
             var result = thirdPartyHelper.SetThirdPartySetting(tpId, JsonConvert.SerializeObject(setting));
             if (result > 0)
             {

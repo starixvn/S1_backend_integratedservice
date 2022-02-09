@@ -66,10 +66,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "THB";
-            int siteId = 1;
-            int gmt = 7;
+            var siteId = 1;
+            var gmt = 7;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
@@ -95,7 +95,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
@@ -115,12 +115,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -134,10 +134,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "MYR";
-            int siteId = 1;
-            int gmt = 8;
+            var siteId = 1;
+            var gmt = 8;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
@@ -163,7 +163,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
@@ -183,12 +183,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -202,10 +202,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "IDR";
-            int siteId = 1;
-            int gmt = 8;
+            var siteId = 1;
+            var gmt = 8;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
@@ -232,7 +232,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
@@ -252,12 +252,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -271,10 +271,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "VND";
-            int siteId = 2;
-            int gmt = 7;
+            var siteId = 2;
+            var gmt = 7;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency, siteId);
@@ -300,7 +300,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency, siteId);
@@ -320,12 +320,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerVNDGoal.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerVNDGoal.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -339,10 +339,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "VND";
-            int siteId = 3;
-            int gmt = 7;
+            var siteId = 3;
+            var gmt = 7;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency, siteId);
@@ -368,7 +368,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency, siteId);
@@ -388,12 +388,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerVNDBwing.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerVNDBwing.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -407,10 +407,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "USD";
-            int siteId = 1;
-            int gmt = 0;
+            var siteId = 1;
+            var gmt = 0;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
@@ -436,7 +436,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
@@ -456,12 +456,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerUSD.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerUSD.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -475,11 +475,11 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "INR";
-            int siteId = 1;
-            int gmt = 5;
-            int gmtMinute = 30;
+            var siteId = 1;
+            var gmt = 5;
+            var gmtMinute = 30;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
@@ -505,7 +505,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
@@ -525,12 +525,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerINR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerINR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -544,10 +544,10 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            int quick = 0;
+            var quick = 0;
             var currency = "CNY";
-            int siteId = 1;
-            int gmt = 8;
+            var siteId = 1;
+            var gmt = 8;
             try
             {
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
@@ -573,7 +573,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    bool result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
@@ -593,12 +593,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerCNY.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerCNY.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

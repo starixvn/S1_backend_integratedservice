@@ -15,9 +15,9 @@ namespace ThirdPartyWager.Service.Library
     {
         public TimeCast GetTimeByMinute(int period, int utc, string format, DateTime timerTime, int utcMinute = 0)
         {
-            DateTime current = timerTime;
+            var current = timerTime;
 
-            DateTime timeBase = new DateTime(
+            var timeBase = new DateTime(
                 current.Year,
                 current.Month,
                 current.Day,
@@ -46,10 +46,10 @@ namespace ThirdPartyWager.Service.Library
             var endAt = new DateTimeOffset(dEndTime);
             var startTime = beginAt.ToOffset(new TimeSpan(utc, utcMinute, 0)).ToString(format);
             var endTime = endAt.ToOffset(new TimeSpan(utc, utcMinute, 0)).ToString(format);
-            long startUnix = beginAt.ToUnixTimeSeconds();
-            long endUnix = endAt.ToUnixTimeSeconds();
+            var startUnix = beginAt.ToUnixTimeSeconds();
+            var endUnix = endAt.ToUnixTimeSeconds();
 
-            TimeCast timeCast = new TimeCast
+            var timeCast = new TimeCast
             {
                 startTime = startTime,
                 endTime = endTime,
@@ -61,9 +61,9 @@ namespace ThirdPartyWager.Service.Library
         }
         public TimeCast GetTimeByHour(int period, int utc, string format, DateTime timerTime, int addEndSecond = -1)
         {
-            DateTime current = timerTime;
+            var current = timerTime;
 
-            DateTime timeBase = new DateTime(
+            var timeBase = new DateTime(
                 current.Year,
                 current.Month,
                 current.Day,
@@ -76,10 +76,10 @@ namespace ThirdPartyWager.Service.Library
             var endAt = new DateTimeOffset(timeBase.AddMinutes(period).AddMilliseconds(addEndSecond));
             var startTime = beginAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
             var endTime = endAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
-            long startUnix = beginAt.ToUnixTimeSeconds();
-            long endUnix = endAt.ToUnixTimeSeconds();
+            var startUnix = beginAt.ToUnixTimeSeconds();
+            var endUnix = endAt.ToUnixTimeSeconds();
 
-            TimeCast timeCast = new TimeCast
+            var timeCast = new TimeCast
             {
                 startTime = startTime,
                 endTime = endTime,
@@ -91,9 +91,9 @@ namespace ThirdPartyWager.Service.Library
         }
         public TimeCast GetTimeByDay(int period, int utc, string format, DateTime timerTime)
         {
-            DateTime current = timerTime;
+            var current = timerTime;
 
-            DateTime timeBase = new DateTime(
+            var timeBase = new DateTime(
                 current.Year,
                 current.Month,
                 current.Day,
@@ -106,10 +106,10 @@ namespace ThirdPartyWager.Service.Library
             var endAt = new DateTimeOffset(timeBase.AddMinutes(period).AddMilliseconds(-1));
             var startTime = beginAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
             var endTime = endAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
-            long startUnix = beginAt.ToUnixTimeSeconds();
-            long endUnix = endAt.ToUnixTimeSeconds();
+            var startUnix = beginAt.ToUnixTimeSeconds();
+            var endUnix = endAt.ToUnixTimeSeconds();
 
-            TimeCast timeCast = new TimeCast
+            var timeCast = new TimeCast
             {
                 startTime = startTime,
                 endTime = endTime,

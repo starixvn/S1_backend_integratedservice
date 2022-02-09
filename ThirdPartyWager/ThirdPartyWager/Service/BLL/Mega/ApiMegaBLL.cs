@@ -49,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
             // param
             var uuid = Guid.NewGuid();
 
-            string sign = uuid + sn + agentLoginId + secretCode;
+            var sign = uuid + sn + agentLoginId + secretCode;
 
             var param = new
             {
@@ -69,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(apiUrl, param);
+            var r = await DoHttpClientAsync(apiUrl, param);
             var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
             if (error.error != null)
             {

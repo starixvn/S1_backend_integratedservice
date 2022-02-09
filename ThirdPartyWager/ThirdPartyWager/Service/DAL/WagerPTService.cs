@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public int InsertWager(BetPT bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             if (string.Equals(bet.GAMETYPE, "Live Games", StringComparison.OrdinalIgnoreCase))
             {
                 // live casino

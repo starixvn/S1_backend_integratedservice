@@ -17,13 +17,13 @@ namespace ThirdPartyWager.Service.DAL
 
         public int InsertWager(BetSG bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerSG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
 
         public int InsertWagerRng(BetSG bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerRng_SG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
     }

@@ -37,14 +37,14 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecRewardWorker(int type, int timeRange)
         {
             var wokerTime = GetWorkerTime(type, 0);
-            bool quick = CheckQuick(wokerTime, 5);
+            var quick = CheckQuick(wokerTime, 5);
             wokerTime = wokerTime.AddMinutes(-3);
             var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                bool result = await GetRewardsAsync(time.startTime, time.endTime);
+                var result = await GetRewardsAsync(time.startTime, time.endTime);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -56,17 +56,17 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> GetRewardsAsync(string startTime, string endTime)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
 
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
 
                 // pagination
-                int pageIndex = 1;
-                int pageRowCnt = 1;
-                bool success = true;
+                var pageIndex = 1;
+                var pageRowCnt = 1;
+                var success = true;
 
                 while (pageRowCnt >= 1)
                 {

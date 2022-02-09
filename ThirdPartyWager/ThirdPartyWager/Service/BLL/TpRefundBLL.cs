@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
         public bool ExecRefundWorker(int gameType)
         {
             dynamic _bll = "";
-            int tpId = 0;
+            var tpId = 0;
             var result = true;
             try
             {

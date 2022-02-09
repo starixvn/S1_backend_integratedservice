@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 quick = 0;
-                string siteIds = "1,2,3";
+                var siteIds = "1,2,3";
                 var site = siteIds.Split(",");
                 foreach (var siteId in site)
                 {
@@ -73,13 +73,13 @@ namespace ThirdPartyWager.Workers
                     var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     if (time.endUnix < cvTime)
                     {
-                        bool result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
+                        var result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
                         if (result)
                         {
                             thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, Convert.ToInt32(siteId));
                         }
                     }
-                    int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                    var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
                     if (diffDay >= (iDays + 1))
                     {
                         quick = 1;
@@ -94,12 +94,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(60);
+                    var dueTimeSpan = TimeSpan.FromSeconds(60);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    var dueTimeSpan = TimeSpan.FromDays(intervalDays);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

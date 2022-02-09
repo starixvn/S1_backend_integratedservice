@@ -30,8 +30,8 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerSGModel> GetBetListByTime(string apiUrl, string merchantCode, string startTime, string endTime, int page, string guid)
         {
             // param
-            string uri = "getBetHistory";
-            string url = $"{apiUrl}";
+            var uri = "getBetHistory";
+            var url = $"{apiUrl}";
             var param = new
             {
                 beginDate = startTime,
@@ -42,7 +42,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, uri, param);
+            var r = await DoHttpClientAsync(url, uri, param);
             var result = JsonConvert.DeserializeObject<WagerSGModel>(r);
             return result;
         }

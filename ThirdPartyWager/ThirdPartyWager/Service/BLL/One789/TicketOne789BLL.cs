@@ -36,11 +36,10 @@ namespace ThirdPartyWager.Service
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
-            string func = "CheckTicketStatusAsync";
+            var func = "CheckTicketStatusAsync";
             var msg = "";
 
-            var param = new List<string>();
-            param.Add(pending.Tx);
+            var param = new List<string> { pending.Tx };
 
             var data = await _apiOne789BLL.CheckTicketStatus(setting, param);
             TicketDataOne789 ticketData = JsonConvert.DeserializeObject<TicketDataOne789>(data);

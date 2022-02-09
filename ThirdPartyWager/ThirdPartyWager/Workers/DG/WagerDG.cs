@@ -47,7 +47,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (environment.IsDevelopment() || environment.IsEnvironment("QA") || isContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(10);

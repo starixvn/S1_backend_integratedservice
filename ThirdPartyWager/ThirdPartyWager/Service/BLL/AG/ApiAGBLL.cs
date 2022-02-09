@@ -40,11 +40,11 @@ namespace ThirdPartyWager.Service.BLL
         {
             // param
             var httpMethod = "Post";
-            string uri = "/getorders.xml";
-            string url = $"{apiUrl}{uri}";
-            int perPage = 500;
-            string key = _common.ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
-            string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
+            var uri = "/getorders.xml";
+            var url = $"{apiUrl}{uri}";
+            var perPage = 500;
+            var key = _common.ToMD5($"{cagent}{startTime}{endTime}{page}{perPage}{hashKey}");
+            var param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&page={page}&perpage={perPage}&key={key}";
 
             // request
             var r = await DoHttpClientAsync(httpMethod, url, param, "row");
@@ -56,10 +56,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             // param
             var httpMethod = "Post";
-            string uri = "/getsumorders.xml";
-            string url = $"{apiUrl}{uri}";
-            string key = _common.ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
-            string param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&key={key}";
+            var uri = "/getsumorders.xml";
+            var url = $"{apiUrl}{uri}";
+            var key = _common.ToMD5($"{cagent}{startTime}{endTime}{hashKey}");
+            var param = $"cagent={cagent}&startdate={startTime}&enddate={endTime}&key={key}";
 
             // request
             var r = await DoHttpClientAsync(httpMethod, url, param, "row");
@@ -71,9 +71,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             // param
             var httpMethod = "Get";
-            string uri = "/resource/CheckTicketStatus.ucs";
-            string url = $"{apiUrl}{uri}";
-            string param = $"transactionID={transactionID}";
+            var uri = "/resource/CheckTicketStatus.ucs";
+            var url = $"{apiUrl}{uri}";
+            var param = $"transactionID={transactionID}";
 
             // request
             var r = await DoHttpClientAsync(httpMethod, url, param, "row");
@@ -99,7 +99,7 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             // xml to json
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(result);
 
             // single data force to array
@@ -118,17 +118,17 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<string> callSeamlessApi(string type, BettransDataAG bettransDataAG)
         {
             // param
-            string url = $"{_seamlessUrl}/AG";
-            string uri = "/postTransfer";
-            string cagent = "GF4";
-            string platformType = "AGIN";
+            var url = $"{_seamlessUrl}/AG";
+            var uri = "/postTransfer";
+            var cagent = "GF4";
+            var platformType = "AGIN";
             var wr = new StringWriter();
-            bool tag = true;
+            var tag = true;
 
             switch (type)
             {
                 case "Refund":
-                    XDocument doc = new XDocument(
+                    var doc = new XDocument(
                         new XElement("Data",
                         new XElement("Record",
                             new XElement("ticketStatus", type),
@@ -190,7 +190,7 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 // xml to json
-                XmlDocument xmlDoc = new XmlDocument();
+                var xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(content);
                 return JsonConvert.SerializeXmlNode(xmlDoc);
             }

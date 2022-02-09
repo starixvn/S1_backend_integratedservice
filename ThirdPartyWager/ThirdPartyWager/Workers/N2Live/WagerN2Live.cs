@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 quick = 0;
-                string siteIds = "1,2,3";
+                var siteIds = "1,2,3";
                 var site = siteIds.Split(",");
                 foreach (var siteId in site)
                 {
@@ -76,21 +76,21 @@ namespace ThirdPartyWager.Workers
                         //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                         //if (time.endUnix < cvTime)
                         //{
-                        TimeSpan timeLimit = DateTime.UtcNow - DateTime.Parse(time.endTime);
+                        var timeLimit = DateTime.UtcNow - DateTime.Parse(time.endTime);
                         if (timeLimit.TotalMinutes < 5)
                         {
                             // 日期值不能为未来日期 时间必须是当前时间的15分钟之前
                             time.endTime = DateTime.Parse(time.endTime).AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss");
                             time.endUnix -= 300;
                         }
-                        bool result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
+                        var result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
                         if (result)
                         {
                             thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, Convert.ToInt32(siteId));
                         }
                     }
-                    TimeSpan ts = DateTime.Now - timerTime;
-                    int diffMin = (int)ts.TotalMinutes;
+                    var ts = DateTime.Now - timerTime;
+                    var diffMin = (int)ts.TotalMinutes;
                     if (diffMin > beyond)
                     {
                         quick = 1;
@@ -105,12 +105,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    var dueTimeSpan = TimeSpan.FromSeconds(45);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

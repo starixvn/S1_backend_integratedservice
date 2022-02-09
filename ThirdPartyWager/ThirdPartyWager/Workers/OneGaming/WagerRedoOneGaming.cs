@@ -54,8 +54,8 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            int quick = 0;
-            int failed = 0;
+            var quick = 0;
+            var failed = 0;
             var tasks = new List<Task>();
             try
             {
@@ -90,7 +90,7 @@ namespace ThirdPartyWager.Workers
                     }));
 
                 }
-                Task t = Task.WhenAll(tasks);
+                var t = Task.WhenAll(tasks);
                 t.Wait();
                 //foreach (var ti in tasks)
                 //{
@@ -105,12 +105,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(60);
+                    var dueTimeSpan = TimeSpan.FromSeconds(60);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    var dueTimeSpan = TimeSpan.FromDays(intervalDays);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -118,7 +118,7 @@ namespace ThirdPartyWager.Workers
 
         private async Task<int> Main(string currency)
         {
-            int quick = 0;
+            var quick = 0;
             var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
 
             DateTime timerTime;
@@ -135,14 +135,14 @@ namespace ThirdPartyWager.Workers
             var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                bool result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                 if (result)
                 {
                     thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                 }
             }
 
-            int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+            var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
             if (diffDay >= (iDays + 1))
             {
                 quick = 1;

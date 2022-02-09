@@ -42,13 +42,13 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            bool isError = false;
+            var isError = false;
             try
             {
                 //string url = "http://portal.1100011.com/feeds/Nova88/odds.xml?sport=1,3&&league=UEFA%20EURO%202020&bettype=1";
-                string url = "http://portal.1100011.com/feeds/Nova88/odds.xml?sport=1&bettype=1";
+                var url = "http://portal.1100011.com/feeds/Nova88/odds.xml?sport=1&bettype=1";
 
-                UriBuilder builder = new UriBuilder(url)
+                var builder = new UriBuilder(url)
                 {
                     Port = -1
                 };
@@ -58,7 +58,7 @@ namespace ThirdPartyWager.Workers
                 //query["key"] = "Gs6Am3Cn0C";
                 //query["format"] = "JSON";
                 builder.Query = query.ToString();
-                string newurl = builder.ToString();
+                var newurl = builder.ToString();
 
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 var result = await _httpHelper.GetClient().SendAsync(data);
@@ -68,9 +68,9 @@ namespace ThirdPartyWager.Workers
                     var Content = result.Content.ReadAsStringAsync().Result;
                     Content = Content.Replace("<bookie ", "<bookie xmlns:json=\"http://james.newtonking.com/projects/json\" ");
                     Content = Content.Replace("<odd ", "<odd json:Array=\"true\" ");
-                    XmlDocument xmlDoc = new XmlDocument();
+                    var xmlDoc = new XmlDocument();
                     xmlDoc.LoadXml(Content);
-                    string sabaOddsJson = JsonConvert.SerializeXmlNode(xmlDoc, Newtonsoft.Json.Formatting.None, true);
+                    var sabaOddsJson = JsonConvert.SerializeXmlNode(xmlDoc, Newtonsoft.Json.Formatting.None, true);
                     sabaOddsJson = sabaOddsJson.Replace("@", "");
                     var response = JsonConvert.DeserializeObject<GetSabaOddsJson>(sabaOddsJson);
                     
@@ -94,7 +94,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (_environment.IsDevelopment())
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(30);

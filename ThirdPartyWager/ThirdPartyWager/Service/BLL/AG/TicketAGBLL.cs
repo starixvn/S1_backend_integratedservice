@@ -38,9 +38,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
-            string func = "CheckTicketStatusAsync";
+            var func = "CheckTicketStatusAsync";
             var msg = "";
-            bool task = true;
+            var task = true;
 
             var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
 

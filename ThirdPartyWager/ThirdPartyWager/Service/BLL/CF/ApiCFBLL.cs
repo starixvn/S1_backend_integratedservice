@@ -19,9 +19,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerCFModel> GetBetListByTime(string apiUrl, string apiKey, string agentCode, string startTime, string endTime)
         {
             // param
-            string uri = "/get_cockfight_processed_ticket_2.aspx";
-            string url = $"{apiUrl}{uri}";
-            string param = $"api_key={apiKey}&agent_code={agentCode}&start_datetime={startTime}&end_datetime={endTime}";
+            var uri = "/get_cockfight_processed_ticket_2.aspx";
+            var url = $"{apiUrl}{uri}";
+            var param = $"api_key={apiKey}&agent_code={agentCode}&start_datetime={startTime}&end_datetime={endTime}";
 
             // request
             var r = await DoHttpClientAsync(url, param, "data");
@@ -32,9 +32,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerCFModel> GetBetSummaryByTime(string apiUrl, string apiKey, string agentCode, string checkDate)
         {
             // param
-            string uri = "/get_cockfight_player_summary.aspx";
-            string url = $"{apiUrl}{uri}";
-            string param = $"api_key={apiKey}&agent_code={agentCode}&match_date={checkDate}";
+            var uri = "/get_cockfight_player_summary.aspx";
+            var url = $"{apiUrl}{uri}";
+            var param = $"api_key={apiKey}&agent_code={agentCode}&match_date={checkDate}";
 
             // request
             var r = await DoHttpClientAsync(url, param, "data");
@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
                 var result = response.Content.ReadAsStringAsync().Result;
 
                 // xml to json
-                XmlDocument xmlDoc = new XmlDocument();
+                var xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(result);
 
                 // single data force to array
@@ -66,7 +66,7 @@ namespace ThirdPartyWager.Service.BLL
                     node.Attributes.Append(attribute);
                 }
 
-                string json = JsonConvert.SerializeXmlNode(xmlDoc);
+                var json = JsonConvert.SerializeXmlNode(xmlDoc);
                 return json;
             }
             else

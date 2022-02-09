@@ -45,17 +45,19 @@ namespace ThirdPartyWager.Workers
                 var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // call jwt
-                var currencyList = new List<string>();
-                currencyList.Add("THB");
-                currencyList.Add("MYR");
-                currencyList.Add("IDR");
-                currencyList.Add("VND");
-                currencyList.Add("CNY");
-                currencyList.Add("USDT");
-                currencyList.Add("INR");
+                var currencyList = new List<string>
+                {
+                    "THB",
+                    "MYR",
+                    "IDR",
+                    "VND",
+                    "CNY",
+                    "USDT",
+                    "INR"
+                };
                 foreach (var curr in currencyList)
                 {
-                    string jwtUserName = setting[$"agent_{curr}"];
+                    var jwtUserName = setting[$"agent_{curr}"];
                     var getJwt = await apiIconicBLL.GetJwtToken(setting["ApiUrl"], jwtUserName, setting["password"]);
                     if (getJwt.token != null)
                     {
@@ -73,7 +75,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromDays(7);
+                var dueTimeSpan = TimeSpan.FromDays(7);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

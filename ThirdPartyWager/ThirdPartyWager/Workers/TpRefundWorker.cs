@@ -50,7 +50,7 @@ namespace ThirdPartyWager.Workers
             };
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", tpName);
-            bool task = true;
+            var task = true;
             var gametype = (GameType)state;
             try
             {
@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(20);
+                var dueTimeSpan = TimeSpan.FromMinutes(20);
                 if (!task)
                 {
                     dueTimeSpan = TimeSpan.FromMinutes(10);

@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public int InsertWager(BetN2Live bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             if (bet.schemeid != 0)
             {
                 return conn.Execute("Service_TpSmartWagerLC_N2Live_Ins", bet, commandType: CommandType.StoredProcedure);

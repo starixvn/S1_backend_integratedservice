@@ -31,15 +31,14 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                var currencyList = new List<string>();
-                currencyList.Add("RMB");
+                var currencyList = new List<string> { "RMB" };
                 if (_environment.IsProduction())
                 {
                     currencyList.Add("THB");

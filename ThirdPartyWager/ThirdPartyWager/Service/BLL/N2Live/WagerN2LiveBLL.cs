@@ -29,8 +29,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string apiUrl, string vendorId, string merchantCode, string startTime, string endTime)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get wager
@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             foreach (var betTmp in dealItem.betinfo.clientbet)
                             {
-                                BetN2Live bet = new BetN2Live
+                                var bet = new BetN2Live
                                 {
                                     gamecode = Int32.Parse(gameItem.code),
                                     id = Int64.Parse(dealItem.id),

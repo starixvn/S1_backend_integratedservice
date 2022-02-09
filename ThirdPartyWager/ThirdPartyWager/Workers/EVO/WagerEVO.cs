@@ -37,7 +37,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            bool quick = false;
+            var quick = false;
             try
             {
                 quick = await _wagerEVOBLL.ExecWagerWorker(tpType, timeRange);
@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

@@ -36,13 +36,13 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
         {
             var wokerTime = GetWorkerTime(type, -180);
-            bool quick = CheckQuick(wokerTime, 5);
+            var quick = CheckQuick(wokerTime, 5);
             var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                bool result = await GetWagersAsync(time.startTime, time.endTime);
+                var result = await GetWagersAsync(time.startTime, time.endTime);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -55,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
         {
             var wokerTime = GetWorkerTime(type, 1);
-            bool quick = CheckQuick(wokerTime, 120);
+            var quick = CheckQuick(wokerTime, 120);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
@@ -63,10 +63,10 @@ namespace ThirdPartyWager.Service.BLL
             {
                 // count interval wagers
                 var getWagerCount = _wagerEVOService.GetWagerRoundInfoTotal(time.startUnix, time.endUnix);
-                decimal wagerTotal = getWagerCount.WagerTotal;
-                decimal payoutTotal = getWagerCount.PayoutTotal;
+                var wagerTotal = getWagerCount.WagerTotal;
+                var payoutTotal = getWagerCount.PayoutTotal;
 
-                bool result = await GetWagersAsync(time.startTime, time.endTime, true, wagerTotal, payoutTotal);
+                var result = await GetWagersAsync(time.startTime, time.endTime, true, wagerTotal, payoutTotal);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -78,8 +78,8 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> GetWagersAsync(string startTime, string endTime, bool compare = false, decimal wagerTotal = 0, decimal payoutTotal = 0)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
@@ -99,8 +99,8 @@ namespace ThirdPartyWager.Service.BLL
 
                 if (compare)
                 {
-                    decimal wager = dataWager.Sum(x => x.wager);
-                    decimal payout = dataWager.Sum(x => x.payout);
+                    var wager = dataWager.Sum(x => x.wager);
+                    var payout = dataWager.Sum(x => x.payout);
 
                     if (wager == wagerTotal && payout == payoutTotal)
                     {
@@ -117,15 +117,15 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
-                string name = "ROUNDID";
-                string field = "";
+                var name = "ROUNDID";
+                var field = "";
                 foreach (var round in dataWager)
                 {
                     try
                     {
                         field = round.id;
 
-                        WagerRoundInfo_EVO roundInfo = new WagerRoundInfo_EVO();
+                        var roundInfo = new WagerRoundInfo_EVO();
                         roundInfo.id = round.id;
                         roundInfo.gameProvider = round.gameProvider;
                         roundInfo.startedAt = round.startedAt;
@@ -148,7 +148,7 @@ namespace ThirdPartyWager.Service.BLL
                                 name = "WAGERID";
                                 field = betItem.transactionId;
 
-                                Wager_EVO bet = new Wager_EVO();
+                                var bet = new Wager_EVO();
                                 bet.RoundId = round.id;
                                 bet.casinoId = playerItem.casinoId;
                                 bet.playerId = playerItem.playerId;
