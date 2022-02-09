@@ -41,11 +41,13 @@ namespace ThirdPartyWager.Service.BLL
                 string apiUrl = setting["ApiUrl"];
                 string pass = setting[$"Pass_{currency}"];
                 string entityKey = setting[$"XEntityKey_{currency}"];
-                Dictionary<string, string> certificate = new Dictionary<string, string>();
-                certificate.Add("path", Path.Combine(_environment.ContentRootPath, "Storage", "PT", $"{currency}.p12"));
-                certificate.Add("password", pass);
-                certificate.Add("currency", currency);
-                certificate.Add("site", siteId.ToString());
+                Dictionary<string, string> certificate = new Dictionary<string, string>
+                {
+                    { "path", Path.Combine(_environment.ContentRootPath, "Storage", "PT", $"{currency}.p12") },
+                    { "password", pass },
+                    { "currency", currency },
+                    { "site", siteId.ToString() }
+                };
 
                 int perPage = 500;
                 int page = 1;

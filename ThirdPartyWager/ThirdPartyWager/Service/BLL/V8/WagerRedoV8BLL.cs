@@ -71,23 +71,25 @@ namespace ThirdPartyWager.Service.BLL
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
                 {
-                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>();
-                    keyValuePairs.Add("GameID", dataWager.d.list.GameID[i]);
-                    keyValuePairs.Add("Accounts", dataWager.d.list.Accounts[i]);
-                    keyValuePairs.Add("ServerID", dataWager.d.list.ServerID[i]);
-                    keyValuePairs.Add("KindID", dataWager.d.list.KindID[i]);
-                    keyValuePairs.Add("TableID", dataWager.d.list.TableID[i]);
-                    keyValuePairs.Add("ChairID", dataWager.d.list.ChairID[i]);
-                    keyValuePairs.Add("UserCount", dataWager.d.list.UserCount[i]);
-                    keyValuePairs.Add("CellScore", dataWager.d.list.CellScore[i]);
-                    keyValuePairs.Add("AllBet", dataWager.d.list.AllBet[i]);
-                    keyValuePairs.Add("Profit", dataWager.d.list.Profit[i]);
-                    keyValuePairs.Add("Revenue", dataWager.d.list.Revenue[i]);
-                    keyValuePairs.Add("GameStartTime", dataWager.d.list.GameStartTime[i]);
-                    keyValuePairs.Add("GameEndTime", dataWager.d.list.GameEndTime[i]);
-                    keyValuePairs.Add("CardValue", dataWager.d.list.CardValue[i]);
-                    keyValuePairs.Add("ChannelID", dataWager.d.list.ChannelID[i]);
-                    keyValuePairs.Add("LineCode", dataWager.d.list.LineCode[i]);
+                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>
+                    {
+                        { "GameID", dataWager.d.list.GameID[i] },
+                        { "Accounts", dataWager.d.list.Accounts[i] },
+                        { "ServerID", dataWager.d.list.ServerID[i] },
+                        { "KindID", dataWager.d.list.KindID[i] },
+                        { "TableID", dataWager.d.list.TableID[i] },
+                        { "ChairID", dataWager.d.list.ChairID[i] },
+                        { "UserCount", dataWager.d.list.UserCount[i] },
+                        { "CellScore", dataWager.d.list.CellScore[i] },
+                        { "AllBet", dataWager.d.list.AllBet[i] },
+                        { "Profit", dataWager.d.list.Profit[i] },
+                        { "Revenue", dataWager.d.list.Revenue[i] },
+                        { "GameStartTime", dataWager.d.list.GameStartTime[i] },
+                        { "GameEndTime", dataWager.d.list.GameEndTime[i] },
+                        { "CardValue", dataWager.d.list.CardValue[i] },
+                        { "ChannelID", dataWager.d.list.ChannelID[i] },
+                        { "LineCode", dataWager.d.list.LineCode[i] }
+                    };
                     field.Add(JsonConvert.SerializeObject(keyValuePairs));
                 }
 

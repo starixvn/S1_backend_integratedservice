@@ -39,8 +39,7 @@ namespace ThirdPartyWager.Service.BLL
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                var currencyList = new List<string>();
-                currencyList.Add("RMB");
+                var currencyList = new List<string> { "RMB" };
                 if (_environment.IsProduction())
                 {
                     currencyList.Add("THB");

@@ -45,14 +45,16 @@ namespace ThirdPartyWager.Workers
                 var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // call jwt
-                var currencyList = new List<string>();
-                currencyList.Add("THB");
-                currencyList.Add("MYR");
-                currencyList.Add("IDR");
-                currencyList.Add("VND");
-                currencyList.Add("CNY");
-                currencyList.Add("USDT");
-                currencyList.Add("INR");
+                var currencyList = new List<string>
+                {
+                    "THB",
+                    "MYR",
+                    "IDR",
+                    "VND",
+                    "CNY",
+                    "USDT",
+                    "INR"
+                };
                 foreach (var curr in currencyList)
                 {
                     string jwtUserName = setting[$"agent_{curr}"];

@@ -39,8 +39,7 @@ namespace ThirdPartyWager.Service
             string func = "CheckTicketStatusAsync";
             var msg = "";
 
-            var param = new List<string>();
-            param.Add(pending.Tx);
+            var param = new List<string> { pending.Tx };
 
             var data = await _apiOne789BLL.CheckTicketStatus(setting, param);
             TicketDataOne789 ticketData = JsonConvert.DeserializeObject<TicketDataOne789>(data);
