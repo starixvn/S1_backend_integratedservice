@@ -1256,10 +1256,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 decimal stake = unsettled.Stake;
                                 decimal validBet = unsettled.Stake;
                                 decimal winLostAmount = unsettled.WinLostAmount;
-                                var winloss = Math.Round(wager.WinLostAmount, 1, MidpointRounding.ToNegativeInfinity);
-                                var checkWinlose = Math.Round(winLostAmount, 1, MidpointRounding.ToNegativeInfinity);
 
-                                if (wager.Stake == stake && winloss == checkWinlose)
+                                if (wager.Stake == stake)
                                 {
                                     BetRecordInfo betRecordInfo = new BetRecordInfo
                                     {
