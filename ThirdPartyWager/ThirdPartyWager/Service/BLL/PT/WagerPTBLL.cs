@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
@@ -40,9 +41,8 @@ namespace ThirdPartyWager.Service.BLL
                 string apiUrl = setting["ApiUrl"];
                 string pass = setting[$"Pass_{currency}"];
                 string entityKey = setting[$"XEntityKey_{currency}"];
-
                 Dictionary<string, string> certificate = new Dictionary<string, string>();
-                certificate.Add("path", $@"{_environment.ContentRootPath}\Storage\PT\{currency}.p12");
+                certificate.Add("path", Path.Combine(_environment.ContentRootPath, "Storage", "PT", $"{currency}.p12"));
                 certificate.Add("password", pass);
                 certificate.Add("currency", currency);
                 certificate.Add("site", siteId.ToString());
