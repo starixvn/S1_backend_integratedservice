@@ -32,8 +32,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -49,12 +49,12 @@ namespace ThirdPartyWager.Service.BLL
                     currencyList.Add("USD");
                     currencyList.Add("INR");
                 }
-                bool reCheck = false;
+                var reCheck = false;
                 foreach (var curr in currencyList)
                 {
                     // count interval wagers
                     var getWagerCount = _wagerWMService.GetWagerTotal(startUnix, endUnix, curr);
-                    int wagerCount = getWagerCount.wagerCount;
+                    var wagerCount = getWagerCount.wagerCount;
 
                     var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{curr}"], setting[$"signature_{curr}"], startTime, endTime, guid);
 

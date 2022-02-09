@@ -29,8 +29,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(int tpId, long startUnix, long endUnix)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerV8Service.GetWagerTotal(startUnix, endUnix);
-                int wagerCount = getWagerCount.wagerCount;
+                var wagerCount = getWagerCount.wagerCount;
 
                 // get wager
                 var dataWager = await _apiV8BLL.GetBetListByTime(setting["WagerUrl"], setting["Agent"], setting["Deskey"], setting["Md5key"], startUnix, endUnix, guid);
@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
                 {
-                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>
+                    var keyValuePairs = new Dictionary<string, dynamic>
                     {
                         { "GameID", dataWager.d.list.GameID[i] },
                         { "Accounts", dataWager.d.list.Accounts[i] },

@@ -32,16 +32,16 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
-                string apiUrl = setting["ApiUrl"];
-                string pass = setting[$"Pass_{currency}"];
-                string entityKey = setting[$"XEntityKey_{currency}"];
-                Dictionary<string, string> certificate = new Dictionary<string, string>
+                var apiUrl = setting["ApiUrl"];
+                var pass = setting[$"Pass_{currency}"];
+                var entityKey = setting[$"XEntityKey_{currency}"];
+                var certificate = new Dictionary<string, string>
                 {
                     { "path", Path.Combine(_environment.ContentRootPath, "Storage", "PT", $"{currency}.p12") },
                     { "password", pass },
@@ -49,9 +49,9 @@ namespace ThirdPartyWager.Service.BLL
                     { "site", siteId.ToString() }
                 };
 
-                int perPage = 500;
-                int page = 1;
-                int totalPage = 1;
+                var perPage = 500;
+                var page = 1;
+                var totalPage = 1;
                 while (page <= totalPage)
                 {
                     // get wager

@@ -29,17 +29,17 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix, string currency)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                DateTime getReportStartTime = DateTime.Parse(startTime);
-                string ReportStartTime = getReportStartTime.ToString("yyyy-MM-dd");
-                DateTime getReportEndTime = DateTime.Parse(endTime);
-                string ReportEndTime = getReportEndTime.ToString("yyyy-MM-dd");
+                var getReportStartTime = DateTime.Parse(startTime);
+                var ReportStartTime = getReportStartTime.ToString("yyyy-MM-dd");
+                var getReportEndTime = DateTime.Parse(endTime);
+                var ReportEndTime = getReportEndTime.ToString("yyyy-MM-dd");
 
                 // get report player
                 var dataReportPlayer = await _apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], ReportStartTime, ReportEndTime, guid);
@@ -60,17 +60,17 @@ namespace ThirdPartyWager.Service.BLL
 
                 //count interval wagers
                 var getWagerCount = _wagerKiss918Service.GetWagerTotal(startUnix, endUnix, currency);
-                Dictionary<string, int> keyValuePairs = new Dictionary<string, int>();
+                var keyValuePairs = new Dictionary<string, int>();
                 foreach (var wagerItem in getWagerCount)
                 {
                     keyValuePairs.Add(wagerItem.Account, wagerItem.wagerCount);
                 }
 
-                int perPage = 100;
+                var perPage = 100;
                 foreach (var reportList in dataReportPlayer.results)
                 {
-                    int page = 1;
-                    int totalPage = 1;
+                    var page = 1;
+                    var totalPage = 1;
                     var Account = reportList.Account;
                     while (page <= totalPage)
                     {

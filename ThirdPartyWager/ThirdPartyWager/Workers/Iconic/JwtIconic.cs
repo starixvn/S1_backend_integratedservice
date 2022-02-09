@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Workers
                 };
                 foreach (var curr in currencyList)
                 {
-                    string jwtUserName = setting[$"agent_{curr}"];
+                    var jwtUserName = setting[$"agent_{curr}"];
                     var getJwt = await apiIconicBLL.GetJwtToken(setting["ApiUrl"], jwtUserName, setting["password"]);
                     if (getJwt.token != null)
                     {
@@ -75,7 +75,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromDays(7);
+                var dueTimeSpan = TimeSpan.FromDays(7);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

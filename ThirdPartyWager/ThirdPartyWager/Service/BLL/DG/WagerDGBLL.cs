@@ -30,14 +30,14 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync()
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             // get dg api info
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
 
-                List<long> wagerIds = new List<long>();
+                var wagerIds = new List<long>();
                 // get wagers
                 var dataWager = await _apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], guid);
 

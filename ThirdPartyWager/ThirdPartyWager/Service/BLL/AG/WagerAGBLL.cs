@@ -26,16 +26,16 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // pagination
-                int page = 1;
-                int totalPage = 1;
+                var page = 1;
+                var totalPage = 1;
                 while (page <= totalPage)
                 {
                     // get wager

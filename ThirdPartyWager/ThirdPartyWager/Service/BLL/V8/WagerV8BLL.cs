@@ -29,8 +29,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, long startUnix, long endUnix)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -60,7 +60,7 @@ namespace ThirdPartyWager.Service.BLL
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
                 {
-                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>
+                    var keyValuePairs = new Dictionary<string, dynamic>
                     {
                         { "GameID", dataWager.d.list.GameID[i] },
                         { "Accounts", dataWager.d.list.Accounts[i] },

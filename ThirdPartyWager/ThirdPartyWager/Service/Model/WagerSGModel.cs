@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Service.Model
         {
             get
             {
-                DateTime oDate = DateTime.ParseExact($"{ticketTime}+08", "yyyyMMddTHHmmssfffzz", CultureInfo.InvariantCulture);
+                var oDate = DateTime.ParseExact($"{ticketTime}+08", "yyyyMMddTHHmmssfffzz", CultureInfo.InvariantCulture);
                 return new DateTimeOffset(oDate).ToUnixTimeSeconds();
             }
         }

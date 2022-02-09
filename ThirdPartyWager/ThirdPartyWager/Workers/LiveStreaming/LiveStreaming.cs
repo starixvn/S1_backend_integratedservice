@@ -42,12 +42,12 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            bool isError = false;
+            var isError = false;
             try
             {
-                string url = "https://www.glivestreaming.com/api.php";
+                var url = "https://www.glivestreaming.com/api.php";
 
-                UriBuilder builder = new UriBuilder(url)
+                var builder = new UriBuilder(url)
                 {
                     Port = -1
                 };
@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Workers
                 query["key"] = "lnQzpXfTvn";
                 query["format"] = "JSON";
                 builder.Query = query.ToString();
-                string newurl = builder.ToString();
+                var newurl = builder.ToString();
 
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 var result = await _httpHelper.GetClient().SendAsync(data);
@@ -76,7 +76,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (_environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);

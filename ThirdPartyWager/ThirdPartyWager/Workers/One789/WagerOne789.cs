@@ -78,14 +78,14 @@ namespace ThirdPartyWager.Workers
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
-                    bool result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
+                    var result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, gameType);
                     }
                 }
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
                 if (diffMin > 8)
                 {
                     quickLT = 1;
@@ -100,12 +100,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickLT == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    var dueTimeSpan = TimeSpan.FromSeconds(45);
                     timerLT.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(30);
+                    var dueTimeSpan = TimeSpan.FromMinutes(30);
                     timerLT.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -138,14 +138,14 @@ namespace ThirdPartyWager.Workers
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
-                    bool result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
+                    var result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, gameType);
                     }
                 }
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
                 if (diffMin > 8)
                 {
                     quickLT_789 = 1;
@@ -160,12 +160,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickLT_789 == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    var dueTimeSpan = TimeSpan.FromSeconds(45);
                     timerLT_789.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(8);
+                    var dueTimeSpan = TimeSpan.FromMinutes(8);
                     timerLT_789.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -198,14 +198,14 @@ namespace ThirdPartyWager.Workers
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
-                    bool result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
+                    var result = await wagerOne789BLL.GetWagersAsync(tpId, time.startTime, time.endTime, gameType);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, gameType);
                     }
                 }
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
                 if (diffMin > 8)
                 {
                     quickLC = 1;
@@ -220,12 +220,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickLC == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    var dueTimeSpan = TimeSpan.FromSeconds(45);
                     timerLC.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timerLC.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

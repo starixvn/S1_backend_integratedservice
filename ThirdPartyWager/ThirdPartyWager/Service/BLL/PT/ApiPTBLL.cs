@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerPTModel> GetBetListByTime(string apiUrl, string entityKey, Dictionary<string, string> certificate, string startTime, string endTime, int page, int perPage, string guid)
         {
             // param
-            string url = $"{apiUrl}/game/flow";
+            var url = $"{apiUrl}/game/flow";
             var param = new
             {
                 exitgame = true,
@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param, entityKey, certificate);
+            var r = await DoHttpClientAsync(url, param, entityKey, certificate);
             var result = JsonConvert.DeserializeObject<WagerPTModel>(r);
             return result;
         }
@@ -69,11 +69,11 @@ namespace ThirdPartyWager.Service.BLL
 
             _log2File.InsertRequestLog(_tpName, url, sParam, "1");
 
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/x-www-form-urlencoded");
             request.Headers.Add("X_ENTITY_KEY", entityKey);
 
-            using HttpClientHandler handler = new HttpClientHandler();
+            using var handler = new HttpClientHandler();
             if (_configuration.GetValue<string>("ProxyHost") != null)
             {
                 handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),

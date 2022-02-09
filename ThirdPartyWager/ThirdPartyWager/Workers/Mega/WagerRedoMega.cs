@@ -71,13 +71,13 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < DateTime.Now.AddDays(iDays * -1))
                 {
                     var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    bool result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                     if (result == true)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
                 }
-                int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
                 if (diffDay >= (iDays + 1))
                 {
                     quickTHB = 1;
@@ -92,12 +92,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickTHB == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    var dueTimeSpan = TimeSpan.FromDays(intervalDays);
                     timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -125,13 +125,13 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < DateTime.Now.AddDays(iDays * -1))
                 {
                     var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    bool result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                     if (result == true)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
                 }
-                int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
                 if (diffDay >= (iDays + 1))
                 {
                     quickMYR = 1;
@@ -146,12 +146,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickMYR == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    var dueTimeSpan = TimeSpan.FromDays(intervalDays);
                     timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -179,13 +179,13 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < DateTime.Now.AddDays(iDays * -1))
                 {
                     var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    bool result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                     if (result == true)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                     }
                 }
-                int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
                 if (diffDay >= (iDays + 1))
                 {
                     quickIDR = 1;
@@ -200,12 +200,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quickIDR == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(90);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    var dueTimeSpan = TimeSpan.FromDays(intervalDays);
                     timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

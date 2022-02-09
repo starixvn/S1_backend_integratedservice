@@ -69,7 +69,7 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < DateTime.Now)
                 {
                     var time = dateTimeHelper.GetTimeByMinute(last, 8, "yyyy-MM-dd HH:mm", timerTime);
-                    bool result = await wagerCFBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
+                    var result = await wagerCFBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
 
                     if (result == true)
                     {
@@ -77,8 +77,8 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
                 if (diffMin > 8)
                 {
                     quick = 1;
@@ -92,12 +92,12 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(70);
+                    var dueTimeSpan = TimeSpan.FromSeconds(70);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

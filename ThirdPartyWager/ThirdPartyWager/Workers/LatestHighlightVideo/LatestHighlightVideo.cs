@@ -50,27 +50,27 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            bool isError = false;
+            var isError = false;
             try
             {
-                string url = "https://glombi.accordde.com/video/soccerList.json";
-                string timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-                int SiteId = 1;
-                UriBuilder builder = new UriBuilder(url)
+                var url = "https://glombi.accordde.com/video/soccerList.json";
+                var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+                var SiteId = 1;
+                var builder = new UriBuilder(url)
                 {
                     Port = -1
                 };
                 var query = HttpUtility.ParseQueryString(builder.Query);
                 query["v"] = timestamp;
                 builder.Query = query.ToString();
-                string newurl = builder.ToString();
+                var newurl = builder.ToString();
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var result = await client.SendAsync(data);
                 
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
-                    IEnumerable<ServerInfo> siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
+                    var siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
                     var latestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
 
                     if (siteList.Any() && latestHighlightVideo != null)
@@ -87,7 +87,7 @@ namespace ThirdPartyWager.Workers
                                 {
                                     if (!string.IsNullOrEmpty(latestHighlightVideo.m3u8))
                                     {
-                                        string title = siteListInfoDetail == "cs" ? latestHighlightVideo.title.cs : latestHighlightVideo.title.en;
+                                        var title = siteListInfoDetail == "cs" ? latestHighlightVideo.title.cs : latestHighlightVideo.title.en;
                                         LatestHighlightVideoData.Add(new LatestHighlightVideoData()
                                         {
                                             SiteId = SiteId,
@@ -115,7 +115,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(10);
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
                 if (_environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);

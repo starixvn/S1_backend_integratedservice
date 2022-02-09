@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerWMModel> GetBetListByTime(string apiUrl, string vendorId, string signature, string startTime, string endTime, string guid)
         {
             // param
-            string url = $"{apiUrl}";
+            var url = $"{apiUrl}";
             var param = new
             {
                 cmd = "GetDateTimeReport",
@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerWMModel>(r);
             return result;
         }
