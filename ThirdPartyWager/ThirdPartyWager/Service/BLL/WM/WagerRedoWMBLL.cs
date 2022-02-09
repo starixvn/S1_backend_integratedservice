@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +20,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IHostEnvironment _environment;
 
         private readonly int _tpId = (int)Tp.WM;
-        private readonly string _tpName = Tp.WM.ToString();
 
         public WagerRedoWMBLL(IServiceProvider provider)
         {
@@ -34,16 +32,14 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                var currencyList = new List<string>();
-                currencyList.Add("RMB");
+                var currencyList = new List<string> { "RMB" };
                 if (_environment.IsProduction())
                 {
                     currencyList.Add("THB");
@@ -53,12 +49,12 @@ namespace ThirdPartyWager.Service.BLL
                     currencyList.Add("USD");
                     currencyList.Add("INR");
                 }
-                bool reCheck = false;
+                var reCheck = false;
                 foreach (var curr in currencyList)
                 {
                     // count interval wagers
                     var getWagerCount = _wagerWMService.GetWagerTotal(startUnix, endUnix, curr);
-                    int wagerCount = getWagerCount.wagerCount;
+                    var wagerCount = getWagerCount.wagerCount;
 
                     var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{curr}"], setting[$"signature_{curr}"], startTime, endTime, guid);
 
@@ -98,7 +94,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.betId} )";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -113,7 +109,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"RedoWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

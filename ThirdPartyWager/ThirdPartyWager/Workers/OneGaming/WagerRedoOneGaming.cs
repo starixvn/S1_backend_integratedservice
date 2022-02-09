@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -19,15 +19,14 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper dateTimeHelper;
         private readonly CommonBLL commonBLL;
         private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
         private int intervalDays = 1;
         private int iRangMins = 1440;
         private int tpId = (int)Tp.OneGaming;
+        private readonly string _tpName = Tp.OneGaming.ToString();
         private int tpType = 2;
         private int iDays = 2;
         private readonly int timeZone = 8;
-        private string logName = Tp.OneGaming.ToString();
 
         public WagerRedoOneGaming(
             ILogger<WagerRedoOneGaming> logger,
@@ -35,8 +34,7 @@ namespace ThirdPartyWager.Workers
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
             CommonBLL commonBLL,
-            IHostEnvironment environment,
-            Log2File log2File
+            IHostEnvironment environment
         )
         {
             this.logger = logger;
@@ -45,7 +43,6 @@ namespace ThirdPartyWager.Workers
             this.dateTimeHelper = dateTimeHelper;
             this.commonBLL = commonBLL;
             this.environment = environment;
-            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -55,9 +52,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-
-            int quick = 0;
-            int failed = 0;
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var quick = 0;
+            var failed = 0;
             var tasks = new List<Task>();
             try
             {
@@ -86,13 +84,13 @@ namespace ThirdPartyWager.Workers
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex, logName);
+                            logger.LogError(ex, ex.Message);
                             Interlocked.Increment(ref failed);
                         }
                     }));
 
                 }
-                Task t = Task.WhenAll(tasks);
+                var t = Task.WhenAll(tasks);
                 t.Wait();
                 //foreach (var ti in tasks)
                 //{
@@ -101,19 +99,18 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(60);
+                    var dueTimeSpan = TimeSpan.FromSeconds(60);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromDays(intervalDays);
+                    var dueTimeSpan = TimeSpan.FromDays(intervalDays);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -121,7 +118,7 @@ namespace ThirdPartyWager.Workers
 
         private async Task<int> Main(string currency)
         {
-            int quick = 0;
+            var quick = 0;
             var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
 
             DateTime timerTime;
@@ -138,14 +135,14 @@ namespace ThirdPartyWager.Workers
             var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                bool result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                 if (result)
                 {
                     thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                 }
             }
 
-            int diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+            var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
             if (diffDay >= (iDays + 1))
             {
                 quick = 1;

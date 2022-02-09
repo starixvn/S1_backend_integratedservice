@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
@@ -15,9 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<WagerAGBLL> _logger;
-
         private readonly int _tpId = (int)Tp.AG;
-        private readonly string _tpName = Tp.AG.ToString();
 
         public WagerAGBLL(IServiceProvider provider)
         {
@@ -29,17 +26,16 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // pagination
-                int page = 1;
-                int totalPage = 1;
+                var page = 1;
+                var totalPage = 1;
                 while (page <= totalPage)
                 {
                     // get wager
@@ -87,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

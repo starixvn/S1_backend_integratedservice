@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<WagerEVOModel>> GetBetListByTime(string wagerUrl, string casinoKey, string gameHistoryApiToken, string gameProvider, string startTime, string endTime, string guid)
         {
             // param
-            string url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
+            var url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
             var param = new
             {
                 startDate = startTime,
@@ -43,14 +43,14 @@ namespace ThirdPartyWager.Service.BLL
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             // request
-            string r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken);
+            var r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken);
             var result = JsonConvert.DeserializeObject<List<WagerEVOModel>>(r);
             return result;
         }
 
         private async Task<string> DoHttpClientAsync(string url, string param, string casinoKey, string ua2Token)
         {
-            string tmpUrl = url;
+            var tmpUrl = url;
             url = $"{url}?{param}";
             _log2File.InsertRequestLog(_tpName, tmpUrl, param, "1");
 
@@ -58,7 +58,7 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{casinoKey}:{ua2Token}")));
 
             var response = await _httpHelper.GetClient().SendAsync(request);
-            string result = response.Content.ReadAsStringAsync().Result;
+            var result = response.Content.ReadAsStringAsync().Result;
 
             if (!response.IsSuccessStatusCode)
             {
@@ -74,7 +74,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                string word = "error";
+                var word = "error";
                 if (!result.Contains(word))
                 {
                     word = "}\n{";

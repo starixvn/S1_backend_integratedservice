@@ -2,12 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -31,7 +27,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public bool InsertWagerOne789(BetOne789 bet, int gameType)
         {
-            string game = "";
+            var game = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
@@ -46,13 +42,13 @@ namespace ThirdPartyWager.Service.DAL
                 default:
                     break;
             }
-            string sp = $"Service_TpWagerOne789_{game}_Ins";
+            var sp = $"Service_TpWagerOne789_{game}_Ins";
             return _wagerDbClient.Execute(sp, new DynamicParameters(bet));
         }
 
         public IEnumerable<BettransDataOne789> GetPendingList(int gameType)
         {
-            string game = "";
+            var game = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
@@ -67,7 +63,7 @@ namespace ThirdPartyWager.Service.DAL
                 default:
                     break;
             }
-            string sp = $"Service_Bettrans{game}_Bet_Pending_Get";
+            var sp = $"Service_Bettrans{game}_Bet_Pending_Get";
             return _mainDbClient.Query<BettransDataOne789>(sp);
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -24,19 +24,16 @@ namespace ThirdPartyWager.Workers
         private Timer _timerLatestHighlightVideo;
         private readonly IHostEnvironment _environment;
         private readonly ILogger<LatestHighlightVideo> _logger;
-        private readonly Log2File _log2File;
         private readonly HttpHelper _httpHelper;
         private readonly CommonBLL _commonBll;
         private readonly LatestHighlightVideoBLL _latestHighlightVideoBll;
         private readonly IConfiguration _configuration;
-
-
+        private readonly string _tpName = "LatestHighlightVideo";
 
         public LatestHighlightVideo(IServiceProvider provider)
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _logger = provider.GetRequiredService<ILogger<LatestHighlightVideo>>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _commonBll = provider.GetRequiredService<CommonBLL>();
             _latestHighlightVideoBll = provider.GetRequiredService<LatestHighlightVideoBLL>();
@@ -51,27 +48,29 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoLatestHighlightVideoAsync(object state)
         {
-            bool isError = false;
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var isError = false;
             try
             {
-                string url = "https://glombi.accordde.com/video/soccerList.json";
-                string timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-                int SiteId = 1;
-                UriBuilder builder = new UriBuilder(url)
+                var url = "https://glombi.accordde.com/video/soccerList.json";
+                var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+                var SiteId = 1;
+                var builder = new UriBuilder(url)
                 {
                     Port = -1
                 };
                 var query = HttpUtility.ParseQueryString(builder.Query);
                 query["v"] = timestamp;
                 builder.Query = query.ToString();
-                string newurl = builder.ToString();
+                var newurl = builder.ToString();
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var result = await client.SendAsync(data);
                 
-                if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                if (result.StatusCode == HttpStatusCode.OK)
                 {
-                    IEnumerable<ServerInfo> siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
+                    var siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
                     var latestHighlightVideo = JsonSerializer.Deserialize<List<LatestHighlightVideoJson>>(result.Content.ReadAsStringAsync().Result).LastOrDefault();
 
                     if (siteList.Any() && latestHighlightVideo != null)
@@ -82,15 +81,13 @@ namespace ThirdPartyWager.Workers
 
                             if (check == 0)
                             {
-                                var sw = new Stopwatch();
-                                sw.Start();
                                 var LatestHighlightVideoData = new List<LatestHighlightVideoData>();
 
                                 foreach (var siteListInfoDetail in JsonSerializer.Deserialize<IEnumerable<string>>(siteListInfo.LangList))
                                 {
                                     if (!string.IsNullOrEmpty(latestHighlightVideo.m3u8))
                                     {
-                                        string title = siteListInfoDetail == "cs" ? latestHighlightVideo.title.cs : latestHighlightVideo.title.en;
+                                        var title = siteListInfoDetail == "cs" ? latestHighlightVideo.title.cs : latestHighlightVideo.title.en;
                                         LatestHighlightVideoData.Add(new LatestHighlightVideoData()
                                         {
                                             SiteId = SiteId,
@@ -106,13 +103,6 @@ namespace ThirdPartyWager.Workers
                                 }
 
                                 _latestHighlightVideoBll.SetLatestHighlightVideo(LatestHighlightVideoData);
-                                
-                                sw.Stop();
-                                _logger.LogInformation($"End to SetLatestHighlightVideo ,CostTime :{sw.Elapsed:c}", GetCurrentAsyncMethod());
-                            }
-                            else
-                            {
-                                _log2File.Error($"{siteListInfo.SiteId}, {latestHighlightVideo.date}, {latestHighlightVideo.title.en} {check}", "LatestHighlightVideo");
                             }
                         }
                     }
@@ -122,11 +112,10 @@ namespace ThirdPartyWager.Workers
             {
                 isError = true;
                 _logger.LogError(ex, GetCurrentAsyncMethod());
-                _log2File.Error(ex.ToString(), GetCurrentAsyncMethod());
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(10);
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
                 if (_environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);

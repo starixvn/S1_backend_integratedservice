@@ -69,11 +69,11 @@ namespace ThirdPartyWager.Service.BLL
                 };
 
                 string sList = arrWager.data[0];
-                string[] aRow = sList.Split('|');
+                var aRow = sList.Split('|');
                 foreach (var item in aRow)
                 {
-                    Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
-                    string[] aRecord = item.Split(',');
+                    var keyValuePairs = new Dictionary<string, string>();
+                    var aRecord = item.Split(',');
                     for (var i = 0; i < field.Length; i++)
                     {
                         keyValuePairs.Add(field[i], aRecord[i]);

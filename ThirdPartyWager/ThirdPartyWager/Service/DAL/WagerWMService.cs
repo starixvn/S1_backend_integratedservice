@@ -1,11 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL
@@ -21,13 +17,13 @@ namespace ThirdPartyWager.Service.DAL
 
         public int InsertWager(BetWM bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerWM_Ins", bet, commandType: CommandType.StoredProcedure);
         }
 
         public WagerWMTotal GetWagerTotal(long beginTime, long endTime, string currency)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.QueryFirstOrDefault<WagerWMTotal>("Service_TpWagerWM_Total_Get", new { BeginTime = beginTime, EndTime = endTime, Currency = currency }, commandType: CommandType.StoredProcedure);
         }
     }

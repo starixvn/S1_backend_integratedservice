@@ -2,12 +2,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -27,6 +26,7 @@ namespace ThirdPartyWager.Workers
         private Timer _settleTimerINR;
 
         private readonly int tpId = (int)Tp.TCG;
+        private readonly string _tpName = Tp.TCG.ToString();
         private readonly int TimeZone = 8;
 
         public WagerTCG(IServiceProvider provider)
@@ -49,6 +49,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettle(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             var currency = (string)state;
             var doQuickly = false;
             var timerType = 1;

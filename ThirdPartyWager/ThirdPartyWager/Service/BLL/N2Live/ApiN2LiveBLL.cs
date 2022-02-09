@@ -30,14 +30,14 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<WagerN2LiveModel> GetBetListByTime(string apiUrl, string vendorId, string merchantPassCode, string startTime, string endTime, string guid)
         {
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
 
             // request
-            XmlElement request = doc.CreateElement("request");
+            var request = doc.CreateElement("request");
             request.SetAttribute("action", "gameinfo");
 
             // element
-            XmlElement element = doc.CreateElement("element");
+            var element = doc.CreateElement("element");
 
             // properties
             element.InnerXml = "" +
@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
             request.AppendChild(element);
 
             // request
-            string r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
+            var r = await DoHttpClientAsync(apiUrl, doc.InnerXml);
             var result = JsonConvert.DeserializeObject<WagerN2LiveModel>(r);
             return result;
         }
@@ -66,7 +66,7 @@ namespace ThirdPartyWager.Service.BLL
             request.Content = new StringContent(param.ToString(), Encoding.UTF8, "application/xml");
             request.Headers.Add("Accept-Encoding", "gzip");
 
-            HttpResponseMessage response = await _httpHelper.GetClient().SendAsync(request);
+            var response = await _httpHelper.GetClient().SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -86,7 +86,7 @@ namespace ThirdPartyWager.Service.BLL
             output = output.Replace("<clientbet ", "<clientbet xmlns:json='http://james.newtonking.com/projects/json' json:Array='true' ");
 
             // xml to json
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(output);
 
             // single data force to array

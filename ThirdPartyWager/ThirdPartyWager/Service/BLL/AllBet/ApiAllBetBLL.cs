@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -45,15 +44,15 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerAllBetModel> GetBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
-            string uri = "/betlog_histories";
-            string url = $"{apiUrl}{uri}";
-            int pageSize = 1000;
-            string parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
+            var uri = "/betlog_histories";
+            var url = $"{apiUrl}{uri}";
+            var pageSize = 1000;
+            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
 
             // encrype param
-            string data = _common.encrypt(parameter, desKey, null, NULL_IV);
-            string sign = _common.base64edMd5($"{data}{md5Key}");
-            string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
+            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
+            var sign = _common.base64edMd5($"{data}{md5Key}");
+            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
             _logger.LogInformation(parameter);
@@ -74,15 +73,15 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerAllBetModel> GetModifiedBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
-            string uri = "/betlog_modified_histories";
-            string url = $"{apiUrl}{uri}";
-            int pageSize = 1000;
-            string parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
+            var uri = "/betlog_modified_histories";
+            var url = $"{apiUrl}{uri}";
+            var pageSize = 1000;
+            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
 
             // encrype param
-            string data = _common.encrypt(parameter, desKey, null, NULL_IV);
-            string sign = _common.base64edMd5($"{data}{md5Key}");
-            string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
+            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
+            var sign = _common.base64edMd5($"{data}{md5Key}");
+            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
             _logger.LogInformation(parameter);
@@ -103,15 +102,15 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<RewardAllBetModel> GetRewardByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
-            string uri = "/query_event_records";
-            string url = $"{apiUrl}{uri}";
-            int pageSize = 1000;
-            string parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
+            var uri = "/query_event_records";
+            var url = $"{apiUrl}{uri}";
+            var pageSize = 1000;
+            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
 
             // encrype param
-            string data = _common.encrypt(parameter, desKey, null, NULL_IV);
-            string sign = _common.base64edMd5($"{data}{md5Key}");
-            string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
+            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
+            var sign = _common.base64edMd5($"{data}{md5Key}");
+            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
             _logger.LogInformation(parameter);
@@ -151,7 +150,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<string> callSeamlessApi(string type, dynamic parameter, string sha1key, string propertyId)
         {
             // param
-            string url = $"{_seamlessUrl}/Allbet";
+            var url = $"{_seamlessUrl}/Allbet";
             string uri = null;
             dynamic param = "";
 

@@ -52,23 +52,23 @@ namespace ThirdPartyWager.Service.BLL
                     break;
             }
 
-            string url = $"{setting["ApiUrl"]}{uri}";
-            string param = $"?from={startTime}&to={endTime}&type=1&size={perPage}&page={page}";
+            var url = $"{setting["ApiUrl"]}{uri}";
+            var param = $"?from={startTime}&to={endTime}&type=1&size={perPage}&page={page}";
 
             // request
             var r = await DoHttpClientAsync(HttpMethod.Get, setting, url, param);
-            dynamic result = JsonConvert.DeserializeObject(r);
+            var result = JsonConvert.DeserializeObject(r);
             return result;
         }
 
         public async Task<dynamic> CheckTicketStatus(dynamic setting, dynamic parameters)
         {
             // param
-            string uri = "/transaction/exists";
-            string url = $"{setting["ApiUrl"]}{uri}";
+            var uri = "/transaction/exists";
+            var url = $"{setting["ApiUrl"]}{uri}";
 
             // param
-            string param = JsonConvert.SerializeObject(new { TXList = parameters });
+            var param = JsonConvert.SerializeObject(new { TXList = parameters });
 
             // request
             return await DoHttpClientAsync(HttpMethod.Post, setting, url, param);
@@ -102,9 +102,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<string> callSeamlessApi(string type, BettransDataOne789 bettransDataOne789)
         {
             // param
-            string url = $"{_seamlessUrl}/One789";
-            string uri = "/balance_transactions";
-            bool tag = true;
+            var url = $"{_seamlessUrl}/One789";
+            var uri = "/balance_transactions";
+            var tag = true;
             var param = string.Empty;
 
             switch (type)

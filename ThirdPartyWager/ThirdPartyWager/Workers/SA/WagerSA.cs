@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,32 +16,26 @@ namespace ThirdPartyWager.Workers
         private readonly WagerSABLL wagerSABLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
         private int intervalMins = 3;
         private int iRangMins = 20;
         private int tpId = (int)Tp.SA;
+        private readonly string _tpName = Tp.SA.ToString();
         private int tpType = 1;
         private int quick = 0;
         private readonly int timeZone = 8;
-        private string logName = Tp.SA.ToString();
 
         public WagerSA(
             ILogger<WagerSA> logger,
             WagerSABLL wagerSABLL,
             ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment,
-            Log2File log2File
+            DateTimeHelper dateTimeHelper
         )
         {
             this.logger = logger;
             this.wagerSABLL = wagerSABLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
-            this.log2File = log2File;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -51,6 +46,8 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 quick = 0;
@@ -73,14 +70,14 @@ namespace ThirdPartyWager.Workers
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
-                    bool result = await wagerSABLL.GetWagersAsync(tpId, time.startTime, time.endTime);
+                    var result = await wagerSABLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                 }
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
                 if (diffMin > 5)
                 {
                     quick = 1;
@@ -89,19 +86,18 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(45);
+                    var dueTimeSpan = TimeSpan.FromSeconds(45);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }

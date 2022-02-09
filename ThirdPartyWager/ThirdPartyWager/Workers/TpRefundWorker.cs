@@ -2,10 +2,9 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -14,7 +13,6 @@ namespace ThirdPartyWager.Workers
     public class TpRefundWorker : BackgroundService
     {
         private readonly ILogger<TpRefundWorker> _logger;
-        private readonly IHostEnvironment _environment;
         private readonly TpRefundBLL _tpRefundBLL;
 
         // timer{gameType} 
@@ -24,13 +22,11 @@ namespace ThirdPartyWager.Workers
         private Timer timer37;
 
         public TpRefundWorker(
-            IServiceProvider provider,
-            IHostEnvironment environment
+            IServiceProvider provider
         )
         {
             _logger = provider.GetRequiredService<ILogger<TpRefundWorker>>();
             _tpRefundBLL = provider.GetRequiredService<TpRefundBLL>();
-            _environment = environment;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -44,7 +40,17 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-            bool task = true;
+            var tpName = (GameType)state switch
+            {
+                GameType.AG_LiveCasino => Tp.AG.ToString(),
+                GameType.One789_Lottery => Tp.One789.ToString(),
+                GameType.One789_Lottery_789 => Tp.One789.ToString(),
+                GameType.One789_LiveCasino => Tp.One789.ToString(),
+                _ => string.Empty
+            };
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", tpName);
+            var task = true;
             var gametype = (GameType)state;
             try
             {
@@ -56,7 +62,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(20);
+                var dueTimeSpan = TimeSpan.FromMinutes(20);
                 if (!task)
                 {
                     dueTimeSpan = TimeSpan.FromMinutes(10);
