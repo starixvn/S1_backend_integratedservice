@@ -27,12 +27,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("auth")]
-        public async Task<HBPlayerDetailResponse> GetBalance()
+        public async Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request)
         {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<HBPlayerDetailRequest>(content);
-            return _hbbll.Auth(request);
+            return await _hbbll.Auth(request);
+        }
+
+        public async Task<HBFundTransferResponse> FundTransfer(HBFundTransferRequest request)
+        {
+            return new HBFundTransferResponse()
+            {
+                fundtransferresponse = await _hbbll.FundTransfer(request.fundtransferrequest)
+            };
         }
     }
 }

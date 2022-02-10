@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ThirdPartySeamlessWallet.Controllers;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -16,17 +18,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly AuthBLL _authBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingService _bettingService;
+        private readonly ILogger<HBBLL> _logger;
 
-        public HBBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll)
+        public HBBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll, ILogger<HBBLL> logger)
         {
             thisTp = Tp.HB;
             GameType = GameType.HB_RNG;
             _authBLL = authBll;
             _thirdPartyBLL = thirdPartyBll;
             _tpCustInfoBLL = tpCustInfoBll;
+            _logger = logger;
         }
 
-        public HBPlayerDetailResponse Auth(HBPlayerDetailRequest request)
+        public async Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request)
         {
             var response = new HBPlayerDetailResponse()
             {
@@ -40,50 +45,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             if (!string.IsNullOrEmpty(request.playerdetailrequest.token))
             {
-                try
+                var (authToken, sessionToken) = ParseToken(request.playerdetailrequest.token);
+                if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
-                    var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(request.playerdetailrequest.token)));
-                    var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                    var authToken = sessionKeyArr[0]; /* 1 Time*/
-                    var sessionToken = sessionKeyArr[1];/* Long Time*/
-                    if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                    if (tpCheck == null || tpCheck.Token != sessionToken)
                     {
-                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                        if (tpCheck == null || tpCheck.Token != sessionToken)
-                        {
-                            status.message = "Player session is expired";
-                        }
-                        else if (tpCheck.Locked)
-                        {
-                            status.message = "Player is inactive";
-                        }
-                        else
-                        {
-                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)GameType);
-                            if (tpCustBalance != null)
-                            {
-                                response.playerdetailresponse.Status = new HBStatus()
-                                {
-                                    success = true,
-                                    autherror = false,
-                                    message = ""
-                                };
-                                response.playerdetailresponse.accountid = tpCustInfoAuth.TpUserName;
-                                response.playerdetailresponse.accountname = tpCustInfoAuth.TpUserName;
-                                response.playerdetailresponse.balance = tpCustBalance.Balance;
-                                response.playerdetailresponse.currencycode = tpCustBalance.TpCurrencyId;
-                                return response;
-                            }
-                        }
+                        _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
+                        status.message = "player session is expired";
+                    }
+                    else if (tpCheck.Locked)
+                    {
+                        status.message = "player is inactive";
                     }
                     else
                     {
-                        status.message = "Invalid player session";
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)GameType);
+                        if (tpCustBalance != null)
+                        {
+                            response.playerdetailresponse.Status = new HBStatus()
+                            {
+                                success = true,
+                                autherror = false,
+                                message = ""
+                            };
+                            response.playerdetailresponse.accountid = tpCustInfoAuth.TpUserName;
+                            response.playerdetailresponse.accountname = tpCustInfoAuth.TpUserName;
+                            response.playerdetailresponse.balance = tpCustBalance.Balance;
+                            response.playerdetailresponse.currencycode = tpCustBalance.TpCurrencyId;
+                            return response;
+                        }
                     }
                 }
-                catch (FormatException fEx)
+                else
                 {
-                    
+                    status.message = "Invalid player session";
                 }
             }
             else
@@ -92,6 +88,45 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             response.playerdetailresponse.Status = status;
             return response;
+        }
+
+        public async Task<Fundtransferresponse> FundTransfer(Fundtransferrequest request)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.JILI, request.accountid);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                foreach (var fundInfo in request.funds.fundinfo)
+                {
+                    fundInfo.amount *= tpCurrency.ExchangeRate;
+
+                    var bettingData_HB = new BettingDataRNG_HB()
+                    {
+                        accountid = request.accountid,
+                        gameinstanceid = request.gameinstanceid,
+                        friendlygameinstanceid = request.friendlygameinstanceid
+                    };
+                    var result = _bettingService.PlaceBet_HB(tpCustInfo, bettingData_HB, out var afterAmount);
+                    if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+                    {
+                        afterAmount /= tpCurrency.ExchangeRate;
+                    }
+                    
+
+                }
+            }
+
+            return new Fundtransferresponse()
+            {
+            };
+        }
+
+        private (string authToken, string sessionToken) ParseToken(string token)
+        {
+            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(token)));
+            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+            return sessionKeyArr.Length > 2 ? (sessionKeyArr[0], sessionKeyArr[1]) : (string.Empty, string.Empty);
         }
     }
 }
