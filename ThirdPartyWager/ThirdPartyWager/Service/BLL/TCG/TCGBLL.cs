@@ -96,6 +96,7 @@ namespace ThirdPartyWager.Service.BLL
                     using FtpClient client = new FtpClientHttp11Proxy(proxy);
                     client.Host = config.WagerUrl;
                     client.Credentials = new NetworkCredential(config.WagerAccount, config.WagerPassword);
+                    client.AutoDetect();
                     client.Connect();
                     var result = client.DownloadAsync(fileUrl, 0);
                     using Stream stream = new MemoryStream(result.Result);
