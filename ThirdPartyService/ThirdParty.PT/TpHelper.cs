@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -12,7 +13,7 @@ namespace ThirdParty.PT
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly string storagePath = $@"{ContentRootPath}\Storage\PT";
+        private readonly string storagePath = Path.Combine(ContentRootPath, "Storage", "PT");
 
         private readonly Dictionary<string, int> timeZoneList = new Dictionary<string, int>() {
             {"MYR",8},
@@ -165,7 +166,7 @@ namespace ThirdParty.PT
                 header.Add("X_ENTITY_KEY", EntityKey);
 
                 Dictionary<string, string> certificate = new Dictionary<string, string>();
-                certificate.Add("path", $@"{storagePath}\{currency}.p12");
+                certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
                 certificate.Add("password", Pass);
 
                 var CheckTransfer = new
@@ -251,7 +252,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             string playerName = $"{Prefix}_{tpCustInfo.TpUserName}";
@@ -316,7 +317,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             var Balance = new
@@ -435,7 +436,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             var Transfer = new DepositParam
@@ -556,7 +557,7 @@ namespace ThirdParty.PT
                 };
                 var certificate = new Dictionary<string, string>
                 {
-                    { "path", $@"{storagePath}\{tpCustInfo.TpCurrencyId}.p12" },
+                    { "path", Path.Combine(storagePath, $"{tpCustInfo.TpCurrencyId}.p12") },
                     { "password", pass }
                 };
 
@@ -614,7 +615,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             var ChangePassword = new
