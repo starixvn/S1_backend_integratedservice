@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -17,32 +16,26 @@ namespace ThirdPartyWager.Workers
         private readonly WagerV8BLL wagerV8BLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
         private int intervalMins = 60;
         private int tpId = (int)Tp.V8;
+        private readonly string _tpName = Tp.V8.ToString();
         private int tpType = 2;
         private int quick = 0;
         private int beyond = 120;
         private readonly int timeZone = 0;
-        private string logName = Tp.V8.ToString();
 
         public WagerRedoV8(
             ILogger<WagerRedoV8> logger,
             WagerV8BLL wagerV8BLL,
             ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment,
-            Log2File log2File
+            DateTimeHelper dateTimeHelper
         )
         {
             this.logger = logger;
             this.wagerV8BLL = wagerV8BLL;
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
-            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -52,13 +45,15 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 quick = 0;
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 DateTime timerTime;
                 int last;
-                int first = 0;
+                var first = 0;
                 if (dataTpTimer == null)
                 {
                     first = 1;
@@ -75,7 +70,7 @@ namespace ThirdPartyWager.Workers
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                 if (time.endUnix < cvTime)
                 {
-                    bool result = await wagerV8BLL.GetWagersAsync(tpId, time.startUnix, time.endUnix);
+                    var result = await wagerV8BLL.GetWagersAsync(tpId, time.startUnix, time.endUnix);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
@@ -88,8 +83,8 @@ namespace ThirdPartyWager.Workers
                         }
                     }
                 }
-                TimeSpan ts = DateTime.Now - timerTime;
-                int diffMin = (int)ts.TotalMinutes;
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
                 if (diffMin >= beyond)
                 {
                     quick = 1;
@@ -98,19 +93,18 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, logName);
-                log2File.Error(ex.ToString(), logName);
+                logger.LogError(ex, ex.Message);
             }
             finally
             {
                 if (quick == 1)
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromSeconds(61);
+                    var dueTimeSpan = TimeSpan.FromSeconds(61);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
-                    TimeSpan dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
