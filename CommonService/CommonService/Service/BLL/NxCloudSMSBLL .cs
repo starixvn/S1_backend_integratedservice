@@ -109,32 +109,19 @@ namespace CommonService.Service.BLL
             string smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
             try
             {
-                Encoding myEncoding = Encoding.GetEncoding("UTF-8");  //选择编码字符集
-                string data = "appkey=" + Config.Appkey + "&secretkey=" + Config.Secretkey + "&phone=" + PhoneNo + "&content=" + smsMessage;
-                byte[] bytesToPost = System.Text.Encoding.Default.GetBytes(data); //转换为bytes数据
-
-                string responseResult = String.Empty;
-                HttpWebRequest req = (HttpWebRequest)
-                HttpWebRequest.Create(Config.ResourceURL);
-                req.Method = "POST";
-                req.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
-                req.ContentLength = bytesToPost.Length;
-
-                using (Stream reqStream = req.GetRequestStream())
+                var data = new Dictionary<string, string>()
                 {
-                    reqStream.Write(bytesToPost, 0, bytesToPost.Length);
-                }
-                HttpWebResponse cnblogsRespone = (HttpWebResponse)req.GetResponse();
-                if (cnblogsRespone != null && cnblogsRespone.StatusCode == HttpStatusCode.OK)
+                    {"appkey", Config.Appkey},
+                    {"secretkey", Config.Secretkey},
+                    {"phone", PhoneNo},
+                    {"content", smsMessage},
+                };
+                
+                using var httpResponse = await httpHelper.HttpFromPostAsync(Config.ResourceURL, null, data, "application/x-www-form-urlencoded");
+                if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.OK)
                 {
-                    StreamReader sr;
-                    using (sr = new StreamReader(cnblogsRespone.GetResponseStream()))
-                    {
-                        responseResult = sr.ReadToEnd();
-                    }
-                    sr.Close();
-
-                    Dictionary<string, object> responsjson = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseResult);
+                    var content = await httpResponse.Content.ReadAsStringAsync();
+                    var responsjson = JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
 
                     if (responsjson.TryGetValue("code", out var code))
                     {
@@ -154,23 +141,18 @@ namespace CommonService.Service.BLL
                             }
                             log2File.Error($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
                         }
-
                     }
                     else
                     {
-                        logger.LogError($"SkyLine - Error HttpStatus = {cnblogsRespone.StatusCode}\r\nRespstatus ={responseResult}");
-                        log2File.Error($"SkyLine - Error HttpStatus = {cnblogsRespone.StatusCode}\r\nRespstatus ={responseResult}", $"{custInfo.SiteName}_OTP");
-
+                        logger.LogError($"SkyLine - Error HttpStatus = {httpResponse.StatusCode}\r\nRespstatus ={content}");
+                        log2File.Error($"SkyLine - Error HttpStatus = {httpResponse.StatusCode}\r\nRespstatus ={content}", $"{custInfo.SiteName}_OTP");
                     }
-
                 }
                 else
                 {
                     apiResult.ErrorCode = ErrorCode.Fail;
-                    log2File.Error($"NxCloud - Http error code :{cnblogsRespone.StatusCode}", $"{custInfo.SiteName}_OTP");
+                    log2File.Error($"NxCloud - Http error code :{httpResponse.StatusCode}", $"{custInfo.SiteName}_OTP");
                 }
-                cnblogsRespone.Close();
-
             }
             catch (Exception ex)
             {

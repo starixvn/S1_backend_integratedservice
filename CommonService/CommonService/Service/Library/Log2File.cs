@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 
 namespace PaymentService.Service.Library
 {
@@ -22,34 +23,20 @@ namespace PaymentService.Service.Library
         }
         public void Info(string InfoContent, string PrefixName)
         {
-            _logger.LogInformation(InfoContent, new string[] { PrefixName });
-            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now:yyyyMMdd}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{InfoContent}");
-            });
+            LogContext.PushProperty("PrefixName", PrefixName);
+            _logger.LogInformation(InfoContent);
         }
         public void Error(string ErrorContent, string PrefixName, Exception ex = null)
         {
+            LogContext.PushProperty("PrefixName", PrefixName);
             if (ex != null)
             {
-                _logger.LogError(ex, ErrorContent, new string[] { PrefixName });
+                _logger.LogError(ex, ErrorContent);
             }
             else
             {
-                _logger.LogError(ErrorContent, new string[] { PrefixName });
+                _logger.LogError(ErrorContent);
             }
-                            
-                          
-            var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now:yyyyMMdd}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{ErrorContent}");
-            });
         }
 
     }
