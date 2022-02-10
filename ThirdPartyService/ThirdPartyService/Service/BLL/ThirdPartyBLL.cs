@@ -1,20 +1,21 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Google.Protobuf.WellKnownTypes;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
-using ThirdPartyService.Extensions;
-using System.Transactions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyService.Service.BLL
 {
@@ -35,6 +36,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly ServerInfoService _serverInfoService;
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
+        private readonly CacheHelper _cacheHelper;
 
         private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
@@ -70,6 +72,7 @@ namespace ThirdPartyService.Service.BLL
             _serverInfoService = provider.GetRequiredService<ServerInfoService>();
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
             _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
+            _cacheHelper = provider.GetRequiredService<CacheHelper>();
 
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.ServerInfoProvider = provider.GetRequiredService<ServerInfoBLL>();
@@ -184,6 +187,13 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
                     apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
+                    return apiResult;
+                }
+                
+                if (ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
+                {
+                    apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
+                    apiResult.Message = "Third party under maintenance.";
                     return apiResult;
                 }
 
@@ -1297,6 +1307,23 @@ namespace ThirdPartyService.Service.BLL
         private int InsertBalance(string timeString, TpCustBalanceModel balanceData)
         {
             return _tpCustBalanceService.InsertBalance(timeString, balanceData);
+        }
+
+        private bool ThirdPartyIsMaintain(int siteId, int tpId)
+        {
+            var maintainList = GetTpMaintainListWithCache(siteId);
+            return maintainList.Any(x => x.TpId == tpId
+                && x.TpGameType == 0); // TpGameType: 0 第三方整個進維護
+        }
+
+        private IEnumerable<TpMaintain> GetTpMaintainListWithCache(int siteId)
+        {
+            var key = $"GetTpMaintainList{siteId}";
+
+            return _cacheHelper.TryGetOrCreate(key,
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)),
+                i => thirdPartyHelper.GetTpMaintainList(siteId)
+                    .Where(item => item.MaintainCheck(DateTime.UtcNow)));
         }
 
         #endregion
