@@ -1,55 +1,85 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Serilog.Context;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class TicketAGBLL
     {
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiAGBLL _apiAGBLL;
+        private readonly WagerAGService _wagerAGService;
+        private readonly ILogger<TicketAGBLL> _logger;
 
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly ApiAGBLL apiAGBLL;
-        private readonly ILogger<TicketAGBLL> logger;
+        private readonly int _tpId = (int)Tp.AG;
 
-        public TicketAGBLL(ILogger<TicketAGBLL> logger, ApiAGBLL apiAGBLL, ThirdPartyBLL thirdPartyBLL)
+        public TicketAGBLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.apiAGBLL = apiAGBLL;
-            this.logger = logger;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
+            _wagerAGService = provider.GetRequiredService<WagerAGService>();
+            _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
         }
 
-        public async Task<dynamic> CheckTicketAsync()
+        // TpRefundWorker
+        public IEnumerable<BettransDataAG> GetPendingList(int gameType)
         {
-            try
-            {
-                // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting((int)Tp.AG);
-                string transactionID = "005211082122001585411";
-                var data = await apiAGBLL.CheckTicketStatus(setting["WalletUrl"], transactionID);
-                if (data.result == null)
-                {
-                    logger.LogError(null);
-                    logger.LogInformation($"THIRD_PARTY_ERROR");
-                    return false;
-                }
+            return _wagerAGService.GetPendingList();
+        }
 
-                var dataTicket = data.result.row;
-                var ticket = new
-                {
-                    billNo = dataTicket.billNo,
-                    status = dataTicket.status
-                };
-                return ticket;
-            }
-            catch (Exception ex)
+        // TpRefundWorker
+        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
+        {
+            LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
+            var func = "CheckTicketStatusAsync";
+            var msg = "";
+            var task = true;
+
+            var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
+
+            if (data == null)
             {
-                logger.LogError(ex, ex.Message);
-                return true;
+                msg = $"{func} NO_DATA";
+                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
+                return task;
             }
+
+            if (data.result.row[0].status == "3")
+            {
+                // call sw api
+                try
+                {
+                    var response = _apiAGBLL.callSeamlessApi("Refund", pending).Result;
+                    var result = JsonConvert.DeserializeObject<SeamlessAgResponse>(response);
+                    if (result.TransferResponse.ResponseCode != "OK")
+                    {
+                        task = false;
+                        msg = $"{func} SEAMLESS_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"System Refund : {pending.transactionID}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                }
+            }
+            else
+            {
+                task = false;
+                _logger.LogError($"Refund Not Match: {pending.transactionID} {JsonConvert.SerializeObject(data)}");
+            }
+            return task;
         }
     }
 }

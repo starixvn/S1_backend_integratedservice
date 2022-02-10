@@ -1,10 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,30 +13,25 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiSGBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiSGBLL> logger;
-        private readonly string logName = Tp.SG.ToString();
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiSGBLL> _logger;
+        private readonly string _tpName = Tp.SG.ToString();
 
-        public ApiSGBLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiSGBLL> logger
-        )
+        public ApiSGBLL(IServiceProvider provider)
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiSGBLL>>();
         }
 
         public async Task<WagerSGModel> GetBetListByTime(string apiUrl, string merchantCode, string startTime, string endTime, int page, string guid)
         {
             // param
-            string uri = "getBetHistory";
-            string url = $"{apiUrl}";
+            var uri = "getBetHistory";
+            var url = $"{apiUrl}";
             var param = new
             {
                 beginDate = startTime,
@@ -49,24 +41,22 @@ namespace ThirdPartyWager.Service.BLL
                 serialNo = Guid.NewGuid().ToString(),
             };
 
-            // log
-            log2File.AddRequestLog(logName, guid, url, param, uri);
-
             // request
-            string r = await DoHttpClientAsync(url, uri, param, guid);
+            var r = await DoHttpClientAsync(url, uri, param);
             var result = JsonConvert.DeserializeObject<WagerSGModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string uri, object param, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, string uri, object param)
         {
             var json = JsonConvert.SerializeObject(param);
+            _log2File.InsertRequestLog(_tpName, url, json, "1");
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Add("API", uri);
             request.Headers.Add("DataType", "JSON");
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await httpHelper.GetClient().SendAsync(request);
+            var response = await _httpHelper.GetClient().SendAsync(request);
             try
             {
                 response.EnsureSuccessStatusCode();
@@ -74,7 +64,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (HttpRequestException HREx)
             {
-                log2File.AddResponseLog(logName, guid, url, param, response, "Error", request.Headers, HREx.Message);
+                _log2File.InsertResponseLog(_tpName, url, json, HREx.Message);
                 return null;
             }
         }

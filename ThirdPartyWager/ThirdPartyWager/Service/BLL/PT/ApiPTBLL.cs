@@ -1,14 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Security;
-using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,32 +18,29 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiPTBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly IConfiguration configuration;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiPTBLL> logger;
-        private readonly string logName = Tp.PT.ToString();
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiPTBLL> _logger;
+        private readonly string _tpName = Tp.PT.ToString();
+        private readonly IConfiguration _configuration;
 
         public ApiPTBLL(
-            HttpHelper httpHelper,
-            Common common,
-            IConfiguration configuration,
-            Log2File log2File,
-            ILogger<ApiPTBLL> logger
+            IServiceProvider provider,
+            IConfiguration configuration
         )
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.configuration = configuration;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiPTBLL>>();
+            _configuration = configuration;
         }
 
         public async Task<WagerPTModel> GetBetListByTime(string apiUrl, string entityKey, Dictionary<string, string> certificate, string startTime, string endTime, int page, int perPage, string guid)
         {
             // param
-            string url = $"{apiUrl}/game/flow";
+            var url = $"{apiUrl}/game/flow";
             var param = new
             {
                 exitgame = true,
@@ -60,31 +55,29 @@ namespace ThirdPartyWager.Service.BLL
                 perPage = perPage,
                 showgameshortname = true,
             };
-            var cert = new { currency = certificate["currency"], site = certificate["site"] };
-
-            // log
-            log2File.AddRequestLog(logName, guid, url, param, cert);
 
             // request
-            string r = await DoHttpClientAsync(url, param, entityKey, certificate, guid);
+            var r = await DoHttpClientAsync(url, param, entityKey, certificate);
             var result = JsonConvert.DeserializeObject<WagerPTModel>(r);
             return result;
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param, string entityKey, Dictionary<string, string> certificate, string guid = null)
+        private async Task<string> DoHttpClientAsync(string url, object param, string entityKey, Dictionary<string, string> certificate)
         {
-            var dicP = common.FromJson<Dictionary<string, string>>(common.ToJson(param));
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+            _log2File.InsertRequestLog(_tpName, url, sParam, "1");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(sParam, Encoding.UTF8, "application/x-www-form-urlencoded");
             request.Headers.Add("X_ENTITY_KEY", entityKey);
 
-            using HttpClientHandler handler = new HttpClientHandler();
-            if (configuration.GetValue<string>("ProxyHost") != null)
+            using var handler = new HttpClientHandler();
+            if (_configuration.GetValue<string>("ProxyHost") != null)
             {
-                handler.Proxy = new WebProxy(configuration.GetValue<string>("ProxyHost"),
-                    configuration.GetValue<int>("ProxyPort"));
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
                 handler.UseProxy = true;
             }
 
@@ -93,16 +86,16 @@ namespace ThirdPartyWager.Service.BLL
 
             using var client = new HttpClient(handler);
             using var response = await client.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
             {
-                return response.Content.ReadAsStringAsync().Result;
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, sParam, result);
+                result = "{\"error\":\"fatal error\",\"errorcode\":999999}";
             }
-            else
-            {
-                var result = "{\"error\":\"fatal error\",\"errorcode\":999999}";
-                log2File.AddResponseLog(logName, guid, url, sParam, response, "Error", request.Headers, certificate);
-                return result;
-            }
+
+            return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"error\":\"SYSTEM_MATAINING\",\"errorcode\":999999}" : result;
         }
     }
 }

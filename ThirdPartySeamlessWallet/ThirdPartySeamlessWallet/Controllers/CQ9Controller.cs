@@ -240,7 +240,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Error : param invalid";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -253,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Error : wtoken";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -265,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 checkPlayerResp.status.message = "Success";
                 checkPlayerResp.status.datetime = getCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
@@ -280,11 +280,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/transaction/balance/{account}")]
-        public GetApiResp Balance(string account, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
+        public GetApiResp Balance(string account, string gamecode, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
         {
             string logName = $"{tpGameName}_Balance";
             var json = JsonConvert.SerializeObject(getBalanceReq);
-            log2File.Info($"account={account}\r\nwtoken={wtoken}\r\n{json}", logName);
+            log2File.Info($"account={account}\r\nwtoken={wtoken}\r\n{gamecode}\r\n{json}", logName);
             var balanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(json);
 
             GetApiResp getBalanceResp = new GetApiResp();
@@ -327,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             // player offline return balance 0 others return cache balance
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, balanceReq.gamecode);
+            var gameType = thirdPartyBLL.GetGameType((int)thisTp, gamecode);
             var tpCustBalance = (environment.IsDevelopment()) ? tpCustInfoBLL.GetBalance((int)thisTp, account, (int)gameType) : tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account, (int)gameType);
             getBalanceResp.data = new BalanceData();
             getBalanceResp.status.code = "0";

@@ -2,10 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -20,11 +18,9 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiMPBLL _apiMPBLL;
         private readonly WagerMPService _wagerMPService;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly Log2File _log2File;
         private readonly ILogger<WagerMPBLL> _logger;
 
         private readonly int _tpId = (int)Tp.MP;
-        private readonly string _logName = Tp.MP.ToString();
         private readonly int _timeZone = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
 
@@ -60,7 +56,6 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMPBLL = provider.GetRequiredService<ApiMPBLL>();
             _wagerMPService = provider.GetRequiredService<WagerMPService>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<WagerMPBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
@@ -68,13 +63,13 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
         {
             var wokerTime = GetWorkerTime(type, -180);
-            bool quick = CheckQuick(wokerTime, 5);
+            var quick = CheckQuick(wokerTime, 5);
             var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                bool result = await GetWagersAsync(time.startUnix, time.endUnix);
+                var result = await GetWagersAsync(time.startUnix, time.endUnix);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -87,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
         {
             var wokerTime = GetWorkerTime(type, 1);
-            bool quick = CheckQuick(wokerTime, 120);
+            var quick = CheckQuick(wokerTime, 120);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
@@ -95,9 +90,9 @@ namespace ThirdPartyWager.Service.BLL
             {
                 // count interval wagers
                 var getWagerCount = _wagerMPService.GetWagerTotal(time.startUnix, time.endUnix);
-                int total = getWagerCount.wagerCount;
+                var total = getWagerCount.wagerCount;
 
-                bool result = await GetWagersAsync(time.startUnix, time.endUnix, true, total);
+                var result = await GetWagersAsync(time.startUnix, time.endUnix, true, total);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -109,10 +104,8 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> GetWagersAsync(long startUnix, long endUnix, bool compare = false, int total = 0)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _logName);
-
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
@@ -127,7 +120,7 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0 && errorCode != 16)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _log2File.AddResultLog(_logName, guid, msg, JsonConvert.SerializeObject(dataWager));
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
 
@@ -135,37 +128,39 @@ namespace ThirdPartyWager.Service.BLL
                 if (compare && totalNum == total)
                 {
                     msg = "MATCH";
-                    _log2File.AddResultLog(_logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
                 if (errorCode == 16 || (errorCode == 0 && dataWager.d.count == 0))
                 {
                     msg = "NO_DATA";
-                    _log2File.AddResultLog(_logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
                 {
-                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>();
-                    keyValuePairs.Add("GameID", dataWager.d.list.GameID[i]);
-                    keyValuePairs.Add("Accounts", dataWager.d.list.Accounts[i]);
-                    keyValuePairs.Add("ServerID", dataWager.d.list.ServerID[i]);
-                    keyValuePairs.Add("KindID", dataWager.d.list.KindID[i]);
-                    keyValuePairs.Add("TableID", dataWager.d.list.TableID[i]);
-                    keyValuePairs.Add("ChairID", dataWager.d.list.ChairID[i]);
-                    keyValuePairs.Add("UserCount", dataWager.d.list.UserCount[i]);
-                    keyValuePairs.Add("CellScore", dataWager.d.list.CellScore[i]);
-                    keyValuePairs.Add("AllBet", dataWager.d.list.AllBet[i]);
-                    keyValuePairs.Add("Profit", dataWager.d.list.Profit[i]);
-                    keyValuePairs.Add("Revenue", dataWager.d.list.Revenue[i]);
-                    keyValuePairs.Add("GameStartTime", dataWager.d.list.GameStartTime[i]);
-                    keyValuePairs.Add("GameEndTime", dataWager.d.list.GameEndTime[i]);
-                    keyValuePairs.Add("CardValue", dataWager.d.list.CardValue[i]);
-                    keyValuePairs.Add("ChannelID", dataWager.d.list.ChannelID[i]);
-                    keyValuePairs.Add("LineCode", dataWager.d.list.LineCode[i]);
+                    var keyValuePairs = new Dictionary<string, dynamic>
+                    {
+                        { "GameID", dataWager.d.list.GameID[i] },
+                        { "Accounts", dataWager.d.list.Accounts[i] },
+                        { "ServerID", dataWager.d.list.ServerID[i] },
+                        { "KindID", dataWager.d.list.KindID[i] },
+                        { "TableID", dataWager.d.list.TableID[i] },
+                        { "ChairID", dataWager.d.list.ChairID[i] },
+                        { "UserCount", dataWager.d.list.UserCount[i] },
+                        { "CellScore", dataWager.d.list.CellScore[i] },
+                        { "AllBet", dataWager.d.list.AllBet[i] },
+                        { "Profit", dataWager.d.list.Profit[i] },
+                        { "Revenue", dataWager.d.list.Revenue[i] },
+                        { "GameStartTime", dataWager.d.list.GameStartTime[i] },
+                        { "GameEndTime", dataWager.d.list.GameEndTime[i] },
+                        { "CardValue", dataWager.d.list.CardValue[i] },
+                        { "ChannelID", dataWager.d.list.ChannelID[i] },
+                        { "LineCode", dataWager.d.list.LineCode[i] }
+                    };
                     field.Add(JsonConvert.SerializeObject(keyValuePairs));
                 }
 
@@ -182,13 +177,13 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {bet.GameID} )";
-                        _log2File.AddResultLog(_logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                         return false;
                     }
                 }
 
                 msg = "FINISH";
-                _log2File.AddResultLog(_logName, guid, msg, null, "Info");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startUnix} ~ {endUnix}");
                 if (compare)
                 {
                     // after rewrite go check next time
@@ -199,7 +194,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _log2File.AddResultLog(_logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

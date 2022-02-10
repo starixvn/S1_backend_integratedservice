@@ -449,6 +449,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
         public int CancelBetRNG_Joker(CancelBetDataRNG_Joker cancelBetDataRNG_Joker, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, cancelBetDataRNG_Joker.username);
@@ -460,6 +461,52 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
 
+            return result;
+        }
+
+        public int DepositFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.DepositFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int TransactionFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.result *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.startbalance *= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.endbalance *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.TransactionFish_Joker(tpCustInfo, bettingDataFish_Joker);
+          
+            if (result > 0 )
+            {
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Joker, bettingDataFish_Joker.username, (int)GameType.Joker_Fish).Balance;
+            }
+            
             return result;
         }
 
@@ -865,6 +912,35 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RewardLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Allbet, bettingDataLC_Allbet.Client);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataLC_Allbet.Amount *= tpCurrency.ExchangeRate;
+                foreach (var bet in bettingDataLC_Allbet.Details)
+                {
+                    bet.Amount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.RewardLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataLC_Allbet.Amount /= tpCurrency.ExchangeRate;
+                foreach (var bet in bettingDataLC_Allbet.Details)
+                {
+                    bet.Amount /= tpCurrency.ExchangeRate;
+                }
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region PG
@@ -908,6 +984,47 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 afterAmount /= tpCurrency.ExchangeRate;
                 adjustmentDataRNG_PG.TransferAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int BetAndPayoutRNG_PG(TransferInOutDataRNG_PG transferInOutDataRNG_PG, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, transferInOutDataRNG_PG.PlayerName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+            var custBalance = tpCustInfoBLL.GetBalance((int)Tp.PG, transferInOutDataRNG_PG.PlayerName, (int)GameType.PG_RNG);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                transferInOutDataRNG_PG.BetAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.WinAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.TransferAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusBalanceAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusRatioAmount *= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.JackpotRtpContributionAmount *= tpCurrency.ExchangeRate;
+                custBalance.Balance *= tpCurrency.ExchangeRate;
+            }
+
+            // check
+            var checkBalance = custBalance.Balance - Math.Abs(transferInOutDataRNG_PG.BetAmount);
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                return 0;
+            }
+
+            var result = settledService.BetAndPayoutRNG_PG(tpCustInfo, transferInOutDataRNG_PG, thirdPartyBLL, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BetAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.WinAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.TransferAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusBalanceAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.BonusRatioAmount /= tpCurrency.ExchangeRate;
+                transferInOutDataRNG_PG.JackpotRtpContributionAmount /= tpCurrency.ExchangeRate;
             }
 
             return result;
@@ -2283,6 +2400,51 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_RedTiger(TransId);
         }
 
+        #endregion
+
+        #region AP
+        public int CancelBetRNG_AP(CancelBetDataRNG_AP cancelBetDataRNG_AP, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetDataRNG_AP.playerid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                cancelBetDataRNG_AP.totalstake *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetRNG_AP(tpCustInfo, cancelBetDataRNG_AP, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int SettledRNG_AP(BettingDataRNG_AP bettingDataRNG_AP,string TpUserName, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_AP.totalwin *= tpCurrency.ExchangeRate;
+                bettingDataRNG_AP.totalstake *= tpCurrency.ExchangeRate;
+                bettingDataRNG_AP.jpwin *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SettledRNG_AP(tpCustInfo, bettingDataRNG_AP, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
         #endregion
     }
 }

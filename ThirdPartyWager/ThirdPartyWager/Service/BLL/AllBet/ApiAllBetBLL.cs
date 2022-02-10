@@ -1,7 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,44 +19,46 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiAllBetBLL
     {
-        private byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiAllBetBLL> logger;
-        private readonly string logName = Tp.Allbet.ToString();
+        private readonly string _seamlessUrl;
+        private readonly byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiAllBetBLL> _logger;
+        private readonly string _tpName = Tp.Allbet.ToString();
 
         public ApiAllBetBLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiAllBetBLL> logger
+            IServiceProvider provider,
+            IHostEnvironment environment,
+            IConfiguration configuration
         )
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
+            _seamlessUrl = configuration.GetValue<string>("TpSWserviceUrl");
         }
+
 
         public async Task<WagerAllBetModel> GetBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
-            string uri = "/betlog_histories";
-            string url = $"{apiUrl}{uri}";
-            int pageSize = 1000;
-            string parameter = $"random={common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
+            var uri = "/betlog_histories";
+            var url = $"{apiUrl}{uri}";
+            var pageSize = 1000;
+            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
 
             // encrype param
-            string data = common.encrypt(parameter, desKey, null, NULL_IV);
-            string sign = common.base64edMd5($"{data}{md5Key}");
-            string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
+            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
+            var sign = _common.base64edMd5($"{data}{md5Key}");
+            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            log2File.AddRequestLog(logName, guid, url, parameter, param);
+            _logger.LogInformation(parameter);
 
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -66,21 +73,21 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerAllBetModel> GetModifiedBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
             // param
-            string uri = "/betlog_modified_histories";
-            string url = $"{apiUrl}{uri}";
-            int pageSize = 1000;
-            string parameter = $"random={common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
+            var uri = "/betlog_modified_histories";
+            var url = $"{apiUrl}{uri}";
+            var pageSize = 1000;
+            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
 
             // encrype param
-            string data = common.encrypt(parameter, desKey, null, NULL_IV);
-            string sign = common.base64edMd5($"{data}{md5Key}");
-            string param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
+            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
+            var sign = _common.base64edMd5($"{data}{md5Key}");
+            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
 
             // log
-            log2File.AddRequestLog(logName, guid, url, parameter, param);
+            _logger.LogInformation(parameter);
 
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
@@ -92,19 +99,122 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<string> DoHttpClientAsync(string url, string param, string guid = null)
+        public async Task<RewardAllBetModel> GetRewardByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
-            var response = await httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            // param
+            var uri = "/query_event_records";
+            var url = $"{apiUrl}{uri}";
+            var pageSize = 1000;
+            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
+
+            // encrype param
+            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
+            var sign = _common.base64edMd5($"{data}{md5Key}");
+            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
+
+            // log
+            _logger.LogInformation(parameter);
+
+            // request
+            var r = await DoHttpClientAsync(url, param);
+            if (string.IsNullOrEmpty(r))
             {
-                return response.Content.ReadAsStringAsync().Result;
+                return null;
             }
             else
             {
-                log2File.AddResponseLog(logName, guid, url, param, response);
+                var result = JsonConvert.DeserializeObject<RewardAllBetModel>(r);
+                return result;
+            }
+        }
+
+        private async Task<string> DoHttpClientAsync(string url, string param)
+        {
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
+
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
+            }
+
+            return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"error_code\":\"SYSTEM_MATAINING\",\"message\":\"System under maintenance\"}" : result;
+        }
+
+        public async Task<string> callSeamlessApi(string type, dynamic parameter, string sha1key, string propertyId)
+        {
+            // param
+            var url = $"{_seamlessUrl}/Allbet";
+            string uri = null;
+            dynamic param = "";
+
+            switch (type)
+            {
+                case "Reward":
+                    uri = "/transfer";
+                    param = new RewardAllBetData();
+                    param.details = new List<RewardAllBet>();
+                    param.tranId = parameter.eventRecordNum;
+                    param.transferType = 40;
+                    param.client = parameter.client;
+                    param.currency = parameter.currency;
+                    param.amount = parameter.amount;
+                    param.eventRecordNum = parameter.eventRecordNum;
+                    param.details.Add(parameter);
+                    break;
+                default:
+                    _logger.LogWarning($"{type} not found");
+                    break;
+            }
+
+            if (uri == null)
+            {
                 return null;
+            }
+
+            // request
+            return await DoSeamlessHttpClientAsync(url, uri, param, sha1key, propertyId);
+        }
+
+        public async Task<string> DoSeamlessHttpClientAsync(string url, string uri, dynamic param, string sha1key, string propertyId)
+        {
+            var json = JsonConvert.SerializeObject(param);
+            var date = DateTime.UtcNow.AddHours(8).ToString("ddd, dd MMM yyy HH:mm:ss 'GMT'", CultureInfo.CreateSpecificCulture("en-US"));
+            var md5 = "";
+            var str = $"POST\n{md5}\napplication/json; charset=utf-8\n{date}\n{uri}";
+            var sign = _common.Sign(str, sha1key);
+            var seamlessApi = $"{url}{uri}";
+
+            try
+            {
+                _log2File.InsertRequestLog(_tpName, url, json, "1");
+
+                HttpRequestMessage request;
+                request = new HttpRequestMessage(HttpMethod.Post, seamlessApi);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");//, Encoding.UTF8, "application/json"
+                request.Headers.Add("Authorization", $"AB {propertyId}:{sign}");
+                request.Headers.Add("Date", date);
+
+                var response = await _httpHelper.GetClient().SendAsync(request);
+                var result = response.Content.ReadAsStringAsync().Result;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, url, param, result);
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return ex.Message;
             }
         }
     }

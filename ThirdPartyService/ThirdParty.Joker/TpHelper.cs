@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -64,14 +66,20 @@ namespace ThirdParty.Joker
                 Secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"]) ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"] : throw new Exception();
             }
 
-            ApiUrl = $"{ApiUrl}";
+            var gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
+            var token = ApplyToken(tpCustInfo);
+            var sessionKeyArr = new string[] { token, gameCode };
+            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            var sessionKey = Convert.ToBase64String(bytes);
 
-            LoginReq loginReq = new LoginReq();
-            loginReq.token = ApplyToken(tpCustInfo);
-            loginReq.appID = AppID;
-            loginReq.gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-            loginReq.language = TpLangId;
-            loginReq.mobile = appType != AppType.Desktop;
+            var loginReq = new LoginReq
+            {
+                token = sessionKey,
+                appID = AppID,
+                gameCode = gameCode,
+                language = TpLangId,
+                mobile = appType != AppType.Desktop
+            };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
@@ -98,16 +106,17 @@ namespace ThirdParty.Joker
                     appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                     secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                 }
-                var gameCode = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId })
-                    .GetValueOrDefault("gamecode")?.ToString();
+                var data = getBetDetail.TpGameTypeOption.Type == 13 ?
+                    TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }) :
+                    TpBetRecordProvider.ReportDbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
 
                 var url = $"{apiUrl}/game-history-url";
                 var parameters = new Dictionary<string, string>()
                 {
-                    { "AppID",appID },
-                    { "Username",tpCustInfo.TpUserName },
-                    { "GameCode",gameCode},
-                    { "RoundID",getBetDetail.TransId},
+                    { "AppID", appID },
+                    { "Username", tpCustInfo.TpUserName },
+                    { "GameCode", data.GetValueOrDefault("gamecode")?.ToString()},
+                    { "RoundID", getBetDetail.TransId},
                     { "Language","en"},
                     { "Timestamp",DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()}
                 };

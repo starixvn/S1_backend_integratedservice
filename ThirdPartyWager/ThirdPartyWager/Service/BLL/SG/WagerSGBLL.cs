@@ -1,67 +1,54 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerSGBLL
     {
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly WagerSGService wagerSGService;
-        private readonly ApiSGBLL apiSGBLL;
-        private readonly ILogger<WagerSGBLL> logger;
-        private readonly Log2File log2File;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiSGBLL _apiSGBLL;
+        private readonly WagerSGService _wagerSGService;
+        private readonly ILogger<WagerSGBLL> _logger;
 
-        public WagerSGBLL(
-            ILogger<WagerSGBLL> logger,
-            WagerSGService wagerSGService,
-            ApiSGBLL apiSGBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            Log2File log2File
-        )
+        private readonly int _tpId = (int)Tp.SG;
+
+        public WagerSGBLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.wagerSGService = wagerSGService;
-            this.apiSGBLL = apiSGBLL;
-            this.logger = logger;
-            this.log2File = log2File;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiSGBLL = provider.GetRequiredService<ApiSGBLL>();
+            _wagerSGService = provider.GetRequiredService<WagerSGService>();
+            _logger = provider.GetRequiredService<ILogger<WagerSGBLL>>();
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
-            string msg = "FATAL_ERROR";
-            string logName = Tp.SG.ToString();
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", logName);
-
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // pagination
-                int page = 1;
-                int totalPage = 1;
+                var page = 1;
+                var totalPage = 1;
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await apiSGBLL.GetBetListByTime(setting["ApiUrl"], setting["merchantCode"], startTime, endTime, page, guid);
+                    var dataWager = await _apiSGBLL.GetBetListByTime(setting["ApiUrl"], setting["merchantCode"], startTime, endTime, page, guid);
 
                     // error condition
                     var errorCode = dataWager.code;
-                    var errorMsg = dataWager.msg;
 
                     if (errorCode != 0)
                     {
                         msg = "THIRD_PARTY_ERROR";
-                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return false;
                     }
 
@@ -70,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (totalNum == 0)
                     {
                         msg = "NO_DATA";
-                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return true;
                     }
 
@@ -82,18 +69,18 @@ namespace ThirdPartyWager.Service.BLL
                             if (!bet.gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
                             {
                                 // slot
-                                wagerSGService.InsertWagerRng(bet);
+                                _wagerSGService.InsertWagerRng(bet);
                             }
                             else
                             {
                                 // fish
-                                wagerSGService.InsertWager(bet);
+                                _wagerSGService.InsertWager(bet);
                             }
                         }
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.ticketId} )";
-                            log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -101,13 +88,13 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

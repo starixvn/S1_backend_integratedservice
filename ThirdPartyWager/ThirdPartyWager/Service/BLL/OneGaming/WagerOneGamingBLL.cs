@@ -1,68 +1,54 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerOneGamingBLL
     {
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly WagerOneGamingService wagerOneGamingService;
-        private readonly ApiOneGamingBLL apiOneGamingBLL;
-        private readonly Log2File log2File;
-        private readonly ILogger<WagerOneGamingBLL> logger;
-        private readonly IHostEnvironment environment;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ApiOneGamingBLL _apiOneGamingBLL;
+        private readonly WagerOneGamingService _wagerOneGamingService;
+        private readonly ILogger<WagerOneGamingBLL> _logger;
 
-        public WagerOneGamingBLL(
-            ILogger<WagerOneGamingBLL> logger,
-            WagerOneGamingService wagerOneGamingService,
-            ApiOneGamingBLL apiOneGamingBLL,
-            Log2File log2File,
-            ThirdPartyBLL thirdPartyBLL,
-            IHostEnvironment environment
-        )
+        private readonly int _tpId = (int)Tp.OneGaming;
+
+        public WagerOneGamingBLL(IServiceProvider provider)
         {
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.wagerOneGamingService = wagerOneGamingService;
-            this.apiOneGamingBLL = apiOneGamingBLL;
-            this.log2File = log2File;
-            this.logger = logger;
-            this.environment = environment;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiOneGamingBLL = provider.GetRequiredService<ApiOneGamingBLL>();
+            _wagerOneGamingService = provider.GetRequiredService<WagerOneGamingService>();
+            _logger = provider.GetRequiredService<ILogger<WagerOneGamingBLL>>();
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, string currency)
         {
-            string msg = "FATAL_ERROR";
-            string logName = Tp.OneGaming.ToString();
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", logName);
-
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
-                var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // get wager
-                var dataWager = await apiOneGamingBLL.GetBetListByTime(setting["ApiUrl"], setting[$"agent_code_{currency}"], setting[$"secret_key_{currency}"], startTime, endTime, guid);
+                var dataWager = await _apiOneGamingBLL.GetBetListByTime(setting["ApiUrl"], setting[$"agent_code_{currency}"], setting[$"secret_key_{currency}"], startTime, endTime, guid);
 
                 // error condition
                 if (dataWager.status_code != "0")
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager));
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
 
                 if (dataWager.data.Count == 0)
                 {
                     msg = "NO_DATA";
-                    log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(dataWager), "Info");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
@@ -70,24 +56,24 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        wagerOneGamingService.InsertWager(bet);
+                        _wagerOneGamingService.InsertWager(bet);
                     }
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {bet.ticket} )";
-                        log2File.AddResultLog(logName, guid, msg, JsonConvert.SerializeObject(bet), "Error", ex.Message);
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                         return false;
                     }
                 }
 
                 msg = "FINISH";
-                log2File.AddResultLog(logName, guid, msg, null, "Info");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                log2File.AddResultLog(logName, guid, msg, null, "Error", ex.Message);
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

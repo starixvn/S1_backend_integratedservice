@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,42 +16,38 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiDGBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly Common common;
-        private readonly Log2File log2File;
-        private readonly ILogger<ApiDGBLL> logger;
-        private readonly string logName = Tp.DG.ToString();
+        private readonly HttpHelper _httpHelper;
+        private readonly Common _common;
+        private readonly Log2File _log2File;
+        private readonly ILogger<ApiDGBLL> _logger;
+        private readonly string _tpName = Tp.DG.ToString();
 
         public ApiDGBLL(
-            HttpHelper httpHelper,
-            Common common,
-            Log2File log2File,
-            ILogger<ApiDGBLL> logger
+            IServiceProvider provider,
+            IConfiguration configuration
         )
         {
-            this.httpHelper = httpHelper;
-            this.common = common;
-            this.log2File = log2File;
-            this.logger = logger;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _logger = provider.GetRequiredService<ILogger<ApiDGBLL>>();
         }
+
         public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey, string guid)
         {
             // param
-            string uri = "/game/getReport/";
-            string random = common.GetRandomString(8);
-            string url = $"{apiUrl}{uri}{agentName}";
-            string token = common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            var uri = "/game/getReport/";
+            var random = _common.GetRandomString(8);
+            var url = $"{apiUrl}{uri}{agentName}";
+            var token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
                 token = token,
                 random = random
             };
 
-            // log
-            log2File.AddRequestLog(logName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
             return result;
         }
@@ -57,10 +55,10 @@ namespace ThirdPartyWager.Service.BLL
         public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds, string guid)
         {
             // param
-            string uri = "/game/markReport/";
-            string random = common.GetRandomString(8);
-            string url = $"{apiUrl}{uri}{agentName}";
-            string token = common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            var uri = "/game/markReport/";
+            var random = _common.GetRandomString(8);
+            var url = $"{apiUrl}{uri}{agentName}";
+            var token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -68,11 +66,8 @@ namespace ThirdPartyWager.Service.BLL
                 list = wagerIds
             };
 
-            // log
-            log2File.AddRequestLog(logName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerDGModel>(r);
 
             if (result.codeId != 0)
@@ -85,9 +80,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow, string guid)
         {
             // param
-            string uri = "/game/getReport";
-            string url = $"{apiUrl}{uri}";
-            string token = common.ToMD5($"{agentName}{apiKey}").ToLower();
+            var uri = "/game/getReport";
+            var url = $"{apiUrl}{uri}";
+            var token = _common.ToMD5($"{agentName}{apiKey}").ToLower();
 
             var param = new
             {
@@ -98,30 +93,31 @@ namespace ThirdPartyWager.Service.BLL
                 pageNow = pageNow
             };
 
-            // log
-            log2File.AddRequestLog(logName, guid, url, param);
-
             // request
-            var r = await DoHttpClientAsync(url, param, guid);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
             return result;
         }
-        private async Task<string> DoHttpClientAsync(string url, object param, string guid = null)
+        
+        private async Task<string> DoHttpClientAsync(string url, object param)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
             var json = JsonConvert.SerializeObject(param);
+
+            _log2File.InsertRequestLog(_tpName, url, json, "1");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await httpHelper.GetClient().SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            var result = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
             {
-                return response.Content.ReadAsStringAsync().Result;
+                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertResponseLog(_tpName, url, json, result);
             }
-            else
-            {
-                var result = response.Content.ReadAsStringAsync().Result;
-                log2File.AddResponseLog(logName, guid, url, json, response);
-                return result;
-            }
+            
+            return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"codeId\": 300}" : result;
         }
     }
 }

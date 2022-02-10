@@ -14,6 +14,15 @@ namespace ThirdParty.PG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        public class DetailData
+        {
+            public string operator_session { get; set; }
+        }
+        public class DetailResponse
+        {
+            public DetailData data { get; set; }
+        }
+
         private readonly IReadOnlyDictionary<string, string> GameNameList;
 
         public TpHelper()
@@ -84,31 +93,83 @@ namespace ThirdParty.PG
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+            //var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
 
-            if (tpBetRecordDetail == null)
+            //if (tpBetRecordDetail == null)
+            //{
+            //    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+            //}
+
+            //var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
+            //return new CasinoDetail(getBetDetail.TpGameTypeOption)
+            //{
+            //    TransId = getBetDetail.TransId,
+            //    Detail = tpBetRecordDetail.Detail,
+            //    TpCurrency = new TpCurrency()
+            //    {
+            //        ExchangeRate = tpCustInfo.ExchangeRate,
+            //        TpCurrencyId = tpCustInfo.TpCurrencyId,
+            //    },
+            //    RefTransId = model?.parentBetId.ToString(),
+            //    TpUserName = model?.playerName,
+            //    UTCBetTime = DateTimeOffset.FromUnixTimeMilliseconds(model?.betTime ?? 0).DateTime,
+            //    UTCSettledTime = DateTimeOffset.FromUnixTimeMilliseconds(model?.betEndTime ?? 0).DateTime,
+            //    Stake = model.betAmount * tpCustInfo.ExchangeRate,
+            //    WinlostAmount = (model.winAmount - model.betAmount) * tpCustInfo.ExchangeRate,
+            //    GameCode = model.gameId.ToString(),
+            //    GameName = GetGameName(model.gameId.ToString()),
+            //};
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            string BetDetailUrl = inputs.ContainsKey("BetDetailUrl") && !string.IsNullOrEmpty(inputs["BetDetailUrl"]) ? inputs["BetDetailUrl"] : throw new Exception("BetDetailUrl");
+            string operator_token = inputs.ContainsKey("operator_token") && !string.IsNullOrEmpty(inputs["operator_token"]) ? inputs["operator_token"] : throw new Exception("operator_token");
+            string secret_key = inputs.ContainsKey("secret_key") && !string.IsNullOrEmpty(inputs["secret_key"]) ? inputs["secret_key"] : throw new Exception("secret_key");
+            string Uri = $"/Login/v1/LoginProxy";
+
+            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId });
+
+            string TraceId = detail.GetValueOrDefault("TraceId")?.ToString();
+            string ParentBetId = detail.GetValueOrDefault("ParentBetId").ToString();
+            string BetId = detail.GetValueOrDefault("BetId").ToString();
+            if (string.IsNullOrEmpty(TraceId))
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
             }
 
-            var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
-            return new CasinoDetail(getBetDetail.TpGameTypeOption)
+            var BetDetail = new
+            {
+                operator_token = operator_token,
+                secret_key = secret_key
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(BetDetail));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            var result = HttpPost(
+                $"{ApiUrl}{Uri}?trace_id={TraceId}",
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
+
+            if (!IsJSON(result))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result}");
+            }
+
+            var json = JsonConvert.DeserializeObject<DetailResponse>(result);
+            if (string.IsNullOrEmpty(json.data.operator_session))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail error.");
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
-                Detail = tpBetRecordDetail.Detail,
+                DetailUrl = $"{BetDetailUrl}?trace_id={TraceId}&t={json.data.operator_session}&psid={ParentBetId}&sid={BetId}&lang=en&type=operator",
                 TpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 },
-                RefTransId = model?.parentBetId.ToString(),
-                TpUserName = model?.playerName,
-                UTCBetTime = DateTimeOffset.FromUnixTimeMilliseconds(model?.betTime ?? 0).DateTime,
-                UTCSettledTime = DateTimeOffset.FromUnixTimeMilliseconds(model?.betEndTime ?? 0).DateTime,
-                Stake = model.betAmount * tpCustInfo.ExchangeRate,
-                WinlostAmount = (model.winAmount - model.betAmount) * tpCustInfo.ExchangeRate,
-                GameCode = model.gameId.ToString(),
-                GameName = GetGameName(model.gameId.ToString()),
             };
         }
 

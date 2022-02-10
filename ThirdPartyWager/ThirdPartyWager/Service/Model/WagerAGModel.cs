@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Xml.Serialization;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace ThirdPartyWager.Service.Model
@@ -113,5 +110,54 @@ namespace ThirdPartyWager.Service.Model
     public class WagerAGTotal
     {
         public int wagerCount { get; set; }
+    }
+
+    public class BettransDataAG
+    {
+        public string transactionID { get; set; }
+        public string currency { get; set; }
+        public decimal value { get; set; }
+        public string playname { get; set; }
+        public DateTime betTime { get; set; }
+        public string round { get; set; }
+        public string gametype { get; set; }
+        public string gameCode { get; set; }
+        public string tableCode { get; set; }
+        public string transactionCode { get; set; }
+        public int playtype { get; set; }
+        public int SettleFlag { get; set; }
+        public int TicketType { get; set; }
+        public decimal Amount => (currency == "IDR" || currency == "VND") ? value / 1000 : value;
+    }
+
+    public class TicketDataAG
+    {
+        public TicketResult result { get; set; }
+    }
+
+    public class TicketResult
+    {
+        public IList<TicketRowAG> row { get; set; }
+    }
+
+    public class TicketRowAG
+    {
+        [JsonProperty("@billNo")]
+        public string billNo { get; set; }
+
+        [JsonProperty("@status")]
+        public string status { get; set; }
+    }
+
+    public class SeamlessAgResponse
+    {
+        public TransferAgResponse TransferResponse { get; set; }
+
+    }
+
+    public class TransferAgResponse
+    {
+        public string ResponseCode { get; set; }
+        public decimal Balance { get; set; }
     }
 }

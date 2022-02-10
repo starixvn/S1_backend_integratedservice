@@ -2,12 +2,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -24,8 +23,10 @@ namespace ThirdPartyWager.Workers
         private Timer _settleTimerCNY;
         private Timer _settleTimerVNDK;
         private Timer _settleTimerIDRK;
+        private Timer _settleTimerINR;
 
         private readonly int tpId = (int)Tp.TCG;
+        private readonly string _tpName = Tp.TCG.ToString();
         private readonly int TimeZone = 8;
 
         public WagerTCG(IServiceProvider provider)
@@ -42,11 +43,14 @@ namespace ThirdPartyWager.Workers
             _settleTimerCNY = new Timer(DoSettle, "CNY", TimeSpan.FromSeconds(5), TimeSpan.Zero);
             _settleTimerVNDK = new Timer(DoSettle, "VNDK", TimeSpan.FromSeconds(7), TimeSpan.Zero);
             _settleTimerIDRK = new Timer(DoSettle, "IDRK", TimeSpan.FromSeconds(9), TimeSpan.Zero);
+            _settleTimerINR = new Timer(DoSettle, "INR", TimeSpan.FromSeconds(11), TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         private async void DoSettle(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             var currency = (string)state;
             var doQuickly = false;
             var timerType = 1;
@@ -100,6 +104,9 @@ namespace ThirdPartyWager.Workers
                     case "IDRK":
                         _settleTimerIDRK.Change(nextTimeSpan, TimeSpan.Zero);
                         break;
+                    case "INR":
+                        _settleTimerINR.Change(nextTimeSpan, TimeSpan.Zero);
+                        break;
                     default:
                         break;
                 }
@@ -114,6 +121,7 @@ namespace ThirdPartyWager.Workers
             _settleTimerCNY?.Change(Timeout.Infinite, 0);
             _settleTimerVNDK?.Change(Timeout.Infinite, 0);
             _settleTimerIDRK?.Change(Timeout.Infinite, 0);
+            _settleTimerINR?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

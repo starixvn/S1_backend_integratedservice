@@ -1,35 +1,42 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerAGService
     {
-        private readonly IConfiguration configuration;
+        private readonly MySqlClient _wagerDbClient;
+        private readonly MySqlClient _mainDbClient;
 
-        public WagerAGService(IConfiguration configuration)
+        public WagerAGService(
+            IServiceProvider provider,
+            IConfiguration configuration
+        )
         {
-            this.configuration = configuration;
+            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
+            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), log);
+            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), log);
         }
 
-        public int InsertWager(BetAG bet)
+        public bool InsertWager(BetAG bet)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerAG_Ins", bet, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerAG_Ins", new DynamicParameters(bet));
         }
 
         public WagerAGTotal GetWagerTotal(long beginTime, long endTime)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<WagerAGTotal>("Service_TpWagerAGTotal_Get", new { BeginTime = beginTime, EndTime = endTime }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<WagerAGTotal>("Service_TpWagerAGTotal_Get", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
+        }
+
+        public IEnumerable<BettransDataAG> GetPendingList()
+        {
+            return _mainDbClient.Query<BettransDataAG>("Service_BettransLC_AGV2_Bet_Pending_Get");
         }
     }
 }

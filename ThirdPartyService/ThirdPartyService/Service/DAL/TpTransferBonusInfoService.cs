@@ -259,7 +259,7 @@ namespace ThirdPartyService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
-                var result = _mainDbClient.Execute("Service_BonusExpired_Set",
+                var result = _mainDbClient.Execute("Service_BonusExpired_Set_V2",
                     new
                     {
                         tpBonusCancelTransfer.BonusId,
@@ -268,7 +268,8 @@ namespace ThirdPartyService.Service.DAL
                         tpBonusCancelTransfer.SiteId,
                         TYPE = (int)FinancialType.CancelledBonus,
                         tpBonusCancelTransfer.PromoCategoryId,
-                        Bonus = tpBonusCancelTransfer.RemainingBonus
+                        Bonus = tpBonusCancelTransfer.RemainingBonus,
+                        Memo = tpBonusCancelTransfer.UpdateBonusTransferStatus ? "Cancel Bonus" : "Expired Bonus" 
                     }, conn, trans);
 
                 if (result >= 0 && tpBonusCancelTransfer.RemainingBonus > 0)
@@ -296,6 +297,18 @@ namespace ThirdPartyService.Service.DAL
                             tpBonusCancelTransfer.BonusId.ToString(),
                             out _, conn, trans);
                     }
+                }
+                
+                if (result >= 0)
+                {
+                    var cp = new DynamicParameters(
+                        new
+                        {
+                            _BonusId = tpBonusCancelTransfer.BonusId,
+                            _CancelBonus = tpBonusCancelTransfer.RemainingBonus - tpBonusCancelTransfer.RefundAmount
+                        });
+                    result = conn.Execute("Service_CancelBonusAmount_Set", cp, trans,
+                        commandType: CommandType.StoredProcedure);
                 }
 
                 if (result >= 0)

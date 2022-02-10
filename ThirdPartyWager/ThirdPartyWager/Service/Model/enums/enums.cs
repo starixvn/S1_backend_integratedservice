@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartyWager.Service.Model.enums
+﻿namespace ThirdPartyWager.Service.Model.enums
 {
     public enum Tp
     {
@@ -43,6 +38,7 @@ namespace ThirdPartyWager.Service.Model.enums
 
     public enum GameType
     {
+        AG_LiveCasino = 8,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,

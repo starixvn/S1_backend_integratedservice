@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,15 +11,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 {
     public partial class BettingBLL
     {
+        private readonly ILogger<BettingBLL> _logger;
         private readonly BettingService bettingService;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
 
-        public BettingBLL(BettingService bettingService, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, WalletService walletService)
+        public BettingBLL(BettingService bettingService, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, WalletService walletService, ILogger<BettingBLL> logger)
         {
             this.bettingService = bettingService;
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.thirdPartyBLL = thirdPartyBLL;
+            _logger = logger;
         }
 
 
@@ -325,8 +328,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
+            var t1 = DateTimeOffset.UtcNow.ToString("o");
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.EBet, bettingData_EBet.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
+            var t2 = DateTimeOffset.UtcNow.ToString("o");
 
             if (tpCurrency.ExchangeRate > 0)
             {
@@ -338,8 +343,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     item.betMoney *= tpCurrency.ExchangeRate;
                 }
             }
+            var t3 = DateTimeOffset.UtcNow.ToString("o");
 
             var result = bettingService.PlaceBetLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
+            var t4 = DateTimeOffset.UtcNow.ToString("o");
+
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -349,6 +357,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 bettingData_EBet.money /= tpCurrency.ExchangeRate;
             }
+
+            var t5 = DateTimeOffset.UtcNow.ToString("o");
+            _logger.LogWarning($"BettingBLL.PlaceBetLC_EBet\r\nt1:{t1}\r\nt2:{t2}\r\nt3:{t3}\r\nt4:{t4}\r\nt5:{t5}");
             return result;
         }
 
@@ -569,5 +580,47 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region Joker Fish
+
+        public int WithdrawFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, bettingDataFish_Joker.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Joker, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataFish_Joker.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.WithdrawFish_Joker(tpCustInfo, bettingDataFish_Joker, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataFish_Joker.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region AP
+        public int PlaceBet_AP(BettingDataRNG_AP bettingData_AP, out decimal afterAmount, out long seq)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, bettingData_AP.playerid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_AP.stake *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBet_AP(tpCustInfo, bettingData_AP, out afterAmount, out seq);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        #endregion
     }
 }

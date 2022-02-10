@@ -126,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"token={token}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"token={token}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 3;
                     getApiResponse.error.title = "INVALID_USER";
                     getApiResponse.error.description = "Invalid user Id";
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpCheck.Token != sessionToken)
@@ -153,7 +153,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 1;
                     getApiResponse.error.title = "Wrong_Token";
                     getApiResponse.error.description = "Wrong Token";
-                    log2File.Info($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpCheck.Locked)
@@ -203,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"token={token}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"token={token}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -223,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 3;
                     getApiResponse.error.title = "INVALID_USER";
                     getApiResponse.error.description = "Invalid user Id";
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpCheck.Locked)
@@ -231,7 +231,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 3;
                     getApiResponse.error.title = "USER_IS_LOCKED";
                     getApiResponse.error.description = "Account is Locked";
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                     if (string.IsNullOrEmpty(thirdPartySetting.TpSetting["secure_code"]))
                     {
-                        log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
 
@@ -263,7 +263,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 3;
                     getApiResponse.error.title = "INVALID_USER";
                     getApiResponse.error.description = "Invalid user Id";
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpCheck.Token != sessionToken)
@@ -272,7 +272,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 1;
                     getApiResponse.error.title = "Wrong_Token";
                     getApiResponse.error.description = "Wrong Token";
-                    log2File.Info($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpCheck.Locked)
@@ -280,7 +280,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.statusCode = 3;
                     getApiResponse.error.title = "USER_IS_LOCKED";
                     getApiResponse.error.description = "Account is Locked";
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
@@ -290,7 +290,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                     if (string.IsNullOrEmpty(thirdPartySetting.TpSetting["secure_code"]))
                     {
-                        log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
 
@@ -332,7 +332,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -342,7 +342,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
                 getApiResponse.error.description = "Wrong Hash";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -358,7 +358,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 3;
                 getApiResponse.error.title = "INVALID_USER";
                 getApiResponse.error.description = "Invalid user Id";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             else if (tpCheck.Token != sessionToken)
@@ -367,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "Wrong_Token";
                 getApiResponse.error.description = "Wrong Token";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             else if (tpCheck.Locked)
@@ -375,7 +375,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 3;
                 getApiResponse.error.title = "USER_IS_LOCKED";
                 getApiResponse.error.description = "Account is Locked";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -416,7 +416,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getBetResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpAffterAmount)}").ToLower();
                     getBetResp.error.title = "Not Enough Balance";
                     getBetResp.error.description = "Not Enough Balance";
-                    log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                     return getBetResp;
                 }
             }
@@ -453,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -463,7 +463,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
                 getApiResponse.error.description = "Wrong Hash";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -511,45 +511,53 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataRNG_Iconic getReq = JsonConvert.DeserializeObject<BettingDataRNG_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username) && string.IsNullOrEmpty(getReq.player))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
+            if (!string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                getReq.username = sessionKeyArr[2];/* User Name*/
+            }
+
+            // 對方補派資料不會使用username而是player參數
+            bool repair = false;
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                repair = true;
+                getReq.username = getReq.player;
+            }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(getReq.username) || (!repair && (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))))
             {
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
                 getApiResponse.error.description = "Wrong Hash";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
-
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0]; /* 1 Time*/
-            string sessionToken = sessionKeyArr[1];/* Long Time*/
-            string tpUserName = sessionKeyArr[2];/* User Name*/
 
             GetApiResp getPayoutResp = new GetApiResp();
 
             var gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.productId);
-            getReq.username = tpUserName;
 
             var result = settledBLL.PayoutRNG_Iconic(getReq, out decimal tpAffterAmount);
             if (result > 0 || result == -1)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username, (int)gameType);
                 Response.StatusCode = (int)Error.OK;
                 getPayoutResp.data.statusCode = 0;
-                getPayoutResp.data.username = tpUserName;
+                getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{ getReq.username}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }
@@ -581,7 +589,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -591,7 +599,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
                 getApiResponse.error.description = "Wrong Hash";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -608,7 +616,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 3;
                 getApiResponse.error.title = "INVALID_USER";
                 getApiResponse.error.description = "Invalid user Id";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             else if (tpCheck.Token != sessionToken)
@@ -617,7 +625,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "Wrong_Token";
                 getApiResponse.error.description = "Wrong Token";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             else if (tpCheck.Locked)
@@ -625,7 +633,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 3;
                 getApiResponse.error.title = "USER_IS_LOCKED";
                 getApiResponse.error.description = "Account is Locked";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -667,7 +675,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getBetResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpAffterAmount)}").ToLower();
                     getBetResp.error.title = "Not Enough Balance";
                     getBetResp.error.description = "Not Enough Balance";
-                    log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                     return getBetResp;
                 }
             }
@@ -704,7 +712,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -714,7 +722,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
                 getApiResponse.error.description = "Wrong Hash";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -762,55 +770,63 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"{Content}", logName);
             BettingDataFish_Iconic getReq = JsonConvert.DeserializeObject<BettingDataFish_Iconic>(Content);
 
-            if (string.IsNullOrEmpty(getReq.token))
+            if (string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username) && string.IsNullOrEmpty(getReq.player))
             {
                 getApiResponse.data.statusCode = 1;
                 getApiResponse.error.title = "TOKEN_IS_NULL";
                 getApiResponse.error.description = "Token is nil";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
+            if (!string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                getReq.username = sessionKeyArr[2];/* User Name*/
+            }
+
+            // 對方補派資料不會使用username而是player參數
+            bool repair = false;
+            if (!string.IsNullOrEmpty(getReq.player) && string.IsNullOrEmpty(getReq.token) && string.IsNullOrEmpty(getReq.username))
+            {
+                repair = true;
+                getReq.username = getReq.player;
+            }
+
             var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(getReq.username) || (!repair && (string.IsNullOrEmpty(getReq.hash) || !string.Equals(getReq.hash, tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.transactionId}{getReq.amount}"), StringComparison.OrdinalIgnoreCase))))
             {
                 getApiResponse.data.statusCode = 4;
                 getApiResponse.error.title = "Wrong Hash";
                 getApiResponse.error.description = "Wrong Hash";
-                log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
-
-            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(getReq.token));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0]; /* 1 Time*/
-            string sessionToken = sessionKeyArr[1];/* Long Time*/
-            string tpUserName = sessionKeyArr[2];/* User Name*/
 
             GetApiResp getPayoutResp = new GetApiResp();
 
             var gameType = GameType.Iconic_Fish;
-            getReq.username = tpUserName;
 
             var result = settledBLL.PayoutFish_Iconic(getReq, out decimal tpAffterAmount);
             if (result > 0)
             {
                 Response.StatusCode = (int)Error.OK;
                 getPayoutResp.data.statusCode = 0;
-                getPayoutResp.data.username = tpUserName;
+                getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpAffterAmount);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpAffterAmount)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.username}{Math.Truncate(tpAffterAmount)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }
             else if (result == -1)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username, (int)gameType);
                 Response.StatusCode = (int)Error.OK;
                 getPayoutResp.data.statusCode = 0;
-                getPayoutResp.data.username = tpUserName;
+                getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.username}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }

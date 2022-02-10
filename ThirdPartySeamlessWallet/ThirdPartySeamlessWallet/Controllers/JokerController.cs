@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,7 +18,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class JokerController : ControllerBase
     {
         private readonly AuthBLL authBLL;
-        private readonly ILogger<JokerController> logger;
+        private readonly ILogger<JokerController> _logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
@@ -29,12 +26,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly IHostEnvironment environment;
         private readonly Tools tools;
-        private readonly int gameType = 0;
 
         public JokerController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools)
         {
             this.authBLL = authBLL;
-            this.logger = logger;
+            this._logger = logger;
             this.thirdPartyBLL = thirdPartyBLL;
             this.tpCustInfoBLL = tpCustInfoBLL;
             this.bettingBLL = bettingBLL;
@@ -42,7 +38,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.log2File = log2File;
             this.environment = environment;
             this.tools = tools;
-            gameType = (int)GameType.Joker_RNG;
         }
         private string GetMD5Signature(string rawData)
         {
@@ -78,9 +73,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/authenticate-token")]
-        public AuthenticateTokenRep AuthenticateToken([FromForm]AuthenticateTokenReq authenticateTokenReq)
+        public AuthenticateTokenRep AuthenticateToken([FromForm] AuthenticateTokenReq authenticateTokenReq)
         {
-            log2File.Info(Newtonsoft.Json.JsonConvert.SerializeObject(authenticateTokenReq), "Joker_AuthenticateToken");
+            log2File.Info(JsonConvert.SerializeObject(authenticateTokenReq), "Joker_AuthenticateToken");
             AuthenticateTokenRep authenticateTokenRep = new AuthenticateTokenRep();
             authenticateTokenRep.Status = 1000;
             authenticateTokenRep.Message = "Other";
@@ -99,21 +94,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             string P = $"{string.Join("&", dicP.Where(x => x.Key != "hash").Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == authenticateTokenReq.hash)
             {
-                if (authBLL.Authenticate(authenticateTokenReq.token, out TpCustInfoAuth tpCustInfoAuth))
+                var (token, gameCode) = GetToken(authenticateTokenReq.token);
+                if (authBLL.Authenticate(token, out TpCustInfoAuth tpCustInfoAuth))
                 {
                     var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.Joker, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null)
-                    {
-                        authenticateTokenRep.Status = 3;
-                        authenticateTokenRep.Message = "Invalid token";
-                    }
-                    else if (tpCheck.Locked)
+                    if (tpCheck == null || tpCheck.Locked)
                     {
                         authenticateTokenRep.Status = 3;
                         authenticateTokenRep.Message = "Invalid token";
                     }
                     else
                     {
+                        var gameType = (int)thirdPartyBLL.GetGameType((int)Tp.Joker, gameCode);
+                        tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)Tp.Joker, gameType);
                         var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, tpCustInfoAuth.TpUserName, gameType);
                         authenticateTokenRep.Status = 0;
                         authenticateTokenRep.Message = "Success";
@@ -153,7 +146,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/balance")]
-        public Rep Balance([FromForm]BalanceReq balanceReq)
+        public Rep Balance([FromForm] BalanceReq balanceReq)
         {
             Rep rep = new Rep();
             rep.Status = 1000;
@@ -173,6 +166,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secret}";
             if (GetMD5Signature(P) == balanceReq.hash)
             {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Joker, balanceReq.username);
+                var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Joker);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.Joker, balanceReq.username, gameType);
                 rep.Status = 0;
                 rep.Message = "Success";
@@ -194,8 +189,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bet")]
-        public Rep Bet([FromForm]Dictionary<string, string> betReqq)
+        public Rep Bet([FromForm] Dictionary<string, string> betReqq)
         {
+            var gameType = (int)GameType.Joker_RNG;
             if (environment.IsDevelopment())
             {
                 //string BB = @"{""amount"":""1.20"",""appid"":""TFEB"",""gamecode"":""69xaiyrbo4dae"",""hash"":""7e3a05a92e9b1a4f8c5d655443440ac1"",""id"":""B-qc3ogwwgx3wzg"",""roundid"":""qc3ogwwgx3wzg"",""timestamp"":""1585853879309"",""username"":""DNOVA88_235""}";
@@ -302,8 +298,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/settle-bet")]
-        public Rep SettleBet([FromForm]Dictionary<string, string> settleBetReqq)
+        public Rep SettleBet([FromForm] Dictionary<string, string> settleBetReqq)
         {
+            var gameType = (int)GameType.Joker_RNG;
             if (environment.IsDevelopment())
             {
                 /*var s = @"{""amount"":""0.00"",""appid"":""TFEE"",""description"":""G2a4153aeb436"",""gamecode"":""tocki7xk7xwq1"",""id"":""S_Ta8c164a170c5"",""roundid"":""8yhaa13k78ouc"",""timestamp"":""1586840626331"",""type"":""8yhaa13k78ouc"",""username"":""Nova88_14""}";
@@ -400,8 +397,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/cancel-bet")]
-        public Rep CancelBet([FromForm]Dictionary<string, string> cancelBetReqq)
+        public Rep CancelBet([FromForm] Dictionary<string, string> cancelBetReqq)
         {
+            var gameType = (int)GameType.Joker_RNG;
             log2File.Info(JsonConvert.SerializeObject(cancelBetReqq), "Joker_CancelBet");
             var cancelBetReq = JsonConvert.DeserializeObject<CancelBetReq>(JsonConvert.SerializeObject(cancelBetReqq));
             Rep rep = new Rep();
@@ -463,8 +461,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bonus-win")]
-        public Rep Bonus([FromForm]Dictionary<string, string> bonusReqq)
+        public Rep Bonus([FromForm] Dictionary<string, string> bonusReqq)
         {
+            var gameType = (int)GameType.Joker_RNG;
             log2File.Info(JsonConvert.SerializeObject(bonusReqq), "Joker_Bonus");
             var settleBetReq = JsonConvert.DeserializeObject<SettleBetReq>(JsonConvert.SerializeObject(bonusReqq));
             Rep rep = new Rep();
@@ -543,8 +542,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/jackpot-win")]
-        public Rep Jackpot([FromForm]Dictionary<string, string> jackpotReqq)
+        public Rep Jackpot([FromForm] Dictionary<string, string> jackpotReqq)
         {
+            var gameType = (int)GameType.Joker_RNG;
             log2File.Info(JsonConvert.SerializeObject(jackpotReqq), "Joker_Jackpot");
             var settleBetReq = JsonConvert.DeserializeObject<SettleBetReq>(JsonConvert.SerializeObject(jackpotReqq));
             Rep rep = new Rep();
@@ -623,39 +623,164 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/transaction")]
-        public Rep Transaction([FromForm]Dictionary<string, string> transactionReqq)
+        public Rep Transaction([FromForm] Dictionary<string, string> parameter)
         {
-            log2File.Info(JsonConvert.SerializeObject(transactionReqq), "Joker_Transaction");
-
-            Rep rep = new Rep();
-            rep.Status = 1000;
-            rep.Message = "Other";
-
-            return rep;
+            return FishBet(JokerFishTransType.Transaction, parameter);
         }
 
         [Route("[controller]/withdraw")]
-        public Rep Withdraw([FromForm]Dictionary<string, string> withdrawReqq)
+        public Rep Withdraw([FromForm] Dictionary<string, string> parameter)
         {
-            log2File.Info(JsonConvert.SerializeObject(withdrawReqq), "Joker_Withdraw");
-
-            Rep rep = new Rep();
-            rep.Status = 1000;
-            rep.Message = "Other";
-
-            return rep;
+            return FishBet(JokerFishTransType.Withdraw, parameter);
         }
 
         [Route("[controller]/deposit")]
-        public Rep Deposit([FromForm]Dictionary<string, string> depositReqq)
+        public Rep Deposit([FromForm] Dictionary<string, string> parameter)
         {
-            log2File.Info(JsonConvert.SerializeObject(depositReqq), "Joker_Deposit");
+            return FishBet(JokerFishTransType.Deposit, parameter);
+        }
 
-            Rep rep = new Rep();
-            rep.Status = 1000;
-            rep.Message = "Other";
+        private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter)
+        {
+            try
+            {
+                log2File.Info(JsonConvert.SerializeObject(parameter), $"Joker_{transType}");
+                var request = JsonConvert.DeserializeObject<BettingDataFish_Joker>(JsonConvert.SerializeObject(parameter));
 
-            return rep;
+                if (request.amount < 0)
+                {
+                    return new Rep
+                    {
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, (int)GameType.Joker_Fish).Balance,
+                        Status = 4,
+                        Message = "InvalidParameters"
+                    };
+                }
+
+                request.amount = tools.Floor(request.amount, 2);
+                parameter["amount"] = request.amount.ToString("0.00");
+
+                if (transType == JokerFishTransType.Transaction)
+                {
+                    request.result = tools.Floor(request.result, 2);
+                    parameter["result"] = request.result.ToString("0.00");
+
+                    request.startbalance = tools.Floor(request.startbalance, 2);
+                    parameter["startbalance"] = request.startbalance.ToString("0.00");
+
+                    request.endbalance = tools.Floor(request.endbalance, 2);
+                    parameter["endbalance"] = request.endbalance.ToString("0.00");
+                }
+
+                if (!CheckSign(request.appid, request.hash, parameter))
+                {
+                    return new Rep
+                    {
+                        Status = 5,
+                        Message = "Invalid signature"
+                    };
+                }
+
+                if (transType == JokerFishTransType.Withdraw)
+                {
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.Joker, request.username);
+                    if (tpCheck == null || tpCheck.Locked)
+                    {
+                        return new Rep
+                        {
+                            Status = 1000,
+                            Message = "Other"
+                        };
+                    }
+                }
+               
+                decimal tpAffterAmount;
+                var result = transType switch
+                {
+                    JokerFishTransType.Withdraw => bettingBLL.WithdrawFish_Joker(request, out tpAffterAmount),
+                    JokerFishTransType.Deposit => settledBLL.DepositFish_Joker(request, out tpAffterAmount),
+                    JokerFishTransType.Transaction => settledBLL.TransactionFish_Joker(request, out tpAffterAmount),
+                    _ => throw new NotImplementedException(),
+                };
+
+                if (result > 0)
+                {
+                    return new Rep
+                    {
+                        Balance = tpAffterAmount,
+                        Status = 0,
+                        Message = "Success"
+                    };
+                }
+                // InsufficientFund
+                if (result == 0)
+                {
+                    return new Rep
+                    {
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, (int)GameType.Joker_Fish).Balance,
+                        Status = 100,
+                        Message = "InsufficientFund"
+                    };
+                }
+                // Duplicated
+                if (result == -1)
+                {
+                    return new Rep
+                    {
+                        Balance = tpCustInfoBLL.GetBalance((int)Tp.Joker, request.username, (int)GameType.Joker_Fish).Balance,
+                        Status = 0,
+                        Message = "Success"
+                    };
+                }
+
+                return new Rep
+                {
+                    Status = 1000,
+                    Message = "Other"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new Rep
+                {
+                    Status = 1000,
+                    Message = "Other"
+                };
+            }
+        }
+
+        private bool CheckSign(string appid, string hash, Dictionary<string, string> data)
+        {
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)Tp.Joker);
+            var secret = "";
+            foreach (var setting in thirdPartySetting.TpSetting)
+            {
+                if (setting.Value == appid)
+                {
+                    secret = thirdPartySetting.TpSetting[$"Secret_{setting.Key.Substring(6)}"];
+                    break;
+                }
+            }
+
+            data.Remove("hash");
+            var rawData = $"{string.Join("&", data.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"))}{secret}";
+
+            return GetMD5Signature(rawData) == hash;
+        }
+
+        private (string Token, string gameCode) GetToken(string token)
+        {
+            try
+            {
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                return (sessionKeyArr[0], sessionKeyArr[1]);
+            }
+            catch
+            {
+                return (null, null);
+            }
         }
     }
 }

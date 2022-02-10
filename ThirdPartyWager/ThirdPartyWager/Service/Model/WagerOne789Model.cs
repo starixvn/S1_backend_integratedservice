@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ThirdPartyWager.Service
 {
@@ -55,4 +52,31 @@ namespace ThirdPartyWager.Service
         }
     }
 
+    public class BettransDataOne789
+    {
+        public string Username { get; set; }
+        public string Tx { get; set; }
+        public decimal Amount { get; set; }
+        public long CreatedAt { get; set; }
+        public string Source { get; set; }
+        public string Type { get; set; }
+        public string RefSource { get; set; }
+    }
+
+    public class TicketDataOne789
+    {
+        public string ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+        public IList<string> Result { get; set; }
+
+    }
+
+    public class SeamlessOne789Response
+    {
+        public string ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+        public string Tx { get; set; }
+        public decimal Amount { get; set; }
+        public decimal Balance { get; set; }
+    }
 }

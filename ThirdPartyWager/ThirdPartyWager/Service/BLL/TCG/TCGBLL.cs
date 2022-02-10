@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using Serilog.Context;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -31,8 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             LogContext.PushProperty("Tp", "TCG");
             var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            var conn = configuration.GetConnectionString("ConnectionStringWager");
-            _wagerDbClient = new MySqlClient(conn, log);
+            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), log);
             _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
             
         }
@@ -83,15 +81,15 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {      
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(fileUrl);
+                var request = (FtpWebRequest)WebRequest.Create(fileUrl);
                 request.Method = WebRequestMethods.Ftp.DownloadFile;
                 request.Credentials = new NetworkCredential(config.WagerAccount, config.WagerPassword);
-                FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+                var response = (FtpWebResponse)request.GetResponse();
 
-                using Stream s = response.GetResponseStream();
-                using StreamReader sr = new StreamReader(s);
+                using var s = response.GetResponseStream();
+                using var sr = new StreamReader(s);
                 using JsonReader reader = new JsonTextReader(sr);
-                JsonSerializer serializer = new JsonSerializer();
+                var serializer = new JsonSerializer();
                 _logger.LogInformation($"TCG: {config.WagerAccount} || FTP Success:{response.StatusDescription}");
                 return serializer.Deserialize<TCGQueryWagerObj<T>>(reader);
             }

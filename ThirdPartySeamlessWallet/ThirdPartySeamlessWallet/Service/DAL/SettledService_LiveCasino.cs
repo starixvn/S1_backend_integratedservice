@@ -35,18 +35,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var refBettransLC = conn.Execute("Service_CancelBetLC_SA_Set", new { Txnid = bettingDataLC_SA.txn_reverse_id }, transaction: trans, commandType: CommandType.StoredProcedure);
 
-            /*BetRecordInfo betRecordInfo = new BetRecordInfo();
-            betRecordInfo.TpId = (int)Tp.SA;
-            betRecordInfo.Stake = bettingDataLC_SA.amount;
-            betRecordInfo.TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}";
-            betRecordInfo.GameType = GameType.SA_LiveCasino;
-            betRecordInfo.TpUserName = bettingDataLC_SA.username;
-
-            result = CancelBetByCall(tpCustInfo, betRecordInfo, out afterAmount, conn, trans);*/
             if (refBettransLC > 0)
             {
-                //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, Math.Abs(bettingDataLC_SA.amount), (int)Tp.SA, TransType.Refunds, $"Cancel Bet: {Math.Abs(bettingDataLC_SA.amount).ToString("#,##0.##")}", $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", out afterAmount, conn, trans);
-                result = PayoutV2(tpCustInfo, Math.Abs(bettingDataLC_SA.amount), (int)Tp.SA, bettingDataLC_SA.txn_reverse_id, gameType, TpCategory.LiveCasino, $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", TransType.Refunds, null, out afterAmount, "CancelBet", out bonusId, conn, trans);
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(bettingDataLC_SA.amount),
+                    (int)Tp.SA,
+                    bettingDataLC_SA.txn_reverse_id,
+                    gameType,
+                    TpCategory.LiveCasino,
+                    $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}",
+                    TransType.Refunds,
+                    null,
+                    out afterAmount,
+                    "CancelBet",
+                    out bonusId,
+                    conn,
+                    trans
+                );
 
                 if (result > 0)
                 {
@@ -55,6 +61,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
+                var p = new DynamicParameters(new
+                {
+                    Txnid = bettingDataLC_SA.txnid,
+                    TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}",
+                    Currency = bettingDataLC_SA.currency,
+                    Username = bettingDataLC_SA.username,
+                    Gametype = bettingDataLC_SA.gametype,
+                    Amount = bettingDataLC_SA.amount,
+                    Gameid = bettingDataLC_SA.gameid,
+                    TxnReverseId = bettingDataLC_SA.txn_reverse_id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    SettleFlag = (int)SettleFlag.Settled
+                });
+
+                p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                conn.Execute("Service_BettransLC_SA_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var refLC = p.Get<int>("out_result");
+                if (refLC == 2)
+                {
+                    // insert cancel record
+                    trans.Commit();
+                }
                 return -1;
             }
 
@@ -494,12 +525,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
         #region Allbet
         public IEnumerable<UnsettleBettingDataLC_Allbet> GetUnsettledListLC_Allbet()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<UnsettleBettingDataLC_Allbet>("Service_BettransLC_Allbet_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
+
         public int CancelBetLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -539,6 +572,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int PayoutLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -607,6 +641,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         public int ReSettledLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -693,6 +728,76 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int RewardLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.Allbet_LiveCasino;
+            var result = 0;
+            afterAmount = 0;
+
+            var eventRecordNum = bettingDataLC_Allbet.Details[0].EventRecordNum.ToString();
+            var p = new DynamicParameters(new
+            {
+                tranId = bettingDataLC_Allbet.TranId,
+                transferType = bettingDataLC_Allbet.TransferType,
+                client = bettingDataLC_Allbet.Client,
+                currency = bettingDataLC_Allbet.Currency,
+                amount = bettingDataLC_Allbet.Amount,
+                eventRecordNum = eventRecordNum,
+                details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details),
+                SettleFlag = SettleFlag.Settled
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                result = conn.Execute("Service_RewardLC_Allbet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    if (bettingDataLC_Allbet.Amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataLC_Allbet.Amount,
+                            (int)Tp.Allbet,
+                            eventRecordNum,
+                            gameType,
+                            TpCategory.LiveCasino,
+                            eventRecordNum,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"{eventRecordNum} Prize",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return result;
+        }
+
         public int SetSettleFlag_Allbet(long betNum)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -704,6 +809,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerAllBet_Settle_Set", new { betNum = betNum }, commandType: CommandType.StoredProcedure);
         }
+
         public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
         {
             stake = 0;
@@ -735,6 +841,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
         #endregion
 
         #region Sexy

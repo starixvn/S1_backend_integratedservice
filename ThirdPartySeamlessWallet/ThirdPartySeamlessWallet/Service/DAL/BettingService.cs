@@ -25,6 +25,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
+        private readonly MySqlClient _mainDbClient;
+        private readonly PartitionService _partitionService;
 
         public BettingService(IServiceProvider provider)
         {
@@ -34,7 +36,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             logger = provider.GetRequiredService<ILogger<BettingService>>();
             log2File = provider.GetRequiredService<Log2File>();
             _riskInspection = provider.GetRequiredService<RiskInspection>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _partitionService = provider.GetRequiredService<PartitionService>();
         }
+
         private int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
         {
             if (bonusId == 0)
@@ -45,49 +50,63 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
+            var t1 = DateTimeOffset.UtcNow.ToString("o");
+            var t3 = "";
+            var t4 = "";
+            var t5 = "";
+            var t6 = "";
+            var t7 = "";
+            var t8 = "";
+
             afterAmount = 0;
             int result = 0;
             bool bHasBonusWallet = true;
-            
-            if (_riskInspection.IsOutOfLimit(tpCustInfo.CustId, (int) tpCategory, gameType, Math.Abs(amount),
+
+            if (_riskInspection.IsOutOfLimit(tpCustInfo.CustId, (int)tpCategory, gameType, Math.Abs(amount),
                                              out var minBet, out var maxBet))
             {
                 logger.LogInformation($"User:{tpCustInfo.TpUserName}, tpCategory:{(int)tpCategory}, gameType:{gameType}, betAmount:{Math.Abs(amount)} " +
                                               $"minBet:{minBet} maxBet:{maxBet} out of bet limit");
                 return -9;
             }
+            var t2 = DateTimeOffset.UtcNow.ToString("o");
 
             try
             {
                 if (bHasBonusWallet)
                 {
                     result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
+                    t3 = DateTimeOffset.UtcNow.ToString("o");
                     if (bonusId > 0)
                     {
-
                         if (tpTransId != null)
                         {
                             AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans);
-                        }                    
+                            t4 = DateTimeOffset.UtcNow.ToString("o");
+                        }
 
                         if (afterAmount < 0)
                         {
                             amount = afterAmount;
                             result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                            t5 = DateTimeOffset.UtcNow.ToString("o");
                         }
                         else
                         {
                             afterAmount += walletService.GetBalance(tpCustInfo.CustId);
+                            t6 = DateTimeOffset.UtcNow.ToString("o");
                         }
                     }
                     else if (bonusId == 0)
                     {
                         result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                        t7 = DateTimeOffset.UtcNow.ToString("o");
                     }
                 }
                 else
                 {
                     result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    t8 = DateTimeOffset.UtcNow.ToString("o");
                 }
             }
             catch (Exception ex)
@@ -108,9 +127,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name, ex);
             }
 
+            var t9 = DateTimeOffset.UtcNow.ToString("o");
+            this.logger.LogWarning($"PlaceBetV2\r\nt1:{t1}\r\nt2:{t2}\r\nt3:{t3}\r\nt4:{t4}\r\nt5:{t5}\r\nt6:{t6}\r\nt7:{t7}\r\nt8:{t8}\r\nt9:{t9}");
             return result;
         }
-
-
     }
 }
