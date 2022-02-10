@@ -96,7 +96,15 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Netent_RNG = 64,
         RedTiger_RNG = 65,
         Joker_Fish = 66,
-        AP_RNG = 67
+        AP_RNG = 67,
+
+        SBSW_Sports = 69,
+        SBSW_NumberGame = 70,
+        SBSW_VirtualSports = 71,
+        SBSW_VirtualSports2 = 72,
+        SBSW_Keno = 73,
+        SBSW_Lottery = 74,
+        SBSW_TableGame = 75
     }
     public enum Tp
     {
@@ -138,7 +146,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
-        AP = 39
+        AP = 39,
+
+        SBSW = 41
     }
     public enum TransferType : int
     {
@@ -186,7 +196,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Lottery = 5,
         Sports = 6,
         PTSlotsGame = 7,
-        PTLiveCasino = 8
+        PTLiveCasino = 8,
+        SBSW = 9
     }
 
     public enum Direction
