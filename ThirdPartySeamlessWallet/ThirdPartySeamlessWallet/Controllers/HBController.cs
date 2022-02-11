@@ -23,16 +23,26 @@ namespace ThirdPartySeamlessWallet.Controllers
         public string Ping() => "ok";
         
         /// <summary>
-        /// 取得餘額
+        /// 驗證授權
         /// </summary>
         [HttpPost]
         [Route("auth")]
-        public async Task<HBPlayerDetailResponse> GetBalance()
+        public async Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request)
         {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<HBPlayerDetailRequest>(content);
-            return _hbbll.Auth(request);
+            return await _hbbll.Auth(request);
+        }
+
+        /// <summary>
+        /// 交易
+        /// </summary>
+        [HttpPost]
+        [Route("tx")]
+        public async Task<HBFundTransferResponse> FundTransfer(HBFundTransferRequest request)
+        {
+            return new HBFundTransferResponse()
+            {
+                fundtransferresponse = await _hbbll.FundTransfer(request.fundtransferrequest)
+            };
         }
     }
 }

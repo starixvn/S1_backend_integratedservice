@@ -3968,5 +3968,52 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
+
+        #region HB
+
+        public int PayoutRNG_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = 0;
+            try
+            {
+                var partitionTime = bettingDataRng_HB.dtevent;
+                var check = _partitionService.Query<string>(partitionTime, "Service_BettransRng_HB_Check", bettingDataRng_HB);
+                if (check.Any())
+                {
+                    return -1; //Duplicated
+                }
+
+                bettingDataRng_HB.TicketType = (int)BettransType.Payout;
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", bettingDataRng_HB, trans);
+
+                if (result > 0 && bettingDataRng_HB.amount != 0)
+                {
+                    result = PayoutV2(
+                         tpCustInfo: tpCustInfo,
+                         amount: bettingDataRng_HB.amount,
+                         tpId: (int)Tp.Joker,
+                         tpTransId: bettingDataRng_HB.initialdebittransferid,
+                         gameType: (int)GameType.Joker_Fish,
+                         tpCategory: TpCategory.Fish,
+                         refId: bettingDataRng_HB.transferid,
+                         TransType.Payout,
+                         betData: null,
+                         out var afterAmount,
+                         "Payout",
+                         out var bonusId,
+                         conn,
+                         trans);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                result = 0;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

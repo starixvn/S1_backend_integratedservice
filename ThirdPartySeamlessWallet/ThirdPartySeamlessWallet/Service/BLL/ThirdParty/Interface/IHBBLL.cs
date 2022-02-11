@@ -1,9 +1,11 @@
-﻿using ThirdPartySeamlessWallet.Service.Model;
+﻿using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
     public interface IHBBLL
     {
-        HBPlayerDetailResponse Auth(HBPlayerDetailRequest request);
+        Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request);
+        Task<Fundtransferresponse> FundTransfer(Fundtransferrequest request);
     }
 }
