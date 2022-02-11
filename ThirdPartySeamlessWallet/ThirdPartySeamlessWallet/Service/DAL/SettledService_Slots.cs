@@ -2577,7 +2577,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     refundDataFish_YL.gameId,
                     updateTime,
                     TicketStatus = (int)TicketStatus.Refund,
-                    SettleFlag = (int)SettleFlag.Settled
+                    SettleFlag = (int)SettleFlag.EndGame
                 });
 
                 p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
