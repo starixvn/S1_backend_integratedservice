@@ -206,11 +206,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     msg = "System Error"
                 };
 
-                if (environment.IsDevelopment())
-                {
-                    //Content = @"{""acctId"":""DNOVA88_156"",""transferId"":""20200416011215846126898"",""currency"":""THB"",""amount"":10.000000,""type"":1,""ticketId"":null,""channel"":""Web"",""playerIp"":""218.211.34.185"",""token"":""WyJKbUZrQU41UnlrNmg0NG91OFpJTlEiLCJqczR6YUZBWkFVMkV6ZTM2Wmk1MkhRIl0="",""transferTime"":""2020-04-16 01:12:15.846"",""gameCode"":""S-BM01"",""merchantCode"":""NVC"",""serialNo"":""2f651454-73e7-475e-8ffe-d85e09f3bff5"",""referenceId"":null,""specialGame"":null,""refTicketIds"":null}";
-                    //{"serialNo":"ad3c00b7-7902-4ac6-9ca9-5a2995319759","merchantCode":"NVC","transferId":"20200416125847382126900","acctId":"DNOVA88_156","currency":"THB","amount":10.000000,"type":1,"gameCode":"S-BM01","channel":"Web","playerIp":"218.211.34.185","token":"WyI0UGtadXRxd1ZrZXNHMmJ4RERGRXciLCJqczR6YUZBWkFVMkV6ZTM2Wmk1MkhRIl0=","transferTime":"2020-04-16 12:58:47.382"}
-                }
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
                 transferResp.acctId = transferReq.acctId;
@@ -314,7 +309,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     catch (Exception ex)
                     {
                         log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex}", $"SG_{api}_{transferReq.type}", ex);
-                        throw ex;
+                        throw;
                     }
                 }
                 else if (transferReq.type == TransferType.Payout)
