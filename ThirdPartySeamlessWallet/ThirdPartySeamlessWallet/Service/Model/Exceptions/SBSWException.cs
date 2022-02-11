@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Drawing;
 using ThirdPartySeamlessWallet.Extensions;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 {
@@ -11,10 +10,16 @@ namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 
         public string ErrorMessage { get; set; }
 
-        public SBSWException(SBSWReturnCode returnCode, string message): base(message)
+        public SBSWException(ReturnCode returnCode, string message): base(message)
         {
             ErrorCode = returnCode.CodeToString();
             ErrorMessage = message;
+        }
+
+        public SBSWException(ReturnCode returnCode) 
+        {
+            ErrorCode = returnCode.CodeToString();
+            ErrorMessage = returnCode.ToString();
         }
     }
 }

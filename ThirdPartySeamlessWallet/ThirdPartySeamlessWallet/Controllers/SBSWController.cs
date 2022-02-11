@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
-using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -27,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
        
         [HttpPost]
         [Route("{method}")]
-        [GzipFilter]
+        //[GzipFilter]
         public async Task<dynamic> SeamlessWallet([FromRoute] string merchant, [FromRoute] string method)
         {
             try
@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return new SBSWReturnObj(SBSWReturnCode.UnknownError);
+                return new ReturnObj(ReturnCode.UnknownError);
             }
         }
 
