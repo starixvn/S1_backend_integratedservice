@@ -834,18 +834,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new { transferId = bettingDataRNG_SG.transferId, referenceId = bettingDataRNG_SG.referenceId });
                 p.Add("CancelStake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                bool cash = false;
-                var category = TpCategory.Slots;
-                if (gameType == (int)GameType.SG_RNG)
-                {
-                    result = conn.Execute("Service_BettransRng_SG_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                }
-                else
-                {
-                    cash = true;
-                    category = TpCategory.Fish;
-                    result = conn.Execute("Service_BettransFish_SG_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
-                }
+                var category = (gameType == (int)GameType.SG_Fish) ? TpCategory.Fish : TpCategory.Slots;
+                var cancelSetSp = (gameType == (int)GameType.SG_RNG) ? "Service_BettransRng_SG_CancelBet_Set" : "Service_BettransFish_SG_CancelBet_Set";
+
+                result = conn.Execute(cancelSetSp, p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -853,59 +845,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     int bonusId = 0;
                     if (cancelStake != bettingDataRNG_SG.amount)
                     {
-                        throw new Exception($"SG Cancel amount {bettingDataRNG_SG.amount.ToString("#,##0.##")} it not equal {cancelStake.ToString("#,##0.##")}");
+                        Exception exception = new Exception($"SG Cancel amount {bettingDataRNG_SG.amount:#,##0.##} it not equal {cancelStake:#,##0.##}");
+                        throw exception;
                     }
 
                     if (cancelStake != 0)
                     {
-                        if (cash == false)
-                        {
-                            //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, cancelStake, (int)Tp.SG, TransType.Refunds, $"Refund: {cancelStake.ToString("#,##0.##")}", bettingDataRNG_SG.referenceId, out afterAmount, conn, trans);
-                            result = PayoutV2(
-                                tpCustInfo,
-                                bettingDataRNG_SG.amount,
-                                (int)Tp.SG,
-                                bettingDataRNG_SG.referenceId,
-                                gameType,
-                                category,
-                                bettingDataRNG_SG.referenceId,
-                                TransType.Refunds,
-                                null,
-                                out afterAmount,
-                                "Cancel",
-                                out bonusId,
-                                conn,
-                                trans
-                            );
-                        }
-                        else
-                        {
-                            result = walletService.SetBalance(
-                                tpCustInfo.CustId,
-                                tpCustInfo.SiteId,
-                                tpCustInfo.UserName,
-                                Math.Abs(bettingDataRNG_SG.amount),
-                                (int)Tp.SG,
-                                TransType.Refunds,
-                                $"Cancel: {Math.Abs(bettingDataRNG_SG.amount):#,##0.##}",
-                                bettingDataRNG_SG.referenceId,
-                                out afterAmount,
-                                conn,
-                                trans
-                            );
-                        }
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(bettingDataRNG_SG.amount),
+                            (int)Tp.SG,
+                            bettingDataRNG_SG.referenceId,
+                            gameType,
+                            category,
+                            bettingDataRNG_SG.referenceId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Cancel",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
                     }
-                    //else
-                    //{
-                    //    GetTpBonus(
-                    //        (int)Tp.SG,
-                    //        bettingDataRNG_SG.referenceId,
-                    //        gameType,
-                    //        category,
-                    //        out int custId,
-                    //        out bonusId
-                    //    );
-                    //}
 
                     if (result > 0)
                     {
@@ -914,6 +876,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
+                    p = new DynamicParameters(new
+                    {
+                        transferId = bettingDataRNG_SG.transferId,
+                        acctId = bettingDataRNG_SG.acctId,
+                        currency = bettingDataRNG_SG.currency,
+                        amount = bettingDataRNG_SG.amount,
+                        type = bettingDataRNG_SG.type,
+                        channel = bettingDataRNG_SG.channel,
+                        playerIp = bettingDataRNG_SG.playerIp,
+                        transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                        gameCode = bettingDataRNG_SG.gameCode,
+                        referenceId = bettingDataRNG_SG.referenceId,
+                        TicketStatus = (int)TicketStatus.Refund,
+                        SettleFlag = (int)SettleFlag.Settled
+                    });
+
+                    p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                    var cancelInsSp = (gameType == (int)GameType.SG_RNG) ? "Service_BettransRng_SG_CancelBet_Ins" : "Service_BettransFish_SG_CancelBet_Ins";
+                    conn.Execute(cancelInsSp, p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var refLC = p.Get<int>("out_result");
+                    if (refLC == 2)
+                    {
+                        // insert cancel record
+                        trans.Commit();
+                    }
+
                     return -1;
                 }
 
@@ -921,8 +909,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (MySqlException MyEx)
             {
-                log2File.Error($"{MyEx}", "CancelBetRNG_SG");
-                throw MyEx;
+                if (MyEx.Number == 1062)
+                {
+                    return -1;
+                }
+                throw;
             }
         }
 
