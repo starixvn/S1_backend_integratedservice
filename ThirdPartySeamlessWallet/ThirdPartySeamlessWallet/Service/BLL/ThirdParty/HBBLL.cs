@@ -163,7 +163,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 trans.Commit();
                 return new Fundtransferresponse()
                 {
-                    status = new SuccessStatus()
+                    status = new Status()
                     {
                         success = true,
                         successdebit = true,
@@ -176,7 +176,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new Fundtransferresponse()
             {
-                status = new NofundsStatus()
+                status = new Status()
                 {
                     success = false,
                     nofunds = true

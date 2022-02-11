@@ -145,17 +145,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class Status
     {
         public bool success { get; set; }
-    }
-
-    public class SuccessStatus : Status
-    {
+        public bool nofunds { get; set; }
         public bool successdebit { get; set; }
         public bool successcredit { get; set; }
-    }
-
-    public class NofundsStatus : Status
-    {
-        public bool nofunds { get; set; }
     }
 
     public class Fundtransferresponse
