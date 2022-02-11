@@ -134,6 +134,10 @@ namespace ThirdPartySettleWorker.Workers
                     }
                 }                
             }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
             catch (Exception ex)
             {             
                 _logger.LogError(ex, ex.Message);
