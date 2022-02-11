@@ -3999,6 +3999,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          conn,
                          trans);
                 }
+                
+                if (result > 0)
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, bettingDataRng_HB.initialdebittransferid, trans, partitionTime);
+                }
             }
             catch (Exception ex)
             {
