@@ -17,6 +17,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         UserLocked = 202,
         TransactionDuplicated = 1,
         InvalidParameters = 101,
+        DatabaseError = 901,
+        InsufficientBalance = 502,
     }
 
     public class Config
@@ -114,18 +116,18 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string IP { get; set; }
         public bool isLive { get; set; }
         public string refId { get; set; }
-        public string tsId { get; set; }
-        public string point { get; set; }
-        public string point2 { get; set; }
-        public string betTeam { get; set; }
+        public string tsId { get; set; } = "";
+        public string point { get; set; } = "";
+        public string point2 { get; set; } = "";
+        public string betTeam { get; set; } = "";
         public int homeScore { get; set; }
-        public int awayScore { get; set; }
+        public int awayScore { get; set; } 
         public bool baStatus { get; set; }
-        public string excluding { get; set; }
+        public string excluding { get; set; } = "";
         public string betFrom { get; set; }
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
-        public string oddsInfo { get; set; }
+        public string oddsInfo { get; set; } = "";
         public DateTime matchDateTime { get; set; }
     }
 

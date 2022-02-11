@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
@@ -102,58 +103,58 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 var placeBet = JsonConvert.DeserializeObject<PlaceBetReq>((string)JsonConvert.SerializeObject(request.message));
-                return new PlaceBetObj(ReturnCode.Success)
-                {
-                    licenseeTxId = Guid.NewGuid().ToString(),
-                    refId = placeBet.refId,
-                };
-                var (tpCustInfo, tpCurrency) = GetTPInfo((string)request.message.userId);
+
+                var (tpCustInfo, tpCurrency) = GetTPInfo(placeBet.userId);
+                TpUserCheck(tpCustInfo.TpUserName);
+
                 placeBet.betAmount *= tpCurrency.ExchangeRate;
                 placeBet.actualAmount *= tpCurrency.ExchangeRate;
                 placeBet.creditAmount *= tpCurrency.ExchangeRate;
                 placeBet.debitAmount *= tpCurrency.ExchangeRate;
 
-                TpUserCheck(tpCustInfo.TpUserName);
-                var check = _mainDbClient.Query<string>("Service_Bettrans_SBSW_Check", parameters: placeBet);
-                if (check.Any())
-                {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated);
-                }
-
                 var (gameType, tpCategory) = GetGameType(placeBet.sportType);
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
-                var trans = conn.BeginTransaction();
-                var result = await _mainDbClient.QueryFirstAsync<long>("Service_Bettrans_SBSW_Ins", trans, placeBet);
-
-                if (result > 0 && placeBet.actualAmount != 0)
+                using var trans = conn.BeginTransaction();
+                
+                var sq = await _mainDbClient.QueryFirstAsync<long>("Service_Bettrans_SBSW_PlaceBet", trans, placeBet);
+                if (sq < 1)
                 {
-                    var bonusId = 0;
-                    result = _bettingService.PlaceBetV2(
-                        tpCustInfo,
-                        Math.Abs(placeBet.actualAmount) * -1,
-                        (int)ThirdParty,
-                        placeBet.refId,
-                        (int)gameType,
-                        placeBet.refId,
-                        null,
-                        tpCategory,
-                        out var afterAmount,
-                        ref bonusId,
-                        conn,
-                        trans);
+                    throw new SBSWException(ReturnCode.InvalidParameters);
                 }
 
-                if (result > 0)
+                var bonusId = 0;
+                var result = _bettingService.PlaceBetV2(
+                    tpCustInfo,
+                    Math.Abs(placeBet.actualAmount) * -1,
+                    (int)ThirdParty,
+                    placeBet.refId,
+                    (int)gameType,
+                    placeBet.refId,
+                    null,
+                    tpCategory,
+                    out var afterAmount,
+                    ref bonusId,
+                    conn,
+                    trans);
+                
+                if (result < 1 || afterAmount < 0)
                 {
-                    trans.Commit();
+                    throw new SBSWException(ReturnCode.InsufficientBalance);
                 }
+
+                trans.Commit();
                 return new PlaceBetObj(ReturnCode.Success)
                 {
-                    licenseeTxId = Guid.NewGuid().ToString(),
+                    licenseeTxId = sq.ToString(),
                     refId = placeBet.refId,
                 };
+            }
+            catch (MySqlException mySqlEx)
+            {          
+                return mySqlEx.Number == 1062 ? new ReturnObj(ReturnCode.TransactionDuplicated) : 
+                    new ReturnObj(ReturnCode.DatabaseError, mySqlEx.Message);
             }
             catch (Exception ex)
             {
@@ -262,10 +263,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             switch (sportType)
             {
-                //Number Game
-                case 161:
-                case 164:
-                case 168:
+                case 161: //百练赛
+                case 164: //快乐5
+                case 168: //快乐5系列游戏
                     return (GameType.SBSW_NumberGame, TpCategory.Lottery);
                 case 180:
                 case 181:
@@ -285,11 +285,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 case 197:
                 case 199:
                     return (GameType.SBSW_VirtualSports2, TpCategory.VirtualSports);
-                case 202:
+                case 202: //快乐彩
                     return (GameType.SBSW_Keno, TpCategory.Lottery);
-                case 220:
+                case 220: //彩票(Keno Lottery)
                     return (GameType.SBSW_Lottery, TpCategory.Lottery);
-                case 222:
+                case 222: //桌面游戏
                     return (GameType.SBSW_TableGame, TpCategory.Lottery);
                 default:
                     throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{sportType} not supported.");
