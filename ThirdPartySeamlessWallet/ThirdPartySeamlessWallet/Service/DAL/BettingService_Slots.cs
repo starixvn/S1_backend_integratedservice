@@ -998,7 +998,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Habanero
 
-        public int PlaceBet_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, out decimal afterAmount)
+        public int PlaceBet_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
             afterAmount = 0;
@@ -1010,13 +1010,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -1;//Duplicated
                 }
-
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                var trans = conn.BeginTransaction();
                 
                 bettingDataRng_HB.TicketType = (int)BettransType.Bet;
-                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataRng_HB, trans);
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", bettingDataRng_HB, trans);
 
                 if (result > 0 && bettingDataRng_HB.amount != 0)
                 {
@@ -1034,11 +1030,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         ref bonusId,
                         conn,
                         trans);
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
                 }
             }
             catch (Exception ex)

@@ -10,7 +10,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long friendlygameinstanceid { get; set; }
         public int gamestatemode { get; set; }
         public string transferid { get; set; }
-        public int currencycode { get; set; }
+        public string currencycode { get; set; }
         public decimal amount { get; set; }
         public decimal bonusamount { get; set; }
         public bool jpwin { get; set; }
@@ -90,7 +90,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bool jpwin { get; set; }
         public decimal jpcont { get; set; }
         public bool isbonus { get; set; }
-        public DateTime dtevent { get; set; }
+        public string dtevent { get; set; }
         public string initialdebittransferid { get; set; }
         public int accounttransactiontype { get; set; }
         public bool gameinfeature { get; set; }
@@ -145,8 +145,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class Status
     {
         public bool success { get; set; }
+    }
+
+    public class SuccessStatus : Status
+    {
         public bool successdebit { get; set; }
         public bool successcredit { get; set; }
+    }
+
+    public class NofundsStatus : Status
+    {
+        public bool nofunds { get; set; }
     }
 
     public class Fundtransferresponse

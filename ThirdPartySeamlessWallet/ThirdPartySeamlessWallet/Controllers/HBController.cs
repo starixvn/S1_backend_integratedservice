@@ -23,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public string Ping() => "ok";
         
         /// <summary>
-        /// 取得餘額
+        /// 驗證授權
         /// </summary>
         [HttpPost]
         [Route("auth")]
@@ -32,6 +32,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             return await _hbbll.Auth(request);
         }
 
+        /// <summary>
+        /// 交易
+        /// </summary>
+        [HttpPost]
+        [Route("tx")]
         public async Task<HBFundTransferResponse> FundTransfer(HBFundTransferRequest request)
         {
             return new HBFundTransferResponse()
