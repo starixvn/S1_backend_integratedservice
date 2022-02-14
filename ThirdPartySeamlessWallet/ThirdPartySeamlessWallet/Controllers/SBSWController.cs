@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
@@ -32,9 +31,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
+                if (!Enum.TryParse(method, ignoreCase: true, out SBSWTransType transType))
+                {
+                    return new ReturnObj(ReturnCode.InvalidParameters);
+                }
+
                 using var reader = new StreamReader(Request.Body);
-                var bodyText = await reader.ReadToEndAsync();
-                return await _sbswBLL.SeamlessWallet(merchant, method, bodyText);
+                var bodyText = await reader.ReadToEndAsync();               
+                return await _sbswBLL.SeamlessWallet(transType, merchant, bodyText);
             }
             catch (Exception ex)
             {

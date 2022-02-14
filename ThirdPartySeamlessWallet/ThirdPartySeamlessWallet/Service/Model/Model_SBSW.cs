@@ -17,6 +17,26 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         UserLocked = 202,
         TransactionDuplicated = 1,
         InvalidParameters = 101,
+        DatabaseError = 901,
+        InsufficientBalance = 502,
+        TransactionNotFound = 504,
+        InvalidAmount = 307,
+    }
+
+    public enum SBSWTransType
+    {
+        GetBalance,
+        PlaceBet,
+        ConfirmBet,
+        CancelBet,
+        Settle,
+        Resettle,
+        Unsettle,
+        PlaceBetParlay,
+        ConfirmBetParlay,
+        PlaceBet3rd,
+        ConfirmBet3rd,
+        HealthCheck
     }
 
     public class Config
@@ -59,15 +79,48 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             status = exception.ErrorCode;
             msg = exception.ErrorMessage;
         }
+        public ReturnObj(ExecuteResult result)
+        {
+            status = result.ReturnCode.CodeToString();
+            msg = result.Message;
+        }
     }
 
-    public class BaseReq
+    public class BaseReq<T>
     {
         public string key { get; set; }
 
-        public dynamic message { get; set; }
+        public T message { get; set; }
     }
 
+    public class ExecuteResult
+    {
+
+        public int SPResult { get; set; } = -1;
+
+        public int SportType { get; set; }
+
+        public int SetBalanceResult { get; set; } = -1;
+
+        public ReturnCode ReturnCode { get; set; } 
+
+        public string Message { get; set; }
+
+        public ExecuteResult()
+        {     
+        }
+
+        public ExecuteResult(ReturnCode returnCode)
+        {
+            ReturnCode = returnCode;
+            Message = returnCode.ToString();
+        }
+        public ExecuteResult(ReturnCode returnCode, string message)
+        {
+            ReturnCode = returnCode;
+            Message = message;
+        }
+    }
 
     public class BalanceObj : ReturnObj
     {
@@ -77,9 +130,21 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
 
         public BalanceObj(ReturnCode returnCode) : base(returnCode) { }
     }
+    public class GetBalance
+    {
+        public string action { get; set; }
+        public string userId { get; set; }
 
+    }
 
-    public class PlaceBetReq
+    public class PlaceBetObj : ReturnObj
+    {
+        public string refId { get; set; }
+        public string licenseeTxId { get; set; }
+
+        public PlaceBetObj(ReturnCode returnCode) : base(returnCode) { }
+    }
+    public class PlaceBet
     {
         public string action { get; set; }
         public string operationId { get; set; }
@@ -114,29 +179,21 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string IP { get; set; }
         public bool isLive { get; set; }
         public string refId { get; set; }
-        public string tsId { get; set; }
-        public string point { get; set; }
-        public string point2 { get; set; }
-        public string betTeam { get; set; }
+        public string tsId { get; set; } = "";
+        public string point { get; set; } = "";
+        public string point2 { get; set; } = "";
+        public string betTeam { get; set; } = "";
         public int homeScore { get; set; }
         public int awayScore { get; set; }
         public bool baStatus { get; set; }
-        public string excluding { get; set; }
+        public string excluding { get; set; } = "";
         public string betFrom { get; set; }
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
-        public string oddsInfo { get; set; }
+        public string oddsInfo { get; set; } = "";
         public DateTime matchDateTime { get; set; }
     }
-
-
-    public class PlaceBetObj : ReturnObj
-    {
-        public string refId { get; set; }
-        public string licenseeTxId { get; set; }
-
-        public PlaceBetObj(ReturnCode returnCode) : base(returnCode) { }
-    }
+   
 
     public class ConfirmBetObj : ReturnObj
     {
@@ -144,5 +201,26 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
 
         public ConfirmBetObj(ReturnCode returnCode) : base(returnCode) { }
     }
-
+    public class ConfirmBet
+    {
+        public string action { get; set; }
+        public string operationId { get; set; }
+        public string userId { get; set; }
+        public DateTime updateTime { get; set; }
+        public DateTime transactionTime { get; set; }
+        public List<Txn> txns { get; set; }
+    }
+    public class Txn
+    {
+        public string refId { get; set; }
+        public long txId { get; set; }
+        public string licenseeTxId { get; set; }
+        public decimal odds { get; set; }
+        public int oddsType { get; set; }
+        public decimal actualAmount { get; set; }
+        public bool isOddsChanged { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+        public DateTime winlostDate { get; set; }
+    }
 }
