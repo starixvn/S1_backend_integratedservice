@@ -5,6 +5,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
     public interface ISBSWBLL
     {
-        Task<ReturnObj> SeamlessWallet(string merchant, string method, string bodyText);
+        Task<ReturnObj> SeamlessWallet(SBSWTransType transType, string merchant, string bodyText);
     }
 }

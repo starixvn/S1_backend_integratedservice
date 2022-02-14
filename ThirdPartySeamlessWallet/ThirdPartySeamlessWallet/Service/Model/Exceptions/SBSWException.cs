@@ -10,16 +10,20 @@ namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 
         public string ErrorMessage { get; set; }
 
-        public SBSWException(ReturnCode returnCode, string message): base(message)
+        public ReturnCode ReturnCode { get; set; }
+
+    public SBSWException(ReturnCode returnCode, string message): base(message)
         {
             ErrorCode = returnCode.CodeToString();
             ErrorMessage = message;
+            ReturnCode = returnCode;
         }
 
         public SBSWException(ReturnCode returnCode) 
         {
             ErrorCode = returnCode.CodeToString();
             ErrorMessage = returnCode.ToString();
+            ReturnCode = returnCode;
         }
     }
 }
