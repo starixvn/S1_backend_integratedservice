@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var bonusId = 0;
                 var result = _bettingService.PlaceBetV2(
                     tpCustInfo,
-                    Math.Abs(placeBet.actualAmount) * -1,
+                    Math.Abs(placeBet.betAmount) * -1,
                     (int)ThirdParty,
                     placeBet.refId,
                     (int)gameType,
@@ -211,16 +211,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet", trans, p);
-                if (result.SPResult == -1)
-                {
-                    return new ExecuteResult(ReturnCode.TransactionNotFound);
-                }
-
-                if (result.SPResult == -2)//已經ConfirmBet完成視為成功
-                {
-                    return new ExecuteResult(ReturnCode.Success);
-                }
-
+                CheckExecuteResult(result.SPResult);
+                
                 //處理ConfirmBet的差異金額
                 var amount = txn.creditAmount - txn.debitAmount;
                 if (txn.isOddsChanged && amount != 0)
@@ -308,15 +300,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_CancelBet", trans, p);
-                if (result.SPResult == -1)
-                {
-                    return new ExecuteResult(ReturnCode.TransactionNotFound);
-                }
-
-                if (result.SPResult == -2)//已經CancelBet完成視為成功
-                {
-                    return new ExecuteResult(ReturnCode.Success);
-                }
+                CheckExecuteResult(result.SPResult);
 
                 var amount = txn.creditAmount - txn.debitAmount;
                 var (gameType, tpCategory) = GetGameType(result.SportType);
@@ -484,5 +468,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return tpCustBalance;
         }
 
+        private void CheckExecuteResult(int SPResult)
+        {
+            if (SPResult == -1)
+            {
+                throw new SBSWException(ReturnCode.TransactionNotFound);
+            }
+
+            if (SPResult == -2)
+            {
+                throw new SBSWException(ReturnCode.TransactionDuplicated);
+            }
+
+            if (SPResult == -3)
+            {
+                throw new SBSWException(ReturnCode.InvalidTransactionStatus);
+            }
+        }
     }
 }
