@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         InsufficientBalance = 502,
         TransactionNotFound = 504,
         InvalidAmount = 307,
+        InvalidTransactionStatus = 309,
     }
 
     public enum SBSWTransType
