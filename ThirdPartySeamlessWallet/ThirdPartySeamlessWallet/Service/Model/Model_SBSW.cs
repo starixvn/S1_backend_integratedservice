@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -240,11 +241,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public long txId { get; set; }
         public DateTime updateTime { get; set; }
         public DateTime winlostDate { get; set; }
-        public string status { get; set; }
+        public string status { get; set; } = "";
         public decimal payout { get; set; }
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
         public string extraStatus { get; set; }
+        public string extra_status { get; set; } 
         public ParlayDetail[] parlayDetail { get; set; }
     }
 
