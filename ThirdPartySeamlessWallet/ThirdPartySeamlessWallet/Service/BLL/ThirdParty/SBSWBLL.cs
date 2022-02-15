@@ -211,7 +211,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet", trans, p);
-                CheckExecuteResult(result.SPResult);
+                if (result.SPResult == -1)
+                {
+                    throw new SBSWException(ReturnCode.TransactionNotFound);
+                }
+
+                if (result.SPResult == -2)
+                {
+                    throw new SBSWException(ReturnCode.Success);//已完成ConfirmBet視為成功
+                }
+
+                if (result.SPResult == -3)
+                {
+                    throw new SBSWException(ReturnCode.InvalidTransactionStatus);
+                }
 
                 //處理ConfirmBet的差異金額
                 var amount = detail.creditAmount - detail.debitAmount;
@@ -298,7 +311,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     detail.debitAmount,
                     TicketType = (int)SBSWTransType.CancelBet,
                 });
-                CheckExecuteResult(result.SPResult);
+                if (result.SPResult == -1 || result.SPResult == -2) //查無交易與完成Cancel都視為成功
+                {
+                    throw new SBSWException(ReturnCode.Success);
+                }
+
+                if (result.SPResult == -3)
+                {
+                    throw new SBSWException(ReturnCode.InvalidTransactionStatus);
+                }
 
                 var amount = detail.creditAmount - detail.debitAmount;
                 var (gameType, tpCategory) = GetGameType(result.SportType);
@@ -573,24 +594,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var gameType = (int)GameType.SBSW_Sports;//SBSW使用專用的單一錢包Bonus類別，所以直接帶固定gameType
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, gameType);
             return tpCustBalance;
-        }
-
-        private void CheckExecuteResult(int SPResult)
-        {
-            if (SPResult == -1)
-            {
-                throw new SBSWException(ReturnCode.TransactionNotFound);
-            }
-
-            if (SPResult == -2)
-            {
-                throw new SBSWException(ReturnCode.TransactionDuplicated);
-            }
-
-            if (SPResult == -3)
-            {
-                throw new SBSWException(ReturnCode.InvalidTransactionStatus);
-            }
         }
     }
 }
