@@ -27,5 +27,6 @@
         public string deviceType { get; set; }
         public string platformType { get; set; }
         public bool completed { get; set; }
+        public bool IsFailedTransaction { get; set; }
     }
 }
