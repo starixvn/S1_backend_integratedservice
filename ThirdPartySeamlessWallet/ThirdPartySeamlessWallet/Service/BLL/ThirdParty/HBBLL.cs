@@ -187,9 +187,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private (string authToken, string sessionToken) ParseToken(string token)
         {
-            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(token)));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            return sessionKeyArr.Length > 2 ? (sessionKeyArr[0], sessionKeyArr[1]) : (string.Empty, string.Empty);
+            try
+            {
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(token)));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                return sessionKeyArr.Length > 2 ? (sessionKeyArr[0], sessionKeyArr[1]) : (string.Empty, string.Empty);
+            }
+            catch (FormatException e)
+            {
+                _logger.LogError($"invalid token:{token}");
+                return (string.Empty, string.Empty);
+            }
+            
         }
     }
 }
