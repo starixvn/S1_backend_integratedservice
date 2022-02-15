@@ -3986,10 +3986,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PayoutV2(
                          tpCustInfo: tpCustInfo,
                          amount: bettingDataRng_HB.amount,
-                         tpId: (int)Tp.Joker,
+                         tpId: (int)Tp.HB,
                          tpTransId: bettingDataRng_HB.initialdebittransferid,
-                         gameType: (int)GameType.Joker_Fish,
-                         tpCategory: TpCategory.Fish,
+                         gameType: (int)GameType.HB_RNG,
+                         tpCategory: TpCategory.Slots,
                          refId: bettingDataRng_HB.transferid,
                          TransType.Payout,
                          betData: null,
