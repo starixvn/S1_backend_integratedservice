@@ -4000,7 +4000,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          trans);
                 }
                 
-                if (result > 0)
+                if (result > 0 && bettingDataRng_HB.gamestatemode == 2)
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, bettingDataRng_HB.initialdebittransferid, trans, partitionTime);
                 }
