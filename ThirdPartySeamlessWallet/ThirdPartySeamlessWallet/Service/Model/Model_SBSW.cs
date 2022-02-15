@@ -103,12 +103,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
 
         public int SetBalanceResult { get; set; } = -1;
 
-        public ReturnCode ReturnCode { get; set; } 
+        public ReturnCode ReturnCode { get; set; }
 
         public string Message { get; set; }
 
         public ExecuteResult()
-        {     
+        {
         }
 
         public ExecuteResult(ReturnCode returnCode)
@@ -194,7 +194,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string oddsInfo { get; set; } = "";
         public DateTime matchDateTime { get; set; }
     }
-   
+
 
     public class ConfirmBetObj : ReturnObj
     {
@@ -209,9 +209,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string userId { get; set; }
         public DateTime updateTime { get; set; }
         public DateTime transactionTime { get; set; }
-        public List<Txn> txns { get; set; }
+        public ConfirmDetail[] txns { get; set; }
     }
-    public class Txn
+    public class ConfirmDetail
     {
         public string refId { get; set; }
         public long txId { get; set; }
@@ -224,4 +224,69 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public decimal debitAmount { get; set; }
         public DateTime winlostDate { get; set; }
     }
+
+
+    public class Settle
+    {
+        public string action { get; set; }
+        public string operationId { get; set; }
+        public SettleDetail[] txns { get; set; }
+    }
+
+    public class SettleDetail
+    {
+        public string userId { get; set; }
+        public string refId { get; set; }
+        public long txId { get; set; }
+        public DateTime updateTime { get; set; }
+        public DateTime winlostDate { get; set; }
+        public string status { get; set; }
+        public decimal payout { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+        public string extraStatus { get; set; }
+        public ParlayDetail[] parlayDetail { get; set; }
+    }
+
+    public class ParlayDetail
+    {
+        public long refNo { get; set; }
+        public decimal stake { get; set; }
+        public decimal odds { get; set; }
+        public decimal transOdds { get; set; }
+        public string ticketStatus { get; set; }
+        public DateTime winlostDate { get; set; }
+        public decimal winlostAmount { get; set; }
+        public SystemParlayDetail[] systemParlayDetail { get; set; }
+    }
+
+    public class SystemParlayDetail
+    {
+        public long sn { get; set; }
+        public DateTime detailWinlostDate { get; set; }
+        public string ticketStatus { get; set; }
+        public int leagueId { get; set; }
+        public string leagueName_en { get; set; }
+        public string leagueName_cs { get; set; }
+        public int matchId { get; set; }
+        public int homeId { get; set; }
+        public string homeName_en { get; set; }
+        public string homeName_cs { get; set; }
+        public int awayId { get; set; }
+        public string awayName_en { get; set; }
+        public string awayName_cs { get; set; }
+        public DateTime matchDatetime { get; set; }
+        public decimal odds { get; set; }
+        public int betType { get; set; }
+        public string betTypeName_en { get; set; }
+        public string betTypeName_cs { get; set; }
+        public string betTeam { get; set; }
+        public int sportType { get; set; }
+        public string sportTypeName_en { get; set; }
+        public string sportTypeName_cs { get; set; }
+        public string isLive { get; set; }
+        public int homeScore { get; set; }
+        public int awayScore { get; set; }
+    }
+
 }
