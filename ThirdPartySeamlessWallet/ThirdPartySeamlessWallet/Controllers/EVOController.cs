@@ -649,17 +649,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
                 }
-                else
-                {
-                    getApiResponse.retransmission = true;
-                }
 
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                getApiResponse.retransmission = true;
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
                 return getApiResponse;
             }
