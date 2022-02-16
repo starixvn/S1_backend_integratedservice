@@ -330,7 +330,7 @@ namespace ThirdParty.PT
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
