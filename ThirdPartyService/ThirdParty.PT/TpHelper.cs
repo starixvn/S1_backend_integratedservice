@@ -355,7 +355,7 @@ namespace ThirdParty.PT
             }
             else
             {
-                oApiResult.RawMessage = "No Result";
+                oApiResult.RawMessage = result;
                 oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
             }
