@@ -104,6 +104,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
 
         public int SetBalanceResult { get; set; } = -1;
 
+        public long licenseeTxId { get; set; }
+
+        public string refId { get; set; }
+
         public ReturnCode ReturnCode { get; set; }
 
         public string Message { get; set; }
@@ -246,7 +250,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
         public string extraStatus { get; set; }
-        public string extra_status { get; set; } 
+        public string extra_status { get; set; }
         public ParlayDetail[] parlayDetail { get; set; }
     }
 
@@ -289,6 +293,59 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string isLive { get; set; }
         public int homeScore { get; set; }
         public int awayScore { get; set; }
+    }
+
+
+    public class PlaceBet3rdObj : ReturnObj
+    {
+        public decimal balance { get; set; }
+
+        public List<PlaceBet3rdResult> txns { get; set; }
+
+        public PlaceBet3rdObj(ReturnCode returnCode) : base(returnCode) { }
+    }
+
+    public class PlaceBet3rdResult
+    {
+        public string refId { get; set; }
+
+        public string licenseeTxId { get; set; }
+    }
+
+    public class PlaceBet3rd
+    {
+        public string action { get; set; }
+        public string operationId { get; set; }
+        public string userId { get; set; }
+        public int currency { get; set; }
+        public int productId { get; set; }
+        public int gameId { get; set; }
+        public Ticket[] ticketList { get; set; }
+        public DateTime betTime { get; set; }
+        public string IP { get; set; }
+        public string tsId { get; set; }
+        public string productName_en { get; set; }
+        public string gameName_en { get; set; }
+        public string betFrom { get; set; }
+    }
+
+    public class Ticket
+    {
+        public string refId { get; set; }
+        public string betChoice_en { get; set; }
+        public decimal odds { get; set; }
+        public int oddsType { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal actualAmount { get; set; }
+        public Extra extra { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+    }
+
+    public class Extra
+    {
+        public int gameNo { get; set; }
+        public string gameBetType { get; set; }
     }
 
 }
