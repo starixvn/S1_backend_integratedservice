@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography;
@@ -315,6 +316,39 @@ namespace ThirdPartyCore
             InsertLog?.Invoke(url, parameters, sb.ToString());
             return sb.ToString();
         }
+
+        protected string HttpGet(string url, string parameters, Dictionary<string, string> headers = null)
+        {
+            InsertLog?.Invoke(url, parameters, "1");
+            using var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            using var client = new HttpClient(handler);
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
+                }
+                var stream = client.GetStreamAsync($"{url}?{parameters}").Result;
+                using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
+                var response = myStreamReader.ReadToEnd();
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), response);
+                return response;
+            }
+            catch (Exception e)
+            {
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
+                return e.Message;
+            }
+        }
+
         protected string ToMD5(string encodeStr)
         {
             using var cryptoMD5 = MD5.Create();
