@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
+
 namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_HB
     {
+
         public string accountid { get; set; }
         public string gameinstanceid { get; set; }
         public long friendlygameinstanceid { get; set; }
@@ -24,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gametypename { get; set; }
         public int channel { get; set; }
         public int TicketType { get; set; }
+
     }
 
     public class PlaceBetRngDto_HB
@@ -102,6 +105,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int BonusId { get; set; }
     }
 
+    public class SettleDataRNG_HB
+    {
+        public string TransId { get; set; }
+        public string TpUserName { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public long SettledTime { get; set; }
+        public long TransTime { get; set; }
+        public string GameId { get; set; }
+    }
     #region Auth
     public class HBPlayerDetailRequest
     {
@@ -155,6 +169,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     
     #endregion
+
     
     public class Fundinfo
     {
@@ -245,4 +260,5 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string tpUserName { get; set; }
         public string gameId { get; set; }
     }
+
 }
