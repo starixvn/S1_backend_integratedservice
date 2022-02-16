@@ -35,7 +35,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             tpList = thirdPartyBLL.GetTpList();
-            foreach (var tp in tpList.Where(item => item.Id == (int)Tp.Saba))
+            foreach (var tp in tpList.Where(item => item.Id == (int)Tp.SBSW))
             {
                 try
                 {
