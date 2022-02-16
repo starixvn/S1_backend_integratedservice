@@ -146,57 +146,54 @@ namespace ThirdPartyCore
 
         protected string HttpPostWithX509(string url, string parameters, string contentType, Dictionary<string, string> headers = null, Dictionary<string, string> certificate = null)
         {
-
-            
             InsertLog?.Invoke(url, parameters, "1");
 
-            // if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-            // {
-            //     ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
-            //     ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
-            // }
-
-            try
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                if (!string.IsNullOrEmpty(proxyHost))
-                {
-                    request.Proxy = new WebProxy(proxyHost, proxyPort);
-                }
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                //ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+            }
 
-                request.Method = "POST";
-                byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
-                request.ContentType = contentType;
-                request.ContentLength = byteArray.Length;
-                request.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                request.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
 
-                if (headers != null)
+            request.Method = "POST";
+            byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
+            request.ContentType = contentType;
+            request.ContentLength = byteArray.Length;
+            request.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
+            ServicePointManager.ServerCertificateValidationCallback = CertificateValidationCallBack;
+
+            if (headers != null)
+            {
+                foreach (var item in headers)
                 {
-                    foreach (var item in headers)
-                    {
-                        request.Headers.Add(item.Key, item.Value);
-                    }
-                }
-                using (var wr = (HttpWebResponse)request.GetResponse())
-                {
-                    using (var myStreamReader = new StreamReader(wr.GetResponseStream(), Encoding.GetEncoding("UTF-8")))
-                    {
-                        var response = myStreamReader.ReadToEnd();
-                        InsertLog?.Invoke(url, parameters, response);
-                        return response;
-                    }
+                    request.Headers.Add(item.Key, item.Value);
                 }
             }
-            catch (WebException wex)
+            using (Stream RequestStream = request.GetRequestStream())
             {
-                using (StreamReader myStreamReader = new StreamReader(wex.Response.GetResponseStream(), Encoding.GetEncoding("UTF-8")))
+                RequestStream.Write(byteArray, 0, byteArray.Length);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            using (WebResponse response = request.GetResponse())
+            using (Stream ResponseStream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    var res = myStreamReader.ReadToEnd();
-                    InsertLog?.Invoke(url, parameters, res);
-                    return res;
+                    sb.Append(line);
                 }
             }
+
+            InsertLog?.Invoke(url, parameters, sb.ToString());
+            return sb.ToString();
         }
         private static bool CertificateValidationCallBack(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
