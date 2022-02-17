@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogInformation($"header:{string.Join("&", Request.Headers.Select(i => $"{i.Key}={i.Value}"))}");
                 _logger.LogInformation($"bodyText:{bodyText}");
                 
-                if (GetHeaderValueAs<string>("Accept-Encoding").Contains("gzip"))
+                if (GetHeaderValueAs<string>("Accept-Encoding")?.Contains("gzip") ?? false)
                 {
                     bodyText = GZipDecompress(Encoding.UTF8.GetBytes(bodyText));
                     _logger.LogInformation($"deompress:{bodyText}");
@@ -72,10 +72,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private T GetHeaderValueAs<T>(string headerName)
         {
-            if (Request.Headers.TryGetValue(headerName, out var values)
-                && !string.IsNullOrWhiteSpace(values.ToString()))
+            if (Request?.Headers?.TryGetValue(headerName, out StringValues values) ?? false)
             {
-                return (T)Convert.ChangeType(values.ToString(), typeof(T));
+                string rawValues = values.ToString();
+                if (!string.IsNullOrWhiteSpace(rawValues))
+                {
+                    return (T)Convert.ChangeType(values.ToString(), typeof(T));
+                }
             }
             return default;
         }
