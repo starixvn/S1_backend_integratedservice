@@ -221,7 +221,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet", trans, p);
                 if (result.SPResult == -1)
                 {
-                    throw new SBSWException(ReturnCode.TransactionNotFound);
+                    throw new SBSWException(ReturnCode.TransactionNotFound, $"licenseeTxId:{detail.licenseeTxId} refId:{detail.refId} Not Found");
                 }
 
                 if (result.SPResult == -2)
@@ -616,7 +616,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(confirmBet.userId);
-                detail.actualAmount *= tpCurrency.ExchangeRate;
                 detail.debitAmount *= tpCurrency.ExchangeRate;
                 detail.creditAmount *= tpCurrency.ExchangeRate;
 
@@ -637,7 +636,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet3rd", trans, p);
                 if (result.SPResult == -1)
                 {
-                    throw new SBSWException(ReturnCode.TransactionNotFound);
+                    throw new SBSWException(ReturnCode.TransactionNotFound, $"licenseeTxId:{detail.licenseeTxId} refId:{detail.refId} Not Found");
                 }
 
                 if (result.SPResult == -2)
