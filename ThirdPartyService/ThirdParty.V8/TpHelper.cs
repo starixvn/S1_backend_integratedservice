@@ -115,11 +115,7 @@ namespace ThirdParty.V8
             dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
             var sCheckTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sCheckTransfer,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sCheckTransfer);
 
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
             if (IsJSON(result))
@@ -203,11 +199,7 @@ namespace ThirdParty.V8
             dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
             var sBalance = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sBalance,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sBalance);
 
             ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
             if (IsJSON(result))
@@ -277,11 +269,7 @@ namespace ThirdParty.V8
 
             var sLogin = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sLogin,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sLogin);
 
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
@@ -340,11 +328,7 @@ namespace ThirdParty.V8
             dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
             var sTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sTransfer,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sTransfer);
 
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
             apiResult.RawMessage = "No Result";

@@ -175,12 +175,10 @@ namespace ThirdParty.PT
                 };
 
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
-                var sParam = string.Join("&",
-                    dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
                 var result = HttpPostWithX509(
                     ApiUrl,
-                    sParam,
+                    dicP,
                     "application/x-www-form-urlencoded",
                     header,
                     certificate
@@ -266,11 +264,10 @@ namespace ThirdParty.PT
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
@@ -326,11 +323,10 @@ namespace ThirdParty.PT
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
@@ -355,7 +351,7 @@ namespace ThirdParty.PT
             }
             else
             {
-                oApiResult.RawMessage = "No Result";
+                oApiResult.RawMessage = result;
                 oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
             }
@@ -462,11 +458,10 @@ namespace ThirdParty.PT
             }
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 TransUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
@@ -574,7 +569,7 @@ namespace ThirdParty.PT
 
                 var json = HttpPostWithX509(
                     apiUrl,
-                    string.Join("&", sParam.Select(kp => $"{kp.Key}={kp.Value}")),
+                    sParam,
                     "application/x-www-form-urlencoded",
                     header,
                     certificate
@@ -625,11 +620,10 @@ namespace ThirdParty.PT
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(ChangePassword));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate

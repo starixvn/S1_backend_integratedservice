@@ -73,8 +73,6 @@ namespace ThirdPartyService.Service.DAL
         {
             var content = $"Url={url}, Input={input}, Output={output}";
             logger.LogInformation(content);
-            var action = url.Split('/').LastOrDefault(x => !string.IsNullOrWhiteSpace(x));
-            _log2File.Info(content, action);
         }
 
         public string GetTpLanId(int tpId, string langId)
