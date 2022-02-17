@@ -45,7 +45,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var acceptEncoding = GetHeaderValueAs<string>("Accept-Encoding");
                 _logger.LogInformation($"AcceptEncoding:{acceptEncoding}");
 
-                if (acceptEncoding.ToLower().Split(",").Contains("gzip"))
+                if (!string.IsNullOrEmpty(acceptEncoding) && acceptEncoding.ToLower().Split(",").Contains("gzip"))
                 {
                     var deompress = GZipDecompress(Encoding.UTF8.GetBytes(bodyText));
                     bodyText = Encoding.UTF8.GetString(deompress);
