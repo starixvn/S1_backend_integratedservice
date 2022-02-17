@@ -86,19 +86,19 @@ namespace ThirdParty.SBSW
         {
             public string bet_setting { get; set; }
         }
-        
+
         public class GetBetSettingLimitReq
         {
             public string vendor_id { set; get; }
             public string currency { set; get; }
         }
-           
+
         private class SetMemberBetSettingResult
         {
             public int error_code { get; set; }
             public string message { get; set; }
         }
-        
+
         public class Datum
         {
             public string vendor_member_id { get; set; }
@@ -286,7 +286,7 @@ namespace ThirdParty.SBSW
             }
 
             return apiResult;
-        }    
+        }
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
@@ -294,7 +294,7 @@ namespace ThirdParty.SBSW
             var apiUrl = config.ApiUrl;
             var req = new SetMemberBetSettingReq
             {
-                vendor_id = config.VendorId, 
+                vendor_id = config.VendorId,
                 vendor_member_id = tpCustInfo.TpUserName,
                 bet_setting = betSetting
             };
@@ -335,16 +335,16 @@ namespace ThirdParty.SBSW
             var domain = config.ApiUrl;
             var req = new GetBetSettingLimitReq
             {
-                vendor_id = config.VendorId, 
+                vendor_id = config.VendorId,
                 currency = tpCustInfo.TpCurrencyId
             };
             var t = req.GetType();
             var props = t.GetProperties();
             var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
-            
+
             var apiUrl = $"{domain}/GetBetSettingLimit";
             var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
-            
+
             var oApiResult = new ApiResult<List<BetSetting>>();
             if (IsJSON(result))
             {
@@ -466,7 +466,7 @@ namespace ThirdParty.SBSW
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {  
+        {
             var tpCurrency = new TpCurrency()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,
@@ -540,9 +540,9 @@ namespace ThirdParty.SBSW
                     TpCurrency = tpCurrency,
                     RefTransId = gameType == 70 ? betNumberDetail?.trans_id : betDetail?.trans_id,
                     TpUserName = gameType == 70 ? betNumberDetail?.vendor_member_id : betDetail?.vendor_member_id,
-                    UTCBetTime = gameType == 70 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) : 
+                    UTCBetTime = gameType == 70 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
                             GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
-                    UTCSettledTime = gameType == 70 ?　GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
+                    UTCSettledTime = gameType == 70 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
                             GetUTCTime(betDetail?.transaction_time, (DateTime)betDetail.transaction_time),
                     Stake = gameType == 70 ? betNumberDetail.stake * tpCurrency.ExchangeRate : betDetail.stake * tpCurrency.ExchangeRate,
                     WinlostAmount = gameType == 70 ? betNumberDetail.winlost_amount * tpCurrency.ExchangeRate : betDetail.winlost_amount * tpCurrency.ExchangeRate,
