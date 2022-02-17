@@ -27,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _sbswBLL = new SBSWBLL(provider);
         }
 
-       
+
         [HttpPost]
         [Route("{method}")]
         public async Task<dynamic> SeamlessWallet([FromRoute] string merchant, [FromRoute] string method)
@@ -41,17 +41,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body);
                 var bodyText = await reader.ReadToEndAsync();
 
-                _logger.LogInformation($"bodyText1:{bodyText}");
-                var acceptEncoding = GetHeaderValueAs<string>("Accept-Encoding");
-                _logger.LogInformation($"AcceptEncoding:{acceptEncoding}");
-
-                if (!string.IsNullOrEmpty(acceptEncoding) && acceptEncoding.ToLower().Split(",").Contains("gzip"))
-                {
-                    var deompress = GZipDecompress(Encoding.UTF8.GetBytes(bodyText));
-                    bodyText = Encoding.UTF8.GetString(deompress);
-                    _logger.LogInformation($"deompress:{bodyText}");
-                }                        
+                _logger.LogInformation($"header:{string.Join("&", Request.Headers.Select(i => $"{i.Key}={i.Value}"))}");
+                _logger.LogInformation($"bodyText:{bodyText}");
                 
+                if (GetHeaderValueAs<string>("Accept-Encoding").Contains("gzip"))
+                {
+                    bodyText = GZipDecompress(Encoding.UTF8.GetBytes(bodyText));
+                    _logger.LogInformation($"deompress:{bodyText}");
+                }
+
                 return await _sbswBLL.SeamlessWallet(transType, merchant, bodyText);
             }
             catch (Exception ex)
@@ -61,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private byte[] GZipDecompress(byte[] data)
+        private string GZipDecompress(byte[] data)
         {
             using var msi = new MemoryStream(data);
             using var mso = new MemoryStream();
@@ -69,19 +67,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 gs.CopyTo(mso);
             }
-            return mso.ToArray();
+            return Encoding.UTF8.GetString(mso.ToArray());
         }
 
         private T GetHeaderValueAs<T>(string headerName)
         {
-            if (Request?.Headers?.TryGetValue(headerName, out StringValues values) ?? false)
+            if (Request.Headers.TryGetValue(headerName, out var values)
+                && !string.IsNullOrWhiteSpace(values.ToString()))
             {
-                string rawValues = values.ToString();
-
-                if (!string.IsNullOrWhiteSpace(rawValues))
-                {
-                    return (T)Convert.ChangeType(values.ToString(), typeof(T));
-                }
+                return (T)Convert.ChangeType(values.ToString(), typeof(T));
             }
             return default;
         }
