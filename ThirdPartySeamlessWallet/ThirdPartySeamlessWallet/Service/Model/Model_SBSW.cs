@@ -192,7 +192,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             betAmount = parlayDetail.betAmount;
             creditAmount = parlayDetail.creditAmount;
             debitAmount = parlayDetail.debitAmount;
-            detail = parlayDetail.detail;
+            detail = parlayDetail.detail != null ? JsonConvert.SerializeObject(parlayDetail.detail) : "{}";
         }
         public Bet(PlaceBet3rd placeBet3rd, Ticket ticket)
         {
@@ -243,8 +243,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public decimal odds { get; set; }
         public string betChoice { get; set; } = "";
         public string betChoice_en { get; set; } = "";
-        public DateTime updateTime { get; set; } = DateTime.MinValue;
-        public DateTime transactionTime { get; set; } = DateTime.MinValue;
+        public DateTime updateTime { get; set; } = DateTime.MinValue;      
         public int leagueId { get; set; }
         public string leagueName { get; set; } = "";
         public string leagueName_en { get; set; } = "";
@@ -254,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string awayName_en { get; set; } = "";
         public string IP { get; set; } = "";
         public bool isLive { get; set; }
-        public string refId { get; set; } = "";
+        public string refId { get; set; } = ""; 
         public string tsId { get; set; } = "";
         public string point { get; set; } = "";
         public string point2 { get; set; } = "";
@@ -268,6 +267,14 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public decimal debitAmount { get; set; }
         public string oddsInfo { get; set; } = "";
         public DateTime matchDateTime { get; set; } = DateTime.MinValue;
+
+
+        //confirm
+        public DateTime transactionTime { get; set; } = DateTime.MinValue;
+        public long txId { get; set; }
+        public long licenseeTxId { get; set; }
+        public bool isOddsChanged { get; set; }
+        public DateTime winlostDate { get; set; } = DateTime.MinValue;
 
         //3rd
         public int productId { get; set; }
