@@ -48,15 +48,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 { SBSWTransType.GetBalance, GetBalance},
                 { SBSWTransType.PlaceBet, PlaceBet},
+                { SBSWTransType.PlaceBetParlay, PlaceBetParlay},
+                { SBSWTransType.PlaceBet3rd, PlaceBet3rd},
                 { SBSWTransType.ConfirmBet, ConfirmBet},
+                { SBSWTransType.ConfirmBetParlay, ConfirmBet},
+                { SBSWTransType.ConfirmBet3rd, ConfirmBet},
                 { SBSWTransType.CancelBet, CancelBet},
                 { SBSWTransType.Settle, Settle},
                 { SBSWTransType.Resettle, Settle},
                 { SBSWTransType.Unsettle, Settle},
-                { SBSWTransType.PlaceBetParlay, PlaceBetParlay},
-                { SBSWTransType.ConfirmBetParlay, ConfirmBetParlay},
-                { SBSWTransType.PlaceBet3rd, PlaceBet3rd},
-                { SBSWTransType.ConfirmBet3rd, ConfirmBet},
                 { SBSWTransType.HealthCheck, HealthCheck},
             };
             _logger = provider.GetRequiredService<ILogger<SBSWBLL>>();
@@ -95,43 +95,103 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<ReturnObj> PlaceBet(SBSWTransType transType, string merchant, string bodyText)
         {
+            var request = JsonConvert.DeserializeObject<BaseReq<Bet>>(bodyText);
+            CheckKey(merchant, request.key);
+            var result = await ExecuteBet(transType, request.message);
+            if (result.ReturnCode != ReturnCode.Success)
+            {
+                return new ReturnObj(result);
+            }
+
+            return new PlaceBetObj(ReturnCode.Success)
+            {
+                licenseeTxId = result.licenseeTxId.ToString(),
+                refId = result.refId,
+            };
+        }
+
+        private async Task<ReturnObj> PlaceBetParlay(SBSWTransType transType, string merchant, string bodyText)
+        {
+            var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
+            CheckKey(merchant, request.key);
+            var Tasks = request.message.txns.Select(ticket => Task.Run(()
+                => ExecuteBet(transType, new Bet(request.message, ticket)))).ToArray();
+            var resultList = await Task.WhenAll(Tasks);
+            var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
+            if (error != null)
+            {
+                return new ReturnObj(error);
+            }
+
+            return new PlaceBetParlayObj(ReturnCode.Success)
+            {
+                txns = resultList.Select(i => new BetObj()
+                {
+                    refId = i.refId,
+                    licenseeTxId = i.licenseeTxId.ToString(),
+                }).ToList()
+            };
+        }
+
+        private async Task<ReturnObj> PlaceBet3rd(SBSWTransType transType, string merchant, string bodyText)
+        {
+            var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
+            CheckKey(merchant, request.key);
+            var Tasks = request.message.ticketList.Select(ticket => Task.Run(()
+                => ExecuteBet(transType, new Bet(request.message, ticket)))).ToArray();
+            var resultList = await Task.WhenAll(Tasks);
+            var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
+            if (error != null)
+            {
+                return new ReturnObj(error);
+            }
+
+            return new PlaceBet3rdObj(ReturnCode.Success)
+            {
+                balance = GetTpCustBalance(request.message.userId).Balance,
+                txns = resultList.Select(i => new BetObj()
+                {
+                    refId = i.refId,
+                    licenseeTxId = i.licenseeTxId.ToString(),
+                }).ToList()
+            };
+        }
+
+        private async Task<ExecuteResult> ExecuteBet(SBSWTransType transType, Bet bet)
+        {
             try
             {
-                var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet>>(bodyText);
-                CheckKey(merchant, request.key);
-
-                var placeBet = request.message;
-                var (tpCustInfo, tpCurrency) = GetTPInfo(placeBet.userId);
+                var (tpCustInfo, tpCurrency) = GetTPInfo(bet.userId);
                 CheckTpUser(tpCustInfo.TpUserName);
 
-                placeBet.betAmount *= tpCurrency.ExchangeRate;
-                placeBet.actualAmount *= tpCurrency.ExchangeRate;
-                placeBet.creditAmount *= tpCurrency.ExchangeRate;
-                placeBet.debitAmount *= tpCurrency.ExchangeRate;
+                bet.betAmount *= tpCurrency.ExchangeRate;
+                bet.actualAmount *= tpCurrency.ExchangeRate;
+                bet.debitAmount *= tpCurrency.ExchangeRate;
+                bet.creditAmount *= tpCurrency.ExchangeRate;
 
-                var (gameType, tpCategory) = GetGameType(placeBet.sportType);
+                var (gameType, tpCategory) = GetGameType(bet.sportType);
 
-                var p = new DynamicParameters(placeBet);
-                p.AddDynamicParams(new { TicketType = (int)SBSWTransType.PlaceBet });
+                var p = new DynamicParameters(bet);
+                p.AddDynamicParams(new { TicketType = (int)transType });
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
-                var sq = await _mainDbClient.QueryFirstAsync<long>("Service_Bettrans_SBSW_PlaceBet", trans, p);
-                if (sq < 1)
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
+                if (result.licenseeTxId < 1)
                 {
                     throw new SBSWException(ReturnCode.InvalidParameters);
                 }
 
                 var bonusId = 0;
-                var result = _bettingService.PlaceBetV2(
+                result.SetBalanceResult = _bettingService.PlaceBetV2(
                     tpCustInfo,
-                    Math.Abs(placeBet.betAmount) * -1,
+                    Math.Abs(bet.betAmount) * -1,
                     (int)ThirdParty,
-                    placeBet.refId,
+                    bet.refId,
                     (int)gameType,
-                    placeBet.refId,
+                    bet.refId,
                     null,
                     tpCategory,
                     out var afterAmount,
@@ -139,31 +199,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     conn,
                     trans);
 
-                if (result < 1 || afterAmount < 0)
+                if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
                     throw new SBSWException(ReturnCode.InsufficientBalance);
                 }
 
                 trans.Commit();
-                return new PlaceBetObj(ReturnCode.Success)
-                {
-                    licenseeTxId = sq.ToString(),
-                    refId = placeBet.refId,
-                };
+                return result;
             }
             catch (SBSWException ex)
             {
-                return new ReturnObj(ex);
+                return new ExecuteResult(ex.ReturnCode, ex.Message);
             }
             catch (MySqlException mySqlEx)
             {
-                return mySqlEx.Number == 1062 ? new ReturnObj(ReturnCode.TransactionDuplicated) :
-                    new ReturnObj(ReturnCode.DatabaseError, mySqlEx.Message);
+                return mySqlEx.Number == 1062 ? new ExecuteResult(ReturnCode.TransactionDuplicated) :
+                    new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return new ReturnObj(ReturnCode.UnknownError, ex.Message);
+                return new ExecuteResult(ReturnCode.UnknownError, ex.Message);
             }
         }
 
@@ -171,17 +227,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<ConfirmBet>>(bodyText);
             CheckKey(merchant, request.key);
-
-            //使用非同步逐筆更新下注結果
-            var Tasks = request.message.txns.Select(txn =>
-            {
-                return transType switch
-                {
-                    SBSWTransType.ConfirmBet => Task.Run(() => ExecuteConfirmBet(request.message, txn)),
-                    SBSWTransType.ConfirmBet3rd => Task.Run(() => ExecuteConfirmBet3rd(request.message, txn)),
-                    _ => throw new SBSWException(ReturnCode.InvalidParameters),
-                };
-            }).ToArray();
+            var Tasks = request.message.txns.Select(txn => Task.Run(()
+                => ExecuteConfirmBet(transType, new Confirm(request.message, txn)))).ToArray();
             var resultList = await Task.WhenAll(Tasks);
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
@@ -195,38 +242,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<ExecuteResult> ExecuteConfirmBet(ConfirmBet confirmBet, ConfirmDetail detail)
+        private async Task<ExecuteResult> ExecuteConfirmBet(SBSWTransType transType, Confirm confirm)
         {
             try
             {
-                var (tpCustInfo, tpCurrency) = GetTPInfo(confirmBet.userId);
-                detail.actualAmount *= tpCurrency.ExchangeRate;
-                detail.debitAmount *= tpCurrency.ExchangeRate;
-                detail.creditAmount *= tpCurrency.ExchangeRate;
+                var (tpCustInfo, tpCurrency) = GetTPInfo(confirm.userId);
+                confirm.actualAmount *= tpCurrency.ExchangeRate;
+                confirm.debitAmount *= tpCurrency.ExchangeRate;
+                confirm.creditAmount *= tpCurrency.ExchangeRate;
 
-                var p = new DynamicParameters(detail);
-                p.AddDynamicParams(new
-                {
-                    confirmBet.action,
-                    confirmBet.operationId,
-                    confirmBet.userId,
-                    confirmBet.updateTime,
-                    confirmBet.transactionTime,
-                    TicketType = (int)SBSWTransType.ConfirmBet,
-                });
+                var p = new DynamicParameters(confirm);
+                p.AddDynamicParams(new { TicketType = (int)transType });
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet", trans, p);
+
                 if (result.SPResult == -1)
                 {
-                    throw new SBSWException(ReturnCode.TransactionNotFound, $"licenseeTxId:{detail.licenseeTxId} refId:{detail.refId} Not Found");
+                    throw new SBSWException(ReturnCode.TransactionNotFound, $"licenseeTxId:{confirm.licenseeTxId} refId:{confirm.refId} Not Found");
                 }
 
                 if (result.SPResult == -2)
                 {
-                    throw new SBSWException(ReturnCode.Success);//已完成ConfirmBet視為成功
+                    throw new SBSWException(ReturnCode.Success);//已完成視為成功
                 }
 
                 if (result.SPResult == -3)
@@ -235,18 +275,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
 
                 //處理ConfirmBet的差異金額
-                var amount = detail.creditAmount - detail.debitAmount;
-                if (detail.isOddsChanged && amount != 0)
+                var amount = confirm.creditAmount - confirm.debitAmount;
+                if (confirm.isOddsChanged || amount != 0)
                 {
                     var (gameType, tpCategory) = GetGameType(result.SportType);
                     result.SetBalanceResult = _settledService.PayoutV2(
                                 tpCustInfo: tpCustInfo,
                                 amount: amount,
                                 tpId: (int)ThirdParty,
-                                tpTransId: detail.refId,
+                                tpTransId: confirm.refId,
                                 gameType: (int)gameType,
                                 tpCategory: tpCategory,
-                                refId: detail.refId,
+                                refId: confirm.refId,
                                 TransType.Refunds,
                                 betData: null,
                                 out decimal afterAmount,
@@ -281,7 +321,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var request = JsonConvert.DeserializeObject<BaseReq<ConfirmBet>>(bodyText);
             CheckKey(merchant, request.key);
 
-            //使用非同步逐筆更新下注結果
             var Tasks = request.message.txns.Select(txn => Task.Run(() => ExecuteCancelBet(request.message, txn))).ToArray();
             var resultList = await Task.WhenAll(Tasks);
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
@@ -372,7 +411,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var request = JsonConvert.DeserializeObject<BaseReq<Settle>>(bodyText);
             CheckKey(merchant, request.key);
 
-            //使用非同步逐筆更新Settle結果
             var Tasks = request.message.txns.Select(txn
                 => Task.Run(() => ExecuteSettle(transType, request.message, txn))).ToArray();
             var resultList = await Task.WhenAll(Tasks);
@@ -415,29 +453,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     extraStatus = (detail.extraStatus ?? detail.extra_status) ?? "",
                     TicketType = (int)transType,
                 });
-
-                //處理parlay資料
-                if (detail.parlayDetail?.Length > 0)
-                {
-                    var parlayList = detail.parlayDetail.Select(parlay => new
-                    {
-                        detail.refId,
-                        detail.txId,
-                        parlay.refNo,
-                        parlay.stake,
-                        parlay.odds,
-                        parlay.transOdds,
-                        parlay.ticketStatus,
-                        parlay.winlostDate,
-                        parlay.winlostAmount,
-                        systemParlayDetail = parlay.systemParlayDetail != null ? JsonConvert.SerializeObject(parlay.systemParlayDetail) : "{}"
-                    });
-                    var parlayResult = await _mainDbClient.ExecuteAsync("Service_Bettrans_SBSW_Settle_Parlay", trans, parlayList);
-                    if (parlayResult != detail.parlayDetail.Length)
-                    {
-                        return new ExecuteResult(ReturnCode.DatabaseError);
-                    }
-                }
 
                 var amount = detail.creditAmount - detail.debitAmount;
                 var (gameType, tpCategory) = GetGameType(result.SportType);
@@ -487,210 +502,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new ExecuteResult(ReturnCode.UnknownError, ex.Message);
             }
         }
-
-        private async Task<ReturnObj> PlaceBetParlay(SBSWTransType transType, string merchant, string bodyText)
-        {
-            return new ReturnObj(ReturnCode.Success);
-        }
-
-        private async Task<ReturnObj> ConfirmBetParlay(SBSWTransType transType, string merchant, string bodyText)
-        {
-            return new ReturnObj(ReturnCode.Success);
-        }
-
-        private async Task<ReturnObj> PlaceBet3rd(SBSWTransType transType, string merchant, string bodyText)
-        {
-            var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
-            CheckKey(merchant, request.key);
-
-            //使用非同步逐筆更新Settle結果
-            var Tasks = request.message.ticketList.Select(ticket
-                => Task.Run(() => ExecutePlaceBet3rd(request.message, ticket))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
-            var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
-            if (error != null)
-            {
-                return new ReturnObj(error);
-            }
-
-            return new PlaceBet3rdObj(ReturnCode.Success)
-            {
-                balance = GetTpCustBalance(request.message.userId).Balance,
-                txns = resultList.Select(i => new PlaceBet3rdResult()
-                {
-                    refId = i.refId,
-                    licenseeTxId = i.licenseeTxId.ToString(),
-                }).ToList()
-            };
-        }
-
-        private async Task<ExecuteResult> ExecutePlaceBet3rd(PlaceBet3rd placeBet3rd, Ticket ticket)
-        {
-            try
-            {
-                var (tpCustInfo, tpCurrency) = GetTPInfo(placeBet3rd.userId);
-                ticket.betAmount *= tpCurrency.ExchangeRate;
-                ticket.actualAmount *= tpCurrency.ExchangeRate;
-                ticket.debitAmount *= tpCurrency.ExchangeRate;
-                ticket.creditAmount *= tpCurrency.ExchangeRate;
-
-                var (gameType, tpCategory) = GetGameType(placeBet3rd.productId);
-
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_PlaceBet3rd", trans, new
-                {
-                    placeBet3rd.action,
-                    placeBet3rd.operationId,
-                    placeBet3rd.userId,
-                    placeBet3rd.currency,
-                    placeBet3rd.productId,
-                    placeBet3rd.gameId,
-                    placeBet3rd.betTime,
-                    placeBet3rd.IP,
-                    placeBet3rd.tsId,
-                    placeBet3rd.productName_en,
-                    placeBet3rd.gameName_en,
-                    placeBet3rd.betFrom,
-                    ticket.refId,
-                    ticket.betChoice_en,
-                    ticket.odds,
-                    ticket.oddsType,
-                    ticket.betAmount,
-                    ticket.actualAmount,
-                    extra = ticket.extra != null ? JsonConvert.SerializeObject(ticket.extra) : "{}",
-                    ticket.creditAmount,
-                    ticket.debitAmount,
-                    TicketType = (int)SBSWTransType.PlaceBet3rd,
-                });
-
-                if (result.licenseeTxId < 1)
-                {
-                    throw new SBSWException(ReturnCode.InvalidParameters);
-                }
-
-                var bonusId = 0;
-                result.SetBalanceResult = _bettingService.PlaceBetV2(
-                    tpCustInfo,
-                    Math.Abs(ticket.betAmount) * -1,
-                    (int)ThirdParty,
-                    ticket.refId,
-                    (int)gameType,
-                    ticket.refId,
-                    null,
-                    tpCategory,
-                    out var afterAmount,
-                    ref bonusId,
-                    conn,
-                    trans);
-
-                if (result.SetBalanceResult < 1 || afterAmount < 0)
-                {
-                    throw new SBSWException(ReturnCode.InsufficientBalance);
-                }
-
-                trans.Commit();
-                return result;
-            }
-            catch (SBSWException ex)
-            {
-                return new ExecuteResult(ex.ReturnCode, ex.Message);
-            }
-            catch (MySqlException mySqlEx)
-            {
-                return mySqlEx.Number == 1062 ? new ExecuteResult(ReturnCode.TransactionDuplicated) :
-                    new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new ExecuteResult(ReturnCode.UnknownError, ex.Message);
-            }
-
-        }
-
-        private async Task<ExecuteResult> ExecuteConfirmBet3rd(ConfirmBet confirmBet, ConfirmDetail detail)
-        {
-            try
-            {
-                var (tpCustInfo, tpCurrency) = GetTPInfo(confirmBet.userId);
-                detail.debitAmount *= tpCurrency.ExchangeRate;
-                detail.creditAmount *= tpCurrency.ExchangeRate;
-
-                var p = new DynamicParameters(detail);
-                p.AddDynamicParams(new
-                {
-                    confirmBet.action,
-                    confirmBet.operationId,
-                    confirmBet.userId,
-                    confirmBet.updateTime,
-                    confirmBet.transactionTime,
-                    TicketType = (int)SBSWTransType.ConfirmBet3rd,
-                });
-
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet3rd", trans, p);
-                if (result.SPResult == -1)
-                {
-                    throw new SBSWException(ReturnCode.TransactionNotFound, $"licenseeTxId:{detail.licenseeTxId} refId:{detail.refId} Not Found");
-                }
-
-                if (result.SPResult == -2)
-                {
-                    throw new SBSWException(ReturnCode.Success);//已完成ConfirmBet視為成功
-                }
-
-                if (result.SPResult == -3)
-                {
-                    throw new SBSWException(ReturnCode.InvalidTransactionStatus);
-                }
-
-                //處理ConfirmBet的差異金額
-                var amount = detail.creditAmount - detail.debitAmount;
-                if (amount != 0)
-                {
-                    var (gameType, tpCategory) = GetGameType(result.SportType);
-                    result.SetBalanceResult = _settledService.PayoutV2(
-                                tpCustInfo: tpCustInfo,
-                                amount: amount,
-                                tpId: (int)ThirdParty,
-                                tpTransId: detail.refId,
-                                gameType: (int)gameType,
-                                tpCategory: tpCategory,
-                                refId: detail.refId,
-                                TransType.Refunds,
-                                betData: null,
-                                out decimal afterAmount,
-                                "Refund",
-                                out int bonusId,
-                                conn,
-                                trans,
-                                AllowNegative.Allow);
-
-                    if (result.SetBalanceResult < 1)
-                    {
-                        return new ExecuteResult(ReturnCode.InvalidAmount);
-                    }
-                }
-
-                trans.Commit();
-                return result;
-            }
-            catch (SBSWException ex)
-            {
-                return new ExecuteResult(ex.ReturnCode, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new ExecuteResult(ReturnCode.UnknownError, ex.Message);
-            }
-        }
-
 
         private async Task<ReturnObj> HealthCheck(SBSWTransType transType, string merchant, string bodyText)
         {
