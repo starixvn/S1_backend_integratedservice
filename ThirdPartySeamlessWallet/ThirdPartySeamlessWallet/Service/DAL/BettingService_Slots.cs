@@ -998,25 +998,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Habanero
 
-        public int PlaceBet_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
+        public TransactionResult_HB PlaceBet_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
-            afterAmount = 0;
+            var transactionResult = new TransactionResult_HB();
             try
             {
                 var partitionTime = bettingDataRng_HB.dtevent;
                 var check = _partitionService.Query<string>(partitionTime, "Service_BettransRng_HB_Check", bettingDataRng_HB);
                 if (check.Any())
                 {
-                    return -1;//Duplicated
+                    transactionResult.result = -1;
+                    return transactionResult;//Duplicated
                 }
                 
                 bettingDataRng_HB.TicketType = (int)BettransType.Bet;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", bettingDataRng_HB, trans);
 
+                var afterAmount = 0m;
+                var bonusId = 0;
                 if (result > 0 && bettingDataRng_HB.amount != 0)
                 {
-                    var bonusId = 0;
                     result = PlaceBetV2(
                         tpCustInfo,
                         Math.Abs(bettingDataRng_HB.amount) * -1,
@@ -1031,14 +1033,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans);
                 }
+                return new TransactionResult_HB()
+                {
+                    result = result,
+                    afterAmount = afterAmount,
+                    BonusId = bonusId
+                };
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                result = 0;
+                return new TransactionResult_HB()
+                {
+                    result = 0,
+                };
             }
-
-            return result;
         }
 
         #endregion

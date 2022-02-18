@@ -37,8 +37,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("tx")]
-        public async Task<HBFundTransferResponse> FundTransfer(HBFundTransferRequest request)
+        public async Task<HBFundTransferResponse> FundTransfer()
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<dynamic>(content);
             return new HBFundTransferResponse()
             {
                 fundtransferresponse = await _hbbll.FundTransfer(request.fundtransferrequest)
