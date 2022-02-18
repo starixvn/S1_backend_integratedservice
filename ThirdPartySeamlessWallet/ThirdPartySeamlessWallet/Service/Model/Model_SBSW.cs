@@ -201,7 +201,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             action = placeBet3rd.action;
             operationId = placeBet3rd.operationId;
             userId = placeBet3rd.userId;
-            currency = placeBet3rd.currency;     
+            currency = placeBet3rd.currency;
             productId = placeBet3rd.productId;
             gameId = placeBet3rd.gameId;
             betTime = placeBet3rd.betTime;
@@ -244,6 +244,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string betChoice { get; set; } = "";
         public string betChoice_en { get; set; } = "";
         public DateTime updateTime { get; set; } = DateTime.MinValue;
+        public DateTime transactionTime { get; set; } = DateTime.MinValue;
         public int leagueId { get; set; }
         public string leagueName { get; set; } = "";
         public string leagueName_en { get; set; } = "";
@@ -373,11 +374,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             operationId = confirmBet.operationId;
             userId = confirmBet.userId;
             updateTime = confirmBet.updateTime;
-            transactionTime =confirmBet.transactionTime;
+            transactionTime = confirmBet.transactionTime;
             refId = detail.refId;
             txId = detail.txId;
             licenseeTxId = detail.licenseeTxId;
-            odds =detail.odds;
+            odds = detail.odds;
             oddsType = detail.oddsType;
             actualAmount = detail.actualAmount;
             isOddsChanged = detail.isOddsChanged;
