@@ -25,7 +25,33 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int channel { get; set; }
         public int TicketType { get; set; }
     }
-    
+
+    public class CancelBetRngDto_HB
+    {
+        public string TransferId { get; set; }
+        public string RoundId { get; set; }
+        public string AccountId { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime dtevent { get; set; }
+    }
+
+    public class BettransData_HB
+    {
+        public long SQ { get; set; }
+        public string accountid { get; set; }
+        public string transferid { get; set; }
+        public decimal amount { get; set; }
+        public string initialdebittransferid { get; set; }
+        public int TicketStatus { get; set; }
+    }
+
+    public class TransactionResult_HB
+    {
+        public int result { get; set; }
+        public decimal afterAmount { get; set; }
+        public int BonusId { get; set; }
+    }
+
     #region Auth
     public class HBPlayerDetailRequest
     {
@@ -139,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime dtsent { get; set; }
         public Basegame basegame { get; set; }
         public Auth auth { get; set; }
-        public Fundtransferrequest fundtransferrequest { get; set; }
+        public dynamic fundtransferrequest { get; set; }
     }
     
     public class Status

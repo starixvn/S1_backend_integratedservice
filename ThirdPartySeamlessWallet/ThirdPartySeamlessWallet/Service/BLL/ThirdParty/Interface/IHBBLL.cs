@@ -6,6 +6,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
     public interface IHBBLL
     {
         Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request);
-        Task<Fundtransferresponse> FundTransfer(Fundtransferrequest request);
+        Task<Fundtransferresponse> FundTransfer(dynamic request);
     }
 }
