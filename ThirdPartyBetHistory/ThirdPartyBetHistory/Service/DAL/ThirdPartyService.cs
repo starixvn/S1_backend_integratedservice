@@ -82,7 +82,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     int bonusId;
 
                     /*Only count Sports*/
-                    if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
+                    if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
@@ -97,7 +97,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.Saba, tpCustInfo.CustId, out bonusId);
+                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.SBSW, tpCustInfo.CustId, out bonusId);
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
@@ -272,11 +272,11 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                     if (tpCustInfo.SiteId == (int)SiteId.Nova88)
                     {
-                        SetTicketKey((int)Tp.Saba, betRecord.TicketKey);
+                        SetTicketKey((int)Tp.SBSW, betRecord.TicketKey);
                     }
                     else
                     {
-                        SiteTpTicketKey((int)Tp.Saba, tpCustInfo.SiteId, betRecord.TicketKey);
+                        SiteTpTicketKey((int)Tp.SBSW, tpCustInfo.SiteId, betRecord.TicketKey);
                     }
 
                      _logger.LogDebug(JsonConvert.SerializeObject(betRecord));

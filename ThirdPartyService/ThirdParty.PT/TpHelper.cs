@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -12,7 +13,7 @@ namespace ThirdParty.PT
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly string storagePath = $@"{ContentRootPath}\Storage\PT";
+        private readonly string storagePath = Path.Combine(ContentRootPath, "Storage", "PT");
 
         private readonly Dictionary<string, int> timeZoneList = new Dictionary<string, int>() {
             {"MYR",8},
@@ -165,7 +166,7 @@ namespace ThirdParty.PT
                 header.Add("X_ENTITY_KEY", EntityKey);
 
                 Dictionary<string, string> certificate = new Dictionary<string, string>();
-                certificate.Add("path", $@"{storagePath}\{currency}.p12");
+                certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
                 certificate.Add("password", Pass);
 
                 var CheckTransfer = new
@@ -174,12 +175,10 @@ namespace ThirdParty.PT
                 };
 
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
-                var sParam = string.Join("&",
-                    dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
                 var result = HttpPostWithX509(
                     ApiUrl,
-                    sParam,
+                    dicP,
                     "application/x-www-form-urlencoded",
                     header,
                     certificate
@@ -251,7 +250,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             string playerName = $"{Prefix}_{tpCustInfo.TpUserName}";
@@ -265,11 +264,10 @@ namespace ThirdParty.PT
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
@@ -316,7 +314,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             var Balance = new
@@ -325,11 +323,10 @@ namespace ThirdParty.PT
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
@@ -354,7 +351,7 @@ namespace ThirdParty.PT
             }
             else
             {
-                oApiResult.RawMessage = "No Result";
+                oApiResult.RawMessage = result;
                 oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
             }
@@ -435,7 +432,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             var Transfer = new DepositParam
@@ -461,11 +458,10 @@ namespace ThirdParty.PT
             }
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 TransUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
@@ -556,7 +552,7 @@ namespace ThirdParty.PT
                 };
                 var certificate = new Dictionary<string, string>
                 {
-                    { "path", $@"{storagePath}\{tpCustInfo.TpCurrencyId}.p12" },
+                    { "path", Path.Combine(storagePath, $"{tpCustInfo.TpCurrencyId}.p12") },
                     { "password", pass }
                 };
 
@@ -573,7 +569,7 @@ namespace ThirdParty.PT
 
                 var json = HttpPostWithX509(
                     apiUrl,
-                    string.Join("&", sParam.Select(kp => $"{kp.Key}={kp.Value}")),
+                    sParam,
                     "application/x-www-form-urlencoded",
                     header,
                     certificate
@@ -614,7 +610,7 @@ namespace ThirdParty.PT
             header.Add("X_ENTITY_KEY", EntityKey);
 
             Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", $@"{storagePath}\{currency}.p12");
+            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
             certificate.Add("password", Pass);
 
             var ChangePassword = new
@@ -624,11 +620,10 @@ namespace ThirdParty.PT
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(ChangePassword));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPostWithX509(
                 ApiUrl,
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate

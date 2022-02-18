@@ -3,8 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
@@ -22,6 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly int timeRange = 20; //in minutes
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 180; // in seconds
+        private readonly string _tpName = Tp.Allbet.ToString();
 
         public CheckRewardAllBet(IServiceProvider provider)
         {
@@ -37,7 +36,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-            bool quick = false;
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var quick = false;
             try
             {
                 quick = await _rewardAllBetBLL.ExecRewardWorker(tpType, timeRange);
@@ -48,7 +49,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

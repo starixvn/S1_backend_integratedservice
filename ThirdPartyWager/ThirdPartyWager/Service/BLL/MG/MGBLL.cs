@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -47,11 +46,12 @@ namespace ThirdPartyWager.Service.BLL.MG
                             playerId = transaction.playerId,
                             amount = transaction.amount,
                             currency = currencyId,
-                            txnId = transaction.txnId,
+                            txnId = TransformTxnId(transaction.txnId),
                             creationTime = DateTime.UtcNow.Ticks,
                             contentCode = transaction.contentCode,
                             betId = transaction.betId,
-                            completed = transaction.completed
+                            completed = transaction.completed,
+                            IsFailedTransaction = true
                         };
                     
                         var isSuccess = await _swApi.MgUpdateBalance(request);
@@ -64,6 +64,12 @@ namespace ThirdPartyWager.Service.BLL.MG
                 }
                 Thread.Sleep(10000);
             }
+        }
+
+        public string TransformTxnId(string txnId)
+        {
+            var cut = txnId.Substring(2, txnId.Length - 2);
+            return $"AI{cut}AA";
         }
     }
 }

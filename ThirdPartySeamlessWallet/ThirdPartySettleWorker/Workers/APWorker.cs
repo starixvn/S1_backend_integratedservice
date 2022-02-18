@@ -57,6 +57,9 @@ namespace ThirdPartySettleWorker.Workers
 
         private void Settle(object state)
         {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;

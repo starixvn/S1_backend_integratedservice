@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,10 +33,10 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerKiss918Model> GetBetListByTime(string wagerUrl, string authcode, string secretkey, string userName, string player, string startTime, string endTime, int page, int perPage, string guid)
         {
             // param
-            long current = _common.GetTimestemp1();
-            string sign = authcode + player + current + secretkey;
+            var current = _common.GetTimestemp1();
+            var sign = authcode + player + current + secretkey;
 
-            string url = $"{wagerUrl}/GameLog.ashx";
+            var url = $"{wagerUrl}/GameLog.ashx";
             var param = new
             {
                 userName = player,
@@ -51,7 +50,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerKiss918Model>(r);
             return result;
 
@@ -60,10 +59,10 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerKiss918ReportPlayer> GetReportPlayerListByTime(string wagerUrl, string authcode, string secretkey, string userName, string startTime, string endTime, string guid)
         {
             // param
-            long current = _common.GetTimestemp1();
-            string sign = authcode + userName + current + secretkey;
+            var current = _common.GetTimestemp1();
+            var sign = authcode + userName + current + secretkey;
 
-            string url = $"{wagerUrl}/AgentTotalReport.ashx";
+            var url = $"{wagerUrl}/AgentTotalReport.ashx";
             var param = new
             {
                 userName = userName,
@@ -76,7 +75,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(url, param);
+            var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<WagerKiss918ReportPlayer>(r);
             return result;
 

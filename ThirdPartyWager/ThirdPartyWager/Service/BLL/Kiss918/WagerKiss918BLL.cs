@@ -1,14 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -21,7 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerKiss918BLL> _logger;
 
         private readonly int _tpId = (int)Tp.Kiss918;
-        private readonly string _tpName = Tp.Kiss918.ToString();
 
         public WagerKiss918BLL(IServiceProvider provider)
         {
@@ -33,18 +28,17 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, string currency)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                DateTime getReportStartTime = DateTime.Parse(startTime);
-                string ReportStartTime = getReportStartTime.ToString("yyyy-MM-dd");
-                DateTime getReportEndTime = DateTime.Parse(endTime);
-                string ReportEndTime = getReportEndTime.ToString("yyyy-MM-dd");
+                var getReportStartTime = DateTime.Parse(startTime);
+                var ReportStartTime = getReportStartTime.ToString("yyyy-MM-dd");
+                var getReportEndTime = DateTime.Parse(endTime);
+                var ReportEndTime = getReportEndTime.ToString("yyyy-MM-dd");
 
                 // get report player
                 var dataReportPlayer = await _apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], ReportStartTime, ReportEndTime, guid);
@@ -63,11 +57,11 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
-                int perPage = 100;
+                var perPage = 100;
                 foreach (var reportList in dataReportPlayer.results)
                 {
-                    int page = 1;
-                    int totalPage = 1;
+                    var page = 1;
+                    var totalPage = 1;
                     var Account = reportList.Account;
                     while (page <= totalPage)
                     {
@@ -106,7 +100,7 @@ namespace ThirdPartyWager.Service.BLL
                             catch (Exception ex)
                             {
                                 msg = $"INSERT_WAGER(WAGERID: {bet.uuid} )";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}\r\n{ex.Message}");
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}\r\n{ex.Message}");
                                 return false;
                             }
                         }
@@ -121,7 +115,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

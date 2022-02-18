@@ -73,8 +73,6 @@ namespace ThirdPartyService.Service.DAL
         {
             var content = $"Url={url}, Input={input}, Output={output}";
             logger.LogInformation(content);
-            var action = url.Split('/').LastOrDefault(x => !string.IsNullOrWhiteSpace(x));
-            _log2File.Info(content, action);
         }
 
         public string GetTpLanId(int tpId, string langId)
@@ -105,6 +103,12 @@ namespace ThirdPartyService.Service.DAL
             {
                 return conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { CustId = custid, TpId = tpId }, commandType: CommandType.StoredProcedure);
             }
+        }
+
+        public IEnumerable<TpMaintain> GetTpMaintainList(int siteId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
     }
 }

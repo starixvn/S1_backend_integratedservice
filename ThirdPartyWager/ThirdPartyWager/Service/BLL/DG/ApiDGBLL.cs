@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -37,10 +36,10 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey, string guid)
         {
             // param
-            string uri = "/game/getReport/";
-            string random = _common.GetRandomString(8);
-            string url = $"{apiUrl}{uri}{agentName}";
-            string token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            var uri = "/game/getReport/";
+            var random = _common.GetRandomString(8);
+            var url = $"{apiUrl}{uri}{agentName}";
+            var token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -56,10 +55,10 @@ namespace ThirdPartyWager.Service.BLL
         public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds, string guid)
         {
             // param
-            string uri = "/game/markReport/";
-            string random = _common.GetRandomString(8);
-            string url = $"{apiUrl}{uri}{agentName}";
-            string token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            var uri = "/game/markReport/";
+            var random = _common.GetRandomString(8);
+            var url = $"{apiUrl}{uri}{agentName}";
+            var token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -81,9 +80,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow, string guid)
         {
             // param
-            string uri = "/game/getReport";
-            string url = $"{apiUrl}{uri}";
-            string token = _common.ToMD5($"{agentName}{apiKey}").ToLower();
+            var uri = "/game/getReport";
+            var url = $"{apiUrl}{uri}";
+            var token = _common.ToMD5($"{agentName}{apiKey}").ToLower();
 
             var param = new
             {

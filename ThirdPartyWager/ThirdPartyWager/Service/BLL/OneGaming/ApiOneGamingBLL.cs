@@ -16,7 +16,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiOneGamingBLL> _logger;
         private readonly string _tpName = Tp.OneGaming.ToString();
 
         public ApiOneGamingBLL(IServiceProvider provider)
@@ -24,14 +23,13 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiOneGamingBLL>>();
         }
 
         public async Task<WagerOneGamingModel> GetBetListByTime(string apiUrl, string agentCode, string secretKey, string startTime, string endTime, string guid)
         {
             // param
-            string uri = "/allPlayerRecord_Currency";
-            string url = $"{apiUrl}{uri}";
+            var uri = "/allPlayerRecord_Currency";
+            var url = $"{apiUrl}{uri}";
             var param = new
             {
                 agent_code = agentCode,

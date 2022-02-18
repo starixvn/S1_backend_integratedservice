@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,7 +18,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerRedoV8BLL> _logger;
 
         private readonly int _tpId = (int)Tp.V8;
-        private readonly string _tpName = Tp.V8.ToString();
 
         public WagerRedoV8BLL(IServiceProvider provider)
         {
@@ -31,9 +29,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(int tpId, long startUnix, long endUnix)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -41,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerV8Service.GetWagerTotal(startUnix, endUnix);
-                int wagerCount = getWagerCount.wagerCount;
+                var wagerCount = getWagerCount.wagerCount;
 
                 // get wager
                 var dataWager = await _apiV8BLL.GetBetListByTime(setting["WagerUrl"], setting["Agent"], setting["Deskey"], setting["Md5key"], startUnix, endUnix, guid);
@@ -74,23 +71,25 @@ namespace ThirdPartyWager.Service.BLL
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
                 {
-                    Dictionary<string, dynamic> keyValuePairs = new Dictionary<string, dynamic>();
-                    keyValuePairs.Add("GameID", dataWager.d.list.GameID[i]);
-                    keyValuePairs.Add("Accounts", dataWager.d.list.Accounts[i]);
-                    keyValuePairs.Add("ServerID", dataWager.d.list.ServerID[i]);
-                    keyValuePairs.Add("KindID", dataWager.d.list.KindID[i]);
-                    keyValuePairs.Add("TableID", dataWager.d.list.TableID[i]);
-                    keyValuePairs.Add("ChairID", dataWager.d.list.ChairID[i]);
-                    keyValuePairs.Add("UserCount", dataWager.d.list.UserCount[i]);
-                    keyValuePairs.Add("CellScore", dataWager.d.list.CellScore[i]);
-                    keyValuePairs.Add("AllBet", dataWager.d.list.AllBet[i]);
-                    keyValuePairs.Add("Profit", dataWager.d.list.Profit[i]);
-                    keyValuePairs.Add("Revenue", dataWager.d.list.Revenue[i]);
-                    keyValuePairs.Add("GameStartTime", dataWager.d.list.GameStartTime[i]);
-                    keyValuePairs.Add("GameEndTime", dataWager.d.list.GameEndTime[i]);
-                    keyValuePairs.Add("CardValue", dataWager.d.list.CardValue[i]);
-                    keyValuePairs.Add("ChannelID", dataWager.d.list.ChannelID[i]);
-                    keyValuePairs.Add("LineCode", dataWager.d.list.LineCode[i]);
+                    var keyValuePairs = new Dictionary<string, dynamic>
+                    {
+                        { "GameID", dataWager.d.list.GameID[i] },
+                        { "Accounts", dataWager.d.list.Accounts[i] },
+                        { "ServerID", dataWager.d.list.ServerID[i] },
+                        { "KindID", dataWager.d.list.KindID[i] },
+                        { "TableID", dataWager.d.list.TableID[i] },
+                        { "ChairID", dataWager.d.list.ChairID[i] },
+                        { "UserCount", dataWager.d.list.UserCount[i] },
+                        { "CellScore", dataWager.d.list.CellScore[i] },
+                        { "AllBet", dataWager.d.list.AllBet[i] },
+                        { "Profit", dataWager.d.list.Profit[i] },
+                        { "Revenue", dataWager.d.list.Revenue[i] },
+                        { "GameStartTime", dataWager.d.list.GameStartTime[i] },
+                        { "GameEndTime", dataWager.d.list.GameEndTime[i] },
+                        { "CardValue", dataWager.d.list.CardValue[i] },
+                        { "ChannelID", dataWager.d.list.ChannelID[i] },
+                        { "LineCode", dataWager.d.list.LineCode[i] }
+                    };
                     field.Add(JsonConvert.SerializeObject(keyValuePairs));
                 }
 
@@ -105,7 +104,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {bet.GameID} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                         return false;
                     }
                 }
@@ -117,7 +116,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"RedoWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

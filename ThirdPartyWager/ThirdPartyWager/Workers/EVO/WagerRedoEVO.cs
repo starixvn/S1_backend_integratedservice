@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -20,6 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly int timeRange = 60; //in minutes 
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 2; // in hours
+        private readonly string _tpName = Tp.EVO.ToString();
 
         public WagerRedoEVO(IServiceProvider provider)
         {
@@ -34,7 +35,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTask(object state)
         {
-            bool quick = false;
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var quick = false;
             try
             {
                 quick = await _wagerEVOBLL.ExecWagerRedoWorker(tpType, timeRange);
@@ -45,7 +48,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
