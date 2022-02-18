@@ -100,7 +100,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return response;
         }
 
-        public async Task<Fundtransferresponse> FundTransfer(dynamic request)
+        public async Task<dynamic> FundTransfer(dynamic request)
         {
             var tpUserName = (string) request.accountid;
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.HB, tpUserName);
@@ -158,26 +158,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     // debit
                     if (fundInfo.amount < 0)
                     {
-                        result = _bettingService.PlaceBet_HB(tpCustInfo, bettingData_HB, out afterAmount, conn, trans);
-                        if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-                        {
-                            afterAmount /= tpCurrency.ExchangeRate;
-                        }
+                        transactionResult = _bettingService.PlaceBet_HB(tpCustInfo, bettingData_HB, conn, trans);
+
                     }
                     // credit
                     else
                     {
-                        result = _settledService.PayoutRNG_HB(tpCustInfo, bettingData_HB, conn, trans);
-                        if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-                        {
-                            afterAmount /= tpCurrency.ExchangeRate;
-                        }
+                        transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, bettingData_HB, conn, trans);
                     }
                 }
             }
-
-            if (result > 0 || transactionResult.result > 0)
+            
+            if (transactionResult.result > 0)
             {
+                if (transactionResult.afterAmount == 0)
+                {
+                    transactionResult.afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, request.playerId, (int)GameType).Balance;
+                }
+                else
+                {
+                    if (tpCurrency.ExchangeRate > 0) 
+                        transactionResult.afterAmount /= tpCurrency.ExchangeRate;   
+                }
                 trans.Commit();
                 return new Fundtransferresponse()
                 {
@@ -187,11 +189,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         successdebit = true,
                         successcredit = true
                     },
-                    balance = afterAmount,
+                    balance = transactionResult.afterAmount,
                     currencycode = tpCurrency.TpCurrencyId
                 };
             }
 
+            
             return new Fundtransferresponse()
             {
                 status = new Status()

@@ -185,6 +185,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class HBFundTransferResponse
     {
-        public Fundtransferresponse fundtransferresponse { get; set; }
+        public dynamic fundtransferresponse { get; set; }
     }
 }

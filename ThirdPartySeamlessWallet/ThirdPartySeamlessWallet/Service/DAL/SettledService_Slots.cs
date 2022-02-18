@@ -3966,21 +3966,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region HB
 
-        public int PayoutRNG_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, MySqlConnection conn, MySqlTransaction trans)
+        public TransactionResult_HB PayoutRNG_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
+            var transactionResult = new TransactionResult_HB();
             try
             {
                 var partitionTime = bettingDataRng_HB.dtevent;
-                var check = _partitionService.Query<string>(partitionTime, "Service_BettransRng_HB_Check", bettingDataRng_HB);
+                var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", bettingDataRng_HB);
                 if (check.Any())
                 {
-                    return -1; //Duplicated
+                    transactionResult.result = -1;
+                    return transactionResult;
                 }
 
                 bettingDataRng_HB.TicketType = (int)BettransType.Payout;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", bettingDataRng_HB, trans);
-
+                
+                var afterAmount = 0m;
+                var bonusId = 0;
                 if (result > 0 && bettingDataRng_HB.amount != 0)
                 {
                     result = PayoutV2(
@@ -3993,9 +3997,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          refId: bettingDataRng_HB.transferid,
                          TransType.Payout,
                          betData: null,
-                         out var afterAmount,
+                         out afterAmount,
                          "Payout",
-                         out var bonusId,
+                         out bonusId,
                          conn,
                          trans);
                 }
@@ -4004,18 +4008,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, bettingDataRng_HB.initialdebittransferid, trans, partitionTime);
                 }
+                return new TransactionResult_HB()
+                {
+                    result = result,
+                    afterAmount = afterAmount,
+                    BonusId = bonusId
+                };
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                result = 0;
+                return new TransactionResult_HB()
+                {
+                    result = 0
+                };
             }
-
-            return result;
         }
 
-        public TransactionResult_HB CancelBetRNG_HB(TpCustInfo tpCustInfo, CancelBetRngDto_HB cancelBetRngDto,
-            MySqlConnection conn, MySqlTransaction trans)
+        public TransactionResult_HB CancelBetRNG_HB(TpCustInfo tpCustInfo, CancelBetRngDto_HB cancelBetRngDto, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
             var transactionResult = new TransactionResult_HB();
