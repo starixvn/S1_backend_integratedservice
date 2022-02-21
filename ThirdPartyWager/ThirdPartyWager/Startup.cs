@@ -194,17 +194,10 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportMega>();
             services.AddHostedService<ReportRedoMega>();
 
-            //services.AddHostedService<WagerMega>();
-            //services.AddHostedService<CheckMega>();
-
             /*
                 services.AddHostedService<WagerCF>();
                 services.AddHostedService<WagerKiss918>();
                 services.AddHostedService<WagerRedoKiss918>();
-                services.AddHostedService<ReportMega>();
-                services.AddHostedService<ReportRedoMega>();
-                services.AddHostedService<WagerMega>();
-                services.AddHostedService<CheckMega>();
             */
         }
 
