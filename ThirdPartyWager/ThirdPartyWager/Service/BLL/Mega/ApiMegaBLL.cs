@@ -23,7 +23,6 @@ namespace ThirdPartyWager.Service.BLL
 
         private class ErrorResponse
         {
-            //public string result { get; set; }
             public Error error { get; set; }
             public string id { get; set; }
             public string jsonrpc { get; set; }
