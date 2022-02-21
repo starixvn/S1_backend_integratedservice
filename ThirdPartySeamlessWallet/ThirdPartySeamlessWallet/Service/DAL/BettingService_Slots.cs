@@ -998,34 +998,38 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Habanero
 
-        public TransactionResult_HB PlaceBet_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, MySqlConnection conn, MySqlTransaction trans)
+        public TransactionResult_HB PlaceBet_HB(TpCustInfo tpCustInfo, PlaceBetRngDto_HB placeBetRngDto, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
             var transactionResult = new TransactionResult_HB();
             try
             {
-                var partitionTime = bettingDataRng_HB.dtevent;
-                var check = _partitionService.Query<string>(partitionTime, "Service_BettransRng_HB_Check", bettingDataRng_HB);
+                var partitionTime = placeBetRngDto.dtevent;
+                var query = new
+                {
+                    placeBetRngDto.transferid
+                };
+                var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
                 if (check.Any())
                 {
                     transactionResult.result = -1;
                     return transactionResult;//Duplicated
                 }
                 
-                bettingDataRng_HB.TicketType = (int)BettransType.Bet;
-                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", bettingDataRng_HB, trans);
+                placeBetRngDto.TicketType = (int)BettransType.Bet;
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
 
                 var afterAmount = 0m;
                 var bonusId = 0;
-                if (result > 0 && bettingDataRng_HB.amount != 0)
+                if (result > 0 && placeBetRngDto.amount != 0)
                 {
                     result = PlaceBetV2(
                         tpCustInfo,
-                        Math.Abs(bettingDataRng_HB.amount) * -1,
+                        Math.Abs(placeBetRngDto.amount) * -1,
                         (int)Tp.HB,
-                        bettingDataRng_HB.initialdebittransferid,
+                        placeBetRngDto.initialdebittransferid,
                         (int)GameType.HB_RNG,
-                        bettingDataRng_HB.transferid,
+                        placeBetRngDto.transferid,
                         null,
                         TpCategory.Slots,
                         out afterAmount,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -106,34 +107,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.HB, tpUserName);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.HB, tpCustInfo.CurrencyId);
 
-            var afterAmount = 0m;
-            var result = 0;
-            var transactionResult = new TransactionResult_HB();
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-            
             // 退款
             if ((bool)request.isrefund && (bool)request.isrefund)
             {
-                var cancelBet = new CancelBetRngDto_HB()
-                {
-                    AccountId = tpUserName,
-                    TransferId = request.funds.refund.transferid,
-                    RoundId = request.funds.refund.originaltransferid,
-                    Amount = request.funds.refund.amount,
-                    dtevent = request.funds.refund.dtevent
-                };
-                transactionResult = _settledService.CancelBetRNG_HB(tpCustInfo, cancelBet, conn, trans);
+                return await Refund(request, tpCustInfo, tpCurrency);
             }
             else
             {
-                foreach (var fundInfo in request.funds.fundinfo)
-                {
-                    if (tpCurrency.ExchangeRate > 0)
-                        fundInfo.amount *= tpCurrency.ExchangeRate;
+                return await DebitAndCredit(request, tpCustInfo, tpCurrency);
+            }
+        }
 
-                    var bettingData_HB = new BettingDataRNG_HB()
+        public async Task<dynamic> DebitAndCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        {
+            var transactionResult = new TransactionResult_HB();
+            dynamic response = new ExpandoObject();
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            foreach (var fundInfo in request.funds.fundinfo)
+            {
+                if (tpCurrency.ExchangeRate > 0)
+                    fundInfo.amount *= tpCurrency.ExchangeRate;
+                
+                // debit
+                if (fundInfo.amount < 0)
+                {
+                    var placeBetRngDto = new PlaceBetRngDto_HB()
                     {
                         accountid = request.accountid,
                         gameinstanceid = request.gameinstanceid,
@@ -146,7 +146,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         jpwin = fundInfo.jpwin,
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
-                        dtevent = DateTime.Parse(fundInfo.dtevent),
+                        dtevent = DateTime.Parse((string)fundInfo.dtevent),
                         initialdebittransferid = fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
@@ -154,26 +154,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
                     };
-                    
-                    // debit
-                    if (fundInfo.amount < 0)
-                    {
-                        transactionResult = _bettingService.PlaceBet_HB(tpCustInfo, bettingData_HB, conn, trans);
+                    transactionResult = _bettingService.PlaceBet_HB(tpCustInfo, placeBetRngDto, conn, trans);
 
-                    }
-                    // credit
-                    else
+                }
+                // credit
+                else
+                {
+                    var payoutRngDto = new PayoutRngDto_HB()
                     {
-                        transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, bettingData_HB, conn, trans);
-                    }
+                        accountid = request.accountid,
+                        gameinstanceid = request.gameinstanceid,
+                        friendlygameinstanceid = request.friendlygameinstanceid,
+                        gamestatemode = fundInfo.gamestatemode,
+                        transferid = fundInfo.transferid,
+                        currencycode = fundInfo.currencycode,
+                        amount = fundInfo.amount,
+                        bonusamount = fundInfo.bonusamount,
+                        jpwin = fundInfo.jpwin,
+                        jpcont = fundInfo.jpcont,
+                        isbonus = fundInfo.isbonus,
+                        dtevent = DateTime.Parse((string)fundInfo.dtevent),
+                        initialdebittransferid = fundInfo.initialdebittransferid,
+                        accounttransactiontype = fundInfo.accounttransactiontype,
+                        gameinfeature = fundInfo.gameinfeature,
+                        keyname = request.gamedetails.keyname,
+                        gametypename = request.gamedetails.gametypename,
+                        channel = request.gamedetails.channel
+                    };
+                    transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, conn, trans);
                 }
             }
-            
             if (transactionResult.result > 0)
             {
                 if (transactionResult.afterAmount == 0)
                 {
-                    transactionResult.afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, request.playerId, (int)GameType).Balance;
+                    transactionResult.afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, request.accountid, (int)GameType).Balance;
                 }
                 else
                 {
@@ -181,29 +196,57 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         transactionResult.afterAmount /= tpCurrency.ExchangeRate;   
                 }
                 trans.Commit();
-                return new Fundtransferresponse()
-                {
-                    status = new Status()
-                    {
-                        success = true,
-                        successdebit = true,
-                        successcredit = true
-                    },
-                    balance = transactionResult.afterAmount,
-                    currencycode = tpCurrency.TpCurrencyId
-                };
+                response.status = new ExpandoObject();
+                response.status.success = true;
+                response.status.successdebit = true;
+                response.status.successcredit = true;
+            }
+            else
+            {
+                response.status = new ExpandoObject();
+                response.status.success = false;
+                response.status.nofunds = true;
             }
 
-            
-            return new Fundtransferresponse()
+            response.balance = transactionResult.afterAmount;
+            response.currencycode = tpCurrency.TpCurrencyId;
+            return response;
+        }
+
+        public async Task<dynamic> Refund(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        {
+            dynamic response = new ExpandoObject();
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            var cancelBet = new CancelBetRngDto_HB()
             {
-                status = new Status()
-                {
-                    success = false,
-                    nofunds = true
-                },
-                currencycode = tpCurrency.TpCurrencyId
+                AccountId = request.accountid,
+                TransferId = request.funds.refund.transferid,
+                RoundId = request.funds.refund.originaltransferid,
+                Amount = request.funds.refund.amount,
+                dtevent = request.funds.refund.dtevent
             };
+            var transactionResult = _settledService.CancelBetRNG_HB(tpCustInfo, cancelBet, conn, trans);
+
+            if (transactionResult.result > 0)
+            {
+                response.status = new ExpandoObject();
+                response.status.success = true;
+                response.status.refundstatus = 1;
+            }
+
+            if (transactionResult.result == -2)
+            {
+                response.status = new ExpandoObject();
+                response.status.success = true;
+                response.status.refundstatus = 2;
+            }
+
+            response.balance = transactionResult.afterAmount;
+            response.currencycode = tpCurrency.TpCurrencyId;
+
+            return response;
         }
 
         private (string authToken, string sessionToken) ParseToken(string token)
