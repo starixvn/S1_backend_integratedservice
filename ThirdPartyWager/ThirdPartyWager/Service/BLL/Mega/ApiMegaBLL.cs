@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -44,20 +46,24 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiMegaBLL>>();
         }
 
-        public async Task<WagerMegaReport> GetReportPlayerListByTime(string apiUrl, string sn, string secretCode, string agentLoginId, string startTime, string endTime, string guid)
+        public async Task<ReportMega> GetReportPlayerListByTime(dynamic setting, string currency, string startTime, string endTime)
         {
             // param
-            var uuid = Guid.NewGuid();
-
-            var sign = uuid + sn + agentLoginId + secretCode;
+            var contentType = "application/json";
+            var guid = Guid.NewGuid().ToString();
+            var apiUrl = setting["ApiUrl"];
+            var sn = setting["sn"];
+            var agentLoginId = setting[$"agentLoginId_{currency}"];
+            var secretCode = setting[$"secretCode_{currency}"];
+            string sign = guid + sn + agentLoginId + secretCode;
 
             var param = new
             {
-                id = uuid,
+                id = guid,
                 method = "open.mega.player.total.report",
                 @params = new
                 {
-                    random = uuid,
+                    random = guid,
                     digest = _common.ToMD5(sign).ToUpper(),
                     sn = sn,
                     agentLoginId = agentLoginId,
@@ -67,42 +73,105 @@ namespace ThirdPartyWager.Service.BLL
                 },
                 jsonrpc = "2.0",
             };
+            var sParam = JsonConvert.SerializeObject(param);
 
             // request
-            var r = await DoHttpClientAsync(apiUrl, param);
+            var r = await DoHttpClientAsync(apiUrl, sParam, contentType);
             var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
             if (error.error != null)
             {
-                var result = new WagerMegaReport();
+                var result = new ReportMega();
                 result.code = error.error.code;
                 result.message = error.error.message;
                 return result;
             }
             else
             {
-                var result = JsonConvert.DeserializeObject<WagerMegaReport>(r);
+                var result = JsonConvert.DeserializeObject<ReportMega>(r);
                 return result;
             }
         }
 
-        private async Task<string> DoHttpClientAsync(string url, object param)
+
+        public GameLogUrl GetGameLogUrlByPlayer(string apiUrl, string sn, string secretCode, string loginId, string startTime, string endTime, string guid)
         {
+            // param
+            var contentType = "application/json";
+            string sign = guid + sn + loginId + secretCode;
+
+            var param = new
+            {
+                id = guid,
+                method = "open.mega.player.game.log.url.get",
+                @params = new
+                {
+                    random = guid,
+                    digest = _common.ToMD5(sign).ToUpper(),
+                    sn = sn,
+                    loginId = loginId,
+                    startTime = startTime,
+                    endTime = endTime
+                },
+                jsonrpc = "2.0",
+            };
             var sParam = JsonConvert.SerializeObject(param);
 
-            _log2File.InsertRequestLog(_tpName, url, sParam, "1");
+            // request
+            var r = DoHttpClientAsync(apiUrl, sParam, contentType).GetAwaiter().GetResult();
+            var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
+            if (error.error != null)
+            {
+                var result = new GameLogUrl();
+                result.code = error.error.code;
+                result.message = error.error.message;
+                return result;
+            }
+            else
+            {
+                var result = JsonConvert.DeserializeObject<GameLogUrl>(r);
+                result.code = "0";
+                return result;
+            }
+        }
 
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Content = new StringContent(sParam, Encoding.UTF8, "application/json");
-            
-            var response = await _httpHelper.GetClient().SendAsync(request);
+        public WagerMega GetBetListByTime(string wagerUrl, dynamic parameter, string guid, int page)
+        {
+            // param
+            var contentType = "application/x-www-form-urlencoded";
+            string uri = "/ashx/log/GameLog.ashx";
+            string url = $"{wagerUrl}{uri}";
+            var param = new
+            {
+                action = "playerGameLog",
+                user = parameter["playername"],
+                sDate = parameter["logdate_begin"],
+                eDate = parameter["logdate_end"],
+                time = parameter["time"],
+                sign = parameter["sign"],
+                pageIndex = page,
+            };
+
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request
+            string r = DoHttpClientAsync(url, sParam, contentType).GetAwaiter().GetResult();
+            var result = JsonConvert.DeserializeObject<WagerMega>(r);
+            return result;
+        }
+
+        private async Task<string> DoHttpClientAsync(string url, string param, string contentType)
+        {
+            var httpContent = new StringContent(param, Encoding.UTF8, contentType);
+            var response = await _httpHelper.GetClient().PostAsync(url, httpContent);
             var result = response.Content.ReadAsStringAsync().Result;
 
             if (!response.IsSuccessStatusCode)
             {
                 _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
-                _log2File.InsertResponseLog(_tpName, url, sParam, result);
+                _log2File.InsertResponseLog(_tpName, url, param, result);
+                return result;
             }
-
             return result;
         }
     }
