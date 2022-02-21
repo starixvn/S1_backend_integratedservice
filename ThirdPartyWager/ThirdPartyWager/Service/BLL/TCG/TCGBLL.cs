@@ -68,7 +68,7 @@ namespace ThirdPartyWager.Service.BLL
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    var fileUrl = $"/{type}/SETTLED/{batchTime:yyyyMMdd}/{batchTime:yyyyMMddHHmm}_{page:0000}.json";;
+                    var fileUrl = $"/{type}/SETTLED/{batchTime:yyyyMMdd}/{batchTime:yyyyMMddHHmm}_{page:0000}.json";
                     var queryResult = DownloadFTPFile<T>(config, fileUrl);
                     if (queryResult.list.Count > 0)
                     {
@@ -123,7 +123,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {config.WagerUrl}{fileUrl} {ex.Message}.");
-                return new TCGQueryWagerObj<T>() ;
+                throw;
             }
         }
 

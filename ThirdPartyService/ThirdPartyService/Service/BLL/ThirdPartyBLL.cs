@@ -766,7 +766,6 @@ namespace ThirdPartyService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.UserNotExist;
                 apiResult.Message = "This Account Cust Wallet Not Found";
-                log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
                 return apiResult;
             }
 
@@ -776,7 +775,6 @@ namespace ThirdPartyService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.AutoTransferIsOff;
                 apiResult.Message = "This Account Auto Transfer Is Off";
-                log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
                 return apiResult;
             }
 
@@ -886,14 +884,12 @@ namespace ThirdPartyService.Service.BLL
                 {
                     apiResult.ErrorCode = ErrorCode.AutoTransferIsSeamless;
                     apiResult.Message = "Go To Seamless Game Is No Need To Transfer";
-                    log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
                 }
             }
             else
             {
                 apiResult.ErrorCode = ErrorCode.AutoTransferFail;
                 apiResult.Message = "Get Transfer Games Failed";
-                log2File.Error(JsonConvert.SerializeObject(apiResult), "AutoTransfer");
             }
 
             return apiResult;
