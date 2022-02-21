@@ -42,66 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetService<ILogger<HBBLL>>();
         }
 
-        public async Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request)
-        {
-            var response = new HBPlayerDetailResponse()
-            {
-                playerdetailresponse = new playerdetailresponse()
-            };
-            var status = new HBStatus()
-            {
-                success = false,
-                autherror = true
-            };
-            
-            if (!string.IsNullOrEmpty(request.playerdetailrequest.token))
-            {
-                var (authToken, sessionToken) = ParseToken(request.playerdetailrequest.token);
-                if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-                {
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null || tpCheck.Token != sessionToken)
-                    {
-                        _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
-                        status.message = "player session is expired";
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        status.message = "player is inactive";
-                    }
-                    else
-                    {
-                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)GameType);
-                        if (tpCustBalance != null)
-                        {
-                            response.playerdetailresponse.Status = new HBStatus()
-                            {
-                                success = true,
-                                autherror = false,
-                                message = ""
-                            };
-                            response.playerdetailresponse.accountid = tpCustInfoAuth.TpUserName;
-                            response.playerdetailresponse.accountname = tpCustInfoAuth.TpUserName;
-                            response.playerdetailresponse.balance = tpCustBalance.Balance;
-                            response.playerdetailresponse.currencycode = tpCustBalance.TpCurrencyId;
-                            return response;
-                        }
-                    }
-                }
-                else
-                {
-                    status.message = "Invalid player session";
-                }
-            }
-            else
-            {
-                status.message = "Player session token is empty";
-            }
-            response.playerdetailresponse.Status = status;
-            return response;
-        }
-
-        public async Task<playerdetailresponse> Auth(string token)
+        public playerdetailresponse PlayerDetail(string token)
         {
             var response = new playerdetailresponse();
             var status = new HBStatus()
@@ -112,11 +53,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             if (!string.IsNullOrEmpty(token))
             {
-                var (authToken, sessionToken) = ParseToken(token);
-                if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                var authToken = ParseToken(token);
+                if (authToken != null && _authBLL.Authenticate(authToken.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
                     var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null || tpCheck.Token != sessionToken)
+                    if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
                     {
                         _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
                         status.message = "player session is expired";
@@ -155,6 +96,44 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             response.Status = status;
             return response;
+        }
+
+        public bool Auth(string token)
+        {
+            if (!string.IsNullOrEmpty(token))
+            {
+                var authToken = ParseToken(token);
+                if (authToken == null)
+                {
+                    return false;
+                }
+
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, authToken.tpUserName);
+                if (tpCheck == null)
+                {
+                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
+                    return false;
+                }
+                else if(tpCheck.Token != authToken.longTimeToken)
+                {
+                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
+                    return false;
+                }
+                else if (tpCheck.Locked)
+                {
+                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player is inactive");
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Player session token is empty");
+                return false;
+            }
         }
         
         public async Task<dynamic> FundTransfer(dynamic request)
@@ -310,20 +289,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return response;
         }
 
-        private (string authToken, string sessionToken) ParseToken(string token)
+        private TokenInfo ParseToken(string token)
         {
             try
             {
                 var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(token)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                return sessionKeyArr.Length > 2 ? (sessionKeyArr[0], sessionKeyArr[1]) : (string.Empty, string.Empty);
+                if (sessionKeyArr.Length > 2)
+                {
+                    return new TokenInfo
+                    {
+                        shortTimeToken = sessionKeyArr[0], /* 1 min*/
+                        longTimeToken = sessionKeyArr[1],  /* Long Time*/
+                        tpUserName = sessionKeyArr[2],
+                    };
+                }
+                return null;
             }
             catch (FormatException e)
             {
                 _logger.LogError($"invalid token:{token}");
-                return (string.Empty, string.Empty);
+                return null;
             }
-            
         }
     }
 }
