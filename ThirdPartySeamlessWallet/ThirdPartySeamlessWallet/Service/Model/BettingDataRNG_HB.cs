@@ -250,5 +250,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public dynamic fundtransferresponse { get; set; }
     }
-
+    public class TokenInfo
+    {
+        public string shortTimeToken { get; set; }
+        public string longTimeToken { get; set; }
+        public string tpUserName { get; set; }
+        public string gameId { get; set; }
+    }
 }
