@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Dynamic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<dynamic>(content);
+            var token = (string) request.fundtransferrequest.token;
+            var response = await _hbbll.Auth(token);
+            if (response.Status.success == false)
+            {
+                return new HBFundTransferResponse()
+                {
+                    fundtransferresponse = new
+                    {
+                        status = new
+                        {
+                            success = false,
+                            autherror = true
+                        }
+                    }
+                };
+            }
+
             return new HBFundTransferResponse()
             {
                 fundtransferresponse = await _hbbll.FundTransfer(request.fundtransferrequest)
