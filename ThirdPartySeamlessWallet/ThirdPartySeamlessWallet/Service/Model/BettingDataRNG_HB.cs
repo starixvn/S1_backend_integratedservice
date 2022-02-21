@@ -34,6 +34,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TpUserName { get; set; }
         public decimal Stake { get; set; }
         public decimal ValidBet { get; set; }
+        public decimal ProgressiveBet { get; set; }
+        public decimal ProgressiveWin { get; set; }
         public decimal WinLostAmount { get; set; }
         public long SettledTime { get; set; }
         public long TransTime { get; set; }
