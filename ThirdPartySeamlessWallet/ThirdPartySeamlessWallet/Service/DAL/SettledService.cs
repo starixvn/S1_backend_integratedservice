@@ -163,6 +163,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     allowNegative = allowNegative
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                throw;
             }
 
             return result;
@@ -211,6 +212,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     allowNegative = allowNegative
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
+                throw;
             }
 
             return result;
