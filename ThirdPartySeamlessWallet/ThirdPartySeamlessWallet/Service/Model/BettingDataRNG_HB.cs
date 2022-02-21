@@ -40,6 +40,54 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string GameId { get; set; }
     }
 
+    public class PlaceBetRngDto_HB
+    {
+        public string accountid { get; set; }
+        public string gameinstanceid { get; set; }
+        public long friendlygameinstanceid { get; set; }
+        public int gamestatemode { get; set; }
+        public string transferid { get; set; }
+        public string currencycode { get; set; }
+        public decimal amount { get; set; }
+        public decimal bonusamount { get; set; }
+        public bool jpwin { get; set; }
+        public decimal jpcont { get; set; }
+        public bool isbonus { get; set; }
+        public DateTime dtevent { get; set; }
+        public string initialdebittransferid { get; set; }
+        public int accounttransactiontype { get; set; }
+        public bool gameinfeature { get; set; }
+        public string keyname { get; set; }
+        public string gametypename { get; set; }
+        public int channel { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+    }
+
+    public class PayoutRngDto_HB
+    {
+        public string accountid { get; set; }
+        public string gameinstanceid { get; set; }
+        public long friendlygameinstanceid { get; set; }
+        public int gamestatemode { get; set; }
+        public string transferid { get; set; }
+        public string currencycode { get; set; }
+        public decimal amount { get; set; }
+        public decimal bonusamount { get; set; }
+        public bool jpwin { get; set; }
+        public decimal jpcont { get; set; }
+        public bool isbonus { get; set; }
+        public DateTime dtevent { get; set; }
+        public string initialdebittransferid { get; set; }
+        public int accounttransactiontype { get; set; }
+        public bool gameinfeature { get; set; }
+        public string keyname { get; set; }
+        public string gametypename { get; set; }
+        public int channel { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+    }
+
     public class CancelBetRngDto_HB
     {
         public string TransferId { get; set; }
