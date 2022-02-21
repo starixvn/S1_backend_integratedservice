@@ -236,4 +236,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         InsufficientBalance = 1,
     }
+
+    public enum SeamlessBonusType
+    {
+        TpCategory,
+        TpId,
+    }
 }
