@@ -28,9 +28,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("auth")]
-        public async Task<HBPlayerDetailResponse> Auth(HBPlayerDetailRequest request)
+        public HBPlayerDetailResponse Auth(HBPlayerDetailRequest request)
         {
-            return await _hbbll.Auth(request);
+            return new HBPlayerDetailResponse()
+            {
+                playerdetailresponse = _hbbll.PlayerDetail((string)request.playerdetailrequest.token)
+            };
         }
 
         /// <summary>
@@ -44,8 +47,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<dynamic>(content);
             var token = (string) request.fundtransferrequest.token;
-            var response = await _hbbll.Auth(token);
-            if (response.Status.success == false)
+            if (_hbbll.Auth(token) == false)
             {
                 return new HBFundTransferResponse()
                 {
@@ -64,6 +66,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 fundtransferresponse = await _hbbll.FundTransfer(request.fundtransferrequest)
             };
+        }
+        
+        /// <summary>
+        /// 交易
+        /// </summary>
+        [HttpPost]
+        [Route("query")]
+        public async Task<dynamic> QueryRequest()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<dynamic>(content);
+            return "";
         }
     }
 }
