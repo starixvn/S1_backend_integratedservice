@@ -55,33 +55,33 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);
             try
             {
-                var currency = "THB";
-                quickTHB = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                if (dataTpTimer == null)
-                {
-                    timerTime = DateTime.Now.AddDays(iDays * -1);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                }
+                //var currency = "THB";
+                //quickTHB = 0;
+                //var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                //DateTime timerTime;
+                //if (dataTpTimer == null)
+                //{
+                //    timerTime = DateTime.Now.AddDays(iDays * -1);
+                //}
+                //else
+                //{
+                //    timerTime = dataTpTimer.StartTime.AddSeconds(1);
+                //}
 
-                if (timerTime < DateTime.Now.AddDays(iDays * -1))
-                {
-                    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                    if (result == true)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                    }
-                }
-                var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
-                if (diffDay >= (iDays + 1))
-                {
-                    quickTHB = 1;
-                }
+                //if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                //{
+                //    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                //    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                //    if (result == true)
+                //    {
+                //        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                //    }
+                //}
+                //var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                //if (diffDay >= (iDays + 1))
+                //{
+                //    quickTHB = 1;
+                //}
 
             }
             catch (Exception ex)
@@ -109,33 +109,33 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);
             try
             {
-                var currency = "MYR";
-                quickMYR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                if (dataTpTimer == null)
-                {
-                    timerTime = DateTime.Now.AddDays(iDays * -1);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                }
+                //var currency = "MYR";
+                //quickMYR = 0;
+                //var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                //DateTime timerTime;
+                //if (dataTpTimer == null)
+                //{
+                //    timerTime = DateTime.Now.AddDays(iDays * -1);
+                //}
+                //else
+                //{
+                //    timerTime = dataTpTimer.StartTime.AddSeconds(1);
+                //}
 
-                if (timerTime < DateTime.Now.AddDays(iDays * -1))
-                {
-                    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                    if (result == true)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                    }
-                }
-                var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
-                if (diffDay >= (iDays + 1))
-                {
-                    quickMYR = 1;
-                }
+                //if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                //{
+                //    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                //    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                //    if (result == true)
+                //    {
+                //        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                //    }
+                //}
+                //var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                //if (diffDay >= (iDays + 1))
+                //{
+                //    quickMYR = 1;
+                //}
 
             }
             catch (Exception ex)
@@ -163,33 +163,33 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);
             try
             {
-                var currency = "IDR";
-                quickIDR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                if (dataTpTimer == null)
-                {
-                    timerTime = DateTime.Now.AddDays(iDays * -1);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                }
+                //var currency = "IDR";
+                //quickIDR = 0;
+                //var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                //DateTime timerTime;
+                //if (dataTpTimer == null)
+                //{
+                //    timerTime = DateTime.Now.AddDays(iDays * -1);
+                //}
+                //else
+                //{
+                //    timerTime = dataTpTimer.StartTime.AddSeconds(1);
+                //}
 
-                if (timerTime < DateTime.Now.AddDays(iDays * -1))
-                {
-                    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                    if (result == true)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                    }
-                }
-                var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
-                if (diffDay >= (iDays + 1))
-                {
-                    quickIDR = 1;
-                }
+                //if (timerTime < DateTime.Now.AddDays(iDays * -1))
+                //{
+                //    var time = dateTimeHelper.GetTimeByDay(iRangMins, -4, "yyyy-MM-dd HH:mm:ss", timerTime);
+                //    var result = await wagerMegaBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                //    if (result == true)
+                //    {
+                //        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                //    }
+                //}
+                //var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
+                //if (diffDay >= (iDays + 1))
+                //{
+                //    quickIDR = 1;
+                //}
 
             }
             catch (Exception ex)

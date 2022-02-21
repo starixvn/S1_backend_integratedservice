@@ -109,48 +109,53 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{thisTp}_{getLoginReq.method}";
             if (string.Equals(getLoginReq.method, "open.operator.user.login", StringComparison.OrdinalIgnoreCase))
             {
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.Params.loginId);
-                if (tpCheck == null)
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
+                if (tpCustInfo == null)
                 {
                     resp.error = "Invalid user Id";
-                    log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
+                }
+
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
+                if (tpCheck == null)
+                {
+                    tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, "", out _);
+                    tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, "", "App", "App");
+                    tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
                 }
 
                 if (tpCheck.Locked)
                 {
                     resp.error = "Account is Lock";
-                    log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
 
                 if (string.IsNullOrEmpty(getLoginReq.Params.password))
                 {
                     resp.error = "Invalid password";
-                    log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
-
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
 
                 if (tpCustInfo.TpPwd == getLoginReq.Params.password)
                 {
                     resp.result.success = "1";
                     resp.result.sessionId = tpCheck.Token;
                     resp.result.msg = "login success";
+                    log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }
                 else
                 {
                     resp.error = "Password failed";
+                    log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                 }
+                return resp;
+            }
 
-                log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-            }
-            else
-            {
-                resp.error = "404 failed";
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-            }
+            resp.error = "404 failed";
+            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             return resp;
         }
     }
