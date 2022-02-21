@@ -3966,35 +3966,35 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region HB
 
-        public TransactionResult_HB PayoutRNG_HB(TpCustInfo tpCustInfo, BettingDataRNG_HB bettingDataRng_HB, MySqlConnection conn, MySqlTransaction trans)
+        public TransactionResult_HB PayoutRNG_HB(TpCustInfo tpCustInfo, PayoutRngDto_HB payoutRngDto, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
             var transactionResult = new TransactionResult_HB();
             try
             {
-                var partitionTime = bettingDataRng_HB.dtevent;
-                var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", bettingDataRng_HB);
+                var partitionTime = payoutRngDto.dtevent;
+                var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", payoutRngDto);
                 if (check.Any())
                 {
                     transactionResult.result = -1;
                     return transactionResult;
                 }
 
-                bettingDataRng_HB.TicketType = (int)BettransType.Payout;
-                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", bettingDataRng_HB, trans);
+                payoutRngDto.TicketType = (int)BettransType.Payout;
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 
                 var afterAmount = 0m;
                 var bonusId = 0;
-                if (result > 0 && bettingDataRng_HB.amount != 0)
+                if (result > 0 && payoutRngDto.amount != 0)
                 {
                     result = PayoutV2(
                          tpCustInfo: tpCustInfo,
-                         amount: bettingDataRng_HB.amount,
+                         amount: payoutRngDto.amount,
                          tpId: (int)Tp.HB,
-                         tpTransId: bettingDataRng_HB.initialdebittransferid,
+                         tpTransId: payoutRngDto.initialdebittransferid,
                          gameType: (int)GameType.HB_RNG,
                          tpCategory: TpCategory.Slots,
-                         refId: bettingDataRng_HB.transferid,
+                         refId: payoutRngDto.transferid,
                          TransType.Payout,
                          betData: null,
                          out afterAmount,
@@ -4004,9 +4004,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                          trans);
                 }
                 
-                if (result > 0 && bettingDataRng_HB.gamestatemode == 2)
+                if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, bettingDataRng_HB.initialdebittransferid, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, payoutRngDto.initialdebittransferid, trans, partitionTime);
                 }
                 return new TransactionResult_HB()
                 {
