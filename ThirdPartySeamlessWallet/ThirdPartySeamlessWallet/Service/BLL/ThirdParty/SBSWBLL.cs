@@ -197,7 +197,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     out var afterAmount,
                     ref bonusId,
                     conn,
-                    trans);
+                    trans,
+                    SeamlessBonusType.TpId);
 
                 if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
@@ -294,7 +295,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 out int bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.Allow);
+                                AllowNegative.NotAllow,
+                                SeamlessBonusType.TpId);
 
                     if (result.SetBalanceResult < 1)
                     {
@@ -385,7 +387,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow);
+                            AllowNegative.NotAllow,
+                            SeamlessBonusType.TpId);
 
                 if (result.SetBalanceResult < 1)
                 {
@@ -477,7 +480,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow);
+                            AllowNegative.Allow,
+                            SeamlessBonusType.TpId);
 
                 if (result.SetBalanceResult < 1)
                 {

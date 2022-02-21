@@ -94,7 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
+        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
             afterAmount = 0;
             bonusId = 0;
@@ -104,7 +104,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (bHasBonusWallet)
                 {
-                    result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out int custId, out bonusId);
+                    result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out int custId, out bonusId, bonusType);
 
                     if (bonusId > 0 || transType == TransType.Prize)
                     {
@@ -218,16 +218,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
+        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
             CustId = 0;
             BonusId = 0;
-
+            var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute($"Service_Tp{tpCategory}Bonus_Get", p, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute(spName, p, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
