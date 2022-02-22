@@ -1053,12 +1053,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 transferid
             };
             var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
-            if (check.Any())
-            {
-                return true;
-            }
-
-            return false;
+            return check.Any();
         }
         #endregion
         

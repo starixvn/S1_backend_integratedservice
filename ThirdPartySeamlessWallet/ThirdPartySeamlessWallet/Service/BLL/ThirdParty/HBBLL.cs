@@ -147,10 +147,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return await Refund(request, tpCustInfo, tpCurrency);
             }
-            else if((bool)request.isretry && (bool)request.isrecredit)
-            {
-                return await ReCredit(request, tpCustInfo, tpCurrency);
-            }
             else
             {
                 return await DebitAndCredit(request, tpCustInfo, tpCurrency);
@@ -209,15 +205,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gameinstanceid = request.gameinstanceid,
                         friendlygameinstanceid = request.friendlygameinstanceid,
                         gamestatemode = fundInfo.gamestatemode,
-                        transferid = fundInfo.transferid,
+                        transferid = (bool) request.isrecredit ? fundInfo.originaltransferid : fundInfo.transferid,
                         currencycode = fundInfo.currencycode,
                         amount = fundInfo.amount,
                         bonusamount = fundInfo.bonusamount,
                         jpwin = fundInfo.jpwin,
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
-                        dtevent = DateTimeOffset.Parse((string)fundInfo.dtevent).DateTime,
-                        initialdebittransferid = (bool)fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
+                        dtevent = DateTimeOffset.Parse((string) fundInfo.dtevent).DateTime,
+                        initialdebittransferid = (bool) fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
                         keyname = request.gamedetails.keyname,
@@ -230,6 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (afterAmount < 0)
                 {
+                    _logger.LogInformation("");
                     break;
                 }
             }
@@ -243,12 +240,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 else
                 {
                     if (tpCurrency.ExchangeRate > 0) 
-                        afterAmount /= tpCurrency.ExchangeRate;   
+                        afterAmount /= tpCurrency.ExchangeRate;
                 }
                 
                 trans.Commit();
                 if(bonusId > 0)
-                    _settledService.UpdateTpBonus_HB((int) Tp.HB, transId, (int) GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
+                    _settledService.UpdateTpBonusFlag_HB((int) Tp.HB, transId, (int) GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.successdebit = true;
@@ -259,6 +256,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 response.status = new ExpandoObject();
                 response.status.success = false;
                 response.status.nofunds = true;
+                afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
             }
 
             response.balance = afterAmount;
@@ -295,53 +293,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.refundstatus = 2;
-            }
-
-            response.balance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
-            response.currencycode = tpCurrency.TpCurrencyId;
-
-            return response;
-        }
-        
-        public async Task<dynamic> ReCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
-        {
-            var transactionResult = 0;
-            dynamic response = new ExpandoObject();
-
-            var bonusId = 0;
-            var afterAmount = 0m;
-            
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-            var payoutRngDto = new PayoutRngDto_HB()
-            {
-                accountid = request.accountid,
-                gameinstanceid = request.gameinstanceid,
-                friendlygameinstanceid = request.friendlygameinstanceid,
-                gamestatemode = request.funds.refund.gamestatemode,
-                transferid = request.funds.refund.transferid,
-                currencycode = request.funds.refund.currencycode,
-                amount = request.funds.refund.amount,
-                bonusamount = request.funds.refund.bonusamount,
-                jpwin = request.funds.refund.jpwin,
-                jpcont = request.funds.refund.jpcont,
-                isbonus = request.funds.refund.isbonus,
-                dtevent = DateTimeOffset.Parse((string)request.funds.refund.dtevent).DateTime,
-                initialdebittransferid = (bool)request.funds.refund.isbonus ? request.bonusdetails.bonusbalanceid : request.funds.refund.initialdebittransferid,
-                accounttransactiontype = request.funds.refund.accounttransactiontype,
-                gameinfeature = request.funds.refund.gameinfeature,
-                keyname = request.gamedetails.keyname,
-                gametypename = request.gamedetails.gametypename,
-                channel = request.gamedetails.channel
-            };
-            transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, out afterAmount, ref bonusId, conn, trans);
-
-            if (transactionResult > 0)
-            {
-                trans.Commit();
-                response.status = new ExpandoObject();
-                response.status.success = true;
             }
 
             response.balance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
