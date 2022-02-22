@@ -103,82 +103,48 @@ namespace ThirdPartyBetHistory.Service.DAL
                             betRecord.BonusId = bonusId;
                         }
                     }
-
-                    var isRollover = false;
-                    if (RefBetRecord == null)
+                  
+                    if (hasJoinBonus) //有Bonus走SetRollOverTurnOver
                     {
-                        if (betRecord.SettlementType == SettlementType.SettledForValid)
+                        if (RefBetRecord == null)
                         {
-                            if (hasJoinBonus)
+                            if (betRecord.SettlementType == SettlementType.SettledForValid)
                             {
-                                SetRollOverTurnOver(bonusId, betRecord.TpId, (int) betRecord.GameType,
+                                SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet,
                                     "Settled", betRecord.TransId, conn, trans);
                             }
-                            else
-                            {
-                                isRollover = SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet, "Settled", betRecord.TransId, conn, trans) > 0;
-                            }
                         }
-                    }
-                    else
-                    {
-                        if (RefBetRecord.SettlementType != SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid)
+                        else
                         {
-                            if (hasJoinBonus)
+                            if (RefBetRecord.SettlementType != SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid)
                             {
-                                SetRollOverTurnOver(bonusId, betRecord.TpId, (int) betRecord.GameType,
+                                SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet,
                                     "Settled", betRecord.TransId, conn, trans);
                             }
-                            else
+                            else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.UnSettled)
                             {
-                                isRollover = SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet, "Settled", betRecord.TransId, conn, trans) > 0;
-                            }
-                        }
-                        else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.UnSettled)
-                        {
-                            if (hasJoinBonus)
-                            {
-                                SetRollOverTurnOver(bonusId, betRecord.TpId, (int) betRecord.GameType,
+                                SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId,
-                                    RefBetRecord.ValidBet * -1, "UnSettled", betRecord.TransId, conn, trans);
+                                    RefBetRecord.ValidBet * -1, "UnSettled", betRecord.TransId, conn, trans);                                
                             }
-                            else
+                            else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType != SettlementType.SettledForValid)
                             {
-                                isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, "UnSettled", RefBetRecord.TransId, conn, trans) > 0;
-                            }
-                        }
-                        else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType != SettlementType.SettledForValid)
-                        {
-                            if (hasJoinBonus)
-                            {
-                                SetRollOverTurnOver(bonusId, betRecord.TpId, (int) betRecord.GameType,
+                                SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId,
                                     RefBetRecord.ValidBet * -1, "Re-Settled", RefBetRecord.TransId, conn, trans);
                             }
-                            else
+                            else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && RefBetRecord.ValidBet != betRecord.ValidBet)
                             {
-                                isRollover = SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, "Re-Settled", RefBetRecord.TransId, conn, trans) > 0;
-                            }
-                        }
-                        else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && RefBetRecord.ValidBet != betRecord.ValidBet)
-                        {
-                            if (hasJoinBonus)
-                            {
-                                SetRollOverTurnOver(bonusId, betRecord.TpId, (int) betRecord.GameType,
+                                SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId,
                                     betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, conn,
                                     trans);
                             }
-                            else
-                            {
-                                isRollover = SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, conn, trans) > 0;
-                            }
                         }
                     }
-
-                    if (!isRollover && !hasJoinBonus)
+                    else //沒Bonus走SetWithdrawalLimitTurnOver
                     {
                         if (RefBetRecord == null)
                         {
@@ -195,16 +161,16 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet, "Settled", betRecord.TransId, conn, trans);
                             }
                             else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
-                                     && (betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Draw))
+                                        && (betRecord.TicketStatus == TicketStatus.Refund || betRecord.TicketStatus == TicketStatus.UnSettled || betRecord.TicketStatus == TicketStatus.Draw))
                             {
                                 SetWithdrawalLimitTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, betRecord.TicketStatus == TicketStatus.UnSettled ? "UnSettled" : "Re-Settled", RefBetRecord.TransId, conn, trans);
                             }
                             else if ((betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Lost)
-                                     && RefBetRecord.ValidBet != betRecord.ValidBet)
+                                        && RefBetRecord.ValidBet != betRecord.ValidBet)
                             {
                                 SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, conn, trans);
                             }
-                        }
+                        }                       
                     }
 
                     var Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
@@ -221,7 +187,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                         if (Losses != 0 && bonusId > 0)
                         {
-                            AutoCancelBonusV2(bonusId,betRecord.TransId, conn, trans);
+                            AutoCancelBonus(bonusId,betRecord.TransId, conn, trans);
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -240,7 +206,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                             if (Losses != 0 && bonusId > 0)
                             {
-                                AutoCancelBonusV2(bonusId,betRecord.TransId, conn, trans);
+                                AutoCancelBonus(bonusId,betRecord.TransId, conn, trans);
                             }
                         }
                     }
@@ -332,15 +298,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_TpBetRecord_Set", parameters, conn, trans);
         }
 
-        private int SetRollOverTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
-        {
-            if (TurnOver == 0)
-                return 0;
-
-            var parameters = new DynamicParameters(new {TpId, CustId, UserName, SiteId, TurnOver, Memo, RefTransId});
-            return _mainDbClient.Execute("Common_RollOverTurnOver_Set", parameters, conn, trans);
-        }
-
         private int SetWithdrawalLimitTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (TurnOver == 0)
@@ -384,14 +341,16 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", parameters);
         }
 
-        private int SetRollOverTurnOver(int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
+        private int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (Turnover == 0)
                 return 0;
 
             var parameters = new DynamicParameters(new {TpId, GameType, CustId, UserName, SiteId, Turnover, Memo, RefTransId });
             parameters.Add("BonusId", BonusId, direction: ParameterDirection.InputOutput);
-            return _mainDbClient.Execute("Service_RolloverTurnover_Set", parameters, conn, trans);
+            var result = _mainDbClient.Execute("Service_RolloverTurnover_Set", parameters, conn, trans);
+            BonusId = parameters.Get<int>("BonusId");
+            return BonusId > 0 ? 1 : 0;
         }
 
         private int SetBonusWinLost(int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, int BonusId, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
@@ -402,7 +361,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, conn, trans);
         }
 
-        private int AutoCancelBonusV2(int bonusId,string transId, MySqlConnection conn, MySqlTransaction trans)
+        private int AutoCancelBonus(int bonusId,string transId, MySqlConnection conn, MySqlTransaction trans)
         {
             var parameters = new DynamicParameters(new { BonusId = bonusId ,TransId = transId });
             return _mainDbClient.Execute("Service_AutoCancelBonus_Set_V3", parameters, conn, trans);
