@@ -3971,7 +3971,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 payoutRngDto.TicketStatus = (int) TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
-                ;
 
                 if (result > 0 && payoutRngDto.amount != 0)
                 {
@@ -4026,7 +4025,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public void UpdateTpBonus_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
+
+        public void UpdateTpBonusFlag_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
             GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
         }
