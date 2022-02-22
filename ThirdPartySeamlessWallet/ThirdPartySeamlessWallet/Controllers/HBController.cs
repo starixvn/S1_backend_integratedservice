@@ -46,20 +46,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<dynamic>(content);
-            var token = (string) request.fundtransferrequest.token;
-            if (_hbbll.Auth(token) == false)
+            if ((bool) request.fundtransferrequest.isretry == false)
             {
-                return new HBFundTransferResponse()
+                var token = (string) request.fundtransferrequest.token;
+                if (_hbbll.Auth(token) == false)
                 {
-                    fundtransferresponse = new
+                    return new HBFundTransferResponse()
                     {
-                        status = new
+                        fundtransferresponse = new
                         {
-                            success = false,
-                            autherror = true
+                            status = new
+                            {
+                                success = false,
+                                autherror = true
+                            }
                         }
-                    }
-                };
+                    };
+                }
             }
 
             return new HBFundTransferResponse()
