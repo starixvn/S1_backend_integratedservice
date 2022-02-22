@@ -4046,7 +4046,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             // 已退過款
             else if (check.TicketStatus == (int) TicketStatus.Refund)
             {
-                transactionResult.result = -1;
+                transactionResult.result = 1;
                 return transactionResult;
             }
 
