@@ -87,8 +87,6 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = settleData.Stake,
                             ValidBet = settleData.ValidBet,
-                            ProgressiveBet = settleData.ProgressiveBet,
-                            ProgressiveWin = settleData.ProgressiveWin,
                             WinlostAmount = settleData.WinLostAmount,
                             TransId = settleData.TransId,
                             GameType = gametype,

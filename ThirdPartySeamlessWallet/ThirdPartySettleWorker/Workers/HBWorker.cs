@@ -90,6 +90,8 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = UnsettleData.Stake,
                             ValidBet = UnsettleData.ValidBet,
+                            ProgressiveBet = UnsettleData.ProgressiveBet,
+                            ProgressiveWin = UnsettleData.ProgressiveWin,
                             WinlostAmount = UnsettleData.WinLostAmount,
                             TransId = tpUnsettle.TransId,
                             GameType = gametype,
