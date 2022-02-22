@@ -1017,6 +1017,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 
                 placeBetRngDto.TicketType = (int)BettransType.Bet;
+                placeBetRngDto.TicketStatus = (int)TicketStatus.UnSettled;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
 
                 var afterAmount = 0m;
