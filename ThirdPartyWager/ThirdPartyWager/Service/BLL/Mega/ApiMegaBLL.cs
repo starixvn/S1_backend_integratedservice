@@ -171,6 +171,8 @@ namespace ThirdPartyWager.Service.BLL
                 _log2File.InsertResponseLog(_tpName, url, param, result);
                 return result;
             }
+
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
             return result;
         }
     }
