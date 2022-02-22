@@ -1055,6 +1055,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+        public bool QueryBettrans(string transferid)
+        {
+            var partitionTime = DateTime.UtcNow;
+            var query = new
+            {
+                transferid
+            };
+            var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
+            if (check.Any())
+            {
+                return true;
+            }
+
+            return false;
+        }
         #endregion
         
     }

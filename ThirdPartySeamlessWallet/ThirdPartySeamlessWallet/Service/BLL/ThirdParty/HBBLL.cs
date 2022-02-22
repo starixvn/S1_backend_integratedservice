@@ -289,6 +289,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return response;
         }
 
+        public bool QueryRequest(dynamic request)
+        {
+            return _bettingService.QueryBettrans((string)request.transferid);
+        }
+
         private TokenInfo ParseToken(string token)
         {
             try
