@@ -1017,6 +1017,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 
                 placeBetRngDto.TicketType = (int)BettransType.Bet;
+                placeBetRngDto.TicketStatus = (int)TicketStatus.UnSettled;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
 
                 var afterAmount = 0m;
@@ -1054,6 +1055,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+        public bool QueryBettrans(string transferid)
+        {
+            var partitionTime = DateTime.UtcNow;
+            var query = new
+            {
+                transferid
+            };
+            var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
+            if (check.Any())
+            {
+                return true;
+            }
+
+            return false;
+        }
         #endregion
         
     }
