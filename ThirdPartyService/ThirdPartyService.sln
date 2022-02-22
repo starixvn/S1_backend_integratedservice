@@ -87,7 +87,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.RedTiger", "Thir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.AP", "ThirdParty.AP\ThirdParty.AP.csproj", "{ECF8316A-1724-43A8-B034-931132E57465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Habanero", "ThirdParty.Habanero\ThirdParty.Habanero.csproj", "{02F30FD7-585B-4A93-BAF2-19316555233A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.HB", "ThirdParty.HB\ThirdParty.HB.csproj", "{02F30FD7-585B-4A93-BAF2-19316555233A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
