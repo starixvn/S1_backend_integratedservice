@@ -143,9 +143,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.HB, tpCustInfo.CurrencyId);
 
             // 退款
-            if ((bool)request.isrefund && (bool)request.isrefund)
+            if ((bool)request.isretry && (bool)request.isrefund)
             {
                 return await Refund(request, tpCustInfo, tpCurrency);
+            }
+            else if((bool)request.isretry && (bool)request.isrecredit)
+            {
+                return await ReCredit(request, tpCustInfo, tpCurrency);
             }
             else
             {
@@ -271,6 +275,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (transactionResult.result > 0)
             {
+                trans.Commit();
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.refundstatus = 1;
@@ -283,7 +288,50 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 response.status.refundstatus = 2;
             }
 
-            response.balance = transactionResult.afterAmount;
+            response.balance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
+            response.currencycode = tpCurrency.TpCurrencyId;
+
+            return response;
+        }
+        
+        public async Task<dynamic> ReCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        {
+            var transactionResult = new TransactionResult_HB();
+            dynamic response = new ExpandoObject();
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            var payoutRngDto = new PayoutRngDto_HB()
+            {
+                accountid = request.accountid,
+                gameinstanceid = request.gameinstanceid,
+                friendlygameinstanceid = request.friendlygameinstanceid,
+                gamestatemode = request.funds.refund.gamestatemode,
+                transferid = request.funds.refund.transferid,
+                currencycode = request.funds.refund.currencycode,
+                amount = request.funds.refund.amount,
+                bonusamount = request.funds.refund.bonusamount,
+                jpwin = request.funds.refund.jpwin,
+                jpcont = request.funds.refund.jpcont,
+                isbonus = request.funds.refund.isbonus,
+                dtevent = DateTimeOffset.Parse((string)request.funds.refund.dtevent).DateTime,
+                initialdebittransferid = (bool)request.funds.refund.isbonus ? request.bonusdetails.bonusbalanceid : request.funds.refund.initialdebittransferid,
+                accounttransactiontype = request.funds.refund.accounttransactiontype,
+                gameinfeature = request.funds.refund.gameinfeature,
+                keyname = request.gamedetails.keyname,
+                gametypename = request.gamedetails.gametypename,
+                channel = request.gamedetails.channel
+            };
+            transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, conn, trans);
+
+            if (transactionResult.result > 0 || transactionResult.result == -1)
+            {
+                trans.Commit();
+                response.status = new ExpandoObject();
+                response.status.success = true;
+            }
+
+            response.balance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
             response.currencycode = tpCurrency.TpCurrencyId;
 
             return response;
