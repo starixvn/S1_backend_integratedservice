@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
                         dtevent = DateTimeOffset.Parse((string)fundInfo.dtevent).DateTime,
-                        initialdebittransferid = fundInfo.initialdebittransferid,
+                        initialdebittransferid = (bool)fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
                         keyname = request.gamedetails.keyname,

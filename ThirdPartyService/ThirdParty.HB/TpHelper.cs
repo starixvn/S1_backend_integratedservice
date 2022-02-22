@@ -11,7 +11,7 @@ using ThirdPartyCore.Model.enums;
 using System.Threading.Tasks;
 using ThirdPartyCore.Model.Exceptions;
 
-namespace ThirdParty.Habanero
+namespace ThirdParty.HB
 {
     public class TpHelper: ThirdPartyHelperBase
     {
