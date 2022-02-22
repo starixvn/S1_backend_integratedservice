@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -19,7 +21,8 @@ namespace ThirdPartyWager.Workers
         private readonly int tpType = 1;
         private readonly int timeRange = 1440; //in minutes (24 * 60)
         private readonly int quickTime = 300; // in seconds
-        private readonly int runTime = 600; // in seconds (2 * 60)
+        private readonly int runTime = 600; // in seconds
+        private readonly string _tpName = Tp.Mega.ToString();
 
         public ReportMega(IServiceProvider provider)
         {
@@ -36,6 +39,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskTHB(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
             bool quick = false;
             var currency = "THB";
             try
@@ -55,6 +61,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskMYR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
             bool quick = false;
             var currency = "MYR";
             try
@@ -74,6 +83,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskIDR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
             bool quick = false;
             var currency = "IDR";
             try

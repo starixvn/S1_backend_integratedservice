@@ -1,10 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
@@ -21,6 +23,7 @@ namespace ThirdPartyWager.Workers
         private readonly int timeRange = 1440; //in minutes
         private readonly int quickTime = 1200; // in seconds
         private readonly int runTime = 1; // in day
+        private readonly string _tpName = Tp.Mega.ToString();
 
         public ReportRedoMega(IServiceProvider provider)
         {
@@ -38,6 +41,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskTHB(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
             bool quick = false;
             var currency = "THB";
             try
@@ -57,6 +63,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskMYR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
             bool quick = false;
             var currency = "MYR";
             try
@@ -76,6 +85,9 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskIDR(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
             bool quick = false;
             var currency = "IDR";
             try
