@@ -181,7 +181,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         jpwin = fundInfo.jpwin,
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
-                        dtevent = DateTime.Parse((string)fundInfo.dtevent),
+                        dtevent = DateTimeOffset.Parse((string)fundInfo.dtevent).DateTime,
                         initialdebittransferid = fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         jpwin = fundInfo.jpwin,
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
-                        dtevent = DateTime.Parse((string)fundInfo.dtevent),
+                        dtevent = DateTimeOffset.Parse((string)fundInfo.dtevent).DateTime,
                         initialdebittransferid = fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
@@ -287,6 +287,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             response.currencycode = tpCurrency.TpCurrencyId;
 
             return response;
+        }
+
+        public bool QueryRequest(dynamic request)
+        {
+            return _bettingService.QueryBettrans((string)request.transferid);
         }
 
         private TokenInfo ParseToken(string token)

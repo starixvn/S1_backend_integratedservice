@@ -73,12 +73,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("query")]
-        public async Task<dynamic> QueryRequest()
+        public async Task<HBFundTransferResponse> QueryRequest()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<dynamic>(content);
-            return "";
+            
+            return new HBFundTransferResponse()
+            {
+                fundtransferresponse = new
+                {
+                    status = _hbbll.QueryRequest(request.queryrequest)
+                }
+            };
         }
     }
 }

@@ -3970,6 +3970,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 payoutRngDto.TicketType = (int)BettransType.Payout;
+                payoutRngDto.TicketStatus = (int) TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 
                 var afterAmount = 0m;
