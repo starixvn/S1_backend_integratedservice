@@ -78,12 +78,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<dynamic>(content);
-            
+
             return new HBFundTransferResponse()
             {
                 fundtransferresponse = new
                 {
-                    status = _hbbll.QueryRequest(request.queryrequest)
+                    status = new
+                    {
+                        success = _hbbll.QueryRequest(request.queryrequest)
+                    }
                 }
             };
         }
