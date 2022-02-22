@@ -998,10 +998,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Habanero
 
-        public TransactionResult_HB PlaceBet_HB(TpCustInfo tpCustInfo, PlaceBetRngDto_HB placeBetRngDto, MySqlConnection conn, MySqlTransaction trans)
+        public int PlaceBet_HB(TpCustInfo tpCustInfo, PlaceBetRngDto_HB placeBetRngDto, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
-            var transactionResult = new TransactionResult_HB();
+            afterAmount = 0m;
             try
             {
                 var partitionTime = placeBetRngDto.dtevent;
@@ -1012,16 +1012,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
                 if (check.Any())
                 {
-                    transactionResult.result = -1;
-                    return transactionResult;//Duplicated
+                    return 1;
                 }
                 
                 placeBetRngDto.TicketType = (int)BettransType.Bet;
                 placeBetRngDto.TicketStatus = (int)TicketStatus.UnSettled;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
-
-                var afterAmount = 0m;
-                var bonusId = 0;
+                
                 if (result > 0 && placeBetRngDto.amount != 0)
                 {
                     result = PlaceBetV2(
@@ -1038,20 +1035,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans);
                 }
-                return new TransactionResult_HB()
-                {
-                    result = result,
-                    afterAmount = afterAmount,
-                    BonusId = bonusId
-                };
+
+                return result;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return new TransactionResult_HB()
-                {
-                    result = 0,
-                };
+                return -1;
             }
         }
 

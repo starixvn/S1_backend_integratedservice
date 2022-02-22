@@ -3955,64 +3955,80 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region HB
 
-        public TransactionResult_HB PayoutRNG_HB(TpCustInfo tpCustInfo, PayoutRngDto_HB payoutRngDto, MySqlConnection conn, MySqlTransaction trans)
+        public int PayoutRNG_HB(TpCustInfo tpCustInfo, PayoutRngDto_HB payoutRngDto, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
-            var transactionResult = new TransactionResult_HB();
+            afterAmount = 0m;
             try
             {
                 var partitionTime = payoutRngDto.dtevent;
                 var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", payoutRngDto);
                 if (check.Any())
                 {
-                    transactionResult.result = -1;
-                    return transactionResult;
+                    return 1;
                 }
-
                 payoutRngDto.TicketType = (int)BettransType.Payout;
                 payoutRngDto.TicketStatus = (int) TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
-                
-                var afterAmount = 0m;
-                var bonusId = 0;
+                var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
+                ;
+
                 if (result > 0 && payoutRngDto.amount != 0)
                 {
-                    result = PayoutV2(
-                         tpCustInfo: tpCustInfo,
-                         amount: payoutRngDto.amount,
-                         tpId: (int)Tp.HB,
-                         tpTransId: payoutRngDto.initialdebittransferid,
-                         gameType: (int)GameType.HB_RNG,
-                         tpCategory: TpCategory.Slots,
-                         refId: payoutRngDto.transferid,
-                         TransType.Payout,
-                         betData: null,
-                         out afterAmount,
-                         "Payout",
-                         out bonusId,
-                         conn,
-                         trans);
+                    if (bonusId > 0)
+                    {
+                        result = PayoutWithBonusId(
+                            tpCustInfo: tpCustInfo,
+                            amount: payoutRngDto.amount,
+                            tpId: (int)Tp.HB,
+                            tpTransId: payoutRngDto.initialdebittransferid,
+                            gameType: (int)GameType.HB_RNG,
+                            tpCategory: TpCategory.Slots,
+                            refId: payoutRngDto.transferid,
+                            TransType.Payout,
+                            out afterAmount,
+                            "Payout",
+                            bonusId,
+                            conn,
+                            trans);
+                    }
+                    else
+                    {
+                        result = PayoutV2(
+                            tpCustInfo: tpCustInfo,
+                            amount: payoutRngDto.amount,
+                            tpId: (int)Tp.HB,
+                            tpTransId: payoutRngDto.initialdebittransferid,
+                            gameType: (int)GameType.HB_RNG,
+                            tpCategory: TpCategory.Slots,
+                            refId: payoutRngDto.transferid,
+                            transType,
+                            betData: null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans);
+                    }
                 }
                 
                 if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, payoutRngDto.initialdebittransferid, trans, partitionTime);
                 }
-                return new TransactionResult_HB()
-                {
-                    result = result,
-                    afterAmount = afterAmount,
-                    BonusId = bonusId
-                };
+
+                return result;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
-                return new TransactionResult_HB()
-                {
-                    result = 0
-                };
+                return -1;
             }
+        }
+
+        public void UpdateTpBonus_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
+        {
+            GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
         }
 
         public TransactionResult_HB CancelBetRNG_HB(TpCustInfo tpCustInfo, CancelBetRngDto_HB cancelBetRngDto, MySqlConnection conn, MySqlTransaction trans)
