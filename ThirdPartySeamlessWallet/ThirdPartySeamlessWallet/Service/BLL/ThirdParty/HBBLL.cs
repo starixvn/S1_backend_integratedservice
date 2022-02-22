@@ -159,8 +159,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<dynamic> DebitAndCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
         {
-            var transactionResult = new TransactionResult_HB();
+            var transactionResult = 0;
             dynamic response = new ExpandoObject();
+            var bonusId = 0;
+            var afterAmount = 0m;
+            var transId = "";
+            
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
@@ -193,8 +197,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
                     };
-                    transactionResult = _bettingService.PlaceBet_HB(tpCustInfo, placeBetRngDto, conn, trans);
-
+                    transId = placeBetRngDto.initialdebittransferid;
+                    transactionResult = _bettingService.PlaceBet_HB(tpCustInfo, placeBetRngDto, out afterAmount, ref bonusId, conn, trans);
                 }
                 // credit
                 else
@@ -220,26 +224,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
                     };
-                    transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, conn, trans);
+                    transId = payoutRngDto.initialdebittransferid;
+                    transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, out afterAmount, ref bonusId, conn, trans);
                 }
 
-                if (transactionResult.afterAmount < 0)
+                if (afterAmount < 0)
                 {
                     break;
                 }
             }
-            if (transactionResult.result > 0)
+            
+            if (transactionResult > 0)
             {
-                if (transactionResult.afterAmount == 0)
+                if (afterAmount == 0)
                 {
-                    transactionResult.afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
+                    afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
                 }
                 else
                 {
                     if (tpCurrency.ExchangeRate > 0) 
-                        transactionResult.afterAmount /= tpCurrency.ExchangeRate;   
+                        afterAmount /= tpCurrency.ExchangeRate;   
                 }
+                
                 trans.Commit();
+                if(bonusId > 0)
+                    _settledService.UpdateTpBonus_HB((int) Tp.HB, transId, (int) GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.successdebit = true;
@@ -252,7 +261,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 response.status.nofunds = true;
             }
 
-            response.balance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
+            response.balance = afterAmount;
             response.currencycode = tpCurrency.TpCurrencyId;
             return response;
         }
@@ -296,8 +305,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         public async Task<dynamic> ReCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
         {
-            var transactionResult = new TransactionResult_HB();
+            var transactionResult = 0;
             dynamic response = new ExpandoObject();
+
+            var bonusId = 0;
+            var afterAmount = 0m;
+            
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
@@ -322,9 +335,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 gametypename = request.gamedetails.gametypename,
                 channel = request.gamedetails.channel
             };
-            transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, conn, trans);
+            transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, out afterAmount, ref bonusId, conn, trans);
 
-            if (transactionResult.result > 0 || transactionResult.result == -1)
+            if (transactionResult > 0)
             {
                 trans.Commit();
                 response.status = new ExpandoObject();
