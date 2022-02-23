@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,8 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSGBLL _apiSGBLL;
         private readonly WagerSGService _wagerSGService;
         private readonly ILogger<WagerSGBLL> _logger;
-
-        private readonly int _tpId = (int)Tp.SG;
 
         public WagerSGBLL(IServiceProvider provider)
         {

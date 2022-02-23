@@ -19,7 +19,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly DateTimeHelper _dateTimeHelper;
 
         private readonly int tpId = (int)Tp.Mega;
-        private readonly int timeZone = 8;
         private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerMegaBLL(IServiceProvider provider)

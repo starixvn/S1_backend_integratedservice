@@ -16,7 +16,6 @@ namespace ThirdPartyWager.Workers
         private readonly WagerOne789BLL wagerOne789BLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly Log2File log2File;
         private Timer timerLT;
         private Timer timerLT_789;
         private Timer timerLC;
