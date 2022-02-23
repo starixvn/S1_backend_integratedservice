@@ -15,6 +15,7 @@ using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using ThirdPartySeamlessWallet.Service.Model.Options;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
@@ -27,8 +28,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly ILogger<SBSWBLL> _logger;
-        public readonly ThirdPartySetting _thirdPartySetting;
+        private readonly ThirdPartySetting _thirdPartySetting;
         private readonly Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>> _requestHandler;
+        private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
 
 
         public Tp ThirdParty { get; set; }
@@ -60,6 +62,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { SBSWTransType.HealthCheck, HealthCheck},
             };
             _logger = provider.GetRequiredService<ILogger<SBSWBLL>>();
+            var sabaSportTypeOption = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>();
+            _sportTypeConfig = sabaSportTypeOption.ToDictionary(item => item.SportType, item => item);
         }
 
         public async Task<ReturnObj> SeamlessWallet(SBSWTransType transType, string merchant, string bodyText)
@@ -552,44 +556,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private (GameType gameType, TpCategory tpCategory) GetGameType(int sportType)
         {
-            if (sportType > 0 && sportType < 100)
+            if (!_sportTypeConfig.TryGetValue(sportType, out var sabaSportType))
             {
-                return (GameType.SBSW_Sports, TpCategory.Sports);
+                throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{sportType} not supported.");
             }
 
-            switch (sportType)
-            {
-                case 161: //百练赛
-                case 164: //快乐5
-                case 168: //快乐5系列游戏
-                    return (GameType.SBSW_NumberGame, TpCategory.Lottery);
-                case 180:
-                case 181:
-                case 182:
-                case 183:
-                case 184:
-                case 185:
-                case 186:
-                    return (GameType.SBSW_VirtualSports, TpCategory.VirtualSports);
-                case 190:
-                case 191:
-                case 192:
-                case 193:
-                case 194:
-                case 195:
-                case 196:
-                case 197:
-                case 199:
-                    return (GameType.SBSW_VirtualSports2, TpCategory.VirtualSports);
-                case 202: //快乐彩
-                    return (GameType.SBSW_Keno, TpCategory.Lottery);
-                case 220: //彩票(Keno Lottery)
-                    return (GameType.SBSW_Lottery, TpCategory.Lottery);
-                case 222: //桌面游戏
-                    return (GameType.SBSW_TableGame, TpCategory.Lottery);
-                default:
-                    throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{sportType} not supported.");
-            }
+            return ((GameType)sabaSportType.TpGameType, (TpCategory)sabaSportType.TpCategoryId);
         }
 
         private TpCustBalance GetTpCustBalance(string tpUserName)
