@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -17,8 +16,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<TicketAGBLL> _logger;
-
-        private readonly int _tpId = (int)Tp.AG;
 
         public TicketAGBLL(IServiceProvider provider)
         {

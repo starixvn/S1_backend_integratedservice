@@ -18,8 +18,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerDGService _wagerDGService;
         private readonly ILogger<WagerDGBLL> _logger;
 
-        private readonly int _tpId = (int)Tp.DG;
-
         public WagerDGBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();

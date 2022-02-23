@@ -16,7 +16,6 @@ namespace ThirdPartyWager.Workers
         private readonly WagerN2LiveBLL wagerN2LiveBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
-        private readonly Log2File log2File;
         private Timer timer;
         private int intervalDays = 1;
         private int iRangMins = 1440;
