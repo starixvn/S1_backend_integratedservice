@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
@@ -20,7 +20,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IHostEnvironment _environment;
 
         private readonly int _tpId = (int)Tp.PT;
-        private readonly string _tpName = Tp.PT.ToString();
 
         public WagerPTBLL(IServiceProvider provider)
         {
@@ -33,26 +32,26 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt)
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
-                string apiUrl = setting["ApiUrl"];
-                string pass = setting[$"Pass_{currency}"];
-                string entityKey = setting[$"XEntityKey_{currency}"];
+                var apiUrl = setting["ApiUrl"];
+                var pass = setting[$"Pass_{currency}"];
+                var entityKey = setting[$"XEntityKey_{currency}"];
+                var certificate = new Dictionary<string, string>
+                {
+                    { "path", Path.Combine(_environment.ContentRootPath, "Storage", "PT", $"{currency}.p12") },
+                    { "password", pass },
+                    { "currency", currency },
+                    { "site", siteId.ToString() }
+                };
 
-                Dictionary<string, string> certificate = new Dictionary<string, string>();
-                certificate.Add("path", $@"{_environment.ContentRootPath}\Storage\PT\{currency}.p12");
-                certificate.Add("password", pass);
-                certificate.Add("currency", currency);
-                certificate.Add("site", siteId.ToString());
-
-                int perPage = 500;
-                int page = 1;
-                int totalPage = 1;
+                var perPage = 500;
+                var page = 1;
+                var totalPage = 1;
                 while (page <= totalPage)
                 {
                     // get wager
@@ -90,7 +89,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.GAMECODE} )";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -104,7 +103,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

@@ -31,15 +31,15 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerSAModel> GetBetListByTime(string apiUrl, string encrypKey, string md5Key, string secretKey, string startTime, string endTime, string guid)
         {
             // param
-            string url = $"{apiUrl}";
-            string method = "GetAllBetDetailsForTimeIntervalDV";
+            var url = $"{apiUrl}";
+            var method = "GetAllBetDetailsForTimeIntervalDV";
             var time = new DateTimeOffset(DateTime.Now).ToString("yyyyMMddHHmmss");
-            string parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
+            var parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
 
             // encrype param
-            string q = _common.encrypt(parameter, encrypKey);
-            string s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
-            string param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
+            var q = _common.encrypt(parameter, encrypKey);
+            var s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
+            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
 
             // log
             _logger.LogInformation(parameter);
@@ -53,15 +53,15 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<WagerRedoSAModel> GetBetSummaryByTime(string apiUrl, string encrypKey, string md5Key, string secretKey, string startTime, string endTime, string guid)
         {
             // param
-            string url = $"{apiUrl}";
-            string method = "GetTransactionDetails";
+            var url = $"{apiUrl}";
+            var method = "GetTransactionDetails";
             var time = new DateTimeOffset(DateTime.Now).ToString("yyyyMMddHHmmss");
-            string parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
+            var parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
 
             // encrype param
-            string q = _common.encrypt(parameter, encrypKey);
-            string s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
-            string param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
+            var q = _common.encrypt(parameter, encrypKey);
+            var s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
+            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
 
             // log
             _logger.LogInformation(parameter);
@@ -90,7 +90,7 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             // xml to json
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(result);
 
             // single data force to array

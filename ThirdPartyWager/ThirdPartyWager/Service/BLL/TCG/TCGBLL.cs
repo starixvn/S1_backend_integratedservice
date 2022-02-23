@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using Serilog.Context;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -82,22 +81,22 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {      
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(fileUrl);
+                var request = (FtpWebRequest)WebRequest.Create(fileUrl);
                 request.Method = WebRequestMethods.Ftp.DownloadFile;
                 request.Credentials = new NetworkCredential(config.WagerAccount, config.WagerPassword);
-                FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+                var response = (FtpWebResponse)request.GetResponse();
 
-                using Stream s = response.GetResponseStream();
-                using StreamReader sr = new StreamReader(s);
+                using var s = response.GetResponseStream();
+                using var sr = new StreamReader(s);
                 using JsonReader reader = new JsonTextReader(sr);
-                JsonSerializer serializer = new JsonSerializer();
+                var serializer = new JsonSerializer();
                 _logger.LogInformation($"TCG: {config.WagerAccount} || FTP Success:{response.StatusDescription}");
                 return serializer.Deserialize<TCGQueryWagerObj<T>>(reader);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {fileUrl} {ex.Message}.");
-                return new TCGQueryWagerObj<T>() ;
+                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {config.WagerUrl}{fileUrl} {ex.Message}.");
+                throw;
             }
         }
 

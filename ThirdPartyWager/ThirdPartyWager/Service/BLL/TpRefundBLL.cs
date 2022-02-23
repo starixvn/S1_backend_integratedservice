@@ -1,11 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -26,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
         public bool ExecRefundWorker(int gameType)
         {
             dynamic _bll = "";
-            int tpId = 0;
+            var tpId = 0;
             var result = true;
             try
             {

@@ -1,11 +1,10 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -16,22 +15,19 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<JwtIconic> logger;
         private readonly ApiIconicBLL apiIconicBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly IHostEnvironment environment;
         private Timer timer;
         private int tpId = (int)Tp.Iconic;
-
+        private readonly string _tpName = Tp.Iconic.ToString();
 
         public JwtIconic(
             ILogger<JwtIconic> logger,
             ApiIconicBLL apiIconicBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            IHostEnvironment environment
+            ThirdPartyBLL thirdPartyBLL
         )
         {
             this.logger = logger;
             this.apiIconicBLL = apiIconicBLL;
             this.thirdPartyBLL = thirdPartyBLL;
-            this.environment = environment;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -41,23 +37,27 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTaskJWT(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             try
             {
                 // get setting
                 var setting = thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 // call jwt
-                var currencyList = new List<string>();
-                currencyList.Add("THB");
-                currencyList.Add("MYR");
-                currencyList.Add("IDR");
-                currencyList.Add("VND");
-                currencyList.Add("CNY");
-                currencyList.Add("USDT");
-                currencyList.Add("INR");
+                var currencyList = new List<string>
+                {
+                    "THB",
+                    "MYR",
+                    "IDR",
+                    "VND",
+                    "CNY",
+                    "USDT",
+                    "INR"
+                };
                 foreach (var curr in currencyList)
                 {
-                    string jwtUserName = setting[$"agent_{curr}"];
+                    var jwtUserName = setting[$"agent_{curr}"];
                     var getJwt = await apiIconicBLL.GetJwtToken(setting["ApiUrl"], jwtUserName, setting["password"]);
                     if (getJwt.token != null)
                     {
@@ -75,7 +75,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromDays(7);
+                var dueTimeSpan = TimeSpan.FromDays(7);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

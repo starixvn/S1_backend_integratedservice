@@ -7,6 +7,7 @@ using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -21,6 +22,7 @@ namespace ThirdPartyWager.Workers
         private readonly HttpHelper _httpHelper;
         private readonly LiveStreamingBLL _liveStreamingBll;
         private Timer _timerLiveStreaming;
+        private readonly string _tpName = "LiveStreaming";
 
         public LiveStreaming(IServiceProvider provider)
         {
@@ -38,12 +40,14 @@ namespace ThirdPartyWager.Workers
         }
         private async void DoLiveStreamingAsync(object state)
         {
-            bool isError = false;
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var isError = false;
             try
             {
-                string url = "https://www.glivestreaming.com/api.php";
+                var url = "https://www.glivestreaming.com/api.php";
 
-                UriBuilder builder = new UriBuilder(url)
+                var builder = new UriBuilder(url)
                 {
                     Port = -1
                 };
@@ -53,7 +57,7 @@ namespace ThirdPartyWager.Workers
                 query["key"] = "lnQzpXfTvn";
                 query["format"] = "JSON";
                 builder.Query = query.ToString();
-                string newurl = builder.ToString();
+                var newurl = builder.ToString();
 
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 var result = await _httpHelper.GetClient().SendAsync(data);
@@ -72,7 +76,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (_environment.IsDevelopment())
                 {
                     //dueTimeSpan = TimeSpan.FromMinutes(1);

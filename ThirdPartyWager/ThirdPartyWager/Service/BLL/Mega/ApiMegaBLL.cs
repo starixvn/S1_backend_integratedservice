@@ -1,10 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
             // param
             var uuid = Guid.NewGuid();
 
-            string sign = uuid + sn + agentLoginId + secretCode;
+            var sign = uuid + sn + agentLoginId + secretCode;
 
             var param = new
             {
@@ -72,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL
             };
 
             // request
-            string r = await DoHttpClientAsync(apiUrl, param);
+            var r = await DoHttpClientAsync(apiUrl, param);
             var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
             if (error.error != null)
             {

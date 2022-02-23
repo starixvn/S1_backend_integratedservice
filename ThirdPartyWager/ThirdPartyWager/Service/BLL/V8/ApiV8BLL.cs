@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
             // param
-            string url = wagerUrl;
+            var url = wagerUrl;
             var param = new
             {
                 s = 6,
@@ -60,7 +59,7 @@ namespace ThirdPartyWager.Service.BLL
             sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             // request
-            string r = await DoHttpClientAsync(url, sParam);
+            var r = await DoHttpClientAsync(url, sParam);
             var result = JsonConvert.DeserializeObject<WagerV8Model>(r);
             return result;
         }

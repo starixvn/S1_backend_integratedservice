@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.Library;
@@ -21,6 +21,7 @@ namespace ThirdPartyWager.Workers.KM
         private Timer _settleTimer;
 
         private const int TpId = (int)Tp.KM;
+        private readonly string _tpName = Tp.KM.ToString();
         private const int TpType = 52;
         private const int TimeZone = 8;
 
@@ -47,6 +48,8 @@ namespace ThirdPartyWager.Workers.KM
         /// <param name="state"></param>
         private async void DoSettle(object? state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
             var timerType = 1; //Settle
             var dataRangeMins = 20;

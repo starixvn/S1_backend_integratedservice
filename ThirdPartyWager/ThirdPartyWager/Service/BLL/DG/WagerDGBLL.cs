@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +19,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerDGBLL> _logger;
 
         private readonly int _tpId = (int)Tp.DG;
-        private readonly string _tpName = Tp.DG.ToString();
 
         public WagerDGBLL(IServiceProvider provider)
         {
@@ -32,15 +30,14 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersAsync()
         {
-            string msg = "FATAL_ERROR";
-            string guid = Guid.NewGuid().ToString();
-            LogContext.PushProperty("Tp", _tpName);
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
             // get dg api info
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
 
-                List<long> wagerIds = new List<long>();
+                var wagerIds = new List<long>();
                 // get wagers
                 var dataWager = await _apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], guid);
 
@@ -70,7 +67,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {bet.id} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                         return false;
                     }
                 }
@@ -84,7 +81,7 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError($"GetWagersAsync {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return true;
             }
         }

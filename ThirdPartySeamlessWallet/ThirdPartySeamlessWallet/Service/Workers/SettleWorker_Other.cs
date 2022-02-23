@@ -340,7 +340,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
                             _logger.LogError(ex1, $"exMessage:{ex1.Message} ||　{JsonConvert.SerializeObject(unsettled)}");
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                         }
                     }
                 }
@@ -349,7 +348,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             {
                 LogContext.PushProperty("TP", tpName);
                 _logger.LogError(ex, ex.Message);
-                log2File.Error(ex.ToString(), logName, ex);
                 isError = true;
             }
             finally

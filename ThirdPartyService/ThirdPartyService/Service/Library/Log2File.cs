@@ -1,39 +1,36 @@
 ﻿using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Serilog.Context;
 
 namespace ThirdPartyService.Service.Library
 {
     public class Log2File
     {
-        private readonly string LogFolder = "";
-        public Log2File(IHostEnvironment environment)
+        private readonly ILogger<Log2File> _logger;
+        public Log2File(ILogger<Log2File> logger)
         {
-            LogFolder = $@"{environment.ContentRootPath}\Logs";
+            _logger = logger;
         }
         public void Info(string InfoContent, string PrefixName)
         {
-            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now.ToString("yyyyMMdd")}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{InfoContent}");
-            });
+            LogContext.PushProperty("PrefixName", PrefixName);
+            _logger.LogInformation(InfoContent);
         }
-        public void Error(string ErrorContent, string PrefixName)
+        public void Error(string ErrorContent, string PrefixName, Exception ex = null)
         {
-            var filePath = $@"{LogFolder}\{PrefixName}_Err_{DateTime.Now.ToString("yyyyMMdd")}.log";
-            Task.Run(() =>
+            LogContext.PushProperty("PrefixName", PrefixName);
+            if (ex != null)
             {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  Thread:{Thread.CurrentThread.ManagedThreadId}\r\n{ErrorContent}");
-            });
+                _logger.LogError(ex, ErrorContent);
+            }
+            else
+            {
+                _logger.LogError(ErrorContent);
+            }
         }
     }
 }
