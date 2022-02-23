@@ -181,13 +181,16 @@ namespace ThirdPartyBetHistory.Service.DAL
                     {
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
                         if (hasJoinBonus)
+                        {
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                 tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
                                 betRecord.TransId, conn, trans);
 
+                        }
+
                         if (Losses != 0 && bonusId > 0)
-                        {        
-                            AutoCancelSeamlessBonus(tpCustInfo,bonusId, betRecord.GameType, conn, trans);
+                        {
+                            AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -200,9 +203,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                         {
                             SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", betRecord.TransId, conn, trans);
                             if (hasJoinBonus)
+                            {
                                 SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                     tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
                                     "Settled", bonusId, betRecord.TransId, conn, trans);
+                            }
 
                             if (Losses != 0 && bonusId > 0)
                             {
@@ -396,10 +401,10 @@ namespace ThirdPartyBetHistory.Service.DAL
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Wallet_Set", p, conn, trans);           
+            _ = _mainDbClient.Execute("Wallet_Set", p, conn, trans);
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
             afterAmount = p.Get<decimal>("AfterAmount");
-            return afterAmount >= 0 ? 1 : 0;            
+            return afterAmount >= 0 ? 1 : 0;
         }
     }
 }
