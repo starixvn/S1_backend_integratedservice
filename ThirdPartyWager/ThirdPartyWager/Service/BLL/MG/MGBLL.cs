@@ -68,8 +68,13 @@ namespace ThirdPartyWager.Service.BLL.MG
 
         public string TransformTxnId(string txnId)
         {
-            var cut = txnId.Substring(2, txnId.Length - 2);
-            return $"AI{cut}AA";
+            if (!string.IsNullOrEmpty(txnId) && txnId.StartsWith("AE") && txnId.Length == 34)
+            {
+                var cut = txnId.Substring(2, txnId.Length - 2);
+                return $"AI{cut}AA";
+            }
+
+            return txnId;
         }
     }
 }
