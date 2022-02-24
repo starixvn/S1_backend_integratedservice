@@ -5,7 +5,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -15,8 +14,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiDGBLL _apiDGBLL;
         private readonly WagerDGService _wagerDGService;
         private readonly ILogger<WagerRedoDGBLL> _logger;
-
-        private readonly int _tpId = (int)Tp.DG;
 
         public WagerRedoDGBLL(IServiceProvider provider)
         {

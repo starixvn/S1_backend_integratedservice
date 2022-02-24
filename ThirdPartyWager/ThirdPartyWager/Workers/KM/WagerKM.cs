@@ -10,7 +10,7 @@ using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.KM
+namespace ThirdPartyWager.Workers
 {
     public class WagerKM : BackgroundService
     {

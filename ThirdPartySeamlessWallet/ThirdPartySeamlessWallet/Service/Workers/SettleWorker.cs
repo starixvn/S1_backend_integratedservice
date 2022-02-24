@@ -38,7 +38,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
         private Timer timerSettleOne789LC;
-        private Timer timerSettleMega;
         private Timer timerSettleIconicRng;
         private Timer timerSettleIconicFish;
         private Timer timerSettleOneGaming;
@@ -106,7 +105,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleMega = new Timer(DoSettleMegaWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleIconicRng = new Timer(DoSettleIconicRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleIconicFish = new Timer(DoSettleIconicFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOneGaming = new Timer(DoSettleOneGamingWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -1337,7 +1335,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleOne789LT?.Change(Timeout.Infinite, 0);
             timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
             timerSettleOne789LC?.Change(Timeout.Infinite, 0);
-            timerSettleMega?.Change(Timeout.Infinite, 0);
             timerSettleIconicRng?.Change(Timeout.Infinite, 0);
             timerSettleIconicFish?.Change(Timeout.Infinite, 0);
             timerSettleOneGaming?.Change(Timeout.Infinite, 0);
