@@ -189,6 +189,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         initialdebittransferid = fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
+                        gamename = request.gamedetails.name,
                         keyname = request.gamedetails.keyname,
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
@@ -216,6 +217,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         initialdebittransferid = (bool) fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
+                        gamename = request.gamedetails.name,
                         keyname = request.gamedetails.keyname,
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
