@@ -90,6 +90,7 @@ namespace ThirdParty.HB
             var detail = ToJson(detailList);
 
             var gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("keyname")?.ToString();
+            var gamename = detailList.FirstOrDefault()?.GetValueOrDefault("gamename")?.ToString();
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
@@ -105,7 +106,7 @@ namespace ThirdParty.HB
                         .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
                     WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
                     GameCode = gameCode,
-                    GameName = gameCode,
+                    GameName = gamename,
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
