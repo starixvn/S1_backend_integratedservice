@@ -46,7 +46,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 
                 if (GetHeaderValueAs<string>("Content-Encoding")?.Contains("gzip") ?? false)
                 {
-                    bodyText = GZipDecompress(Encoding.UTF8.GetBytes(bodyText));
+                    using var ms = new MemoryStream(2048);
+                    await Request.Body.CopyToAsync(ms);
+                    bodyText = GZipDecompress(ms.ToArray());
                     _logger.LogInformation($"deompress:{bodyText}");
                 }
 
