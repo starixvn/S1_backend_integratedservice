@@ -96,6 +96,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
 
+                
+                
                 bettingDataFish_Joker.TicketType = (int)BettransType.Bet;
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
 
@@ -993,5 +995,67 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
+
+        #region Habanero
+
+        public int PlaceBet_HB(TpCustInfo tpCustInfo, PlaceBetRngDto_HB placeBetRngDto, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = 0;
+            afterAmount = 0m;
+            try
+            {
+                var partitionTime = placeBetRngDto.dtevent;
+                var query = new
+                {
+                    placeBetRngDto.transferid
+                };
+                var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
+                if (check.Any())
+                {
+                    return 1;
+                }
+                
+                placeBetRngDto.TicketType = (int)BettransType.Bet;
+                placeBetRngDto.TicketStatus = (int)TicketStatus.UnSettled;
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
+                
+                if (result > 0 && placeBetRngDto.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(placeBetRngDto.amount) * -1,
+                        (int)Tp.HB,
+                        placeBetRngDto.initialdebittransferid,
+                        (int)GameType.HB_RNG,
+                        placeBetRngDto.transferid,
+                        null,
+                        TpCategory.Slots,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return -1;
+            }
+        }
+
+        public bool QueryBettrans(string transferid)
+        {
+            var partitionTime = DateTime.UtcNow;
+            var query = new
+            {
+                transferid
+            };
+            var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query);
+            return check.Any();
+        }
+        #endregion
+        
     }
 }
