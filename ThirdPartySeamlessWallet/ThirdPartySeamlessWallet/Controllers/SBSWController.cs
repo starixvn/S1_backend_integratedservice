@@ -38,12 +38,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return new ReturnObj(ReturnCode.InvalidParameters);
                 }
-                using var reader = new StreamReader(Request.Body);
-                var bodyText = await reader.ReadToEndAsync();
-
+              
                 _logger.LogInformation($"header || {string.Join("&", Request.Headers.Select(i => $"{i.Key}={i.Value}"))}");
-                _logger.LogInformation($"bodyText || {bodyText}");
                 
+                var bodyText = string.Empty;               
                 if (GetHeaderValueAs<string>("Content-Encoding")?.Contains("gzip") ?? false)
                 {
                     using var ms = new MemoryStream(2048);
@@ -51,7 +49,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bodyText = GZipDecompress(ms.ToArray());
                     _logger.LogInformation($"deompress:{bodyText}");
                 }
+                else
+                {
+                    using var reader = new StreamReader(Request.Body);
+                    bodyText = await reader.ReadToEndAsync();
+                }
 
+                _logger.LogInformation($"bodyText || {bodyText}");
                 return await _sbswBLL.SeamlessWallet(transType, merchant, bodyText);
             }
             catch (Exception ex)
