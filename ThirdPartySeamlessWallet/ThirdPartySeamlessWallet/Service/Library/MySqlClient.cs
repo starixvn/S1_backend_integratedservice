@@ -41,7 +41,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{spName} {sw.Elapsed:c}");
+            _logger.LogDebug($"{spName} {sw.Elapsed:c}");
             return result;
         }
 
@@ -61,7 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -80,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -100,7 +100,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -125,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{spName} {sw.Elapsed:c}");
+            _logger.LogDebug($"{spName} {sw.Elapsed:c}");
             return result;
         }
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
     }

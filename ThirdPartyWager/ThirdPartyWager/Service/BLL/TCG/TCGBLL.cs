@@ -95,8 +95,8 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {fileUrl} {ex.Message}.");
-                return new TCGQueryWagerObj<T>() ;
+                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {config.WagerUrl}{fileUrl} {ex.Message}.");
+                throw;
             }
         }
 
