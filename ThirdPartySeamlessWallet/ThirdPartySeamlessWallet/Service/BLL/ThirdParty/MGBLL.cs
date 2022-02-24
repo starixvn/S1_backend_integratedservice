@@ -101,17 +101,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private async Task<MGUpdatebalanceResponse> Debit(MGUpdatebalanceRequest request)
         {
             // 檢查玩家
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int) ThirdParty, request.playerId);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
             if (tpCheck == null || tpCheck.Locked)
             {
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
                 throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
             }
-            
+
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
             if (tpCurrency.ExchangeRate > 0)
                 request.amount *= tpCurrency.ExchangeRate;
-            
+
             var bettingData = new BettingDataRNG_MG()
             {
                 txnType = request.txnType,
@@ -128,22 +128,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 platformType = request.platformType,
                 completed = request.completed
             };
+
+            var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
+
             var placeBetResult = new MGPlaceBetResult();
-            if (GameType == GameType.MG_RNG)
+            if (gameType == GameType.MG_RNG)
             {
-                placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int) GameType);
+                placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int)gameType);
             }
-            else if (GameType == GameType.MG_LiveCasino)
+            else if (gameType == GameType.MG_LiveCasino)
             {
-                placeBetResult = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int) GameType);
+                placeBetResult = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int)gameType);
             }
             else
             {
-                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{gameType}");
             }
-            
+
             // 餘額不足
-            if(placeBetResult.AfterAmount < 0 )
+            if (placeBetResult.AfterAmount < 0)
             {
                 throw new MGException(MGErrorCode.InsufficientBalance,
                     $"betting data: {JsonConvert.SerializeObject(bettingData)} and afterAmount:{placeBetResult.AfterAmount}");
@@ -152,16 +155,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (placeBetResult.Result <= 0)
             {
                 throw new MGException(MGErrorCode.SystemError);
-            } 
-            
+            }
+
             if (placeBetResult.AfterAmount == 0)
             {
-                placeBetResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+                placeBetResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)gameType).Balance;
             }
             else
             {
-                if (tpCurrency.ExchangeRate > 0) 
-                    placeBetResult.AfterAmount /= tpCurrency.ExchangeRate;   
+                if (tpCurrency.ExchangeRate > 0)
+                    placeBetResult.AfterAmount /= tpCurrency.ExchangeRate;
             }
 
             return new MGUpdatebalanceResponse()
@@ -171,13 +174,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 balance = placeBetResult.AfterAmount
             };
         }
-        
+
         private async Task<MGUpdatebalanceResponse> Credit(MGUpdatebalanceRequest request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
-            if (tpCurrency.ExchangeRate > 0) 
+            if (tpCurrency.ExchangeRate > 0)
                 request.amount *= tpCurrency.ExchangeRate;
-            
+
             var bettingData = new BettingDataRNG_MG()
             {
                 txnType = request.txnType.ToString(),
@@ -194,22 +197,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 platformType = request.platformType,
                 completed = request.completed
             };
+
+            var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
+
             var payoutResult = new MGPayoutResult();
-            if (GameType == GameType.MG_RNG)
+            if (gameType == GameType.MG_RNG)
             {
-                payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)GameType);
+                payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)gameType);
             }
-            else if(GameType == GameType.MG_LiveCasino)
+            else if (gameType == GameType.MG_LiveCasino)
             {
-                payoutResult = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)GameType);
+                payoutResult = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)gameType);
             }
             else
             {
-                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{gameType}");
             }
-            
+
             // 餘額不足
-            if(payoutResult.AfterAmount < 0 )
+            if (payoutResult.AfterAmount < 0)
             {
                 throw new MGException(MGErrorCode.InsufficientBalance,
                     $"betting data: {JsonConvert.SerializeObject(bettingData)} and afterAmount:{payoutResult.AfterAmount}");
@@ -222,12 +228,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (payoutResult.AfterAmount == 0)
             {
-                payoutResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+                payoutResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)gameType).Balance;
             }
             else
             {
-                if (tpCurrency.ExchangeRate > 0) 
-                    payoutResult.AfterAmount /= tpCurrency.ExchangeRate;   
+                if (tpCurrency.ExchangeRate > 0)
+                    payoutResult.AfterAmount /= tpCurrency.ExchangeRate;
             }
 
             return new MGUpdatebalanceResponse()
@@ -251,21 +257,34 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 playerId = request.playerId,
                 amount = request.amount
             };
+
             var cancelResult = new MGCancelResult();
-            if (GameType == GameType.MG_RNG)
+
+            // check bettrans of gametype
+            var tpGameType = _settledService.GetBettrans_MG_TpGameType(request.betId);
+            if(tpGameType == 0)
             {
-                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, (int)GameType);
+                return new MGRollbackResponse()
+                {
+                    currency = tpCurrency.TpCurrencyId,
+                    balance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance,
+                    extTxnId = cancelResult.ExtTxnId.ToString()
+                };
             }
-            else if (GameType == GameType.MG_LiveCasino)
+
+            if (tpGameType == (int)GameType.MG_RNG)
             {
-                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, (int)GameType);
+                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, tpGameType);
+            }
+            else if (tpGameType == (int)GameType.MG_LiveCasino)
+            {
+                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, tpGameType);
             }
             else
             {
-                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}");
             }
 
-            
             // DB 錯誤
             if (cancelResult.Result <= 0)
             {
@@ -293,7 +312,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private async Task<MGUpdatebalanceResponse> Rollback(MGUpdatebalanceRequest request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
-            if (tpCurrency.ExchangeRate > 0) 
+            if (tpCurrency.ExchangeRate > 0)
                 request.amount *= tpCurrency.ExchangeRate;
 
             var cancelData = new CancelDataRNG_MG()
@@ -303,35 +322,38 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 playerId = request.playerId,
                 amount = request.amount
             };
+
+            var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
+
             var cancelResult = new MGCancelResult();
-            if (GameType == GameType.MG_RNG)
+            if (gameType == GameType.MG_RNG)
             {
-                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, (int)GameType);
+                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, (int)gameType);
             }
-            else if (GameType == GameType.MG_LiveCasino)
+            else if (gameType == GameType.MG_LiveCasino)
             {
-                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, (int)GameType);
+                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, (int)gameType);
             }
             else
             {
-                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{GameType}");
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{gameType}");
             }
 
-            
+
             // DB 錯誤
             if (cancelResult.Result <= 0)
             {
                 throw new MGException();
-            } 
-            
+            }
+
             if (cancelResult.AfterAmount == 0)
             {
-                cancelResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
+                cancelResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)gameType).Balance;
             }
             else
             {
-                if (tpCurrency.ExchangeRate > 0) 
-                    cancelResult.AfterAmount /= tpCurrency.ExchangeRate;   
+                if (tpCurrency.ExchangeRate > 0)
+                    cancelResult.AfterAmount /= tpCurrency.ExchangeRate;
             }
 
             return new MGUpdatebalanceResponse()
@@ -341,16 +363,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 extTxnId = cancelResult.ExtTxnId.ToString()
             };
         }
-        
+
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int) ThirdParty, tpUserName);
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
             if (tpCustInfo == null)
             {
                 throw new MGException(MGErrorCode.SystemError, $"tpCustInfo is null, tpUserName:{tpUserName}");
             }
 
-            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int) ThirdParty, tpCustInfo.CurrencyId);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
             if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
             {
                 throw new MGException(MGErrorCode.SystemError, $"tpCurrency is null, {JsonConvert.SerializeObject(tpCustInfo)}");

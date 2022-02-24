@@ -87,6 +87,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string betId { get; set; }
         public string contentCode { get; set; }
         public string channel { get; set; }
+        public long creationTime { get; set; }
     }
 
     public class MGRollbackResponse

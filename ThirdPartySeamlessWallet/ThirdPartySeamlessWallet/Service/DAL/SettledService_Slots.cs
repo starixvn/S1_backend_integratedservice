@@ -2822,6 +2822,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Execute(spName, new { betId = transId }, commandType: CommandType.StoredProcedure);
         }
 
+        public int GetBettrans_MG_TpGameType(string betId)
+        {
+            var p = new DynamicParameters(new
+            {
+                betId = betId
+            });
+
+            p.Add("out_tpGameType", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Execute("Service_Bettrans_MG_TpGameType_Get", new { betId = betId }, commandType: CommandType.StoredProcedure);
+            var tpGameType = p.Get<int>("out_tpGameType");
+            return tpGameType;
+        }
+
         #endregion
 
         #region JILI
