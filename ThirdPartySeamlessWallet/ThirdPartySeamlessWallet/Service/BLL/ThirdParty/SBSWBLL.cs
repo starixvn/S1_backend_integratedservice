@@ -62,8 +62,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { SBSWTransType.HealthCheck, HealthCheck},
             };
             _logger = provider.GetRequiredService<ILogger<SBSWBLL>>();
-            var sabaSportTypeOption = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>();
-            _sportTypeConfig = sabaSportTypeOption.ToDictionary(item => item.SportType, item => item);
+            _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
+                .ToDictionary(item => item.SportType, item => item);
         }
 
         public async Task<ReturnObj> SeamlessWallet(SBSWTransType transType, string merchant, string bodyText)
