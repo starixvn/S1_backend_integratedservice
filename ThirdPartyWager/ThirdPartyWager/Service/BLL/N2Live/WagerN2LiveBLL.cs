@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,8 +15,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiN2LiveBLL _apiN2LiveBLL;
         private readonly WagerN2LiveService _wagerN2LiveService;
         private readonly ILogger<WagerN2LiveBLL> _logger;
-
-        private readonly int _tpId = (int)Tp.N2Live;
 
         public WagerN2LiveBLL(IServiceProvider provider)
         {
