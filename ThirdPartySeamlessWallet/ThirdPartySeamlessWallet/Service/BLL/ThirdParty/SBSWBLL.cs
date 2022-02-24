@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                _logger.LogInformation($"{transType}:{bodyText}");
+                _logger.LogInformation($"{transType} || {bodyText}");
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
             }
             catch (SBSWException ex)

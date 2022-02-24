@@ -47,7 +47,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     using var ms = new MemoryStream(2048);
                     await Request.Body.CopyToAsync(ms);
                     bodyText = GZipDecompress(ms.ToArray());
-                    _logger.LogInformation($"deompress:{bodyText}");
                 }
                 else
                 {
@@ -55,7 +54,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bodyText = await reader.ReadToEndAsync();
                 }
 
-                _logger.LogInformation($"bodyText || {bodyText}");
                 return await _sbswBLL.SeamlessWallet(transType, merchant, bodyText);
             }
             catch (Exception ex)
