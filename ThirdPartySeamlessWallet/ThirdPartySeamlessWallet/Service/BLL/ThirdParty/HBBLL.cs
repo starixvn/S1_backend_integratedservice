@@ -226,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (afterAmount < 0)
                 {
-                    _logger.LogInformation("");
+                    _logger.LogInformation($"user {tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
                     break;
                 }
             }
@@ -244,8 +244,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 
                 trans.Commit();
-                if(bonusId > 0)
+                if (bonusId > 0)
+                {
+                    _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{transId}");
                     _settledService.UpdateTpBonusFlag_HB((int) Tp.HB, transId, (int) GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
+                }
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.successdebit = true;
