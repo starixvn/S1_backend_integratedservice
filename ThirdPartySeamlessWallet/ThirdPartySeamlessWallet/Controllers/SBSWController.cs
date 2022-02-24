@@ -41,10 +41,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body);
                 var bodyText = await reader.ReadToEndAsync();
 
-                _logger.LogInformation($"header:{string.Join("&", Request.Headers.Select(i => $"{i.Key}={i.Value}"))}");
-                _logger.LogInformation($"bodyText:{bodyText}");
+                _logger.LogInformation($"header || {string.Join("&", Request.Headers.Select(i => $"{i.Key}={i.Value}"))}");
+                _logger.LogInformation($"bodyText || {bodyText}");
                 
-                if (GetHeaderValueAs<string>("Accept-Encoding")?.Contains("gzip") ?? false)
+                if (GetHeaderValueAs<string>("Content-Encoding")?.Contains("gzip") ?? false)
                 {
                     bodyText = GZipDecompress(Encoding.UTF8.GetBytes(bodyText));
                     _logger.LogInformation($"deompress:{bodyText}");
