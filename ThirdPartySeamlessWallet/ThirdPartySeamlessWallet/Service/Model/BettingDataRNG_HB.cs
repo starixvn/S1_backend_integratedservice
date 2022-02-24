@@ -57,6 +57,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string initialdebittransferid { get; set; }
         public int accounttransactiontype { get; set; }
         public bool gameinfeature { get; set; }
+        public string gamename { get; set; }
         public string keyname { get; set; }
         public string gametypename { get; set; }
         public int channel { get; set; }
@@ -81,6 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string initialdebittransferid { get; set; }
         public int accounttransactiontype { get; set; }
         public bool gameinfeature { get; set; }
+        public string gamename { get; set; }
         public string keyname { get; set; }
         public string gametypename { get; set; }
         public int channel { get; set; }

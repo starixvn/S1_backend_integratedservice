@@ -9,7 +9,9 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Threading.Tasks;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.HB
 {
@@ -79,7 +81,40 @@ namespace ThirdParty.HB
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_HB_Detail_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
+            var detail = ToJson(detailList);
+
+            var gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("keyname")?.ToString();
+            var gamename = detailList.FirstOrDefault()?.GetValueOrDefault("gamename")?.ToString();
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = string.Empty,
+                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("accountid")?.ToString(),
+                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("dtevent", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("dtevent", DateTime.MinValue)),
+                    Stake = detailList.Where(i => (int)i.GetValueOrDefault("gamestatemode") == 1)
+                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                    GameCode = gameCode,
+                    GameName = gamename,
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
         }
 
         private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
