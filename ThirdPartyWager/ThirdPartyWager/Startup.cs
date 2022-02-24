@@ -11,8 +11,6 @@ using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.KM;
-using ThirdPartyWager.Workers.MG;
 
 namespace ThirdPartyWager
 {
@@ -193,13 +191,13 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<TpRefundWorker>();
+            //services.AddHostedService<ReportMega>();
+            //services.AddHostedService<ReportRedoMega>();
 
             /*
                 services.AddHostedService<WagerCF>();
                 services.AddHostedService<WagerKiss918>();
                 services.AddHostedService<WagerRedoKiss918>();
-                services.AddHostedService<WagerMega>();
-                services.AddHostedService<WagerRedoMega>();
             */
         }
 
