@@ -363,12 +363,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketType = (int)BettransType.Bet;
             bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
             bettingDataRNG_MG.SettleFlag = (int)SettleFlag.Running;
-
-            var p = new DynamicParameters(bettingDataRNG_MG);
-            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            
             try
             {
-                var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransRngMG != null)
                 {
                     return new MGPlaceBetResult()
@@ -379,6 +377,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
+                var p = new DynamicParameters(bettingDataRNG_MG);
+                p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
