@@ -39,21 +39,5 @@ namespace ThirdPartyWager.IntegrationTest.Unittest
             serviceCollection.AddTransient<Log2File>();
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
-
-        
-        [TestCase("AEBQAAQAYDEMUDQAAAAABRVW45RBAAAAAA", "AIBQAAQAYDEMUDQAAAAABRVW45RBAAAAAAAA")]
-        [TestCase("AEBQAAQAEYTD6DIAAAAABSC5ANRBAAAAAA", "AIBQAAQAEYTD6DIAAAAABSC5ANRBAAAAAAAA")]
-        [TestCase("AEBQAAQAIT2V4DYAAAAABMFXINPBAAAAAA", "AIBQAAQAIT2V4DYAAAAABMFXINPBAAAAAAAA")]
-        [TestCase("AEBQAAQA2LZLIEAAAAAAAU2XWRPBAAAAAA", "AIBQAAQA2LZLIEAAAAAAAU2XWRPBAAAAAAAA")]
-        [TestCase("032000C6019A430B0001000000002F141EA4", "032000C6019A430B0001000000002F141EA4")]
-        [TestCase("AIBQAAQATVUOEEAAAAAABBJIYFPBAAAAAAAA", "AIBQAAQATVUOEEAAAAAABBJIYFPBAAAAAAAA")]
-        public void TestTransformTxnId(string origin, string target)
-        {
-            var mgBll = new MGBLL(_serviceProvider);
-
-            var actual = mgBll.TransformTxnId(origin);
-
-            actual.Should().Be(target);
-        }
     }
 }
