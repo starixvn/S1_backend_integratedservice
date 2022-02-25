@@ -46,7 +46,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                             playerId = transaction.playerId,
                             amount = transaction.amount,
                             currency = currencyId,
-                            txnId = TransformTxnId(transaction.txnId),
+                            txnId = transaction.txnId,
                             creationTime = DateTime.UtcNow.Ticks,
                             contentCode = transaction.contentCode,
                             betId = transaction.betId,

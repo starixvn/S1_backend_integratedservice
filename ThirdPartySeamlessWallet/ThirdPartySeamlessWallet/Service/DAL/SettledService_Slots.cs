@@ -2728,8 +2728,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<MGCancelResult> CancelBetRNG_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG,
-            int gameType)
+        public async Task<MGCancelResult> CancelBetRNG_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG, int gameType)
         {
             int bonusId = 0;
             var afterAmount = 0M;
@@ -2740,8 +2739,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get",
-                    new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransRngMg == null)
                 {
                     return new MGCancelResult()
@@ -2765,8 +2763,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = conn.Execute("Service_CancelBetRng_MG_Set",
-                    new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = conn.Execute("Service_CancelBetRng_MG_Set", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
                     if (cancelDataRng_MG.amount != 0)
@@ -2775,8 +2772,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo,
                             cancelDataRng_MG.amount,
                             (int)Tp.MG,
-                            bettransRngMg.RoundId,
-                            gameType, TpCategory.Slots,
+                            cancelDataRng_MG.betId,
+                            gameType,
+                            TpCategory.Slots,
                             cancelDataRng_MG.txnId,
                             TransType.Refunds,
                             null,
