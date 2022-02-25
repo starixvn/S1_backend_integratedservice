@@ -65,16 +65,5 @@ namespace ThirdPartyWager.Service.BLL.MG
                 Thread.Sleep(10000);
             }
         }
-
-        public string TransformTxnId(string txnId)
-        {
-            if (!string.IsNullOrEmpty(txnId) && txnId.StartsWith("AE") && txnId.Length == 34)
-            {
-                var cut = txnId.Substring(2, txnId.Length - 2);
-                return $"AI{cut}AA";
-            }
-
-            return txnId;
-        }
     }
 }
