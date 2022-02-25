@@ -113,12 +113,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{thisTp}_{getLoginReq.method}";
             if (string.Equals(getLoginReq.method, "open.operator.user.login", StringComparison.OrdinalIgnoreCase))
             {
-                if (_environment.IsDevelopment())
-                {
-                    resp.error = "Not allowed environment";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
+                //if (_environment.IsDevelopment())
+                //{
+                //    resp.error = "Not allowed environment";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //    return resp;
+                //}
 
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
                 if (tpCustInfo == null)
@@ -131,6 +131,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
                 if (tpCheck == null)
                 {
+                    _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, "", out _);
                     tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
                 }
 
@@ -150,7 +151,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (tpCustInfo.TpPwd == getLoginReq.Params.password)
                 {
-                    _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, "", out _);
                     _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, "", "App", "App");
                     resp.result.success = "1";
                     resp.result.sessionId = tpCheck.Token;
