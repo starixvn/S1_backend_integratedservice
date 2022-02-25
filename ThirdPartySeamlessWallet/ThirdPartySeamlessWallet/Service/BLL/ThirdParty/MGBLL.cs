@@ -158,12 +158,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     placeBetResult.AfterAmount /= tpCurrency.ExchangeRate;   
             }
 
-            if (request.playerId == "DNova88_250032" && request.amount == 150.0m)
-            {
-                System.Threading.Thread.Sleep(10000);
-                _logger.LogInformation("DNova88_250032 debit sleep 10000");
-            }
-            
             return new MGUpdatebalanceResponse()
             {
                 extTxnId = placeBetResult.ExtTxnId.ToString(),
@@ -229,13 +223,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (tpCurrency.ExchangeRate > 0) 
                     payoutResult.AfterAmount /= tpCurrency.ExchangeRate;   
             }
-            
-            if (request.playerId == "DNova88_250032" && request.amount == 50.0m)
-            {
-                System.Threading.Thread.Sleep(10000);
-                _logger.LogInformation("DNova88_250032 credit sleep 10000");
-            }
-            
+
             return new MGUpdatebalanceResponse()
             {
                 extTxnId = payoutResult.ExtTxnId.ToString(),
