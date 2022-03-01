@@ -15,8 +15,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<WagerOne789BLL> _logger;
 
-        private readonly int _tpId = (int)Tp.One789;
-
         public WagerOne789BLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();

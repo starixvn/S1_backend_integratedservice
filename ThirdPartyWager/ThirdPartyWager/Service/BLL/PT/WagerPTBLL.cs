@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -18,8 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerPTService _wagerPTService;
         private readonly ILogger<WagerPTBLL> _logger;
         private readonly IHostEnvironment _environment;
-
-        private readonly int _tpId = (int)Tp.PT;
 
         public WagerPTBLL(IServiceProvider provider)
         {
