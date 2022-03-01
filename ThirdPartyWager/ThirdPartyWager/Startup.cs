@@ -28,7 +28,8 @@ namespace ThirdPartyWager
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
-            if (configuration.GetValue<string>("ProxyHost") != null)
+            
+            if (!string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost")))
             {
                 var proxy = new HttpClientHandler
                 {
