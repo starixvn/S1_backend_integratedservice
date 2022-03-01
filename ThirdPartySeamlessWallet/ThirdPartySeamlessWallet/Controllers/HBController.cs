@@ -32,8 +32,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return new HBPlayerDetailResponse()
             {
-                playerdetailresponse = _hbbll.PlayerDetail(request.playerdetailrequest.token, 
-                                                            request.playerdetailrequest.gamelaunch)
+                playerdetailresponse = _hbbll.PlayerDetail(request.playerdetailrequest.token)
             };
         }
 

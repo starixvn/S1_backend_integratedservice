@@ -42,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetService<ILogger<HBBLL>>();
         }
 
-        public playerdetailresponse PlayerDetail(string token, bool gamelaunch)
+        public playerdetailresponse PlayerDetail(string token)
         {
             if (string.IsNullOrEmpty(token))
             {
@@ -55,22 +55,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return PlayerDetailResponse($"Invalid player session");
             }
 
-            var tpUserName = "";
-            if (gamelaunch)
-            {
-                if (!_authBLL.Authenticate(authToken.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
-                {
-                    return PlayerDetailResponse($"Token expired");
-                }
+            var tpUserName = authToken.tpUserName;
 
-                tpUserName = tpCustInfoAuth.TpUserName;
-            }
-            else
-            {
-                tpUserName = authToken.tpUserName;
-            }
-
-            
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
             if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
             {
