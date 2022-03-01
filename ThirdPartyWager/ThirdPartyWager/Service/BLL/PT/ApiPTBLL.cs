@@ -74,7 +74,7 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add("X_ENTITY_KEY", entityKey);
 
             using var handler = new HttpClientHandler();
-            if (_configuration.GetValue<string>("ProxyHost") != null)
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
             {
                 handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
                     _configuration.GetValue<int>("ProxyPort"));
