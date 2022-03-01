@@ -17,8 +17,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private readonly MySqlClient _mainDbClient;
 
-        private readonly MySqlClient _reportDbClient;
-
         private readonly MySqlClient _wagerDbClient;
 
         public TpUnsettleService(IServiceProvider provider)
