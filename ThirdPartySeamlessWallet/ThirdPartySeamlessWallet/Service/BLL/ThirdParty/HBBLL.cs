@@ -42,60 +42,84 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetService<ILogger<HBBLL>>();
         }
 
-        public playerdetailresponse PlayerDetail(string token)
+        public playerdetailresponse PlayerDetail(string token, bool gamelaunch)
         {
-            var response = new playerdetailresponse();
-            var status = new HBStatus()
+            if (string.IsNullOrEmpty(token))
             {
-                success = false,
-                autherror = true
-            };
-            
-            if (!string.IsNullOrEmpty(token))
+                return PlayerDetailResponse($"Player session token is empty");
+            }
+
+            var authToken = ParseToken(token);
+            if (authToken == null)
             {
-                var authToken = ParseToken(token);
-                if (authToken != null && _authBLL.Authenticate(authToken.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
+                return PlayerDetailResponse($"Invalid player session");
+            }
+
+            var tpUserName = "";
+            if (gamelaunch)
+            {
+                if (!_authBLL.Authenticate(authToken.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
-                    {
-                        _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
-                        status.message = "player session is expired";
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        status.message = "player is inactive";
-                    }
-                    else
-                    {
-                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)GameType);
-                        if (tpCustBalance != null)
-                        {
-                            response.Status = new HBStatus()
-                            {
-                                success = true,
-                                autherror = false,
-                                message = ""
-                            };
-                            response.accountid = tpCustInfoAuth.TpUserName;
-                            response.accountname = tpCustInfoAuth.TpUserName;
-                            response.balance = tpCustBalance.Balance;
-                            response.currencycode = tpCustBalance.TpCurrencyId;
-                            return response;
-                        }
-                    }
+                    return PlayerDetailResponse($"Token expired");
                 }
-                else
-                {
-                    status.message = "Invalid player session";
-                }
+
+                tpUserName = tpCustInfoAuth.TpUserName;
             }
             else
             {
-                status.message = "Player session token is empty";
+                tpUserName = authToken.tpUserName;
             }
-            response.Status = status;
-            return response;
+
+            
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
+            if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
+            {
+                _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
+                return PlayerDetailResponse($"Player session is expired");
+            }
+            else if (tpCheck.Locked)
+            {
+                return PlayerDetailResponse($"Player is inactive");
+            }
+            else
+            {
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)GameType);
+                if (tpCustBalance != null)
+                {
+                    return PlayerDetailResponse("", tpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+                }
+                return PlayerDetailResponse($"Can't get player:{tpUserName} balance");
+            }
+        }
+
+        private playerdetailresponse PlayerDetailResponse(string message, string tpUserName = "", decimal balance = 0m, string currency = "")
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return new playerdetailresponse()
+                {
+                    Status = new HBStatus()
+                    {
+                        success = true,
+                        autherror = false,
+                        message = message
+                    },
+                    accountid = tpUserName,
+                    accountname = tpUserName,
+                    balance = balance,
+                    currencycode = currency
+                };
+            }
+
+            return new playerdetailresponse()
+            {
+                Status = new HBStatus()
+                {
+                    success = false,
+                    autherror = true,
+                    message = message
+                }
+            };
         }
 
         public bool Auth(string token)
@@ -111,17 +135,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, authToken.tpUserName);
                 if (tpCheck == null)
                 {
-                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
+                    _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
                     return false;
                 }
                 else if(tpCheck.Token != authToken.longTimeToken)
                 {
-                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
+                    _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
                     return false;
                 }
                 else if (tpCheck.Locked)
                 {
-                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player is inactive");
+                    _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player is inactive");
                     return false;
                 }
                 else
@@ -131,7 +155,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                _logger.LogInformation("Player session token is empty");
+                _logger.LogError("Player session token is empty");
                 return false;
             }
         }
