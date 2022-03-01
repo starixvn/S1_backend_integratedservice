@@ -4,11 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Exceptions;
 
@@ -29,7 +27,7 @@ namespace CommonService
                         .ConfigureAppConfiguration((hostContext, builder) =>
                         {
                             builder
-                                .SetBasePath(Directory.GetCurrentDirectory())
+                                .SetBasePath(AppContext.BaseDirectory)
                                 .AddEnvironmentVariables()
                                 .AddJsonFile($"appsettings.json", false, true)
                                 .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", false, true);
