@@ -191,8 +191,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             foreach (var fundInfo in request.funds.fundinfo)
             {
                 if (tpCurrency.ExchangeRate > 0)
+                {
                     fundInfo.amount *= tpCurrency.ExchangeRate;
-                
+                    fundInfo.bonusamount *= tpCurrency.ExchangeRate;
+                    fundInfo.jpcont *= tpCurrency.ExchangeRate;
+                }
+
                 // debit
                 if (fundInfo.amount < 0)
                 {
@@ -252,7 +256,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (afterAmount < 0)
                 {
-                    _logger.LogInformation($"user {tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
+                    _logger.LogError($"user {tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
                     break;
                 }
             }

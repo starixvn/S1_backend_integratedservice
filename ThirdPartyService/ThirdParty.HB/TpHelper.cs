@@ -35,7 +35,7 @@ namespace ThirdParty.HB
             var gameUrl = "";
             if (IsFunMode(inputs))
             {
-                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&mode=fun&local={TpLangId}&lobbyurl={homeUrl}";
+                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&mode=fun&locale={TpLangId}&lobbyurl={homeUrl}";
             }
             else
             {
@@ -90,7 +90,7 @@ namespace ThirdParty.HB
             var detail = ToJson(detailList);
 
             var gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("keyname")?.ToString();
-            var gamename = detailList.FirstOrDefault()?.GetValueOrDefault("gamename")?.ToString();
+            var gameName = detailList.FirstOrDefault()?.GetValueOrDefault("gamename")?.ToString();
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
@@ -106,7 +106,7 @@ namespace ThirdParty.HB
                         .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
                     WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
                     GameCode = gameCode,
-                    GameName = gamename,
+                    GameName = gameName,
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
