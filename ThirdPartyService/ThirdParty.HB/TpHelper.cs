@@ -44,7 +44,7 @@ namespace ThirdParty.HB
                 var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
                 var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
                 var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
-                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&token={sessionKey}&mode=real&local={TpLangId}&lobbyurl={homeUrl}";
+                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&token={sessionKey}&mode=real&locale={TpLangId}&lobbyurl={homeUrl}";
             }
             var apiResult = new ApiResult()
             {
