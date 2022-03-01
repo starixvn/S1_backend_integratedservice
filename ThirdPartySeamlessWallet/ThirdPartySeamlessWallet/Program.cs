@@ -29,7 +29,7 @@ namespace ThirdPartySeamlessWallet
                         .ConfigureAppConfiguration((hostContext, builder) =>
                         {
                             builder
-                                .SetBasePath(Directory.GetCurrentDirectory())
+                                .SetBasePath(AppContext.BaseDirectory)
                                 .AddEnvironmentVariables()
                                 .AddJsonFile($"appsettings.json", false, true)
                                 .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", false, true);
