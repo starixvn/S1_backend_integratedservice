@@ -20,10 +20,6 @@ namespace ThirdPartySeamlessWallet.Extensions
                 {
                     DataBase = DataBase.Main
                 })
-                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_ReportDB"), logger)
-                {
-                    DataBase = DataBase.Report
-                })
                 .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_WagerDB"), logger)
                 {
                     DataBase = DataBase.Wager

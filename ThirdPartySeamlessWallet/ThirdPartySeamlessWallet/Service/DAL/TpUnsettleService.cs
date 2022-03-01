@@ -17,15 +17,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private readonly MySqlClient _mainDbClient;
 
-        private readonly MySqlClient _reportDbClient;
-
         private readonly MySqlClient _wagerDbClient;
 
         public TpUnsettleService(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<TpUnsettleService>>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
@@ -34,7 +31,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return dataBase switch
             {
                 DataBase.Main => _mainDbClient.Query<TResult>(spName),
-                DataBase.Report => _reportDbClient.Query<TResult>(spName),
                 DataBase.Wager => _wagerDbClient.Query<TResult>(spName),
                 _ => throw new NotImplementedException(),
             };
@@ -45,7 +41,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return dataBase switch
             {
                 DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
-                DataBase.Report => _reportDbClient.Execute(spName, parameters: parameters),
                 DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
                 _ => throw new NotImplementedException(),
             };
@@ -61,7 +56,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return dataBase switch
             {
                 DataBase.Main => _mainDbClient.Query<TResult>(spName, parameters: parameters),
-                DataBase.Report => _reportDbClient.Query<TResult>(spName, parameters: parameters),
                 DataBase.Wager => _wagerDbClient.Query<TResult>(spName, parameters: parameters),
                 _ => throw new NotImplementedException(),
             };
