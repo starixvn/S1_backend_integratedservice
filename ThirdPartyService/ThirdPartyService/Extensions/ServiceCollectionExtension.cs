@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -15,20 +15,21 @@ namespace ThirdPartyService.Extensions
         {
             var provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            var serviceType = Environment.GetEnvironmentVariable("ServiceType") ?? config.GetValue<string>("ServiceType");
 
-            services.AddSingleton(factory => new MySqlClient(config.GetConnectionString("ConnectionString"), logger)
-            {
-                DataBase = DataBase.Main
-            });
-            services.AddSingleton(factory => new MySqlClient(config.GetConnectionString("ConnectionStringReport"), logger)
-            {
-                DataBase = DataBase.Report
-            });
-            services.AddSingleton(factory => new MySqlClient(config.GetConnectionString("ConnectionStringWager"), logger)
-            {
-                DataBase = DataBase.Wager
-            });
-            return services;
+            return services
+                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_MainDB"), logger)
+                {
+                    DataBase = DataBase.Main
+                })
+                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_ReportDB"), logger)
+                {
+                    DataBase = DataBase.Report
+                })
+                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_WagerDB"), logger)
+                {
+                    DataBase = DataBase.Wager
+                });
         }
 
         public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
