@@ -44,58 +44,68 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public playerdetailresponse PlayerDetail(string token)
         {
-            var response = new playerdetailresponse();
-            var status = new HBStatus()
+            if (string.IsNullOrEmpty(token))
             {
-                success = false,
-                autherror = true
-            };
-            
-            if (!string.IsNullOrEmpty(token))
+                return PlayerDetailResponse($"Player session token is empty");
+            }
+
+            var authToken = ParseToken(token);
+            if (authToken == null)
             {
-                var authToken = ParseToken(token);
-                if (authToken != null && _authBLL.Authenticate(authToken.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
-                {
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                    if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
-                    {
-                        _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
-                        status.message = "player session is expired";
-                    }
-                    else if (tpCheck.Locked)
-                    {
-                        status.message = "player is inactive";
-                    }
-                    else
-                    {
-                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)GameType);
-                        if (tpCustBalance != null)
-                        {
-                            response.Status = new HBStatus()
-                            {
-                                success = true,
-                                autherror = false,
-                                message = ""
-                            };
-                            response.accountid = tpCustInfoAuth.TpUserName;
-                            response.accountname = tpCustInfoAuth.TpUserName;
-                            response.balance = tpCustBalance.Balance;
-                            response.currencycode = tpCustBalance.TpCurrencyId;
-                            return response;
-                        }
-                    }
-                }
-                else
-                {
-                    status.message = "Invalid player session";
-                }
+                return PlayerDetailResponse($"Invalid player session");
+            }
+
+            var tpUserName = authToken.tpUserName;
+
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
+            if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
+            {
+                _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
+                return PlayerDetailResponse($"Player session is expired");
+            }
+            else if (tpCheck.Locked)
+            {
+                return PlayerDetailResponse($"Player is inactive");
             }
             else
             {
-                status.message = "Player session token is empty";
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)GameType);
+                if (tpCustBalance != null)
+                {
+                    return PlayerDetailResponse("", tpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+                }
+                return PlayerDetailResponse($"Can't get player:{tpUserName} balance");
             }
-            response.Status = status;
-            return response;
+        }
+
+        private playerdetailresponse PlayerDetailResponse(string message, string tpUserName = "", decimal balance = 0m, string currency = "")
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return new playerdetailresponse()
+                {
+                    Status = new HBStatus()
+                    {
+                        success = true,
+                        autherror = false,
+                        message = message
+                    },
+                    accountid = tpUserName,
+                    accountname = tpUserName,
+                    balance = balance,
+                    currencycode = currency
+                };
+            }
+
+            return new playerdetailresponse()
+            {
+                Status = new HBStatus()
+                {
+                    success = false,
+                    autherror = true,
+                    message = message
+                }
+            };
         }
 
         public bool Auth(string token)
@@ -111,17 +121,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, authToken.tpUserName);
                 if (tpCheck == null)
                 {
-                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
+                    _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
                     return false;
                 }
                 else if(tpCheck.Token != authToken.longTimeToken)
                 {
-                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
+                    _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
                     return false;
                 }
                 else if (tpCheck.Locked)
                 {
-                    _logger.LogInformation($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player is inactive");
+                    _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player is inactive");
                     return false;
                 }
                 else
@@ -131,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                _logger.LogInformation("Player session token is empty");
+                _logger.LogError("Player session token is empty");
                 return false;
             }
         }
@@ -167,8 +177,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             foreach (var fundInfo in request.funds.fundinfo)
             {
                 if (tpCurrency.ExchangeRate > 0)
+                {
                     fundInfo.amount *= tpCurrency.ExchangeRate;
-                
+                    fundInfo.bonusamount *= tpCurrency.ExchangeRate;
+                    fundInfo.jpcont *= tpCurrency.ExchangeRate;
+                }
+
                 // debit
                 if (fundInfo.amount < 0)
                 {
@@ -228,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (afterAmount < 0)
                 {
-                    _logger.LogInformation($"user {tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
+                    _logger.LogError($"user {tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
                     break;
                 }
             }

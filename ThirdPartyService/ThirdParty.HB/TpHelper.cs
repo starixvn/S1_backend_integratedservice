@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
@@ -35,7 +36,7 @@ namespace ThirdParty.HB
             var gameUrl = "";
             if (IsFunMode(inputs))
             {
-                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&mode=fun&local={TpLangId}&lobbyurl={homeUrl}";
+                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&mode=fun&locale={TpLangId}&lobbyurl={homeUrl}";
             }
             else
             {
@@ -44,7 +45,7 @@ namespace ThirdParty.HB
                 var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
                 var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
                 var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
-                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&token={sessionKey}&mode=real&local={TpLangId}&lobbyurl={homeUrl}";
+                gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&token={sessionKey}&mode=real&locale={TpLangId}&lobbyurl={homeUrl}";
             }
             var apiResult = new ApiResult()
             {
@@ -78,42 +79,28 @@ namespace ThirdParty.HB
             throw new NotImplementedException();
         }
 
-        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo,
-            Dictionary<string, string> inputs)
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpCurrency = new TpCurrency()
-            {
-                ExchangeRate = tpCustInfo.ExchangeRate,
-                TpCurrencyId = tpCustInfo.TpCurrencyId,
-            };
+            var brandId = GetInputValue(inputs, "BrandId");
+            var url = GetInputValue(inputs, "LaunchUrl");
+            var apiKey = GetInputValue(inputs, "APIKey");
+            
             var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_HB_Detail_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
-            var detail = ToJson(detailList);
-
-            var gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("keyname")?.ToString();
-            var gamename = detailList.FirstOrDefault()?.GetValueOrDefault("gamename")?.ToString();
-            return getBetDetail.TpGameTypeOption.CategoryId switch
+            var idx = url.LastIndexOf('/');
+            var gameHistory = url[..idx];
+            var friendlygameinstanceid = detailList.FirstOrDefault()?.GetValueOrDefault("friendlygameinstanceid")?.ToString();
+            var hash = SHA256($"{friendlygameinstanceid.ToLower()}{brandId.ToLower()}{apiKey.ToLower()}");
+            
+            var URL = $"{gameHistory}/games/history/?brandid={brandId}&friendlyid={friendlygameinstanceid}&hash={hash}&locale=en&viewtype=game";
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
-                TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                TransId = getBetDetail.TransId,
+                DetailUrl = URL,
+                TpCurrency = new TpCurrency()
                 {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                    RefTransId = string.Empty,
-                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("accountid")?.ToString(),
-                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("dtevent", DateTime.MinValue)),
-                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("dtevent", DateTime.MinValue)),
-                    Stake = detailList.Where(i => (int)i.GetValueOrDefault("gamestatemode") == 1)
-                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
-                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
-                    GameCode = gameCode,
-                    GameName = gamename,
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
                 },
-                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                }
             };
         }
 
@@ -132,6 +119,14 @@ namespace ThirdParty.HB
         private bool IsFunMode(Dictionary<string, string> inputs)
         {
             return inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
+        }
+        
+        private string SHA256(string message)
+        {
+            var sha256 = new SHA256CryptoServiceProvider();
+            var source = Encoding.UTF8.GetBytes(message);
+            var crypto = sha256.ComputeHash(source);
+            return BitConverter.ToString(crypto).Replace("-", "");
         }
     }
 }
