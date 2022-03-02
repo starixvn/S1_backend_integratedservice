@@ -55,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL.MG
         private HttpClientHandler CreateHandler()
         {
             var handler = new HttpClientHandler();
-            if (_configuration.GetValue<string>("ProxyHost") != null)
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
             {
                 handler.UseProxy = true;
                 handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),

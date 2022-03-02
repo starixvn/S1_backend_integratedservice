@@ -2139,16 +2139,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Mega
 
-        public IEnumerable<SettleData_Mega> GetUnsettledList_Mega()
+        public SettleData GetSettle_TpReportMega(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData_Mega>("Service_TpWagerMega_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpReportRng_Mega_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
-        public int SetSettleFlag_TpWagerMega(long TransId)
+        public int SetSettleFlag_TpReportMega(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerMega_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpReportRng_Mega_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
         #endregion

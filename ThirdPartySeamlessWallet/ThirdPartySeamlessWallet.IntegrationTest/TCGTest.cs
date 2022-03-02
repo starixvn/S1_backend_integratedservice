@@ -20,11 +20,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             {
                 { "MerchantCode", "xpnovamyr" },
                 { "TpUserName", "xnova88x249951" },
-                { "DebitID", $"debit{now.ToFileTime()}" },//¤Uª`¥æ©ö¸¹
-                { "CreditID", $"credit{now.ToFileTime()}" },//¬£±m¥æ©ö¸¹
-                { "ReserveID", $"reserve{now.ToFileTime()}" },//°é¦s¥æ©ö¸¹
-                { "OrderNo", $"order{now.ToFileTime()}" },//ª`³æ¸¹
-                { "WagerID", $"wager{now.ToFileTime()}" }//ª`³æ¬ö¿ı¸¹
+                { "DebitID", $"debit{now.ToFileTime()}" },//ä¸‹æ³¨äº¤æ˜“è™Ÿ
+                { "CreditID", $"credit{now.ToFileTime()}" },//æ´¾å½©äº¤æ˜“è™Ÿ
+                { "ReserveID", $"reserve{now.ToFileTime()}" },//åœˆå­˜äº¤æ˜“è™Ÿ
+                { "OrderNo", $"order{now.ToFileTime()}" },//æ³¨å–®è™Ÿ
+                { "WagerID", $"wager{now.ToFileTime()}" }//æ³¨å–®ç´€éŒ„è™Ÿ
             };
         }
 
@@ -220,8 +220,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     betAmount = reserveAmount,
                     actualBetAmount = reserveAmount,
                     username = _inputs["TpUserName"],
-                    netPNL = creditAmount - reserveAmount,//¿éÄ¹ª÷ÃB
-                    winAmount = creditAmount,//¬£±mª÷ÃB
+                    netPNL = creditAmount - reserveAmount,//è¼¸è´é‡‘é¡
+                    winAmount = creditAmount,//æ´¾å½©é‡‘é¡
                     settlementTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
                     productType = "TCG_SEA",
                     orderNum = _inputs["OrderNo"],
@@ -272,7 +272,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     playName = null,
                     actualBetAmount = reserveAmount,
                     username = _inputs["TpUserName"],
-                    winAmount = creditAmount,//¬£±mª÷ÃB
+                    winAmount = creditAmount,//æ´¾å½©é‡‘é¡
                     drawTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
                     orderNum = _inputs["OrderNo"],
                     remark = "testing",
