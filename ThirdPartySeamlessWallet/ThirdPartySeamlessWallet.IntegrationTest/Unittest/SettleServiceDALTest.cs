@@ -137,7 +137,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             var configBuilder = new ConfigurationBuilder();
             configBuilder.SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false);
+                .AddJsonFile("appsettings.Local.json", false, false)
+                .AddJsonStream(Program.GetRemoteConfig(new System.Collections.Generic.List<string> { "http://52.221.19.140:7243/" }));
             _configuration = configBuilder.Build();
             services.AddSingleton(_configuration);
             return services;
