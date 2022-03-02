@@ -8,7 +8,7 @@ namespace ThirdPartyWager.Service.Library
         private readonly HttpClient client;
         public HttpHelper(IHttpClientFactory clientFactory, IConfiguration configuration)
         {
-            if (configuration.GetValue<string>("ProxyHost") != null)
+            if (!string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost")))
             {
                 client = clientFactory.CreateClient("with_proxy");
             }
