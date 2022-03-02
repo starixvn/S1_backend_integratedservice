@@ -192,8 +192,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<TpRefundWorker>();
-            //services.AddHostedService<ReportMega>();
-            //services.AddHostedService<ReportRedoMega>();
+            services.AddHostedService<ReportMega>();
+            services.AddHostedService<ReportRedoMega>();
 
             /*
                 services.AddHostedService<WagerCF>();

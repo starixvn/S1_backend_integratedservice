@@ -6,6 +6,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace ThirdParty.PP
 {
@@ -160,7 +161,12 @@ namespace ThirdParty.PP
             var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
             var secureLogin = inputs.GetValueOrDefault("SecureLogin") ?? throw new Exception();
             var secureKey = inputs.GetValueOrDefault("SecureKey") ?? throw new Exception();
-            
+
+            if (Regex.IsMatch(getBetDetail.TransId, @"[a-z]"))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} is PromoWin, No bet detail.");
+            }
+
             var gameId = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_PP_GameId_Get",
                 new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }).GetValueOrDefault("gameId")?.ToString();
 
