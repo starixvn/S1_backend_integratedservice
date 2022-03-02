@@ -49,7 +49,8 @@ namespace ThirdPartyService.Service.BLL.Tests
             services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyBLL>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyHelper>>());
-            
+            services.AddTransient(p => Substitute.For<ILogger<Log2File>>());
+
             var startup = new StubStartUp(_configuration);
 
             startup.ConfigureServices(services);
@@ -59,7 +60,7 @@ namespace ThirdPartyService.Service.BLL.Tests
         }
 
         //[Ignore("dev")]
-        [TestCase(250072, "4Ei9yfdzKGJll1", 67, ExpectedResult = ErrorCode.Success)]
+        [TestCase(250072, "2360725352", 7, ExpectedResult = ErrorCode.Success)]
         public ErrorCode GetBetDetailTest(int custId, string transId, int gameType)
         {
             var actual = _thirdPartyBLL.GetBetDetail(new GetBetDetailRequest
