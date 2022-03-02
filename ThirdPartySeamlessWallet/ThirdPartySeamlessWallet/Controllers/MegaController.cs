@@ -128,14 +128,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
                 
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.Params.loginId);
                 if (tpCheck == null)
                 {
                     _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, "", out _);
                     tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
                 }
 
-                if (tpCheck.Locked)
+                if (tpCheck == null|| tpCheck.Locked)
                 {
                     resp.error = "Account is Lock";
                     _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
