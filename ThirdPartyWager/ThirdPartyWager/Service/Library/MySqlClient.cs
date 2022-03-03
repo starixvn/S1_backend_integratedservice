@@ -21,6 +21,7 @@ namespace ThirdPartyWager.Service.Library
 
         public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
         {
+            LogContext.PushProperty("DataBase", DataBase.ToString());
             _connectionString = connectionString;
             _logger = logger;
         }

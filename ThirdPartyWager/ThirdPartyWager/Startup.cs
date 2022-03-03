@@ -12,6 +12,7 @@ using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager
@@ -198,6 +199,7 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportRedoMega>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
+            services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get" , new { TpId = 1, Type = 1} , DataBase.Wager);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
