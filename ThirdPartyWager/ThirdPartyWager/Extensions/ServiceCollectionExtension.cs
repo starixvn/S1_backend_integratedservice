@@ -33,20 +33,20 @@ namespace ThirdPartyWager.Extensions
                });
         }
 
-        public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
+        public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null, DataBase dataBase = DataBase.Report)
         {
             var provider = services.BuildServiceProvider();
             var configService = provider.GetRequiredService<ConfigService>();
-            var option = configService.Query<T>(sql, parameters);
+            var option = configService.Query<T>(sql, parameters, dataBase);
             services.AddSingleton(typeof(IEnumerable<T>), p => option);
             return services;
         }
 
-        public static IServiceCollection AddOptionByDB<T>(this IServiceCollection services, string sql, object parameters = null)
+        public static IServiceCollection AddOptionByDB<T>(this IServiceCollection services, string sql, object parameters = null, DataBase dataBase = DataBase.Report)
         {
             var provider = services.BuildServiceProvider();
             var configService = provider.GetRequiredService<ConfigService>();
-            var option = configService.Query<T>(sql, parameters).FirstOrDefault();
+            var option = configService.Query<T>(sql, parameters, dataBase).FirstOrDefault();
             services.AddSingleton(typeof(T), p => option);
             return services;
         }
