@@ -186,16 +186,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 // debit
                 if (fundInfo.amount < 0)
                 {
-                    if ((string) request.gamedetails.keyname == "SGSantasVillage" && Math.Abs((decimal)fundInfo.amount) > 200 ||
-                        (string) request.gamedetails.keyname == "SGFortuneDogs" && Math.Abs((decimal)fundInfo.amount) > 200 )
-                    {
-                        System.Threading.Thread.Sleep(60000);
-                        response.status = new ExpandoObject();
-                        response.status.success = false;
-                        response.status.nofunds = true;
-                        return response;
-                    }
-
                     var placeBetRngDto = new PlaceBetRngDto_HB()
                     {
                         accountid = request.accountid,
