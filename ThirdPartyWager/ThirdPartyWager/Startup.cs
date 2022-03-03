@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager
@@ -23,12 +25,11 @@ namespace ThirdPartyWager
             this.configuration = configuration;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
-        {
+        {            
             services.AddMemoryCache();
-            
+            services.AddDatabaseConnection(configuration);
+
             if (!string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost")))
             {
                 var proxy = new HttpClientHandler
@@ -74,6 +75,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
+            services.AddSingleton<ConfigService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -192,17 +194,12 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<TpRefundWorker>();
-            services.AddHostedService<ReportMega>();
+            services.AddHostedService<Workers.ReportMega>();
             services.AddHostedService<ReportRedoMega>();
 
-            /*
-                services.AddHostedService<WagerCF>();
-                services.AddHostedService<WagerKiss918>();
-                services.AddHostedService<WagerRedoKiss918>();
-            */
+            services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

@@ -45,4 +45,11 @@
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
     }
+
+    public enum DataBase
+    {
+        Main, //ConnectionString
+        Report,//ConnectionStringReport
+        Wager,//ConnectionStringWager
+    }
 }
