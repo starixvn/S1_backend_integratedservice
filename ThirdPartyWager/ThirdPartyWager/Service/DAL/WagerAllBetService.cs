@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
@@ -14,14 +16,10 @@ namespace ThirdPartyWager.Service.DAL
         private readonly MySqlClient _wagerDbClient;
         private readonly MySqlClient _mainDbClient;
 
-        public WagerAllBetService(
-            IServiceProvider provider,
-            IConfiguration configuration
-        )
+        public WagerAllBetService(IServiceProvider provider)
         {
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), log);
-            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), log);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public bool InsertWager(BetAllBet bet)

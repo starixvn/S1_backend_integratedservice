@@ -3,10 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
@@ -14,10 +15,9 @@ namespace ThirdPartyWager.Service.DAL
     {
         private readonly MySqlClient _wagerDbClient;
 
-        public WagerMegaService(IServiceProvider provider, IConfiguration configuration)
+        public WagerMegaService(IServiceProvider provider)
         {
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), log);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public Task<int> InsertReport(ReportListMega report)

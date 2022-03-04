@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
@@ -13,11 +15,9 @@ namespace ThirdPartyWager.Service.DAL
     {
         private readonly MySqlClient _wagerDbClient;
 
-        public WagerEVOService(IServiceProvider provider, IConfiguration configuration)
+        public WagerEVOService(IServiceProvider provider)
         {
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            var conn = configuration.GetConnectionString("ConnectionStringWager");
-            _wagerDbClient = new MySqlClient(conn, log);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public Task<int> InsertWager(Wager_EVO bet)
