@@ -28,19 +28,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
 
     }
-    public class SettleDataRNG_HB
-    {
-        public string TransId { get; set; }
-        public string TpUserName { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal ProgressiveBet { get; set; }
-        public decimal ProgressiveWin { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public long SettledTime { get; set; }
-        public long TransTime { get; set; }
-        public string GameId { get; set; }
-    }
 
     public class PlaceBetRngDto_HB
     {
@@ -117,7 +104,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal afterAmount { get; set; }
         public int BonusId { get; set; }
     }
-    
+
+    public class SettleDataRNG_HB
+    {
+        public string TransId { get; set; }
+        public string TpUserName { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal ProgressiveBet { get; set; }
+        public decimal ProgressiveWin { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public long SettledTime { get; set; }
+        public long TransTime { get; set; }
+        public string GameId { get; set; }
+    }
     #region Auth
     public class HBPlayerDetailRequest
     {
@@ -261,4 +261,5 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string tpUserName { get; set; }
         public string gameId { get; set; }
     }
+
 }
