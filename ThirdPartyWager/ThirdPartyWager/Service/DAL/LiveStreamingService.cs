@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
@@ -15,9 +17,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public LiveStreamingService(IServiceProvider provider)
         {
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            var conn = provider.GetRequiredService<IConfiguration>().GetConnectionString("ConnectionString");
-            _mySqlClient = new MySqlClient(conn, log);
+            _mySqlClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
         public async Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {

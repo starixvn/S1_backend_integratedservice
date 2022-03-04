@@ -24,15 +24,13 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.TCG;
         private readonly Dictionary<string, string> _setting;
 
-        public TCGBLL(IServiceProvider provider, IConfiguration configuration)
+        public TCGBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             LogContext.PushProperty("Tp", "TCG");
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), log);
-            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-            
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);            
         }
 
         public async Task<bool> GetWagersAsync<T>(DateTimeOffset batchTime, string currency)
