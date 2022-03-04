@@ -28,6 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string playerId { get; set; }
         public string txnId { get; set; }
+        public string betId { get; set; }
     }
 
     public class MGLoginRequest
@@ -82,6 +83,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string currency { get; set; }
         public string txnId { get; set; }
+        public string betId { get; set; }
     }
 
     public class MGRollbackResponse

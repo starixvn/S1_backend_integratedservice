@@ -35,6 +35,7 @@
     <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
     <ProjectReference Include="..\ThirdParty.EVO\ThirdParty.EVO.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
+    <ProjectReference Include="..\ThirdParty.HB\ThirdParty.HB.csproj" />
     <ProjectReference Include="..\ThirdParty.Iconic\ThirdParty.Iconic.csproj" />
     <ProjectReference Include="..\ThirdParty.JILI\ThirdParty.JILI.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />

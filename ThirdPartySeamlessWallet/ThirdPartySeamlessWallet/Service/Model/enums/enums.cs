@@ -97,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         RedTiger_RNG = 65,
         Joker_Fish = 66,
         AP_RNG = 67,
-
+        HB_RNG = 68,
         SBSW_Sports = 69,
         SBSW_NumberGame = 70,
         SBSW_VirtualSports = 71,
@@ -147,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Netent = 37,
         RedTiger = 38,
         AP = 39,
-
+        HB = 40,
         SBSW = 41
     }
     public enum TransferType : int

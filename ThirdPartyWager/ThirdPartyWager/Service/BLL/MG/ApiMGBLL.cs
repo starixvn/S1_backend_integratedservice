@@ -41,6 +41,10 @@ namespace ThirdPartyWager.Service.BLL.MG
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _client.GetAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions");
                 var result = await response.Content.ReadAsStringAsync();
+                if (result != "[]")
+                {
+                    _logger.LogInformation($"{agent.AgentCode} get failedTransactions:{result}");
+                }
                 var failedTransactions = JsonConvert.DeserializeObject<List<MGFailedTransactions>>(result);
                 return failedTransactions;
             }

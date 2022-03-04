@@ -23,16 +23,14 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.NineW;
         private readonly NineWConfig _config;
 
-        public NineWBLL(IServiceProvider provider, IConfiguration configuration)
+        public NineWBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<NineWBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
 
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            var conn = configuration.GetConnectionString("ConnectionStringWager");
-            _wagerDbClient = new MySqlClient(conn, log);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
 
             var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
             _config = new NineWConfig(setting);

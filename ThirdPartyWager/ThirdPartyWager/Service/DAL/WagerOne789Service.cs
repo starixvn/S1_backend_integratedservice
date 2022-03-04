@@ -1,9 +1,8 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -15,14 +14,10 @@ namespace ThirdPartyWager.Service.DAL
         private readonly MySqlClient _wagerDbClient;
         private readonly MySqlClient _mainDbClient;
 
-        public WagerOne789Service(
-            IServiceProvider provider,
-            IConfiguration configuration
-        )
+        public WagerOne789Service(IServiceProvider provider)
         {
-            var log = provider.GetRequiredService<ILogger<MySqlClient>>();
-            _wagerDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringWager"), log);
-            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), log);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public bool InsertWagerOne789(BetOne789 bet, int gameType)

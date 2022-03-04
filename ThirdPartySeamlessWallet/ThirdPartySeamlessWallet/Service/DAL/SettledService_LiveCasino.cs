@@ -3071,6 +3071,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
+                var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransLC_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (isCompleted)
+                {
+                    return new MGPayoutResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount
+                    };
+                }
+                
                 var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransLcMg.ExtTxnId != 0)
                 {
@@ -3121,8 +3131,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<MGCancelResult> CancelBetLC_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG,
-            int gameType)
+        public async Task<MGCancelResult> CancelBetLC_MG(TpCustInfo tpCustInfo, CancelDataRNG_MG cancelDataRng_MG, int gameType)
         {
             int bonusId = 0;
             var afterAmount = 0M;
@@ -3133,8 +3142,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get",
-                    new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLCByBet_MG_Get", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransLcMg == null)
                 {
                     return new MGCancelResult()
@@ -3159,8 +3167,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = conn.Execute("Service_CancelBetLC_MG_Set",
-                    new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = conn.Execute("Service_CancelBetLC_MG_Set", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
                     if (cancelDataRng_MG.amount != 0)
