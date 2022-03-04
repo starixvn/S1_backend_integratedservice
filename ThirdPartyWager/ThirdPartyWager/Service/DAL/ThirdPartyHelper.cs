@@ -1,73 +1,73 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
+using System;
 using System.Data;
+using System.Linq;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class ThirdPartyHelper
     {
 
-        private readonly IConfiguration configuration;
+        private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _wagerDbClient;
 
-        public ThirdPartyHelper(IConfiguration configuration)
+        public ThirdPartyHelper(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public ThirdPartyModel GetThirdPartySetting(int tpId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.QueryFirst<ThirdPartyModel>("Tp_Get", new { TpId = tpId });
         }
 
         public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId }, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.QueryFirst<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
         }
 
         public int SetThirdPartySetting(int tpId, string setting)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_Tp_Set", new { TpId = tpId, Setting = setting }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_Tp_Set", new { TpId = tpId, Setting = setting });
         }
 
         public ThirdPartyTimerModel GetThirdPartyTimer(int tpId, int type)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<ThirdPartyTimerModel>("Service_TpWagerTimer_Get", new { TpId = tpId, Type = type }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<ThirdPartyTimerModel>("Service_TpWagerTimer_Get", new { TpId = tpId, Type = type });
         }
 
         public int SetThirdPartyTimer(int tpId, int type, long start)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerTimer_Ins", new { TpId = tpId, Type = type, StartUnix = start }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerTimer_Ins", new { TpId = tpId, Type = type, StartUnix = start });
         }
 
         public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByCurrency(int tpId, int type, string currency, int gameType = 0)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByCurrency_Get", new { TpId = tpId, Type = type, Currency = currency, GameType = gameType }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByCurrency_Get", new { TpId = tpId, Type = type, Currency = currency, GameType = gameType });
         }
 
         public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByGameType(int tpId, int type, int gameType)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByGameType_Get", new { TpId = tpId, Type = type, GameType = gameType }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByGameType_Get", new { TpId = tpId, Type = type, GameType = gameType });
         }
 
         public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency, int gameType = 0)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerTimerReference_Currency_Set", new { TpId = tpId, Type = type, StartUnix = start, Currency = currency, GameType = gameType }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerTimerReference_Currency_Set", new { TpId = tpId, Type = type, StartUnix = start, Currency = currency, GameType = gameType });
         }
 
         public int SetThirdPartyTimerByGameType(int tpId, int type, long start, int gameType)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerTimerReference_GameType_Set", new { TpId = tpId, Type = type, StartUnix = start, GameType = gameType }, commandType: CommandType.StoredProcedure);
+        { 
+            return _wagerDbClient.Execute("Service_TpWagerTimerReference_GameType_Set", new { TpId = tpId, Type = type, StartUnix = start, GameType = gameType });
         }
     }
 }

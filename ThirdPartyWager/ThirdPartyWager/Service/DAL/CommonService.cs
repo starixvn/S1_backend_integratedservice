@@ -1,29 +1,37 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using Dapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class CommonService
     {
-        private readonly IConfiguration _configuration;
+        private readonly IEnumerable<ServerInfo> _serverInfos;
 
-        public CommonService(IConfiguration configuration)
+        private readonly MySqlClient _reportDbClient;
+
+        public CommonService(IServiceProvider provider)
         {
-            this._configuration = configuration;
+            _serverInfos = provider.GetRequiredService<IEnumerable<ServerInfo>>();
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
+
         public IEnumerable<ServerInfo> GetSiteList()
         {
-            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.Query<ServerInfo>("Admin_ServerInfoList_Get", commandType: CommandType.StoredProcedure);
+            return _serverInfos;
         }
+
         public IEnumerable<TpCurrency> GetTpCurrencyList(int tpId)
         {
-            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
     }
 }

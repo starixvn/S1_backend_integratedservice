@@ -86,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 dBonusCategoryList = new Dictionary<int, int>();
 
                 var bonusCategoryList = thirdPartyService.GetBonusCategoryList();
-                foreach (var bonusCategory in bonusCategoryList.Where(x => x.TpId == 0))
+                foreach (var bonusCategory in bonusCategoryList.Where(x => x.WalletType == 1))
                 {
                     dBonusCategoryList.Add(bonusCategory.Type, bonusCategory.Id);
                 }

@@ -9,9 +9,9 @@ using ThirdPartyBetHistory.Service.Worker;
 
 namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
-    public class SabaBetHelper : ThirdPartyBetHelperBase
+    public class SBSWBetHelper : ThirdPartyBetHelperBase
     {
-        public SabaBetHelper(ILogger<WorkerService> logger)
+        public SBSWBetHelper(ILogger<WorkerService> logger)
         {
             Logger = logger;
         }
@@ -247,7 +247,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         {
                             var betRecordInfo = new BetRecordInfo
                             {
-                                GameType = GameType.Saba_NumberGame,
+                                GameType = GameType.SBSW_NumberGame,
                                 TransId = betDetial.trans_id.ToString(),
                                 TransTime = ConvertLocTime(betDetial.transaction_time),
                                 SettledTime = ConvertLocTime(betDetial.transaction_time),
@@ -280,11 +280,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                             if (betDetial.sport_type >= 180 || betDetial.sport_type <= 189)
                             {
-                                betRecordInfo.GameType = GameType.Saba_VirtualSport;
+                                betRecordInfo.GameType = GameType.SBSW_VirtualSports;
                             }
                             else
                             {
-                                betRecordInfo.GameType = GameType.Saba_VirtualSports2;
+                                betRecordInfo.GameType = GameType.SBSW_VirtualSports2;
                             }
 
                             if (betDetial.match_datetime != null)
@@ -335,10 +335,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
             else
             {
-                if (betRecordInfo.GameType == GameType.Allbet || betRecordInfo.GameType == GameType.PP || betRecordInfo.GameType == GameType.Saba_RNG ||
-                    betRecordInfo.GameType == GameType.Saba_CardClub || betRecordInfo.GameType == GameType.Saba_Indo4D || betRecordInfo.GameType == GameType.Saba_Keno ||
-                    betRecordInfo.GameType == GameType.Saba_Lottery || betRecordInfo.GameType == GameType.Saba_MacauGame || betRecordInfo.GameType == GameType.Saba_SabaClub ||
-                    betRecordInfo.GameType == GameType.Saba_VirtualGames || betRecordInfo.GameType == GameType.Saba_Vgaming)
+                if (betRecordInfo.GameType == GameType.SBSW_Keno || betRecordInfo.GameType == GameType.SBSW_Lottery )
                 {
 
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
@@ -534,25 +531,15 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
         {
             if (sport_type == null)
             {
-                return GameType.Saba_Sports;
+                return GameType.SBSW_Sports;
             }
 
             return sport_type switch
             {
-                56 => GameType.Saba_ChinaLottery,
-                69 => GameType.Saba_Bitcoin,
-                165 => GameType.Saba_CardClub,
-                171 => GameType.Saba_Vgaming,
-                200 => GameType.Saba_SabaClub,
-                202 => GameType.Saba_Keno,
-                212 => GameType.Saba_MacauGame,
-                220 => GameType.Saba_Lottery,
-                222 => GameType.Saba_TableGame,
-                223 => GameType.Saba_Indo4D,
-                245 => GameType.Saba_VirtualGames,
-                211 => GameType.Allbet,
-                248 => GameType.PP,
-                _ => sport_type > 200 ? GameType.Saba_RNG : GameType.Saba_Sports,
+                202 => GameType.SBSW_Keno,
+                220 => GameType.SBSW_Lottery,
+                222 => GameType.SBSW_TableGame,
+                _ => GameType.SBSW_Sports,
             };
         }
     }
