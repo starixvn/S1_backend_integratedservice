@@ -80,6 +80,7 @@ namespace ThirdPartyWager
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
+            services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
