@@ -78,6 +78,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerEVOService>();
             services.AddSingleton<ConfigService>();
 
+            services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
+            services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
+
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
@@ -198,8 +201,7 @@ namespace ThirdPartyWager
             services.AddHostedService<Workers.ReportMega>();
             services.AddHostedService<ReportRedoMega>();
 
-            services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
-            services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get" , new { TpId = 1, Type = 1} , DataBase.Wager);
+           
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
