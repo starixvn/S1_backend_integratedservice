@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
                 }
-                
+
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.Params.loginId);
                 if (tpCheck == null)
                 {
@@ -135,7 +135,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
                 }
 
-                if (tpCheck == null|| tpCheck.Locked)
+                if (tpCheck == null)
+                {
+                    resp.error = "Check invalid user id";
+                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
+                }
+
+                if (tpCheck.Locked)
                 {
                     resp.error = "Account is Lock";
                     _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
