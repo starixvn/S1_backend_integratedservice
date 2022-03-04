@@ -23,9 +23,7 @@
         public long creationTime { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
-        public string roundId { get; set; }
-        public string deviceType { get; set; }
-        public string platformType { get; set; }
         public bool completed { get; set; }
+        public bool IsFailedTransaction { get; set; }
     }
 }

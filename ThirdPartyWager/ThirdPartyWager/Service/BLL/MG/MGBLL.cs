@@ -50,7 +50,8 @@ namespace ThirdPartyWager.Service.BLL.MG
                             creationTime = DateTime.UtcNow.Ticks,
                             contentCode = transaction.contentCode,
                             betId = transaction.betId,
-                            completed = transaction.completed
+                            completed = transaction.completed,
+                            IsFailedTransaction = true
                         };
                     
                         var isSuccess = await _swApi.MgUpdateBalance(request);
