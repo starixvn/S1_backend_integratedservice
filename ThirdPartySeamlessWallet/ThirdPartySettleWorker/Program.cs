@@ -84,9 +84,12 @@ namespace ThirdPartySettleWorker
                 try
                 {
                     result = client.GetAsync(url).Result.Content.ReadAsStreamAsync().Result;
+                    
                     break;
                 }
-                catch { }
+                catch (Exception ex) {
+                    throw ex;
+                }
             }
 
             using var streamReader = new StreamReader(result);
