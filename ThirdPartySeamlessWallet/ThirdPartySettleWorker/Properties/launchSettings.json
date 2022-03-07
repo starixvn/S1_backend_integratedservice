@@ -3,7 +3,7 @@
     "ThirdPartySettleWorker": {
       "commandName": "Project",
       "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Local"
+        "ASPNETCORE_ENVIRONMENT": "Local"
       }
     }
   }
