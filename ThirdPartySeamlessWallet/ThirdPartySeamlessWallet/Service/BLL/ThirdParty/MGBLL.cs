@@ -138,7 +138,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else if (gameType == GameType.MG_LiveCasino)
             {
-                placeBetResult = await _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int)gameType);
+                placeBetResult = _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int)gameType);
             }
             else
             {
@@ -207,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else if (gameType == GameType.MG_LiveCasino)
             {
-                payoutResult = await _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)gameType);
+                payoutResult = _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)gameType);
             }
             else
             {
@@ -255,21 +255,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 betId = request.betId,
                 txnId = request.txnId,
                 playerId = request.playerId,
-                amount = request.amount
+                amount = request.amount,
+                creationTime = DateTime.UtcNow.Ticks
             };
 
             var cancelResult = new MGCancelResult();
 
             // check bettrans of gametype
-            var tpGameType = _settledService.GetBettrans_MG_TpGameType(request.betId);
+            var tpGameType = _settledService.GetTpGameType_MG(request.betId, cancelData.creationTime);
             if(tpGameType == 0)
             {
-                return new MGRollbackResponse()
-                {
-                    currency = tpCurrency.TpCurrencyId,
-                    balance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance,
-                    extTxnId = cancelResult.ExtTxnId.ToString()
-                };
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
             }
 
             if (tpGameType == (int)GameType.MG_RNG)
@@ -320,7 +316,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 betId = request.betId,
                 txnId = request.txnId,
                 playerId = request.playerId,
-                amount = request.amount
+                amount = request.amount,
+                creationTime = request.creationTime
             };
 
             var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
