@@ -2,13 +2,13 @@
 using FluentAssertions;
 using NUnit.Framework;
 using ThirdPartyCore.Model;
-using ThirdParty.AMB;
+using ThirdParty.NewAMB;
 using ThirdPartyCore.Model.enums;
 
-namespace ThirdParty.AMB.Tests
+namespace ThirdParty.NewAMB.Tests
 {
     [TestFixture()]
-    public class AMBTpHelperTests
+    public class NewAMBTpHelperTests
     {
         private TpHelper _tpHelper;
         private TpCustInfo _tpCustInfo;
@@ -21,12 +21,12 @@ namespace ThirdParty.AMB.Tests
             _tpHelper = new TpHelper();
             _tpCustInfo = new TpCustInfo()
             {
-                TpId = 30,
-                CustId = 250032,
+                TpId = 42,
+                CustId = 250764,
                 SiteId = 1,
-                UserName = "hulkchou",
-                TpUserName = "DNova88_250032",
-                TpCurrencyId = "2",
+                UserName = "hulkchou4",
+                TpUserName = "DNova88_250764",
+                TpCurrencyId = "4",
                 ExchangeRate = 1.0000m,
                 IsTest = false,
                 ActStatus = 2,
@@ -36,9 +36,9 @@ namespace ThirdParty.AMB.Tests
 
             _inputs = new Dictionary<string, string>
             {
-                {"SlotAgent", "nova88thbtestaa"},
-                {"SlotApiUrl", "https://uat.ambslot-api.com"},
-                {"SlotSecretKey", "1b15232c9933c8d031a68a98d14a2333"}
+                {"Agent", "nova88thbtestaa"},
+                {"ApiUrl", "https://uat.ambslot-api.com"},
+                {"SecretKey", "1b15232c9933c8d031a68a98d14a2333"}
             };
         }
         
@@ -58,7 +58,8 @@ namespace ThirdParty.AMB.Tests
             //Arrange
             var appType = AppType.Desktop;
             var tpLangId = "th";
-            _inputs.Add( "gameId", "ANGRYBIRD");
+            _inputs.Add("gameId", "ANGRYBIRD");
+            _inputs.Add("homeUrl", "http://www.n88dev.com");
 
             //Act
             var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);
