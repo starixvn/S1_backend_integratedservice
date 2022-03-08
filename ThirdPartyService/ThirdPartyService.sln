@@ -91,6 +91,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBSW", "ThirdPar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.HB", "ThirdParty.HB\ThirdParty.HB.csproj", "{02F30FD7-585B-4A93-BAF2-19316555233A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.NewAMB", "ThirdParty.NewAMB\ThirdParty.NewAMB.csproj", "{D8ADC2E0-0A6C-4FAD-853A-351BF053C53E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -269,6 +271,10 @@ Global
 		{02F30FD7-585B-4A93-BAF2-19316555233A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02F30FD7-585B-4A93-BAF2-19316555233A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02F30FD7-585B-4A93-BAF2-19316555233A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8ADC2E0-0A6C-4FAD-853A-351BF053C53E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8ADC2E0-0A6C-4FAD-853A-351BF053C53E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8ADC2E0-0A6C-4FAD-853A-351BF053C53E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8ADC2E0-0A6C-4FAD-853A-351BF053C53E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -314,6 +320,7 @@ Global
 		{ECF8316A-1724-43A8-B034-931132E57465} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{0A43ED88-DCAD-4F6A-8CC1-4333C09F9E5D} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{02F30FD7-585B-4A93-BAF2-19316555233A} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{D8ADC2E0-0A6C-4FAD-853A-351BF053C53E} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
