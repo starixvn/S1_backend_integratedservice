@@ -3165,8 +3165,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 long unixTimestamp = cancelDataRng_MG.creationTime - new DateTime(1970, 1, 1).Ticks;
                 unixTimestamp = unixTimestamp / TimeSpan.TicksPerSecond * 1000;
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
-                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", new DynamicParameters(new { betId = cancelDataRng_MG.betId }));
-                if (check.Any() && check.ElementAt(0).TicketStatus == 3)
+                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Bet_Get", new DynamicParameters(new { betId = cancelDataRng_MG.betId, txnId = cancelDataRng_MG.txnId }));
+                if (!check.Any() || check.ElementAt(0).TicketStatus == 3)
                 {
                     return new MGCancelResult()
                     {

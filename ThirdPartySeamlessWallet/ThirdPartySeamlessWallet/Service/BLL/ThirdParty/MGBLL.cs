@@ -129,14 +129,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 completed = request.completed
             };
 
-            var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
-
             var placeBetResult = new MGPlaceBetResult();
-            if (gameType == GameType.MG_RNG)
+
+            var gameType = getGameType(request.contentCode, request.channel);
+            if (gameType == (int)GameType.MG_RNG)
             {
                 placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int)gameType);
             }
-            else if (gameType == GameType.MG_LiveCasino)
+            else if (gameType == (int)GameType.MG_LiveCasino)
             {
                 placeBetResult = _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int)gameType);
             }
@@ -198,14 +198,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 completed = request.completed
             };
 
-            var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
-
             var payoutResult = new MGPayoutResult();
-            if (gameType == GameType.MG_RNG)
+            var gameType = getGameType(request.contentCode, request.channel);
+            if (gameType == (int)GameType.MG_RNG)
             {
                 payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)gameType);
             }
-            else if (gameType == GameType.MG_LiveCasino)
+            else if (gameType == (int)GameType.MG_LiveCasino)
             {
                 payoutResult = _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)gameType);
             }
@@ -243,11 +242,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 balance = payoutResult.AfterAmount
             };
         }
-        
+
         public async Task<MGRollbackResponse> Rollback(MGRollbackeRequest request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
-            if (tpCurrency.ExchangeRate > 0) 
+            if (tpCurrency.ExchangeRate > 0)
                 request.amount *= tpCurrency.ExchangeRate;
 
             var cancelData = new CancelDataRNG_MG()
@@ -261,40 +260,45 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var cancelResult = new MGCancelResult();
 
-            // check bettrans of gametype
-            var tpGameType = _settledService.GetTpGameType_MG(request.betId, cancelData.creationTime);
-            if(tpGameType == 0)
+            var gameType = getGameType(request.contentCode, request.channel);
+            if (gameType == 0)
             {
-                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
+                // check bettrans of gametype by table
+                var tpGameType = _settledService.GetTpGameType_MG(request.betId, cancelData.creationTime);
+                if (tpGameType == 0)
+                {
+                    throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
+                }
+                gameType = tpGameType;
             }
 
-            if (tpGameType == (int)GameType.MG_RNG)
+            if (gameType == (int)GameType.MG_RNG)
             {
-                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, tpGameType);
+                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, gameType);
             }
-            else if (tpGameType == (int)GameType.MG_LiveCasino)
+            else if (gameType == (int)GameType.MG_LiveCasino)
             {
-                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, tpGameType);
+                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, gameType);
             }
             else
             {
-                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}");
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{gameType}");
             }
 
             // DB 錯誤
             if (cancelResult.Result <= 0)
             {
                 throw new MGException();
-            } 
-            
+            }
+
             if (cancelResult.AfterAmount == 0)
             {
                 cancelResult.AfterAmount = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.playerId, (int)GameType).Balance;
             }
             else
             {
-                if (tpCurrency.ExchangeRate > 0) 
-                    cancelResult.AfterAmount /= tpCurrency.ExchangeRate;   
+                if (tpCurrency.ExchangeRate > 0)
+                    cancelResult.AfterAmount /= tpCurrency.ExchangeRate;
             }
 
             return new MGRollbackResponse()
@@ -304,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 extTxnId = cancelResult.ExtTxnId.ToString()
             };
         }
-        
+
         private async Task<MGUpdatebalanceResponse> Rollback(MGUpdatebalanceRequest request)
         {
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.playerId);
@@ -320,14 +324,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 creationTime = request.creationTime
             };
 
-            var gameType = _thirdPartyBLL.GetGameType((int)ThirdParty, request.contentCode);
-
             var cancelResult = new MGCancelResult();
-            if (gameType == GameType.MG_RNG)
+
+            var gameType = getGameType(request.contentCode, request.channel);
+            if (gameType == (int)GameType.MG_RNG)
             {
                 cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, (int)gameType);
             }
-            else if (gameType == GameType.MG_LiveCasino)
+            else if (gameType == (int)GameType.MG_LiveCasino)
             {
                 cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, (int)gameType);
             }

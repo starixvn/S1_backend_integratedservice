@@ -748,10 +748,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 long unixTimestamp = bettingDataRNG_MG.creationTime - new DateTime(1970, 1, 1).Ticks;
                 unixTimestamp = unixTimestamp / TimeSpan.TicksPerSecond * 1000;
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
-                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", new DynamicParameters(new { betId = bettingDataRNG_MG.betId }));
+                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Bet_Get", new DynamicParameters(new { betId = bettingDataRNG_MG.betId, txnId = bettingDataRNG_MG.txnId }));
                 if (check.Any())
                 {
-                    //Duplicated
                     return new MGPlaceBetResult()
                     {
                         Result = 1,

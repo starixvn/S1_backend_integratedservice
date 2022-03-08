@@ -87,9 +87,7 @@ namespace ThirdPartySettleWorker
                     
                     break;
                 }
-                catch (Exception ex) {
-                    throw ex;
-                }
+                catch { }
             }
 
             using var streamReader = new StreamReader(result);
