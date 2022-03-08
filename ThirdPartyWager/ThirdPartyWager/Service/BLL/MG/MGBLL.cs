@@ -51,6 +51,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                             contentCode = transaction.contentCode,
                             betId = transaction.betId,
                             completed = transaction.completed,
+                            channel = transaction.channel,
                             IsFailedTransaction = true
                         };
                     

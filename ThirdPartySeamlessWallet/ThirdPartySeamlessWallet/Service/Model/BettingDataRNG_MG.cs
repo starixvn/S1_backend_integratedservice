@@ -75,6 +75,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string extTxnId { get; set; }
         public decimal balance { get; set; }
         public string currency { get; set; }
+        public string contentCode { get; set; }
+        public string channel { get; set; }
     }
     
     public class MGRollbackeRequest
