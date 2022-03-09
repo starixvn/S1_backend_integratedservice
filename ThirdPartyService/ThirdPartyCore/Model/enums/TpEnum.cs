@@ -41,7 +41,9 @@ namespace ThirdPartyCore.Model.enums
         MP = 35,
         EVO = 36,
         Netent = 37,
-        RedTiger = 38
+        RedTiger = 38,
+        HB = 40,
+        NewAMB = 42
     }
 
     public enum TpGameType
@@ -99,6 +101,8 @@ namespace ThirdPartyCore.Model.enums
         EVO_LiveCasino = 63,
         Netent_RNG = 64,
         RedTiger_RNG = 65,
+        HB_RNG = 68,
+        AMB_RNG = 76
     }
 
 }
