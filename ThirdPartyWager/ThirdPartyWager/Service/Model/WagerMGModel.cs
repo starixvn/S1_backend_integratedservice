@@ -10,6 +10,7 @@
         public string txnId { get; set; }
         public string txnEventType { get; set; }
         public string contentCode { get; set; }
+        public string channel { get; set; }
         public bool completed { get; set; }
     }
     public class MGUpdatebalanceRequest
@@ -24,6 +25,7 @@
         public string contentCode { get; set; }
         public string betId { get; set; }
         public bool completed { get; set; }
+        public string channel { get; set; }
         public bool IsFailedTransaction { get; set; }
     }
 }
