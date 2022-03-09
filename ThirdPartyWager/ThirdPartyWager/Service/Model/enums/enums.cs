@@ -39,6 +39,7 @@
     public enum GameType
     {
         AG_LiveCasino = 8,
+        SA_LiveCasino = 9,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
