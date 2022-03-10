@@ -116,7 +116,42 @@ namespace ThirdParty.AMB
 
         public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            throw new NotImplementedException();
+            var games = GetGameList(callback);
+            var game = games.data.SingleOrDefault(a => a.prefix.Trim() == gameId.Trim());
+            var apiUrl = $"{Setting.ApiUrl}/seamless/result";
+            var param = new
+            {
+                tranId = roundId,
+                agent = Setting.Agent,
+                provider = game.partner,
+                username = tpUserName,
+                language = "en",
+                type = game.type
+            };
+
+            var jsonParam = JsonConvert.SerializeObject(param); 
+            
+            var header = new Dictionary<string, string>
+            {
+                { "x-amb-signature", HMACSHA512(jsonParam, Setting.SecretKey) }
+            };
+            var result = callback(apiUrl, jsonParam, "application/json", header, 0);
+            
+            try
+            {
+                return JsonConvert.DeserializeObject<GameReportResponse>(result);
+            }
+            catch (Exception e)
+            {
+                return new GameReportResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 997,
+                        message = result
+                    }
+                };
+            }
         }
     }
 }

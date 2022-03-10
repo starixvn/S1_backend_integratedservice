@@ -2,6 +2,11 @@
 
 namespace ThirdParty.AMB
 {
+    public class CommonResponse
+    {
+        public Status status { get; set; }
+        public Data? data { get; set; }
+    }
     public class GameReportResponse
     {
         public Status status { get; set; }

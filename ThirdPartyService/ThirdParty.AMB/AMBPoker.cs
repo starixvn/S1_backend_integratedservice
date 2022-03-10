@@ -65,7 +65,7 @@ namespace ThirdParty.AMB
             {
                 username = tpUserName,
                 roundId,
-                Setting.Agent,
+                agent = Setting.Agent,
                 language = "en",
             };
 
@@ -83,7 +83,14 @@ namespace ThirdParty.AMB
             }
             catch (Exception e)
             {
-                return null;
+                return new GameReportResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 997,
+                        message = result
+                    }
+                };
             }
         }
     }
