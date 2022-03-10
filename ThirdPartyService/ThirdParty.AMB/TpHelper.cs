@@ -23,12 +23,7 @@ namespace ThirdParty.AMB
             public string message { get; set; }
 
         }
-        public class Data
-        {
-            public string url { get; set; }
-
-        }
-
+        
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -36,29 +31,12 @@ namespace ThirdParty.AMB
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception("SecretKey");
-            ApiUrl = $"{ApiUrl}/seamless/create";
+            var tpGameType = GetInputValue(inputs, "tpGameType");
+            var enumGameType = (TpGameType)int.Parse(tpGameType);
+            var amb = AMBFactory.Create(enumGameType, inputs);
+            var result = amb.CreateMember(tpCustInfo.TpUserName, HttpPost);
 
-            var param = new
-            {
-                username = tpCustInfo.TpUserName,
-                // password = tpCustInfo.TpPwd,
-                agent = Agent,
-            };
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), SecretKey));
-
-            var result = HttpPost(
-                ApiUrl,
-                JsonConvert.SerializeObject(param),
-                "application/json",
-                header
-            );
-
-            ApiResult oApiResult = new ApiResult();
+            var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<CommonResponse>(result);
@@ -96,26 +74,13 @@ namespace ThirdParty.AMB
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception("SecretKey");
-            ApiUrl = $"{ApiUrl}/seamless/launch";
-
-            var param = new
-            {
-                username = tpCustInfo.TpUserName,
-                agent = Agent,
-            };
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), SecretKey));
-
-            var result = HttpPost(
-                ApiUrl,
-                JsonConvert.SerializeObject(param),
-                "application/json",
-                header
-            );
+            var tpGameType = GetInputValue(inputs, "tpGameType");
+            var gameId = GetInputValue(inputs, "gameId");
+            var homeUrl = GetInputValue(inputs, "homeUrl", true);
+            var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
+            var enumGameType = (TpGameType)int.Parse(tpGameType);
+            var amb = AMBFactory.Create(enumGameType, inputs);
+            var result = amb.LaunchSelectedGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
 
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
@@ -124,7 +89,7 @@ namespace ThirdParty.AMB
                 if (json.status.code == 0)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{json.data.url}&e=disable&h=disable";
+                    oApiResult.Message = $"{json.data.url}";
                 }
                 else
                 {
@@ -194,8 +159,17 @@ namespace ThirdParty.AMB
             public Data data { get; set; }
         }
 
+        private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
+        {
+            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            {
+                return inputs[key];
+            }
 
-
+            if (allowNull)
+                return "";
+            throw new Exception($"inputs {key} is empty");
+        }
 
         private static string HMACSHA512(string input, string key)
         {
