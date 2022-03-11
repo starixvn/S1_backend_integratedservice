@@ -16,27 +16,27 @@ using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class NewAMBWorker : BackgroundService, ISettleWorker
+    public class AMBWorker : BackgroundService, ISettleWorker
     {
-        public Tp Tp => Tp.NewAMB;
+        public Tp Tp => Tp.AMB;
 
         private Timer _timerRng;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly ILogger<NewAMBWorker> _logger;
+        private readonly ILogger<AMBWorker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
 
 
-        public NewAMBWorker(IServiceProvider provider)
+        public AMBWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _logger = provider.GetRequiredService<ILogger<NewAMBWorker>>();
+            _logger = provider.GetRequiredService<ILogger<AMBWorker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
         }
