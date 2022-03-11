@@ -25,9 +25,23 @@ namespace ThirdParty.AMB
                 agent = Setting.Agent,
             };
             var jsonParam = JsonConvert.SerializeObject(param);
-            var resulu = callback(apiUrl, jsonParam, "application/json", null, 0);
-            var games = JsonConvert.DeserializeObject<GameListResponse>(resulu);
-            return games;
+            try
+            {
+                var result = callback(apiUrl, jsonParam, "application/json", null, 0);
+                var games = JsonConvert.DeserializeObject<GameListResponse>(result);
+                return games;
+            }
+            catch (Exception e)
+            {
+                return new GameListResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
+            }
         }
 
         public override CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
@@ -45,14 +59,22 @@ namespace ThirdParty.AMB
                 {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
 
-            var content = callback(apiUrl, jsonParam, "application/json", header, 0);
+            
             try
             {
+                var content = callback(apiUrl, jsonParam, "application/json", header, 0);
                 return JsonConvert.DeserializeObject<CommonResponse>(content);
             }
-            catch
+            catch (Exception e)
             {
-                return null;
+                return new CommonResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
             }
         }
 
@@ -112,14 +134,22 @@ namespace ThirdParty.AMB
                 {
                     {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
                 };
-                var content = callback(apiUrl, jsonParam, "application/json", header, 0);
+                
                 try
                 {
+                    var content = callback(apiUrl, jsonParam, "application/json", header, 0);
                     return JsonConvert.DeserializeObject<CommonResponse>(content);
                 }
                 catch (Exception e)
                 {
-                    return null;
+                    return new CommonResponse()
+                    {
+                        status = new Status()
+                        {
+                            code = 999,
+                            message = e.Message
+                        }
+                    };
                 }
             }
         }

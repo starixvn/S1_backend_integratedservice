@@ -25,24 +25,15 @@ namespace ThirdParty.AMB
             var result = amb.CreateMember(tpCustInfo.TpUserName, HttpPost);
             
             var oApiResult = new ApiResult();
-            if (result != null)
+            if (result.status.code == 0 || result.status.code == 902)
             {
-                if (result.status.code == 0 || result.status.code == 902)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = result.status.message;
-                    oApiResult.RawErrorCode = result.status.code.ToString();
-                }
+                oApiResult.ErrorCode = ErrorCode.Success;
             }
             else
             {
                 oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
+                oApiResult.RawMessage = result.status.message;
+                oApiResult.RawErrorCode = result.status.code.ToString();
             }
             return oApiResult;
         }
@@ -70,25 +61,16 @@ namespace ThirdParty.AMB
             var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
 
             var oApiResult = new ApiResult();
-            if (result != null)
+            if (result.status.code == 0)
             {
-                if (result.status.code == 0)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{result.data.url}";
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = result.status.message;
-                    oApiResult.RawErrorCode = result.status.code.ToString();
-                }
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{result.data.url}";
             }
             else
             {
                 oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
+                oApiResult.RawMessage = result.status.message;
+                oApiResult.RawErrorCode = result.status.code.ToString();
             }
 
             return oApiResult;

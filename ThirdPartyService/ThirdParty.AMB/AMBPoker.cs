@@ -35,14 +35,22 @@ namespace ThirdParty.AMB
             {
                 {"x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), Setting.SecretKey)}
             };
-            var response = callback(apiUrl, jsonParam, "application/json", header, 0);
+            
             try
             {
+                var response = callback(apiUrl, jsonParam, "application/json", header, 0);
                 return JsonConvert.DeserializeObject<CommonResponse>(response);
             }
-            catch
+            catch (Exception e)
             {
-                return null;
+                return new CommonResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
             }
         }
 
@@ -62,16 +70,24 @@ namespace ThirdParty.AMB
             {
                 {"x-amb-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
-            var content = callback(apiUrl, jsonParam, "application/json", header, 0);
+            
             try
             {
+                var content = callback(apiUrl, jsonParam, "application/json", header, 0);
                 var response = JsonConvert.DeserializeObject<CommonResponse>(content);
                 response.data.url += "&e=disable&h=disable";
                 return response;
             }
             catch (Exception e)
             {
-                return null;
+                return new CommonResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
             }
         }
 
