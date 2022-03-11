@@ -16,7 +16,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSABLL _apiSABLL;
         private readonly WagerSAService _wagerSAService;
         private readonly ILogger<WagerRedoSABLL> _logger;
-        private readonly TpUnsettleService _tpUnsettleService;
         private readonly MySqlClient _wagerDbClient;
 
         public WagerRedoSABLL(IServiceProvider provider)
@@ -25,7 +24,6 @@ namespace ThirdPartyWager.Service.BLL
             _apiSABLL = provider.GetRequiredService<ApiSABLL>();
             _wagerSAService = provider.GetRequiredService<WagerSAService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoSABLL>>();
-            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
