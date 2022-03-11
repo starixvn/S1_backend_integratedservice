@@ -31,15 +31,15 @@ namespace ThirdParty.AMB
         protected AMBSetting Setting;
 
         public abstract GameListResponse GetGameList(Func<string, string, string, Dictionary<string, string>, int, string> callback);
-        public abstract string CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback);
+        public abstract CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
-        public abstract string LaunchSelectedGame(string tpUserName, string gameId, string homeUrl, bool isFun,
+        public abstract CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,
             Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
         public abstract GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId,
             Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
-        protected static string HMACSHA512(string input, string key)
+        protected string HMACSHA512(string input, string key)
         {
             var salt = Encoding.UTF8.GetBytes(key);
             var HASH_SIZE = 64;
