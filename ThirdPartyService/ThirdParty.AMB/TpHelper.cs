@@ -20,31 +20,20 @@ namespace ThirdParty.AMB
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpGameType = GetInputValue(inputs, "tpGameType");
-            var enumGameType = (TpGameType)int.Parse(tpGameType);
-            var amb = AMBFactory.Create(enumGameType, inputs);
+            var tpGameType = TpGameType.AMB_RNG;
+            var amb = AMBFactory.Create(tpGameType, inputs);
             var result = amb.CreateMember(tpCustInfo.TpUserName, HttpPost);
-
+            
             var oApiResult = new ApiResult();
-            if (IsJSON(result))
+            if (result.status.code == 0 || result.status.code == 902)
             {
-                var json = JsonConvert.DeserializeObject<CommonResponse>(result);
-                if (json.status.code == 0 || json.status.code == 902)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = json.status.message;
-                    oApiResult.RawErrorCode = json.status.code.ToString();
-                }
+                oApiResult.ErrorCode = ErrorCode.Success;
             }
             else
             {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result.status.message;
+                oApiResult.RawErrorCode = result.status.code.ToString();
             }
             return oApiResult;
         }
@@ -69,29 +58,19 @@ namespace ThirdParty.AMB
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var enumGameType = (TpGameType)int.Parse(tpGameType);
             var amb = AMBFactory.Create(enumGameType, inputs);
-            var result = amb.LaunchSelectedGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
+            var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
 
-            ApiResult oApiResult = new ApiResult();
-            if (IsJSON(result))
+            var oApiResult = new ApiResult();
+            if (result.status.code == 0)
             {
-                var json = JsonConvert.DeserializeObject<CommonResponse>(result);
-                if (json.status.code == 0)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{json.data.url}";
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = json.status.message;
-                    oApiResult.RawErrorCode = json.status.code.ToString();
-                }
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{result.data.url}";
             }
             else
             {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result.status.message;
+                oApiResult.RawErrorCode = result.status.code.ToString();
             }
 
             return oApiResult;

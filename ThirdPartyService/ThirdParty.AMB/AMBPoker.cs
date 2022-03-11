@@ -21,7 +21,7 @@ namespace ThirdParty.AMB
             throw new NotImplementedException();
         }
 
-        public override string CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
+        public override CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var apiUrl = $"{Setting.ApiUrl}/seamless/create";
             var param = new
@@ -35,10 +35,26 @@ namespace ThirdParty.AMB
             {
                 {"x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), Setting.SecretKey)}
             };
-            return callback(apiUrl, jsonParam, "application/json", header, 0);
+            
+            try
+            {
+                var response = callback(apiUrl, jsonParam, "application/json", header, 0);
+                return JsonConvert.DeserializeObject<CommonResponse>(response);
+            }
+            catch (Exception e)
+            {
+                return new CommonResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
+            }
         }
 
-        public override string LaunchSelectedGame(string tpUserName, string gameId, string homeUrl, bool isFun,
+        public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,
             Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var apiUrl = $"{Setting.ApiUrl}/seamless/launch";
@@ -54,8 +70,25 @@ namespace ThirdParty.AMB
             {
                 {"x-amb-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
-
-            return callback(apiUrl, jsonParam, "application/json", header, 0);
+            
+            try
+            {
+                var content = callback(apiUrl, jsonParam, "application/json", header, 0);
+                var response = JsonConvert.DeserializeObject<CommonResponse>(content);
+                response.data.url += "&e=disable&h=disable";
+                return response;
+            }
+            catch (Exception e)
+            {
+                return new CommonResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
+            }
         }
 
         public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, Func<string, string, string, Dictionary<string, string>, int, string> callback)

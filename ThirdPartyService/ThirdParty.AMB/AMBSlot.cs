@@ -25,12 +25,26 @@ namespace ThirdParty.AMB
                 agent = Setting.Agent,
             };
             var jsonParam = JsonConvert.SerializeObject(param);
-            var resulu = callback(apiUrl, jsonParam, "application/json", null, 0);
-            var games = JsonConvert.DeserializeObject<GameListResponse>(resulu);
-            return games;
+            try
+            {
+                var result = callback(apiUrl, jsonParam, "application/json", null, 0);
+                var games = JsonConvert.DeserializeObject<GameListResponse>(result);
+                return games;
+            }
+            catch (Exception e)
+            {
+                return new GameListResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
+            }
         }
 
-        public override string CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
+        public override CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var apiUrl = $"{Setting.ApiUrl}/seamless/create";
             var param = new
@@ -44,12 +58,30 @@ namespace ThirdParty.AMB
             {
                 {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
-            return callback(apiUrl, jsonParam, "application/json", header, 0);
+
+            
+            try
+            {
+                var content = callback(apiUrl, jsonParam, "application/json", header, 0);
+                return JsonConvert.DeserializeObject<CommonResponse>(content);
+            }
+            catch (Exception e)
+            {
+                return new CommonResponse()
+                {
+                    status = new Status()
+                    {
+                        code = 999,
+                        message = e.Message
+                    }
+                };
+            }
         }
 
-        public override string LaunchSelectedGame(string tpUserName, string gameId, string homeUrl, bool isFun,
+        public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,
             Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
+            var response = new CommonResponse();
             var apiUrl = $"{Setting.ApiUrl}/seamless/launch";
             if (isFun)
             {
@@ -59,41 +91,33 @@ namespace ThirdParty.AMB
                     var game = games.data.SingleOrDefault(a => a.prefix.Trim() == gameId.Trim());
                     if (game != null)
                     {
-                        var funGame = new
-                        {
-                            status = new Status()
-                            {
-                                code = games.status.code,
-                                message = games.status.message
-                            },
-                            data = new
-                            {
-                                url = game.demoUrl
-                            }
-                        };
-                        return JsonConvert.SerializeObject(funGame);   
-                    }
-                    var noGame = new
-                    {
-                        status = new Status()
-                        {
-                            code = 997,
-                            message = "no games"
-                        }
-                    };
-                    return JsonConvert.SerializeObject(noGame);   
-                }
-                else
-                {
-                    var funGame = new
-                    {
-                        status = new Status()
+                        response.status = new Status()
                         {
                             code = games.status.code,
                             message = games.status.message
-                        }
+                        };
+                        response.data = new Data()
+                        {
+                            url = game.demoUrl
+                        };
+                        return response;   
+                    }
+
+                    response.status = new Status()
+                    {
+                        code = 997,
+                        message = "no this game"
                     };
-                    return JsonConvert.SerializeObject(funGame);   
+                    return response;   
+                }
+                else
+                {
+                    response.status = new Status()
+                    {
+                        code = games.status.code,
+                        message = games.status.message
+                    };
+                    return response;
                 }
             }
             else
@@ -110,7 +134,23 @@ namespace ThirdParty.AMB
                 {
                     {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
                 };
-                return callback(apiUrl, jsonParam, "application/json", header, 0);
+                
+                try
+                {
+                    var content = callback(apiUrl, jsonParam, "application/json", header, 0);
+                    return JsonConvert.DeserializeObject<CommonResponse>(content);
+                }
+                catch (Exception e)
+                {
+                    return new CommonResponse()
+                    {
+                        status = new Status()
+                        {
+                            code = 999,
+                            message = e.Message
+                        }
+                    };
+                }
             }
         }
 
