@@ -810,6 +810,10 @@ namespace ThirdParty.Saba
             }
 
             var result = $"&types={types}&isChinaView=true";
+            if (sportType == "192")
+            {
+                result = $"&sportid={sportType}";
+            }
             if (!string.IsNullOrEmpty(matchId) && matchId != "0")
             {
                 return $"{result}&matchid={matchId}";
