@@ -76,6 +76,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
+            services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");

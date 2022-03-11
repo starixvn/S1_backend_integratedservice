@@ -174,6 +174,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_SA(GameID, Username);
         }
 
+        public SettleData_SA GetSettle_BettransLC_SA(string Gameid, string Username)
+        {
+            return settledService.GetSettle_BettransLC_SA(Gameid, Username);
+        }
+        
         #endregion
 
         #region DG

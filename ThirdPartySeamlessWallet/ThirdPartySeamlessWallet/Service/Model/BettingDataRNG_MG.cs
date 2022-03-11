@@ -68,6 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string deviceType { get; set; }
         public string platformType { get; set; }
         public bool completed { get; set; }
+        public string channel { get; set; }
     }
 
     public class MGUpdatebalanceResponse
@@ -84,6 +85,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public string betId { get; set; }
+        public string contentCode { get; set; }
+        public string channel { get; set; }
     }
 
     public class MGRollbackResponse
