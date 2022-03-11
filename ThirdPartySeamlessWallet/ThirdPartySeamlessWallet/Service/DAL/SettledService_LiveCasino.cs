@@ -204,6 +204,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerSA_Settle_Set", new { GameID = GameID, Username = Username }, commandType: CommandType.StoredProcedure);
         }
+
+        public SettleData_SA GetSettle_BettransLC_SA(string Gameid, string Username)
+        {
+            return _mainDbClient.QueryFirst<SettleData_SA>("Service_BettransLC_SA_Settle_Get", new DynamicParameters(new { Gameid, Username }));
+        }
+
+        
         #endregion
         #region DG
         public int CancelBetLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)

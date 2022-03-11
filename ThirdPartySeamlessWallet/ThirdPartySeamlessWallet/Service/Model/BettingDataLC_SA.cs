@@ -33,4 +33,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameid { get; set; }
         public int hostid { get; set; }
     }
+
+    public class SettleData_SA : SettleData
+    {
+        public new string Gameid { get; set; }
+    }
 }

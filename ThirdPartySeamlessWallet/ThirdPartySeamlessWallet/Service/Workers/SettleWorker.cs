@@ -464,6 +464,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             //$"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}"
                             var result = settledBLL.Get_TpWagerSA_Settle(unsettled.gameid, unsettled.username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime);
+                            var betTrans = settledBLL.GetSettle_BettransLC_SA(unsettled.gameid, unsettled.username);
 
                             if (result > 0)
                             {
@@ -476,28 +477,30 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     validBet *= tpCurrency.ExchangeRate;
                                     winLostAmount *= tpCurrency.ExchangeRate;
                                 }
-
-                                BetRecordInfo betRecordInfo = new BetRecordInfo
+                                if (betTrans.Stake == stake && betTrans.WinLostAmount == winLostAmount)
                                 {
-                                    TpId = thisTp,
-                                    Stake = stake,
-                                    ValidBet = validBet,
-                                    WinlostAmount = winLostAmount,
-                                    TransId = $"{unsettled.gameid}_{unsettled.username}",
-                                    GameType = GameType.SA_LiveCasino,
-                                    TpUserName = unsettled.username,
-                                    SettledTime = settleTime,
-                                    TransTime = transTime,
-                                    SettlementType = SettlementType.SettledForValid
-                                };
+                                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                                    {
+                                        TpId = thisTp,
+                                        Stake = stake,
+                                        ValidBet = validBet,
+                                        WinlostAmount = winLostAmount,
+                                        TransId = $"{unsettled.gameid}_{unsettled.username}",
+                                        GameType = GameType.SA_LiveCasino,
+                                        TpUserName = unsettled.username,
+                                        SettledTime = settleTime,
+                                        TransTime = transTime,
+                                        SettlementType = SettlementType.SettledForValid
+                                    };
 
-                                result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                                    result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
-                                //Task.Run(() =>
-                                //{
-                                settledBLL.SetSettleFlag_TpWagerSA(unsettled.gameid, unsettled.username);
-                                settledBLL.SetSettleFlag_SA(unsettled.gameid, unsettled.username);
-                                //});
+                                    //Task.Run(() =>
+                                    //{
+                                    settledBLL.SetSettleFlag_TpWagerSA(unsettled.gameid, unsettled.username);
+                                    settledBLL.SetSettleFlag_SA(unsettled.gameid, unsettled.username);
+                                    //});
+                                }
                             }
                         }
                         catch (Exception ex1)
