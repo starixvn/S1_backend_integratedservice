@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 AccountId = request.accountid,
                 TransferId = request.funds.refund.transferid,
-                RoundId = request.funds.refund.originaltransferid,
+                BetId = request.funds.refund.originaltransferid,
                 Amount = request.funds.refund.amount,
                 dtevent = request.funds.refund.dtevent
             };
