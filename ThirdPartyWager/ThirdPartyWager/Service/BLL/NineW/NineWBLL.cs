@@ -75,7 +75,7 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(NineWConfig config, string startTime, string endTime)
         {           
             var result = new List<SettleBet>();
-            var reportType = new List<int>() { 0, 2, 3 };
+            var reportType = new List<int>() { 0, 2, 3, 7 };
             foreach (var type in reportType)
             {           
                 var page = 1;
@@ -116,8 +116,8 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<List<SettleBet>> QueryReSettleSummaryTransactionAsync(NineWConfig config, string startTime, string endTime)
         {
             var result = new List<SettleBet>();
-            var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";          
-            var reportType = new List<int>() { 0, 2, 3 };
+            var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";
+            var reportType = new List<int>() { 0, 2, 3, 7 };
             foreach (var type in reportType)
             {     
                 var page = 1;
