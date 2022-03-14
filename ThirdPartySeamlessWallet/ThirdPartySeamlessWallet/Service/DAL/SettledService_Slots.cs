@@ -3971,7 +3971,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 payoutRngDto.TicketStatus = (int) TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
-
+                
+                var roundId = payoutRngDto.friendlygameinstanceid.ToString();
                 if (result > 0 && payoutRngDto.amount != 0)
                 {
                     if (bonusId > 0)
@@ -3980,7 +3981,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo: tpCustInfo,
                             amount: payoutRngDto.amount,
                             tpId: (int)Tp.HB,
-                            tpTransId: payoutRngDto.initialdebittransferid,
+                            tpTransId: roundId,
                             gameType: (int)GameType.HB_RNG,
                             tpCategory: TpCategory.Slots,
                             refId: payoutRngDto.transferid,
@@ -3997,7 +3998,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo: tpCustInfo,
                             amount: payoutRngDto.amount,
                             tpId: (int)Tp.HB,
-                            tpTransId: payoutRngDto.initialdebittransferid,
+                            tpTransId: roundId,
                             gameType: (int)GameType.HB_RNG,
                             tpCategory: TpCategory.Slots,
                             refId: payoutRngDto.transferid,
@@ -4013,7 +4014,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, payoutRngDto.initialdebittransferid, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, roundId, trans, partitionTime);
                 }
 
                 return result;
