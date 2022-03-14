@@ -1021,11 +1021,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 if (result > 0 && placeBetRngDto.amount != 0)
                 {
+                    var roundId = placeBetRngDto.friendlygameinstanceid.ToString();
                     result = PlaceBetV2(
                         tpCustInfo,
                         Math.Abs(placeBetRngDto.amount) * -1,
                         (int)Tp.HB,
-                        placeBetRngDto.initialdebittransferid,
+                        roundId,
                         (int)GameType.HB_RNG,
                         placeBetRngDto.transferid,
                         null,
