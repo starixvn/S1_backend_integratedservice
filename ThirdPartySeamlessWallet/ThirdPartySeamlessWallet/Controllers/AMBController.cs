@@ -433,12 +433,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// Slot下注
         /// </summary>
         /// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/v2/bet")]
-        //public async Task<AMBSlotBetResponse> SlotBetAsync(AMBSlotBetRequest request)
-        //{
-        //    return await _AMBBLL.SlotBet(request);
-        //}
+        [HttpPost]
+        [Route("[controller]/v2/bet")]
+        public async Task<AMBSlotBetResponse> SlotBetAsync(AMBSlotBetRequest request)
+        {
+            return await _AMBBLL.SlotBet(request);
+        }
 
         /// <summary>
         /// Slot派發彩金

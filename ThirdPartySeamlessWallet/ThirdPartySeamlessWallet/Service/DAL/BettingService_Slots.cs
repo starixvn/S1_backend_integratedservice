@@ -1067,9 +1067,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             errorCode = 0;
             try
             {
-                var partitionTime = data.dtevent;
-                var query = new { data.transactionId };
-                var isExist = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_AMB_Check", query);
+                var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+                var query = new { transactionId = data.transactionId };
+                var isExist = _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
 
                 if (isExist.Any())
                 {

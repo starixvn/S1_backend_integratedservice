@@ -598,7 +598,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
                 Type = 1, //可能可以不用？
-                dtevent = DateTimeOffset.Parse(request.timestamp).DateTime,
             };
 
             try
@@ -628,7 +627,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     afterAmount = afterAmount / tpCurrency.ExchangeRate;
                     data.amount = data.amount / tpCurrency.ExchangeRate;
                 }
-                return result;
+
+                trans.Commit();
+                return true;
             }
             catch (Exception ex)
             {

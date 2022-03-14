@@ -26,10 +26,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public DateTime CreateTime { get; set; }
         public DateTime UpdateTime { get; set; }
-        /// <summary>
-        /// DB Partition Table
-        /// </summary>
-        public DateTime dtevent { get; set; }
     }
 
     #region Global Response Model
