@@ -4046,7 +4046,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var partitionTime = cancelBetRngDto.dtevent;
             var query = new
             {
-                transferid = cancelBetRngDto.RoundId
+                transferid = cancelBetRngDto.BetId
             };
             var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query)
                 ?.FirstOrDefault();
@@ -4080,7 +4080,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         cancelBetRngDto.Amount,
                         (int) Tp.HB,
-                        cancelBetRngDto.RoundId,
+                        cancelBetRngDto.BetId,
                         (int) GameType.HB_RNG,
                         TpCategory.Slots,
                         cancelBetRngDto.TransferId,
