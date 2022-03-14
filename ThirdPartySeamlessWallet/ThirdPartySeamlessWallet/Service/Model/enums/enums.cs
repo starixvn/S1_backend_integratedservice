@@ -141,8 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Netent = 37,
         RedTiger = 38,
         AP = 39,
-        HB = 40,
-        NewAMB = 42
+        HB = 40
     }
     public enum TransferType : int
     {

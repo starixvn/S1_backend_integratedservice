@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -19,40 +21,36 @@ namespace ThirdPartySeamlessWallet.Controllers
 
     public class AMBController : ControllerBase
     {
-        private readonly AuthBLL authBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly ILogger<AMBController> logger;
-        private readonly Log2File log2File;
-        private readonly Tools tools;
-        private readonly Tp thisTp;
-        private readonly IHostEnvironment environment;
 
-        public AMBController(
-            AuthBLL authBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL,
-            ILogger<AMBController> logger,
-            Log2File log2File,
-            Tools tools,
-            IHostEnvironment environment
-        )
+        #region Fields
+
+        private readonly Tp thisTp;
+
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Log2File _log2File;
+        private readonly IAMBBLL _AMBBLL;
+
+        #endregion
+
+        #region Constructors
+
+        public AMBController(IServiceProvider provider)
         {
-            this.authBLL = authBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            this.tools = tools;
-            this.thisTp = Tp.AMB;
-            this.environment = environment;
+            thisTp = Tp.AMB;
+
+            _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetService<BettingBLL>();
+            _settledBLL = provider.GetService<SettledBLL>();
+            _log2File = provider.GetService<Log2File>();
+
+            _AMBBLL = provider.GetService<IAMBBLL>();
         }
+
+        #endregion
 
         #region Request
 
@@ -133,6 +131,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
+        /// <summary>
+        /// 測試API有通
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[controller]/ping")]
+        public string PingTest() => "Ping Ok.";
+
+        #region AMB Poker Actions
+
         [HttpPost]
         [Route("[controller]/balance")]
         public async Task<dynamic> balanceAsync()
@@ -141,7 +149,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
+            _log2File.Info(Content, logName);
 
             BalanceReq getReq = JsonConvert.DeserializeObject<BalanceReq>(Content);
 
@@ -149,26 +157,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.username);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.username);
             if (tpCheck == null || tpCheck.Locked)
             {
                 getApiResponse.status.code = 997;
                 getApiResponse.status.message = "Invalid request data";
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username, (int)GameType.AMB_Poker);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.username, (int)GameType.AMB_Poker);
             if (tpCustBalance != null)
             {
                 getApiResponse.status.code = 0;
                 getApiResponse.status.message = "Success";
                 getApiResponse.data.balance = tpCustBalance.Balance;
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
-            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
         }
 
@@ -180,7 +188,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
+            _log2File.Info(Content, logName);
 
             BettingDataPK_AMB getReq = JsonConvert.DeserializeObject<BettingDataPK_AMB>(Content);
 
@@ -188,18 +196,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.username);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.username);
             if (tpCheck == null || tpCheck.Locked)
             {
                 getApiResponse.status.code = 997;
                 getApiResponse.status.message = "Invalid request data";
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
             try
             {
-                var result = bettingBLL.PlaceBetPK_AMB(getReq, out decimal tpAffterAmount);
+                var result = _bettingBLL.PlaceBetPK_AMB(getReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     getApiResponse.status.code = 0;
@@ -226,12 +234,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.refId = getReq.refId;
                 }
 
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
@@ -244,7 +252,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
+            _log2File.Info(Content, logName);
 
             CancelDataPK_AMB getReq = JsonConvert.DeserializeObject<CancelDataPK_AMB>(Content);
 
@@ -254,7 +262,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var result = settledBLL.CancelBetPK_AMB(getReq, out decimal tpAffterAmount);
+                var result = _settledBLL.CancelBetPK_AMB(getReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     getApiResponse.status.code = 0;
@@ -265,7 +273,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -274,16 +282,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Transaction already canceled";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.refId = getReq.refId;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
@@ -296,7 +304,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
+            _log2File.Info(Content, logName);
 
             PayoutDataPK_AMB getReq = JsonConvert.DeserializeObject<PayoutDataPK_AMB>(Content);
 
@@ -313,12 +321,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var result = settledBLL.PayoutPK_AMB(getReq, out decimal tpAffterAmount);
+                var result = _settledBLL.PayoutPK_AMB(getReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = tpCustInfoBLL.GetBalance((int)thisTp, getReq.username).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, getReq.username).Balance;
                     }
                     getApiResponse.status.code = 0;
                     getApiResponse.status.message = "Success";
@@ -328,7 +336,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.balance.before = tpAffterAmount - getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -337,16 +345,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Duplicate Round Id";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.refId = getReq.refId;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
@@ -359,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
+            _log2File.Info(Content, logName);
 
             VoidDataPK_AMB getReq = JsonConvert.DeserializeObject<VoidDataPK_AMB>(Content);
 
@@ -369,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var result = settledBLL.ResettlePK_AMB(getReq, out decimal tpAffterAmount);
+                var result = _settledBLL.ResettlePK_AMB(getReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     getApiResponse.status.code = 0;
@@ -380,7 +388,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -392,19 +400,69 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Duplicate Round Id";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.refId = getReq.refId;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                 return getApiResponse;
             }
         }
+
+        #endregion
+
+        #region AMB Slot Actions
+
+        /// <summary>
+        /// Slot取得餘額
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/v2/balance")]
+        public async Task<AMBSlotGetBalanceResponse> SlotGetBalanceAsync(ANBSlotGetBalanceRequest request)
+        {
+            return await _AMBBLL.SlotGetBalance(request);
+        }
+
+        /// <summary>
+        /// Slot下注
+        /// </summary>
+        /// <returns></returns>
+        //[HttpPost]
+        //[Route("[controller]/v2/bet")]
+        //public async Task<AMBSlotBetResponse> SlotBetAsync(AMBSlotBetRequest request)
+        //{
+        //    return await _AMBBLL.SlotBet(request);
+        //}
+
+        /// <summary>
+        /// Slot派發彩金
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/v2/payout")]
+        public async Task<AMBSlotPayoutResponse> SlotPayoutAsync(AMBSlotPayoutRequest request)
+        {
+            return await _AMBBLL.SlotPayout(request);
+        }
+
+        /// <summary>
+        /// Slot取消下注
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/v2/cancel")]
+        public async Task<AMBSlotCancelResponse> SlotCancelAsync(AMBSlotCancelRequest request)
+        {
+            return await _AMBBLL.SlotCancel(request);
+        }
+
+        #endregion
 
         private string getCurrentGameTime()
         {

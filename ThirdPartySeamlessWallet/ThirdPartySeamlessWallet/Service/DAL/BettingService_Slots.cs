@@ -96,8 +96,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
 
-                
-                
+
+
                 bettingDataFish_Joker.TicketType = (int)BettransType.Bet;
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
 
@@ -363,7 +363,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketType = (int)BettransType.Bet;
             bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
             bettingDataRNG_MG.SettleFlag = (int)SettleFlag.Running;
-            
+
             try
             {
                 var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -966,7 +966,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = bettingDataRNG_AP.TicketStatus,
             });
             p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-           
+
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
@@ -1014,11 +1014,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return 1;
                 }
-                
+
                 placeBetRngDto.TicketType = (int)BettransType.Bet;
                 placeBetRngDto.TicketStatus = (int)TicketStatus.UnSettled;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
-                
+
                 if (result > 0 && placeBetRngDto.amount != 0)
                 {
                     result = PlaceBetV2(
@@ -1056,6 +1056,72 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return check.Any();
         }
         #endregion
-        
+
+        #region AMB Slot
+
+        public bool PlaceBet_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            out decimal afterAmount, out int errorCode, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = 0;
+            afterAmount = 0m;
+            errorCode = 0;
+            try
+            {
+                var partitionTime = data.dtevent;
+                var query = new { data.transactionId };
+                var isExist = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_AMB_Check", query);
+
+                if (isExist.Any())
+                {
+                    //806:Duplicate Round Id
+                    errorCode = 806;
+                    return false;
+                }
+
+                data.TicketType = (int)BettransType.Bet;
+                data.TicketStatus = (int)TicketStatus.UnSettled;
+                bool isSuccess = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans) > 0;
+
+                if (!isSuccess)
+                {
+                    errorCode = 999; //999:Service not available
+                    return false;
+                }
+
+                if (data.amount != 0)
+                {
+                    result = PlaceBetV2(tpCustInfo,
+                                        Math.Abs(data.amount) * -1,
+                                        (int)Tp.AMB,
+                                        data.transactionId,  //TpTransId
+                                        (int)GameType.AMB_RNG,
+                                        data.transactionId,  //RefId
+                                        null,
+                                        TpCategory.Slots,
+                                        out afterAmount,
+                                        ref bonusId,
+                                        conn,
+                                        trans);
+
+                    if (result == 0)
+                    {
+                        errorCode = 999; //999:Service not available
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                //999:Service not available
+                errorCode = 999;
+                return false;
+            }
+        }
+
+        #endregion
+
     }
 }
