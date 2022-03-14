@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
                     };
-                    transId = placeBetRngDto.initialdebittransferid;
+                    transId = placeBetRngDto.friendlygameinstanceid.ToString();
                     transactionResult = _bettingService.PlaceBet_HB(tpCustInfo, placeBetRngDto, out afterAmount, ref bonusId, conn, trans);
                 }
                 // credit
@@ -236,7 +236,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gametypename = request.gamedetails.gametypename,
                         channel = request.gamedetails.channel
                     };
-                    transId = payoutRngDto.initialdebittransferid;
+                    transId = payoutRngDto.friendlygameinstanceid.ToString();
                     transactionResult = _settledService.PayoutRNG_HB(tpCustInfo, payoutRngDto, out afterAmount, ref bonusId, conn, trans);
                 }
 
