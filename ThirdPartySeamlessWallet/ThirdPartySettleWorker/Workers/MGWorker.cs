@@ -46,7 +46,7 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerRNG = new Timer(DoSettleRng, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerLC = new Timer(DoSettleLc, null,TimeSpan.Zero, TimeSpan.Zero);
+            //timerLC = new Timer(DoSettleLc, null,TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
