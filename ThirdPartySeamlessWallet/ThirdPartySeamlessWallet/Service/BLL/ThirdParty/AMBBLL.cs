@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -98,6 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<AMBSlotBetResponse> SlotBet(AMBSlotBetRequest request)
         {
             var message = string.Empty;
+            decimal beforeBalance = 0; decimal afterBalance = 0;
 
             if (!CheckRequestForSlotBet(request, out message))
             {
@@ -123,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetBalanceForSlotBet(request.username, out decimal beforeBalance, out message))
+            if (!GetBalanceForSlotBet(request.username, out beforeBalance, out message))
             {
                 return new AMBSlotBetResponse()
                 {
@@ -155,22 +157,69 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!InsertBetForSlotBet(request, tpCustInfo, tpCurrency,
-                out bool isDuplicateRound, out decimal afterBalance, out message))
+            var data = new BettingDataRNG_AMB()
             {
-                if (isDuplicateRound)
-                {
-                    return new AMBSlotBetResponse()
-                    {
-                        status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
-                    };
-                }
+                username = request.username,
+                agent = request.agent,
+                game = request.game,
+                gameId = request.gameId,
+                roundId = request.roundId,
+                amount = request.amount,
+                currency = request.currency,
+                transactionId = request.transactionId,
+                timestamp = request.timestamp,
+                featureBuy = request.featureBuy,
+                isEndRound = request.isEndRound,
+                Type = 1, //可能可以不用？
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled
+            };
 
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                data.amount = data.amount * tpCurrency.ExchangeRate;
+            }
+
+            var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            if (!CheckBetForSlotBet(partitionTime, data, out message, conn, trans))
+            {
+                trans.Rollback();
+                return new AMBSlotBetResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
+                };
+            }
+
+            if (!PlaceBetForSlotBet(partitionTime, data, out message, conn, trans))
+            {
+                trans.Rollback();
                 return new AMBSlotBetResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
                 };
             }
+
+            if (data.amount != 0)
+            {
+                //Bet為減項
+                data.amount = data.amount * -1;
+
+                if (!SetBalanceForSlotBet(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                {
+                    trans.Rollback();
+                    return new AMBSlotBetResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                    };
+                }
+            }
+
+            trans.Commit();
 
             return new AMBSlotBetResponse()
             {
@@ -571,70 +620,74 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool InsertBetForSlotBet(AMBSlotBetRequest request, TpCustInfo tpCustInfo, TpCurrency tpCurrency,
-            out bool isDuplicateRound, out decimal afterBalance, out string message)
+        private bool CheckBetForSlotBet(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlConnection conn, MySqlTransaction trans)
         {
             message = string.Empty;
-            isDuplicateRound = false;
-            afterBalance = 0;
-            var bonusId = 0;
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                request.amount = request.amount * tpCurrency.ExchangeRate;
-            }
-
-            var data = new BettingDataRNG_AMB()
-            {
-                username = request.username,
-                agent = request.agent,
-                game = request.game,
-                gameId = request.gameId,
-                roundId = request.roundId,
-                amount = request.amount,
-                currency = request.currency,
-                transactionId = request.transactionId,
-                timestamp = request.timestamp,
-                featureBuy = request.featureBuy,
-                isEndRound = request.isEndRound,
-                Type = 1, //可能可以不用？
-            };
-
             try
             {
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                if (_bettingService.IsExist_AMB(partitionTime, data, conn, trans))
+                {
+                    message = "exist bet transactionId and roundId.";
+                    _logger.LogError($"CheckBet Fail:{message}");
+                    return false;
+                }
+                else
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckBet Exception:{ex.ToString()}");
+                return false;
+            }
+        }
 
-                var result = _bettingService.PlaceBet_AMB(tpCustInfo, data, out decimal afterAmount, out int errorCode, ref bonusId, conn, trans);
+        private bool PlaceBetForSlotBet(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = _bettingService.PlaceBet_AMB(partitionTime, data, conn, trans);
 
                 if (!result)
                 {
-                    if (errorCode == (int)AMBErrorCode.DuplicateRound)
-                    {
-                        message = "insert bet fail because of DuplicateRound.";
-                        _logger.LogError($"InsertBet Fail:{message}");
-                        return false;
-                    }
-
-                    message = "insert bet fail.";
-                    _logger.LogError($"InsertBet Fail:{message}");
+                    message = "place bet fail.";
+                    _logger.LogError($"PlaceBet Fail:{message}");
                     return false;
                 }
-
-                if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-                {
-                    afterAmount = afterAmount / tpCurrency.ExchangeRate;
-                    data.amount = data.amount / tpCurrency.ExchangeRate;
-                }
-
-                trans.Commit();
                 return true;
             }
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError($"InsertBet Exception:{ex.ToString()}");
+                _logger.LogError($"PlaceBet Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool SetBalanceForSlotBet(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            out string message, out decimal afterAmount, out int bonusId,
+            MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            afterAmount = 0;
+            bonusId = 0;
+            try
+            {
+                var result = _bettingService.SetBalance_AMB(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+
+                if (!result)
+                {
+                    message = "set balance fail.";
+                    _logger.LogError($"SetBalance Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"SetBalance Exception:{ex.ToString()}");
                 return false;
             }
         }

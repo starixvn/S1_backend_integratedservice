@@ -1059,66 +1059,49 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region AMB Slot
 
-        public bool PlaceBet_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
-            out decimal afterAmount, out int errorCode, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        public bool IsExist_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlConnection conn, MySqlTransaction trans)
         {
-            var result = 0;
-            afterAmount = 0m;
-            errorCode = 0;
-            try
+            var query = new { transactionId = data.transactionId ,roundId = data.roundId};
+            var isExist = _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
+
+            if (isExist.Any())
             {
-                var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
-                var query = new { transactionId = data.transactionId };
-                var isExist = _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
-
-                if (isExist.Any())
-                {
-                    //806:Duplicate Round Id
-                    errorCode = 806;
-                    return false;
-                }
-
-                data.TicketType = (int)BettransType.Bet;
-                data.TicketStatus = (int)TicketStatus.UnSettled;
-                bool isSuccess = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans) > 0;
-
-                if (!isSuccess)
-                {
-                    errorCode = 999; //999:Service not available
-                    return false;
-                }
-
-                if (data.amount != 0)
-                {
-                    result = PlaceBetV2(tpCustInfo,
-                                        Math.Abs(data.amount) * -1,
-                                        (int)Tp.AMB,
-                                        data.transactionId,  //TpTransId
-                                        (int)GameType.AMB_RNG,
-                                        data.transactionId,  //RefId
-                                        null,
-                                        TpCategory.Slots,
-                                        out afterAmount,
-                                        ref bonusId,
-                                        conn,
-                                        trans);
-
-                    if (result == 0)
-                    {
-                        errorCode = 999; //999:Service not available
-                        return false;
-                    }
-                }
-
                 return true;
             }
-            catch (Exception ex)
+            return false;
+        }
+
+        public bool PlaceBet_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans);
+
+            if (result == 0)
             {
-                logger.LogError(ex, ex.Message);
-                //999:Service not available
-                errorCode = 999;
                 return false;
             }
+            return true;
+        }
+
+        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.AMB,
+                                data.transactionId,  //TpTransId
+                                (int)GameType.AMB_RNG,
+                                data.roundId,  //RefId
+                                null,
+                                TpCategory.Slots,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans);
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         #endregion
