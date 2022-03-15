@@ -2101,6 +2101,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_MG(spName, transId);
         }
 
+        public int SetSettleFlag_BettransLC_MG(string spName, string transId, long transTime)
+        {
+            return settledService.SetSettleFlag_BettransLC_MG(spName, transId, transTime);
+        }
+
         #endregion
 
         #region JILI
