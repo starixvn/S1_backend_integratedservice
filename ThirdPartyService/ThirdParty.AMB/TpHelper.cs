@@ -20,21 +20,39 @@ namespace ThirdParty.AMB
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpGameType = TpGameType.AMB_RNG;
-            var amb = AMBFactory.Create(tpGameType, inputs);
-            var result = amb.CreateMember(tpCustInfo.TpUserName, HttpPost);
-            
             var oApiResult = new ApiResult();
-            if (result.status.code == 0 || result.status.code == 902)
+            var ok = false;
+            if (inputs.ContainsKey("ApiUrl") && inputs.ContainsKey("Agent") && inputs.ContainsKey("SecretKey"))
             {
+                var ambPoker = AMBFactory.Create(TpGameType.AMB_Poker, inputs);
+                var pokerResult = ambPoker.CreateMember(tpCustInfo.TpUserName, HttpPost);
+                if (pokerResult.status.code != 0 && pokerResult.status.code != 902)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = pokerResult.status.message;
+                    oApiResult.RawErrorCode = pokerResult.status.code.ToString();
+                    return oApiResult;
+                }
+                ok = true;
+            }
+
+            if (inputs.ContainsKey("SlotApiUrl") && inputs.ContainsKey("SlotAgent") && inputs.ContainsKey("SlotSecretKey"))
+            {
+                var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs);
+                var slotResult = ambSlot.CreateMember(tpCustInfo.TpUserName, HttpPost);
+                if (slotResult.status.code == 0 || slotResult.status.code == 902)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = slotResult.status.message;
+                    oApiResult.RawErrorCode = slotResult.status.code.ToString();
+                    return oApiResult;
+                }
+                ok = true;
+            }
+            
+            if(ok)
                 oApiResult.ErrorCode = ErrorCode.Success;
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = result.status.message;
-                oApiResult.RawErrorCode = result.status.code.ToString();
-            }
+            
             return oApiResult;
         }
 
