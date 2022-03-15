@@ -162,48 +162,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
-        {
-            stake = 0;
-            validBet = 0;
-            winLostAmount = 0;
-            settleTime = 0;
-            transTime = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            var p = new DynamicParameters(new { GameID = GameID, Username = Username });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            p.Add("TransTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            int result = conn.Execute("Service_TpWagerSA_Settle_Get", p, commandType: CommandType.StoredProcedure);
-
-            if (p.Get<decimal?>("Stake") != null)
-            {
-                stake = p.Get<decimal>("Stake");
-                validBet = p.Get<decimal>("ValidBet");
-                winLostAmount = p.Get<decimal>("WinLostAmount");
-                settleTime = p.Get<long>("SettleTime");
-                transTime = p.Get<long>("TransTime");
-            }
-            else
-            {
-                result = 0;
-            }
-
-            return result;
-        }
-
-        public int SetSettleFlag_SA(string GameID, string Username)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_SAV2_Set", new { Username = Username, Gameid = GameID, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
-        }
-        public int SetSettleFlag_TpWagerSA(string GameID, string Username)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerSA_Settle_Set", new { GameID = GameID, Username = Username }, commandType: CommandType.StoredProcedure);
-        }
 
         public SettleData_SA GetSettle_BettransLC_SA(string Gameid, string Username)
         {
