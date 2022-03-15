@@ -192,5 +192,11 @@ namespace ThirdPartyService.Service.DAL
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
             return conn.Query<BalanceTpCustInfoModel>("Service_TpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
         }
+
+        public void SetCustGotoGame(int custId, int tpId, int gameType)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Execute("Service_CustGotoGame_Set", new { CustId = custId, TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

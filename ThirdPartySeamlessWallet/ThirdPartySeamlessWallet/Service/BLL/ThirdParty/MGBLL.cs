@@ -42,15 +42,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public MGLoginResponse Login(MGLoginRequest request)
         {
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int) ThirdParty, request.playerId);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
             if (tpCheck == null || tpCheck.Locked)
             {
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
                 throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
             }
 
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.playerId);
+            var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)ThirdParty);
+
             var tpCustBalance =
-                _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.playerId, (int)GameType);
+                _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.playerId, gameType);
             if (tpCustBalance != null)
             {
                 return new MGLoginResponse()
@@ -60,20 +63,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
             throw new MGException(MGErrorCode.BalanceFailed,
-                $"{ThirdParty} {GameType}: {request.playerId} get balance failed");
+                $"{ThirdParty} {gameType}: {request.playerId} get balance failed");
         }
 
         public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
         {
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int) ThirdParty, request.playerId);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
             if (tpCheck == null || tpCheck.Locked)
             {
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
                 throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
             }
 
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.playerId);
+            var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)ThirdParty);
+
             var tpCustBalance =
-                _tpCustInfoBLL.GetBalanceByHalfSecCache((int) ThirdParty, request.playerId, (int) GameType);
+                _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.playerId, gameType);
             if (tpCustBalance != null)
             {
                 return new MGGetBalanceResponse()
@@ -83,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
             throw new MGException(MGErrorCode.BalanceFailed,
-                $"{ThirdParty} {GameType}: {request.playerId} get balance failed");
+                $"{ThirdParty} {gameType}: {request.playerId} get balance failed");
         }
 
         public async Task<MGUpdatebalanceResponse> UpdateBalance(MGUpdatebalanceRequest request)
@@ -351,6 +357,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             return (tpCustInfo, tpCurrency);
+        }
+
+        private int getGameType(string contentCode = null, string channel = null)
+        {
+            var gameType = 0;
+            if (!string.IsNullOrEmpty(channel) && string.Equals(channel, "LIVEDEALER", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = (int)GameType.MG_LiveCasino;
+            }
+            else if (!string.IsNullOrEmpty(channel) && string.Equals(channel, "SLOTS", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = (int)GameType.MG_RNG;
+            }
+            else
+            {
+                gameType = (int)_thirdPartyBLL.GetGameType((int)ThirdParty, contentCode);
+            }
+            return gameType;
         }
     }
 }
