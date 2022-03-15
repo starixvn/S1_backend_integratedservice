@@ -220,6 +220,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.Joker_Fish;
                     }
                     break;
+                case (int)Tp.MG:
+                    gameType = GameType.MG_RNG;
+                    var casino = GetGameCasinoWithCache(tpId);
+                    var check = casino.FirstOrDefault(x => x.GameId == gameId);
+                    if (check == null)
+                    {
+                        gameType = GameType.MG_LiveCasino;
+                    }
+                    break;
                 default:
                     break;
             }
