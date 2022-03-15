@@ -85,8 +85,8 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var stake = settleData.Sum(x => x.totalstake);
                         var winLostAmount = settleData.Sum(x => x.totalwin) + settleData.Sum(x => x.jpwin) - stake;
-                        var settledTime = settleData.Where(x => x.settletime > 0).FirstOrDefault().settletime;
-                        var betTime = betData.Where(x => x.bettime > 0).FirstOrDefault().bettime;
+                        var settledTime = settleData.FirstOrDefault(x => x.settletime > 0).settletime;
+                        var betTime = betData.FirstOrDefault(x => x.bettime > 0).bettime;
                         var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
                         {
                             TpId = (int)Tp,
