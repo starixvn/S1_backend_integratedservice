@@ -146,6 +146,12 @@ namespace ThirdPartySeamlessWallet.Service.Library
             });
         }
 
+        public long GetUnixTimestampByTicks(long ticks)
+        {
+            long unixTimestamp = ticks - new DateTime(1970, 1, 1).Ticks;
+            return unixTimestamp / TimeSpan.TicksPerSecond * 1000;
+        }
+
         #region GetClientIP
         /// <summary>
         /// 获取客户端IP
