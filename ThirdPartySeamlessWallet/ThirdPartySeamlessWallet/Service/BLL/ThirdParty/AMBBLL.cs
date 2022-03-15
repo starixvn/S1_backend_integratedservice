@@ -180,6 +180,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data.amount = data.amount * tpCurrency.ExchangeRate;
             }
 
+            //Bet為減項
+            data.amount = data.amount * -1;
+
             var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
 
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -206,9 +209,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
-                //Bet為減項
-                data.amount = data.amount * -1;
-
                 if (!SetBalanceForSlotBet(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
