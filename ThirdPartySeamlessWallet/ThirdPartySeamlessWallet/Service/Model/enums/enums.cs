@@ -97,7 +97,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         RedTiger_RNG = 65,
         Joker_Fish = 66,
         AP_RNG = 67,
-        HB_RNG = 68
+        HB_RNG = 68,
+        AMB_RNG = 76
     }
     public enum Tp
     {
