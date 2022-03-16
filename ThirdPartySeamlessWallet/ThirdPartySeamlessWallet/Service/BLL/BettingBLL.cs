@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -49,9 +48,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.SA, bettingDataLC_SA.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.SA, tpCustInfo.CurrencyId);
 
+            if (bettingDataLC_SA.Betdetails == null)
+            {
+                bettingDataLC_SA.BetAmount = bettingDataLC_SA.amount;
+            }
+            else
+            {
+                bettingDataLC_SA.BetAmount = JsonConvert
+                    .DeserializeObject<BettingDataLC_SA_BetDetail>(bettingDataLC_SA.Betdetails).details
+                    .Sum(i => i.amount);
+            }
+            
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_SA.amount *= tpCurrency.ExchangeRate; /*bettingDataLC_SA.Betdetails has not fixed*/
+                bettingDataLC_SA.BetAmount *= tpCurrency.ExchangeRate;
             }
 
             var result = bettingService.PlaceBetLC_SA(tpCustInfo, bettingDataLC_SA, out afterAmount);
