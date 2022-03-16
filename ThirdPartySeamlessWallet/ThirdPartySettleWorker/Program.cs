@@ -84,6 +84,7 @@ namespace ThirdPartySettleWorker
                 try
                 {
                     result = client.GetAsync(url).Result.Content.ReadAsStreamAsync().Result;
+                    
                     break;
                 }
                 catch { }

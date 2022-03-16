@@ -2822,6 +2822,37 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Execute(spName, new { betId = transId }, commandType: CommandType.StoredProcedure);
         }
 
+        public int GetTpGameType_MG(string betId, long creationTime)
+        {
+            var tpGameType = 0;
+            var p = new DynamicParameters(new
+            {
+                betId = betId
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            
+            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get", p, commandType: CommandType.StoredProcedure);
+            if (slot != null)
+            {
+                tpGameType = (int)GameType.MG_RNG;
+                return tpGameType;
+            }
+
+            long unixTimestamp = creationTime - new DateTime(1970, 1, 1).Ticks;
+            unixTimestamp = unixTimestamp / TimeSpan.TicksPerSecond * 1000;
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+            
+            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", p);
+            if (live.Any())
+            {
+                tpGameType = (int)GameType.MG_LiveCasino;
+                return tpGameType;
+            }
+
+            return tpGameType;
+        }
+
         #endregion
 
         #region JILI
@@ -3975,7 +4006,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return 1;
                 }
                 payoutRngDto.TicketType = (int)BettransType.Payout;
-                payoutRngDto.TicketStatus = (int) TicketStatus.Win;
+                payoutRngDto.TicketStatus = (int)TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
                 
@@ -4018,7 +4049,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans);
                     }
                 }
-                
+
                 if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, roundId, trans, partitionTime);
@@ -4056,7 +4087,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return transactionResult;
             }
             // 已退過款
-            else if (check.TicketStatus == (int) TicketStatus.Refund)
+            else if (check.TicketStatus == (int)TicketStatus.Refund)
             {
                 transactionResult.result = 1;
                 return transactionResult;
@@ -4101,7 +4132,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
-        
+
         #endregion
     }
 }
