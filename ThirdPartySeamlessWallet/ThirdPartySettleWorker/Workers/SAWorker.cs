@@ -82,7 +82,7 @@ namespace ThirdPartySettleWorker.Workers
                         var gameId = split[0];
                         var userName = split[1];
                         
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { GameID = gameId, Username = userName }, DataBase.Main).First();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { GameID = gameId, Username = userName }, DataBase.Wager).First();
                         var betTrans = _settledBLL.GetSettle_BettransLC_SA(gameId, userName);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, userName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
