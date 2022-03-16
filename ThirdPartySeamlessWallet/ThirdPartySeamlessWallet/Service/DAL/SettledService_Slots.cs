@@ -2839,8 +2839,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return tpGameType;
             }
 
-            long unixTimestamp = creationTime - new DateTime(1970, 1, 1).Ticks;
-            unixTimestamp = unixTimestamp / TimeSpan.TicksPerSecond * 1000;
+            long unixTimestamp = tools.GetUnixTimestampByTicks(creationTime);
             var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
             
             var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", p);
