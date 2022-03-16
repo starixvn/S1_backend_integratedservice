@@ -29,7 +29,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_SAV2_Ins", new { Txnid = bettingDataLC_SA.txnid, TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", Currency = bettingDataLC_SA.currency, Username = bettingDataLC_SA.username, Gametype = bettingDataLC_SA.gametype, Amount = bettingDataLC_SA.amount, Betdetails = bettingDataLC_SA.Betdetails, Gameid = bettingDataLC_SA.gameid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_SA_Ins_V3",
+                    new
+                    {
+                        Txnid = bettingDataLC_SA.txnid,
+                        TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}",
+                        Currency = bettingDataLC_SA.currency, 
+                        Username = bettingDataLC_SA.username,
+                        Gametype = bettingDataLC_SA.gametype, 
+                        Amount = bettingDataLC_SA.amount,
+                        bettingDataLC_SA.BetAmount,
+                        bettingDataLC_SA.Betdetails, 
+                        Gameid = bettingDataLC_SA.gameid
+                    }, trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
