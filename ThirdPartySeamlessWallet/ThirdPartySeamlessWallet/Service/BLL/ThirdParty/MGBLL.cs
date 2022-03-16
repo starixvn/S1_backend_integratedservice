@@ -393,6 +393,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 gameType = (int)GameType.MG_RNG;
             }
+            else if (string.Equals(contentCode, "MG Promotions", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = (int)GameType.MG_RNG;
+            }
             else
             {
                 gameType = (int)_thirdPartyBLL.GetGameType((int)ThirdParty, contentCode);
