@@ -17,6 +17,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerSAService _wagerSAService;
         private readonly ILogger<WagerSABLL> _logger;
         private readonly MySqlClient _wagerDbClient;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public WagerSABLL(IServiceProvider provider)
         {
@@ -24,6 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiSABLL = provider.GetRequiredService<ApiSABLL>();
             _wagerSAService = provider.GetRequiredService<WagerSAService>();
             _logger = provider.GetRequiredService<ILogger<WagerSABLL>>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
@@ -75,7 +77,11 @@ namespace ThirdPartyWager.Service.BLL
                         var result = _wagerSAService.InsertWager(group, trans);
                         if (result == group.Count())
                         {
-                            trans.Commit();
+                            if (_tpUnsettleService.InsertTpUnsettle(Tp.SA, GameType.SA_LiveCasino,
+                                    $"{group.Key.GameID}_{group.Key.Username}", trans) > 0)
+                            {
+                                trans.Commit();
+                            }
                         }
                     }
                     catch (Exception ex)
