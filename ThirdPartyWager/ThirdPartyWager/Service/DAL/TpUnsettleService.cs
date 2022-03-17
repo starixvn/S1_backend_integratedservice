@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.DAL
         
         public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, IDbTransaction transaction, DateTime? partitionTime = null)
         {
-            return _mainDbClient.Execute("Service_TpUnsettle_Ins_V2",
+            return _mainDbClient.Execute("Siebog.Service_TpUnsettle_Ins_V2",
                 transaction,
                 new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, PartitionTime = partitionTime });
         }
