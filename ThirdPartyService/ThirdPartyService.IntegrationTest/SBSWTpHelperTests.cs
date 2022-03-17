@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System;
-using static ThirdParty.Saba.TpHelper;
+using static ThirdParty.SBSW.TpHelper;
 
-namespace ThirdParty.Saba.Tests
+namespace ThirdParty.SBSW.Tests
 {
     [TestFixture()]
-    public class SabaTpHelperTests
+    public class SBSWTpHelperTests
     {
         private TpHelper _tpHelper;
         private TpCustInfo _tpCustInfo;
@@ -23,12 +23,12 @@ namespace ThirdParty.Saba.Tests
 
             _tpCustInfo = new TpCustInfo()
             {
-                TpId = 1,
-                CustId = 249951,
+                TpId = 41,
+                CustId = 250713,
                 SiteId = 1,
-                UserName = "hanstest01",
-                TpUserName = "DNova88_249951",
-                TpPwd = "Hc55xs6",
+                UserName = "hanstest001",
+                TpUserName = "DNova88_250713",
+                TpPwd = "hKr82sJ",
                 TpCurrencyId = "MYR",
                 ExchangeRate = 1.0000m,
                 IsTest = false,
@@ -39,13 +39,8 @@ namespace ThirdParty.Saba.Tests
 
             _inputs = new Dictionary<string, string>
             {
-                { "ApiUrl", "https://tsa.n88dev.com/api" },
-                { "NewApiUrl", "http://k024tsa.db5688.com/api" },
+                { "ApiUrl", "http://k024tsa.db5688.com/api" },
                 { "VendorId", "aakx8ncolf" },
-                { "WAPUrl","http://wapsbtest.n88dev.com/deposit_processlogin.aspx"},
-                { "MobileUrl","https://smartsbtest.n88dev.com"},
-                { "NativeUrl", "https://smartsbtest.n88dev.com"},
-                { "DesktopUrl", "https://sbtest.n88dev.com/deposit_processlogin.aspx"},
                 { "homeUrl","homeUrl"},
                 { "signupUrl","signupUrl"},
                 { "LoginUrl","LoginUrl"},

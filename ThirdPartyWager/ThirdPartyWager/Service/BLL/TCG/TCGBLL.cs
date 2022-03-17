@@ -105,4 +105,3 @@ namespace ThirdPartyWager.Service.BLL
         }
     }
 }
-

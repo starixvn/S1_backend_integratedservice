@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class CancelBetRngDto_HB
     {
         public string TransferId { get; set; }
-        public string RoundId { get; set; }
+        public string BetId { get; set; }
         public string AccountId { get; set; }
         public decimal Amount { get; set; }
         public DateTime dtevent { get; set; }
@@ -254,7 +254,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public dynamic fundtransferresponse { get; set; }
     }
-
     public class TokenInfo
     {
         public string shortTimeToken { get; set; }

@@ -58,7 +58,7 @@ namespace ThirdPartySettleWorker
                {
                    services.AddHostedService<BonusWorker>();
                    services.AddHostedService<SettleWorker>();
-
+                   
                    services.AddHostedService<JokerWorker>();
                    services.AddHostedService<MGWorker>();
                    services.AddHostedService<APWorker>();
@@ -69,6 +69,7 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<HBWorker>();
                    services.AddHostedService<MegaWorker>();
                    services.AddHostedService<AMBWorker>();
+                   services.AddHostedService<SAWorker>();
                });     
         
         private static MemoryStream GetRemoteConfig(IEnumerable<string> remoteUrls)
@@ -85,6 +86,7 @@ namespace ThirdPartySettleWorker
                 try
                 {
                     result = client.GetAsync(url).Result.Content.ReadAsStreamAsync().Result;
+                    
                     break;
                 }
                 catch { }

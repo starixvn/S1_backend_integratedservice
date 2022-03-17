@@ -2822,6 +2822,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Execute(spName, new { betId = transId }, commandType: CommandType.StoredProcedure);
         }
 
+        public int GetTpGameType_MG(string betId, long creationTime)
+        {
+            var tpGameType = 0;
+            var p = new DynamicParameters(new
+            {
+                betId = betId
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            
+            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get", p, commandType: CommandType.StoredProcedure);
+            if (slot != null)
+            {
+                tpGameType = (int)GameType.MG_RNG;
+                return tpGameType;
+            }
+
+            long unixTimestamp = tools.GetUnixTimestampByTicks(creationTime);
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+            
+            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", p);
+            if (live.Any())
+            {
+                tpGameType = (int)GameType.MG_LiveCasino;
+                return tpGameType;
+            }
+
+            return tpGameType;
+        }
+
         #endregion
 
         #region JILI
@@ -3978,7 +4008,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 payoutRngDto.TicketStatus = (int)TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
-
+                
+                var roundId = payoutRngDto.friendlygameinstanceid.ToString();
                 if (result > 0 && payoutRngDto.amount != 0)
                 {
                     if (bonusId > 0)
@@ -3987,7 +4018,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo: tpCustInfo,
                             amount: payoutRngDto.amount,
                             tpId: (int)Tp.HB,
-                            tpTransId: payoutRngDto.initialdebittransferid,
+                            tpTransId: roundId,
                             gameType: (int)GameType.HB_RNG,
                             tpCategory: TpCategory.Slots,
                             refId: payoutRngDto.transferid,
@@ -4004,7 +4035,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo: tpCustInfo,
                             amount: payoutRngDto.amount,
                             tpId: (int)Tp.HB,
-                            tpTransId: payoutRngDto.initialdebittransferid,
+                            tpTransId: roundId,
                             gameType: (int)GameType.HB_RNG,
                             tpCategory: TpCategory.Slots,
                             refId: payoutRngDto.transferid,
@@ -4020,7 +4051,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, payoutRngDto.initialdebittransferid, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, roundId, trans, partitionTime);
                 }
 
                 return result;
@@ -4031,6 +4062,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return -1;
             }
         }
+
 
         public void UpdateTpBonusFlag_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
@@ -4044,7 +4076,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var partitionTime = cancelBetRngDto.dtevent;
             var query = new
             {
-                transferid = cancelBetRngDto.RoundId
+                transferid = cancelBetRngDto.BetId
             };
             var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query)
                 ?.FirstOrDefault();
@@ -4077,9 +4109,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PayoutV2(
                         tpCustInfo,
                         cancelBetRngDto.Amount,
-                        (int)Tp.HB,
-                        cancelBetRngDto.RoundId,
-                        (int)GameType.HB_RNG,
+                        (int) Tp.HB,
+                        cancelBetRngDto.BetId,
+                        (int) GameType.HB_RNG,
                         TpCategory.Slots,
                         cancelBetRngDto.TransferId,
                         TransType.Refunds,
