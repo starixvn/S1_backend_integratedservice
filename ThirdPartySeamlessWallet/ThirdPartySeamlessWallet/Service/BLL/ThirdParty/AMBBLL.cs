@@ -160,7 +160,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agent = request.agentId,
+                agentId = request.agentId,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agent = request.agentId,
+                agentId = request.agentId,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -437,7 +437,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agent = request.agentId,
+                agentId = request.agentId,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
