@@ -167,7 +167,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 amount = request.amount,
                 currency = request.currency,
                 transactionId = request.transactionId,
-                timestamp = request.timestamp,
+                timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
                 Type = 1, //可能可以不用？
@@ -183,7 +183,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //Bet為減項
             data.amount = data.amount * -1;
 
-            var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -306,7 +306,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 turnover = request.turnover,
                 currency = request.currency,
                 transactionId = request.transactionId,
-                timestamp = request.timestamp,
+                timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
                 Type = 4, //可能可以不用？
@@ -322,7 +322,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //Payout為加項
             data.amount = data.amount * 1;
 
-            var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -444,7 +444,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 amount = request.amount,
                 currency = request.currency,
                 transactionId = request.transactionId,
-                timestamp = request.timestamp,
+                timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 Type = 1, //可能可以不用？
                 TicketType = BettransType.CancelBet,
                 TicketStatus = TicketStatus.UnSettled
@@ -458,7 +458,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //Cancel為加項
             data.amount = data.amount * 1;
 
-            var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -1231,7 +1231,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 var result = _settledService.SetBalance_AMB(tpCustInfo, data,
-                    TransType.Payout,"Payout",
+                    TransType.Payout, "Payout",
                     out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
