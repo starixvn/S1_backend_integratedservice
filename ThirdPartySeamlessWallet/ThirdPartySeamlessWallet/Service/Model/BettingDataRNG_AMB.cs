@@ -123,7 +123,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Agent Id that AMBSlot has provided
         /// </summary>
-        public string agentId { get; set; }
+        public string agent { get; set; }
         /// <summary>
         /// Game name that user played
         /// </summary>
