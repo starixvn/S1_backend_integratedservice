@@ -1231,7 +1231,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 var result = _settledService.SetBalance_AMB(tpCustInfo, data,
-                    TransType.Payout,"Payout",
+                    TransType.Payout, "Payout",
                     out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
