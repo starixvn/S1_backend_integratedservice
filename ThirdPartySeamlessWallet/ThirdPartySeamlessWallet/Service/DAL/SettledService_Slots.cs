@@ -4134,5 +4134,62 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region AMB Slot
+
+        public bool Payout_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool Cancel_AMB(DateTime partitionTime, int sq, MySqlTransaction trans)
+        {
+            var query = new { TicketType = BettransType.CancelBet, SQ = sq };
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Set", query, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            TransType transType, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.AMB,
+                data.transactionId,
+                (int)GameType.AMB_RNG,
+                TpCategory.Slots,
+                data.roundId,
+                transType,
+                null,
+                out afterAmount,
+                memo,
+                out bonusId,
+                conn,
+                trans
+            );
+
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        #endregion
     }
 }
