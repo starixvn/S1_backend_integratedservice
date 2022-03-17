@@ -10,7 +10,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public int SQ { get; set; }
         public string username { get; set; }
-        public string agent { get; set; }
+        public string agentId { get; set; }
         public string game { get; set; }
         public string gameId { get; set; }
         public string roundId { get; set; }
@@ -123,7 +123,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Agent Id that AMBSlot has provided
         /// </summary>
-        public string agent { get; set; }
+        public string agentId { get; set; }
         /// <summary>
         /// Game name that user played
         /// </summary>
@@ -164,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// Agent Id that AMBSlot has provided
         /// </summary>
         [Required]
-        public string agent { get; set; }
+        public string agentId { get; set; }
     }
 
     public class AMBSlotGetBalanceResponse
