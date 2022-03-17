@@ -18,7 +18,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal turnover { get; set; }
         public string currency { get; set; }
         public string transactionId { get; set; }
-        public string timestamp { get; set; }
+        public DateTime timestamp { get; set; }
         public bool featureBuy { get; set; }
         public bool isEndRound { get; set; }
         public int Type { get; set; }
