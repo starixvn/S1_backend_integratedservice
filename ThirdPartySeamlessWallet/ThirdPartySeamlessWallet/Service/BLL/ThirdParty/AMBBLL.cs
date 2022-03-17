@@ -109,7 +109,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckAgentIdForSlotBet(request.agentId, out message))
+            if (!CheckAgentIdForSlotBet(request.agent, out message))
             {
                 return new AMBSlotBetResponse()
                 {
@@ -160,7 +160,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agentId = request.agentId,
+                agentId = request.agent,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -247,7 +247,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckAgentIdForSlotPayout(request.agentId, out message))
+            if (!CheckAgentIdForSlotPayout(request.agent, out message))
             {
                 return new AMBSlotPayoutResponse()
                 {
@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agentId = request.agentId,
+                agentId = request.agent,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -386,7 +386,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckAgentIdForSlotCancel(request.agentId, out message))
+            if (!CheckAgentIdForSlotCancel(request.agent, out message))
             {
                 return new AMBSlotCancelResponse()
                 {
@@ -437,7 +437,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agentId = request.agentId,
+                agentId = request.agent,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -664,7 +664,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agentId))
+            if (string.IsNullOrWhiteSpace(request.agent))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
@@ -967,7 +967,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agentId))
+            if (string.IsNullOrWhiteSpace(request.agent))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
@@ -1272,7 +1272,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agentId))
+            if (string.IsNullOrWhiteSpace(request.agent))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
