@@ -357,6 +357,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     };
                 }
             }
+            else
+            {
+                afterBalance = beforeBalance;
+            }
 
             trans.Commit();
 
