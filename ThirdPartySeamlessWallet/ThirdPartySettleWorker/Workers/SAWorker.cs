@@ -122,7 +122,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId, false);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, transId, false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
