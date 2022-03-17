@@ -189,7 +189,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            if (!CheckBetForSlotBet(partitionTime, data, out message, conn, trans))
+            if (!CheckBetForSlotBet(partitionTime, data, out message))
             {
                 trans.Rollback();
                 return new AMBSlotBetResponse()
@@ -198,7 +198,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!PlaceBetForSlotBet(partitionTime, data, out message, conn, trans))
+            if (!PlaceBetForSlotBet(partitionTime, data, out message, trans))
             {
                 trans.Rollback();
                 return new AMBSlotBetResponse()
@@ -237,6 +237,128 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request)
         {
             var message = string.Empty;
+            decimal beforeBalance = 0; decimal afterBalance = 0;
+
+            if (!CheckRequestForSlotPayout(request, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
+                };
+            }
+
+            if (!CheckAgentIdForSlotPayout(request.agent, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
+                };
+            }
+
+            if (!CheckTpCustInfoForSlotPayout(request.username, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
+                };
+            }
+
+            if (!GetBalanceForSlotPayout(request.username, out beforeBalance, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            if (!CheckBeforeBalanceForSlotPayout(request.amount, beforeBalance, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.BalanceInsufficient, message = message }
+                };
+            }
+
+            if (!GetTpCustInfoForSlotPayout(request.username, out TpCustInfo tpCustInfo, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            if (!GetTpCurrencyForSlotPayout(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
+            {
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            var data = new BettingDataRNG_AMB()
+            {
+                username = request.username,
+                agent = request.agent,
+                game = request.game,
+                gameId = request.gameId,
+                roundId = request.roundId,
+                amount = request.amount,
+                turnover = request.turnover,
+                currency = request.currency,
+                transactionId = request.transactionId,
+                timestamp = request.timestamp,
+                featureBuy = request.featureBuy,
+                isEndRound = request.isEndRound,
+                Type = 4, //可能可以不用？
+                TicketType = BettransType.Payout,
+                TicketStatus = TicketStatus.UnSettled
+            };
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                data.amount = data.amount * tpCurrency.ExchangeRate;
+            }
+
+            //Payout為加項
+            data.amount = data.amount * 1;
+
+            var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            if (!CheckBetForSlotPayout(partitionTime, data, out message))
+            {
+                trans.Rollback();
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
+                };
+            }
+
+            if (!PlacePayoutForSlotPayout(partitionTime, data, out message, trans))
+            {
+                trans.Rollback();
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            if (data.amount != 0)
+            {
+                if (!SetBalanceForSlotPayout(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                {
+                    trans.Rollback();
+                    return new AMBSlotPayoutResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                    };
+                }
+            }
+
+            trans.Commit();
 
             return new AMBSlotPayoutResponse()
             {
@@ -244,8 +366,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
-                    wallet = new AMBSlotWalletModel() { balance = 0, lastUpdate = getCurrentGameTime() },
-                    balance = new AMBSlotBalanceModel() { before = 0, after = 0 },
+                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
+                    balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
                     refId = request.transactionId
                 }
             };
@@ -254,6 +376,128 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<AMBSlotCancelResponse> SlotCancel(AMBSlotCancelRequest request)
         {
             var message = string.Empty;
+            decimal beforeBalance = 0; decimal afterBalance = 0;
+
+            if (!CheckRequestForSlotCancel(request, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
+                };
+            }
+
+            if (!CheckAgentIdForSlotCancel(request.agent, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
+                };
+            }
+
+            if (!CheckTpCustInfoForSlotCancel(request.username, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
+                };
+            }
+
+            if (!GetBalanceForSlotCancel(request.username, out beforeBalance, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            if (!CheckBeforeBalanceForSlotCancel(request.amount, beforeBalance, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.BalanceInsufficient, message = message }
+                };
+            }
+
+            if (!GetTpCustInfoForSlotCancel(request.username, out TpCustInfo tpCustInfo, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            if (!GetTpCurrencyForSlotCancel(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
+            {
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            var data = new BettingDataRNG_AMB()
+            {
+                username = request.username,
+                agent = request.agent,
+                game = request.game,
+                gameId = request.gameId,
+                roundId = request.roundId,
+                amount = request.amount,
+                currency = request.currency,
+                transactionId = request.transactionId,
+                timestamp = request.timestamp,
+                Type = 1, //可能可以不用？
+                TicketType = BettransType.CancelBet,
+                TicketStatus = TicketStatus.UnSettled
+            };
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                data.amount = data.amount * tpCurrency.ExchangeRate;
+            }
+
+            //Cancel為加項
+            data.amount = data.amount * 1;
+
+            var partitionTime = DateTimeOffset.Parse(data.timestamp).DateTime;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            if (!CheckBetForSlotCancel(partitionTime, data, out int sq, out message))
+            {
+                trans.Rollback();
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
+                };
+            }
+
+            // 是否需要做一個資料比較的步驟？
+            // 確認要cancel的username、amount、transactionId、roundId 與bet資料一致
+
+            if (!CancelBetForSlotCancel(partitionTime, sq, out message, trans))
+            {
+                trans.Rollback();
+                return new AMBSlotCancelResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
+
+            if (data.amount != 0)
+            {
+                if (!SetBalanceForSlotCancel(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                {
+                    trans.Rollback();
+                    return new AMBSlotCancelResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                    };
+                }
+            }
+
+            trans.Commit();
 
             return new AMBSlotCancelResponse()
             {
@@ -261,8 +505,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
-                    wallet = new AMBSlotWalletModel() { balance = 0, lastUpdate = getCurrentGameTime() },
-                    balance = new AMBSlotBalanceModel() { before = 0, after = 0 },
+                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
+                    balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
                     refId = request.transactionId
                 }
             };
@@ -475,32 +719,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private bool CheckAgentIdForSlotBet(string agentId, out string message)
         {
             message = string.Empty;
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-            if (thirdPartySetting == null)
+            try
             {
-                message = "tpinfo not found.";
-                _logger.LogError($"CheckAgentId Fail:{message}");
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+
+                if (thirdPartySetting == null)
+                {
+                    message = "tpinfo not found.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
+
+                if (string.IsNullOrWhiteSpace(slotAgent))
+                {
+                    message = "tpinfo.agent is null.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                if (slotAgent != agentId)
+                {
+                    message = "tpinfo.agent is not equal request.agentId.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckAgentId Exception:{ex.ToString()}");
                 return false;
             }
-
-            string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
-
-            if (string.IsNullOrWhiteSpace(slotAgent))
-            {
-                message = "tpinfo.agent is null.";
-                _logger.LogError($"CheckAgentId Fail:{message}");
-                return false;
-            }
-
-            if (slotAgent != agentId)
-            {
-                message = "tpinfo.agent is not equal request.agentId.";
-                _logger.LogError($"CheckAgentId Fail:{message}");
-                return false;
-            }
-
-            return true;
         }
 
         private bool CheckTpCustInfoForSlotBet(string username, out string message)
@@ -620,12 +873,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckBetForSlotBet(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlConnection conn, MySqlTransaction trans)
+        private bool CheckBetForSlotBet(DateTime partitionTime, BettingDataRNG_AMB data, out string message)
         {
             message = string.Empty;
             try
             {
-                if (_bettingService.IsExist_AMB(partitionTime, data, conn, trans))
+                if (_bettingService.IsExist_AMB(partitionTime, data, BettransType.Bet, out _))
                 {
                     message = "exist bet transactionId and roundId.";
                     _logger.LogError($"CheckBet Fail:{message}");
@@ -642,12 +895,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool PlaceBetForSlotBet(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlConnection conn, MySqlTransaction trans)
+        private bool PlaceBetForSlotBet(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
             try
             {
-                var result = _bettingService.PlaceBet_AMB(partitionTime, data, conn, trans);
+                var result = _bettingService.PlaceBet_AMB(partitionTime, data, trans);
 
                 if (!result)
                 {
@@ -675,6 +928,627 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 var result = _bettingService.SetBalance_AMB(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+
+                if (!result)
+                {
+                    message = "set balance fail.";
+                    _logger.LogError($"SetBalance Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"SetBalance Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Payout Steps
+
+        private bool CheckRequestForSlotPayout(AMBSlotPayoutRequest request, out string message)
+        {
+            message = string.Empty;
+
+            if (request == null)
+            {
+                message = "request is null.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.username))
+            {
+                message = "request.username is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.agent))
+            {
+                message = "request.agent is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.game))
+            {
+                message = "request.game is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.gameId))
+            {
+                message = "request.gameId is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.roundId))
+            {
+                message = "request.roundId is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.currency))
+            {
+                message = "request.currency is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.transactionId))
+            {
+                message = "request.transactionId is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.timestamp))
+            {
+                message = "request.timestamp is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckAgentIdForSlotPayout(string agentId, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+
+                if (thirdPartySetting == null)
+                {
+                    message = "tpinfo not found.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
+
+                if (string.IsNullOrWhiteSpace(slotAgent))
+                {
+                    message = "tpinfo.agent is null.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                if (slotAgent != agentId)
+                {
+                    message = "tpinfo.agent is not equal request.agentId.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckAgentId Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CheckTpCustInfoForSlotPayout(string username, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, username);
+
+                if (result == null)
+                {
+                    message = "player not found.";
+                    _logger.LogError($"CheckTpCustInfo Fail:{message}");
+                    return false;
+                }
+
+                if (result.Locked)
+                {
+                    message = "player is Locked.";
+                    _logger.LogError($"CheckTpCustInfo Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckTpCustInfo Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool GetBalanceForSlotPayout(string username, out decimal beforeBalance, out string message)
+        {
+            message = string.Empty;
+            beforeBalance = 0;
+            try
+            {
+                var result = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, username, (int)GameType);
+
+                if (result == null)
+                {
+                    message = "balance not found.";
+                    _logger.LogError($"GetBalance Fail:{message}");
+                    return false;
+                }
+
+                beforeBalance = result.Balance;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"GetBalance Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CheckBeforeBalanceForSlotPayout(decimal payoutAmount, decimal beforeBalance, out string message)
+        {
+            message = string.Empty;
+
+            if (beforeBalance + payoutAmount < 0)
+            {
+                message = "Balance insufficient.";
+                _logger.LogError($"CheckBalance Fail:{message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool GetTpCustInfoForSlotPayout(string username, out TpCustInfo tpCustInfo, out string message)
+        {
+            message = string.Empty;
+            tpCustInfo = null;
+            try
+            {
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AMB, username);
+                if (tpCustInfo == null)
+                {
+                    message = "tpCustInfo is null.";
+                    _logger.LogError($"GetTpCustInfo Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"GetTpCustInfo Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool GetTpCurrencyForSlotPayout(int currencyId, out TpCurrency tpCurrency, out string message)
+        {
+            message = string.Empty;
+            tpCurrency = null;
+            try
+            {
+                tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, currencyId);
+                if (tpCurrency == null)
+                {
+                    message = "tpCurrency is null.";
+                    _logger.LogError($"GetTpCurrency Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"GetTpCurrency Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CheckBetForSlotPayout(DateTime partitionTime, BettingDataRNG_AMB data, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                if (_bettingService.IsExist_AMB(partitionTime, data, BettransType.Payout, out _))
+                {
+                    message = "exist bet transactionId and roundId.";
+                    _logger.LogError($"CheckBet Fail:{message}");
+                    return false;
+                }
+                else
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckBet Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool PlacePayoutForSlotPayout(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = _settledService.Payout_AMB(partitionTime, data, trans);
+
+                if (!result)
+                {
+                    message = "place payout fail.";
+                    _logger.LogError($"PlacePayout Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"PlacePayout Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool SetBalanceForSlotPayout(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            out string message, out decimal afterAmount, out int bonusId,
+            MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            afterAmount = 0;
+            bonusId = 0;
+            try
+            {
+                var result = _settledService.SetBalance_AMB(tpCustInfo, data,
+                    TransType.Payout,"Payout",
+                    out afterAmount, ref bonusId, conn, trans);
+
+                if (!result)
+                {
+                    message = "set balance fail.";
+                    _logger.LogError($"SetBalance Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"SetBalance Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Cancel Steps
+
+        private bool CheckRequestForSlotCancel(AMBSlotCancelRequest request, out string message)
+        {
+            message = string.Empty;
+
+            if (request == null)
+            {
+                message = "request is null.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.username))
+            {
+                message = "request.username is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.agent))
+            {
+                message = "request.agent is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.game))
+            {
+                message = "request.game is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.gameId))
+            {
+                message = "request.gameId is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.roundId))
+            {
+                message = "request.roundId is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.currency))
+            {
+                message = "request.currency is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.transactionId))
+            {
+                message = "request.transactionId is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.timestamp))
+            {
+                message = "request.timestamp is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckAgentIdForSlotCancel(string agentId, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+
+                if (thirdPartySetting == null)
+                {
+                    message = "tpinfo not found.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
+
+                if (string.IsNullOrWhiteSpace(slotAgent))
+                {
+                    message = "tpinfo.agent is null.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                if (slotAgent != agentId)
+                {
+                    message = "tpinfo.agent is not equal request.agentId.";
+                    _logger.LogError($"CheckAgentId Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckAgentId Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CheckTpCustInfoForSlotCancel(string username, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, username);
+
+                if (result == null)
+                {
+                    message = "player not found.";
+                    _logger.LogError($"CheckTpCustInfo Fail:{message}");
+                    return false;
+                }
+
+                if (result.Locked)
+                {
+                    message = "player is Locked.";
+                    _logger.LogError($"CheckTpCustInfo Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckTpCustInfo Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool GetBalanceForSlotCancel(string username, out decimal beforeBalance, out string message)
+        {
+            message = string.Empty;
+            beforeBalance = 0;
+            try
+            {
+                var result = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, username, (int)GameType);
+
+                if (result == null)
+                {
+                    message = "balance not found.";
+                    _logger.LogError($"GetBalance Fail:{message}");
+                    return false;
+                }
+
+                beforeBalance = result.Balance;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"GetBalance Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CheckBeforeBalanceForSlotCancel(decimal betAmount, decimal beforeBalance, out string message)
+        {
+            message = string.Empty;
+
+            if (beforeBalance - betAmount < 0)
+            {
+                message = "Balance insufficient.";
+                _logger.LogError($"CheckBalance Fail:{message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool GetTpCustInfoForSlotCancel(string username, out TpCustInfo tpCustInfo, out string message)
+        {
+            message = string.Empty;
+            tpCustInfo = null;
+            try
+            {
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AMB, username);
+                if (tpCustInfo == null)
+                {
+                    message = "tpCustInfo is null.";
+                    _logger.LogError($"GetTpCustInfo Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"GetTpCustInfo Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool GetTpCurrencyForSlotCancel(int currencyId, out TpCurrency tpCurrency, out string message)
+        {
+            message = string.Empty;
+            tpCurrency = null;
+            try
+            {
+                tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, currencyId);
+                if (tpCurrency == null)
+                {
+                    message = "tpCurrency is null.";
+                    _logger.LogError($"GetTpCurrency Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"GetTpCurrency Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CheckBetForSlotCancel(DateTime partitionTime, BettingDataRNG_AMB data, out int sq, out string message)
+        {
+            message = string.Empty;
+            sq = 0;
+            try
+            {
+                if (!_bettingService.IsExist_AMB(partitionTime, data, BettransType.Bet, out var getData))
+                {
+                    message = "not exist by transactionId and roundId.";
+                    _logger.LogError($"CheckBet Fail:{message}");
+                    return false;
+                }
+                else
+                {
+                    if (getData.Count() != 1)
+                    {
+                        message = "exist multi data by transactionId and roundId.";
+                        _logger.LogError($"CheckBet Fail:{message}");
+                        return false;
+                    }
+                    sq = getData.First().SQ;
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"CheckBet Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool CancelBetForSlotCancel(DateTime partitionTime, int sq,
+            out string message, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = _settledService.Cancel_AMB(partitionTime, sq, trans);
+
+                if (!result)
+                {
+                    message = "place bet fail.";
+                    _logger.LogError($"PlaceBet Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"PlaceBet Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool SetBalanceForSlotCancel(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            out string message, out decimal afterAmount, out int bonusId,
+            MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            afterAmount = 0;
+            bonusId = 0;
+            try
+            {
+                var result = _settledService.SetBalance_AMB(tpCustInfo, data,
+                    TransType.Refunds, "CancelBet",
+                    out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
                 {
