@@ -108,11 +108,9 @@ namespace ThirdPartyWager.Service.BLL
                         var result = _wagerSAService.InsertWager(group, trans);
                         if (result == group.Count())
                         {
-                            if (_tpUnsettleService.InsertTpUnsettle(Tp.SA, GameType.SA_LiveCasino,
-                                    $"{group.Key.GameID}_{group.Key.Username}", trans) > 0)
-                            {
-                                trans.Commit();
-                            }
+                            trans.Commit();
+                            _tpUnsettleService.InsertTpUnsettle(Tp.SA, GameType.SA_LiveCasino,
+                                $"{group.Key.GameID}_{group.Key.Username}");
                         }
                     }
                     catch (Exception ex)
