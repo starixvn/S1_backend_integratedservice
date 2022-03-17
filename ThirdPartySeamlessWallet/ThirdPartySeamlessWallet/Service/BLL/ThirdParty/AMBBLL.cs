@@ -359,6 +359,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
+                //lost => 沒有加錢
                 afterBalance = beforeBalance;
             }
 
