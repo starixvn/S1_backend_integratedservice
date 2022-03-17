@@ -163,9 +163,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public SettleData_SA GetSettle_BettransLC_SA(string Gameid, string Username)
+        public SettleData_SA GetSettle_BettransLC_SA(string gameId, string userName)
         {
-            return _mainDbClient.QueryFirst<SettleData_SA>("Service_BettransLC_SA_Settle_Get_V2", new DynamicParameters(new { Gameid, Username }));
+            return _mainDbClient.QueryFirst<SettleData_SA>("Service_BettransLC_SA_Settle_Get_V2", new DynamicParameters(new { GameId = gameId, UserName = userName }));
         }
 
         
