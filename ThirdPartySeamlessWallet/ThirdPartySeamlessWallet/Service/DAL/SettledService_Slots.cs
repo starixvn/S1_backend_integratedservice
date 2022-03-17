@@ -3975,7 +3975,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return 1;
                 }
                 payoutRngDto.TicketType = (int)BettransType.Payout;
-                payoutRngDto.TicketStatus = (int) TicketStatus.Win;
+                payoutRngDto.TicketStatus = (int)TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
 
@@ -4017,7 +4017,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans);
                     }
                 }
-                
+
                 if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, payoutRngDto.initialdebittransferid, trans, partitionTime);
@@ -4055,7 +4055,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return transactionResult;
             }
             // 已退過款
-            else if (check.TicketStatus == (int) TicketStatus.Refund)
+            else if (check.TicketStatus == (int)TicketStatus.Refund)
             {
                 transactionResult.result = 1;
                 return transactionResult;
@@ -4077,9 +4077,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PayoutV2(
                         tpCustInfo,
                         cancelBetRngDto.Amount,
-                        (int) Tp.HB,
+                        (int)Tp.HB,
                         cancelBetRngDto.RoundId,
-                        (int) GameType.HB_RNG,
+                        (int)GameType.HB_RNG,
                         TpCategory.Slots,
                         cancelBetRngDto.TransferId,
                         TransType.Refunds,
@@ -4100,7 +4100,64 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
-        
+
+        #endregion
+
+        #region AMB Slot
+
+        public bool Payout_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool Cancel_AMB(DateTime partitionTime, int sq, MySqlTransaction trans)
+        {
+            var query = new { TicketType = BettransType.CancelBet, SQ = sq };
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Set", query, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            TransType transType, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.AMB,
+                data.transactionId,
+                (int)GameType.AMB_RNG,
+                TpCategory.Slots,
+                data.roundId,
+                transType,
+                null,
+                out afterAmount,
+                memo,
+                out bonusId,
+                conn,
+                trans
+            );
+
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
         #endregion
     }
 }

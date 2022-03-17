@@ -1059,19 +1059,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region AMB Slot
 
-        public bool IsExist_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlConnection conn, MySqlTransaction trans)
+        public bool IsExist_AMB(DateTime partitionTime, BettingDataRNG_AMB data, BettransType ticketType, out IEnumerable<BettingDataRNG_AMB> result)
         {
-            var query = new { transactionId = data.transactionId ,roundId = data.roundId};
-            var isExist = _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
+            var query = new { transactionId = data.transactionId, roundId = data.roundId, TicketType = ticketType };
+            result = _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
 
-            if (isExist.Any())
+            if (result.Count() == 1)
             {
                 return true;
             }
             return false;
         }
 
-        public bool PlaceBet_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlConnection conn, MySqlTransaction trans)
+        public bool PlaceBet_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
         {
             var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans);
 
