@@ -16,16 +16,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class GPIController : ControllerBase
     {
-        private readonly Dictionary<string, string> lCountryMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            {"RMB","CN" },
-            {"IDR","ID" },
-            {"MYR","MY" },
-            {"THB","TH" },
-            {"VND","VN" },
-            {"INR","INR"}
-        };
-
         private readonly AuthBLL authBLL;
         private readonly ILogger<GPIController> logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
@@ -77,12 +67,21 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public ValidateTicketResp validateticket([FromForm] string ticket)
         {
-            logger.LogCritical(ticket);
+            logger.LogInformation(ticket);
 
             ValidateTicketResp validateTicketResp = new ValidateTicketResp();
             TpCustInfoAuth tpCustInfoAuth = null;
             if (authBLL.Authenticate(ticket, out tpCustInfoAuth))
             {
+                var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)Tp.GPI, tpCustInfoAuth.TpCurrencyId);
+                if (tpCountryCode == null)
+                {
+                    validateTicketResp.Error_code = -3;
+                    validateTicketResp.Error_msg = "Authentication Failed";
+                    logger.LogError($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(validateTicketResp)}");
+                    return validateTicketResp;
+                }
+
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, tpCustInfoAuth.TpUserName);
                 if (tpCheck == null)
                 {
@@ -100,11 +99,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     validateTicketResp.Cust_id = tpCustInfoAuth.TpUserName;
                     validateTicketResp.Cust_name = tpCustInfoAuth.TpUserName;
                     validateTicketResp.Currency_code = tpCustInfoAuth.TpCurrencyId;
-                    validateTicketResp.Country = lCountryMapping[tpCustInfoAuth.TpCurrencyId];
+                    validateTicketResp.Country = tpCountryCode.CountryCode;
                     validateTicketResp.Language = tpCustInfoAuth.TpLangId;
                     validateTicketResp.Test_cust = tpCustInfoAuth.IsTest;
                     validateTicketResp.Date_of_birth = "30-7-1970";
                     validateTicketResp.Ip = tpCustInfoAuth.ClientIP;
+
+                    logger.LogInformation(JsonConvert.SerializeObject(validateTicketResp));
+                    return validateTicketResp;
                 }
             }
             else
@@ -112,7 +114,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 validateTicketResp.Error_code = -3;
                 validateTicketResp.Error_msg = "Authentication Failed";
             }
-            logger.LogCritical(Newtonsoft.Json.JsonConvert.SerializeObject(validateTicketResp));
+
+            logger.LogError(JsonConvert.SerializeObject(validateTicketResp));
             return validateTicketResp;
         }
 
@@ -144,8 +147,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public GetbalanceResp getbalance([FromForm] GetbalanceReq getbalanceReq)
         {
-            logger.LogCritical(JsonConvert.SerializeObject(getbalanceReq));
-
             GetbalanceResp getbalanceResp = new GetbalanceResp();
 
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, getbalanceReq.cust_id, gameType);
@@ -157,8 +158,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             else
             {
                 getbalanceResp.Balance = tpCustBalance.Balance;
+                logger.LogInformation($"{JsonConvert.SerializeObject(getbalanceReq)}\r\n{JsonConvert.SerializeObject(getbalanceResp)}");
+                return getbalanceResp;
             }
 
+            logger.LogError($"{JsonConvert.SerializeObject(getbalanceReq)}\r\n{JsonConvert.SerializeObject(getbalanceResp)}");
             return getbalanceResp;
         }
         public class DebitReq : BettingDataRNG_GPI
@@ -188,8 +192,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public DebitResp debit([FromForm] DebitReq debitReq)
         {
-            logger.LogCritical(JsonConvert.SerializeObject(debitReq));
-
             DebitResp debitResp = new DebitResp();
             debitResp.Error_code = -1;
             debitResp.Error_msg = "Unknown error";
@@ -226,6 +228,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         debitResp.Exchange_rate = 1;
                         debitResp.Trx_id = TransId;
+
+                        log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}", "GPI_debit");
+                        return debitResp;
                     }
                     else if (tpAffterAmount < 0)
                     {
@@ -243,11 +248,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     debitResp.Error_code = -1;
                     debitResp.Error_msg = "Unknown error";
                     log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}\r\n{ex}", "GPI_debit", ex);
+                    return debitResp;
                 }
             }
 
-            string debitLog = $"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}";
-            log2File.Info(debitLog, "GPI_debit");
+            log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}", "GPI_debit");
             return debitResp;
         }
 
@@ -297,6 +302,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                         creditResp.Before = tpAffterAmount - creditReq.amount;
                         creditResp.Error_code = 0;
                         creditResp.Error_msg = "No errors";
+
+                        log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+                        return creditResp;
                     }
                     else if (creditReq.amount == 0)
                     {
@@ -305,6 +313,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                         creditResp.Before = tpCustBalance.Balance;
                         creditResp.Error_code = 0;
                         creditResp.Error_msg = "No errors";
+
+                        log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+                        return creditResp;
                     }
                 }
                 else if (result == -1)
@@ -314,6 +325,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     creditResp.Before = tpCustBalance.Balance;
                     creditResp.Error_code = 0;
                     creditResp.Error_msg = "No errors";
+
+                    log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+                    return creditResp;
                 }
             }
             catch (Exception ex)
@@ -324,8 +338,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 throw ex;
             }
 
-            string creditLog = $"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}";
-            log2File.Info(creditLog, "GPI_credit");
+            log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
             return creditResp;
         }
         public class EndgameReq : EndgameRNG_GPI
