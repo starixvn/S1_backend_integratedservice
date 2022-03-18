@@ -40,7 +40,7 @@ namespace ThirdParty.AMB
             {
                 var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs);
                 var slotResult = ambSlot.CreateMember(tpCustInfo.TpUserName, HttpPost);
-                if (slotResult.status.code == 0 || slotResult.status.code == 902)
+                if (slotResult.status.code != 0 && slotResult.status.code != 902)
                 {
                     oApiResult.ErrorCode = ErrorCode.Fail;
                     oApiResult.RawMessage = slotResult.status.message;
