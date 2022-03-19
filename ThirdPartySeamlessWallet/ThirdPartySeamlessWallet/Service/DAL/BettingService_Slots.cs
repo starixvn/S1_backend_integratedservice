@@ -1088,19 +1088,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = PlaceBetV2(tpCustInfo,
                                 data.amount,
                                 (int)Tp.AMB,
-                                data.transactionId,  //TpTransId
+                                data.roundId,  //TpTransId
                                 (int)GameType.AMB_RNG,
-                                data.roundId,  //RefId
+                                data.transactionId,  //RefId
                                 null,
                                 TpCategory.Slots,
                                 out afterAmount,
                                 ref bonusId,
                                 conn,
                                 trans);
-            if (result == 0)
+
+            if (result <= 0)
             {
                 return false;
             }
+
             return true;
         }
 
