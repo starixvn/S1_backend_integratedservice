@@ -424,9 +424,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/v2/balance")]
-        public async Task<AMBSlotGetBalanceResponse> SlotGetBalanceAsync(ANBSlotGetBalanceRequest request)
+        public AMBSlotGetBalanceResponse SlotGetBalanceAsync(ANBSlotGetBalanceRequest request)
         {
-            return await _AMBBLL.SlotGetBalance(request);
+            return _AMBBLL.SlotGetBalance(request);
         }
 
         /// <summary>

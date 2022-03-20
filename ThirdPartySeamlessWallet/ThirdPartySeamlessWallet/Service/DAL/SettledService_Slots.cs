@@ -4160,6 +4160,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
+        public bool InsertUnsettle_AMB(DateTime partitionTime, string transactionId, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.AMB, GameType.AMB_RNG, transactionId, trans, partitionTime);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
             TransType transType, string memo,
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
@@ -4169,10 +4180,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 tpCustInfo,
                 data.amount,
                 (int)Tp.AMB,
-                data.transactionId,
+                data.roundId,
                 (int)GameType.AMB_RNG,
                 TpCategory.Slots,
-                data.roundId,
+                data.transactionId,
                 transType,
                 null,
                 out afterAmount,
