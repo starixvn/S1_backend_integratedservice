@@ -4,6 +4,7 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -53,7 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #region Methods
 
-        public async Task<AMBSlotGetBalanceResponse> SlotGetBalance(ANBSlotGetBalanceRequest request)
+        public AMBSlotGetBalanceResponse SlotGetBalance(ANBSlotGetBalanceRequest request)
         {
             var message = string.Empty;
 
@@ -170,7 +171,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
-                Type = 1, //可能可以不用？
+                Type = BettransRng_AMBTypeEnum.FromBet,
                 TicketType = BettransType.Bet,
                 TicketStatus = TicketStatus.UnSettled
             };
@@ -185,9 +186,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
-            using var conn = _mainDbClient.GetMySqlConnection();
+            await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            using var trans = conn.BeginTransaction();
+            await using var trans = conn.BeginTransaction();
 
             if (!CheckBetForSlotBet(partitionTime, data, out message))
             {
@@ -236,6 +237,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request)
         {
+            Thread.Sleep(60 * 1000);//Test Cancel Bet
             var message = string.Empty;
             decimal beforeBalance = 0; decimal afterBalance = 0;
 
@@ -309,8 +311,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
-                Type = 4, //可能可以不用？
-                TicketType = BettransType.Payout,
+                Type = BettransRng_AMBTypeEnum.FromPayout,
+                TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
                 TicketStatus = TicketStatus.UnSettled
             };
 
@@ -319,14 +321,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data.amount = data.amount * tpCurrency.ExchangeRate;
             }
 
-            //Payout為加項
-            data.amount = data.amount * 1;
-
             var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
-            using var conn = _mainDbClient.GetMySqlConnection();
+            await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            using var trans = conn.BeginTransaction();
+            await using var trans = conn.BeginTransaction();
 
             if (!CheckBetForSlotPayout(partitionTime, data, out message))
             {
@@ -361,6 +360,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 //lost => 沒有加錢
                 afterBalance = beforeBalance;
+            }
+
+            if (data.isEndRound)
+            {
+                if (!InsertUnsettleForSlotPayout(partitionTime, data.transactionId, out message, trans))
+                {
+                    trans.Rollback();
+                    return new AMBSlotPayoutResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                    };
+                }
             }
 
             trans.Commit();
@@ -450,7 +461,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
-                Type = 1, //可能可以不用？
                 TicketType = BettransType.CancelBet,
                 TicketStatus = TicketStatus.UnSettled
             };
@@ -460,14 +470,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data.amount = data.amount * tpCurrency.ExchangeRate;
             }
 
-            //Cancel為加項
-            data.amount = data.amount * 1;
-
             var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
-            using var conn = _mainDbClient.GetMySqlConnection();
+            await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            using var trans = conn.BeginTransaction();
+            await using var trans = conn.BeginTransaction();
 
             if (!CheckBetForSlotCancel(partitionTime, data, out int sq, out message))
             {
@@ -1254,6 +1261,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
+
+        private bool InsertUnsettleForSlotPayout(DateTime partitionTime, string transactionId, out string message, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = _settledService.InsertUnsettle_AMB(partitionTime, transactionId, trans);
+
+                if (!result)
+                {
+                    message = "insert unsettle transactionId fail.";
+                    _logger.LogError($"InsertUnsettle Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError($"InsertUnsettle Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
 
         #endregion
 
