@@ -21,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime timestamp { get; set; }
         public bool featureBuy { get; set; }
         public bool isEndRound { get; set; }
-        public int Type { get; set; }
+        public BettransRng_AMBTypeEnum Type { get; set; }
         public BettransType TicketType { get; set; }
         public TicketStatus TicketStatus { get; set; }
         public DateTime CreateTime { get; set; }
