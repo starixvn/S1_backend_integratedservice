@@ -4,6 +4,7 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -170,7 +171,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
-                Type = 1, //可能可以不用？
+                Type = BettransRng_AMBTypeEnum.FromBet,
                 TicketType = BettransType.Bet,
                 TicketStatus = TicketStatus.UnSettled
             };
@@ -236,6 +237,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request)
         {
+            Thread.Sleep(60 * 1000);//Test Cancel Bet
             var message = string.Empty;
             decimal beforeBalance = 0; decimal afterBalance = 0;
 
@@ -309,7 +311,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
-                Type = 4, //可能可以不用？
+                Type = BettransRng_AMBTypeEnum.FromPayout,
                 TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
                 TicketStatus = TicketStatus.UnSettled
             };
@@ -459,7 +461,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
-                Type = 1, //可能可以不用？
                 TicketType = BettransType.CancelBet,
                 TicketStatus = TicketStatus.UnSettled
             };

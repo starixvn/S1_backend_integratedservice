@@ -21,4 +21,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         [Description("Response error via axios timeout")]
         ResponseTimeout = 1601
     }
+
+    public enum BettransRng_AMBTypeEnum
+    {
+        FromBet = 1,
+        FromPayout = 4
+    }
 }
