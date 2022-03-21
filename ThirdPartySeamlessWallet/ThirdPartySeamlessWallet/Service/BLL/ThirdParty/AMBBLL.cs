@@ -237,7 +237,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request)
         {
-            Thread.Sleep(60 * 1000);//Test Cancel Bet
+            if (string.Equals(request.gameId, "ANGRYBIRD", StringComparison.OrdinalIgnoreCase))
+            {
+                Thread.Sleep(60 * 1000);//Test Cancel Bet
+            }
+            
             var message = string.Empty;
             decimal beforeBalance = 0; decimal afterBalance = 0;
 
