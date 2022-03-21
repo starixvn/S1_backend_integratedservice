@@ -42,6 +42,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettlementType(gameType, gameId);
         }
 
+        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory)
+        {
+            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory);
+            return result;
+        }
+
         #region SA
 
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
