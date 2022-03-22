@@ -76,13 +76,13 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_HB>("Service_BettransRng_AMB_Unsettle_Get", tpUnsettle).FirstOrDefault();
+                        var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransRng_AMB_Unsettle_Get", tpUnsettle).FirstOrDefault();
                         if (unsettleData != null)
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
+                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
                             if (tpCustInfo == null)
                             {
-                                throw new UnsettleNotFoundException($"{unsettleData.TpUserName} TpCustInfo not found.");
+                                throw new UnsettleNotFoundException($"{unsettleData.Account} TpCustInfo not found.");
                             }
 
                             var betRecordInfo = new BetRecordInfo
@@ -93,8 +93,8 @@ namespace ThirdPartySettleWorker.Workers
                                 WinlostAmount = unsettleData.WinLostAmount,
                                 TransId = tpUnsettle.TransId,
                                 GameType = gametype,
-                                TpUserName = unsettleData.TpUserName,
-                                SettledTime = unsettleData.SettledTime,
+                                TpUserName = unsettleData.Account,
+                                SettledTime = unsettleData.SettleTime,
                                 TransTime = unsettleData.TransTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
                                 TicketStatus = SetTicketStatus(unsettleData.WinLostAmount)
