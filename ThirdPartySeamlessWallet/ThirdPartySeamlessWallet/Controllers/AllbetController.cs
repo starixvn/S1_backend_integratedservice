@@ -79,9 +79,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
 
-            var resp = new Resp();
-            resp.error_code = "50000";
-            resp.message = "server error";
+            var resp = new Resp
+            {
+                error_code = "50000",
+                message = "server error"
+            };
 
             TransferReq transferReq = null;
             try
@@ -517,9 +519,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
 
-            var resp = new Resp();
-            resp.error_code = "50000";
-            resp.message = "server error";
+            var resp = new Resp
+            {
+                error_code = "50000",
+                message = "server error"
+            };
 
             if (tools.GetClientIP(HttpContext) != "211.75.236.133" && tools.GetClientIP(HttpContext) != "220.130.219.4")
             {
@@ -649,9 +653,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/[action]/{client}")]
         public Resp get_balance(string client)
         {
-            var resp = new Resp();
-            resp.error_code = "50000";
-            resp.message = "server error";
+            var resp = new Resp
+            {
+                error_code = "50000",
+                message = "server error"
+            };
 
             Request.Headers.TryGetValue("Authorization", out var authorization);
             Request.Headers.TryGetValue("Accept", out var accept);
