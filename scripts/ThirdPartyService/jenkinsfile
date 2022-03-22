@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+    environment {
+        auto_deploy = fileExists 'deploy.yml'
+        env = 'Development'
+        registry = '13.213.82.69: 8082'
+        proj = 'thirdpartyservice'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    env.version = sh (script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+                }
+                sh 'docker build -f ./ThirdPartyService/ThirdPartyService/Dockerfile -t ${registry}/${proj}:${version} .'
+                sh 'docker login ${registry} -u admin -p 123456'
+                sh 'docker push ${registry}/${proj}:${version}'
+            }
+        }
+        stage('Deploy') {
+            when {
+                expression { auto_deploy == 'true'
+                }
+            }
+            steps {
+                sh 'ansible-playbook -i DEV.AWS.yml deploy.docker.yml --extra-vars "host=linux-dev-worker docker_name=dev_thirdpartyservice ver=${proj}:${version} env=${env} docker_ports=55996:55996 volume=/logs/tpservice:/tpservice"'
+            }
+        }
+    }
+}
