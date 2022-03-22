@@ -135,7 +135,7 @@ namespace ThirdPartyService.Service.BLL
 
                 // Test account only allow login for saba
                 if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
-                    tpInfo.TpId != 41)
+                    tpInfo.TpId != 1)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = apiResult.Message = "This Account not allow for access";
