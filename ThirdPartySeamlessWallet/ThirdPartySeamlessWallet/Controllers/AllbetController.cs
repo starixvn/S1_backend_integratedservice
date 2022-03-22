@@ -71,15 +71,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
 
         }
-
+        
         [HttpPost]
         [Route("[controller]/[action]")]
         public async Task<Resp> TransferAsync()/*[FromForm]Dictionary<string, string> transferReqq*/
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            string Content = await reader.ReadToEndAsync();
+            var Content = await reader.ReadToEndAsync();
 
-            Resp resp = new Resp();
+            var resp = new Resp();
             resp.error_code = "50000";
             resp.message = "server error";
 
@@ -95,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer", ex);
                 return resp;
             }
-            TransferType transferType = TransferType.Bet;
+            var transferType = TransferType.Bet;
             Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
 
             Request.Headers.TryGetValue("Authorization", out var authorization);
@@ -104,9 +104,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Content-Type", out var cType);
             Request.Headers.TryGetValue("Date", out var dtDate);
 
-            string propertyId = "";
-            string sign = "";
-            string sAuthorization = authorization.ToString();
+            var propertyId = "";
+            var sign = "";
+            var sAuthorization = authorization.ToString();
             if (!string.IsNullOrEmpty(sAuthorization))
             {
                 propertyId = sAuthorization.Substring(3, sAuthorization.IndexOf(":") - 3);
@@ -123,7 +123,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            string signString = $"POST\n{md5}\n{cType}\n{dtDate}\n/transfer";
+            var signString = $"POST\n{md5}\n{cType}\n{dtDate}\n/transfer";
             _logger.LogInformation($"{authorization}\r\n{accept}\r\n{md5}\r\n{cType}\r\n{dtDate}\r\n{signString}");
 
             if (Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) != sign)
@@ -165,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (transferType == TransferType.Bet)
                 {
                     decimal amountSum = 0;
-                    bool valid = true;
+                    var valid = true;
 
                     if (transferReq.Amount <= 0)
                     {
@@ -206,7 +206,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            int result = bettingBLL.PlaceBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+                            var result = bettingBLL.PlaceBetLC_Allbet(transferReq, out var tpAffterAmount);
                             if (result > 0)
                             {
                                 resp.balance = tpAffterAmount;
@@ -243,7 +243,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (transferType == TransferType.Settle)
                 {
                     decimal amountSum = 0;
-                    bool valid = true;
+                    var valid = true;
 
                     if (transferReq.Details.Count > 1)
                     {
@@ -264,7 +264,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = settledBLL.PayoutLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        var result = settledBLL.PayoutLC_Allbet(transferReq, out var tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -302,7 +302,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (transferType == TransferType.Cancel)
                 {
                     decimal amountSum = 0;
-                    bool valid = true;
+                    var valid = true;
                     if (transferReq.OriginalTranId <= 0)
                     {
                         valid = false;
@@ -332,7 +332,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = settledBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        var result = settledBLL.CancelBetLC_Allbet(transferReq, out var tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -372,7 +372,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (transferType == TransferType.ReSettle)
                 {
                     decimal amountSum = 0;
-                    bool valid = true;
+                    var valid = true;
 
                     if (transferReq.Details.Count > 1)
                     {
@@ -393,7 +393,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = settledBLL.ReSettledLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        var result = settledBLL.ReSettledLC_Allbet(transferReq, out var tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -445,7 +445,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (transferType == TransferType.EventSettle)
                 {
                     decimal amountSum = 0;
-                    bool valid = true;
+                    var valid = true;
 
                     if (transferReq.Details.Count > 1)
                     {
@@ -467,7 +467,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = settledBLL.RewardLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        var result = settledBLL.RewardLC_Allbet(transferReq, out var tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -515,9 +515,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<Resp> TransferFixAsync()/*[FromForm]Dictionary<string, string> transferReqq*/
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            string Content = await reader.ReadToEndAsync();
+            var Content = await reader.ReadToEndAsync();
 
-            Resp resp = new Resp();
+            var resp = new Resp();
             resp.error_code = "50000";
             resp.message = "server error";
 
@@ -538,7 +538,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer", ex);
                 return resp;
             }
-            TransferType transferType = TransferType.Bet;
+            var transferType = TransferType.Bet;
             Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
 
             if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null || transferReq.Details.Any(bet => bet.BetNum <= 0))
@@ -565,7 +565,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (transferType == TransferType.Cancel)
                 {
                     decimal amountSum = 0;
-                    bool valid = true;
+                    var valid = true;
                     if (transferReq.OriginalTranId <= 0)
                     {
                         valid = false;
@@ -595,7 +595,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                     if (valid)
                     {
-                        int result = settledBLL.CancelBetLC_Allbet(transferReq, out decimal tpAffterAmount);
+                        var result = settledBLL.CancelBetLC_Allbet(transferReq, out var tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -649,7 +649,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/[action]/{client}")]
         public Resp get_balance(string client)
         {
-            Resp resp = new Resp();
+            var resp = new Resp();
             resp.error_code = "50000";
             resp.message = "server error";
 
@@ -657,9 +657,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Accept", out var accept);
             Request.Headers.TryGetValue("Date", out var dtDate);
 
-            string propertyId = "";
-            string sign = "";
-            string sAuthorization = authorization.ToString();
+            var propertyId = "";
+            var sign = "";
+            var sAuthorization = authorization.ToString();
             if (!string.IsNullOrEmpty(sAuthorization))
             {
                 propertyId = sAuthorization.Substring(3, sAuthorization.IndexOf(":") - 3);
@@ -676,7 +676,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            string signString = $"GET\n\n\n{dtDate}\n/get_balance/{client}";
+            var signString = $"GET\n\n\n{dtDate}\n/get_balance/{client}";
             //log2File.Info($"{Sign(signString, thirdPartySetting.TpSetting["SHA1key"])}\r\n{signString}\r\n{authorization}", $"{thisTp}_get_balance_Sign");
 
             if (Sign(signString, thirdPartySetting.TpSetting["SHA1key"]) != sign)
@@ -732,8 +732,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private string Sign(string EncryptText, string EncryptKey)
         {
-            using HMACSHA1 myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
-            byte[] RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
+            using var myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
+            var RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
 
             return Convert.ToBase64String(RstRes);
         }
