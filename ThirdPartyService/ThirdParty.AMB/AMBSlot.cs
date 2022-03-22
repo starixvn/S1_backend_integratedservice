@@ -165,12 +165,10 @@ namespace ThirdParty.AMB
                 agent = Setting.Agent,
                 username = tpUserName,
                 language = "en",
-                provider = game.partner,
+                provider = game.partner.ToLower(),
                 type = game.type
             };
-
             var jsonParam = JsonConvert.SerializeObject(param);
-
             var header = new Dictionary<string, string>
             {
                 {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
