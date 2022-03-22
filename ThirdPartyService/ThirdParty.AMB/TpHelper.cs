@@ -115,7 +115,7 @@ namespace ThirdParty.AMB
                 {
                     var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_AMB_Detail_Get",
                         new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
-                    roundId = detail?.GetValueOrDefault("roundId")?.ToString();
+                    roundId = detail?.GetValueOrDefault("transactionId")?.ToString();
                     gameId = detail?.GetValueOrDefault("gameId")?.ToString();
                     break;
                 }
