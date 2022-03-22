@@ -158,6 +158,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
+
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
@@ -168,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 amount = request.amount,
                 currency = request.currency,
                 transactionId = request.transactionId,
-                timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
+                timestamp = partitionTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
                 Type = BettransRng_AMBTypeEnum.FromBet,
@@ -183,8 +185,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             //Bet為減項
             data.amount = data.amount * -1;
-
-            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -229,7 +229,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     username = request.username,
                     wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
-                    balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
+                    balance = new AMBSlotBalanceModel() { before = afterBalance + data.amount, after = afterBalance },
                     refId = request.transactionId
                 }
             };
@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 Thread.Sleep(60 * 1000);//Test Cancel Bet
             }
-            
+
             var message = string.Empty;
             decimal beforeBalance = 0; decimal afterBalance = 0;
 
@@ -301,6 +301,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
+
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
@@ -312,7 +314,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 turnover = request.turnover,
                 currency = request.currency,
                 transactionId = request.transactionId,
-                timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
+                timestamp = partitionTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
                 Type = BettransRng_AMBTypeEnum.FromPayout,
@@ -324,8 +326,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 data.amount = data.amount * tpCurrency.ExchangeRate;
             }
-
-            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -454,6 +454,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
+
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
@@ -464,7 +466,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 amount = request.amount,
                 currency = request.currency,
                 transactionId = request.transactionId,
-                timestamp = DateTimeOffset.Parse(request.timestamp).DateTime,
+                timestamp = partitionTime,
                 TicketType = BettransType.CancelBet,
                 TicketStatus = TicketStatus.UnSettled
             };
@@ -473,8 +475,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 data.amount = data.amount * tpCurrency.ExchangeRate;
             }
-
-            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -488,9 +488,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
                 };
             }
-
-            // 是否需要做一個資料比較的步驟？
-            // 確認要cancel的username、amount、transactionId、roundId 與bet資料一致
 
             if (!CancelBetForSlotCancel(partitionTime, sq, out message, trans))
             {
