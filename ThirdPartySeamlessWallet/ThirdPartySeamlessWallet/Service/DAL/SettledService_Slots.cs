@@ -4165,7 +4165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool Cancel_AMB(DateTime partitionTime, int sq, MySqlTransaction trans)
         {
-            var query = new { TicketType = BettransType.CancelBet, SQ = sq };
+            var query = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
             var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Set", query, trans);
 
             if (result == 0)
