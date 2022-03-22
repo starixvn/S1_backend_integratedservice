@@ -391,7 +391,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
             var parameters = new DynamicParameters(new {TpId, GameType, CustId, UserName, SiteId, Turnover, Memo, RefTransId });
             parameters.Add("BonusId", BonusId, direction: ParameterDirection.InputOutput);
-            return _mainDbClient.Execute("Service_RolloverTurnover_Set", parameters, conn, trans);
+            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V2", parameters, conn, trans);
         }
 
         private int SetBonusWinLost(int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, int BonusId, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
