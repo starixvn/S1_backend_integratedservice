@@ -190,7 +190,8 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                         if (Losses != 0 && bonusId > 0)
                         {
-                            AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                            AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
+                            //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -211,7 +212,8 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                             if (Losses != 0 && bonusId > 0)
                             {
-                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                                AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
+                                //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
                             }
                         }
                     }
@@ -376,6 +378,12 @@ namespace ThirdPartyBetHistory.Service.DAL
                 return 0;
             var parameters = new DynamicParameters(new { TpId, GameType, CustId, UserName, SiteId, Winnings, Losses, Memo, BonusId, RefTransId });
             return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, conn, trans);
+        }
+
+        private int AutoCancelBonus(int bonusId, string transId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var parameters = new DynamicParameters(new { BonusId = bonusId, TransId = transId });
+            return _mainDbClient.Execute("Service_AutoCancelBonus_Set_V3", parameters, conn, trans);
         }
 
         private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, MySqlConnection conn, MySqlTransaction trans)
