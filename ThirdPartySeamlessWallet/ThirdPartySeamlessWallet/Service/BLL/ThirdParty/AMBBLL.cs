@@ -67,10 +67,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
-            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
-            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotGetBalance(request.agentId, out message))
+            if (!CheckAgentIdForSlotGetBalance(agent, out message))
             {
                 return new AMBSlotGetBalanceResponse()
                 {
@@ -115,10 +114,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
-            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
-            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotBet(request.agent, out message))
+            if (!CheckAgentIdForSlotBet(agent, out message))
             {
                 return new AMBSlotBetResponse()
                 {
@@ -171,7 +169,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agentId = request.agent,
+                agentId = agent,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -262,10 +260,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
-            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
-            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotPayout(request.agent, out message))
+            if (!CheckAgentIdForSlotPayout(agent, out message))
             {
                 return new AMBSlotPayoutResponse()
                 {
@@ -302,7 +299,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agentId = request.agent,
+                agentId = agent,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
@@ -412,10 +409,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
-            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
-            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotCancel(request.agent, out message))
+            if (!CheckAgentIdForSlotCancel(agent, out message))
             {
                 return new AMBSlotCancelResponse()
                 {
@@ -444,7 +440,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var data = new BettingDataRNG_AMB()
             {
                 username = request.username,
-                agentId = request.agent,
+                agentId = agent,
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
