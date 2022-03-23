@@ -118,7 +118,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckTpCustInfoForSlotBet(request.username, out message))
+            if (!CheckThirdPartyForSlotBet(request.username, out message))
             {
                 return new AMBSlotBetResponse()
                 {
@@ -261,7 +261,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckTpCustInfoForSlotPayout(request.username, out message))
+            if (!CheckThirdPartyForSlotPayout(request.username, out message))
             {
                 return new AMBSlotPayoutResponse()
                 {
@@ -343,12 +343,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
                     };
                 }
+                //win => 有派彩，beforeBalance用afterBalance反推
+                beforeBalance = afterBalance - request.amount;
             }
-            //else
-            //{
-            //    //lost => 沒有加錢
-            //    afterBalance = beforeBalance;
-            //}
+            else
+            {
+                //lost => 沒有派彩，balance取db資料
+                if (!GetBalanceForSlotPayout(request.username, out beforeBalance, out message))
+                {
+                    return new AMBSlotPayoutResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                    };
+                }
+                afterBalance = beforeBalance;
+            }
 
             if (data.isEndRound)
             {
@@ -371,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     username = request.username,
                     wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
-                    balance = new AMBSlotBalanceModel() { before = afterBalance - request.amount, after = afterBalance },
+                    balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
                     refId = request.transactionId
                 }
             };
@@ -558,7 +567,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckTpCustInfoForSlotGetBalance(string username, out string message)
+        private bool CheckThirdPartyForSlotGetBalance(string username, out string message)
         {
             message = string.Empty;
             try
@@ -729,7 +738,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckTpCustInfoForSlotBet(string username, out string message)
+        private bool CheckThirdPartyForSlotBet(string username, out string message)
         {
             message = string.Empty;
             try
@@ -1046,7 +1055,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckTpCustInfoForSlotPayout(string username, out string message)
+        private bool CheckThirdPartyForSlotPayout(string username, out string message)
         {
             message = string.Empty;
             try
@@ -1073,6 +1082,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 message = "exception happen.";
                 _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
+        private bool GetBalanceForSlotPayout(string username, out decimal beforeBalance, out string message)
+        {
+            message = string.Empty;
+            beforeBalance = 0;
+            try
+            {
+                var result = _tpCustInfoBLL.GetBalance((int)ThirdParty, username, (int)GameType);
+
+                if (result == null)
+                {
+                    message = "balance not found.";
+                    _logger.LogError($"GetBalance Fail:{message}");
+                    return false;
+                }
+
+                beforeBalance = result.Balance;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
                 return false;
             }
         }
