@@ -269,14 +269,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetBalanceForSlotPayout(request.username, out beforeBalance, out message))
-            {
-                return new AMBSlotPayoutResponse()
-                {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
-                };
-            }
-
             if (!GetTpCustInfoForSlotPayout(request.username, out TpCustInfo tpCustInfo, out message))
             {
                 return new AMBSlotPayoutResponse()
@@ -352,11 +344,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     };
                 }
             }
-            else
-            {
-                //lost => 沒有加錢
-                afterBalance = beforeBalance;
-            }
+            //else
+            //{
+            //    //lost => 沒有加錢
+            //    afterBalance = beforeBalance;
+            //}
 
             if (data.isEndRound)
             {
@@ -379,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     username = request.username,
                     wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
-                    balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
+                    balance = new AMBSlotBalanceModel() { before = afterBalance - request.amount, after = afterBalance },
                     refId = request.transactionId
                 }
             };
@@ -403,22 +395,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new AMBSlotCancelResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
-                };
-            }
-
-            if (!GetBalanceForSlotCancel(request.username, out beforeBalance, out message))
-            {
-                return new AMBSlotCancelResponse()
-                {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
-                };
-            }
-
-            if (!CheckBeforeBalanceForSlotCancel(request.amount, beforeBalance, out message))
-            {
-                return new AMBSlotCancelResponse()
-                {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.BalanceInsufficient, message = message }
                 };
             }
 
@@ -503,7 +479,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     username = request.username,
                     wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
-                    balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
+                    balance = new AMBSlotBalanceModel() { before = afterBalance - request.amount, after = afterBalance },
                     refId = request.transactionId
                 }
             };
@@ -1101,32 +1077,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetBalanceForSlotPayout(string username, out decimal beforeBalance, out string message)
-        {
-            message = string.Empty;
-            beforeBalance = 0;
-            try
-            {
-                var result = _tpCustInfoBLL.GetBalance((int)ThirdParty, username, (int)GameType);
-
-                if (result == null)
-                {
-                    message = "balance not found.";
-                    _logger.LogError($"GetBalance Fail:{message}");
-                    return false;
-                }
-
-                beforeBalance = result.Balance;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
-                return false;
-            }
-        }
-
         private bool GetTpCustInfoForSlotPayout(string username, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
@@ -1397,46 +1347,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError(ex, $"CheckAgentId Exception:{ex.ToString()}");
                 return false;
             }
-        }
-
-        private bool GetBalanceForSlotCancel(string username, out decimal beforeBalance, out string message)
-        {
-            message = string.Empty;
-            beforeBalance = 0;
-            try
-            {
-                var result = _tpCustInfoBLL.GetBalance((int)ThirdParty, username, (int)GameType);
-
-                if (result == null)
-                {
-                    message = "balance not found.";
-                    _logger.LogError($"GetBalance Fail:{message}");
-                    return false;
-                }
-
-                beforeBalance = result.Balance;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
-                return false;
-            }
-        }
-
-        private bool CheckBeforeBalanceForSlotCancel(decimal betAmount, decimal beforeBalance, out string message)
-        {
-            message = string.Empty;
-
-            if (beforeBalance - betAmount < 0)
-            {
-                message = "Balance insufficient.";
-                _logger.LogError($"CheckBalance Fail:{message}");
-                return false;
-            }
-
-            return true;
         }
 
         private bool GetTpCustInfoForSlotCancel(string username, out TpCustInfo tpCustInfo, out string message)
