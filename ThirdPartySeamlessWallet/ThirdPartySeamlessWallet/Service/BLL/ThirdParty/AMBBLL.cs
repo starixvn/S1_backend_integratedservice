@@ -74,7 +74,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckTpCustInfoForSlotGetBalance(request.username, out message))
+            if (!CheckThirdPartyForSlotGetBalance(request.username, out message))
             {
                 return new AMBSlotGetBalanceResponse()
                 {
