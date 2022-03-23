@@ -399,6 +399,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
+            //Cancel不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
+            if (string.IsNullOrWhiteSpace(request.agentId))
+            {
+                request.agentId = request.agent;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.agent))
+            {
+                request.agent = request.agentId;
+            }
+
             if (!CheckAgentIdForSlotCancel(request.agent, out message))
             {
                 return new AMBSlotCancelResponse()
@@ -1292,7 +1303,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agent))
+            if (string.IsNullOrWhiteSpace(request.agent) && string.IsNullOrWhiteSpace(request.agentId))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
