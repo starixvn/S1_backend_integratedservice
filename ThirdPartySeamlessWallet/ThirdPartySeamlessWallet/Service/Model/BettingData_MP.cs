@@ -12,6 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class TransferData_MP
     {
         public string channelId { get; set; }
+        public string playerId { get; set; }
         public string account { get; set; }
         public decimal requestAmount { get; set; }
         public string gameId { get; set; }
