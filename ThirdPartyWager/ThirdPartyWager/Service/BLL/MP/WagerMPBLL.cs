@@ -49,6 +49,7 @@ namespace ThirdPartyWager.Service.BLL
             {517,GameType.MP_Poker },// 517	抽水5%
             {519,GameType.MP_Poker },// 519	抽水5%
             {515,GameType.MP_Poker_None },// 515	无抽水
+            {181,GameType.MP_Poker },// 181	抽水5%
         };
 
         public WagerMPBLL(IServiceProvider provider, IConfiguration configuration)
