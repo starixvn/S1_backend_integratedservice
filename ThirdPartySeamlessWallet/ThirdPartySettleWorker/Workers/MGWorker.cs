@@ -80,7 +80,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransRng_MG_Unsettle_Get_V2",
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransRng_MG_Unsettle_Get_V3",
                             new { tpUnsettle.TransId }, DataBase.Main).First();
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
