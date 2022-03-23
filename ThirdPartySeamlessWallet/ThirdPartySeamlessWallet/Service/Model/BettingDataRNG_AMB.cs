@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime UpdateTime { get; set; }
     }
 
-      public class SettleDataRNG_AMB
+    public class SettleDataRNG_AMB
     {
         public string TransId { get; set; }
         public string TpUserName { get; set; }
@@ -123,6 +123,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Agent Id that AMBSlot has provided
         /// </summary>
+        public string agentId { get; set; }
+        /// <summary>
+        /// Agent Id that AMBSlot has provided
+        /// </summary>
         public string agent { get; set; }
         /// <summary>
         /// Game name that user played
@@ -158,13 +162,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Member username
         /// </summary>
-        [Required]
         public string username { get; set; }
         /// <summary>
         /// Agent Id that AMBSlot has provided
         /// </summary>
-        [Required]
         public string agentId { get; set; }
+        /// <summary>
+        /// Agent Id that AMBSlot has provided
+        /// </summary>
+        public string agent { get; set; }
     }
 
     public class AMBSlotGetBalanceResponse
@@ -226,10 +232,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class AMBSlotCancelRequest : AMBSlotRequestModel
     {
-        /// <summary>
-        /// Agent Id that AMBSlot has provided
-        /// </summary>
-        public string agentId { get; set; }
         /// <summary>
         /// Amount number that user bet (+)
         /// </summary>
