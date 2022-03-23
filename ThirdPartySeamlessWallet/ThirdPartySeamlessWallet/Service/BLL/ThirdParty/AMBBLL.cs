@@ -324,7 +324,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
 
-            if (!CheckBetForSlotPayout(partitionTime, data, out message))
+            if (!CheckPayoutForSlotPayout(partitionTime, data, out message))
             {
                 trans.Rollback();
                 return new AMBSlotPayoutResponse()
@@ -461,7 +461,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
 
-            if (!CheckBetForSlotCancel(partitionTime, data, out int sq, out message))
+            if (!CheckCancelForSlotCancel(partitionTime, data, out int sq, out message))
             {
                 trans.Rollback();
                 return new AMBSlotCancelResponse()
@@ -872,23 +872,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             message = string.Empty;
             try
             {
-                var slotDatas = _bettingService.IsExist_AMB(partitionTime, data);
-                var validBetData = slotDatas.Where(x => x.Type == BettransRng_AMBTypeEnum.FromBet
-                                                     && x.TicketType == BettransType.Bet);
-                var validPayoutData = slotDatas.Where(x => x.Type == BettransRng_AMBTypeEnum.FromPayout
-                                                       && (x.TicketType == BettransType.Payout || x.TicketType == BettransType.EndRound));
-                if (validBetData.Count() > 0)
-                {
-                    //已存在指定有效Bet
-                    message = "already exist valid bet by transactionId and roundId.";
-                    _logger.LogError($"CheckBet Fail:{message}");
-                    return false;
-                }
+                var slotDatas = _bettingService.IsExist_AMB(false, partitionTime, data);
 
-                if (validPayoutData.Count() > 0)
+                if (slotDatas.Any())
                 {
-                    //已存在指定有效派彩
-                    message = "already exist valid payout by transactionId and roundId.";
+                    //已存在指定有效投注
+                    message = "already exist valid bet by transactionId and roundId.";
                     _logger.LogError($"CheckBet Fail:{message}");
                     return false;
                 }
@@ -1170,29 +1159,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckBetForSlotPayout(DateTime partitionTime, BettingDataRNG_AMB data, out string message)
+        private bool CheckPayoutForSlotPayout(DateTime partitionTime, BettingDataRNG_AMB data, out string message)
         {
             message = string.Empty;
             try
             {
-                var slotDatas = _bettingService.IsExist_AMB(partitionTime, data);
-                var validBetData = slotDatas.Where(x => x.Type == BettransRng_AMBTypeEnum.FromBet
-                                                     && x.TicketType == BettransType.Bet);
-                var validPayoutData = slotDatas.Where(x => x.Type == BettransRng_AMBTypeEnum.FromPayout
-                                                       && (x.TicketType == BettransType.Payout || x.TicketType == BettransType.EndRound));
-                if (validBetData.Count() == 0)
-                {
-                    //不存在指定有效Bet
-                    message = "not exist valid bet by transactionId and roundId.";
-                    _logger.LogError($"CheckBet Fail:{message}");
-                    return false;
-                }
+                var slotDatas = _bettingService.IsExist_AMB(false, partitionTime, data);
 
-                if (validPayoutData.Count() > 0)
+
+                if (slotDatas.Any())
                 {
                     //已存在指定有效派彩
                     message = "already exist valid payout by transactionId and roundId.";
-                    _logger.LogError($"CheckBet Fail:{message}");
+                    _logger.LogError($"CheckPayout Fail:{message}");
                     return false;
                 }
 
@@ -1201,7 +1180,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckBet Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckPayout Exception:{ex.ToString()}");
                 return false;
             }
         }
@@ -1280,7 +1259,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-
 
         #endregion
 
@@ -1442,49 +1420,48 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckBetForSlotCancel(DateTime partitionTime, BettingDataRNG_AMB data, out int sq, out string message)
+        private bool CheckCancelForSlotCancel(DateTime partitionTime, BettingDataRNG_AMB data, out int sq, out string message)
         {
             message = string.Empty;
             sq = 0;
             try
             {
-                var slotDatas = _bettingService.IsExist_AMB(partitionTime, data);
-                var validBetData = slotDatas.Where(x => x.Type == BettransRng_AMBTypeEnum.FromBet
-                                                     && x.TicketType == BettransType.Bet);
-                var validPayoutData = slotDatas.Where(x => x.Type == BettransRng_AMBTypeEnum.FromPayout
-                                                       && (x.TicketType == BettransType.Payout || x.TicketType == BettransType.EndRound));
-                if (validBetData.Count() != 1)
-                {
-                    if (validBetData.Count() == 0)
-                    {
-                        //不存在指定有效Bet
-                        message = "not exist valid bet by transactionId and roundId.";
-                        _logger.LogError($"CheckBet Fail:{message}");
-                        return false;
-                    }
+                var slotDatas = _bettingService.IsExist_AMB(false,partitionTime, data);
 
-                    //存在多筆指定有效Bet
+                if (!slotDatas.Any())
+                {
+                    //不存在指定有效投注
+                    message = "not exist bet by transactionId and roundId.";
+                    _logger.LogError($"CheckCancel Fail:{message}");
+                    return false;
+                }
+
+                if (slotDatas.Count() > 1)
+                {
+                    //存在多筆指定有效投注
                     message = "already exist multi bet by transactionId and roundId.";
-                    _logger.LogError($"CheckBet Fail:{message}");
+                    _logger.LogError($"CheckCancel Fail:{message}");
                     return false;
                 }
 
-                if (validPayoutData.Count() > 0)
+                var endRoundDatas = _bettingService.IsExist_AMB(true, partitionTime, data);
+
+                if (endRoundDatas.Any())
                 {
-                    //已存在指定有效派彩
-                    message = "already exist valid payout by transactionId and roundId.";
-                    _logger.LogError($"CheckBet Fail:{message}");
+                    //該回合已結束，不可取消投注
+                    message = "roundId already end. can't cancel this round's bet.";
+                    _logger.LogError($"CheckCancel Fail:{message}");
                     return false;
                 }
 
-                sq = validBetData.First().SQ;
+                sq = slotDatas.First().SQ;
                 return true;
 
             }
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"CheckBet Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"CheckCancel Exception:{ex.ToString()}");
                 return false;
             }
         }
