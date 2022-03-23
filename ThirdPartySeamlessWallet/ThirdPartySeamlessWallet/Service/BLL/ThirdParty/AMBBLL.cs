@@ -66,6 +66,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
+            //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
+            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
+            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+
             if (!CheckAgentIdForSlotGetBalance(request.agentId, out message))
             {
                 return new AMBSlotGetBalanceResponse()
@@ -109,6 +113,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
                 };
             }
+
+            //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
+            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
+            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
             if (!CheckAgentIdForSlotBet(request.agent, out message))
             {
@@ -228,7 +236,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
-                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
+                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = GetCurrentGameTime() },
                     balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
                     refId = request.transactionId
                 }
@@ -252,6 +260,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
                 };
             }
+
+            //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
+            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
+            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
             if (!CheckAgentIdForSlotPayout(request.agent, out message))
             {
@@ -379,7 +391,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
-                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
+                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = GetCurrentGameTime() },
                     balance = new AMBSlotBalanceModel() { before = beforeBalance, after = afterBalance },
                     refId = request.transactionId
                 }
@@ -398,6 +410,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
                 };
             }
+
+            //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
+            request.agentId = string.IsNullOrWhiteSpace(request.agentId) ? request.agent : request.agentId;
+            request.agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
             if (!CheckAgentIdForSlotCancel(request.agent, out message))
             {
@@ -487,7 +503,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
-                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = getCurrentGameTime() },
+                    wallet = new AMBSlotWalletModel() { balance = afterBalance, lastUpdate = GetCurrentGameTime() },
                     balance = new AMBSlotBalanceModel() { before = afterBalance - request.amount, after = afterBalance },
                     refId = request.transactionId
                 }
@@ -511,7 +527,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agentId))
+            if (string.IsNullOrWhiteSpace(request.agent) && string.IsNullOrWhiteSpace(request.agentId))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
@@ -646,7 +662,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agent))
+            if (string.IsNullOrWhiteSpace(request.agent) && string.IsNullOrWhiteSpace(request.agentId))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
@@ -963,7 +979,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agent))
+            if (string.IsNullOrWhiteSpace(request.agent) && string.IsNullOrWhiteSpace(request.agentId))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
@@ -1292,7 +1308,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.agent))
+            if (string.IsNullOrWhiteSpace(request.agent) && string.IsNullOrWhiteSpace(request.agentId))
             {
                 message = "request.agent is Invalid.";
                 _logger.LogError($"CheckRequest Fail:{message}");
@@ -1532,7 +1548,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #endregion
 
-        private string getCurrentGameTime()
+        private string GetCurrentGameTime()
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");
