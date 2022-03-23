@@ -42,9 +42,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public MGLoginResponse Login(MGLoginRequest request)
         {
-            throw new MGException(MGErrorCode.BalanceFailed,
-             $"MG maintain.");
-
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
             if (tpCheck == null || tpCheck.Locked)
             {
@@ -71,9 +68,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
         {
-            throw new MGException(MGErrorCode.BalanceFailed,
-               $"MG maintain.");
-
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
             if (tpCheck == null || tpCheck.Locked)
             {
@@ -106,9 +100,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<MGUpdatebalanceResponse> Debit(MGUpdatebalanceRequest request)
         {
-            throw new MGException(MGErrorCode.BalanceFailed,
-             $"MG maintain.");
-
             // 檢查玩家
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
             if (tpCheck == null || tpCheck.Locked)
