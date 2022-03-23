@@ -227,6 +227,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class AMBSlotCancelRequest : AMBSlotRequestModel
     {
         /// <summary>
+        /// Agent Id that AMBSlot has provided
+        /// </summary>
+        public string agentId { get; set; }
+        /// <summary>
         /// Amount number that user bet (+)
         /// </summary>
         public decimal amount { get; set; }
