@@ -371,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 afterBalance = beforeBalance;
             }
 
-            if (!CheckEndRoundForSlotPayout(data.game, out bool doSettle, out message))
+            if (!CheckSettleForSlotPayout(data.gameId, out bool doSettle, out message))
             {
                 trans.Rollback();
                 return new AMBSlotPayoutResponse()
@@ -1249,7 +1249,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckEndRoundForSlotPayout(string gameId, out bool doSettle, out string message)
+        private bool CheckSettleForSlotPayout(string gameId, out bool doSettle, out string message)
         {
             message = string.Empty;
             doSettle = false;
@@ -1262,7 +1262,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $" CheckEndRound Exception:{ex.ToString()}");
+                _logger.LogError(ex, $" CheckSettle Exception:{ex.ToString()}");
                 return false;
             }
         }
