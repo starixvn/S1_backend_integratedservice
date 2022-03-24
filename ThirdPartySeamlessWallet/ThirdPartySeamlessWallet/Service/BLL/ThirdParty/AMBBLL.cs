@@ -371,9 +371,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 afterBalance = beforeBalance;
             }
 
-            var checkEndRound = CheckEndRoundForSlotPayout(data);
+            if (!CheckEndRoundForSlotPayout(data.game, out bool doSettle, out message))
+            {
+                trans.Rollback();
+                return new AMBSlotPayoutResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+                };
+            }
 
-            if (!checkEndRound || data.isEndRound)
+            if (doSettle || data.isEndRound)
             {
                 if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
                 {
@@ -1242,29 +1249,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckEndRoundForSlotPayout(BettingDataRNG_AMB data)
+        private bool CheckEndRoundForSlotPayout(string gameId, out bool doSettle, out string message)
         {
+            message = string.Empty;
+            doSettle = false;
             try
             {
-                //如果不是3.Table，則需要判斷是否有回合結束
-                var result = _thirdPartyBLL.GetGameCasinoWithCache((int)ThirdParty).Where(x => x.TypeId == 3).Select(x => x.GameId);
+                doSettle = _thirdPartyBLL.GetGameCasinoWithCache((int)ThirdParty).Any(x => x.TypeId == 3 && x.GameId == gameId);
 
-                if (result.Contains(data.gameId))
-                {
-                    return true;
-                }
-
-                //如果是3.Table，但是是有回合結束的遊戲ID，則需要判斷是否有回合結束
-                if (HasEndroundTableGameId.Contains(data.gameId))
-                {
-                    return true;
-                }
-
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $" CheckSettle Exception:{ex.ToString()}");
+                message = "exception happen.";
+                _logger.LogError(ex, $" CheckEndRound Exception:{ex.ToString()}");
                 return false;
             }
         }
