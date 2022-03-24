@@ -366,16 +366,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             
             try
             {
-                // 檢查該局是否已經結算
-                var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (isCompleted)
-                {
-                    return new MGPlaceBetResult()
-                    {
-                        Result = 1,
-                        AfterAmount = afterAmount
-                    };
-                }
+                //// 檢查該局是否已經結算
+                //var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                //if (isCompleted)
+                //{
+                //    return new MGPlaceBetResult()
+                //    {
+                //        Result = 1,
+                //        AfterAmount = afterAmount
+                //    };
+                //}
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
