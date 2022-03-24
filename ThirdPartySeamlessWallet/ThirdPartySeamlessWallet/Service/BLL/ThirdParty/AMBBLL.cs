@@ -31,6 +31,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
 
+        public string[] HasEndroundTableGameId { get; set; }
+
         #endregion
 
         #region Constructors
@@ -39,6 +41,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             ThirdParty = Tp.AMB;
             GameType = GameType.AMB_RNG;
+            HasEndroundTableGameId = new string[] { "BACCARAT", "DRAGONTIGER" };
 
             _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
@@ -368,7 +371,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 afterBalance = beforeBalance;
             }
 
-            if (data.isEndRound)
+            var checkEndRound = CheckEndRoundForSlotPayout(data);
+
+            if (!checkEndRound || data.isEndRound)
             {
                 if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
                 {
@@ -1237,6 +1242,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
+        private bool CheckEndRoundForSlotPayout(BettingDataRNG_AMB data)
+        {
+            try
+            {
+                //如果不是3.Table，則需要判斷是否有回合結束
+                var result = _thirdPartyBLL.GetGameCasinoWithCache((int)ThirdParty).Where(x => x.TypeId == 3).Select(x => x.GameId);
+
+                if (result.Contains(data.gameId))
+                {
+                    return true;
+                }
+
+                //如果是3.Table，但是是有回合結束的遊戲ID，則需要判斷是否有回合結束
+                if (HasEndroundTableGameId.Contains(data.gameId))
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $" CheckSettle Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
         private bool InsertUnsettleForSlotPayout(DateTime partitionTime, string roundId, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
@@ -1426,7 +1458,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             sq = 0;
             try
             {
-                var slotDatas = _bettingService.IsExist_AMB(false,partitionTime, data);
+                var slotDatas = _bettingService.IsExist_AMB(false, partitionTime, data);
 
                 if (!slotDatas.Any())
                 {
