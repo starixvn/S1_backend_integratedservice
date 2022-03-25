@@ -1061,7 +1061,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<BettingDataRNG_AMB> IsExist_AMB(bool checkEndRound, DateTime partitionTime, BettingDataRNG_AMB data)
         {
-            var query = new { CheckEndRound = checkEndRound, transactionId = data.transactionId, roundId = data.roundId, Type = data.Type };
+            var query = new { CheckEndRound = checkEndRound, transactionId = data.transactionId, roundId = data.roundId, FromAPIType = data.FromAPIType };
             return _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
         }
 

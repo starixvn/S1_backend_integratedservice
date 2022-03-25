@@ -177,12 +177,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 gameId = request.gameId,
                 roundId = request.roundId,
                 amount = request.amount,
+                roundAmount = request.roundAmount,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
-                Type = BettransRng_AMBTypeEnum.FromBet,
+                type = request.type,
+                tranId = request.tranId,
+                FromAPIType = BettransRng_AMBTypeEnum.FromBet,
                 TicketType = BettransType.Bet,
                 TicketStatus = TicketStatus.UnSettled
             };
@@ -308,12 +311,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 roundId = request.roundId,
                 amount = request.amount,
                 turnover = request.turnover,
+                roundAmount = request.roundAmount,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
                 featureBuy = request.featureBuy,
                 isEndRound = request.isEndRound,
-                Type = BettransRng_AMBTypeEnum.FromPayout,
+                type = request.type,
+                tranId = request.tranId,
+                FromAPIType = BettransRng_AMBTypeEnum.FromPayout,
                 TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
                 TicketStatus = TicketStatus.UnSettled
             };
