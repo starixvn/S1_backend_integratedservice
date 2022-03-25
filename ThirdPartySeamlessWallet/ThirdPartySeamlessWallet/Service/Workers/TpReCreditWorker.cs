@@ -73,7 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
                 if (_environment.IsDevelopment())
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
