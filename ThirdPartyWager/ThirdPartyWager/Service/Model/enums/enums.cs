@@ -53,4 +53,10 @@
         Report,//ConnectionStringReport
         Wager,//ConnectionStringWager
     }
+
+    public enum SummaryType
+    {
+        TpBetRecord = 1,//下注紀錄
+        TpReward = 2,//活動紀錄
+    }
 }
