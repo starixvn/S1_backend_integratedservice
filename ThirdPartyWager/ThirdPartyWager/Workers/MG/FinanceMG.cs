@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Workers
                     var isSuccess = await _mgBll.GetReport(summaryType, date);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"MG Get {date:yyyy-MM-dd} PlayerGameAnalysis");
+                        _logger.LogInformation($"MG Get {summaryType} {date:yyyy-MM-dd}");
                         _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds());
                     }
                 }
@@ -64,12 +64,13 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "MG.GetPlayerGameAnalysis.Exception");
+                _logger.LogError(ex, $"MG.{summaryType}.Exception");
             }
             finally
             {
                 var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromDays(intervalDays);
-                _gameTimer.Change(nextTimeSpan, TimeSpan.Zero);
+                _ = summaryType == SummaryType.TpBetRecord ? 
+                    _gameTimer.Change(nextTimeSpan, TimeSpan.Zero) : _rewardTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
 
