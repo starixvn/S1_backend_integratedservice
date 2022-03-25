@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartyCore;
@@ -8,6 +9,7 @@ using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.AMB
 {
@@ -113,10 +115,10 @@ namespace ThirdParty.AMB
                     break;
                 case TpGameType.AMB_RNG:
                 {
-                    var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_AMB_Detail_Get",
+                    var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_AMB_Detail_Get",
                         new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
-                    roundId = detail?.GetValueOrDefault("roundId")?.ToString();
-                    gameId = detail?.GetValueOrDefault("gameId")?.ToString();
+                    roundId = getBetDetail.TransId;
+                    gameId = detailList?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
                     break;
                 }
                 default:
@@ -129,16 +131,44 @@ namespace ThirdParty.AMB
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {gameReport.status.code} | {gameReport.status.message}");
             }
 
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            if (string.IsNullOrEmpty(gameReport.data.url))
             {
-                TransId = getBetDetail.TransId,
-                DetailUrl = gameReport.data.url,
-                TpCurrency = new TpCurrency()
+                var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_AMB_Detail_Get",
+                    new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
+                var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
-                },
-            };
+                };
+                return new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = ToJson(detailList),
+                    TpCurrency = tpCurrency,
+                    RefTransId = string.Empty,
+                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("username")?.ToString(),
+                    UTCBetTime = detailList.Min(i => (DateTime) i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime) i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                    Stake = detailList.Where(i => (sbyte) i.GetValueOrDefault("TicketType") == 1)
+                        .Sum(i => Math.Abs((decimal) i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Sum(i => (decimal) i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                    GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameId")?.ToString(),
+                    GameName = detailList.FirstOrDefault()?.GetValueOrDefault("game")?.ToString(),
+                };
+            }
+            else
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = gameReport.data.url,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
         }
 
         private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
