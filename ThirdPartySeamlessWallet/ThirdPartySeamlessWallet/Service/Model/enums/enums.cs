@@ -242,4 +242,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         TpCategory,
         TpId,
     }
+    
+    public enum RequestFailureType
+    {
+        Tp = 1,
+        Payment = 2,
+    }
 }
