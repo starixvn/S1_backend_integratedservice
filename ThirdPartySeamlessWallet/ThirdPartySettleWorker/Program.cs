@@ -58,7 +58,7 @@ namespace ThirdPartySettleWorker
                {
                    services.AddHostedService<BonusWorker>();
                    services.AddHostedService<SettleWorker>();
-                   
+                   services.AddHostedService<TpReCreditWorker>();
                    services.AddHostedService<JokerWorker>();
                    services.AddHostedService<MGWorker>();
                    services.AddHostedService<APWorker>();
