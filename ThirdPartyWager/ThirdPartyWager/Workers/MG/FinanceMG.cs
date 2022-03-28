@@ -15,8 +15,7 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<FinanceMG> _logger;
         private readonly IMGBLL _mgBll;
-        private Timer _gameTimer;
-        private Timer _rewardTimer;
+        private Timer _timer;
         private readonly string _tpName = Tp.MG.ToString();
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly int tpId = (int)Tp.MG;
@@ -29,8 +28,7 @@ namespace ThirdPartyWager.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _gameTimer = new Timer(GetReport, SummaryType.TpBetRecord, TimeSpan.Zero, TimeSpan.Zero);
-            _rewardTimer = new Timer(GetReport, SummaryType.TpReward, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(GetReport,null,  TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -39,8 +37,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
-            var summaryType = (SummaryType)state;
-            var timerType = (int)summaryType;
+            var timerType = 1;
             var intervalDays = 1;
             try
             {
@@ -49,10 +46,10 @@ namespace ThirdPartyWager.Workers
 
                 if (date < DateTime.UtcNow)
                 {
-                    var isSuccess = await _mgBll.GetReport(summaryType, date);
+                    var isSuccess = await _mgBll.GetReport(date);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"MG Get {summaryType} {date:yyyy-MM-dd}");
+                        _logger.LogInformation($"MG Get {date:yyyy-MM-dd} report");
                         _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds());
                     }
                 }
@@ -64,20 +61,18 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"MG.{summaryType}.Exception");
+                _logger.LogError(ex, $"MG.GetReport.Exception");
             }
             finally
             {
                 var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromDays(intervalDays);
-                _ = summaryType == SummaryType.TpBetRecord ? 
-                    _gameTimer.Change(nextTimeSpan, TimeSpan.Zero) : _rewardTimer.Change(nextTimeSpan, TimeSpan.Zero);
+                _timer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _gameTimer?.Change(Timeout.Infinite, 0);
-            _rewardTimer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

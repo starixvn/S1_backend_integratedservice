@@ -16,5 +16,6 @@ namespace ThirdPartyWager.Service.Model
         public decimal WinlostAmount { get; set; }
         public decimal ProgressiveBet { get; set; }
         public decimal ProgressiveWin { get; set; }
+        public decimal Reward { get; set; }
     }
 }

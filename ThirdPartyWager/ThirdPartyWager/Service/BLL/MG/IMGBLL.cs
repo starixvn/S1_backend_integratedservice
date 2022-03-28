@@ -8,6 +8,6 @@ namespace ThirdPartyWager.Service.BLL.MG
     {
         Task ReSettle();
 
-        Task<bool> GetReport(SummaryType summaryType, DateTime date);
+        Task<bool> GetReport(DateTime date);
     }
 }
