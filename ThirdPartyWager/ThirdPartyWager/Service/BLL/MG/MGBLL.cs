@@ -26,12 +26,12 @@ namespace ThirdPartyWager.Service.BLL.MG
         {
             _mgApi = provider.GetRequiredService<IApiMGBLL>();
             _swApi = provider.GetRequiredService<IApiSWBLL>();
-            var config = provider.GetRequiredService<ThirdPartyBLL>().GetThirdPartySetting((int)tp); 
+            var config = provider.GetRequiredService<ThirdPartyBLL>().GetThirdPartySetting((int)tp);
             _mgApi.MgConfig = config;
             _logger = provider.GetRequiredService<ILogger<MGBLL>>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
             _currencyId = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)tp)
-                .ToDictionary(i => i.TpCurrencyId, i =>i.CurrencyId);
+                .ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
         }
 
         public async Task ReSettle()
@@ -73,7 +73,7 @@ namespace ThirdPartyWager.Service.BLL.MG
             }
         }
 
-        public async Task<bool> GetReport(SummaryType summaryType, DateTime date)
+        public async Task<bool> GetReport(DateTime date)
         {
             foreach (var tpCurrencyId in _tpCurrency)
             {
@@ -83,53 +83,93 @@ namespace ThirdPartyWager.Service.BLL.MG
                     return false;
                 }
 
-                if (summaryType == SummaryType.TpBetRecord)
+
+                var gameAnalyses = await _mgApi.GetPlayerGameAnalysisAsync(token, tpCurrencyId, date);
+                if (gameAnalyses.Any())
                 {
-                    var gameAnalyses = await _mgApi.GetPlayerGameAnalysisAsync(token, tpCurrencyId, date);
-                    if (gameAnalyses.Any())
-                    {
-                        var stake = gameAnalyses.Sum(i => i.income);
-                        var dailySummary = new FincanceDailySummary()
-                        {
-                            SummaryType = summaryType,
-                            SummaryDate = date,
-                            TpId = (int)tp,
-                            CurrencyId = _currencyId[tpCurrencyId],
-                            Stake = stake,
-                            ValidBet = stake,
-                            Payout = gameAnalyses.Sum(i => i.payout),
-                            WinlostAmount = gameAnalyses.Sum(i => i.grossWin),
-                            ProgressiveBet = gameAnalyses.Sum(i => i.progressiveBetAmount),
-                        };
-                        _fincanceService.SetFinanceTpDailySummary(dailySummary);
-                    }
+                    var stake = gameAnalyses.Sum(i => i.income);
+                    var dailySummary = new List<FincanceDailySummary>() { new FincanceDailySummary(){
+                        SummaryType = SummaryType.TpBetRecord,
+                        SummaryDate = date,
+                        TpId = (int)tp,
+                        CurrencyId = _currencyId[tpCurrencyId],
+                        Stake = stake,
+                        ValidBet = stake,
+                        Payout = gameAnalyses.Sum(i => i.payout),
+                        WinlostAmount = gameAnalyses.Sum(i => i.grossWin),
+                        ProgressiveBet = gameAnalyses.Sum(i => i.progressiveBetAmount),
+                    }};
+                    _fincanceService.SetFinanceTpDailySummary(dailySummary);
                 }
 
-                if (summaryType == SummaryType.TpReward)
+                Thread.Sleep(10000);
+
+                var fortuneRewards = await _mgApi.GetFortuneRewardsAsync(token, tpCurrencyId, date);
+                if (fortuneRewards.Any())
                 {
-                    var fortuneRewards = await _mgApi.GetFortuneRewardsAsync(token, tpCurrencyId, date);
-                    if (fortuneRewards.Any())
-                    {
-                        var stake = fortuneRewards.Sum(i => i.rewardAmount);
-                        var payout = fortuneRewards.Sum(i => i.payout);
-                        var dailySummary = new FincanceDailySummary()
-                        {
-                            SummaryType = summaryType,
-                            SummaryDate = date,
-                            TpId = (int)tp,
-                            CurrencyId = _currencyId[tpCurrencyId],
-                            Stake = stake,
-                            ValidBet = stake,
-                            Payout = payout,
-                            WinlostAmount = payout - stake,
-                        };
-                        _fincanceService.SetFinanceTpDailySummary(dailySummary);
-                    }
+                    var fortun = GetRewardSummary(date, tpCurrencyId, fortuneRewards);
+                    _fincanceService.SetFinanceTpDailySummary(fortun);
                 }
 
                 Thread.Sleep(10000);
             }
             return true;
-        }   
+        }
+
+        private IEnumerable<FincanceDailySummary> GetRewardSummary(DateTime date, string tpCurrencyId, IEnumerable<MGFortuneRewards> fortuneRewards)
+        {
+            var currencyId = _currencyId[tpCurrencyId];
+            var total = 0m;
+            var payout = 0m;
+            var cash = 0m;
+            var freeGame = 0m;
+
+            foreach (var item in fortuneRewards)
+            {
+                total += item.rewardAmount;
+                payout += item.payout;
+                if (int.TryParse(item.transactionId, out var _))
+                {
+                    freeGame += item.rewardAmount;
+                }
+                else
+                {
+                    cash += item.rewardAmount;
+                }
+            }
+
+            return new List<FincanceDailySummary>()
+            {
+               new FincanceDailySummary()
+               {
+                    SummaryType = SummaryType.TpRewardTotalAmount,
+                    SummaryDate = date,
+                    TpId = (int)tp,
+                    CurrencyId = currencyId,
+                    Payout = payout,
+                    Reward = total,
+               },
+               new FincanceDailySummary()
+               {
+                    SummaryType = SummaryType.TpRewardCash,
+                    SummaryDate = date,
+                    TpId = (int)tp,
+                    CurrencyId = currencyId,
+                    Payout = payout,
+                    Reward = cash,
+               },
+               new FincanceDailySummary()
+               {
+                    SummaryType = SummaryType.TpRewardFreeGame,
+                    SummaryDate = date,
+                    TpId = (int)tp,
+                    CurrencyId = currencyId,
+                    Payout = payout,
+                    Reward = freeGame,
+               }
+            };
+        }
     }
+
+
 }

@@ -203,8 +203,6 @@ namespace ThirdPartyWager
             services.AddHostedService<TpRefundWorker>();
             services.AddHostedService<Workers.ReportMega>();
             services.AddHostedService<ReportRedoMega>();
-
-           
             services.AddHostedService<FinanceMG>();
         }
 
