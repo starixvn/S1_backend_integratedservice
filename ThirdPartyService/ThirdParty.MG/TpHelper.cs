@@ -68,6 +68,15 @@ namespace ThirdParty.MG
             
             try
             {
+                var tpGameType = (int)TpGameType.MG_RNG;
+                if (gameId == "0")
+                {
+                    gameId = "SMG_titaniumLiveGames_Baccarat";
+                    tpGameType = (int)TpGameType.MG_LiveCasino;
+                }
+
+                TpCustInfoProvider.SetCustGotoGame(tpCustInfo.CustId, tpCustInfo.TpId, tpGameType);
+
                 var header = new Dictionary<string, string>()
                 {
                     {"Authorization", $"Bearer {token}"}
