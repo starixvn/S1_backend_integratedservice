@@ -91,7 +91,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleAG = new Timer(DoSettleAGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAllbet = new Timer(DoSettleAllbetWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleSA = new Timer(DoSettleSAWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleCQ9 = new Timer(DoSettleCQ9Work, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -441,97 +440,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleAllbet.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoSettleSAWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.SA;
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
-
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListLC_SA();
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            //$"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}"
-                            var result = settledBLL.Get_TpWagerSA_Settle(unsettled.gameid, unsettled.username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime);
-                            var betTrans = settledBLL.GetSettle_BettransLC_SA(unsettled.gameid, unsettled.username);
-
-                            if (result > 0)
-                            {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.username);
-                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-
-                                if (tpCurrency.ExchangeRate > 1)
-                                {
-                                    stake *= tpCurrency.ExchangeRate;
-                                    validBet *= tpCurrency.ExchangeRate;
-                                    winLostAmount *= tpCurrency.ExchangeRate;
-                                }
-                                if (betTrans.Stake == stake && betTrans.WinLostAmount == winLostAmount)
-                                {
-                                    BetRecordInfo betRecordInfo = new BetRecordInfo
-                                    {
-                                        TpId = thisTp,
-                                        Stake = stake,
-                                        ValidBet = validBet,
-                                        WinlostAmount = winLostAmount,
-                                        TransId = $"{unsettled.gameid}_{unsettled.username}",
-                                        GameType = GameType.SA_LiveCasino,
-                                        TpUserName = unsettled.username,
-                                        SettledTime = settleTime,
-                                        TransTime = transTime,
-                                        SettlementType = SettlementType.SettledForValid
-                                    };
-
-                                    result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
-
-                                    //Task.Run(() =>
-                                    //{
-                                    settledBLL.SetSettleFlag_TpWagerSA(unsettled.gameid, unsettled.username);
-                                    settledBLL.SetSettleFlag_SA(unsettled.gameid, unsettled.username);
-                                    //});
-                                }
-                            }
-                        }
-                        catch (Exception ex1)
-                        {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleSA");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", tpName);
-                log2File.Error(ex.ToString(), "SettleSA");
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-
-                timerSettleSA.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

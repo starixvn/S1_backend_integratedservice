@@ -1,14 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartyCore.Model;
+﻿using ThirdPartyCore;
 using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.BLL
 {
-    public class TpCustInfoBLL
+    public class TpCustInfoBLL : ITpCustInfoProvider
     {
         private readonly TpCustInfoService tpCustInfoService;
 
@@ -23,6 +18,10 @@ namespace ThirdPartyService.Service.BLL
         public void SetTpLastTradingTime(int custId, int tpId)
         {
             tpCustInfoService.SetTpLastTradingTime(custId, tpId);
+        }
+        public void SetCustGotoGame(int custId, int tpId, int gameType)
+        {
+            tpCustInfoService.SetCustGotoGame(custId, tpId, gameType);
         }
     }
 }
