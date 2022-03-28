@@ -8,7 +8,7 @@ using Serilog.Context;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.MG
+namespace ThirdPartyWager.Workers
 {
     public class WagerMG : BackgroundService
     {

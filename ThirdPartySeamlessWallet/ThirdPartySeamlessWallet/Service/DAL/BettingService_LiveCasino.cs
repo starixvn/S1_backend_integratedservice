@@ -29,7 +29,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_SAV2_Ins", new { Txnid = bettingDataLC_SA.txnid, TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}", Currency = bettingDataLC_SA.currency, Username = bettingDataLC_SA.username, Gametype = bettingDataLC_SA.gametype, Amount = bettingDataLC_SA.amount, Betdetails = bettingDataLC_SA.Betdetails, Gameid = bettingDataLC_SA.gameid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_SA_Ins_V3",
+                    new
+                    {
+                        Txnid = bettingDataLC_SA.txnid,
+                        TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}",
+                        Currency = bettingDataLC_SA.currency, 
+                        Username = bettingDataLC_SA.username,
+                        Gametype = bettingDataLC_SA.gametype, 
+                        Amount = bettingDataLC_SA.amount,
+                        bettingDataLC_SA.BetAmount,
+                        bettingDataLC_SA.Betdetails, 
+                        Gameid = bettingDataLC_SA.gameid
+                    }, trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -738,37 +750,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region MG
 
-        public async Task<MGPlaceBetResult> PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
+        public MGPlaceBetResult PlaceBetLC_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
         {
             var bonusId = 0;
             var afterAmount = 0M;
             var result = 0;
-
-            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-
-            bettingDataRNG_MG.amount *= -1;
-            bettingDataRNG_MG.TransType = "D";
-            bettingDataRNG_MG.TicketType = (int)BettransType.Bet;
-            bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
-            bettingDataRNG_MG.SettleFlag = (int)SettleFlag.Running;
-            var p = new DynamicParameters(bettingDataRNG_MG);
-            p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
-                var bettransLcMg = await conn.QueryFirstOrDefaultAsync<BettransLC_MG>("Service_BettransLC_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransLcMg != null)
+                long unixTimestamp = tools.GetUnixTimestampByTicks(bettingDataRNG_MG.creationTime);
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Bet_Get", new DynamicParameters(new { betId = bettingDataRNG_MG.betId, txnId = bettingDataRNG_MG.txnId }));
+                if (check.Any())
                 {
                     return new MGPlaceBetResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = bettransLcMg.ExtTxnId
+                        ExtTxnId = check.ElementAt(0).trx_id
                     };
                 }
 
-                result = conn.Execute("Service_BettransLC_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                bettingDataRNG_MG.amount *= -1;
+                bettingDataRNG_MG.TransType = "D";
+                bettingDataRNG_MG.TicketType = (int)BettransType.Bet;
+                bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
+                bettingDataRNG_MG.SettleFlag = (int)SettleFlag.Running;
+
+                var p = new DynamicParameters(bettingDataRNG_MG);
+                p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Ins", p, trans);
                 var extTxnId = p.Get<long>("extTxnId");
 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
@@ -805,7 +819,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 logger.LogError(e, $"PlaceBetLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
                 throw;
             }
-
         }
 
         #endregion MG

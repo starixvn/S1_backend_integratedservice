@@ -7,17 +7,21 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Serilog.Context;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.Library
 {
     public sealed class MySqlClient
     {
+        public DataBase DataBase { get; set; }
+
         private readonly string _connectionString;
 
         private readonly ILogger<MySqlClient> _logger;
 
         public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
         {
+            LogContext.PushProperty("DataBase", DataBase.ToString());
             _connectionString = connectionString;
             _logger = logger;
         }
@@ -43,7 +47,7 @@ namespace ThirdPartyWager.Service.Library
             return result;
         }
 
-        public T QueryFirst<T>(string name, SqlMapper.IDynamicParameters parameters)
+        public T QueryFirst<T>(string name, object parameters)
         {
             T result;
             var sw = Stopwatch.StartNew();
@@ -83,6 +87,26 @@ namespace ThirdPartyWager.Service.Library
             return true;
         }
 
+        public int Execute(string name, object parameters)
+        {
+            var result = 0;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
         public int Execute(string command)
         {
             var sw = Stopwatch.StartNew();
@@ -100,6 +124,25 @@ namespace ThirdPartyWager.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug(command);
+            return result;
+        }
+        
+        public int Execute(string name, IDbTransaction transaction, object parameters = null)
+        {
+            var sw = Stopwatch.StartNew();
+            int result;
+            try
+            {
+                result = transaction.Connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
@@ -143,14 +186,14 @@ namespace ThirdPartyWager.Service.Library
             return result;
         }
 
-        public IEnumerable<T> Query<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
+        public IEnumerable<T> Query<T>(string name, object parameters)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, parameters, commandTimeout: commandTimeout, commandType: CommandType.StoredProcedure);
+                result = connection.Query<T>(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
             {
@@ -183,6 +226,11 @@ namespace ThirdPartyWager.Service.Library
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
+        }
+        
+        public MySqlConnection GetMySqlConnection()
+        {
+            return new MySqlConnection(_connectionString);
         }
 
         public async Task<IEnumerable<T>> QueryAsync<T>(string name, SqlMapper.IDynamicParameters parameters)

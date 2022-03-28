@@ -163,10 +163,14 @@ namespace CommonService.Service.BLL
 
         private string CreateTemplate(TemplateType type, SendGridConfig config, string userLang)
         {
+            var lang = "en";
+            if (config.ResetPasswordTemplate.ContainsKey(userLang) && config.VerifyMailTemplate.ContainsKey(userLang))
+                lang = userLang;
+
             return type switch
             {
-                TemplateType.ResetPassword => config.ResetPasswordTemplate[userLang],
-                TemplateType.VerificationMail => config.VerifyMailTemplate[userLang],
+                TemplateType.ResetPassword => config.ResetPasswordTemplate[lang],
+                TemplateType.VerificationMail => config.VerifyMailTemplate[lang],
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, @"template type not define")
             };
         }

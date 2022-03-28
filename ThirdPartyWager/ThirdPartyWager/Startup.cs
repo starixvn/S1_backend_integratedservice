@@ -5,14 +5,15 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.KM;
-using ThirdPartyWager.Workers.MG;
 
 namespace ThirdPartyWager
 {
@@ -25,12 +26,12 @@ namespace ThirdPartyWager
             this.configuration = configuration;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
-        {
+        {            
             services.AddMemoryCache();
-            if (configuration.GetValue<string>("ProxyHost") != null)
+            services.AddDatabaseConnection(configuration);
+
+            if (!string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost")))
             {
                 var proxy = new HttpClientHandler
                 {
@@ -75,6 +76,13 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
+            services.AddSingleton<TpUnsettleService>();
+            services.AddSingleton<ConfigService>();
+            services.AddSingleton<FincanceService>();
+
+            services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
+            services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
+            services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -193,17 +201,11 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<TpRefundWorker>();
-
-            /*
-                services.AddHostedService<WagerCF>();
-                services.AddHostedService<WagerKiss918>();
-                services.AddHostedService<WagerRedoKiss918>();
-                services.AddHostedService<WagerMega>();
-                services.AddHostedService<WagerRedoMega>();
-            */
+            services.AddHostedService<Workers.ReportMega>();
+            services.AddHostedService<ReportRedoMega>();
+            services.AddHostedService<FinanceMG>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

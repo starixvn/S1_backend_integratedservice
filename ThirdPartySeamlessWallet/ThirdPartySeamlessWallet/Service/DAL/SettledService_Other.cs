@@ -762,7 +762,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    logger.LogError(mySqlEx, mySqlEx.Message);
+                    result = 0;
                 }
             }
 
@@ -927,7 +928,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    logger.LogError(mySqlEx, mySqlEx.Message);
+                    result = 0;
                 }
             }
 

@@ -2,8 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -14,8 +16,8 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSABLL _apiSABLL;
         private readonly WagerSAService _wagerSAService;
         private readonly ILogger<WagerRedoSABLL> _logger;
-
-        private readonly int _tpId = (int)Tp.SA;
+        private readonly MySqlClient _wagerDbClient;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public WagerRedoSABLL(IServiceProvider provider)
         {
@@ -23,6 +25,8 @@ namespace ThirdPartyWager.Service.BLL
             _apiSABLL = provider.GetRequiredService<ApiSABLL>();
             _wagerSAService = provider.GetRequiredService<WagerSAService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoSABLL>>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
@@ -41,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
                 var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime, guid);
 
                 // error condition
-                var errorCode = getWagerSummary.GetTransactionDetailsResponse != null ? getWagerSummary.GetTransactionDetailsResponse.ErrorMsgId : getWagerSummary.APIResponse.ErrorMsgId;
+                var errorCode = getWagerSummary.GetTransactionDetailsResponse?.ErrorMsgId ?? getWagerSummary.APIResponse.ErrorMsgId;
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
@@ -71,7 +75,7 @@ namespace ThirdPartyWager.Service.BLL
                 var dataWager = await _apiSABLL.GetBetListByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime, guid);
 
                 // error condition
-                errorCode = dataWager.GetAllBetDetailsForTimeIntervalResponse != null ? dataWager.GetAllBetDetailsForTimeIntervalResponse.ErrorMsgId : dataWager.APIResponse.ErrorMsgId;
+                errorCode = dataWager.GetAllBetDetailsForTimeIntervalResponse?.ErrorMsgId ?? dataWager.APIResponse.ErrorMsgId;
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
@@ -84,18 +88,35 @@ namespace ThirdPartyWager.Service.BLL
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
-
+                
+                var groups = dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList.BetDetail.GroupBy(i =>
+                    (i.Username, i.GameID));
+                
                 // insert wager to db
-                foreach (var bet in dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList.BetDetail)
+                foreach (var group in groups)
                 {
+                    await using var conn = _wagerDbClient.GetMySqlConnection();
+                    conn.Open();
+                    await using var trans = await conn.BeginTransactionAsync();
                     try
                     {
-                        _wagerSAService.InsertWager(bet);
+                        foreach (var bet in group)
+                        {
+                            bet.GameResult = JsonConvert.SerializeObject(bet.GameResult);
+                        }
+
+                        var result = _wagerSAService.InsertWager(group, trans);
+                        if (result == group.Count())
+                        {
+                            trans.Commit();
+                            _tpUnsettleService.InsertTpUnsettle(Tp.SA, GameType.SA_LiveCasino,
+                                $"{group.Key.GameID}_{group.Key.Username}");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        msg = $"INSERT_WAGER(WAGERID: {bet.BetID} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                        msg = $"INSERT_WAGER(WAGERID: {group.Key.GameID}_{group.Key.Username} )";
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
                         return false;
                     }
                 }

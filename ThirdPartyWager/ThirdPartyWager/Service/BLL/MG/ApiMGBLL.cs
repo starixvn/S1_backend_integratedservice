@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using System.Text;
 
 namespace ThirdPartyWager.Service.BLL.MG
 {
@@ -41,10 +42,14 @@ namespace ThirdPartyWager.Service.BLL.MG
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _client.GetAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions");
                 var result = await response.Content.ReadAsStringAsync();
+                if (result != "[]")
+                {
+                    _logger.LogInformation($"{agent.AgentCode} get failedTransactions:{result}");
+                }
                 var failedTransactions = JsonConvert.DeserializeObject<List<MGFailedTransactions>>(result);
                 return failedTransactions;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "get mg failed transactions failed");
                 return null;
@@ -64,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                 var response = await _client.PatchAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions/{txnId}", null);
                 _logger.LogInformation($"update mg failed transactions {response.StatusCode}");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Update failed transaction to resolved state failed");
             }
@@ -90,20 +95,83 @@ namespace ThirdPartyWager.Service.BLL.MG
                 var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenResult);
                 return dict.ContainsKey("access_token") ? dict["access_token"] : string.Empty;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "get mg token failed");
                 return string.Empty;
             }
         }
+
+        public async Task<IEnumerable<MGPlayerGameAnalysis>> GetPlayerGameAnalysisAsync(string token, string currencyId, DateTime date)
+        {
+            try
+            {
+                var apiUrl = GetInputValue(MgConfig, "ApiUrl");
+                var strAgents = GetInputValue(MgConfig, "Agent");
+                var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
+                var agent = mgAgents.SingleOrDefault(a => a.Currency == currencyId);
+                var parameters = new
+                {
+                    fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),             
+                    toDate = date.AddDays(1).AddMilliseconds(-1).ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    timeAggregation = "Daily",
+                    utcOffset = "0"
+                };
+                var httpContent = new StringContent(JsonConvert.SerializeObject(parameters), Encoding.UTF8, "application/json");
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.PostAsync($"{apiUrl}/agents/{agent.AgentCode}/reports/playerGameAnalysis", httpContent);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<IEnumerable<MGPlayerGameAnalysis>>(content);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GET MG playerGameAnalysis failed");
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<MGFortuneRewards>> GetFortuneRewardsAsync(string token, string currencyId, DateTime date)
+        {
+            try
+            {
+                var apiUrl = GetInputValue(MgConfig, "ApiUrl");
+                var strAgents = GetInputValue(MgConfig, "Agent");
+                var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
+                var agent = mgAgents.SingleOrDefault(a => a.Currency == currencyId);
+                var parameters = new
+                {
+                    fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    toDate = date.AddDays(1).AddMilliseconds(-1).ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    utcOffset = "0"
+                };
+                var httpContent = new StringContent(JsonConvert.SerializeObject(parameters), Encoding.UTF8, "application/json");
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.PostAsync($"{apiUrl}/agents/{agent.AgentCode}/reports/fortuneRewards", httpContent);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<IEnumerable<MGFortuneRewards>>(content);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GET MG FortuneRewards failed");
+                return null;
+            }
+        }
+     
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
-            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }
             throw new Exception();
         }
+
         private class MGAgents
         {
             public string Currency { get; set; }
@@ -111,10 +179,11 @@ namespace ThirdPartyWager.Service.BLL.MG
             public string AgentCode { get; set; }
             public string SecretKey { get; set; }
         }
+
         private HttpClientHandler CreateHandler()
         {
             var handler = new HttpClientHandler();
-            if (_configuration.GetValue<string>("ProxyHost") != null)
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
             {
                 handler.UseProxy = true;
                 handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),

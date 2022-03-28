@@ -25,7 +25,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Log2File log2File;
         private readonly ILogger<SettledService> logger;
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
         private readonly BettingService _bettingService;
         private readonly TpUnsettleService _tpUnsettleService;
@@ -42,7 +41,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _partitionService = provider.GetRequiredService<PartitionService>();
         }
@@ -163,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     allowNegative = allowNegative
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
-                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
+                throw;
             }
 
             return result;
@@ -212,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     allowNegative = allowNegative
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
-                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
+                throw;
             }
 
             return result;
@@ -613,7 +611,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     doPayout = doPayout
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
-                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
             return result;

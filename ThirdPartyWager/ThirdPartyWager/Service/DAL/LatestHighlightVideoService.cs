@@ -1,31 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class LatestHighlightVideoService
     {
-        private readonly IConfiguration _configuration;
+       
+        private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
 
         public LatestHighlightVideoService(IServiceProvider provider)
         {
-            _configuration = provider.GetRequiredService<IConfiguration>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
         public int SetLatestHighlightVideo(List<LatestHighlightVideoData> data)
         {
-            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_LatestHighlightVideo_Set_V2", data, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_LatestHighlightVideo_Set_V2", data);
         }
         public int GetLatestHighlightVideo(int siteId, string date, string title)
         {
-            using var conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.QueryFirstOrDefault<int>("Service_LatestHighlightVideo_Get", new { SiteId = siteId, Date = date, Title = title }, commandType: CommandType.StoredProcedure);
+
+            return _reportDbClient.QueryFirst<int>("Service_LatestHighlightVideo_Get", new { SiteId = siteId, Date = date, Title = title });
         }
     }
 }

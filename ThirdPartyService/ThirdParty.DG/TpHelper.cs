@@ -223,6 +223,14 @@ namespace ThirdParty.DG
             if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
             {
                 Login.data = limitGroupNoMapping[tpCustInfo.TpCurrencyId];
+                
+                if (!IsDevelopment && tpCustInfo.CustId == 477682)
+                {
+                    /* 
+                     GOAL123_477682 VND2 member can change bet limit to 80 - 40,000
+                    */
+                    Login.data = "F";
+                }
             }
             else
             {

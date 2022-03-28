@@ -120,10 +120,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region SA
 
-        public IEnumerable<PayoutDataLC_SA> GetUnsettledListLC_SA()
-        {
-            return settledService.GetUnsettledListLC_SA();
-        }
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.SA, bettingDataLC_SA.username);
@@ -161,19 +157,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int Get_TpWagerSA_Settle(string GameID, string Username, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
-        {
-            return settledService.Get_TpWagerSA_Settle(GameID, Username, out stake, out validBet, out winLostAmount, out settleTime, out transTime);
-        }
-        public int SetSettleFlag_TpWagerSA(string GameID, string Username)
-        {
-            return settledService.SetSettleFlag_TpWagerSA(GameID, Username);
-        }
-        public int SetSettleFlag_SA(string GameID, string Username)
-        {
-            return settledService.SetSettleFlag_SA(GameID, Username);
-        }
 
+        public SettleData_SA GetSettle_BettransLC_SA(string Gameid, string Username)
+        {
+            return settledService.GetSettle_BettransLC_SA(Gameid, Username);
+        }
+        
         #endregion
 
         #region DG
@@ -1802,14 +1791,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region Mega
 
-        public IEnumerable<SettleData_Mega> GetUnsettledList_Mega()
+        public SettleData GetSettle_TpReportMega(string TransId)
         {
-            return settledService.GetUnsettledList_Mega();
+            return settledService.GetSettle_TpReportMega(TransId);
         }
 
-        public int SetSettleFlag_TpWagerMega(long TransId)
+        public int SetSettleFlag_TpReportMega(string TransId)
         {
-            return settledService.SetSettleFlag_TpWagerMega(TransId);
+            return settledService.SetSettleFlag_TpReportMega(TransId);
         }
 
         #endregion
@@ -2094,6 +2083,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag_MG(string spName, string transId)
         {
             return settledService.SetSettleFlag_MG(spName, transId);
+        }
+
+        public int SetSettleFlag_BettransLC_MG(string spName, string transId, long transTime)
+        {
+            return settledService.SetSettleFlag_BettransLC_MG(spName, transId, transTime);
         }
 
         #endregion

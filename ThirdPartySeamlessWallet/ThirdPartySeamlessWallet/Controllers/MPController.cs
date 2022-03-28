@@ -144,14 +144,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
 
                 sResult = DoEncrypt(Param, Deskey);
-                _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                _log2File.Info($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                 return sResult;
             }
 
             sResult = DoEncrypt(Fatal, Deskey);
-            _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
-            _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+            _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
             return sResult;
         }
 
@@ -205,8 +203,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Info($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
                 else if (result == -1)
@@ -221,8 +218,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
                 else if (tpAffterAmount < 0)
@@ -234,14 +230,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 
                 sResult = DoEncrypt(Fatal, Deskey);
-                _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
-                _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+                _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
                 return sResult;
             }
             catch (Exception ex)
@@ -301,8 +295,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Info($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
                 else if (result == -1)
@@ -317,8 +310,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
                 else if (tpAffterAmount < 0)
@@ -330,14 +322,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 
                 sResult = DoEncrypt(Fatal, Deskey);
-                _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Fatal)}");
-                _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
+                _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Fatal)}", logName);
                 return sResult;
             }
             catch (Exception ex)
@@ -399,8 +389,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogInformation($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Info($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Info($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
                 else if (result == -1)
@@ -415,8 +404,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     sResult = DoEncrypt(Param, Deskey);
-                    _logger.LogError($"Response Decrypt: {JsonConvert.SerializeObject(Param)}");
-                    _log2File.Error($"{Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
+                    _log2File.Error($"Response Decrypt: {Content}\r\n{encrypt}\r\n{JsonConvert.SerializeObject(check)}\r\n{sResult}\r\n{JsonConvert.SerializeObject(Param)}", logName);
                     return sResult;
                 }
 

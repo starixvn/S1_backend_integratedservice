@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -12,21 +13,17 @@ namespace ThirdPartySeamlessWallet.Extensions
         {
             var provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            var serviceType = Environment.GetEnvironmentVariable("ServiceType") ?? config.GetValue<string>("ServiceType");
 
-            services.AddSingleton(provider => new MySqlClient(config.GetConnectionString("ConnectionString"), logger)
-            {
-                DataBase = DataBase.Main
-            });
-            services.AddSingleton(provider => new MySqlClient(config.GetConnectionString("ConnectionStringReport"), logger)
-            {
-                DataBase = DataBase.Report
-            });
-            services.AddSingleton(provider => new MySqlClient(config.GetConnectionString("ConnectionStringWager"), logger)
-            {
-                DataBase = DataBase.Wager
-            });
-
-            return services;
+            return services
+                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_MainDB"), logger)
+                {
+                    DataBase = DataBase.Main
+                })
+                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_WagerDB"), logger)
+                {
+                    DataBase = DataBase.Wager
+                });
         }
     }
 }

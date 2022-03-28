@@ -23,7 +23,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             var configBuilder = new ConfigurationBuilder();
             configBuilder.SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false);
+                .AddJsonFile("appsettings.Local.json", false, false)
+                .AddJsonStream(Program.GetRemoteConfig(new System.Collections.Generic.List<string> { "http://52.221.19.140:7243/" }));;
             var configuration = configBuilder.Build();
             services.AddSingleton(configuration);
             var mySqlLog = Substitute.For<ILogger<MySqlClient>>();

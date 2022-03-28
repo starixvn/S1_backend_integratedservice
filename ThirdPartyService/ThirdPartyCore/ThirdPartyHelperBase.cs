@@ -3,7 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Security;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -61,6 +64,8 @@ namespace ThirdPartyCore
         public static IAuthProvider AuthProvider { set; get; }
 
         public static ITpBetRecordProvider TpBetRecordProvider { set; get; }
+
+        public static ITpCustInfoProvider TpCustInfoProvider { set; get; }
 
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }
@@ -144,97 +149,45 @@ namespace ThirdPartyCore
             return sb.ToString();
         }
 
-        protected string HttpPostWithX509(string url, string parameters, string contentType, Dictionary<string, string> headers = null, Dictionary<string, string> certificate = null)
+        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, Dictionary<string, string> certificate = null)
         {
-
-            InsertLog?.Invoke(url, parameters, "1");
+            InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), "1");
 
             if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
             {
-                ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
                 ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
             }
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            using var handler = new HttpClientHandler();
             if (!string.IsNullOrEmpty(proxyHost))
             {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
             }
-
-            request.Method = "POST";
-            byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-            request.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
-            ServicePointManager.ServerCertificateValidationCallback = CertificateValidationCallBack;
-
-            if (headers != null)
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.SslProtocols = SslProtocols.Tls12;
+            handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
+            using var client = new HttpClient(handler);
+            try
             {
-                foreach (var item in headers)
+                if (headers != null)
                 {
-                    request.Headers.Add(item.Key, item.Value);
-                }
-            }
-            using (Stream RequestStream = request.GetRequestStream())
-            {
-                RequestStream.Write(byteArray, 0, byteArray.Length);
-            }
-
-            StringBuilder sb = new StringBuilder();
-            using (WebResponse response = request.GetResponse())
-            using (Stream ResponseStream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    sb.Append(line);
-                }
-            }
-
-            InsertLog?.Invoke(url, parameters, sb.ToString());
-            return sb.ToString();
-        }
-        private static bool CertificateValidationCallBack(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            // If the certificate is a valid, signed certificate, return true.
-            if (sslPolicyErrors == SslPolicyErrors.None)
-            {
-                return true;
-            }
-            // If there are errors in the certificate chain, look at each error to determine the cause.
-            if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0)
-            {
-                if (chain != null && chain.ChainStatus != null)
-                {
-                    foreach (X509ChainStatus status in
-                   chain.ChainStatus)
+                    foreach (var item in headers)
                     {
-                        if ((certificate.Subject == certificate.Issuer) &&
-                        (status.Status ==
-                       X509ChainStatusFlags.UntrustedRoot))
-                        {
-                            // Self-signed certificates with an untrusted root are valid.
-                            continue;
-                        }
-                        else
-                        {
-                            if (status.Status !=
-                           X509ChainStatusFlags.NoError)
-                            {
-                                // If there are any other errors in the certificate chain, the certificate is invalid,
-                                // so the method returns false.
-                                return false;
-                            }
-                        }
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
                     }
                 }
-                return true;
+                var formData = new FormUrlEncodedContent(parameters);
+                var response = client.PostAsync(url, formData).Result;
+                var sb = response.Content.ReadAsStringAsync().Result;
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), sb);
+                return sb;
             }
-            else
+            catch (Exception e)
             {
-                // In all other cases, return false.
-                return false;
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
+                return e.Message;
             }
         }
 
@@ -270,6 +223,39 @@ namespace ThirdPartyCore
             InsertLog?.Invoke(url, parameters, sb.ToString());
             return sb.ToString();
         }
+
+        protected string HttpGet(string url, string parameters, Dictionary<string, string> headers = null)
+        {
+            InsertLog?.Invoke(url, parameters, "1");
+            using var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            using var client = new HttpClient(handler);
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
+                }
+                var stream = client.GetStreamAsync($"{url}?{parameters}").Result;
+                using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
+                var response = myStreamReader.ReadToEnd();
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), response);
+                return response;
+            }
+            catch (Exception e)
+            {
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
+                return e.Message;
+            }
+        }
+
         protected string ToMD5(string encodeStr)
         {
             using var cryptoMD5 = MD5.Create();

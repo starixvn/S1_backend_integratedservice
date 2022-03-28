@@ -31,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameId { get; set; }
         public string txId { get; set; }
         public string gameNumier { get; set; }
+        public string gameNumber { get; set; }
         public string updateTime { get; set; }
     }
 

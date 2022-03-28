@@ -1,24 +1,28 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System.Data;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerMegaService
     {
-        private readonly IConfiguration configuration;
+        private readonly MySqlClient _wagerDbClient;
 
-        public WagerMegaService(IConfiguration configuration)
+        public WagerMegaService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
-        public int InsertWager(ReportMega bet)
+        public Task<int> InsertReport(ReportListMega report)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerMega_Ins", bet, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.ExecuteAsync("Service_TpReportRng_Mega_Ins", new DynamicParameters(report));
         }
     }
 }

@@ -95,12 +95,11 @@ namespace ThirdParty.V8
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
-            var timecnv = current.ToString("yyyyMMddHHmmssfff");
 
             var Param = new
             {
                 s = 4,
-                orderid = ThirdPartyTransID
+                orderid = $"{Agent}{TransID}"
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -115,11 +114,7 @@ namespace ThirdParty.V8
             dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
             var sCheckTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sCheckTransfer,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sCheckTransfer);
 
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
             if (IsJSON(result))
@@ -127,7 +122,7 @@ namespace ThirdParty.V8
                 var json = JsonConvert.DeserializeObject<ApiResponse>(result);
                 if (json.d.code != 0)
                 {
-                    apiResult.RawMessage = ErrorMassage[json.d.code];
+                    apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
                     apiResult.RawErrorCode = json.d.code.ToString();
                     apiResult.ErrorCode = ErrorCode.TransferPending;
                     apiResult.Data.Status = TransferStatus.Pending;
@@ -148,7 +143,7 @@ namespace ThirdParty.V8
                     }
                     else
                     {
-                        apiResult.RawMessage = ErrorMassage[json.d.code];
+                        apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
                         apiResult.RawErrorCode = json.d.code.ToString();
                         apiResult.ErrorCode = ErrorCode.Fail;
                         apiResult.Data.Status = TransferStatus.Fail;
@@ -203,11 +198,7 @@ namespace ThirdParty.V8
             dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
             var sBalance = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sBalance,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sBalance);
 
             ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
             if (IsJSON(result))
@@ -221,7 +212,7 @@ namespace ThirdParty.V8
                 else
                 {
                     oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = ErrorMassage[json.d.code];
+                    oApiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
                     oApiResult.RawErrorCode = json.d.code.ToString();
                 }
             }
@@ -277,11 +268,7 @@ namespace ThirdParty.V8
 
             var sLogin = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sLogin,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sLogin);
 
             ApiResult oApiResult = new ApiResult();
             if (IsJSON(result))
@@ -295,7 +282,7 @@ namespace ThirdParty.V8
                 else
                 {
                     oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = ErrorMassage[json.d.code];
+                    oApiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
                     oApiResult.RawErrorCode = json.d.code.ToString();
                 }
             }
@@ -340,11 +327,7 @@ namespace ThirdParty.V8
             dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
             var sTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                ApiUrl,
-                sTransfer,
-                "application/x-www-form-urlencoded"
-            );
+            var result = HttpGet(ApiUrl, sTransfer);
 
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
             apiResult.RawMessage = "No Result";
@@ -358,7 +341,7 @@ namespace ThirdParty.V8
                 var json = JsonConvert.DeserializeObject<ApiResponse>(result);
                 if (json.d.code != 0)
                 {
-                    apiResult.RawMessage = ErrorMassage[json.d.code] ?? "";
+                    apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
                     apiResult.RawErrorCode = json.d.code.ToString() ?? "";
                     if (json.d.code == 27)
                     {
