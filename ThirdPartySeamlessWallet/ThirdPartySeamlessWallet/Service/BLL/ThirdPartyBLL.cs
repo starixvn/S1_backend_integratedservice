@@ -229,6 +229,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.MG_LiveCasino;
                     }
                     break;
+                case (int)Tp.EVO:
+                    gameType = GameType.EVO_LiveCasino;
+                    var netent = GetGameCasinoWithCache((int)Tp.Netent);
+                    var chkNetent = netent.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkNetent != null && chkNetent.GameId == gameId)
+                    {
+                        gameType = GameType.Netent_RNG;
+                        return gameType;
+                    }
+                    var redtiger = GetGameCasinoWithCache((int)Tp.RedTiger);
+                    var chkRedtiger = redtiger.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkRedtiger != null && chkRedtiger.GameId == gameId)
+                    {
+                        gameType = GameType.RedTiger_RNG;
+                        return gameType;
+                    }
+                    break;
                 default:
                     break;
             }

@@ -375,6 +375,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
+            if (!verifyGameId(gameType, getReq.game.details.table.id))
+            {
+                getApiResponse.status = "INVALID_TOKEN_ID";
+                _log2File.Error($"error gametype\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
             if (tokenInfo.tpUserName != getReq.userId)
             {
                 getApiResponse.status = "INVALID_PARAMETER";
@@ -806,6 +812,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 gameType = Convert.ToInt32(sessionKeyArr[3]),
                 tpId = Convert.ToInt32(sessionKeyArr[4])
             };
+        }
+        
+        private bool verifyGameId(int gameType, string gameId)
+        {
+            var getGameType = _thirdPartyBLL.GetGameType((int)Tp.EVO, gameId);
+            if (gameType == (int)getGameType)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
