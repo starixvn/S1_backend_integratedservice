@@ -105,5 +105,11 @@ namespace ThirdPartyService.Service.DAL
                 return conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { CustId = custid, TpId = tpId }, commandType: CommandType.StoredProcedure);
             }
         }
+
+        public IEnumerable<TpMaintain> GetTpMaintainList(int siteId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
