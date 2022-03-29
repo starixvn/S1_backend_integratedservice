@@ -10,7 +10,7 @@ using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.EBet
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyLaunchUrlParticular
     {
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -76,7 +76,7 @@ namespace ThirdParty.EBet
             var apiUrl = inputs.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
             var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
             var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
-           
+
             var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId });
             var roundCode = detail.GetValueOrDefault("roundCode").ToString();
             var username = detail.GetValueOrDefault("username").ToString();
@@ -99,7 +99,7 @@ namespace ThirdParty.EBet
             using var client = new HttpClient();
             var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
             var result = FromJson<DetailResult>(json);
-            
+
             if (result.status != 200)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
@@ -115,6 +115,53 @@ namespace ThirdParty.EBet
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 },
             };
+        }
+
+        /// <summary>
+        /// Test
+        /// </summary>
+        /// <param name="getBetDetail"></param>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        /// <exception cref="BetDetailNotFoundException"></exception>
+        public ApiResult GetLaunchUrl(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var currency = tpCustInfo.TpCurrencyId;
+            var apiUrl = inputs.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
+            var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
+            var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
+
+            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId });
+            var roundCode = detail.GetValueOrDefault("roundCode").ToString();
+            var username = detail.GetValueOrDefault("username").ToString();
+            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+            var signature = RSA($"{username}{timestamp}", privateKey);
+            var lang = "en_us";
+            var sParam = new
+            {
+                channelId,
+                timestamp,
+                signature,
+                username,
+                roundCode,
+                currency,
+                lang
+            };
+
+            var url = $"{apiUrl}/api/launchUrl";
+            var content = new StringContent(ToJson(sParam), Encoding.UTF8, "application/json");
+            using var client = new HttpClient();
+            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
+            var result = FromJson<DetailResult>(json);
+
+            if (result.status != 200)
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
+            }
+
+            return new ApiResult();
         }
 
         public class DetailResult
