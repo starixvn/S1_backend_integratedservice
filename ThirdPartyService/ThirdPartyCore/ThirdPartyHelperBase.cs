@@ -54,17 +54,6 @@ namespace ThirdPartyCore
         ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
-    /// <summary>
-    ///取得發行連結
-    /// </summary>
-    /// <remarks>
-    /// Use：eBET(TpId=18)
-    /// </remarks>
-    public interface IThirdPartyLaunchUrlParticular
-    {
-        ApiResult GetLaunchUrl(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail
     {
         public static string proxyHost;

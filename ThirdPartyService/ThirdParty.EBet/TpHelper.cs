@@ -10,7 +10,7 @@ using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdParty.EBet
 {
-    public class TpHelper : ThirdPartyHelperBase, IThirdPartyLaunchUrlParticular
+    public class TpHelper : ThirdPartyHelperBase
     {
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -38,6 +38,15 @@ namespace ThirdParty.EBet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            #region Test
+
+            if (GetUrlForLogin(tpCustInfo.TpUserName,tpCustInfo.TpCurrencyId, inputs, out string message))
+            {
+                return new ApiResult();
+            }
+
+            #endregion
+
             string currency = tpCustInfo.TpCurrencyId;
             string GameUrl = inputs.ContainsKey($"GameUrl_{currency}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{currency}"]) ? inputs[$"GameUrl_{currency}"] : throw new Exception($"GameUrl_{currency} is empty");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
@@ -117,58 +126,52 @@ namespace ThirdParty.EBet
             };
         }
 
-        /// <summary>
-        /// Test
-        /// </summary>
-        /// <param name="getBetDetail"></param>
-        /// <param name="tpCustInfo"></param>
-        /// <param name="inputs"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="BetDetailNotFoundException"></exception>
-        public ApiResult GetLaunchUrl(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            var currency = tpCustInfo.TpCurrencyId;
-            var apiUrl = inputs.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
-            var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
-            var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
-
-            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId });
-            var roundCode = detail.GetValueOrDefault("roundCode").ToString();
-            var username = detail.GetValueOrDefault("username").ToString();
-            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-            var signature = RSA($"{username}{timestamp}", privateKey);
-            var lang = "en_us";
-            var sParam = new
-            {
-                channelId,
-                timestamp,
-                signature,
-                username,
-                roundCode,
-                currency,
-                lang
-            };
-
-            var url = $"{apiUrl}/api/launchUrl";
-            var content = new StringContent(ToJson(sParam), Encoding.UTF8, "application/json");
-            using var client = new HttpClient();
-            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
-            var result = FromJson<DetailResult>(json);
-
-            if (result.status != 200)
-            {
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
-            }
-
-            return new ApiResult();
-        }
-
         public class DetailResult
         {
             public int status { get; set; }
             public string path { get; set; }
         }
+
+        #region Login Step
+
+        private bool GetUrlForLogin(string username,string currency, Dictionary<string, string> tpInfos, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var apiUrl = tpInfos.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
+
+                var channelId = tpInfos.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
+                var privateKey = tpInfos.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
+                var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+                var signature = RSA($"{channelId}{timestamp}", privateKey);
+                var china = 0;
+
+                var param = new
+                {
+                    channelId,
+                    timestamp,
+                    signature,
+                    currency,
+                    china
+                };
+
+                var url = $"{apiUrl}/api/launchUrl";
+                var content = new StringContent(ToJson(param), Encoding.UTF8, "application/json");
+                using var client = new HttpClient();
+                var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
+                var result = FromJson<DetailResult>(json);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+        }
+
+        #endregion
 
     }
 }
