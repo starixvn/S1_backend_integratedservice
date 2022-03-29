@@ -222,8 +222,8 @@ namespace ThirdPartyService.Service.DAL
         {
             using (var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
-                var p = new DynamicParameters(new { Prefix = $"T{common.GetEnv()}", adminTpTransfer.TpId, tpCustInfo.SiteId, tpCustInfo.CustId, tpCustInfo.UserName, Direction = adminTpTransfer.direction, adminTpTransfer.Amount, adminTpTransfer.Operator, adminTpTransfer.Remarks });
-                transId = conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Ins", p, commandType: CommandType.StoredProcedure);
+                var p = new DynamicParameters(new { Prefix = $"T{common.GetEnv()}", adminTpTransfer.TpId, tpCustInfo.SiteId, tpCustInfo.CustId, tpCustInfo.UserName, Direction = adminTpTransfer.direction, adminTpTransfer.Amount, adminTpTransfer.Operator, adminTpTransfer.Remarks, adminTpTransfer.Category });
+                transId = conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Ins_V2", p, commandType: CommandType.StoredProcedure);
             }
         }
         public void SetAdjustWalletLog(ApiResult<TransferResult> transferResult, string transId)

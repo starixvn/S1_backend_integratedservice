@@ -34,6 +34,8 @@ namespace ThirdPartyCore.Model.enums
         AutoTransferIsOff = 1301,
         AutoTransferIsSeamless = 1302,
         AutoTransferBonusFail = 1303,
+        // Maintain
+        ThirdPartyUnderMaintenance = 1400,
         #endregion
         #region invalid parameter  (2xxxx)
         InvalidParameter = 2000,
@@ -47,7 +49,7 @@ namespace ThirdPartyCore.Model.enums
         GetBetDetailNotImplemented = 3001,
         BetDetailIsUrl = 3002,
         #endregion
-
+        
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
         Not_allowed_environment = 5003,
@@ -136,5 +138,13 @@ namespace ThirdPartyCore.Model.enums
     public enum FinancialType
     {
         CancelledBonus = 7
+    }
+
+    public enum MaintainType
+    {
+        Date,
+        Day,
+        Week,
+        Month
     }
 }
