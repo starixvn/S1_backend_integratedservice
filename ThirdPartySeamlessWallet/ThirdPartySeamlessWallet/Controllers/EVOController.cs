@@ -30,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
+        private readonly TpCreditFailBLL _tpCreditFailBll;
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp thisTp;
@@ -50,6 +51,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpCreditFailBll = provider.GetRequiredService<TpCreditFailBLL>();
             _tools = provider.GetRequiredService<Tools>();
             thisTp = Tp.EVO;
         }
@@ -656,6 +658,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
+                _tpCreditFailBll.SetCreditFail( RequestFailureType.Tp, Tp.EVO, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
         }

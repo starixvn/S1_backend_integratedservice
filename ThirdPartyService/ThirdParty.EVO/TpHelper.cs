@@ -56,6 +56,7 @@ namespace ThirdParty.EVO
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string GameUrl = ApiUrl;
             ApiUrl = $"{ApiUrl}/ua/v1/{CasinoKey}/{Ua2Token}";
 
@@ -121,6 +122,10 @@ namespace ThirdParty.EVO
                     {
                         wrapped = mobile,
                         mobile = mobile
+                    },
+                    urls = new
+                    {
+                        lobby = homeUrl
                     },
                 }
             };
