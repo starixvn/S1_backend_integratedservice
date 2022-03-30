@@ -12,6 +12,23 @@ namespace ThirdParty.EBet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        #region Model
+
+        public class DetailResult
+        {
+            public int status { get; set; }
+            public string path { get; set; }
+        }
+
+        public class GetLaunchUrlResponse
+        {
+            public int status { get; set; }
+            public string launchUrl { get; set; }
+            public string apiVersion { get; set; }
+        }
+
+        #endregion
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -38,40 +55,57 @@ namespace ThirdParty.EBet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            #region Test
+            string domainUrl = string.Empty;
+            string key = string.Empty;
+            string funParam = string.Empty;
+            string mobileParam = string.Empty;
 
-            if (GetUrlForLogin(tpCustInfo.TpUserName,tpCustInfo.TpCurrencyId, inputs, out string message))
+            var apiUrl = inputs.ContainsKey($"ApiUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"ApiUrl_{tpCustInfo.TpCurrencyId}"])
+                       ? inputs[$"ApiUrl_{tpCustInfo.TpCurrencyId}"]
+                       : throw new Exception($"ApiUrl_{tpCustInfo.TpCurrencyId} is empty");
+
+            var channelId = inputs.ContainsKey($"ChannelId_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"ChannelId_{tpCustInfo.TpCurrencyId}"])
+                          ? inputs[$"ChannelId_{tpCustInfo.TpCurrencyId}"]
+                          : throw new Exception($"ChannelId_{tpCustInfo.TpCurrencyId} is empty");
+
+            var privateKey = inputs.ContainsKey($"PrivateKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"ApiUrl_{tpCustInfo.TpCurrencyId}"])
+                           ? inputs[$"PrivateKey_{tpCustInfo.TpCurrencyId}"]
+                           : throw new Exception($"PrivateKey_{tpCustInfo.TpCurrencyId} is empty");
+
+            domainUrl = GetUrlForLogin(tpCustInfo.TpCurrencyId, apiUrl, channelId, privateKey, out string launchUrl)
+                      ? launchUrl
+                      : string.Empty;
+
+            if (string.IsNullOrWhiteSpace(domainUrl))
             {
-                return new ApiResult();
+                //launchUrl沒有拿到資料，則用db的GameUrl
+                domainUrl = inputs.ContainsKey($"GameUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"])
+                          ? inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"]
+                          : throw new Exception($"GameUrl_{tpCustInfo.TpCurrencyId} is empty");
             }
 
-            #endregion
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrWhiteSpace(inputs["fun"])
+                       ? inputs["fun"]
+                       : "0";
 
-            string currency = tpCustInfo.TpCurrencyId;
-            string GameUrl = inputs.ContainsKey($"GameUrl_{currency}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{currency}"]) ? inputs[$"GameUrl_{currency}"] : throw new Exception($"GameUrl_{currency} is empty");
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            ApiResult oApiResult = new ApiResult();
+            key = ApplyToken(tpCustInfo);
 
-            var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token };
-            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            string sessionKey = Convert.ToBase64String(bytes);
-
-            string funParam = "";
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-            {
                 funParam = "&mode=trial";
-            }
-            string mobileParam = "";
-            if (appType != AppType.Desktop)
-            {
-                mobileParam = "&orientation=1";
-            }
 
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?username={tpCustInfo.TpUserName}&accessToken={HttpUtility.UrlEncode(key)}&language={TpLangId}{mobileParam}{funParam}";
-            return oApiResult;
+            if (appType != AppType.Desktop)
+                mobileParam = "&orientation=1";
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = $"{domainUrl}?"
+                        + $"username={tpCustInfo.TpUserName}"
+                        + $"&accessToken={HttpUtility.UrlEncode(key)}"
+                        + $"&language={TpLangId}"
+                        + $"{mobileParam}"
+                        + $"{funParam}"
+            };
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
@@ -126,26 +160,16 @@ namespace ThirdParty.EBet
             };
         }
 
-        public class DetailResult
-        {
-            public int status { get; set; }
-            public string path { get; set; }
-        }
-
         #region Login Step
 
-        private bool GetUrlForLogin(string username,string currency, Dictionary<string, string> tpInfos, out string message)
+        private bool GetUrlForLogin(string currency, string apiUrl, string channelId, string privateKey, out string launchUrl)
         {
-            message = string.Empty;
+            launchUrl = string.Empty;
             try
             {
-                var apiUrl = tpInfos.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
-
-                var channelId = tpInfos.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
-                var privateKey = tpInfos.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
                 var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
                 var signature = RSA($"{channelId}{timestamp}", privateKey);
-                var china = 0;
+                int china = 0;
 
                 var param = new
                 {
@@ -157,10 +181,18 @@ namespace ThirdParty.EBet
                 };
 
                 var url = $"{apiUrl}/api/launchUrl";
-                var content = new StringContent(ToJson(param), Encoding.UTF8, "application/json");
-                using var client = new HttpClient();
-                var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
-                var result = FromJson<DetailResult>(json);
+                var result = HttpPost(url, ToJson(param), "application/json");
+
+                if (IsJSON(result))
+                {
+                    var userResult = FromJson<GetLaunchUrlResponse>(result);
+                    if (userResult.status == 200) //Success
+                        launchUrl = userResult.launchUrl;
+                    else
+                        return false;
+                }
+                else
+                    return false;
 
                 return true;
             }
