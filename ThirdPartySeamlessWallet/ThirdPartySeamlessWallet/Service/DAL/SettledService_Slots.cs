@@ -2765,7 +2765,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     new {cancelDataRng_MG.betId}, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
                 // 不存在有效下注
-                if (bettrans.Count == 0 || bettrans.Any(a=>a.TicketType != 1))
+                if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
                     return new MGCancelResult() {Result = 1};
                 }
