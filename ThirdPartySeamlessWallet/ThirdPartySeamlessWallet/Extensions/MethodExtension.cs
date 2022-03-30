@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -32,6 +33,12 @@ namespace ThirdPartySeamlessWallet.Extensions
             }
 
             return type.ToString();
+        }
+
+
+        public static string CodeToString(this Enum payLoad)
+        {
+            return ((int)(IConvertible)payLoad).ToString();
         }
     }
 }
