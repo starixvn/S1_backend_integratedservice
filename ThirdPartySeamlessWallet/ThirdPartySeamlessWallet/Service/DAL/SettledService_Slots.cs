@@ -2761,29 +2761,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                // 檢查該局是否有下注單
-                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransRngMg == null)
+                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V2",
+                    new {cancelDataRng_MG.betId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettrans = bettransMg.ToList();
+                // 不存在有效下注
+                if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
-                    return new MGCancelResult()
-                    {
-                        Result = 1,
-                    };
+                    logger.LogError($"No valid bet {cancelDataRng_MG.betId}");
+                    return new MGCancelResult() {Result = 1};
                 }
 
-                if (bettransRngMg.PlayerId != cancelDataRng_MG.playerId ||
-                    Math.Abs(bettransRngMg.Amount) != cancelDataRng_MG.amount)
+                // 已結束局
+                if (bettrans.Any(a => a.Completed))
                 {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
+                    return new MGCancelResult() {Result = 1};
+                }
+
+                var bet = bettrans.FirstOrDefault();
+                // 玩家或金額不符
+                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(bet.Amount) != cancelDataRng_MG.amount))
+                {
+                    logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
-                if (bettransRngMg.TicketType == (int)BettransType.CancelBet)
+                //已取消
+                if (bettrans.Any(a=> a.TxnId == cancelDataRng_MG.txnId && a.TicketType == (int)BettransType.CancelBet))
                 {
-                    return new MGCancelResult()
-                    {
-                        Result = 1,
-                        AfterAmount = afterAmount
-                    };
+                    logger.LogError($"betId:{cancelDataRng_MG.betId}, txnId:{cancelDataRng_MG.txnId} is canceled");
+                    return new MGCancelResult() {Result = 1};
                 }
 
                 var result = conn.Execute("Service_BettransRng_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -2847,7 +2854,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             
-            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get", p, commandType: CommandType.StoredProcedure);
+            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V2", p, commandType: CommandType.StoredProcedure);
             if (slot != null)
             {
                 tpGameType = (int)GameType.MG_RNG;
