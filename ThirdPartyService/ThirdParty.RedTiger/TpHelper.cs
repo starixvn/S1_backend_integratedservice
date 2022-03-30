@@ -68,6 +68,7 @@ namespace ThirdParty.RedTiger
             string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string GameUrl = ApiUrl;
             ApiUrl = $"{ApiUrl}/ua/v1/{CasinoKey}/{Ua2Token}";
 
@@ -135,6 +136,10 @@ namespace ThirdParty.RedTiger
                         wrapped = mobile,
                         mobile = mobile
                     },
+                    urls = new
+                    {
+                        lobby = homeUrl
+                    },
                 }
             };
 
@@ -171,7 +176,7 @@ namespace ThirdParty.RedTiger
             string gameHistoryApiToken = inputs.ContainsKey("gameHistoryApiToken") && !string.IsNullOrEmpty(inputs["gameHistoryApiToken"]) ? inputs["gameHistoryApiToken"] : throw new Exception("gameHistoryApiToken");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
             var WagerUrl = $"{ApiUrl}/api/gamehistory/v1/casino/games/stream";
-            
+
             string word = "://";
             string[] cutHost = ApiUrl.Split(word);
             string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
