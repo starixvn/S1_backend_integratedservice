@@ -119,22 +119,18 @@ namespace ThirdPartyWager.Service.BLL.MG
         private IEnumerable<FincanceDailySummary> GetRewardSummary(DateTime date, string tpCurrencyId, IEnumerable<MGFortuneRewards> fortuneRewards)
         {
             var currencyId = _currencyId[tpCurrencyId];
-            var total = 0m;
-            var payout = 0m;
-            var cash = 0m;
-            var freeGame = 0m;
+            var cash = new List<MGFortuneRewards>();
+            var freeGame = new List<MGFortuneRewards>();
 
             foreach (var item in fortuneRewards)
             {
-                total += item.rewardAmount;
-                payout += item.payout;
                 if (int.TryParse(item.transactionId, out var _))
                 {
-                    freeGame += item.rewardAmount;
+                    freeGame.Add(item);
                 }
                 else
                 {
-                    cash += item.rewardAmount;
+                    cash.Add(item);
                 }
             }
 
@@ -146,8 +142,8 @@ namespace ThirdPartyWager.Service.BLL.MG
                     SummaryDate = date,
                     TpId = (int)tp,
                     CurrencyId = currencyId,
-                    Payout = payout,
-                    Reward = total,
+                    Payout = fortuneRewards.Sum(i=>i.payout),
+                    Reward = fortuneRewards.Sum(i=>i.rewardAmount),
                },
                new FincanceDailySummary()
                {
@@ -155,8 +151,8 @@ namespace ThirdPartyWager.Service.BLL.MG
                     SummaryDate = date,
                     TpId = (int)tp,
                     CurrencyId = currencyId,
-                    Payout = payout,
-                    Reward = cash,
+                    Payout = cash.Sum(i=>i.payout),
+                    Reward = cash.Sum(i=>i.rewardAmount),
                },
                new FincanceDailySummary()
                {
@@ -164,8 +160,8 @@ namespace ThirdPartyWager.Service.BLL.MG
                     SummaryDate = date,
                     TpId = (int)tp,
                     CurrencyId = currencyId,
-                    Payout = payout,
-                    Reward = freeGame,
+                    Payout = freeGame.Sum(i=>i.payout),
+                    Reward = freeGame.Sum(i=>i.rewardAmount),
                }
             };
         }
