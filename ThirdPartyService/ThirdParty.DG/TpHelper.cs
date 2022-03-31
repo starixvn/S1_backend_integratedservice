@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Web;
 using System.Xml.Serialization;
 using ThirdPartyCore;
@@ -79,7 +80,8 @@ namespace ThirdParty.DG
         };
 
         private decimal dWinLimit = 0m;
-        private string limitGroupNo = "A";
+        private const string DefaultLimitGroup = "A";
+
         public class Member
         {
             public string username { get; set; }
@@ -150,7 +152,7 @@ namespace ThirdParty.DG
             }
             else
             {
-                SignUp.data = limitGroupNo;
+                SignUp.data = DefaultLimitGroup;
             }
 
             SignUp.member.username = tpCustInfo.TpUserName;
@@ -219,23 +221,8 @@ namespace ThirdParty.DG
 
             Login.member.username = tpCustInfo.TpUserName.ToUpper();
             Login.member.password = tpCustInfo.TpPwd;
-
-            if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
-            {
-                Login.data = limitGroupNoMapping[tpCustInfo.TpCurrencyId];
-                
-                if (!IsDevelopment && tpCustInfo.CustId == 477682)
-                {
-                    /* 
-                     GOAL123_477682 VND2 member can change bet limit to 80 - 40,000
-                    */
-                    Login.data = "F";
-                }
-            }
-            else
-            {
-                Login.data = limitGroupNo;
-            }
+            Login.data = GetLimitGroup(tpCustInfo.TpCurrencyId, tpCustInfo.CustId);
+            
             string InputJson = JsonConvert.SerializeObject(Login);
 
             var result = HttpPost(ApiUrl, InputJson, "application/json");
@@ -309,6 +296,46 @@ namespace ThirdParty.DG
                     TpCurrency = tpCurrency,
                 }
             };
+        }
+
+        private string GetLimitGroup(string tpCurrencyId, int custId)
+        {
+            var custBetLimit = BetLimitProvider.GetCustBetLimit(custId);
+            if (custBetLimit != null)
+            {
+                var limitGroup = JsonConvert.DeserializeObject<List<BetSetting>>(custBetLimit.BetSetting);
+                var dg = limitGroup?.SingleOrDefault(a => a.TpCategory == 3)?.TpBetSetting
+                    .SingleOrDefault(b => b.GameTypeId == 10);
+                if (dg != null)
+                    return dg.LimitGroup;
+            }
+            
+            if (!IsDevelopment && custId == 477682)
+            {
+                /* 
+                 GOAL123_477682 VND2 member can change bet limit to 80 - 40,000
+                */
+                return "F";
+            }
+            else if (limitGroupNoMapping.ContainsKey(tpCurrencyId))
+            {
+                return limitGroupNoMapping[tpCurrencyId];
+            }
+            else
+            {
+                return DefaultLimitGroup;
+            }
+        }
+        public class TpBetSetting
+        {
+            public int GameTypeId { get; set; }
+            public string LimitGroup { get; set; }
+        }
+
+        public class BetSetting
+        {
+            public int TpCategory { get; set; }
+            public IList<TpBetSetting> TpBetSetting { get; set; }
         }
     }
 }
