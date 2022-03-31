@@ -76,6 +76,7 @@ namespace ThirdPartyService.Service.BLL
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
             ThirdPartyHelperBase.TpBetRecordProvider = provider.GetRequiredService<TpBetRecordService>();
             ThirdPartyHelperBase.TpCustInfoProvider = provider.GetRequiredService<TpCustInfoBLL>();
+            ThirdPartyHelperBase.BetLimitProvider = provider.GetRequiredService<BetLimitService>();
 
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>();
             tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
