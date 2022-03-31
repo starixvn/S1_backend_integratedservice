@@ -702,7 +702,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var p = new DynamicParameters(new { TpId = TpId, GameType = GameType, CustId = CustId, UserName = UserName, SiteId = SiteId, Turnover = Turnover, Memo, RefTransId });
             p.Add("BonusId", value: BonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
-            var result = conn.Execute("Service_RolloverTurnover_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_RolloverTurnover_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
             BonusId = p.Get<int>("BonusId");
             return BonusId > 0 ? 1 : 0;
         }
