@@ -183,16 +183,15 @@ namespace ThirdParty.EBet
                 var url = $"{apiUrl}/api/launchUrl";
                 var result = HttpPost(url, ToJson(param), "application/json");
 
-                if (IsJSON(result))
-                {
-                    var userResult = FromJson<GetLaunchUrlResponse>(result);
-                    if (userResult.status == 200) //Success
-                        launchUrl = userResult.launchUrl;
-                    else
-                        return false;
-                }
-                else
+                if (!IsJSON(result))
                     return false;
+
+                var userResult = FromJson<GetLaunchUrlResponse>(result);
+
+                if (userResult.status != 200) //If Not Success,This Step Fail.
+                    return false;
+
+                launchUrl = userResult.launchUrl;
 
                 return true;
             }
