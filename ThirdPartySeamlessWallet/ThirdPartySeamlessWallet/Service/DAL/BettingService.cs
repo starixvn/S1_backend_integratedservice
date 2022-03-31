@@ -54,14 +54,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             bool bHasBonusWallet = true;
 
-            if (_riskInspection.IsOutOfLimit(tpCustInfo.CustId, (int)tpCategory, gameType, Math.Abs(amount),
-                                             out var minBet, out var maxBet))
-            {
-                logger.LogInformation($"User:{tpCustInfo.TpUserName}, tpCategory:{(int)tpCategory}, gameType:{gameType}, betAmount:{Math.Abs(amount)} " +
-                                              $"minBet:{minBet} maxBet:{maxBet} out of bet limit");
-                return -9;
-            }
-
             try
             {
                 if (bHasBonusWallet)
