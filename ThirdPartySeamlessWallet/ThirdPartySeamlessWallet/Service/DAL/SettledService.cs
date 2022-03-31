@@ -13,7 +13,6 @@ using Serilog.Context;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -92,7 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         };
 
-        private int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
+        public int PayoutV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, string betData, out decimal afterAmount, string memoHead, out int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
             afterAmount = 0;
             bonusId = 0;
@@ -102,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (bHasBonusWallet)
                 {
-                    result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out int custId, out bonusId);
+                    result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out int custId, out bonusId, bonusType);
 
                     if (bonusId > 0 || transType == TransType.Prize)
                     {
@@ -216,16 +215,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
+        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
             CustId = 0;
             BonusId = 0;
-
+            var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute($"Service_Tp{tpCategory}Bonus_Get", p, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute(spName, p, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
@@ -264,6 +263,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return settlementType;
         }
+        
         public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory)
         {
             int bonusId = 0;
@@ -320,6 +320,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, bool doPayout = true)
         {
             int result = 0;
@@ -615,50 +616,48 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
+        
         public BetRecordInfo GetTpBetRecord(int TpId, string TransId, int GameType, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.QueryFirstOrDefault<BetRecordInfo>("Service_TpBetRecord_Get", new { TpId = TpId, TransId = TransId, GameType = GameType }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
+        
         public int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.Execute("Service_TpSettleBet_Set", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, SettledTime = betRecordInfo.SettledTime, TransTime = betRecordInfo.TransTime, ValidBet = betRecordInfo.ValidBet, Revenue = betRecordInfo.Revenue, ProgressiveBet = betRecordInfo.ProgressiveBet, ProgressiveWin = betRecordInfo.ProgressiveWin, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
+        
         public int AddTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.Execute("Service_TpSettleBet_Ins", new { TpId = betRecordInfo.TpId, TransId = betRecordInfo.TransId, GameType = (int)betRecordInfo.GameType, CustId = tpCustInfo.CustId, UserName = tpCustInfo.UserName, CurrencyId = tpCustInfo.CurrencyId, SiteId = tpCustInfo.SiteId, TpUserName = betRecordInfo.TpUserName, SettledTime = betRecordInfo.SettledTime, TransTime = betRecordInfo.TransTime, Stake = betRecordInfo.Stake, ValidBet = betRecordInfo.ValidBet, Revenue = betRecordInfo.Revenue, ProgressiveBet = betRecordInfo.ProgressiveBet, ProgressiveWin = betRecordInfo.ProgressiveWin, WinlostAmount = betRecordInfo.WinlostAmount, SettlementType = (int)betRecordInfo.SettlementType, TicketStatus = (int)betRecordInfo.TicketStatus, BonusId = betRecordInfo.BonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
-        public int SetRollOverTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
-        {
-            if (TurnOver == 0)
-                return 0;
-            return conn.Execute("Common_RollOverTurnOver_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
-        }
+
         public int SetWithdrawalLimitTurnOver(int TpId, int gameType, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (TurnOver == 0)
                 return 0;
             return conn.Execute("Common_WithdrawalLimitTurnOver_Set", new { TpId = TpId, GameType = gameType, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
+
         public int SetWinLostAmount(int TpId, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (Winnings == 0 && Losses == 0)
                 return 0;
             return conn.Execute("Common_WinLostAmount_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
+        
         public int SetEffectiveBetSum(int CustId, int SiteId, decimal validBet, MySqlConnection conn, MySqlTransaction trans)
         {
             if (validBet == 0)
                 return 0;
             return conn.Execute("Service_EffectiveBetSum_Set", new { CustId = CustId, SiteId = SiteId, Stake = validBet }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
-        public int AutoCancelBonus(int CustId, MySqlConnection conn, MySqlTransaction trans)
-        {
-            return conn.Execute("Service_AutoCancelBonus_Set", new { CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
-        }
+
         private int AutoCancelTransferBonus(int bonusId,string transId, int currencyId, int gameType, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.Execute("Service_AutoCancelTransferBonus_Set_V2", new { BonusId = bonusId,TransId =transId, CurrencyId = currencyId, GameType = gameType }, trans, commandType: CommandType.StoredProcedure);
         }
+
         public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, MySqlConnection conn, MySqlTransaction trans)
         {
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId });
@@ -695,6 +694,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
+        
         public int SetRollOverTurnOver(ref int BonusId, int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Turnover, string Memo, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (Turnover == 0)
@@ -706,19 +706,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             BonusId = p.Get<int>("BonusId");
             return BonusId > 0 ? 1 : 0;
         }
+        
         public int SetBonusWinLost(int TpId, int GameType, int CustId, string UserName, int SiteId, decimal Winnings, decimal Losses, string Memo, int BonusId, string RefTransId, MySqlConnection conn, MySqlTransaction trans)
         {
             if (Winnings == 0 && Losses == 0)
                 return 0;
 
             return conn.Execute("Service_BonusWinLost_Set", new { TpId = TpId, GameType = GameType, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, BonusId = BonusId, RefTransId = RefTransId }, transaction: trans, commandType: CommandType.StoredProcedure);
-        }
-        public IEnumerable<dynamic> GetTpBetRecordUnsettle(int tpId, int gameType)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<dynamic>("Service_TpBetRecordUnsettle_Get", new { TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
-        }
-
-
+        }     
     }
 }
