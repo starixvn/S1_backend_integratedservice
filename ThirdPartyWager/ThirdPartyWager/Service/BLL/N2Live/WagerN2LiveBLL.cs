@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
                                     channel = betTmp["betdetail"][0]["@channel"].ToString(),
                                     betdetail = JsonConvert.SerializeObject(betTmp["betdetail"]),
                                     dealdetail = JsonConvert.SerializeObject(dealItem.dealdetails.dealdetail),
-                                    result = (dealItem.results != null) ? JsonConvert.SerializeObject(dealItem.results.result) : null,
+                                    result = (dealItem.results != null) ? JsonConvert.SerializeObject(dealItem.results) : null,
                                 };
                                 _wagerN2LiveService.InsertWager(bet);
                             }
