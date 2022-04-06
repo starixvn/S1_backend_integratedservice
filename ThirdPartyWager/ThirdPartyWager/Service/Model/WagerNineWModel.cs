@@ -43,13 +43,13 @@ namespace ThirdPartyWager.Service.Model
     {
         public string eventTypeName { get; set; } = string.Empty;
         public string eventName { get; set; } = string.Empty;
-        public int eventId { get; set; } 
-        public int site { get; set; } 
+        public int eventId { get; set; }
+        public int site { get; set; }
         public string agentId { get; set; } = string.Empty;
-        public int currencyType { get; set; } 
-        public int eventType { get; set; } 
-        public string selectionId { get; set; } 
-        public int categoryType { get; set; } 
+        public int currencyType { get; set; }
+        public int eventType { get; set; }
+        public string selectionId { get; set; }
+        public int categoryType { get; set; }
         public string ip { get; set; } = string.Empty;
         public decimal matchOddsReq { get; set; }
         public string userId { get; set; } = string.Empty;
@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Service.Model
         public string updateDate { get; set; } = string.Empty;
 
         public SettleBet() { }
-            
+
         public SettleBet(ReSettleBet reSettleBet)
         {
             //共同欄位
@@ -83,7 +83,7 @@ namespace ThirdPartyWager.Service.Model
             eventId = reSettleBet.eventId;
             marketName = reSettleBet.marketName;
             marketId = reSettleBet.marketId;
-            
+
             //將ReSettleBet欄位對應至SettleBet
             matchSettledDate = reSettleBet.resettledDate;
             profitLoss = reSettleBet.profitLoss;
@@ -140,6 +140,24 @@ namespace ThirdPartyWager.Service.Model
         public decimal txLiability { get; set; }
         public string betStatus { get; set; }
     }
+
+
+    public class SummaryTransaction
+    {
+        public string status { get; set; }
+        public Checkdata[] checkData { get; set; }
+    }
+
+    public class Checkdata
+    {
+        public int currency { get; set; }
+        public string settledDateStart { get; set; }
+        public string settledDateEnd { get; set; }
+        public decimal profitLoss { get; set; }
+        public decimal commission { get; set; }
+        public decimal stakeTotal { get; set; }
+    }
+
 
 
 

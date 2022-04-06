@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.Model.enums;
@@ -36,13 +37,14 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var doQuickly = false;
             var timerType = 1;
             var intervalDays = 1;
+            var nextTimeSpan = TimeSpan.FromDays(intervalDays);
+
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(tpId, timerType);
-                var date = lastTime?.StartTime ?? DateTime.UtcNow.Date.AddDays(-14);
+                var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
 
                 if (date < DateTime.UtcNow)
                 {
@@ -56,16 +58,16 @@ namespace ThirdPartyWager.Workers
 
                 if ((int)DateTime.UtcNow.Subtract(date).TotalDays > intervalDays)
                 {
-                    doQuickly = true;
+                    nextTimeSpan = TimeSpan.FromSeconds(30);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"MG.GetReport.Exception");
+                nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromDays(intervalDays);
                 _timer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }

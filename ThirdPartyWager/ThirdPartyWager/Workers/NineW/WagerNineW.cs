@@ -8,6 +8,7 @@ using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Extensions;
 
 namespace ThirdPartyWager.Workers
 {
@@ -20,6 +21,7 @@ namespace ThirdPartyWager.Workers
         private Timer _settleTimer;
         private Timer _settleTimerByDate;
         private Timer _reSttleTimer;
+        private Timer _reportTimer;
 
         private readonly int tpId = (int)Tp.NineW;
         private readonly string _tpName = Tp.NineW.ToString();
@@ -38,6 +40,7 @@ namespace ThirdPartyWager.Workers
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
             _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromSeconds(5), TimeSpan.Zero);
+            _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -46,10 +49,10 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var doQuickly = false;
             var timerType = 1;
             var dataRangeMins = 15;
             var intervalMins = 3;
+            var nextTimeSpan = TimeSpan.FromDays(intervalMins);
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
@@ -67,16 +70,16 @@ namespace ThirdPartyWager.Workers
 
                 if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
-                    doQuickly = true;
+                    nextTimeSpan = TimeSpan.FromSeconds(10);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "WagerNineW.DoSettle.Exception");
+                TimeSpan.FromMinutes(1);
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(30) : TimeSpan.FromMinutes(intervalMins);
                 _settleTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
@@ -85,10 +88,11 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var doQuickly = false;
             var timerType = 2;
             var dataRangeMins = 1441;
             var intervalDays = 1;
+            var nextTimeSpan = TimeSpan.FromDays(intervalDays);
+
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
@@ -107,16 +111,16 @@ namespace ThirdPartyWager.Workers
 
                 if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
-                    doQuickly = true;
+                    nextTimeSpan = TimeSpan.FromMinutes(1);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "WagerNineW.DoSettleByDate.Exception");
+                nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromDays(intervalDays);
                 _settleTimerByDate.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
@@ -125,10 +129,10 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var doQuickly = false;
             var timerType = 3;
             var dataRangeMins = 180;
             var intervalHours = 1;
+            var nextTimeSpan = TimeSpan.FromDays(intervalHours);
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
@@ -148,17 +152,55 @@ namespace ThirdPartyWager.Workers
 
                 if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
-                    doQuickly = true;
+                    nextTimeSpan = TimeSpan.FromMinutes(1);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "WagerNineW.DoReSettle.Exception");
+                nextTimeSpan = TimeSpan.FromMinutes(5);
             }
             finally
             {
-                var nextTimeSpan = doQuickly ? TimeSpan.FromMinutes(1) : TimeSpan.FromHours(intervalHours);
                 _reSttleTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private async void GetReportByDate(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);         
+            var timerType = 4;
+            var intervalDays = 1;
+            var nextTimeSpan = TimeSpan.FromDays(intervalDays);
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
+                var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
+
+                if (date < DateTime.UtcNow)
+                {         
+                    var isSuccess = await _nineWService.GetReportAsync(date);
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"9W Get {date:yyyy-MM-dd} Report");
+                        _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds(), tpType);
+                    }
+                }
+
+                if ((int)DateTime.UtcNow.Subtract(date).TotalDays > intervalDays)
+                {
+                    nextTimeSpan = TimeSpan.FromSeconds(1);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WagerNineW.GetReportByDate.Exception");
+                nextTimeSpan = TimeSpan.FromHours(1);
+            }
+            finally
+            {     
+                _reportTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -167,6 +209,7 @@ namespace ThirdPartyWager.Workers
             _settleTimer?.Change(Timeout.Infinite, 0);
             _settleTimerByDate?.Change(Timeout.Infinite, 0);
             _reSttleTimer?.Change(Timeout.Infinite, 0);
+            _reportTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
