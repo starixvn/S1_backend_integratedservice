@@ -1,16 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -30,36 +31,22 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL settledBLL;
         private readonly IHostEnvironment environment;
         private readonly int gameType = 0;
-        public enum TransferType : int
-        {
-            Bet = 10,
-            Cancel = 11,
-            Settle = 20,
-            ReSettle = 21,
-            EventSettle = 40
-        }
+        private static IAllbetBll _AllbetBll { get; set; }
+        
 
-        public AllbetController(
-            IHostEnvironment environment,
-            BettingBLL bettingBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            SettledBLL settledBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            Log2File log2File,
-            Tools tools,
-            ILogger<AllbetController> logger
-        )
+        public AllbetController(IServiceProvider provider)
         {
-            this.tools = tools;
-            _logger = logger;
-            this.log2File = log2File;
+            tools = provider.GetRequiredService<Tools>();
+            _logger = provider.GetRequiredService<ILogger<AllbetController>>();
+            log2File = provider.GetRequiredService<Log2File>();
             thisTp = Tp.Allbet;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.environment = environment;
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            bettingBLL = provider.GetRequiredService<BettingBLL>();
+            settledBLL = provider.GetRequiredService<SettledBLL>();
+            environment = provider.GetRequiredService<IHostEnvironment>();
             gameType = (int)GameType.Allbet_LiveCasino;
+            _AllbetBll = new AllbetBll(provider);
         }
         public class Resp
         {
@@ -71,7 +58,38 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
 
         }
-        
+
+        [HttpPost]
+        [Route("[controller]/v2/{method}")]
+        public async Task<dynamic> TransferAsync([FromRoute] string method)
+        {
+            if (!Enum.TryParse(method, true, out AllbetType transType))
+            {
+                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters);
+            }
+            
+            Request.Headers.TryGetValue("Authorization", out var authorization);
+            Request.Headers.TryGetValue("Accept", out var accept);
+            Request.Headers.TryGetValue("Content-MD5", out var md5);
+            Request.Headers.TryGetValue("Content-Type", out var contentType);
+            Request.Headers.TryGetValue("Date", out var date);
+            
+            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            var signString = $"POST\n{md5}\n{contentType}\n{date}\n/Transfer";
+            var signature = Sign(signString, thirdPartySetting.TpSetting["V2PartnerKey"]);
+            _logger.LogInformation($"authorization={authorization}, accept={accept}, md5={md5}, contentType={contentType}, date={date}, signString={signString}, signature={signature}");
+
+            if (authorization != $"AB {thirdPartySetting.TpSetting["V2OperatorId"]}:{signature}")
+            {
+                return new AllBetTransferResponse(AllbetResultCode.InvalidSignature);
+            }
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var bodyText = await reader.ReadToEndAsync();
+            return await _AllbetBll.SeamlessWallet(transType, bodyText);
+        }
+
+
         [HttpPost]
         [Route("[controller]/[action]")]
         public async Task<Resp> TransferAsync()/*[FromForm]Dictionary<string, string> transferReqq*/
@@ -97,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer", ex);
                 return resp;
             }
-            var transferType = TransferType.Bet;
+            var transferType = AllbetTransferType.Bet;
             Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
 
             Request.Headers.TryGetValue("Authorization", out var authorization);
@@ -143,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_{transferType}_Transfer");
                 return resp;
             }
-            if (transferType == TransferType.EventSettle && transferReq.Details.Any(bet => bet.EventRecordNum <= 0) || transferType != TransferType.EventSettle && transferReq.Details.Any(bet => bet.BetNum <= 0))
+            if (transferType == AllbetTransferType.EventSettle && transferReq.Details.Any(bet => bet.EventRecordNum <= 0) || transferType != AllbetTransferType.EventSettle && transferReq.Details.Any(bet => bet.BetNum <= 0))
             {
                 resp.error_code = "40000";
                 resp.message = "invalid request parameter";
@@ -164,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                if (transferType == TransferType.Bet)
+                if (transferType == AllbetTransferType.Bet)
                 {
                     decimal amountSum = 0;
                     var valid = true;
@@ -242,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.message = "invalid request parameter";
                     }
                 }
-                else if (transferType == TransferType.Settle)
+                else if (transferType == AllbetTransferType.Settle)
                 {
                     decimal amountSum = 0;
                     var valid = true;
@@ -301,7 +319,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.message = "invalid request parameter";
                     }
                 }
-                else if (transferType == TransferType.Cancel)
+                else if (transferType == AllbetTransferType.Cancel)
                 {
                     decimal amountSum = 0;
                     var valid = true;
@@ -371,7 +389,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.message = "invalid request parameter";
                     }
                 }
-                else if (transferType == TransferType.ReSettle)
+                else if (transferType == AllbetTransferType.ReSettle)
                 {
                     decimal amountSum = 0;
                     var valid = true;
@@ -444,7 +462,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.message = "invalid request parameter";
                     }
                 }
-                else if (transferType == TransferType.EventSettle)
+                else if (transferType == AllbetTransferType.EventSettle)
                 {
                     decimal amountSum = 0;
                     var valid = true;
@@ -542,7 +560,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(transferReq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", $"{thisTp}_Transfer", ex);
                 return resp;
             }
-            var transferType = TransferType.Bet;
+            var transferType = AllbetTransferType.Bet;
             Enum.TryParse(transferReq.TransferType.ToString(), out transferType);
 
             if (string.IsNullOrEmpty(transferReq.Client) || transferReq.TranId <= 0 || transferReq.Details == null || transferReq.Details.Any(bet => bet.BetNum <= 0))
@@ -566,7 +584,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                if (transferType == TransferType.Cancel)
+                if (transferType == AllbetTransferType.Cancel)
                 {
                     decimal amountSum = 0;
                     var valid = true;
