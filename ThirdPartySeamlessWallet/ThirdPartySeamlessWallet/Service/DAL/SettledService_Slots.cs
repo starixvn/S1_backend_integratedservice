@@ -2767,12 +2767,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 不存在有效下注
                 if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
+                    logger.LogError($"No valid bet {cancelDataRng_MG.betId}");
                     return new MGCancelResult() {Result = 1};
                 }
 
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
                 {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
                     return new MGCancelResult() {Result = 1};
                 }
 
@@ -2780,12 +2782,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 玩家或金額不符
                 if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(bet.Amount) != cancelDataRng_MG.amount))
                 {
+                    logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
                 //已取消
                 if (bettrans.Any(a=> a.TxnId == cancelDataRng_MG.txnId && a.TicketType == (int)BettransType.CancelBet))
                 {
+                    logger.LogError($"betId:{cancelDataRng_MG.betId}, txnId:{cancelDataRng_MG.txnId} is canceled");
                     return new MGCancelResult() {Result = 1};
                 }
 
