@@ -29,6 +29,27 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("transferType")]
         public int TransferType { get; set; }
     }
+    
+    public class AllBetCancelTransferRequest
+    {
+        [JsonProperty("player")]
+        public string player { get; set; }
+        
+        [JsonProperty("tranId")]
+        public long tranId { get; set; }
+        
+        [JsonProperty("originalTranId")]
+        public long originalTranId { get; set; }
+        
+        [JsonProperty("originalDetails", NullValueHandling = NullValueHandling.Ignore)]
+        public List<AllBetTransferDetails> originalDetails { get; set; }
+        
+        [JsonProperty("reason")]
+        public string reason { get; set; }
+        
+        [JsonProperty("isRetry")]
+        public bool isRetry { get; set; }
+    }
 
     public class AllBetTransferReq
     {
@@ -85,10 +106,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("commission")]
         public int commission { get; set; }
         
-        [JsonProperty("gameResult")]
-        public decimal gameResult { get; set; }
+        [JsonProperty("gameResult", NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? gameResult { get; set; }
         
-        [JsonProperty("gameResult2")]
+        [JsonProperty("gameResult2", NullValueHandling = NullValueHandling.Ignore)]
         public string gameResult2 { get; set; }
         
         [JsonProperty("winOrLossAmount", NullValueHandling = NullValueHandling.Ignore)]
@@ -96,6 +117,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         
         [JsonProperty("validAmount", NullValueHandling = NullValueHandling.Ignore)]
         public decimal? validAmount { get; set; }
+        
+        [JsonProperty("exchangeRate", NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? exchangeRate { get; set; }
         
         [JsonProperty("betTime")]
         public string betTime { get; set; }

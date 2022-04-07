@@ -65,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             if (!Enum.TryParse(method, true, out AllbetType transType))
             {
-                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters);
+                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, $"Not Support {method} method.");
             }
             
             Request.Headers.TryGetValue("Authorization", out var authorization);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,7 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _requestHandler = new Dictionary<AllbetType, Func<AllbetType, string, Task<AllBetTransferResponse>>>
             {
                 { AllbetType.Transfer, Transfer},
-                // { AllbetType.CancelTransfer, CancelTransfer},
+                { AllbetType.CancelTransfer, CancelTransfer},
                 // { AllbetType.GetBalance, GetBalance},
             };
         }
@@ -97,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{ThirdParty}_Transfer, bodyText={bodyText}");
-                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters);
+                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, ex.Message);
             }
 
             try
@@ -167,7 +168,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (!valid)
                 {
-                    return new AllBetTransferResponse(AllbetResultCode.InvalidParameters);
+                    return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, "Data is not Correct.");
                 }
 
                 var tpUserName = request != null ? request.player :
@@ -210,8 +211,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     case AllbetTransferType.Bet:
                         result = Bet(tpCustInfo, request, out afterAmount);
                         break;
-                    // case AllbetTransferType.Cancel:
-                    //     break;
                     case AllbetTransferType.Settle:
                         result = Settle(tpCustInfo, request, out afterAmount);
                         break;
@@ -227,6 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     // case AllbetTransferType.TransferOut:
                     //     break;
                     case AllbetTransferType.EventSettle:
+                        result = EventSettle(tpCustInfo, eventRequest, out afterAmount);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -235,42 +235,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
                 {
                     afterAmount /= tpCurrency.ExchangeRate;
-
-                    if (request != null)
-                    {
-                        request.amount /= tpCurrency.ExchangeRate;
-                        foreach (var bet in request.details)
-                        {
-                            bet.betAmount /= tpCurrency.ExchangeRate;
-                        }
-                    }
-
-                    if (eventRequest != null)
-                    {
-                        eventRequest.amount /= tpCurrency.ExchangeRate;
-                        foreach (var bet in eventRequest.details)
-                        {
-                            bet.amount /= tpCurrency.ExchangeRate;
-                        }
-                    }
                 }
 
                 if (result <= 0 && afterAmount < 0)
                 {
                     return new AllBetTransferResponse(AllbetResultCode.InsufficientBalance, GetBalance(tpUserName));
                 }
-
-                if (((type.type == AllbetTransferType.Settle || type.type == AllbetTransferType.ReSettle) && request.amount <= 0) ||
-                    (type.type == AllbetTransferType.EventSettle && eventRequest.amount == 0))
-                {
-                    afterAmount = GetBalance(tpUserName);
-                }
-
+                
                 return result switch
                 {
                     0 => new AllBetTransferResponse(AllbetResultCode.TranIdNotExists),
                     -1 => new AllBetTransferResponse(AllbetResultCode.InvalidCode),
-                    _ => new AllBetTransferResponse(AllbetResultCode.Success, afterAmount)
+                    _ => new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(tpUserName))
                 };
             }
             catch (Exception ex)
@@ -279,13 +255,92 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new AllBetTransferResponse(AllbetResultCode.SystemError);
             }
         }
+        
+        private async Task<AllBetTransferResponse> CancelTransfer(AllbetType transType, string bodyText)
+        {
+            AllBetCancelTransferRequest request;
+            try
+            {
+                request = JsonConvert.DeserializeObject<AllBetCancelTransferRequest>(bodyText);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{ThirdParty}_Transfer, bodyText={bodyText}");
+                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, ex.Message);
+            }
+            
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, request.player);
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+            
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                foreach (var bet in request.originalDetails)
+                {
+                    bet.betAmount *= tpCurrency.ExchangeRate;
+                }
+            }
 
+            var result = Cancel(tpCustInfo, request);
+            if (result == -3)
+            {
+                Thread.Sleep(5000);
+                result = Cancel(tpCustInfo, request);
+            }
+
+            return result switch
+            {
+                -3 => new AllBetTransferResponse(AllbetResultCode.TranIdNotExists),
+                _ => new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(request.player))
+            };
+        }
+        
         private decimal GetBalance(string tpUserName)
         {
             return _tpCustInfoBll.GetBalance((int)ThirdParty, tpUserName, (int)GameType).Balance;
         }
+        
+        private int Cancel(TpCustInfo tpCustInfo, AllBetCancelTransferRequest request)
+        {
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var p = new DynamicParameters(new
+            {
+                request.originalTranId, 
+                client = request.player,
+                details = JsonConvert.SerializeObject(request.originalDetails)
+            });
+            p.Add("hasCanceled", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            var result = _mainDbClient.Execute("Service_CancelBetLC_Allbet_Set", trans, p);
 
-        public int Bet(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+            if (p.Get<int>("hasCanceled") == 0 && result == request.originalDetails.Count)
+            {
+                var amount = request.originalDetails.Sum(i => i.betAmount);
+                if (result > 0 && amount != 0)
+                {
+                    result = _settledService.PayoutV2(tpCustInfo, amount, (int)ThirdParty, $"T{request.originalTranId}",
+                        (int)GameType, TpCategory.LiveCasino, request.originalTranId.ToString(), TransType.Refunds, null,
+                        out _, "CancelBet", out _, conn, trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            else if (p.Get<int>("hasCanceled") == 1)
+            {
+                result = -1;
+            }
+            else
+            {
+                result = -3;
+            }
+
+            return result;
+        }
+
+        private int Bet(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             var bonusId = 0;
             afterAmount = 0;
@@ -347,11 +402,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-        
-        public int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
-        {
-            var bonusId = 0;
 
+        private int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+        {
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -387,7 +440,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         result = _settledService.PayoutV2(tpCustInfo, payoutAmount, (int)ThirdParty,
                             request.details[0].betNum.ToString(), (int)GameType, TpCategory.LiveCasino,
                             request.details[0].betNum.ToString(), TransType.Payout, null, out afterAmount, "Payout",
-                            out bonusId, conn, trans);
+                            out _, conn, trans);
                     }
         
                     if (result > 0)
@@ -417,8 +470,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
-        
-        public int ReSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+
+        private int ReSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -503,12 +556,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-        
-        public int EventSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllbetTransferEventDetail> request, out decimal afterAmount)
+
+        private int EventSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllbetTransferEventDetail> request, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
-
             var eventRecordNum = request.details[0].eventRecordNum.ToString();
             var p = new DynamicParameters(new
             {
