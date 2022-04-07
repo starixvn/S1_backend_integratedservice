@@ -327,10 +327,22 @@ namespace ThirdParty.Mega
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string secretCode = inputs.ContainsKey($"secretCode_{currency}") && !string.IsNullOrEmpty(inputs[$"secretCode_{currency}"]) ? inputs[$"secretCode_{currency}"] : throw new Exception($"secretCode_{currency}");
             string sn = inputs.ContainsKey("sn") && !string.IsNullOrEmpty(inputs["sn"]) ? inputs["sn"] : throw new Exception("sn");
+            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
 
             if (direction == Direction.ToMain)
             {
                 Amount *= -1;
+            }
+
+            var checkAmount = Amount * 100;
+            bool hasMoreThan3decimals = checkAmount != (int) (checkAmount);
+            if (hasMoreThan3decimals)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Data.Status = TransferStatus.Fail;
+                apiResult.RawMessage = $"transfer failed only support 2 decimal place (Mega point {Math.Abs(Amount)})";
+                apiResult.RawErrorCode = "37123";
+                return apiResult;
             }
 
             var uuid = Guid.NewGuid();
@@ -370,7 +382,7 @@ namespace ThirdParty.Mega
                 "application/json"
             );
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            
             apiResult.RawMessage = "No Result";
             apiResult.RawErrorCode = "1";
             apiResult.ErrorCode = ErrorCode.TransferPending;
