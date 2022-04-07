@@ -245,7 +245,12 @@ namespace ThirdPartyCore.Model
         /// <returns></returns>
         private string ESports()
         {
-            var result = "&game=esports";
+            var result = _appType switch
+            {
+                AppType.Desktop => "&game=esports",
+                AppType.Mobile => "&types=esports",
+                _ => string.Empty
+            };
 
             if (!string.IsNullOrEmpty(_leagueId) && _leagueId != "0")
             {
