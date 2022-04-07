@@ -104,6 +104,58 @@ namespace ThirdPartyBetHistory.Service.DAL
                         }
                     }
 
+                    #region Set WinLostAmount of Cust
+
+                    var Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
+                    var Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
+
+                    if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
+                        && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                    {
+                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
+                        if (hasJoinBonus)
+                        {
+                            SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
+                                tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
+                                betRecord.TransId, conn, trans);
+
+                        }
+
+                        if (Losses != 0 && bonusId > 0)
+                        {
+                            AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
+                            //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                        }
+                    }
+                    else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
+                                                  && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
+                    {
+                        var RefWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
+                        var RefLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
+
+                        if (RefWinnings != Winnings || RefLosses != Losses)
+                        {
+                            SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", betRecord.TransId, conn, trans);
+                            if (hasJoinBonus)
+                            {
+                                SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
+                                    tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
+                                    "Settled", bonusId, betRecord.TransId, conn, trans);
+                            }
+
+                            if (Losses != 0 && bonusId > 0)
+                            {
+                                AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
+                                //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                            }
+                        }
+                    }
+
+
+                    #endregion
+                    
+                    #region Set TurnOver of RollOver OR WithdrawalLimit
+
                     if (hasJoinBonus) //有Bonus走SetRollOverTurnOver
                     {
                         if (RefBetRecord == null)
@@ -173,51 +225,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                         }
                     }
 
-                    var Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
-                    var Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
-
-                    if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
-                        && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
-                    {
-                        SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
-                        if (hasJoinBonus)
-                        {
-                            SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
-                                tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
-                                betRecord.TransId, conn, trans);
-
-                        }
-
-                        if (Losses != 0 && bonusId > 0)
-                        {
-                            AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
-                            //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
-                        }
-                    }
-                    else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
-                                                  && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
-                    {
-                        var RefWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
-                        var RefLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
-
-                        if (RefWinnings != Winnings || RefLosses != Losses)
-                        {
-                            SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses, "Settled", betRecord.TransId, conn, trans);
-                            if (hasJoinBonus)
-                            {
-                                SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
-                                    tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
-                                    "Settled", bonusId, betRecord.TransId, conn, trans);
-                            }
-
-                            if (Losses != 0 && bonusId > 0)
-                            {
-                                AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
-                                //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
-                            }
-                        }
-                    }
-
+                    #endregion
+                    
                     if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
                         && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                     {
@@ -367,7 +376,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
             var parameters = new DynamicParameters(new { TpId, GameType, CustId, UserName, SiteId, Turnover, Memo, RefTransId });
             parameters.Add("BonusId", BonusId, direction: ParameterDirection.InputOutput);
-            var result = _mainDbClient.Execute("Service_RolloverTurnover_Set", parameters, conn, trans);
+            var result = _mainDbClient.Execute("Service_RolloverTurnover_Set_V2", parameters, conn, trans);
             BonusId = parameters.Get<int>("BonusId");
             return BonusId > 0 ? 1 : 0;
         }
