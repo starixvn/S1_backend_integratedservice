@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ThirdPartyWager.Extensions;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -22,6 +24,9 @@ namespace ThirdPartyWager.Service.BLL
         private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.NineW;
         private readonly NineWConfig _config;
+        private readonly FincanceService _fincanceService;
+        private readonly IEnumerable<TpCurrency> _currencyList;
+        private readonly int TimeZone = 8;
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -29,11 +34,11 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<NineWBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
-
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-
             var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
             _config = new NineWConfig(setting);
+            _fincanceService = provider.GetRequiredService<FincanceService>();
+            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
@@ -72,17 +77,38 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
+        public async Task<bool> GetReportAsync(DateTime date)
+        {
+            try
+            {
+                var dailySummary = await CountSummaryTransactionByHourAsync(_config, date);
+                if (!dailySummary.Any())
+                {
+                    return true;
+                }
+
+                var result = _fincanceService.SetFinanceTpDailySummary(dailySummary);
+                return result == dailySummary.Count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "NineW GetReportAsync Exception.");
+                return false;
+            }
+
+        }
+
         private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(NineWConfig config, string startTime, string endTime)
-        {           
+        {
             var result = new List<SettleBet>();
             var reportType = new List<int>() { 0, 2, 3, 7 };
             foreach (var type in reportType)
-            {           
+            {
                 var page = 1;
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    _ = Task.Delay(1000);
+                    await Task.Delay(1500);
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
@@ -95,7 +121,7 @@ namespace ThirdPartyWager.Service.BLL
                     var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
-                        throw new Exception(response.ReasonPhrase);
+                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
                     var json = await response.Content.ReadAsStringAsync();
@@ -119,12 +145,12 @@ namespace ThirdPartyWager.Service.BLL
             var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";
             var reportType = new List<int>() { 0, 2, 3, 7 };
             foreach (var type in reportType)
-            {     
+            {
                 var page = 1;
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    _ = Task.Delay(1000);
+                    await Task.Delay(1500);
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
@@ -138,7 +164,7 @@ namespace ThirdPartyWager.Service.BLL
                     var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
-                        throw new Exception(response.ReasonPhrase);
+                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
                     var json = await response.Content.ReadAsStringAsync();
@@ -153,6 +179,76 @@ namespace ThirdPartyWager.Service.BLL
                     result.AddRange(betlist);
                     page++;
                     totalPage = queryReuslt.totalPage;
+                }
+            }
+            return result;
+        }
+
+        private async Task<List<FincanceDailySummary>> CountSummaryTransactionByHourAsync(NineWConfig config, DateTime date)
+        {
+            var result = new List<FincanceDailySummary>();
+            var apiurl = $"{config.ApiUrl}/{config.WebSite}/countSummaryTransactionByHour";
+
+            foreach (var currency in _currencyList)
+            {
+                var checkDataList = new List<Checkdata>();
+                var reportType = new List<int>() { 0, 2, 3, 7 };
+
+                foreach (var type in reportType)
+                {
+                    foreach (var range in date.DateToTimeRange(TimeZone, 12))
+                    {
+                        await Task.Delay(1500);
+
+                        var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                        {
+                            { "cert", config.Cert },
+                            { "currency", currency.TpCurrencyId },
+                            { "settleDateStart", range.begin.ToString("yyyy-MM-dd HH:mm") },
+                            { "settleDateEnd", range.end.ToString("yyyy-MM-dd HH:mm") },
+                            { "timeZone", "1"},
+                            { "reportType", type.ToString() }
+                        });
+                        var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
+                        }
+
+                        var json = await response.Content.ReadAsStringAsync();
+                        _logger.LogInformation(json);
+                        var queryReuslt = _common.FromJson<SummaryTransaction>(json);
+                        if (queryReuslt.status == "1014")//no data.
+                        {
+                            continue;
+                        }
+
+                        if (queryReuslt.status != "1")
+                        {
+                            throw new Exception($"NineW CountSummaryTransactionByHourAsync fail. status is {queryReuslt.status}.");
+                        }
+
+                        checkDataList.AddRange(queryReuslt.checkData);                       
+                    }
+                }
+
+                var stake = checkDataList.Sum(i => i.stakeTotal);
+                var winlostAmount = checkDataList.Sum(i => i.profitLoss);
+                var revenue = checkDataList.Sum(i => i.commission);
+
+                if (stake > 0 || winlostAmount > 0 || revenue > 0)
+                {
+                    result.Add(new FincanceDailySummary()
+                    {
+                        SummaryType = SummaryType.TpBetRecord,
+                        SummaryDate = date,
+                        TpId = _tpId,
+                        CurrencyId = currency.CurrencyId,
+                        Stake = stake,
+                        ValidBet = stake,
+                        WinlostAmount = winlostAmount,
+                        Revenue = revenue,
+                    });
                 }
             }
             return result;
