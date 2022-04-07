@@ -283,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = Cancel(tpCustInfo, request);
             if (result == -3)
             {
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 result = Cancel(tpCustInfo, request);
             }
 
