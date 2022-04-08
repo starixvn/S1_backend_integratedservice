@@ -8,26 +8,26 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
-    public class TpCreditFailService
+    public class TpRequestFailService
     {
         private readonly MySqlClient _mainDbClient;
 
-        public TpCreditFailService(IServiceProvider provider)
+        public TpRequestFailService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
         
-        public IEnumerable<TpCreditFail> GetCreditFail()
+        public IEnumerable<TpRequestFail> GetRequestFail(RequestFailureType type, Tp tpId)
         {
-            return _mainDbClient.Query<TpCreditFail>("Service_TpRequestFailureRecord_Get");
+            return _mainDbClient.Query<TpRequestFail>("Service_TpRequestFailureRecord_Get", parameters: new { _Type = (int) type ,_TpId = (int) tpId });
         }
         
-        public void SetCreditFail(RequestFailureType type, Tp tpId, string request, string errorMessage)
+        public void SetRequestFail(RequestFailureType type, Tp tpId, TpRequestFailureCategory categoryId, string request, string errorMessage)
         {
-            _mainDbClient.Execute("Service_TpRequestFailureRecord_Ins", parameters: new { _Type = (int) type ,_TpId = (int) tpId , _Request = request , _ErrorMessage = errorMessage});
+            _mainDbClient.Execute("Service_TpRequestFailureRecord_Ins", parameters: new { _Type = (int) type ,_TpId = (int) tpId ,_CategoryId = (int) categoryId, _Request = request , _ErrorMessage = errorMessage});
         }
         
-        public void DelCreditFail(int id)
+        public void DelRequestFail(int id)
         {
             _mainDbClient.Execute("Service_TpRequestFailureRecord_Del" , parameters: new { _Id = id });
         }
