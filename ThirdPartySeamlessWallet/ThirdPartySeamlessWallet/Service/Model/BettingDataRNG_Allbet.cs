@@ -33,135 +33,135 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class AllBetCancelTransferRequest
     {
         [JsonProperty("player")]
-        public string player { get; set; }
+        public string Player { get; set; }
         
         [JsonProperty("tranId")]
-        public long tranId { get; set; }
+        public long TranId { get; set; }
         
         [JsonProperty("originalTranId")]
-        public long originalTranId { get; set; }
+        public long OriginalTranId { get; set; }
         
         [JsonProperty("originalDetails", NullValueHandling = NullValueHandling.Ignore)]
-        public List<AllBetTransferDetails> originalDetails { get; set; }
+        public List<AllBetTransferDetails> OriginalDetails { get; set; }
         
         [JsonProperty("reason")]
-        public string reason { get; set; }
+        public string Reason { get; set; }
         
         [JsonProperty("isRetry")]
-        public bool isRetry { get; set; }
+        public bool IsRetry { get; set; }
     }
 
     public class AllBetTransferReq
     {
-        public AllbetTransferType type { get; set; }
+        public AllbetTransferType Type { get; set; }
     }
 
     public class AllBetTransferRequest<T>
     {
         [JsonProperty("tranId")]
-        public long tranId { get; set; }
+        public long TranId { get; set; }
         
         [JsonProperty("player")]
-        public string player { get; set; }
+        public string Player { get; set; }
         
         [JsonProperty("amount")]
-        public decimal amount { get; set; }
+        public decimal Amount { get; set; }
         
         [JsonProperty("currency")]
-        public string currency { get; set; }
+        public string Currency { get; set; }
         
         [JsonProperty("type")]
-        public AllbetTransferType type { get; set; }
+        public AllbetTransferType Type { get; set; }
         
         [JsonProperty("isRetry")]
-        public bool isRetry { get; set; }
+        public bool IsRetry { get; set; }
         
         [JsonProperty("details", NullValueHandling = NullValueHandling.Ignore)]
-        public List<T> details { get; set; }
+        public List<T> Details { get; set; }
     }
 
     public class AllBetTransferDetails
     {
         [JsonProperty("betNum")]
-        public long betNum { get; set; }
+        public long BetNum { get; set; }
         
         [JsonProperty("gameRoundId")]
-        public long gameRoundId { get; set; }
+        public long GameRoundId { get; set; }
         
         [JsonProperty("status")]
-        public int status { get; set; }
+        public int Status { get; set; }
         
         [JsonProperty("betAmount")]
-        public decimal betAmount { get; set; }
+        public decimal BetAmount { get; set; }
         
         [JsonProperty("deposit")]
-        public decimal deposit { get; set; }
+        public decimal Deposit { get; set; }
         
         [JsonProperty("gameType")]
-        public int gameType { get; set; }
+        public int GameType { get; set; }
         
         [JsonProperty("betType")]
-        public int betType { get; set; }
+        public int BetType { get; set; }
         
         [JsonProperty("commission")]
-        public int commission { get; set; }
+        public int Commission { get; set; }
         
         [JsonProperty("gameResult", NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? gameResult { get; set; }
+        public decimal? GameResult { get; set; }
         
         [JsonProperty("gameResult2", NullValueHandling = NullValueHandling.Ignore)]
-        public string gameResult2 { get; set; }
+        public string GameResult2 { get; set; }
         
         [JsonProperty("winOrLossAmount", NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? winOrLossAmount { get; set; }
+        public decimal? WinOrLossAmount { get; set; }
         
         [JsonProperty("validAmount", NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? validAmount { get; set; }
+        public decimal? ValidAmount { get; set; }
         
         [JsonProperty("exchangeRate", NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? exchangeRate { get; set; }
+        public decimal? ExchangeRate { get; set; }
         
         [JsonProperty("betTime")]
-        public string betTime { get; set; }
+        public string BetTime { get; set; }
 
         [JsonProperty("tableName")]
-        public string tableName { get; set; }
+        public string TableName { get; set; }
         
         [JsonProperty("betMethod")]
-        public int betMethod { get; set; }
+        public int BetMethod { get; set; }
         
         [JsonProperty("appType")]
-        public int appType { get; set; }
+        public int AppType { get; set; }
         
         [JsonProperty("gameRoundStartTime")]
-        public string gameRoundStartTime { get; set; }
+        public string GameRoundStartTime { get; set; }
         
         [JsonProperty("gameRoundEndTime", NullValueHandling = NullValueHandling.Ignore)]
-        public string gameRoundEndTime { get; set; }
+        public string GameRoundEndTime { get; set; }
         
         [JsonProperty("ip")]
-        public string ip { get; set; }
+        public string Ip { get; set; }
     }
     
     public class AllbetTransferEventDetail
     {
         [JsonProperty("eventType")]
-        public int eventType { get; set; }
+        public int EventType { get; set; }
         
         [JsonProperty("eventCode")]
-        public string eventCode { get; set; }
+        public string EventCode { get; set; }
         
         [JsonProperty("eventRecordNum")]
-        public long eventRecordNum { get; set; }
+        public long EventRecordNum { get; set; }
         
         [JsonProperty("amount")]
-        public decimal amount { get; set; }
+        public decimal Amount { get; set; }
         
         [JsonProperty("exchangeRate")]
-        public decimal exchangeRate { get; set; }
+        public decimal ExchangeRate { get; set; }
 
         [JsonProperty("settleTime")]
-        public string settleTime { get; set; }
+        public string SettleTime { get; set; }
     }
     
     public class AllBetTransferResponse
@@ -196,13 +196,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             ResultCode = exception.resultCode;
             Message = exception.message;
         }
-        // public AllBetTransferResponse(ExecuteResult result)
-        // {
-        //     resultCode = (int)result.ReturnCode;
-        //     message = result.Message;
-        // }
     }
-
 
     public class Detail
     {
