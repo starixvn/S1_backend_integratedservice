@@ -59,36 +59,76 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         }
 
+        [HttpGet]
+        [Route("[controller]/v2/{method}/{username}")]
+        public async Task<dynamic> GetBalanceAsync([FromRoute] string method, [FromRoute] string username)
+        {
+            try
+            {
+                if (!Enum.TryParse(method, true, out AllbetType transType))
+                {
+                    return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, $"Not Support {method} method.");
+                }
+
+                Request.Headers.TryGetValue("Authorization", out var authorization);
+                Request.Headers.TryGetValue("Date", out var date);
+
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var signString = $"GET\n\n\n{date}\n/{method}/{username}";
+                var signature = Sign(signString, thirdPartySetting.TpSetting["V2PartnerKey"]);
+                _logger.LogInformation($"authorization={authorization}, date={date}, signString={signString}, signature={signature}");
+                
+                if (authorization != $"AB {thirdPartySetting.TpSetting["V2OperatorId"]}:{signature}")
+                {
+                    return new AllBetTransferResponse(AllbetResultCode.InvalidSignature);
+                }
+
+                return await _AllbetBll.SeamlessWallet(transType, username);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new AllBetTransferResponse(AllbetResultCode.SystemError);
+            }
+        }
+
         [HttpPost]
         [Route("[controller]/v2/{method}")]
         public async Task<dynamic> TransferAsync([FromRoute] string method)
         {
-            if (!Enum.TryParse(method, true, out AllbetType transType))
+            try
             {
-                return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, $"Not Support {method} method.");
-            }
-            
-            Request.Headers.TryGetValue("Authorization", out var authorization);
-            Request.Headers.TryGetValue("Accept", out var accept);
-            Request.Headers.TryGetValue("Content-MD5", out var md5);
-            Request.Headers.TryGetValue("Content-Type", out var contentType);
-            Request.Headers.TryGetValue("Date", out var date);
-            
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            var signString = $"POST\n{md5}\n{contentType}\n{date}\n/Transfer";
-            var signature = Sign(signString, thirdPartySetting.TpSetting["V2PartnerKey"]);
-            _logger.LogInformation($"authorization={authorization}, accept={accept}, md5={md5}, contentType={contentType}, date={date}, signString={signString}, signature={signature}");
+                if (!Enum.TryParse(method, true, out AllbetType transType))
+                {
+                    return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, $"Not Support {method} method.");
+                }
 
-            if (authorization != $"AB {thirdPartySetting.TpSetting["V2OperatorId"]}:{signature}")
+                Request.Headers.TryGetValue("Authorization", out var authorization);
+                Request.Headers.TryGetValue("Accept", out var accept);
+                Request.Headers.TryGetValue("Content-MD5", out var md5);
+                Request.Headers.TryGetValue("Content-Type", out var contentType);
+                Request.Headers.TryGetValue("Date", out var date);
+
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var signString = $"POST\n{md5}\n{contentType}\n{date}\n/Transfer";
+                var signature = Sign(signString, thirdPartySetting.TpSetting["V2PartnerKey"]);
+                _logger.LogInformation($"authorization={authorization}, accept={accept}, md5={md5}, contentType={contentType}, date={date}, signString={signString}, signature={signature}");
+
+                if (authorization != $"AB {thirdPartySetting.TpSetting["V2OperatorId"]}:{signature}")
+                {
+                    return new AllBetTransferResponse(AllbetResultCode.InvalidSignature);
+                }
+
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var bodyText = await reader.ReadToEndAsync();
+                return await _AllbetBll.SeamlessWallet(transType, bodyText);
+            }
+            catch (Exception ex)
             {
-                return new AllBetTransferResponse(AllbetResultCode.InvalidSignature);
+                _logger.LogError(ex, ex.Message);
+                return new AllBetTransferResponse(AllbetResultCode.SystemError);
             }
-
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var bodyText = await reader.ReadToEndAsync();
-            return await _AllbetBll.SeamlessWallet(transType, bodyText);
         }
-
 
         [HttpPost]
         [Route("[controller]/[action]")]

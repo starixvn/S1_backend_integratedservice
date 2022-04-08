@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 { AllbetType.Transfer, Transfer},
                 { AllbetType.CancelTransfer, CancelTransfer},
-                // { AllbetType.GetBalance, GetBalance},
+                { AllbetType.GetBalance, GetBalance},
             };
         }
         
@@ -173,8 +173,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 var tpUserName = request != null ? request.player :
                     eventRequest != null ? eventRequest.player : transferRequest.player;
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
-                var tpCurrency = _thirdPartyBll.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+                var (tpCustInfo, tpCurrency) = GetTPInfo(tpUserName);
 
                 if (tpCurrency.ExchangeRate > 0)
                 {
@@ -203,7 +202,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
-
                 var afterAmount = 0m;
                 var result = 0;
                 switch (type.type)
@@ -221,20 +219,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             return new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(tpUserName));
                         }
                         break;
-                    // case AllbetTransferType.TransferIn:
-                    //     break;
-                    // case AllbetTransferType.TransferOut:
-                    //     break;
                     case AllbetTransferType.EventSettle:
                         result = EventSettle(tpCustInfo, eventRequest, out afterAmount);
                         break;
+                    case AllbetTransferType.TransferIn:
+                    case AllbetTransferType.TransferOut:
                     default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-                {
-                    afterAmount /= tpCurrency.ExchangeRate;
+                        throw new AllbetException(AllbetResultCode.InvalidParameters, $"Not Support {type.type.ToString()} type");
                 }
 
                 if (result <= 0 && afterAmount < 0)
@@ -249,13 +240,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _ => new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(tpUserName))
                 };
             }
+            catch (AllbetException ex)
+            {
+                return new AllBetTransferResponse(ex.ReturnCode, ex.message);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
                 return new AllBetTransferResponse(AllbetResultCode.SystemError);
             }
         }
-        
+
         private async Task<AllBetTransferResponse> CancelTransfer(AllbetType transType, string bodyText)
         {
             AllBetCancelTransferRequest request;
@@ -268,35 +263,70 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError(ex, $"{ThirdParty}_Transfer, bodyText={bodyText}");
                 return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, ex.Message);
             }
-            
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, request.player);
-            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
-            
-            if (tpCurrency.ExchangeRate > 0)
+
+            try
             {
-                foreach (var bet in request.originalDetails)
+                var (tpCustInfo, tpCurrency) = GetTPInfo(request.player);
+
+                if (tpCurrency.ExchangeRate > 0)
                 {
-                    bet.betAmount *= tpCurrency.ExchangeRate;
+                    foreach (var bet in request.originalDetails)
+                    {
+                        bet.betAmount *= tpCurrency.ExchangeRate;
+                    }
                 }
-            }
 
-            var result = Cancel(tpCustInfo, request);
-            if (result == -3)
-            {
-                Thread.Sleep(1000);
-                result = Cancel(tpCustInfo, request);
-            }
+                var result = Cancel(tpCustInfo, request);
+                if (result == -3)
+                {
+                    Thread.Sleep(1000);
+                    result = Cancel(tpCustInfo, request);
+                }
 
-            return result switch
+                return result switch
+                {
+                    -3 => new AllBetTransferResponse(AllbetResultCode.TranIdNotExists),
+                    _ => new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(request.player))
+                };
+
+            }
+            catch (AllbetException ex)
             {
-                -3 => new AllBetTransferResponse(AllbetResultCode.TranIdNotExists),
-                _ => new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(request.player))
-            };
+                return new AllBetTransferResponse(ex.ReturnCode, ex.message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new AllBetTransferResponse(AllbetResultCode.SystemError);
+            }
         }
-        
+
+        private async Task<AllBetTransferResponse> GetBalance(AllbetType transType, string username)
+        {
+            return new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(username));
+        }
+
         private decimal GetBalance(string tpUserName)
         {
-            return _tpCustInfoBll.GetBalance((int)ThirdParty, tpUserName, (int)GameType).Balance;
+            var (tpCustInfo, _) = GetTPInfo(tpUserName);
+            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
+            return tpCustBalance.Balance;
+        }
+        
+        private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
+        {
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
+            if (tpCustInfo == null)
+            {
+                throw new AllbetException(AllbetResultCode.UnknownAccount, $"Customer:{tpUserName} not found.");
+            }
+
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate < 0)
+            {
+                throw new AllbetException(AllbetResultCode.InvalidParameters, $"CurrencyId:{tpCustInfo.CurrencyId} not supported.");
+            }
+            return (tpCustInfo, tpCurrency);
         }
         
         private int Cancel(TpCustInfo tpCustInfo, AllBetCancelTransferRequest request)

@@ -166,28 +166,35 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class AllBetTransferResponse
     {
-        public int resultCode { get; set; }
-        public string message { get; set; }
-        public decimal balance { get; set; }
-        public int version { get; set; }
+        [JsonProperty("resultCode")]
+        public int ResultCode { get; set; }
+        
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        
+        [JsonProperty("balance")]
+        public decimal Balance { get; set; }
+        
+        [JsonProperty("version")]
+        public int Version { get; set; }
         
         public AllBetTransferResponse(AllbetResultCode returnCode, decimal amount = 0)
         {
-            resultCode = (int)returnCode;
-            message = returnCode.GetEnumDescription();
-            balance = amount;
-            version = 1;
+            ResultCode = (int)returnCode;
+            Message = returnCode.GetEnumDescription();
+            Balance = amount;
+            Version = 1;
         }
 
         public AllBetTransferResponse(AllbetResultCode returnCode, string msg)
         {
-            resultCode = (int)returnCode;
-            message = msg;
+            ResultCode = (int)returnCode;
+            Message = msg;
         }
         public AllBetTransferResponse(AllbetException exception)
         {
-            resultCode = exception.resultCode;
-            message = exception.message;
+            ResultCode = exception.resultCode;
+            Message = exception.message;
         }
         // public AllBetTransferResponse(ExecuteResult result)
         // {
