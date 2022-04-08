@@ -20,7 +20,7 @@ pipeline {
         stage('Deploy') {
             agent { node { label 'master' } }
             steps {
-                sh 'hostname'
+                sh 'ansible-playbook -i DEV.AWS.yml deploy.docker.yml --extra-vars "host=linux-dev-worker docker_name=dev_thirdpartyservice ver=${proj}:${version} env=${env} docker_ports=55996:55996 volume=/logs/tpservice:/tpservice"'
             }
         }
     }
