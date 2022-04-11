@@ -2669,6 +2669,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
+                // 檢查該局是否已經結算
                 var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (isCompleted)
                 {
@@ -2679,6 +2680,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
+                // 檢查注單是否已經存在
                 var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (bettransRngMg != null)
                 {
@@ -2729,10 +2731,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ExtTxnId = extTxnId
                 };
             }
-            catch (Exception e)
+            catch (MySqlException mySqlEx)
             {
-                logger.LogError(e, $"PayoutRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
-                throw;
+                // 重複注單派彩
+                if (mySqlEx.Number == 1062)
+                {
+                    return new MGPayoutResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                    };
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, $"PayoutRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                    throw;
+                }
             }
         }
 
@@ -2747,31 +2761,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransRngMg == null)
+                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V2",
+                    new {cancelDataRng_MG.betId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettrans = bettransMg.ToList();
+                // 不存在有效下注
+                if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
-                    return new MGCancelResult()
-                    {
-                        Result = 1,
-                    };
+                    logger.LogError($"No valid bet {cancelDataRng_MG.betId}");
+                    return new MGCancelResult() {Result = 1};
                 }
 
-                if (bettransRngMg.PlayerId != cancelDataRng_MG.playerId ||
-                    Math.Abs(bettransRngMg.Amount) != cancelDataRng_MG.amount)
+                // 已結束局
+                if (bettrans.Any(a => a.Completed))
                 {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
+                    return new MGCancelResult() {Result = 1};
+                }
+
+                var bet = bettrans.FirstOrDefault();
+                // 玩家或金額不符
+                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(bet.Amount) != cancelDataRng_MG.amount))
+                {
+                    logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
-                if (bettransRngMg.TicketType == (int)BettransType.CancelBet)
+                //已取消
+                if (bettrans.Any(a=> a.TxnId == cancelDataRng_MG.txnId && a.TicketType == (int)BettransType.CancelBet))
                 {
-                    return new MGCancelResult()
-                    {
-                        Result = 1,
-                        AfterAmount = afterAmount
-                    };
+                    logger.LogError($"betId:{cancelDataRng_MG.betId}, txnId:{cancelDataRng_MG.txnId} is canceled");
+                    return new MGCancelResult() {Result = 1};
                 }
 
-                var result = conn.Execute("Service_CancelBetRng_MG_Set", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = conn.Execute("Service_BettransRng_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
                     if (cancelDataRng_MG.amount != 0)
@@ -2820,6 +2842,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute(spName, new { betId = transId }, commandType: CommandType.StoredProcedure);
+        }
+
+        public int GetTpGameType_MG(string betId, long creationTime)
+        {
+            var tpGameType = 0;
+            var p = new DynamicParameters(new
+            {
+                betId = betId
+            });
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            
+            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V2", p, commandType: CommandType.StoredProcedure);
+            if (slot != null)
+            {
+                tpGameType = (int)GameType.MG_RNG;
+                return tpGameType;
+            }
+
+            long unixTimestamp = tools.GetUnixTimestampByTicks(creationTime);
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+            
+            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", p);
+            if (live.Any())
+            {
+                tpGameType = (int)GameType.MG_LiveCasino;
+                return tpGameType;
+            }
+
+            return tpGameType;
         }
 
         #endregion
@@ -3978,7 +4030,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 payoutRngDto.TicketStatus = (int)TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
-
+                
+                var roundId = payoutRngDto.friendlygameinstanceid.ToString();
                 if (result > 0 && payoutRngDto.amount != 0)
                 {
                     if (bonusId > 0)
@@ -3987,7 +4040,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo: tpCustInfo,
                             amount: payoutRngDto.amount,
                             tpId: (int)Tp.HB,
-                            tpTransId: payoutRngDto.initialdebittransferid,
+                            tpTransId: roundId,
                             gameType: (int)GameType.HB_RNG,
                             tpCategory: TpCategory.Slots,
                             refId: payoutRngDto.transferid,
@@ -4004,7 +4057,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo: tpCustInfo,
                             amount: payoutRngDto.amount,
                             tpId: (int)Tp.HB,
-                            tpTransId: payoutRngDto.initialdebittransferid,
+                            tpTransId: roundId,
                             gameType: (int)GameType.HB_RNG,
                             tpCategory: TpCategory.Slots,
                             refId: payoutRngDto.transferid,
@@ -4020,7 +4073,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && payoutRngDto.gamestatemode == 2)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, payoutRngDto.initialdebittransferid, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.HB, GameType.HB_RNG, roundId, trans, partitionTime);
                 }
 
                 return result;
@@ -4044,7 +4097,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var partitionTime = cancelBetRngDto.dtevent;
             var query = new
             {
-                transferid = cancelBetRngDto.RoundId
+                transferid = cancelBetRngDto.BetId
             };
             var check = _partitionService.Query<BettransData_HB>(partitionTime, "Service_BettransRng_HB_Check", query)
                 ?.FirstOrDefault();
@@ -4077,9 +4130,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PayoutV2(
                         tpCustInfo,
                         cancelBetRngDto.Amount,
-                        (int)Tp.HB,
-                        cancelBetRngDto.RoundId,
-                        (int)GameType.HB_RNG,
+                        (int) Tp.HB,
+                        cancelBetRngDto.BetId,
+                        (int) GameType.HB_RNG,
                         TpCategory.Slots,
                         cancelBetRngDto.TransferId,
                         TransType.Refunds,
@@ -4100,7 +4153,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
-
         #endregion
 
         #region AMB Slot
@@ -4168,7 +4220,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return true;
         }
-
         #endregion
     }
 }

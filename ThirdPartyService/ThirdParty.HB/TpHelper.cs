@@ -84,11 +84,9 @@ namespace ThirdParty.HB
             var brandId = GetInputValue(inputs, "BrandId");
             var url = GetInputValue(inputs, "LaunchUrl");
             var apiKey = GetInputValue(inputs, "APIKey");
-            
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_HB_Detail_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
             var idx = url.LastIndexOf('/');
             var gameHistory = url[..idx];
-            var friendlygameinstanceid = detailList.FirstOrDefault()?.GetValueOrDefault("friendlygameinstanceid")?.ToString();
+            var friendlygameinstanceid = getBetDetail.TransId;
             var hash = SHA256($"{friendlygameinstanceid.ToLower()}{brandId.ToLower()}{apiKey.ToLower()}");
             
             var URL = $"{gameHistory}/games/history/?brandid={brandId}&friendlyid={friendlygameinstanceid}&hash={hash}&locale=en&viewtype=game";

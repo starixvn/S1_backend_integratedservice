@@ -147,5 +147,24 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
+
+        public async Task<int> ExecuteAsync(string name, IDbTransaction transaction, object parameters = null)
+        {
+            var sw = Stopwatch.StartNew();
+            int result;
+            try
+            {
+                result = await transaction.Connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogInformation($"{name} {sw.Elapsed:c}");
+            return result;
+        }
     }
 }

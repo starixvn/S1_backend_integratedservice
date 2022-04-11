@@ -24,7 +24,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     }
 
     public enum GameType
-    {
+    {      
         Saba_Sports = 1,
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
@@ -42,12 +42,20 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba_MacauGame = 26,
         Saba_ChinaLottery = 38,
         Saba_Vgaming = 59,
-        Saba_Bitcoin = 62
+        Saba_Bitcoin = 62,
+        SBSW_Sports = 69,
+        SBSW_NumberGame = 70,
+        SBSW_VirtualSports = 71,
+        SBSW_VirtualSports2 = 72,
+        SBSW_Keno = 73,
+        SBSW_Lottery = 74,
+        SBSW_TableGame = 75
     }
 
     public enum Tp
     {
-        Saba = 1
+        Saba = 1,
+        SBSW = 41
     }
     
     public enum SiteId

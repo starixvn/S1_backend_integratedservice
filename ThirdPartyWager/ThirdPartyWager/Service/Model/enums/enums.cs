@@ -39,6 +39,7 @@
     public enum GameType
     {
         AG_LiveCasino = 8,
+        SA_LiveCasino = 9,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
@@ -51,5 +52,13 @@
         Main, //ConnectionString
         Report,//ConnectionStringReport
         Wager,//ConnectionStringWager
+    }
+
+    public enum SummaryType
+    {
+        TpBetRecord = 1,//下注紀錄
+        TpRewardTotalAmount = 2,//活動總金額
+        TpRewardFreeGame = 3,//活動免費遊戲
+        TpRewardCash = 4,//活動現金獎勵
     }
 }

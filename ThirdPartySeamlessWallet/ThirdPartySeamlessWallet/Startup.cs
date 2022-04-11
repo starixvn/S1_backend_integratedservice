@@ -13,6 +13,8 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model.Options;
+using ThirdPartySeamlessWallet.Service.Workers;
 
 namespace ThirdPartySeamlessWallet
 {
@@ -71,7 +73,9 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<SettledService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<TpUnsettleService>();
+            services.AddSingleton<TpCreditFailService>();
             services.AddSingleton<PartitionService>();
+            services.AddSingleton<ConfigService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
@@ -84,11 +88,13 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
             services.AddSingleton<TpUnSettledBLL>();
-
+            services.AddSingleton<TpCreditFailBLL>();
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();
             services.AddControllers();
+
+            services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

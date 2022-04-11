@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
+        public long trx_id { get; set; }
     }
 
     public class CancelDataRNG_MG
@@ -29,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string playerId { get; set; }
         public string txnId { get; set; }
         public string betId { get; set; }
+        public long creationTime { get; set; }
     }
 
     public class MGLoginRequest
@@ -68,6 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string deviceType { get; set; }
         public string platformType { get; set; }
         public bool completed { get; set; }
+        public string channel { get; set; }
     }
 
     public class MGUpdatebalanceResponse
@@ -84,6 +87,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public string betId { get; set; }
+        public string contentCode { get; set; }
+        public string channel { get; set; }
+        public long creationTime { get; set; }
     }
 
     public class MGRollbackResponse
@@ -99,6 +105,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string PlayerId { get; set; }
         public decimal Amount { get; set; }
         public string RoundId { get; set; }
+        public string TxnId { get; set; }
+        public bool Completed { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }

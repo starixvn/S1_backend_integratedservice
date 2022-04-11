@@ -366,16 +366,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransRngMG != null)
-                {
-                    return new MGPlaceBetResult()
-                    {
-                        Result = 1,
-                        AfterAmount = afterAmount,
-                        ExtTxnId = bettransRngMG.ExtTxnId
-                    };
-                }
+                //// 檢查該局是否已經結算
+                //var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                //if (isCompleted)
+                //{
+                //    return new MGPlaceBetResult()
+                //    {
+                //        Result = 1,
+                //        AfterAmount = afterAmount
+                //    };
+                //}
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
@@ -411,10 +411,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ExtTxnId = extTxnId
                 };
             }
-            catch (Exception e)
+            catch (MySqlException mySqlEx)
             {
-                logger.LogError(e, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
-                throw;
+                // 重複注單下注
+                if (mySqlEx.Number == 1062)
+                {
+                    return new MGPlaceBetResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount
+                    };
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                    throw;
+                }
             }
         }
         #endregion
@@ -1021,11 +1033,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && placeBetRngDto.amount != 0)
                 {
+                    var roundId = placeBetRngDto.friendlygameinstanceid.ToString();
                     result = PlaceBetV2(
                         tpCustInfo,
                         Math.Abs(placeBetRngDto.amount) * -1,
                         (int)Tp.HB,
-                        placeBetRngDto.initialdebittransferid,
+                        roundId,
                         (int)GameType.HB_RNG,
                         placeBetRngDto.transferid,
                         null,

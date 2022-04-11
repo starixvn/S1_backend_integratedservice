@@ -86,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 dBonusCategoryList = new Dictionary<int, int>();
 
                 var bonusCategoryList = thirdPartyService.GetBonusCategoryList();
-                foreach (var bonusCategory in bonusCategoryList.Where(x => x.TpId == 0))
+                foreach (var bonusCategory in bonusCategoryList.Where(x => x.WalletType == 1))
                 {
                     dBonusCategoryList.Add(bonusCategory.Type, bonusCategory.Id);
                 }
@@ -218,6 +218,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (jokerfish.Contains(gameId))
                     {
                         gameType = GameType.Joker_Fish;
+                    }
+                    break;
+                case (int)Tp.MG:
+                    gameType = GameType.MG_RNG;
+                    var casino = GetGameCasinoWithCache(tpId);
+                    var check = casino.FirstOrDefault(x => x.GameId == gameId);
+                    if (check == null)
+                    {
+                        gameType = GameType.MG_LiveCasino;
                     }
                     break;
                 default:
