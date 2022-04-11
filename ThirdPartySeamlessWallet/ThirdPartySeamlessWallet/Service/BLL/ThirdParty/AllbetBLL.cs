@@ -68,10 +68,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<AllBetTransferResponse> Transfer(AllbetType transType, string bodyText)
         {
-            AllBetTransferReq type = null;
+            AllBetTransferReq type;
             AllBetTransferRequest<AllBetTransferDetails> request = null;
             AllBetTransferRequest<AllbetTransferEventDetail> eventRequest = null;
-            AllBetTransferRequest<AllbetTransferEventDetail> transferRequest = null;
 
             try
             {
@@ -85,14 +84,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         break;
 
                     case AllbetTransferType.EventSettle:
-                        eventRequest =
-                            JsonConvert.DeserializeObject<AllBetTransferRequest<AllbetTransferEventDetail>>(bodyText);
+                        eventRequest = JsonConvert.DeserializeObject<AllBetTransferRequest<AllbetTransferEventDetail>>(bodyText);
                         break;
-
-                    // case AllbetTransferType.TransferIn:
-                    // case AllbetTransferType.TransferOut:
-                    //     transferRequest = JsonConvert.DeserializeObject<AllBetTransferRequest<null>>(bodyText);
-                    //     break;
+                    
+                    case AllbetTransferType.TransferIn:
+                    case AllbetTransferType.TransferOut:
+                    default:
+                        throw new AllbetException(AllbetResultCode.InvalidParameters, $"Not Support {type.Type.ToString()} type");
                 }
             }
             catch (Exception ex)
@@ -171,8 +169,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new AllBetTransferResponse(AllbetResultCode.InvalidParameters, "Data is not Correct.");
                 }
 
-                var tpUserName = request != null ? request.Player :
-                    eventRequest != null ? eventRequest.Player : transferRequest.Player;
+                var tpUserName = request != null ? request.Player : eventRequest.Player;
                 var (tpCustInfo, tpCurrency) = GetTPInfo(tpUserName);
 
                 if (tpCurrency.ExchangeRate > 0)
@@ -222,10 +219,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     case AllbetTransferType.EventSettle:
                         result = EventSettle(tpCustInfo, eventRequest, out afterAmount);
                         break;
-                    case AllbetTransferType.TransferIn:
-                    case AllbetTransferType.TransferOut:
-                    default:
-                        throw new AllbetException(AllbetResultCode.InvalidParameters, $"Not Support {type.Type.ToString()} type");
                 }
 
                 if (result <= 0 && afterAmount < 0)
