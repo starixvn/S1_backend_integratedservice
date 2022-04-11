@@ -4154,7 +4154,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
-
         #endregion
 
         #region AMB Slot
@@ -4222,7 +4221,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return true;
         }
-
         #endregion
     }
 }

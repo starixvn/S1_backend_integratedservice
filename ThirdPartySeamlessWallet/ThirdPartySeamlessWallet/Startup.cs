@@ -73,7 +73,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<SettledService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<TpUnsettleService>();
-            services.AddSingleton<TpRequestFailService>();
+            services.AddSingleton<TpCreditFailService>();
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
 
@@ -88,7 +88,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
             services.AddSingleton<TpUnSettledBLL>();
-            services.AddSingleton<TpRequestFailBLL>();
+            services.AddSingleton<TpCreditFailBLL>();
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();

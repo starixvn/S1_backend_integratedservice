@@ -44,7 +44,6 @@
     <ProjectReference Include="..\ThirdParty.MP\ThirdParty.MP.csproj" />
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />
     <ProjectReference Include="..\ThirdParty.Netent\ThirdParty.Netent.csproj" />
-    <ProjectReference Include="..\ThirdParty.NewAMB\ThirdParty.NewAMB.csproj" />
     <ProjectReference Include="..\ThirdParty.One789\ThirdParty.One789.csproj" />
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />
