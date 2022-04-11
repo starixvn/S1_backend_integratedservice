@@ -1,22 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using ThirdPartyCore.Model;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
-using ThirdPartyService.Service.Worker;
 
 namespace ThirdPartyService
 {
@@ -40,6 +33,7 @@ namespace ThirdPartyService
             services.AddSingleton<Common>();
             services.AddSingleton<Log2File>();
             //services.AddSingleton<IBCDBLibrary>();
+            services.AddSingleton<CacheHelper>();
 
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();

@@ -105,6 +105,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string PlayerId { get; set; }
         public decimal Amount { get; set; }
         public string RoundId { get; set; }
+        public string TxnId { get; set; }
+        public bool Completed { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }

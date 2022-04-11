@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Service.Model
         public Dealdetails dealdetails { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public Results? results { get; set; }
+        public dynamic? results { get; set; }
     }
     public class Betinfo
     {
