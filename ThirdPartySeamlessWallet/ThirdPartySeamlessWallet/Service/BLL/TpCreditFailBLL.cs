@@ -7,28 +7,28 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
-    public class TpCreditFailBLL
+    public class TpRequestFailBLL
     {
-        private readonly TpCreditFailService _tpCreditFailService;
+        private readonly TpRequestFailService _tpRequestFailService;
 
-        public TpCreditFailBLL(IServiceProvider provider)
+        public TpRequestFailBLL(IServiceProvider provider)
         {
-            _tpCreditFailService = provider.GetRequiredService<TpCreditFailService>();
+            _tpRequestFailService = provider.GetRequiredService<TpRequestFailService>();
         }
         
-        public IEnumerable<TpCreditFail> GetCreditFail()
+        public IEnumerable<TpRequestFail> GetRequestFail(RequestFailureType type, Tp tpId)
         {
-            return _tpCreditFailService.GetCreditFail();
+            return _tpRequestFailService.GetRequestFail(type, tpId);
         }
         
-        public void SetCreditFail(RequestFailureType type , Tp tpId , string request, string errorMessage)
+        public void SetRequestFail(RequestFailureType type , Tp tpId ,TpRequestFailureCategory categoryId, string request, string errorMessage)
         {
-            _tpCreditFailService.SetCreditFail(type, tpId, request, errorMessage);
+            _tpRequestFailService.SetRequestFail(type, tpId, categoryId, request, errorMessage);
         }
         
-        public void DelCreditFail(int id)
+        public void DelRequestFail(int id)
         {
-            _tpCreditFailService.DelCreditFail(id);
+            _tpRequestFailService.DelRequestFail(id);
         }
     }
 }
