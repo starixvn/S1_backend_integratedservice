@@ -1,34 +1,20 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.AMB
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        public class CommonResponse
-        {
-            public Status status { get; set; }
-            public Data? data { get; set; }
-        }
-        public class Status
-        {
-            public int code { get; set; }
-            public string message { get; set; }
-
-        }
-        public class Data
-        {
-            public string url { get; set; }
-
-        }
-
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -36,49 +22,39 @@ namespace ThirdParty.AMB
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception("SecretKey");
-            ApiUrl = $"{ApiUrl}/seamless/create";
-
-            var param = new
+            var oApiResult = new ApiResult();
+            var ok = false;
+            if (inputs.ContainsKey("ApiUrl") && inputs.ContainsKey("Agent") && inputs.ContainsKey("SecretKey"))
             {
-                username = tpCustInfo.TpUserName,
-                // password = tpCustInfo.TpPwd,
-                agent = Agent,
-            };
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), SecretKey));
-
-            var result = HttpPost(
-                ApiUrl,
-                JsonConvert.SerializeObject(param),
-                "application/json",
-                header
-            );
-
-            ApiResult oApiResult = new ApiResult();
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<CommonResponse>(result);
-                if (json.status.code == 0 || json.status.code == 902)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                }
-                else
+                var ambPoker = AMBFactory.Create(TpGameType.AMB_Poker, inputs);
+                var pokerResult = ambPoker.CreateMember(tpCustInfo.TpUserName, HttpPost);
+                if (pokerResult.status.code != 0 && pokerResult.status.code != 902)
                 {
                     oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = json.status.message;
-                    oApiResult.RawErrorCode = json.status.code.ToString();
+                    oApiResult.RawMessage = pokerResult.status.message;
+                    oApiResult.RawErrorCode = pokerResult.status.code.ToString();
+                    return oApiResult;
                 }
+                ok = true;
             }
-            else
+
+            if (inputs.ContainsKey("SlotApiUrl") && inputs.ContainsKey("SlotAgent") && inputs.ContainsKey("SlotSecretKey"))
             {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail;
+                var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs);
+                var slotResult = ambSlot.CreateMember(tpCustInfo.TpUserName, HttpPost);
+                if (slotResult.status.code != 0 && slotResult.status.code != 902)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = slotResult.status.message;
+                    oApiResult.RawErrorCode = slotResult.status.code.ToString();
+                    return oApiResult;
+                }
+                ok = true;
             }
+            
+            if(ok)
+                oApiResult.ErrorCode = ErrorCode.Success;
+            
             return oApiResult;
         }
 
@@ -96,48 +72,25 @@ namespace ThirdParty.AMB
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception("SecretKey");
-            ApiUrl = $"{ApiUrl}/seamless/launch";
+            var tpGameType = GetInputValue(inputs, "tpGameType");
+            var gameId = GetInputValue(inputs, "gameId");
+            var homeUrl = GetInputValue(inputs, "homeUrl", true);
+            var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
+            var enumGameType = (TpGameType)int.Parse(tpGameType);
+            var amb = AMBFactory.Create(enumGameType, inputs);
+            var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
 
-            var param = new
+            var oApiResult = new ApiResult();
+            if (result.status.code == 0)
             {
-                username = tpCustInfo.TpUserName,
-                agent = Agent,
-            };
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), SecretKey));
-
-            var result = HttpPost(
-                ApiUrl,
-                JsonConvert.SerializeObject(param),
-                "application/json",
-                header
-            );
-
-            ApiResult oApiResult = new ApiResult();
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<CommonResponse>(result);
-                if (json.status.code == 0)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = $"{json.data.url}&e=disable&h=disable";
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = json.status.message;
-                    oApiResult.RawErrorCode = json.status.code.ToString();
-                }
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{result.data.url}";
             }
             else
             {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result.status.message;
+                oApiResult.RawErrorCode = result.status.code.ToString();
             }
 
             return oApiResult;
@@ -150,68 +103,84 @@ namespace ThirdParty.AMB
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.GetValueOrDefault($"ApiUrl") ?? throw new Exception();
-            var agent = inputs.GetValueOrDefault($"Agent") ?? throw new Exception();
-            var secretKey = inputs.GetValueOrDefault($"SecretKey") ?? throw new Exception();
-            var roundId = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransPK_AMB_Detail_Get", new { getBetDetail.TransId })
-                .GetValueOrDefault("roundId").ToString();
-            var sParam = new
-            {
-                username = tpCustInfo.TpUserName,
-                roundId,
-                agent,
-                language = "en",
-            };
+            var tpGameType = (TpGameType)getBetDetail.TpGameTypeOption.Type;
+            var amb = AMBFactory.Create(tpGameType, inputs);
 
-            var param = ToJson(sParam);
-            var url = $"{apiUrl}/seamless/report";
-            var header = new Dictionary<string, string>
+            var roundId = "";
+            var gameId = "";
+            switch (tpGameType)
             {
-                { "x-amb-signature", HMACSHA512(param, secretKey) }
-            };
-            var json = HttpPost(url, param, "application/json", header);
-            var result = FromJson<DetailResult>(json);
-            if (result.status.code != 0)
-            {
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status.code} | {result.status.message}");
+                case TpGameType.AMB_Poker:
+                    roundId = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransPK_AMB_Detail_Get", new {getBetDetail.TransId}).GetValueOrDefault("roundId").ToString();
+                    break;
+                case TpGameType.AMB_RNG:
+                {
+                    var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_AMB_Detail_Get",
+                        new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
+                    roundId = getBetDetail.TransId;
+                    gameId = detailList?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(tpGameType), tpGameType, null);
             }
 
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            var gameReport = amb.GetRoundResult(tpCustInfo.TpUserName, roundId, gameId, HttpPost);
+            if (gameReport.status.code != 0)
             {
-                TransId = getBetDetail.TransId,
-                DetailUrl = result.data.url,
-                TpCurrency = new TpCurrency()
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {gameReport.status.code} | {gameReport.status.message}");
+            }
+
+            if (string.IsNullOrEmpty(gameReport.data.url))
+            {
+                var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_AMB_Detail_Get",
+                    new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
+                var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
-                },
-            };
+                };
+                return new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = ToJson(detailList),
+                    TpCurrency = tpCurrency,
+                    RefTransId = string.Empty,
+                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("username")?.ToString(),
+                    UTCBetTime = detailList.Min(i => (DateTime) i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime) i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                    Stake = detailList.Where(i => (sbyte) i.GetValueOrDefault("TicketType") == 1)
+                        .Sum(i => Math.Abs((decimal) i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Sum(i => (decimal) i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                    GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameId")?.ToString(),
+                    GameName = detailList.FirstOrDefault()?.GetValueOrDefault("game")?.ToString(),
+                };
+            }
+            else
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = gameReport.data.url,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
         }
 
-        public class DetailResult
+        private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
         {
-            public Status status { get; set; }
-            public Data data { get; set; }
+            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            {
+                return inputs[key];
+            }
+
+            if (allowNull)
+                return "";
+            throw new Exception($"inputs {key} is empty");
         }
-
-
-
-
-        private static string HMACSHA512(string input, string key)
-        {
-            byte[] salt = Encoding.UTF8.GetBytes(key);
-            int HASH_SIZE = 64;
-            int ITERATIONS = 1000;
-
-            // Generate a salt
-            RNGCryptoServiceProvider provider = new RNGCryptoServiceProvider();
-            var encoding = new System.Text.UTF8Encoding();
-
-            // Generate the hash
-            Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(input, salt, ITERATIONS, HashAlgorithmName.SHA512);
-            var data = pbkdf2.GetBytes(HASH_SIZE);
-            return Convert.ToBase64String(data);
-        }
-
     }
 }
