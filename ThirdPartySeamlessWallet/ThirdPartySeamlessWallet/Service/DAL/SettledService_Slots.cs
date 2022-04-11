@@ -4153,7 +4153,73 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
+        #endregion
 
+        #region AMB Slot
+
+        public bool Payout_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool Cancel_AMB(DateTime partitionTime, int sq, MySqlTransaction trans)
+        {
+            var query = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Set", query, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool InsertUnsettle_AMB(DateTime partitionTime, string transactionId, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.AMB, GameType.AMB_RNG, transactionId, trans, partitionTime);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            TransType transType, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.AMB,
+                data.roundId,
+                (int)GameType.AMB_RNG,
+                TpCategory.Slots,
+                data.transactionId,
+                transType,
+                null,
+                out afterAmount,
+                memo,
+                out bonusId,
+                conn,
+                trans
+            );
+
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
         #endregion
     }
 }
