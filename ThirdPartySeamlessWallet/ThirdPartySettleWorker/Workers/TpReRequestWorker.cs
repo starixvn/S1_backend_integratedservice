@@ -107,10 +107,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(100);
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
                 if (_environment.IsDevelopment())
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(500);
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
                 _evoTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
