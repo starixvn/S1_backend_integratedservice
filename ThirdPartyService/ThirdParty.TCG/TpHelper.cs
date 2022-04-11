@@ -253,7 +253,7 @@ namespace ThirdParty.TCG
                 lottery_bet_mode = "Lott";
                 series = new List<Series>()
                 {
-                    new Series{ game_group_code = "VIETNAM_LOTTO", default_series="100" },
+                    new Series{ game_group_code = "VIETNAM_LOTTO", default_series="97.5" },
                 };
             }
 

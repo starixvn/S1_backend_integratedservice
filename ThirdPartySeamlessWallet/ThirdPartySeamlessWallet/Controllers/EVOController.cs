@@ -30,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
+        private readonly TpCreditFailBLL _tpCreditFailBll;
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp thisTp;
@@ -50,6 +51,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpCreditFailBll = provider.GetRequiredService<TpCreditFailBLL>();
             _tools = provider.GetRequiredService<Tools>();
             thisTp = Tp.EVO;
         }
@@ -375,6 +377,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
+            if (!verifyGameId(gameType, getReq.game.details.table.id))
+            {
+                getApiResponse.status = "INVALID_TOKEN_ID";
+                _log2File.Error($"error gametype\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
             if (tokenInfo.tpUserName != getReq.userId)
             {
                 getApiResponse.status = "INVALID_PARAMETER";
@@ -656,6 +664,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
+                _tpCreditFailBll.SetCreditFail( RequestFailureType.Tp, Tp.EVO, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
         }
@@ -806,6 +815,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 gameType = Convert.ToInt32(sessionKeyArr[3]),
                 tpId = Convert.ToInt32(sessionKeyArr[4])
             };
+        }
+        
+        private bool verifyGameId(int gameType, string gameId)
+        {
+            var getGameType = _thirdPartyBLL.GetGameType((int)Tp.EVO, gameId);
+            if (gameType == (int)getGameType)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

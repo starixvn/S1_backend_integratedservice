@@ -86,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 dBonusCategoryList = new Dictionary<int, int>();
 
                 var bonusCategoryList = thirdPartyService.GetBonusCategoryList();
-                foreach (var bonusCategory in bonusCategoryList.Where(x => x.TpId == 0))
+                foreach (var bonusCategory in bonusCategoryList.Where(x => x.WalletType == 1))
                 {
                     dBonusCategoryList.Add(bonusCategory.Type, bonusCategory.Id);
                 }
@@ -227,6 +227,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (check == null)
                     {
                         gameType = GameType.MG_LiveCasino;
+                    }
+                    break;
+                case (int)Tp.EVO:
+                    gameType = GameType.EVO_LiveCasino;
+                    var netent = GetGameCasinoWithCache((int)Tp.Netent);
+                    var chkNetent = netent.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkNetent != null && chkNetent.GameId == gameId)
+                    {
+                        gameType = GameType.Netent_RNG;
+                        return gameType;
+                    }
+                    var redtiger = GetGameCasinoWithCache((int)Tp.RedTiger);
+                    var chkRedtiger = redtiger.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkRedtiger != null && chkRedtiger.GameId == gameId)
+                    {
+                        gameType = GameType.RedTiger_RNG;
+                        return gameType;
                     }
                     break;
                 default:
