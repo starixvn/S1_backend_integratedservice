@@ -96,8 +96,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
 
-                
-                
+
+
                 bettingDataFish_Joker.TicketType = (int)BettransType.Bet;
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
 
@@ -363,7 +363,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_MG.TicketType = (int)BettransType.Bet;
             bettingDataRNG_MG.TicketStatus = (int)TicketStatus.UnSettled;
             bettingDataRNG_MG.SettleFlag = (int)SettleFlag.Running;
-            
+
             try
             {
                 //// 檢查該局是否已經結算
@@ -978,7 +978,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = bettingDataRNG_AP.TicketStatus,
             });
             p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-           
+
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
@@ -1026,11 +1026,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return 1;
                 }
-                
+
                 placeBetRngDto.TicketType = (int)BettransType.Bet;
                 placeBetRngDto.TicketStatus = (int)TicketStatus.UnSettled;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", placeBetRngDto, trans);
-                
+
                 if (result > 0 && placeBetRngDto.amount != 0)
                 {
                     var roundId = placeBetRngDto.friendlygameinstanceid.ToString();
@@ -1069,6 +1069,51 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return check.Any();
         }
         #endregion
-        
+
+        #region AMB Slot
+
+        public IEnumerable<BettingDataRNG_AMB> IsExist_AMB(bool checkEndRound, DateTime partitionTime, BettingDataRNG_AMB data)
+        {
+            var query = new { CheckEndRound = checkEndRound, transactionId = data.transactionId, roundId = data.roundId, Type = data.Type };
+            return _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
+        }
+
+        public bool PlaceBet_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins", data, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.AMB,
+                                data.roundId,  //TpTransId
+                                (int)GameType.AMB_RNG,
+                                data.transactionId,  //RefId
+                                null,
+                                TpCategory.Slots,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans);
+
+            if (result <= 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
+
     }
 }
