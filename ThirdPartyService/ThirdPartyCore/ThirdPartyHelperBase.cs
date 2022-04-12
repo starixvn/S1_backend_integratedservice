@@ -66,6 +66,7 @@ namespace ThirdPartyCore
         public static ITpBetRecordProvider TpBetRecordProvider { set; get; }
 
         public static ITpCustInfoProvider TpCustInfoProvider { set; get; }
+        public static IBetLimitProvider BetLimitProvider { set; get; }
 
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }
