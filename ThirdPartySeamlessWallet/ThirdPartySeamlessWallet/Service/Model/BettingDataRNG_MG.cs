@@ -87,6 +87,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public string betId { get; set; }
+        public string txnEventType { get; set; }
         public string contentCode { get; set; }
         public string channel { get; set; }
         public long creationTime { get; set; }
