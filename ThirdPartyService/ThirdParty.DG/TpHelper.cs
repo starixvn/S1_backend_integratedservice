@@ -304,8 +304,8 @@ namespace ThirdParty.DG
             if (custBetLimit != null)
             {
                 var limitGroup = JsonConvert.DeserializeObject<List<BetSetting>>(custBetLimit.BetSetting);
-                var dg = limitGroup?.SingleOrDefault(a => a.TpCategory == 3)?.TpBetSetting
-                    .SingleOrDefault(b => b.GameTypeId == 10);
+                var dg = limitGroup?.SingleOrDefault(a => a.TpCategory == (int)TpCategory.LiveCasino)?.TpBetSetting
+                    .SingleOrDefault(b => b.GameTypeId == (int)TpGameType.DG_LiveCasino);
                 if (dg != null)
                     return dg.LimitGroup;
             }
