@@ -47,6 +47,7 @@ namespace ThirdPartyService
             services.AddSingleton<TpCustBalanceService>();
             services.AddSingleton<TpBetRecordService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<BetLimitService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
