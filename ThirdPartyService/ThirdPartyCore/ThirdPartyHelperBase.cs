@@ -97,7 +97,12 @@ namespace ThirdPartyCore
         protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null, int timeOutTime = 0)
         {
 
-            InsertLog?.Invoke(url, parameters, "1");
+            var parametersLog = parameters;
+            if (headers != null)
+            {
+                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+            }
+            InsertLog?.Invoke(url, parametersLog, "1");
 
             if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
             {
