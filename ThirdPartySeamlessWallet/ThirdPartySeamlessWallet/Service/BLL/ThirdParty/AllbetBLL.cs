@@ -106,6 +106,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     case AllbetTransferType.Bet:
                         decimal amountSum = 0;
+                        request.Amount = Math.Abs(request.Amount);
 
                         if (request.Amount <= 0)
                         {
