@@ -16,12 +16,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string roundId { get; set; }
         public decimal amount { get; set; }
         public decimal turnover { get; set; }
+        public decimal roundAmount { get; set; }
         public string currency { get; set; }
         public string transactionId { get; set; }
         public DateTime timestamp { get; set; }
         public bool featureBuy { get; set; }
         public bool isEndRound { get; set; }
-        public BettransRng_AMBTypeEnum Type { get; set; }
+        public string type { get; set; }
+        public string tranId { get; set; }
+        public BettransRng_AMBTypeEnum FromAPIType { get; set; }
         public BettransType TicketType { get; set; }
         public TicketStatus TicketStatus { get; set; }
         public DateTime CreateTime { get; set; }
@@ -140,7 +143,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// Round Id for each bet transaction
         /// </summary>
         public string roundId { get; set; }
-
         /// <summary>
         /// Currency of amount
         /// </summary>
@@ -153,6 +155,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// Timestamp of this transaction
         /// </summary>
         public string timestamp { get; set; }
+
+        //The following don't refer from TP Doc. but exit when testing in tp UAT.
+        public decimal roundAmount { get; set; }
+        public string type { get; set; }
+        public string tranId { get; set; }
     }
 
     #endregion
