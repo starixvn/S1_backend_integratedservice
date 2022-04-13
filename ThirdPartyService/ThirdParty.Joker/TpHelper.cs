@@ -13,6 +13,8 @@ namespace ThirdParty.Joker
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        #region Model
+
         public class UsrReq
         {
             public string AppID { get; set; }
@@ -26,7 +28,18 @@ namespace ThirdParty.Joker
             public string gameCode { get; set; }
             public string language { get; set; }
             public bool mobile { get; set; }
+            public string redirectUrl { get; set; }
         }
+
+        public class DetailResult
+        {
+            public string Error { get; set; }
+            public string Description { get; set; }
+            public string Url { get; set; }
+        }
+
+        #endregion
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -34,7 +47,6 @@ namespace ThirdParty.Joker
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
@@ -54,19 +66,36 @@ namespace ThirdParty.Joker
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            string AppID = inputs.ContainsKey($"AppID_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"AppID_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"AppID_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
-            string Secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string gameUrl = string.Empty;
+            string appId = string.Empty;
+            string secret = string.Empty;
+
+            gameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"])
+                     ? inputs["GameUrl"]
+                     : throw new Exception("GameUrl is empty");
 
             if (tpCustInfo.IsTest)
             {
-                AppID = inputs.ContainsKey($"AppID_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"AppID_{tpCustInfo.TpCurrencyId}_Test"]) ? inputs[$"AppID_{tpCustInfo.TpCurrencyId}_Test"] : throw new Exception();
-                Secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"]) ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"] : throw new Exception();
+                appId = inputs.ContainsKey($"AppID_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"AppID_{tpCustInfo.TpCurrencyId}_Test"])
+                      ? inputs[$"AppID_{tpCustInfo.TpCurrencyId}_Test"]
+                      : throw new Exception($"AppID_{tpCustInfo.TpCurrencyId}_Test is empty");
+                secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"])
+                      ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"]
+                      : throw new Exception($"Secret_{tpCustInfo.TpCurrencyId}_Test is empty");
+            }
+            else
+            {
+                appId = inputs.ContainsKey($"AppID_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"AppID_{tpCustInfo.TpCurrencyId}"])
+                      ? inputs[$"AppID_{tpCustInfo.TpCurrencyId}"]
+                      : throw new Exception($"AppID_{tpCustInfo.TpCurrencyId} is empty");
+
+                secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}"])
+                       ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}"]
+                       : throw new Exception($"Secret_{tpCustInfo.TpCurrencyId} is empty");
             }
 
             var gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
+            var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             var token = ApplyToken(tpCustInfo);
             var sessionKeyArr = new string[] { token, gameCode };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
@@ -75,19 +104,21 @@ namespace ThirdParty.Joker
             var loginReq = new LoginReq
             {
                 token = sessionKey,
-                appID = AppID,
+                appID = appId,
                 gameCode = gameCode,
                 language = TpLangId,
-                mobile = appType != AppType.Desktop
+                mobile = appType != AppType.Desktop,
+                redirectUrl = homeUrl
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(loginReq));
             string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
-            //var result = HttpPost(ApiUrl, sParam, "application/json");
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?{sParam}";
-            return oApiResult;
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = $"{gameUrl}?{sParam}"
+            };
         }
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
@@ -149,11 +180,5 @@ namespace ThirdParty.Joker
             }
         }
 
-        public class DetailResult
-        {
-            public string Error { get; set; }
-            public string Description { get; set; }
-            public string Url { get; set; }
-        }
     }
 }
