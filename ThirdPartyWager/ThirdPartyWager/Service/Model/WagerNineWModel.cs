@@ -54,8 +54,8 @@ namespace ThirdPartyWager.Service.Model
         public decimal matchOddsReq { get; set; }
         public string userId { get; set; } = string.Empty;
         public string betId { get; set; } = string.Empty;
-        public string betPlaced { get; set; } = string.Empty;
-        public string matchSettledDate { get; set; } = string.Empty;
+        public DateTime betPlaced { get; set; } = default;
+        public DateTime matchSettledDate { get; set; } = default;
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
         public string matchType { get; set; } = string.Empty;
@@ -68,6 +68,21 @@ namespace ThirdPartyWager.Service.Model
         public decimal matchStake { get; set; }
         public decimal profitLoss { get; set; }
         public string updateDate { get; set; } = string.Empty;
+        public long betUnix
+        {
+            get
+            {
+                return new DateTimeOffset(betPlaced, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+        public long settledUnix
+        {
+            get
+            {
+                return new DateTimeOffset(matchSettledDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+
 
         public SettleBet() { }
 
@@ -115,7 +130,7 @@ namespace ThirdPartyWager.Service.Model
         public string marketId { get; set; }
         public string startTime { get; set; }
         public string settledDate { get; set; }
-        public string resettledDate { get; set; }
+        public DateTime resettledDate { get; set; } = default;
         public decimal profitLoss { get; set; }
         public decimal marketTotal { get; set; }
         public decimal commission { get; set; }
