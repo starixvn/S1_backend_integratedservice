@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartyCore;
@@ -11,18 +12,19 @@ namespace ThirdParty.Allbet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private class Result
+        private class Result<T>
         {
             public string resultCode { get; set; }
             public string message { get; set; }
+            public T data { get; set; }
         }
         
-        private class UserResult : Result
+        private class UserResult
         {
             public string player { get; set; }
         }
         
-        private class LoginResult : Result
+        private class LoginResult
         {
             public string gameLoginUrl { get; set; }
         }
@@ -38,21 +40,21 @@ namespace ThirdParty.Allbet
             var agentKey = $"V2{tpCustInfo.TpCurrencyId}Agent";
             var agent = inputs.ContainsKey(agentKey) && !string.IsNullOrEmpty(inputs[agentKey]) ? inputs[agentKey] : throw new Exception("Can't get agent.");
             var path = "CheckOrCreate";
-            var header = GetAuthData(inputs, path, out var contentType);
-            
+            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["V2Suffix"]}";
             var parameters = ToJson(new
             {
                 agent,
                 player = tpCustInfo.TpUserName
             });
-
-            var result = HttpPost($"{apiUrl}/{path}", parameters, contentType, header);
+            var header = GetAuthData(inputs, path, parameters, out var contentType);
+            
+            var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
 
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var userResult = FromJson<UserResult>(result);
-                if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase))
+                var userResult = FromJson<Result<UserResult>>(result);
+                if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase) || userResult.resultCode.Equals("PLAYER_EXIST", StringComparison.OrdinalIgnoreCase))
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                 }
@@ -89,24 +91,23 @@ namespace ThirdParty.Allbet
             var apiUrl = inputs.ContainsKey("V2ApiUrl") && !string.IsNullOrEmpty(inputs["V2ApiUrl"]) ? inputs["V2ApiUrl"] : throw new Exception();
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
-            var header = GetAuthData(inputs, path, out var contentType);
-
             var parameters = ToJson(new
             {
                 player = isFun ? null : tpCustInfo.TpUserName,
                 language = tpLangId
             });
+            var header = GetAuthData(inputs, path, parameters, out var contentType);
 
-            var result = HttpPost($"{apiUrl}/{path}", parameters, contentType, header);
+            var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var userResult = FromJson<LoginResult>(result);
+                var userResult = FromJson<Result<LoginResult>>(result);
                 if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase))
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = userResult.gameLoginUrl;
+                    oApiResult.Message = userResult.data.gameLoginUrl;
                 }
                 else
                 {
@@ -181,11 +182,11 @@ namespace ThirdParty.Allbet
             };
         }
         
-        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, out string contentType)
+        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, string parameters, out string contentType)
         {
-            var md5 = inputs["MD5Key"];
-            contentType = "application/json; charset=UTF-8";
-            var date = DateTime.UtcNow.ToString("ddd, dd MMM yyy HH:mm:ss UTC");
+            var md5 = Base64Md5(parameters);
+            contentType = "application/json";
+            var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
             var signature = Sign(signString, inputs["V2AllbetKey"]);
             return new Dictionary<string, string>
@@ -193,7 +194,6 @@ namespace ThirdParty.Allbet
                 { "Accept", "application/json" },
                 { "Authorization", $"AB {inputs["V2OperatorId"]}:{signature}" },
                 { "Content-MD5", md5 },
-                { "Content-Type", contentType },
                 { "Date", date }
             };
         }
@@ -204,6 +204,17 @@ namespace ThirdParty.Allbet
             var hash = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(encryptText));
 
             return Convert.ToBase64String(hash);
+        }
+        
+        private string Base64Md5(string data)
+        {
+            return Convert.ToBase64String(Md5(Encoding.UTF8.GetBytes(data)));
+        }
+        
+        private byte[] Md5(byte[] data)
+        {
+            using var md5Crp = new MD5CryptoServiceProvider();
+            return md5Crp.ComputeHash(data);
         }
     }
 }
