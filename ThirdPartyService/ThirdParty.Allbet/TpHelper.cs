@@ -91,6 +91,12 @@ namespace ThirdParty.Allbet
             var apiUrl = inputs.ContainsKey("V2ApiUrl") && !string.IsNullOrEmpty(inputs["V2ApiUrl"]) ? inputs["V2ApiUrl"] : throw new Exception();
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
+                
+            if (!tpCustInfo.TpUserName.EndsWith(inputs["V2Suffix"]))
+            {
+                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["V2Suffix"]}";
+            }
+            
             var parameters = ToJson(new
             {
                 player = isFun ? null : tpCustInfo.TpUserName,
