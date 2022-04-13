@@ -246,7 +246,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         Credit = 1,
         Cancel = 2,
-        PromoPayout = 3
+        PromoPayout = 3,
+        EndRound = 4
     }
     
     public enum SeamlessBonusType

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,15 +18,19 @@ namespace ThirdPartySeamlessWallet.Service.Workers
     {
         private readonly IHostEnvironment _environment;
         private readonly TpRequestFailBLL _tpRequestFailBll;
+        private readonly TpUnSettledBLL _tpUnSettledBll;
+        private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly SettledBLL _settledBll;
         private readonly ILogger<TpReRequestWorker> _logger;
         private Timer _evoTimer;
-   
+        private Timer _ppTimer;
         
         public TpReRequestWorker(IServiceProvider provider)
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
+            _tpUnSettledBll = provider.GetRequiredService<TpUnSettledBLL>();
+            _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBll = provider.GetRequiredService<SettledBLL>();
             _logger = provider.GetRequiredService<ILogger<TpReRequestWorker>>();
         }
@@ -35,6 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _evoTimer = new Timer(DoEvoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            // _ppTimer = new Timer(DoPPTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         
@@ -117,6 +121,44 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
+        private void DoPPTask(object state)
+        {
+            try
+            {
+                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, Tp.PP);
+                foreach (var data in list)
+                {
+                    var result = 0;
+                    var betReq = JsonConvert.DeserializeObject<PPController.BetReq>(data.Request);
+                    
+                    switch (data.CategoryId) 
+                    {
+                        case (int) TpRequestFailureCategory.EndRound: 
+                            var gameType = _thirdPartyBll.GetGameType_PP(betReq.gameId);
+                            result = _tpUnSettledBll.InsertTpUnsettle(Tp.PP, gameType, betReq.roundId.ToString());
+                            break;
+                    }
+                    
+                    if (result > 0 )
+                    {
+                        _tpRequestFailBll.DelRequestFail(data.Id);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, GetCurrentMethod());
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
+                if (_environment.IsDevelopment())
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                _ppTimer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
         #region Evo Private Method
 
         private EVOController.TokenInfo getTokenInfo(string token)
