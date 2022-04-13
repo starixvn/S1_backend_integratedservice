@@ -794,12 +794,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
-        private string Sign(string EncryptText, string EncryptKey)
+        private string Sign(string encryptText, string encryptKey)
         {
-            using var myHMACSHA1 = new HMACSHA1(Convert.FromBase64String(EncryptKey));
-            var RstRes = myHMACSHA1.ComputeHash(Encoding.UTF8.GetBytes(EncryptText));
+            using var hmacsha1 = new HMACSHA1(Convert.FromBase64String(encryptKey));
+            var hash = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(encryptText));
 
-            return Convert.ToBase64String(RstRes);
+            return Convert.ToBase64String(hash);
         }
     }
 }
