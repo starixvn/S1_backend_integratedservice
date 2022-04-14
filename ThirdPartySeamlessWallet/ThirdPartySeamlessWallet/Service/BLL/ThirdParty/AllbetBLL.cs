@@ -403,15 +403,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    var payoutAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
-                    if (payoutAmount != request.Amount - request.Details[0].ValidAmount)
+                    var winLossAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
+                    if (winLossAmount != request.Amount - request.Details[0].ValidAmount - request.Details[0].Deposit)
                     {
                         throw new AllbetException(AllbetResultCode.InvalidParameters,
-                            $"WinOrLossAmount ({payoutAmount}) not equal Amount ({request.Amount}) less ValidAmount ({request.Details[0].ValidAmount}).");
+                            $"WinOrLossAmount ({winLossAmount}) not equal Amount ({request.Amount}) less ValidAmount/Deposit ({request.Details[0].ValidAmount + request.Details[0].Deposit}).");
                     }
-                    if (payoutAmount != 0)
+
+                    if (request.Amount != 0)
                     {
-                        result = _settledService.PayoutV2(tpCustInfo, payoutAmount, (int)ThirdParty,
+                        result = _settledService.PayoutV2(tpCustInfo, request.Amount, (int)ThirdParty,
                             request.Details[0].BetNum.ToString(), (int)GameType, TpCategory.LiveCasino,
                             request.Details[0].BetNum.ToString(), TransType.Payout, null, out afterAmount, "Payout",
                             out _, conn, trans);
