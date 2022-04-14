@@ -105,21 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 switch (type.Type)
                 {
                     case AllbetTransferType.Bet:
-                        decimal amountSum = 0;
-                        request.Amount = Math.Abs(request.Amount);
-
-                        foreach (var betAmt in request.Details)
-                        {
-                            if (betAmt.BetAmount <= 0)
-                            {
-                                valid = false;
-                                break;
-                            }
-
-                            amountSum += betAmt.BetAmount;
-                        }
-
-                        if (amountSum != request.Amount)
+                        if (request.Details.Sum(betAmt => betAmt.BetAmount + betAmt.Deposit) != Math.Abs(request.Amount))
                         {
                             valid = false;
                         }
