@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Commission { get; set; }
         
         [JsonProperty("gameResult", NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? GameResult { get; set; }
+        public string GameResult { get; set; }
         
         [JsonProperty("gameResult2", NullValueHandling = NullValueHandling.Ignore)]
         public string GameResult2 { get; set; }

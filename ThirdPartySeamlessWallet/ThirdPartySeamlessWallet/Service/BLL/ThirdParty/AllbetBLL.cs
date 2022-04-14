@@ -108,29 +108,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         decimal amountSum = 0;
                         request.Amount = Math.Abs(request.Amount);
 
-                        if (request.Amount <= 0)
+                        foreach (var betAmt in request.Details)
+                        {
+                            if (betAmt.BetAmount <= 0)
+                            {
+                                valid = false;
+                                break;
+                            }
+
+                            amountSum += betAmt.BetAmount;
+                        }
+
+                        if (amountSum != request.Amount)
                         {
                             valid = false;
                         }
-                        else
-                        {
-                            foreach (var betAmt in request.Details)
-                            {
-                                if (betAmt.BetAmount <= 0)
-                                {
-                                    valid = false;
-                                    break;
-                                }
-
-                                amountSum += betAmt.BetAmount;
-                            }
-
-                            if (amountSum != request.Amount)
-                            {
-                                valid = false;
-                            }
-                        }
-
                         break;
 
                     case AllbetTransferType.Settle:
@@ -138,13 +130,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         if (request.Details.Count > 1)
                         {
                             valid = false;
-                        }
-                        else
-                        {
-                            if (request.Details.Sum(betAmt => betAmt.BetAmount) != request.Amount)
-                            {
-                                valid = false;
-                            }
                         }
 
                         break;
@@ -428,11 +413,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = AllbetInsert(AllbetTransferType.Settle, request, trans, out var stake, out _);
+                result = AllbetInsert(AllbetTransferType.Settle, request, trans, out _, out _);
 
                 if (result > 0)
                 {
-                    var payoutAmount = request.Amount + stake;
+                    var payoutAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
+                    if (payoutAmount != request.Amount - request.Details[0].ValidAmount)
+                    {
+                        throw new AllbetException(AllbetResultCode.InvalidParameters,
+                            $"WinOrLossAmount ({payoutAmount}) not equal Amount ({request.Amount}) less ValidAmount ({request.Details[0].ValidAmount}).");
+                    }
                     if (payoutAmount != 0)
                     {
                         result = _settledService.PayoutV2(tpCustInfo, payoutAmount, (int)ThirdParty,
