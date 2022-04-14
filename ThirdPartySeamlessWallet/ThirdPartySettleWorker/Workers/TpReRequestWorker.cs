@@ -38,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _evoTimer = new Timer(DoEvoTask, null, TimeSpan.Zero, TimeSpan.Zero);
-            // _ppTimer = new Timer(DoPPTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _ppTimer = new Timer(DoPPTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         
