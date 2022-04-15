@@ -63,7 +63,7 @@ namespace ThirdPartySettleWorker.Workers
             var gameType = (GameType)state;
             var tpCategory = TpCategory.Slots;
             var logName = $"Settle_SG_Rng";
-            var getSP = $"Service_TpWagerRng_SG_Settle_Get_V3";
+            var getSP = $"Service_BettransRng_SG_Settle_Get_V3";
             var setSP = $"Service_TpWagerRng_SG_Settle_Set_V3";
             var dueTimeSpan = TimeSpan.FromSeconds(30);
 
