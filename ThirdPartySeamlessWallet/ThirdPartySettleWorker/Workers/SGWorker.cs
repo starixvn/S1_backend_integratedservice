@@ -216,7 +216,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId);
+                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, DataBase.Wager);
                             });
                         }
                     }
