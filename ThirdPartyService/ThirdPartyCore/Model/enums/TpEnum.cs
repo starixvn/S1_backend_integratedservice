@@ -42,8 +42,7 @@ namespace ThirdPartyCore.Model.enums
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
-        HB = 40,
-        NewAMB = 42
+        HB = 40
     }
 
     public enum TpGameType

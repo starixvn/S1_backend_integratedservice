@@ -87,6 +87,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public string betId { get; set; }
+        public string txnEventType { get; set; }
         public string contentCode { get; set; }
         public string channel { get; set; }
         public long creationTime { get; set; }
@@ -105,6 +106,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string PlayerId { get; set; }
         public decimal Amount { get; set; }
         public string RoundId { get; set; }
+        public string TxnId { get; set; }
+        public bool Completed { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }

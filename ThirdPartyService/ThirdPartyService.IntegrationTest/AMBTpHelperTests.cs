@@ -21,7 +21,7 @@ namespace ThirdParty.AMB.Tests
             _tpHelper = new TpHelper();
             _tpCustInfo = new TpCustInfo()
             {
-                TpId = 42,
+                TpId = 30,
                 CustId = 250764,
                 SiteId = 1,
                 UserName = "hulkchou4",
@@ -45,14 +45,70 @@ namespace ThirdParty.AMB.Tests
         [Test]
         public void CreateMemberTest()
         {
-            //Act
-            _inputs.Add("tpGameType", "76");
             var actual = _tpHelper.CreateMember(_tpCustInfo, _inputs);
-
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
         
+        [Test]
+        public void CreatePokerMember()
+        {
+            //Act
+            var inputs = new Dictionary<string, string>()
+            {
+                {"Agent", "dnova88sw"},
+                {"ApiUrl", "https://staging.ambpoker-api.com"},
+                {"SecretKey", "e926e05de95de97e50ec2922b1ffe608"}
+            };
+            var actual = _tpHelper.CreateMember(_tpCustInfo, inputs);
+            //Assert
+            actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+
+        [Test]
+        public void CreateSlotMember()
+        {
+            //Act
+            var inputs = new Dictionary<string, string>()
+            {
+                {"SlotAgent", "nova88thbtestaa"},
+                {"SlotApiUrl", "https://uat.ambslot-api.com"},
+                {"SlotSecretKey", "1b15232c9933c8d031a68a98d14a2333"}
+            };
+            var actual = _tpHelper.CreateMember(_tpCustInfo, inputs);
+            //Assert
+            actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+        
+        [Test]
+        public void CreatePokerAndSlotMember()
+        {
+            //Act
+            var inputs = new Dictionary<string, string>()
+            {
+                {"Agent", "dnova88sw"},
+                {"ApiUrl", "https://staging.ambpoker-api.com"},
+                {"SecretKey", "e926e05de95de97e50ec2922b1ffe608"},
+                {"SlotAgent", "nova88thbtestaa"},
+                {"SlotApiUrl", "https://uat.ambslot-api.com"},
+                {"SlotSecretKey", "1b15232c9933c8d031a68a98d14a2333"}
+            };
+            var actual = _tpHelper.CreateMember(_tpCustInfo, inputs);
+            //Assert
+            actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+        
+        [Test]
+        public void CreateMemberButNoSetting()
+        {
+            //Act
+            var inputs = new Dictionary<string, string>();
+            var actual = _tpHelper.CreateMember(_tpCustInfo, inputs);
+            //Assert
+            actual.ErrorCode.Should().Be(ErrorCode.SystemError);
+        }
+
+
         [Test]
         public void LoginTest()
         {

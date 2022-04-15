@@ -236,7 +236,20 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         InsufficientBalance = 1,
     }
-
+    
+    public enum RequestFailureType
+    {
+        Tp = 1,
+        Payment = 2,
+    }
+    public enum TpRequestFailureCategory
+    {
+        Credit = 1,
+        Cancel = 2,
+        PromoPayout = 3,
+        EndRound = 4
+    }
+    
     public enum SeamlessBonusType
     {
         TpCategory,

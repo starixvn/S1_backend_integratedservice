@@ -366,16 +366,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransRngMG = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransRngMG != null)
-                {
-                    return new MGPlaceBetResult()
-                    {
-                        Result = 1,
-                        AfterAmount = afterAmount,
-                        ExtTxnId = bettransRngMG.ExtTxnId
-                    };
-                }
+                //// 檢查該局是否已經結算
+                //var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                //if (isCompleted)
+                //{
+                //    return new MGPlaceBetResult()
+                //    {
+                //        Result = 1,
+                //        AfterAmount = afterAmount
+                //    };
+                //}
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
@@ -411,10 +411,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ExtTxnId = extTxnId
                 };
             }
-            catch (Exception e)
+            catch (MySqlException mySqlEx)
             {
-                logger.LogError(e, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
-                throw;
+                // 重複注單下注
+                if (mySqlEx.Number == 1062)
+                {
+                    return new MGPlaceBetResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount
+                    };
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                    throw;
+                }
             }
         }
         #endregion
@@ -1060,16 +1072,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region AMB Slot
 
-        public bool IsExist_AMB(DateTime partitionTime, BettingDataRNG_AMB data, BettransType ticketType, out IEnumerable<BettingDataRNG_AMB> result)
+        public IEnumerable<BettingDataRNG_AMB> IsExist_AMB(bool checkEndRound, DateTime partitionTime, BettingDataRNG_AMB data)
         {
-            var query = new { transactionId = data.transactionId, roundId = data.roundId, TicketType = ticketType };
-            result = _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
-
-            if (result.Count() == 1)
-            {
-                return true;
-            }
-            return false;
+            var query = new { CheckEndRound = checkEndRound, transactionId = data.transactionId, roundId = data.roundId, FromAPIType = data.FromAPIType };
+            return _partitionService.Query<BettingDataRNG_AMB>(partitionTime, "Service_BettransRng_AMB_Check", query);
         }
 
         public bool PlaceBet_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
@@ -1089,19 +1095,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = PlaceBetV2(tpCustInfo,
                                 data.amount,
                                 (int)Tp.AMB,
-                                data.transactionId,  //TpTransId
+                                data.roundId,  //TpTransId
                                 (int)GameType.AMB_RNG,
-                                data.roundId,  //RefId
+                                data.transactionId,  //RefId
                                 null,
                                 TpCategory.Slots,
                                 out afterAmount,
                                 ref bonusId,
                                 conn,
                                 trans);
-            if (result == 0)
+
+            if (result <= 0)
             {
                 return false;
             }
+
             return true;
         }
 

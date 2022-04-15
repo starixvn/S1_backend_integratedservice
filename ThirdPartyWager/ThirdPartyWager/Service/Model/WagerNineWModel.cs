@@ -43,19 +43,19 @@ namespace ThirdPartyWager.Service.Model
     {
         public string eventTypeName { get; set; } = string.Empty;
         public string eventName { get; set; } = string.Empty;
-        public int eventId { get; set; } 
-        public int site { get; set; } 
+        public int eventId { get; set; }
+        public int site { get; set; }
         public string agentId { get; set; } = string.Empty;
-        public int currencyType { get; set; } 
-        public int eventType { get; set; } 
-        public string selectionId { get; set; } 
-        public int categoryType { get; set; } 
+        public int currencyType { get; set; }
+        public int eventType { get; set; }
+        public string selectionId { get; set; }
+        public int categoryType { get; set; }
         public string ip { get; set; } = string.Empty;
         public decimal matchOddsReq { get; set; }
         public string userId { get; set; } = string.Empty;
         public string betId { get; set; } = string.Empty;
-        public string betPlaced { get; set; } = string.Empty;
-        public string matchSettledDate { get; set; } = string.Empty;
+        public DateTime betPlaced { get; set; } = default;
+        public DateTime matchSettledDate { get; set; } = default;
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
         public string matchType { get; set; } = string.Empty;
@@ -68,9 +68,24 @@ namespace ThirdPartyWager.Service.Model
         public decimal matchStake { get; set; }
         public decimal profitLoss { get; set; }
         public string updateDate { get; set; } = string.Empty;
+        public long betUnix
+        {
+            get
+            {
+                return new DateTimeOffset(betPlaced, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+        public long settledUnix
+        {
+            get
+            {
+                return new DateTimeOffset(matchSettledDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+
 
         public SettleBet() { }
-            
+
         public SettleBet(ReSettleBet reSettleBet)
         {
             //共同欄位
@@ -83,7 +98,7 @@ namespace ThirdPartyWager.Service.Model
             eventId = reSettleBet.eventId;
             marketName = reSettleBet.marketName;
             marketId = reSettleBet.marketId;
-            
+
             //將ReSettleBet欄位對應至SettleBet
             matchSettledDate = reSettleBet.resettledDate;
             profitLoss = reSettleBet.profitLoss;
@@ -115,7 +130,7 @@ namespace ThirdPartyWager.Service.Model
         public string marketId { get; set; }
         public string startTime { get; set; }
         public string settledDate { get; set; }
-        public string resettledDate { get; set; }
+        public DateTime resettledDate { get; set; } = default;
         public decimal profitLoss { get; set; }
         public decimal marketTotal { get; set; }
         public decimal commission { get; set; }
@@ -140,6 +155,24 @@ namespace ThirdPartyWager.Service.Model
         public decimal txLiability { get; set; }
         public string betStatus { get; set; }
     }
+
+
+    public class SummaryTransaction
+    {
+        public string status { get; set; }
+        public Checkdata[] checkData { get; set; }
+    }
+
+    public class Checkdata
+    {
+        public int currency { get; set; }
+        public string settledDateStart { get; set; }
+        public string settledDateEnd { get; set; }
+        public decimal profitLoss { get; set; }
+        public decimal commission { get; set; }
+        public decimal stakeTotal { get; set; }
+    }
+
 
 
 
