@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -18,26 +21,32 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class JokerController : ControllerBase
     {
         private readonly AuthBLL authBLL;
-        private readonly ILogger<JokerController> _logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
-        private readonly Log2File log2File;
-        private readonly IHostEnvironment environment;
+        private readonly IJokerBLL _jokerBll;
         private readonly Tools tools;
 
-        public JokerController(IHostEnvironment environment, ILogger<JokerController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File, Tools tools)
+        private readonly IHostEnvironment environment;
+        private readonly ILogger<JokerController> _logger;
+        private readonly Log2File log2File;
+
+        public JokerController(IServiceProvider provider)
         {
-            this.authBLL = authBLL;
-            this._logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            this.environment = environment;
-            this.tools = tools;
+            authBLL = provider.GetService<AuthBLL>();
+            thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+            tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
+            bettingBLL = provider.GetService<BettingBLL>();
+            settledBLL = provider.GetService<SettledBLL>();
+            log2File = provider.GetService<Log2File>();
+            tools = provider.GetService<Tools>();
+            environment = provider.GetService<IHostEnvironment>();
+
+            _logger = provider.GetService<ILogger<JokerController>>();
+            _jokerBll = provider.GetService<IJokerBLL>();
+            log2File = provider.GetService<Log2File>();
+
         }
         private string GetMD5Signature(string rawData)
         {
@@ -640,6 +649,58 @@ namespace ThirdPartySeamlessWallet.Controllers
             return FishBet(JokerFishTransType.Deposit, parameter);
         }
 
+        #region Tournament
+
+        /// <summary>
+        /// 參加錦標賽
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/join-tournament")]
+        public async Task<JokerResponse> JoinTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        {
+            //if (environment.IsDevelopment())
+            //{
+            //string test = @"{""appid"":""TFEB"",""hash"":""7e3a05a92e9b1a4f8c5d655443440ac1"",""id"":""B-qc3ogwwgx3wzg"",""tournamentid"":""qc3ogwwgx3wzg"",""amount"":""1.20"",""username"":""DNova88_127590"",""timestamp"":""1585853879309"",""extendedinfo"":""{}""}";
+            //parameter = JsonConvert.DeserializeObject<Dictionary<string, string>>(test);
+            //}
+
+            return await _jokerBll.JoinTournament(parameter);
+        }
+
+        /// <summary>
+        /// 派彩錦標賽
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/win-tournament")]
+        public async Task<JokerResponse> WinTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        {
+            //if (environment.IsDevelopment())
+            //{
+            //string test = @"{""appid"":""TFEB"",""hash"":""7e3a05a92e9b1a4f8c5d655443440ac1"",""id"":""B-qc3ogwwgx3wzg"",""tournamentid"":""qc3ogwwgx3wzg"",""amount"":""1.20"",""username"":""DNova88_127590"",""timestamp"":""1585853879309"",""extendedinfo"":""{}""}";
+            //parameter = JsonConvert.DeserializeObject<Dictionary<string, string>>(test);
+            //}
+
+            return await _jokerBll.WinTournament(parameter);
+        }
+
+        /// <summary>
+        /// 取消參加錦標賽
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/cancel-join-tournament")]
+        public async Task<JokerResponse> CancelJoinTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        {
+            //if (environment.IsDevelopment())
+            //{
+            //string test = @"{""appid"":""TFEB"",""hash"":""7e3a05a92e9b1a4f8c5d655443440ac1"",""id"":""B-qc3ogwwgx3wzg"",""jointournamentid"":""qc3ogwwgx3wzg"",""amount"":""1.20"",""username"":""DNova88_127590"",""timestamp"":""1585853879309"",""extendedinfo"":""{}""}";
+            //parameter = JsonConvert.DeserializeObject<Dictionary<string, string>>(test);
+            //}
+
+            return await _jokerBll.CancelJoinTournament(parameter);
+        }
+
+        #endregion
+
         private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter)
         {
             try
@@ -693,7 +754,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         };
                     }
                 }
-               
+
                 decimal tpAffterAmount;
                 var result = transType switch
                 {

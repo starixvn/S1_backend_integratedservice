@@ -316,6 +316,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public bool CancelReward_Joker(int sq, MySqlTransaction trans)
+        {
+            var param = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
+            var result = _mainDbClient.QueryFirstAsync<int>("Service_RewardRNG_Joker_Set", trans, new DynamicParameters(param)).Result;
+            if (result == 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
         #endregion
 
         #region YGG
@@ -4154,6 +4165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
+
         #endregion
 
         #region AMB Slot
