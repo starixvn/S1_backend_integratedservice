@@ -23,6 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly Tools _tools;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly TpRequestFailBLL _tpRequestFailBll;
 
         public PPController(IServiceProvider provider)
         {
@@ -35,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tools = provider.GetRequiredService<Tools>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
         }
 
         public class AuthenticateResp
@@ -596,17 +598,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 error = 100,
                 description = "Internal server error."
             };
-
+            var betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(endRoundReqq));
+            
             try
             {
                 var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
                 if (hashCheck(endRoundReqq, secureKey))
-                {   
-                    BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(endRoundReqq));
+                {
                     var gameType = _thirdPartyBLL.GetGameType_PP(betReq.gameId);
-                    //int result = _settledBLL.SetSettleFlag_BettransRng_PP_Payout(betReq.roundId, (int)gameType);         
 
                     var result = _tpUnSettledBLL.InsertTpUnsettle(thisTp, gameType, betReq.roundId.ToString());
                     if (result > 0)
@@ -626,6 +627,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 endRoundResp.error = 100;
+                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.PP, TpRequestFailureCategory.EndRound, JsonConvert.SerializeObject(betReq), ex.Message);
                 _log2File.Error($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}\r\n{ex}", $"{thisTp}_EndRound", ex);
             }
 
