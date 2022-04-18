@@ -117,6 +117,14 @@ namespace ThirdPartyCore.Model.enums
         Transfer = 0,
         Seamless = 1,
     }
+
+    public enum WalletMode
+    {
+        Seamless = 0,
+        Restore = 1,
+        Manual = 2,
+    }
+
     public enum DataBase
     {
         Main, //ConnectionString
