@@ -85,7 +85,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
+                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { _TransId = transId }, DataBase.Main).First();
                         var wager = _settledBLL.GetSettle_TpWagerRng_SG(unsettled.TransId);
                         if (wager == null)
                         {
