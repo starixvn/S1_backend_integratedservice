@@ -100,6 +100,7 @@ namespace ThirdParty.Mega
 
             Match m = Regex.Match(TransID, @"\d+");
             long.TryParse(m.Value, out long bizId);
+            bizId += 220000000000;
 
             if (IsDevelopment)
             {
@@ -353,6 +354,7 @@ namespace ThirdParty.Mega
 
             Match m = Regex.Match(TransID, @"\d+");
             long.TryParse(m.Value, out long bizId);
+            bizId += 220000000000;
 
             if (IsDevelopment)
             {
