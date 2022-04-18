@@ -464,6 +464,24 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
+        public decimal DealTransferAmount(decimal amount, out decimal credit, out bool execute)
+        {
+            execute = true;
+            credit = amount;
+
+            var checkAmount = amount * 100;
+            bool hasMoreThan3decimals = checkAmount != (int)(checkAmount);
+            if (hasMoreThan3decimals)
+            {
+                amount = ((int)amount) / 100;
+                if (Math.Abs(amount) == 0)
+                {
+                    execute = false;
+                }
+            }
+
+            return amount;
+        }
 
         public void Info(string InfoContent, string PrefixName)
         {

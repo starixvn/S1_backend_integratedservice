@@ -335,22 +335,19 @@ namespace ThirdParty.Mega
                 Amount *= -1;
             }
 
-            var checkAmount = Amount * 100;
-            bool hasMoreThan3decimals = checkAmount != (int) (checkAmount);
-            if (hasMoreThan3decimals)
+            Amount = DealTransferAmount(Amount,out decimal credit, out bool execute);
+            if (!execute)
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
                 apiResult.Data.Status = TransferStatus.Fail;
-                apiResult.RawMessage = $"transfer failed only support 2 decimal place (Mega point {Math.Abs(Amount)})";
-                apiResult.RawErrorCode = "37123";
+                apiResult.RawMessage = $"Transfer failed due to decimal greater than 2 digits. ({Math.Abs(credit)})";
+                apiResult.RawErrorCode = ErrorCode.DecimalOutOfRange.ToString();
                 return apiResult;
             }
 
             var uuid = Guid.NewGuid();
 
             string sign = $"{uuid}{sn}{tpCustInfo.TpUserName}{Amount}{secretCode}";
-
-            //long bizId = 0;
 
             Match m = Regex.Match(TransID, @"\d+");
             long.TryParse(m.Value, out long bizId);
