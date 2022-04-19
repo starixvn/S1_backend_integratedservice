@@ -36,11 +36,11 @@ namespace ThirdParty.Allbet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.ContainsKey("V2ApiUrl") && !string.IsNullOrEmpty(inputs["V2ApiUrl"]) ? inputs["V2ApiUrl"] : throw new Exception();
-            var agentKey = $"V2{tpCustInfo.TpCurrencyId}Agent";
+            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            var agentKey = $"{tpCustInfo.TpCurrencyId}Agent";
             var agent = inputs.ContainsKey(agentKey) && !string.IsNullOrEmpty(inputs[agentKey]) ? inputs[agentKey] : throw new Exception("Can't get agent.");
             var path = "CheckOrCreate";
-            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["V2Suffix"]}";
+            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
             var parameters = ToJson(new
             {
                 agent,
@@ -88,13 +88,13 @@ namespace ThirdParty.Allbet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string tpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.ContainsKey("V2ApiUrl") && !string.IsNullOrEmpty(inputs["V2ApiUrl"]) ? inputs["V2ApiUrl"] : throw new Exception();
+            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
                 
-            if (!tpCustInfo.TpUserName.EndsWith(inputs["V2Suffix"]))
+            if (!tpCustInfo.TpUserName.EndsWith(inputs["Suffix"]))
             {
-                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["V2Suffix"]}";
+                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
             }
             
             var parameters = ToJson(new
@@ -194,11 +194,11 @@ namespace ThirdParty.Allbet
             contentType = "application/json";
             var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, inputs["V2AllbetKey"]);
+            var signature = Sign(signString, inputs["AllbetKey"]);
             return new Dictionary<string, string>
             {
                 { "Accept", "application/json" },
-                { "Authorization", $"AB {inputs["V2OperatorId"]}:{signature}" },
+                { "Authorization", $"AB {inputs["OperatorId"]}:{signature}" },
                 { "Content-MD5", md5 },
                 { "Date", date }
             };

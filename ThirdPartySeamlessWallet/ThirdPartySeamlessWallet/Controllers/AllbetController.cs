@@ -75,10 +75,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var signString = $"GET\n\n\n{date}\n/{method}/{username}";
-                var signature = Sign(signString, thirdPartySetting.TpSetting["V2PartnerKey"]);
+                var signature = Sign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
                 _logger.LogInformation($"authorization={authorization}, date={date}, signString={signString}, signature={signature}");
                 
-                if (authorization != $"AB {thirdPartySetting.TpSetting["V2OperatorId"]}:{signature}")
+                if (authorization != $"AB {thirdPartySetting.TpSetting["OperatorId"]}:{signature}")
                 {
                     return new AllBetTransferResponse(AllbetResultCode.InvalidSignature);
                 }
@@ -111,10 +111,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var signString = $"POST\n{md5}\n{contentType}\n{date}\n/Transfer";
-                var signature = Sign(signString, thirdPartySetting.TpSetting["V2PartnerKey"]);
+                var signature = Sign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
                 _logger.LogInformation($"authorization={authorization}, accept={accept}, md5={md5}, contentType={contentType}, date={date}, signString={signString}, signature={signature}");
 
-                if (authorization != $"AB {thirdPartySetting.TpSetting["V2OperatorId"]}:{signature}")
+                if (authorization != $"AB {thirdPartySetting.TpSetting["OperatorId"]}:{signature}")
                 {
                     return new AllBetTransferResponse(AllbetResultCode.InvalidSignature);
                 }
