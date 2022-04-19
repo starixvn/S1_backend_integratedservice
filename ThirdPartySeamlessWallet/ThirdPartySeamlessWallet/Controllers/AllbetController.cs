@@ -15,6 +15,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
+    [Produces("application/json")]
     public class AllbetController : ControllerBase
     {
         private readonly ILogger<AllbetController> _logger;

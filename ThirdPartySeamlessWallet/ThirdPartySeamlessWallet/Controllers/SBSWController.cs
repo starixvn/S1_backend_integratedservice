@@ -15,6 +15,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
     [Route("[controller]/{merchant}")]
+    [Produces("application/json")]
     public class SBSWController : ControllerBase
     {
         private readonly ILogger<SBSWController> _logger;
