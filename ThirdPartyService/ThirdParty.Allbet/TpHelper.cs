@@ -54,7 +54,7 @@ namespace ThirdParty.Allbet
             if (IsJSON(result))
             {
                 var userResult = FromJson<Result<UserResult>>(result);
-                if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase) || userResult.resultCode.Equals("PLAYER_EXIST", StringComparison.OrdinalIgnoreCase))
+                if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase))
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                 }
