@@ -780,8 +780,9 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
+            var msg = $"Main Before : \r\n{JsonConvert.SerializeObject(apiResult)}\r\n";
+
             apiResult.Data.AutoTransfer = custWallet.AutoTransfer;
-            log2File.Info($"Main Before : \r\n{JsonConvert.SerializeObject(apiResult)}", "AutoTransfer");
 
             TpTransfer transfer = new TpTransfer();
             var subResult = new ApiResult<AutoTransferResult>();
@@ -807,6 +808,15 @@ namespace ThirdPartyService.Service.BLL
                     {
                         toTransferGame = true;
                         //continue;
+                    }
+                    if(item.WalletMode == (int)WalletMode.Manual)
+                    {
+                        if (toTransferGame)
+                        {
+                            toTransferGame = false;
+                        }
+                        msg += $"Skip Manual Transfer Game : {item.Id}\r\n";
+                        continue;
                     }
 
                     var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, betaTpId);
@@ -845,8 +855,7 @@ namespace ThirdPartyService.Service.BLL
                                 subResult.ErrorCode = subTrans.ErrorCode;
                                 subResult.RawErrorCode = subTrans.RawErrorCode ?? "";
                                 subResult.RawMessage = subTrans.RawMessage ?? "";
-                                log2File.Info($"Game To Main : \r\n{JsonConvert.SerializeObject(subResult)}",
-                                    "AutoTransfer");
+                                msg += $"Game To Main : \r\n{JsonConvert.SerializeObject(subResult)}\r\n";
                             }
                         }
                         catch
@@ -880,13 +889,14 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.Message = doTransfer.Message;
                     apiResult.RawErrorCode = doTransfer.RawErrorCode;
                     apiResult.RawMessage = doTransfer.RawMessage;
-                    log2File.Info($"Main After : \r\n{JsonConvert.SerializeObject(apiResult)}", "AutoTransfer");
+                    msg += $"Main After : \r\n{JsonConvert.SerializeObject(apiResult)}\r\n";
                 }
                 else
                 {
                     apiResult.ErrorCode = ErrorCode.AutoTransferIsSeamless;
                     apiResult.Message = "Go To Seamless Game Is No Need To Transfer";
                 }
+                log2File.Info(msg, "AutoTransfer");
             }
             else
             {
@@ -1323,7 +1333,6 @@ namespace ThirdPartyService.Service.BLL
                 i => thirdPartyHelper.GetTpMaintainList(siteId)
                     .Where(item => item.MaintainCheck(DateTime.UtcNow)));
         }
-
         #endregion
     }
 }

@@ -100,6 +100,7 @@ namespace ThirdParty.Mega
 
             Match m = Regex.Match(TransID, @"\d+");
             long.TryParse(m.Value, out long bizId);
+            bizId += 220000000000;
 
             if (IsDevelopment)
             {
@@ -327,20 +328,30 @@ namespace ThirdParty.Mega
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string secretCode = inputs.ContainsKey($"secretCode_{currency}") && !string.IsNullOrEmpty(inputs[$"secretCode_{currency}"]) ? inputs[$"secretCode_{currency}"] : throw new Exception($"secretCode_{currency}");
             string sn = inputs.ContainsKey("sn") && !string.IsNullOrEmpty(inputs["sn"]) ? inputs["sn"] : throw new Exception("sn");
+            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
 
             if (direction == Direction.ToMain)
             {
                 Amount *= -1;
             }
 
+            Amount = DealTransferAmount(Amount,out decimal credit, out bool execute);
+            if (!execute)
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.Data.Status = TransferStatus.Fail;
+                apiResult.RawMessage = $"Transfer failed due to decimal greater than 2 digits. ({Math.Abs(credit)})";
+                apiResult.RawErrorCode = ErrorCode.DecimalOutOfRange.ToString();
+                return apiResult;
+            }
+
             var uuid = Guid.NewGuid();
 
             string sign = $"{uuid}{sn}{tpCustInfo.TpUserName}{Amount}{secretCode}";
 
-            //long bizId = 0;
-
             Match m = Regex.Match(TransID, @"\d+");
             long.TryParse(m.Value, out long bizId);
+            bizId += 220000000000;
 
             if (IsDevelopment)
             {
@@ -370,7 +381,7 @@ namespace ThirdParty.Mega
                 "application/json"
             );
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            
             apiResult.RawMessage = "No Result";
             apiResult.RawErrorCode = "1";
             apiResult.ErrorCode = ErrorCode.TransferPending;
