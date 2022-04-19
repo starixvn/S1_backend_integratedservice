@@ -56,7 +56,6 @@ namespace ThirdPartySeamlessWallet
             ////    //services.AddHttpClient();
             ////}
             services.AddHttpClient();
-            services.AddMvc().AddXmlSerializerFormatters();
             services.AddDatabaseConnection(Configuration);
             /*Library*/
             services.AddSingleton<Tools>();
