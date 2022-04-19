@@ -105,31 +105,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 switch (type.Type)
                 {
                     case AllbetTransferType.Bet:
-                        decimal amountSum = 0;
-
-                        if (request.Amount <= 0)
+                        if (request.Details.Sum(betAmt => betAmt.BetAmount + betAmt.Deposit) != Math.Abs(request.Amount))
                         {
                             valid = false;
                         }
-                        else
-                        {
-                            foreach (var betAmt in request.Details)
-                            {
-                                if (betAmt.BetAmount <= 0)
-                                {
-                                    valid = false;
-                                    break;
-                                }
-
-                                amountSum += betAmt.BetAmount;
-                            }
-
-                            if (amountSum != request.Amount)
-                            {
-                                valid = false;
-                            }
-                        }
-
                         break;
 
                     case AllbetTransferType.Settle:
@@ -137,13 +116,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         if (request.Details.Count > 1)
                         {
                             valid = false;
-                        }
-                        else
-                        {
-                            if (request.Details.Sum(betAmt => betAmt.BetAmount) != request.Amount)
-                            {
-                                valid = false;
-                            }
                         }
 
                         break;
@@ -427,14 +399,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = AllbetInsert(AllbetTransferType.Settle, request, trans, out var stake, out _);
+                result = AllbetInsert(AllbetTransferType.Settle, request, trans, out _, out _);
 
                 if (result > 0)
                 {
-                    var payoutAmount = request.Amount + stake;
-                    if (payoutAmount != 0)
+                    var winLossAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
+                    if (winLossAmount != request.Amount - request.Details[0].ValidAmount - request.Details[0].Deposit)
                     {
-                        result = _settledService.PayoutV2(tpCustInfo, payoutAmount, (int)ThirdParty,
+                        throw new AllbetException(AllbetResultCode.InvalidParameters,
+                            $"WinOrLossAmount ({winLossAmount}) not equal Amount ({request.Amount}) less ValidAmount/Deposit ({request.Details[0].ValidAmount + request.Details[0].Deposit}).");
+                    }
+
+                    if (request.Amount != 0)
+                    {
+                        result = _settledService.PayoutV2(tpCustInfo, request.Amount, (int)ThirdParty,
                             request.Details[0].BetNum.ToString(), (int)GameType, TpCategory.LiveCasino,
                             request.Details[0].BetNum.ToString(), TransType.Payout, null, out afterAmount, "Payout",
                             out _, conn, trans);
