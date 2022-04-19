@@ -484,6 +484,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         [HttpPost]
         [Produces("application/xml")]
+        [Consumes("application/xml")]
         public async Task<dynamic> SeamlessWalletAsync()
         {
             string logName = $"{thisTp}";
