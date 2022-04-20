@@ -314,22 +314,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
-
-                        if (getBetReq.username == "dnova88_250797" && Math.Abs(getBetReq.money) == 100)
-                        {
-                            Thread.Sleep(60000);
-                        }
-
+                        
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            //if (environment.IsDevelopment() && getBetReq.type == 1 && getBetReq.money == -40m)
-                            //{
-                            //    getBetResp.status = 500;
-                            //    getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            //    log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                            //    return getBetResp;
-                            //}
+                            if (environment.IsDevelopment() && getBetReq.type == 1 && getBetReq.money == -40m)
+                            {
+                                getBetResp.status = 500;
+                                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                                log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                                return getBetResp;
+                            }
                             getBetResp.status = 200;
                             getBetResp.money = tpAffterAmount;
                             getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;
