@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Google.Protobuf.WellKnownTypes;
@@ -312,6 +313,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                             getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
+                        }
+
+                        if (getBetReq.username == "dnova88_250797" && Math.Abs(getBetReq.money) == 100)
+                        {
+                            Thread.Sleep(60000);
                         }
 
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
