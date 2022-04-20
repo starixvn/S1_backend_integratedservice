@@ -281,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private decimal GetBalance(string tpUserName)
         {
             var (tpCustInfo, _) = GetTPInfo(tpUserName);
-            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
+            var tpCustBalance = _tpCustInfoBll.GetBalance((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
             return tpCustBalance.Balance;
         }
         
