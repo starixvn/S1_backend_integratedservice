@@ -318,7 +318,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            if (environment.IsDevelopment() && getBetReq.type == 1 && getBetReq.money == -40m)
+                            if (getBetReq.username == "dnova88_250797" && Math.Abs(getBetReq.money) == 100)
                             {
                                 getBetResp.status = 500;
                                 getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
