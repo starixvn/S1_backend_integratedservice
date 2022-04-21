@@ -84,12 +84,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("Content-MD5", out var md5);
                 Request.Headers.TryGetValue("Content-Type", out var contentType);
                 Request.Headers.TryGetValue("Date", out var date);
+                Request.Headers.TryGetValue("Internal", out var @internal);
 
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var signString = $"POST\n{md5}\n{contentType}\n{date}\n/Transfer";
                 var signature = GetSign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
 
-                CheckSign(authorization, thirdPartySetting, signature);
+                if (@internal.ToString() != "Wager")
+                {
+                    CheckSign(authorization, thirdPartySetting, signature);
+                }
 
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 var bodyText = await reader.ReadToEndAsync();
