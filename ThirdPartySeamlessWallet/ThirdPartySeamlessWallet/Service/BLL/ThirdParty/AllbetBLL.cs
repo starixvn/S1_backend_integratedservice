@@ -117,6 +117,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             valid = false;
                         }
+                        
+                        var winLossAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
+                        if (winLossAmount != request.Amount - request.Details[0].BetAmount - request.Details[0].Deposit)
+                        {
+                            throw new AllbetException(AllbetResultCode.InvalidParameters,
+                                $"WinOrLossAmount ({winLossAmount}) not equal Amount ({request.Amount}) less BetAmount/Deposit ({request.Details[0].BetAmount + request.Details[0].Deposit}).");
+                        }
 
                         break;
                     case AllbetTransferType.EventSettle:
@@ -274,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private decimal GetBalance(string tpUserName)
         {
             var (tpCustInfo, _) = GetTPInfo(tpUserName);
-            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
+            var tpCustBalance = _tpCustInfoBll.GetBalance((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
             return tpCustBalance.Balance;
         }
         
@@ -403,13 +410,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    var winLossAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
-                    if (winLossAmount != request.Amount - request.Details[0].ValidAmount - request.Details[0].Deposit)
-                    {
-                        throw new AllbetException(AllbetResultCode.InvalidParameters,
-                            $"WinOrLossAmount ({winLossAmount}) not equal Amount ({request.Amount}) less ValidAmount/Deposit ({request.Details[0].ValidAmount + request.Details[0].Deposit}).");
-                    }
-
                     if (request.Amount != 0)
                     {
                         result = _settledService.PayoutV2(tpCustInfo, request.Amount, (int)ThirdParty,
