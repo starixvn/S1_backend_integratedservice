@@ -122,10 +122,12 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<string> CallEventSettleApi(IReadOnlyDictionary<string, string> setting, RewardAllBet reward)
+        public async Task<string> CallEventSettleApi(RewardAllBet reward)
         {
             try
             {
+                var url = $"{_seamlessUrl}/Allbet/transfer";
+
                 var rewardAllBetRequest = new RewardAllBetRequest()
                 {
                     tranId = reward.eventRecordNum,
@@ -135,9 +137,9 @@ namespace ThirdPartyWager.Service.BLL
                     isRetry = true,
                     currency = reward.currency,
                     details = new List<RewardAllBet>() { reward },
-                };
-                var url = $"{_seamlessUrl}/Allbet/transfer";
+                };            
                 var param = JsonConvert.SerializeObject(rewardAllBetRequest);
+
                 var request = new HttpRequestMessage(HttpMethod.Post, url)
                 {
                     Content = new StringContent(param, Encoding.UTF8, "application/json")
@@ -146,7 +148,6 @@ namespace ThirdPartyWager.Service.BLL
 
                 var response = await _httpHelper.GetClient().SendAsync(request);
                 var result = response.Content.ReadAsStringAsync().Result;
-
                 if (!response.IsSuccessStatusCode)
                 {
                     _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
@@ -159,11 +160,6 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, ex.Message);
                 return ex.Message;
             }
-
-            
-
-            // request
-            return await DoSeamlessHttpClientAsync(url, uri, param, "", "");
         }
 
         private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> setting, string path, string parameters, out string contentType)

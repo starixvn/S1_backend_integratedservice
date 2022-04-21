@@ -70,39 +70,39 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     // pagination
                     var pageIndex = 1;
-                    var pageRowCnt = 1;                 
+                    var pageRowCnt = 1;
                     var agent = setting[$"{currency.TpCurrencyId}Agent"];
 
                     while (pageRowCnt >= 1)
                     {
                         // get reward
-                        var data = await _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
+                        var rewardData = await _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
 
                         // error condition
-                        if (data == null)
+                        if (rewardData == null)
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(rewardData)}");
                             return false;
                         }
 
-                        if (data.resultCode != "OK")
+                        if (rewardData.resultCode != "OK")
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(rewardData)}");
                             return false;
                         }
 
-                        pageRowCnt = data.data.list.Count();
+                        pageRowCnt = rewardData.data.list.Count();
                         if (pageRowCnt == 0)
                         {
                             msg = "NO_DATA";
-                            _logger.LogInformation($"GetRewardsAsync {msg}\r\n{JsonConvert.SerializeObject(data)}");
+                            _logger.LogInformation($"GetRewardsAsync {msg}\r\n{JsonConvert.SerializeObject(rewardData)}");
                             break;
                         }
 
                         // check reward data
-                        foreach (var item in data.data.list)
+                        foreach (var item in rewardData.data.list)
                         {
                             try
                             {
@@ -116,7 +116,7 @@ namespace ThirdPartyWager.Service.BLL
                                 if (reward == null)
                                 {
                                     // call sw reward api
-                                    var response = _apiAllBetBLL.CallEventSettleApi(setting, item).Result;
+                                    var response = _apiAllBetBLL.CallEventSettleApi(item).Result;
                                     var result = JsonConvert.DeserializeObject<AllBetTransferResponse>(response);
                                     if (result.resultCode != 0)
                                     {
