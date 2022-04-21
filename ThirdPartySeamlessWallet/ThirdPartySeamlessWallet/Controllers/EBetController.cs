@@ -354,7 +354,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0)
                         {
-                            if (environment.IsDevelopment() && getBetReq.username == "dnova88_250797" && (getBetReq.detail.payout.Value == 195 || getBetReq.detail.payout.Value == 10))
+                            if (getBetReq.username == "dnova88_250797" && getBetReq.money == 195)
                             {
                                 getBetResp.status = 500;
                                 getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
