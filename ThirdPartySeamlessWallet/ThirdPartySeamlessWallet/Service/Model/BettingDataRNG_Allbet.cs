@@ -80,6 +80,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public List<T> Details { get; set; }
     }
 
+    public class AllbetDbDetail
+    {
+        public long BetNum { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal Deposit { get; set; }
+    }
+
     public class AllBetTransferDetails
     {
         [JsonProperty("betNum")]
