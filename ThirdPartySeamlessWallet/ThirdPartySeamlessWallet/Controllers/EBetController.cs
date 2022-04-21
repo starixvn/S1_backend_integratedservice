@@ -354,6 +354,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0)
                         {
+                            if (environment.IsDevelopment() && getBetReq.username == "dnova88_250797" && (getBetReq.detail.payout.Value == 195 || getBetReq.detail.payout.Value == 10))
+                            {
+                                getBetResp.status = 500;
+                                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                                log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                                return getBetResp;
+                            }
+                            
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
