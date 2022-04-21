@@ -52,7 +52,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                _logger.LogInformation($"{transType} || {bodyText}");
                 return await _requestHandler[transType].Invoke(transType, bodyText);
             }
             catch (AllbetException ex)
@@ -308,19 +307,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var amount = request.OriginalDetails.Sum(i => i.BetAmount + i.Deposit);
             var p = new DynamicParameters(new
             {
                 originalTranId = request.OriginalTranId, 
                 client = request.Player,
-                betNum = request.OriginalDetails[0].BetNum,
-                amount
+                details = JsonConvert.SerializeObject(
+                    JsonConvert.DeserializeObject<List<AllbetDbDetail>>(JsonConvert.SerializeObject(request.OriginalDetails)))
             });
             p.Add("hasCanceled", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_CancelBetLC_Allbet_Set_V2", trans, p);
 
             if (p.Get<int>("hasCanceled") == 0 && result == request.OriginalDetails.Count)
             {
+                var amount = request.OriginalDetails.Sum(i => i.BetAmount + i.Deposit);
                 if (result > 0 && amount != 0)
                 {
                     result = _settledService.PayoutV2(tpCustInfo, amount, (int)ThirdParty, $"T{request.OriginalTranId}",
@@ -528,7 +527,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 client = request.Player,
                 currency = request.Currency,
                 amount = request.Amount,
-                betNum = request.Details[0].BetNum
+                details = JsonConvert.SerializeObject(
+                    JsonConvert.DeserializeObject<List<AllbetDbDetail>>(JsonConvert.SerializeObject(request.Details)))
             });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("SettleAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
