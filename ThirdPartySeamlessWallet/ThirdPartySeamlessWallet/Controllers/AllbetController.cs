@@ -80,7 +80,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
 
                 Request.Headers.TryGetValue("Authorization", out var authorization);
-                Request.Headers.TryGetValue("Accept", out var accept);
                 Request.Headers.TryGetValue("Content-MD5", out var md5);
                 Request.Headers.TryGetValue("Content-Type", out var contentType);
                 Request.Headers.TryGetValue("Date", out var date);
