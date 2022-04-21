@@ -14,6 +14,8 @@ using System.Web;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using System.Security.Cryptography;
+using System.Net.Http.Headers;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -26,180 +28,121 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAllBetBLL> _logger;
         private readonly string _tpName = Tp.Allbet.ToString();
+        private readonly IConfiguration _configuration;
 
-        public ApiAllBetBLL(
-            IServiceProvider provider,
-            IHostEnvironment environment,
-            IConfiguration configuration
-        )
+        public ApiAllBetBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
-            _seamlessUrl = configuration.GetValue<string>("TpSWserviceUrl");
+            _configuration = provider.GetRequiredService<IConfiguration>();
+            _seamlessUrl = _configuration.GetValue<string>("TpSWserviceUrl");
         }
 
-
-        public async Task<WagerAllBetModel> GetBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
+        public async Task<WagerAllBetModel<BetAllBet>> GetBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
         {
             // param
-            var uri = "/betlog_histories";
-            var url = $"{apiUrl}{uri}";
-            var pageSize = 1000;
-            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
-
-            // encrype param
-            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
-            var sign = _common.base64edMd5($"{data}{md5Key}");
-            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
-
+            var apiUrl = setting["ApiUrl"];
+            var path = "PagingQueryBetRecords";
+            var param = new
+            {
+                agent,
+                startDateTime,
+                endDateTime,
+                pageNum,
+                pageSize = 1000
+            };
+            var parameters = JsonConvert.SerializeObject(param);
             // log
-            _logger.LogInformation(parameter);
-
+            _logger.LogInformation(parameters);
+            var header = GetAuthData(setting, path, parameters, out var contentType);
             // request
-            var r = await DoHttpClientAsync(url, param);
+            var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
+            if (string.IsNullOrEmpty(r))
+            {
+                return null;
+            }
+
+            return JsonConvert.DeserializeObject<WagerAllBetModel<BetAllBet>>(r);
+        }
+
+        public async Task<WagerAllBetModel<BetAllBet>> GetModifiedBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime)
+        {
+            // param
+            var apiUrl = setting["ApiUrl"];
+            var path = "QueryModifiedBetRecords";
+            var param = new
+            {
+                agent,
+                startDateTime,
+                endDateTime
+            };
+            var parameters = JsonConvert.SerializeObject(param);
+            // log
+            _logger.LogInformation(parameters);
+            var header = GetAuthData(setting, path, parameters, out var contentType);
+            // request
+            var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
+            if (string.IsNullOrEmpty(r))
+            {
+                return null;
+            }
+
+            var result = JsonConvert.DeserializeObject<WagerAllBetModel<BetAllBet>>(r);
+            return result;
+        }
+
+        public async Task<WagerAllBetModel<RewardAllBet>> GetRewardByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
+        {
+            var apiUrl = setting["ApiUrl"];
+            var path = "PagingQueryEventRecords";
+            var param = new
+            {
+                agent,
+                startDateTime,
+                endDateTime,
+                pageNum,
+                pageSize = 1000
+            };
+            var parameters = JsonConvert.SerializeObject(param);
+            // log
+            _logger.LogInformation(parameters);
+            var header = GetAuthData(setting, path, parameters, out var contentType);
+            // request
+            var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
             {
                 return null;
             }
             else
             {
-                var result = JsonConvert.DeserializeObject<WagerAllBetModel>(r);
+                var result = JsonConvert.DeserializeObject<WagerAllBetModel<RewardAllBet>>(r);
                 return result;
             }
         }
 
-        public async Task<WagerAllBetModel> GetModifiedBetListByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
+        public async Task<string> CallEventSettleApi(IReadOnlyDictionary<string, string> setting, RewardAllBet reward)
         {
-            // param
-            var uri = "/betlog_modified_histories";
-            var url = $"{apiUrl}{uri}";
-            var pageSize = 1000;
-            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
-
-            // encrype param
-            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
-            var sign = _common.base64edMd5($"{data}{md5Key}");
-            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
-
-            // log
-            _logger.LogInformation(parameter);
-
-            // request
-            var r = await DoHttpClientAsync(url, param);
-            if (string.IsNullOrEmpty(r))
-            {
-                return null;
-            }
-            else
-            {
-                var result = JsonConvert.DeserializeObject<WagerAllBetModel>(r);
-                return result;
-            }
-        }
-
-        public async Task<RewardAllBetModel> GetRewardByTime(string apiUrl, string desKey, string md5Key, string propertyId, string startTime, string endTime, int pageIndex, string guid)
-        {
-            // param
-            var uri = "/query_event_records";
-            var url = $"{apiUrl}{uri}";
-            var pageSize = 1000;
-            var parameter = $"random={_common.random()}&startTime={startTime}&endTime={endTime}&pageIndex={pageIndex}&pageSize={pageSize}";
-
-            // encrype param
-            var data = _common.encrypt(parameter, desKey, null, NULL_IV);
-            var sign = _common.base64edMd5($"{data}{md5Key}");
-            var param = $"data={HttpUtility.UrlEncode(data)}&sign={HttpUtility.UrlEncode(sign)}&propertyId={propertyId}";
-
-            // log
-            _logger.LogInformation(parameter);
-
-            // request
-            var r = await DoHttpClientAsync(url, param);
-            if (string.IsNullOrEmpty(r))
-            {
-                return null;
-            }
-            else
-            {
-                var result = JsonConvert.DeserializeObject<RewardAllBetModel>(r);
-                return result;
-            }
-        }
-
-        private async Task<string> DoHttpClientAsync(string url, string param)
-        {
-            _log2File.InsertRequestLog(_tpName, url, param, "1");
-
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
-
-            var response = await _httpHelper.GetClient().SendAsync(request);
-            var result = response.Content.ReadAsStringAsync().Result;
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
-                _log2File.InsertResponseLog(_tpName, url, param, result);
-            }
-
-            return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"error_code\":\"SYSTEM_MATAINING\",\"message\":\"System under maintenance\"}" : result;
-        }
-
-        public async Task<string> callSeamlessApi(string type, dynamic parameter, string sha1key, string propertyId)
-        {
-            // param
-            var url = $"{_seamlessUrl}/Allbet";
-            string uri = null;
-            dynamic param = "";
-
-            switch (type)
-            {
-                case "Reward":
-                    uri = "/transfer";
-                    param = new RewardAllBetData();
-                    param.details = new List<RewardAllBet>();
-                    param.tranId = parameter.eventRecordNum;
-                    param.transferType = 40;
-                    param.client = parameter.client;
-                    param.currency = parameter.currency;
-                    param.amount = parameter.amount;
-                    param.eventRecordNum = parameter.eventRecordNum;
-                    param.details.Add(parameter);
-                    break;
-                default:
-                    _logger.LogWarning($"{type} not found");
-                    break;
-            }
-
-            if (uri == null)
-            {
-                return null;
-            }
-
-            // request
-            return await DoSeamlessHttpClientAsync(url, uri, param, sha1key, propertyId);
-        }
-
-        public async Task<string> DoSeamlessHttpClientAsync(string url, string uri, dynamic param, string sha1key, string propertyId)
-        {
-            var json = JsonConvert.SerializeObject(param);
-            var date = DateTime.UtcNow.AddHours(8).ToString("ddd, dd MMM yyy HH:mm:ss 'GMT'", CultureInfo.CreateSpecificCulture("en-US"));
-            var md5 = "";
-            var str = $"POST\n{md5}\napplication/json; charset=utf-8\n{date}\n{uri}";
-            var sign = _common.Sign(str, sha1key);
-            var seamlessApi = $"{url}{uri}";
-
             try
             {
-                _log2File.InsertRequestLog(_tpName, url, json, "1");
-
-                HttpRequestMessage request;
-                request = new HttpRequestMessage(HttpMethod.Post, seamlessApi);
-                request.Content = new StringContent(json, Encoding.UTF8, "application/json");//, Encoding.UTF8, "application/json"
-                request.Headers.Add("Authorization", $"AB {propertyId}:{sign}");
-                request.Headers.Add("Date", date);
+                var rewardAllBetRequest = new RewardAllBetRequest()
+                {
+                    tranId = reward.eventRecordNum,
+                    type = 40,
+                    player = reward.player,
+                    amount = reward.amount,
+                    isRetry = true,
+                    currency = reward.currency,
+                    details = new List<RewardAllBet>() { reward },
+                };
+                var url = $"{_seamlessUrl}/Allbet/transfer";
+                var param = JsonConvert.SerializeObject(rewardAllBetRequest);
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = new StringContent(param, Encoding.UTF8, "application/json")
+                };
+                request.Headers.Add("Internal", $"Wager");
 
                 var response = await _httpHelper.GetClient().SendAsync(request);
                 var result = response.Content.ReadAsStringAsync().Result;
@@ -216,6 +159,117 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, ex.Message);
                 return ex.Message;
             }
+
+            
+
+            // request
+            return await DoSeamlessHttpClientAsync(url, uri, param, "", "");
         }
+
+        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> setting, string path, string parameters, out string contentType)
+        {
+            var md5 = Base64Md5(parameters);
+            contentType = "application/json";
+            var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
+            var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
+            var signature = Sign(signString, setting["AllbetKey"]);
+            return new Dictionary<string, string>
+            {
+                { "Accept", "application/json" },
+                { "Authorization", $"AB {setting["OperatorId"]}:{signature}" },
+                { "Content-MD5", md5 },
+                { "Date", date }
+            };
+        }
+
+        private string Sign(string encryptText, string encryptKey)
+        {
+            using var hmacsha1 = new HMACSHA1(Convert.FromBase64String(encryptKey));
+            var hash = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(encryptText));
+
+            return Convert.ToBase64String(hash);
+        }
+
+        private string Base64Md5(string data)
+        {
+            return Convert.ToBase64String(Md5(Encoding.UTF8.GetBytes(data)));
+        }
+
+        private byte[] Md5(byte[] data)
+        {
+            using var md5Crp = new MD5CryptoServiceProvider();
+            return md5Crp.ComputeHash(data);
+        }
+
+        protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+            var parametersLog = parameters;
+            if (headers != null)
+            {
+                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+            }
+            _logger.LogInformation($"url:{url} parametersLog:{parametersLog}");
+
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+            }
+
+            using var client = _httpHelper.GetClientWithHandler(CreateHandler());
+            try
+            {
+                var httpRequestMessage = new HttpRequestMessage
+                {
+                    Content = new StringContent(parameters),
+                    Method = HttpMethod.Post,
+                    RequestUri = new Uri(url)
+                };
+                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(contentType);
+                if (headers != null)
+                {
+                    foreach (var (key, value) in headers)
+                    {
+                        if (string.Compare(key, "Accept", StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(value));
+                        }
+                        else if (key.Contains("-"))
+                        {
+                            httpRequestMessage.Content.Headers.TryAddWithoutValidation(key, value);
+                        }
+                        else
+                        {
+                            httpRequestMessage.Headers.TryAddWithoutValidation(key, value);
+                        }
+                    }
+                }
+
+                var response = client.SendAsync(httpRequestMessage).Result;
+                response.EnsureSuccessStatusCode();
+
+                var sb = response.Content.ReadAsStringAsync().Result;
+                _logger.LogInformation($"url:{url} | parametersLog:{parametersLog} | Response:{sb}");
+                return sb;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"url:{url} parametersLog:{parametersLog} ex:{e.Message}");
+                return null;
+            }
+        }
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
+            }
+
+            return handler;
+        }
+
     }
 }

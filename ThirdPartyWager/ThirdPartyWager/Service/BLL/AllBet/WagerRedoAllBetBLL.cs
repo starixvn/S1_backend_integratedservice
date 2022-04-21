@@ -5,6 +5,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+using System.Collections.Generic;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,6 +17,8 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL _apiAllBetBLL;
         private readonly WagerAllBetService _wagerAllBetService;
         private readonly ILogger<WagerRedoAllBetBLL> _logger;
+        private readonly IEnumerable<TpCurrency> _currencyList;
+        private readonly int _tpId = (int)Tp.Allbet;
 
         public WagerRedoAllBetBLL(IServiceProvider provider)
         {
@@ -21,12 +26,12 @@ namespace ThirdPartyWager.Service.BLL
             _apiAllBetBLL = provider.GetRequiredService<ApiAllBetBLL>();
             _wagerAllBetService = provider.GetRequiredService<WagerAllBetService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoAllBetBLL>>();
+            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -35,64 +40,67 @@ namespace ThirdPartyWager.Service.BLL
                 // count interval wagers
                 var getWagerCount = _wagerAllBetService.GetWagerTotal(startUnix, endUnix);
                 var wagerCount = getWagerCount.wagerCount;
-
-                // pagination
-                var pageIndex = 1;
-                var pageRowCnt = 1;
-                while (pageRowCnt >= 1)
-                {
-                    // bet 
-                    var dataWager = await _apiAllBetBLL.GetBetListByTime(setting["ApiUrl"], setting["DesKey"], setting["MD5Key"], setting["PropertyId"], startTime, endTime, pageIndex, guid);
-                    if (dataWager == null)
+                foreach (var currency in _currencyList)
+                {              
+                    // pagination
+                    var pageIndex = 1;
+                    var pageRowCnt = 1;
+                    
+                    var agent = setting[$"{currency.TpCurrencyId}Agent"];
+                    while (pageRowCnt >= 1)
                     {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return false;
-                    }
-
-                    // error condition
-                    var errorCode = dataWager.error_code;
-                    if (errorCode != "OK")
-                    {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return false;
-                    }
-
-                    pageRowCnt = dataWager.page.datas.Count();
-                    var totalNum = dataWager.page.count;
-                    if (pageRowCnt == 0)
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return true;
-                    }
-
-                    // db wager count equals api bet count do nothing
-                    if (totalNum == wagerCount)
-                    {
-                        msg = "MATCH";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                        return true;
-                    }
-
-                    // insert wager to db
-                    foreach (var bet in dataWager.page.datas)
-                    {
-                        try
+                        // bet 
+                        var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                        if (dataWager == null)
                         {
-                            var r = _wagerAllBetService.InsertWager(bet);
-                        }
-                        catch (Exception ex)
-                        {
-                            msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
-                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
                         }
-                    }
-                    pageIndex++;
-                }
 
+                        // error condition
+                        var errorCode = dataWager.resultCode;
+                        if (errorCode != "OK")
+                        {
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            return false;
+                        }
+
+                        pageRowCnt = dataWager.data.list.Count();
+                        var totalNum = dataWager.data.total;
+                        if (pageRowCnt == 0)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            return true;
+                        }
+
+                        // db wager count equals api bet count do nothing
+                        if (totalNum == wagerCount)
+                        {
+                            msg = "MATCH";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            return true;
+                        }
+
+                        // insert wager to db
+                        foreach (var bet in dataWager.data.list)
+                        {
+                            try
+                            {
+                                var r = _wagerAllBetService.InsertWager(bet);
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                return false;
+                            }
+                        }
+                        pageIndex++;
+                    }
+                }
                 msg = "FINISH";
                 _logger.LogInformation($"RedoWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                 return false;

@@ -24,7 +24,15 @@ namespace ThirdPartyWager.Service.DAL
 
         public bool InsertWager(BetAllBet bet)
         {
-            return _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", new DynamicParameters(bet));
+            var parameters = new DynamicParameters(bet);
+            //將新api回傳欄位對應回舊的table欄位
+            parameters.AddDynamicParams(new
+            {
+                client = bet.player,
+                winOrLoss = bet.winOrLossAmount,
+                state = bet.status
+            });
+            return _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", parameters);
         }
 
         public WagerAllBetTotal GetWagerTotal(long beginTime, long endTime)
