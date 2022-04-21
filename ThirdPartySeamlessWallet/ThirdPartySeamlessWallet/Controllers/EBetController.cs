@@ -354,14 +354,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         result = settledBLL.PayoutLC_EBet(getBetReq, out tpAffterAmount);
                         if (result > 0)
                         {
-                            if (getBetReq.username == "dnova88_250797" && getBetReq.money == 195)
-                            {
-                                getBetResp.status = 500;
-                                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                                log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                                return getBetResp;
-                            }
-                            
                             var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 200;
                             getBetResp.money = tpCustBalance.Balance;
@@ -370,14 +362,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
-                            if (getBetReq.username == "dnova88_250797" && getBetReq.money == 195)
-                            {
-                                getBetResp.status = 500;
-                                getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                                log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                                return getBetResp;
-                            }
-                            
                             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBetResp.username, gameType);
                             getBetResp.status = 201;
                             getBetResp.money = tpCustBalance.Balance;
