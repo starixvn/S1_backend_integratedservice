@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -56,6 +57,8 @@ namespace ThirdParty.NineW
             var config = new NineWConfig(inputs);
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
             _ = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config);
+            // 暫時加上，9w 限制 1 time pre sec(userid)
+            Thread.Sleep(1000);
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
