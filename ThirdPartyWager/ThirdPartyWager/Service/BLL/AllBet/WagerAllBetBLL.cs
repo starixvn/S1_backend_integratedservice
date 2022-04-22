@@ -45,8 +45,7 @@ namespace ThirdPartyWager.Service.BLL
                     _currencyList = _currencyList.Take(1);
                 }
                 foreach (var currency in _currencyList)
-                {
-                   
+                {       
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;

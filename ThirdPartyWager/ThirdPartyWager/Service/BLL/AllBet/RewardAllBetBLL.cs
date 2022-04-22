@@ -76,10 +76,6 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 foreach (var currency in _currencyList)
                 {
-                    if (_env.IsDevelopment())
-                    {
-                        await Task.Delay(30000);
-                    }
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;
