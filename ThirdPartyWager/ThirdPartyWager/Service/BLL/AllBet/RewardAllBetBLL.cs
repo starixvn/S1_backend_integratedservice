@@ -9,6 +9,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using System.Collections.Generic;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -24,6 +25,8 @@ namespace ThirdPartyWager.Service.BLL
         private readonly string _tpName = Tp.Allbet.ToString();
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+        private readonly IEnumerable<TpCurrency> _currencyList;
+
 
         public RewardAllBetBLL(IServiceProvider provider)
         {
@@ -32,6 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerAllBetService = provider.GetRequiredService<WagerAllBetService>();
             _logger = provider.GetRequiredService<ILogger<RewardAllBetBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
         }
 
         public async Task<bool> ExecRewardWorker(int type, int timeRange)
@@ -57,91 +61,92 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<bool> GetRewardsAsync(string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
 
             try
             {
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
-                // pagination
-                var pageIndex = 1;
-                var pageRowCnt = 1;
                 var success = true;
-
-                while (pageRowCnt >= 1)
+                foreach (var currency in _currencyList)
                 {
-                    // get reward
-                    var data = await _apiAllBetBLL.GetRewardByTime(setting["ApiUrl"], setting["DesKey"], setting["MD5Key"], setting["PropertyId"], startTime, endTime, pageIndex, guid);
+                    // pagination
+                    var pageIndex = 1;
+                    var pageRowCnt = 1;
+                    var agent = setting[$"{currency.TpCurrencyId}Agent"];
 
-                    // error condition
-                    if (data == null)
+                    while (pageRowCnt >= 1)
                     {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
-                        return false;
-                    }
+                        // get reward
+                        var rewardData = await _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
 
-                    var errorCode = data.error_code;
-                    if (errorCode != "OK")
-                    {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(data)}");
-                        return false;
-                    }
-
-                    pageRowCnt = data.page.datas.Count();
-                    if (pageRowCnt == 0)
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"GetRewardsAsync {msg}\r\n{JsonConvert.SerializeObject(data)}");
-                        break;
-                    }
-
-                    // check reward data
-                    foreach (var item in data.page.datas)
-                    {
-                        try
+                        // error condition
+                        if (rewardData == null)
                         {
-                            var reward = _wagerAllBetService.GetRewardRecord(item.eventRecordNum).Result;
-                            if(item.status != 3)
-                            {
-                                //活动记录状态 2: 未结算(Not settled) 3: 已结算(Settled)
-                                _logger.LogError($"Reward Not Settled: {item.eventRecordNum} {item.settleTime}");
-                                continue;
-                            }
-                            if (reward == null)
-                            {
-                                // call sw reward api
-                                var response = _apiAllBetBLL.callSeamlessApi("Reward", item, setting["SHA1key"], setting["PropertyId"]).Result;
-                                var result = JsonConvert.DeserializeObject<RewardAllBetModel>(response);
-                                if (result.error_code != "0")
-                                {
-                                    if (result.error_code != "10007")
-                                    {
-                                        success = false;
-                                        msg = "SEAMLESS_ERROR";
-                                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
-                                    }
-                                }
-                                else
-                                {
-                                    LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
-                                    _logger.LogInformation($"System Reward Settled: {item.eventRecordNum}");
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            msg = $"INSERT_WAGER(WAGERID: {item.eventRecordNum} )";
-                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(rewardData)}");
                             return false;
                         }
+
+                        if (rewardData.resultCode != "OK")
+                        {
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(rewardData)}");
+                            return false;
+                        }
+
+                        pageRowCnt = rewardData.data.list.Count();
+                        if (pageRowCnt == 0)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"GetRewardsAsync {msg}\r\n{JsonConvert.SerializeObject(rewardData)}");
+                            break;
+                        }
+
+                        // check reward data
+                        foreach (var item in rewardData.data.list)
+                        {
+                            try
+                            {
+                                var reward = _wagerAllBetService.GetRewardRecord(item.eventRecordNum).Result;
+                                if (item.status != 3)
+                                {
+                                    //活动记录状态 2: 未结算(Not settled) 3: 已结算(Settled)
+                                    _logger.LogError($"Reward Not Settled: {item.eventRecordNum} {item.settleTime}");
+                                    continue;
+                                }
+                                if (reward == null)
+                                {
+                                    // call sw reward api
+                                    var response = _apiAllBetBLL.CallEventSettleApi(item).Result;
+                                    var result = JsonConvert.DeserializeObject<AllBetTransferResponse>(response);
+                                    if (result.resultCode != 0)
+                                    {
+                                        if (result.resultCode != 10007)
+                                        {
+                                            success = false;
+                                            msg = "SEAMLESS_ERROR";
+                                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        LogContext.PushProperty("SystemJob", $"Auto-Dispatch {_tpName}");
+                                        _logger.LogInformation($"System Reward Settled: {item.eventRecordNum}");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER(WAGERID: {item.eventRecordNum} )";
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
+                                return false;
+                            }
+                        }
+                        if (!success)
+                        {
+                            return false;
+                        }
+                        pageIndex++;
                     }
-                    if (!success)
-                    {
-                        return false;
-                    }
-                    pageIndex++;
                 }
 
                 msg = "FINISH";
