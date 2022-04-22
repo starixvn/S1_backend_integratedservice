@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -810,124 +809,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag_TpWagerAllbet(long betNum)
         {
             return settledService.SetSettleFlag_TpWagerAllbet(betNum);
-        }
-        public int CancelBetLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Allbet, bettingDataLC_Allbet.Client);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                bettingDataLC_Allbet.Amount *= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount *= tpCurrency.ExchangeRate;
-                }
-            }
-
-            var result = settledService.CancelBetLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
-            if (result == -3)
-            {
-                Thread.Sleep(5000);
-                result = settledService.CancelBetLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
-            }
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount /= tpCurrency.ExchangeRate;
-                }
-            }
-            return result;
-        }
-        public int PayoutLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
-        {
-
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Allbet, bettingDataLC_Allbet.Client);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                bettingDataLC_Allbet.Amount *= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount *= tpCurrency.ExchangeRate;
-                }
-            }
-
-            var result = settledService.PayoutLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-                bettingDataLC_Allbet.Amount /= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount /= tpCurrency.ExchangeRate;
-                }
-            }
-
-            return result;
-        }
-        public int ReSettledLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
-        {
-
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Allbet, bettingDataLC_Allbet.Client);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                bettingDataLC_Allbet.Amount *= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount *= tpCurrency.ExchangeRate;
-                }
-            }
-
-            var result = settledService.ReSettledLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-                bettingDataLC_Allbet.Amount /= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount /= tpCurrency.ExchangeRate;
-                }
-            }
-
-            return result;
-        }
-
-        public int RewardLC_Allbet(BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
-        {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Allbet, bettingDataLC_Allbet.Client);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Allbet, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                bettingDataLC_Allbet.Amount *= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount *= tpCurrency.ExchangeRate;
-                }
-            }
-
-            var result = settledService.RewardLC_Allbet(tpCustInfo, bettingDataLC_Allbet, out afterAmount);
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-                bettingDataLC_Allbet.Amount /= tpCurrency.ExchangeRate;
-                foreach (var bet in bettingDataLC_Allbet.Details)
-                {
-                    bet.Amount /= tpCurrency.ExchangeRate;
-                }
-            }
-
-            return result;
         }
 
         #endregion

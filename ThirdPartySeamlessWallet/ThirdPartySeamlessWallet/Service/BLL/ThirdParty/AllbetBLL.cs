@@ -190,10 +190,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         break;
                     case AllbetTransferType.ReSettle:
                         result = ReSettle(tpCustInfo, request, out afterAmount);
-                        if (result == -2)
-                        {
-                            return new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(tpUserName));
-                        }
                         break;
                     case AllbetTransferType.EventSettle:
                         result = EventSettle(tpCustInfo, eventRequest, out afterAmount);
@@ -252,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = Cancel(tpCustInfo, request);
                 if (result == -3)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                     result = Cancel(tpCustInfo, request);
                 }
 
@@ -464,15 +460,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     if (request.Amount != settleAmount)
                     {
-                        decimal backAmount = 0;
-                        if (settleAmount == null)
-                        {
-                            backAmount = request.Amount + stake;
-                        }
-                        else
-                        {
-                            backAmount = request.Amount - (settleAmount ?? 0);
-                        }
+                        var backAmount = request.Amount - (settleAmount ?? 0);
 
                         if (backAmount != 0)
                         {
@@ -492,7 +480,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     else
                     {
                         trans.Commit();
-                        result = -2;
                     }
                 }
             }

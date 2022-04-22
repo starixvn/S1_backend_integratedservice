@@ -146,59 +146,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
-        #region Allbet
-        public int PlaceBetLC_Allbet(TpCustInfo tpCustInfo, BettingDataLC_Allbet bettingDataLC_Allbet, out decimal afterAmount)
-        {
-            int bonusId = 0;
-            int gameType = (int)GameType.Allbet_LiveCasino;
-
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            var result = 0;
-            var p = new DynamicParameters(new { tranId = bettingDataLC_Allbet.TranId, transferType = bettingDataLC_Allbet.TransferType, client = bettingDataLC_Allbet.Client, currency = bettingDataLC_Allbet.Currency, amount = bettingDataLC_Allbet.Amount, details = JsonConvert.SerializeObject(bettingDataLC_Allbet.Details) });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            try
-            {
-                result = conn.Execute("Service_BettransLC_Allbet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                if (result > 0 && bettingDataLC_Allbet.Amount != 0)
-                {
-                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_Allbet.Amount * -1, (int)Tp.Allbet, TransType.Wagers, $"Stake: {Math.Abs(bettingDataLC_Allbet.Amount).ToString("#,##0.##")}", bettingDataLC_Allbet.TranId.ToString(), out afterAmount, conn, trans);
-
-                    //AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans);
-                    result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataLC_Allbet.Amount) * -1, (int)Tp.Allbet, $"T{bettingDataLC_Allbet.TranId}", gameType, bettingDataLC_Allbet.TranId.ToString(), null, TpCategory.LiveCasino, out afterAmount, ref bonusId, conn, trans);
-                    if (bonusId > 0)
-                    {
-                        foreach (var bet in bettingDataLC_Allbet.Details)
-                        {
-                            AddTpBonus((int)Tp.Allbet, bet.BetNum.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bet.Amount, bonusId, TpCategory.LiveCasino, conn, trans);
-                        }
-                    }
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw mySqlEx;
-                }
-            }
-
-            return result;
-        }
-        #endregion
 
         #region Sexy
         public int PlaceBetLC_Sexy(TpCustInfo tpCustInfo, BettingDataLC_Sexy_Bet bettingDataLC_Sexy_Bet, out decimal afterAmount)
