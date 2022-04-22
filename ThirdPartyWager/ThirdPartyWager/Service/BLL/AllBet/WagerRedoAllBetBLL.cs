@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -17,8 +19,9 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL _apiAllBetBLL;
         private readonly WagerAllBetService _wagerAllBetService;
         private readonly ILogger<WagerRedoAllBetBLL> _logger;
-        private readonly IEnumerable<TpCurrency> _currencyList;
+        private IEnumerable<TpCurrency> _currencyList;
         private readonly int _tpId = (int)Tp.Allbet;
+        private readonly IWebHostEnvironment _env;
 
         public WagerRedoAllBetBLL(IServiceProvider provider)
         {
@@ -27,6 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerAllBetService = provider.GetRequiredService<WagerAllBetService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoAllBetBLL>>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
@@ -40,8 +44,13 @@ namespace ThirdPartyWager.Service.BLL
                 // count interval wagers
                 var getWagerCount = _wagerAllBetService.GetWagerTotal(startUnix, endUnix);
                 var wagerCount = getWagerCount.wagerCount;
+
+                if (_env.IsDevelopment())
+                {
+                    _currencyList = _currencyList.Take(1);
+                }
                 foreach (var currency in _currencyList)
-                {              
+                {
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;

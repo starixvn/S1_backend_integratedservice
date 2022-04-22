@@ -38,6 +38,7 @@
 
     public enum GameType
     {
+        Allbet_LiveCasino = 6,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
         One789_Lottery = 35,
