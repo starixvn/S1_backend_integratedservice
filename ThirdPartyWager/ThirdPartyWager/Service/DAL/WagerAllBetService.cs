@@ -15,11 +15,13 @@ namespace ThirdPartyWager.Service.DAL
     {
         private readonly MySqlClient _wagerDbClient;
         private readonly MySqlClient _mainDbClient;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public WagerAllBetService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
         public bool InsertWager(BetAllBet bet)
@@ -32,7 +34,12 @@ namespace ThirdPartyWager.Service.DAL
                 winOrLoss = bet.winOrLossAmount,
                 state = bet.status
             });
-            return _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", parameters);
+            var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", parameters);
+            if (result)
+            {
+                _tpUnsettleService.InsertTpUnsettle(Tp.Allbet, GameType.Allbet_LiveCasino, bet.betNum.ToString());
+            }
+            return result;  
         }
 
         public WagerAllBetTotal GetWagerTotal(long beginTime, long endTime)
