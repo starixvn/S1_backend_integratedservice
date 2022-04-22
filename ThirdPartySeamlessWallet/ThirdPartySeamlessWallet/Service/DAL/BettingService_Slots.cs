@@ -353,9 +353,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
 
-        public IEnumerable<RewardRNG_Joker> IsExistReward_Joker(RewardRNG_Joker data)
+        public IEnumerable<RewardRNG_Joker> IsExistReward_Joker(bool isCancel,RewardRNG_Joker data)
         {
-            var query = new { username = data.username, id = data.id, FromAPIType = data.FromAPIType };
+            var query = new { IsCancel= isCancel, username = data.username, id = data.id, tournamentid = data.tournamentid, FromAPIType = data.FromAPIType };
             return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Check", CommandType.StoredProcedure, new DynamicParameters(query));
         }
 

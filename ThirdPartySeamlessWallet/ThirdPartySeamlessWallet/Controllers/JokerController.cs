@@ -20,6 +20,8 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class JokerController : ControllerBase
     {
+        #region Fields
+
         private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
@@ -31,6 +33,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment environment;
         private readonly ILogger<JokerController> _logger;
         private readonly Log2File log2File;
+
+        #endregion
+
+        #region Constructor
 
         public JokerController(IServiceProvider provider)
         {
@@ -48,22 +54,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File = provider.GetService<Log2File>();
 
         }
-        private string GetMD5Signature(string rawData)
-        {
-            using MD5 md5Hash = MD5.Create();
-            string md5Content = GetMd5Hash(md5Hash, rawData);
-            return md5Content;
-        }
-        private string GetMd5Hash(MD5 md5Hash, string rawData)
-        {
-            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-            var sBuilder = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
-            {
-                sBuilder.Append(data[i].ToString("x2"));
-            }
-            return sBuilder.ToString();
-        }
+
+        #endregion
+
+        #region Request Model
+
         public class AuthenticateTokenReq
         {
             public string appid { get; set; }
@@ -79,6 +74,55 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal Balance { get; set; }
             public string Message { get; set; }
             public int Status { get; set; }
+        }
+
+        public class BalanceReq
+        {
+            public string appid { get; set; }
+            [Newtonsoft.Json.JsonIgnore]
+            public string hash { get; set; }
+            public long timestamp { get; set; }
+            public string username { get; set; }
+        }
+        public class Rep
+        {
+            public decimal Balance { get; set; }
+            public string Message { get; set; }
+            public int Status { get; set; }
+        }
+
+        public class BetReq : BettingDataRNG_Joker
+        {
+            public string hash { get; set; }
+        }
+
+        public class SettleBetReq : BettingDataRNG_Joker
+        {
+            public string hash { get; set; }
+        }
+
+        public class CancelBetReq : CancelBetDataRNG_Joker
+        {
+            public string hash { get; set; }
+        }
+
+        #endregion
+
+        private string GetMD5Signature(string rawData)
+        {
+            using MD5 md5Hash = MD5.Create();
+            string md5Content = GetMd5Hash(md5Hash, rawData);
+            return md5Content;
+        }
+        private string GetMd5Hash(MD5 md5Hash, string rawData)
+        {
+            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            var sBuilder = new StringBuilder();
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+            return sBuilder.ToString();
         }
 
         [Route("[controller]/authenticate-token")]
@@ -139,21 +183,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             return authenticateTokenRep;
         }
 
-        public class BalanceReq
-        {
-            public string appid { get; set; }
-            [Newtonsoft.Json.JsonIgnore]
-            public string hash { get; set; }
-            public long timestamp { get; set; }
-            public string username { get; set; }
-        }
-        public class Rep
-        {
-            public decimal Balance { get; set; }
-            public string Message { get; set; }
-            public int Status { get; set; }
-        }
-
         [Route("[controller]/balance")]
         public Rep Balance([FromForm] BalanceReq balanceReq)
         {
@@ -192,10 +221,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return rep;
         }
 
-        public class BetReq : BettingDataRNG_Joker
-        {
-            public string hash { get; set; }
-        }
+        #region Slot Action
 
         [Route("[controller]/bet")]
         public Rep Bet([FromForm] Dictionary<string, string> betReqq)
@@ -208,6 +234,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 //betReqq = JsonConvert.DeserializeObject<Dictionary<string, string>>(BB);
             }
             var betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(betReqq));
+
+            if (!CheckSign(betReq.appid, betReq.hash, betReqq))
+            {
+                return new Rep
+                {
+                    Status = 5,
+                    Message = "Invalid signature"
+                };
+            }
+
             Rep rep = new Rep();
             rep.Status = 1000;
             rep.Message = "Other";
@@ -301,11 +337,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             return rep;
         }
 
-        public class SettleBetReq : BettingDataRNG_Joker
-        {
-            public string hash { get; set; }
-        }
-
         [Route("[controller]/settle-bet")]
         public Rep SettleBet([FromForm] Dictionary<string, string> settleBetReqq)
         {
@@ -317,6 +348,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             var settleBetReq = JsonConvert.DeserializeObject<SettleBetReq>(JsonConvert.SerializeObject(settleBetReqq));
+
+            if (!CheckSign(settleBetReq.appid, settleBetReq.hash, settleBetReqq))
+            {
+                return new Rep
+                {
+                    Status = 5,
+                    Message = "Invalid signature"
+                };
+            }
+
             Rep rep = new Rep();
             rep.Status = 1000;
             rep.Message = "Other";
@@ -400,17 +441,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             return rep;
         }
 
-        public class CancelBetReq : CancelBetDataRNG_Joker
-        {
-            public string hash { get; set; }
-        }
-
         [Route("[controller]/cancel-bet")]
         public Rep CancelBet([FromForm] Dictionary<string, string> cancelBetReqq)
         {
             var gameType = (int)GameType.Joker_RNG;
             log2File.Info(JsonConvert.SerializeObject(cancelBetReqq), "Joker_CancelBet");
             var cancelBetReq = JsonConvert.DeserializeObject<CancelBetReq>(JsonConvert.SerializeObject(cancelBetReqq));
+
+            if (!CheckSign(cancelBetReq.appid, cancelBetReq.hash, cancelBetReqq))
+            {
+                return new Rep
+                {
+                    Status = 5,
+                    Message = "Invalid signature"
+                };
+            }
+
             Rep rep = new Rep();
             rep.Status = 1000;
             rep.Message = "Other";
@@ -468,6 +514,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File.Info($"secret={secret}\r\n{JsonConvert.SerializeObject(cancelBetReqq)}\r\n{JsonConvert.SerializeObject(rep)}", "Joker_SettleBet");
             return rep;
         }
+
+        #endregion
+
+        #region Bonus And Jackpot Action
 
         [Route("[controller]/bonus-win")]
         public Rep Bonus([FromForm] Dictionary<string, string> bonusReqq)
@@ -631,6 +681,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             return rep;
         }
 
+        #endregion
+
+        #region Fish Action
+
         [Route("[controller]/transaction")]
         public Rep Transaction([FromForm] Dictionary<string, string> parameter)
         {
@@ -649,7 +703,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             return FishBet(JokerFishTransType.Deposit, parameter);
         }
 
-        #region Tournament
+        #endregion
+
+        #region Tournament Action
 
         /// <summary>
         /// 參加錦標賽
