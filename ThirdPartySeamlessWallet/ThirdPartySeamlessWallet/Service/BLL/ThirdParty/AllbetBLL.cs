@@ -312,6 +312,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             });
             p.Add("hasCanceled", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_CancelBetLC_Allbet_Set_V2", trans, p);
+            
+            _logger.LogInformation($"result={result}, request.OriginalDetails.Count={request.OriginalDetails.Count}");
 
             if (p.Get<int>("hasCanceled") == 0 && result == request.OriginalDetails.Count)
             {
