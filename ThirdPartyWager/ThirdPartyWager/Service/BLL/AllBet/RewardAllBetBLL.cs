@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
@@ -26,6 +28,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         private readonly IEnumerable<TpCurrency> _currencyList;
+        private readonly IWebHostEnvironment _env;
 
 
         public RewardAllBetBLL(IServiceProvider provider)
@@ -36,6 +39,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<RewardAllBetBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         public async Task<bool> ExecRewardWorker(int type, int timeRange)
@@ -68,6 +72,10 @@ namespace ThirdPartyWager.Service.BLL
                 var success = true;
                 foreach (var currency in _currencyList)
                 {
+                    if (_env.IsDevelopment())
+                    {
+                        await Task.Delay(30000);
+                    }
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;

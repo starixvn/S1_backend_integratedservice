@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
@@ -19,6 +20,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerAllBetBLL> _logger;
         private readonly IEnumerable<TpCurrency> _currencyList;
         private readonly int _tpId = (int)Tp.Allbet;
+        private readonly IWebHostEnvironment _env;
 
         public WagerAllBetBLL(IServiceProvider provider)
         {
@@ -27,6 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerAllBetService = provider.GetRequiredService<WagerAllBetService>();
             _logger = provider.GetRequiredService<ILogger<WagerAllBetBLL>>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
+            _env = provider.GetRequiredService<IWebHostEnvironment>(); 
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
@@ -37,7 +40,11 @@ namespace ThirdPartyWager.Service.BLL
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
                 foreach (var currency in _currencyList)
-                {             
+                {
+                    if (_env.IsDevelopment())
+                    {
+                        await Task.Delay(30000);
+                    }
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;
