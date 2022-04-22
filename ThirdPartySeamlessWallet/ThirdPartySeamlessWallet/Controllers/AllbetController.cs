@@ -86,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("Internal", out var @internal);
 
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var signString = $"POST\n{md5}\n{contentType}\n{date}\n/Transfer";
+                var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{transType.ToString()}";
                 var signature = GetSign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
 
                 if (@internal.ToString() != "Wager")

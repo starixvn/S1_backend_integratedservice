@@ -52,7 +52,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                _logger.LogInformation($"{transType} || {bodyText}");
                 return await _requestHandler[transType].Invoke(transType, bodyText);
             }
             catch (AllbetException ex)
@@ -117,8 +116,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             valid = false;
                         }
-                        
-                        var winLossAmount = Convert.ToDecimal(request.Details[0].WinOrLossAmount);
+
+                        var winLossAmount = Convert.ToDecimal(request.Details.Sum(i => i.WinOrLossAmount ?? 0));
                         if (winLossAmount != request.Amount - request.Details[0].BetAmount - request.Details[0].Deposit)
                         {
                             throw new AllbetException(AllbetResultCode.InvalidParameters,
@@ -161,6 +160,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             foreach (var bet in request.Details)
                             {
                                 bet.BetAmount *= tpCurrency.ExchangeRate;
+                                bet.Deposit *= tpCurrency.ExchangeRate;
                             }
                         }
                     }
@@ -245,6 +245,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     foreach (var bet in request.OriginalDetails)
                     {
                         bet.BetAmount *= tpCurrency.ExchangeRate;
+                        bet.Deposit *= tpCurrency.ExchangeRate;
                     }
                 }
 
@@ -310,14 +311,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 originalTranId = request.OriginalTranId, 
                 client = request.Player,
-                details = JsonConvert.SerializeObject(request.OriginalDetails)
+                details = JsonConvert.SerializeObject(
+                    JsonConvert.DeserializeObject<List<AllbetDbDetail>>(JsonConvert.SerializeObject(request.OriginalDetails)))
             });
             p.Add("hasCanceled", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_CancelBetLC_Allbet_Set_V2", trans, p);
 
             if (p.Get<int>("hasCanceled") == 0 && result == request.OriginalDetails.Count)
             {
-                var amount = request.OriginalDetails.Sum(i => i.BetAmount);
+                var amount = request.OriginalDetails.Sum(i => i.BetAmount + i.Deposit);
                 if (result > 0 && amount != 0)
                 {
                     result = _settledService.PayoutV2(tpCustInfo, amount, (int)ThirdParty, $"T{request.OriginalTranId}",
@@ -353,7 +355,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = AllbetInsert(AllbetTransferType.Settle, request, trans, out _, out _);
+                result = AllbetInsert(AllbetTransferType.Bet, request, trans, out _, out _);
 
                 if (result > 0 && request.Amount != 0)
                 {
@@ -456,20 +458,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
-                result = AllbetInsert(AllbetTransferType.Settle, request, trans, out var stake, out var winLostAmount);
+                result = AllbetInsert(AllbetTransferType.ReSettle, request, trans, out var stake, out var settleAmount);
 
                 if (result > 0)
                 {
-                    if (winLostAmount == null || request.Amount != winLostAmount)
+                    if (request.Amount != settleAmount)
                     {
                         decimal backAmount = 0;
-                        if (winLostAmount == null)
+                        if (settleAmount == null)
                         {
                             backAmount = request.Amount + stake;
                         }
                         else
                         {
-                            backAmount = request.Amount - (winLostAmount ?? 0);
+                            backAmount = request.Amount - (settleAmount ?? 0);
                         }
 
                         if (backAmount != 0)
@@ -525,10 +527,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 client = request.Player,
                 currency = request.Currency,
                 amount = request.Amount,
-                details = JsonConvert.SerializeObject(request.Details)
+                details = JsonConvert.SerializeObject(
+                    JsonConvert.DeserializeObject<List<AllbetDbDetail>>(JsonConvert.SerializeObject(request.Details)))
             });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("SettleAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_BettransLC_Allbet_Ins_V2", trans, p);
 
             if (type == AllbetTransferType.Settle || type == AllbetTransferType.ReSettle)
@@ -541,7 +544,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (result > 0)
                 {
                     stake = p.Get<decimal>("Stake");
-                    winLostAmount = p.Get<decimal?>("WinLostAmount");
+                    winLostAmount = p.Get<decimal?>("SettleAmount");
                 }
             }
 
