@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
@@ -18,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL _apiAllBetBLL;
         private readonly WagerAllBetService _wagerAllBetService;
         private readonly ILogger<WagerAllBetBLL> _logger;
-        private readonly IEnumerable<TpCurrency> _currencyList;
+        private IEnumerable<TpCurrency> _currencyList;
         private readonly int _tpId = (int)Tp.Allbet;
         private readonly IWebHostEnvironment _env;
 
@@ -39,12 +40,13 @@ namespace ThirdPartyWager.Service.BLL
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                if (_env.IsDevelopment())
+                {
+                    _currencyList = _currencyList.Take(1);
+                }
                 foreach (var currency in _currencyList)
                 {
-                    if (_env.IsDevelopment())
-                    {
-                        await Task.Delay(30000);
-                    }
+                   
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;
