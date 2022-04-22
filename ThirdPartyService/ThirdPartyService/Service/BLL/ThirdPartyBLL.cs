@@ -226,6 +226,30 @@ namespace ThirdPartyService.Service.BLL
                     tpTransfer.Amount = Math.Abs(_Amount);
                 }
 
+                // 2 decimal place
+                var _CheckAmount = tpTransfer.Amount;
+                if (tpCustInfoResult.Data.ExchangeRate != 0)
+                {
+                    _CheckAmount /= tpCustInfoResult.Data.ExchangeRate;
+                }
+                var to2DecimalAmount = DealTransferAmount(_CheckAmount, out decimal credit, out bool execute);
+                if (!execute)
+                {
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.Data.Status = TransferStatus.Fail;
+                    apiResult.RawMessage = $"Transfer failed due to decimal greater than 2 digits. ({Math.Abs(credit)})";
+                    apiResult.RawErrorCode = ErrorCode.DecimalOutOfRange.ToString();
+                    return apiResult;
+                }
+                else
+                {
+                    if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                    {
+                        to2DecimalAmount *= tpCustInfoResult.Data.ExchangeRate;
+                    }
+                    tpTransfer.Amount = Math.Abs(to2DecimalAmount);
+                }
+
                 string transId = null;
                 var thirdIdResult = tpHelper.GetThirdId(tpCustInfoResult.Data, inputs);
                 string thirdId = thirdIdResult.Implemented ? thirdIdResult.ThirdId : null;
@@ -1333,6 +1357,26 @@ namespace ThirdPartyService.Service.BLL
                 i => thirdPartyHelper.GetTpMaintainList(siteId)
                     .Where(item => item.MaintainCheck(DateTime.UtcNow)));
         }
+
+        private decimal DealTransferAmount(decimal amount, out decimal credit, out bool execute)
+        {
+            execute = true;
+            credit = amount;
+
+            var checkAmount = amount * 100;
+            bool hasMoreThan3decimals = checkAmount != (int)(checkAmount);
+            if (hasMoreThan3decimals)
+            {
+                amount = (int)amount;
+                if (Math.Abs(amount) == 0)
+                {
+                    execute = false;
+                }
+            }
+
+            return amount;
+        }
+
         #endregion
     }
 }

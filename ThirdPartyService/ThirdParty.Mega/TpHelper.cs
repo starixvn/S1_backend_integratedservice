@@ -335,16 +335,6 @@ namespace ThirdParty.Mega
                 Amount *= -1;
             }
 
-            Amount = DealTransferAmount(Amount,out decimal credit, out bool execute);
-            if (!execute)
-            {
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Data.Status = TransferStatus.Fail;
-                apiResult.RawMessage = $"Transfer failed due to decimal greater than 2 digits. ({Math.Abs(credit)})";
-                apiResult.RawErrorCode = ErrorCode.DecimalOutOfRange.ToString();
-                return apiResult;
-            }
-
             var uuid = Guid.NewGuid();
 
             string sign = $"{uuid}{sn}{tpCustInfo.TpUserName}{Amount}{secretCode}";
