@@ -1978,9 +1978,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
+            var seqNo = string.IsNullOrEmpty(bettingData_EBet.detail.withHoldingSeqNo)
+                ? bettingData_EBet.seqNo
+                : bettingData_EBet.detail.withHoldingSeqNo;
+
             var refBettransLC = conn.Execute("Service_BettransLC_Ebet_CancelBet_Set", new
             {
-                seqNo = bettingData_EBet.seqNo
+                seqNo = seqNo
             },
             transaction: trans,
             commandType: CommandType.StoredProcedure
