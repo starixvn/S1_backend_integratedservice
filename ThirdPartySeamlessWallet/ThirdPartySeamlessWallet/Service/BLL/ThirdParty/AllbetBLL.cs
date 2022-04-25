@@ -467,7 +467,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             result = _settledService.PayoutV2(tpCustInfo, backAmount, (int)ThirdParty,
                                 request.Details[0].BetNum.ToString(), (int)GameType, TpCategory.LiveCasino,
                                 request.Details[0].BetNum.ToString(), TransType.Payout, null, out afterAmount,
-                                "Resettle", out _, conn, trans);
+                                "Resettle", out _, conn, trans, AllowNegative.Allow);
                         }
 
                         if (result > 0)
