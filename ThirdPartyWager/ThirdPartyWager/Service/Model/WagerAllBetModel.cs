@@ -46,7 +46,7 @@ namespace ThirdPartyWager.Service.Model
         public string tableName { get; set; }
         public decimal validAmount { get; set; }
         public decimal winOrLossAmount { get; set; }
-        public decimal depositAmount { get; set; }
+        public decimal deposit { get; set; }
         
 
         public long betUnix
