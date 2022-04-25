@@ -84,7 +84,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Wager).First();
+                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<AllbetSettleData>(getSP, new { TransId = transId }, DataBase.Wager).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCurrency.ExchangeRate > 1)
@@ -95,7 +95,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var check = _mainDbClient.QueryFirst<CheckData>(checkSP, new { BetNum = transId, Client = unsettled.Account });
-                        if (check.Stake != unsettled.Stake || (check.SettleAmount - check.Stake) != unsettled.WinLostAmount)
+                        if (check.Stake != unsettled.Stake || (check.SettleAmount - check.Stake - unsettled.DepositAmount) != unsettled.WinLostAmount)
                         {
                             _logger.LogWarning($"Settle Amount error || wager : {JsonConvert.SerializeObject(unsettled)} || bettrans : {JsonConvert.SerializeObject(check)}");
                             continue;
@@ -151,5 +151,10 @@ namespace ThirdPartySettleWorker.Workers
     { 
         public decimal SettleAmount { get; set; }
         public decimal Stake { get; set; }
+    }
+
+    public class AllbetSettleData : SettleData
+    {
+        public decimal DepositAmount { get; set; }
     }
 }
