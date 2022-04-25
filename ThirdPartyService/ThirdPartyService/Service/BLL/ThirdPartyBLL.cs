@@ -226,28 +226,26 @@ namespace ThirdPartyService.Service.BLL
                     tpTransfer.Amount = Math.Abs(_Amount);
                 }
 
-                // 2 decimal place
-                var _CheckAmount = tpTransfer.Amount;
-                if (tpCustInfoResult.Data.ExchangeRate != 0)
+                // int transfer amount
+                var to2DecimalAmount = DealTransferAmount(tpTransfer.Amount, tpCustInfoResult.Data.ExchangeRate, tpTransfer.TpId, out decimal credit, out bool execute, out bool skip);
+                if (!skip)
                 {
-                    _CheckAmount /= tpCustInfoResult.Data.ExchangeRate;
-                }
-                var to2DecimalAmount = DealTransferAmount(_CheckAmount, out decimal credit, out bool execute);
-                if (!execute)
-                {
-                    apiResult.ErrorCode = ErrorCode.Fail;
-                    apiResult.Data.Status = TransferStatus.Fail;
-                    apiResult.RawMessage = $"Transfer failed due to decimal greater than 2 digits. ({Math.Abs(credit)})";
-                    apiResult.RawErrorCode = ErrorCode.DecimalOutOfRange.ToString();
-                    return apiResult;
-                }
-                else
-                {
-                    if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                    if (!execute)
                     {
-                        to2DecimalAmount *= tpCustInfoResult.Data.ExchangeRate;
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.Data.Status = TransferStatus.Fail;
+                        apiResult.RawMessage = $"Transfer failed due to decimal greater than 2 digits. ({Math.Abs(credit)})";
+                        apiResult.RawErrorCode = ErrorCode.DecimalOutOfRange.ToString();
+                        return apiResult;
                     }
-                    tpTransfer.Amount = Math.Abs(to2DecimalAmount);
+                    else
+                    {
+                        if (tpCustInfoResult.Data.ExchangeRate > 0 && tpCustInfoResult.Data.ExchangeRate != 1)
+                        {
+                            to2DecimalAmount *= tpCustInfoResult.Data.ExchangeRate;
+                        }
+                        tpTransfer.Amount = Math.Abs(to2DecimalAmount);
+                    }
                 }
 
                 string transId = null;
@@ -1358,16 +1356,33 @@ namespace ThirdPartyService.Service.BLL
                     .Where(item => item.MaintainCheck(DateTime.UtcNow)));
         }
 
-        private decimal DealTransferAmount(decimal amount, out decimal credit, out bool execute)
+        private decimal DealTransferAmount(decimal amount, decimal exchangeRate, int tpId, out decimal credit, out bool execute, out bool skip)
         {
             execute = true;
+            skip = true;
+
+            if (exchangeRate != 0)
+            {
+                amount /= exchangeRate;
+            }
             credit = amount;
 
+            // only check mega
+            if (tpId != (int)TpEnum.Mega)
+            {
+                return amount;
+            }
+
+            skip = false;
+            // check 2 decimal place
             var checkAmount = amount * 100;
             bool hasMoreThan3decimals = checkAmount != (int)(checkAmount);
+            // beyond 2 decimal
             if (hasMoreThan3decimals)
             {
+                // only transfer int amount
                 amount = (int)amount;
+                // no execute if int amount is 0
                 if (Math.Abs(amount) == 0)
                 {
                     execute = false;
