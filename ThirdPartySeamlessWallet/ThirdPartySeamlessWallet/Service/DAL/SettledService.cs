@@ -95,43 +95,35 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             bonusId = 0;
-            int result = 0;
-            bool bHasBonusWallet = true;
+            var result = 0;
             try
             {
-                if (bHasBonusWallet)
+                result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out var custId, out bonusId, bonusType);
+
+                if (bonusId > 0 || transType == TransType.Prize)
                 {
-                    result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out int custId, out bonusId, bonusType);
-
-                    if (bonusId > 0 || transType == TransType.Prize)
+                    if (bonusId > 0 && custId != tpCustInfo.CustId)
                     {
-                        if (bonusId > 0 && custId != tpCustInfo.CustId)
-                        {
-                            return 0;
-                        }
+                        return 0;
+                    }
 
-                        result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out decimal afterBonus, ref bonusId, conn, trans);
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out var afterBonus, ref bonusId, conn, trans);
 
-                        //var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
+                    //var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
 
-                        if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
-                        {
-                            result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
-                        }
-                        else
-                        {
-                            afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
-                        }
-
-                        if (afterBonus > 0)
-                        {
-                            // check bonus status and update status cancel to running
-                            AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
-                        }
+                    if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
+                    {
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
                     }
                     else
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
+                        afterAmount = afterBonus + walletService.GetBalance(tpCustInfo.CustId);
+                    }
+
+                    if (afterBonus > 0)
+                    {
+                        // check bonus status and update status cancel to running
+                        AutoRunningSeamlessBonus(bonusId, tpCustInfo.CurrencyId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, afterBonus, conn, trans);
                     }
                 }
                 else
