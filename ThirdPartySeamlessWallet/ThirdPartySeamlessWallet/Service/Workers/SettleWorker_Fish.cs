@@ -342,7 +342,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_JILI((int)category, unsettled.TransId);
+                            settledBLL.SetSettleFlag_JILI((int)category, unsettled.TransId, unsettled.TicketStatus);
                         }
                         catch (Exception ex1)
                         {
