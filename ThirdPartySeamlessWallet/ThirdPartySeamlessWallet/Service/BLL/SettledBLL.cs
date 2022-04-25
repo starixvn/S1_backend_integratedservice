@@ -1166,6 +1166,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     item.betMoney *= tpCurrency.ExchangeRate;
                     item.payout *= tpCurrency.ExchangeRate;
+                    item.validBet *= tpCurrency.ExchangeRate;
                 }
             }
 
