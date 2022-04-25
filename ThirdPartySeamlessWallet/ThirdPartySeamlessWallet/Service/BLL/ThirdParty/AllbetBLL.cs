@@ -313,10 +313,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             p.Add("hasCanceled", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_CancelBetLC_Allbet_Set_V2", trans, p);
 
-            if (p.Get<int>("hasCanceled") == 0)
+            if (p.Get<int>("hasCanceled") == 0 && result > 0)
             {
                 var amount = request.OriginalDetails.Sum(i => i.BetAmount + i.Deposit);
-                if (result > 0 && amount != 0)
+                if (amount != 0)
                 {
                     result = _settledService.PayoutV2(tpCustInfo, amount, (int)ThirdParty, $"T{request.OriginalTranId}",
                         (int)GameType, TpCategory.LiveCasino, request.OriginalTranId.ToString(), TransType.Refunds, null,
