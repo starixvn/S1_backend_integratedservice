@@ -881,6 +881,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             data.Remove("hash");
+            data.Remove("extendedinfo");
+            if (data.ContainsKey("amount"))
+            {
+                data["amount"] = String.Format("{0:0.00}", Convert.ToDecimal(data["amount"]));
+            }
             var rawData = $"{string.Join("&", data.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"))}{secret}";
 
             return GetMD5Signature(rawData) == hash;
