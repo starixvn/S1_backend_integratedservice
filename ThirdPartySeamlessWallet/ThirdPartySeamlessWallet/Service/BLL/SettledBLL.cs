@@ -2024,9 +2024,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_JILI(category);
         }
 
-        public int SetSettleFlag_JILI(int category, long TransId)
+        public int SetSettleFlag_JILI(int category, long TransId, int TicketStatus)
         {
-            return settledService.SetSettleFlag_JILI(category, TransId);
+            return settledService.SetSettleFlag_JILI(category, TransId, TicketStatus);
         }
 
         #endregion
