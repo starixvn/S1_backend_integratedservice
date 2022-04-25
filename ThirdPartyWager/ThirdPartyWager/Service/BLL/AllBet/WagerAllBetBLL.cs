@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Service.BLL
                             return false;
                         }
 
-                        pageRowCnt = dataWager.data.total;
+                        pageRowCnt = dataWager.data.list.Count();
                         if (pageRowCnt == 0)
                         {
                             msg = "NO_DATA";
