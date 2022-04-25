@@ -96,6 +96,18 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public decimal? payout { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? validBet { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string betId { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? odds { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string number { get; set; }
     }
 
     public class WithHoldingListEbet
