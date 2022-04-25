@@ -3319,10 +3319,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Query<SettleData_JILI>(sp);
         }
 
-        public int SetSettleFlag_JILI(int category, long TransId)
+        public int SetSettleFlag_JILI(int category, long TransId, int TicketStatus)
         {
-            string sp = (category == (int)TpCategory.Fish) ? "Service_BettransFish_JILI_Settle_Set" : "Service_BettransRng_JILI_Settle_Set";
-            return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { TransId = TransId }));
+            string sp = (category == (int)TpCategory.Fish) ? "Service_BettransFish_JILI_Settle_Set" : "Service_BettransRng_JILI_Settle_Set_V2";
+            return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { TransId = TransId, TicketStatus = TicketStatus }));
         }
 
         #endregion
