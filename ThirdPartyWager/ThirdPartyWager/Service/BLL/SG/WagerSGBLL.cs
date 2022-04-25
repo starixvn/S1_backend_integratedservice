@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -13,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSGBLL _apiSGBLL;
         private readonly WagerSGService _wagerSGService;
         private readonly ILogger<WagerSGBLL> _logger;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public WagerSGBLL(IServiceProvider provider)
         {
@@ -20,6 +22,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiSGBLL = provider.GetRequiredService<ApiSGBLL>();
             _wagerSGService = provider.GetRequiredService<WagerSGService>();
             _logger = provider.GetRequiredService<ILogger<WagerSGBLL>>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
@@ -63,15 +66,23 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
+                            var result = 0;
+                            var gameType = GameType.SG_Fish;
                             if (!bet.gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
                             {
                                 // slot
-                                _wagerSGService.InsertWagerRng(bet);
+                                result = _wagerSGService.InsertWagerRng(bet);
+                                gameType = GameType.SG_RNG;
                             }
                             else
                             {
                                 // fish
-                                _wagerSGService.InsertWager(bet);
+                                result = _wagerSGService.InsertWager(bet);
+                            }
+
+                            if (result > 0)
+                            {
+                                _tpUnsettleService.InsertTpUnsettle(Tp.SG, gameType, bet.referenceId);
                             }
                         }
                         catch (Exception ex)
