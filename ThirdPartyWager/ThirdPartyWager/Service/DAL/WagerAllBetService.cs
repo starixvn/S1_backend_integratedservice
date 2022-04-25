@@ -34,7 +34,7 @@ namespace ThirdPartyWager.Service.DAL
                 winOrLoss = bet.winOrLossAmount,
                 state = bet.status
             });
-            var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", parameters);
+            var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins_V2", parameters);
             if (result)
             {
                 _tpUnsettleService.InsertTpUnsettle(Tp.Allbet, GameType.Allbet_LiveCasino, bet.betNum.ToString());
