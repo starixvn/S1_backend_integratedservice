@@ -95,7 +95,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var check = _mainDbClient.QueryFirst<CheckData>(checkSP, new { BetNum = transId, Client = unsettled.Account });
-                        if (check.Stake != unsettled.Stake || (check.SettleAmount - check.Stake - unsettled.DepositAmount) != unsettled.WinLostAmount)
+                        if ((check.Stake - unsettled.DepositAmount) != unsettled.Stake || (check.SettleAmount - check.Stake) != unsettled.WinLostAmount)
                         {
                             _logger.LogWarning($"Settle Amount error || wager : {JsonConvert.SerializeObject(unsettled)} || bettrans : {JsonConvert.SerializeObject(check)}");
                             continue;
