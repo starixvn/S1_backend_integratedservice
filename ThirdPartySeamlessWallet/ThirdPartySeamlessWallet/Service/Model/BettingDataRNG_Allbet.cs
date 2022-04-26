@@ -6,30 +6,6 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
-    public class BettingDataLC_Allbet
-    {
-        [JsonProperty("amount")]
-        public decimal Amount { get; set; }
-
-        [JsonProperty("client")]
-        public string Client { get; set; }
-
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("details")]
-        public List<Detail> Details { get; set; }
-
-        [JsonProperty("originalTranId")]
-        public long OriginalTranId { get; set; }
-
-        [JsonProperty("tranId")]
-        public long TranId { get; set; }
-
-        [JsonProperty("transferType")]
-        public int TransferType { get; set; }
-    }
-    
     public class AllBetCancelTransferRequest
     {
         [JsonProperty("player")]
@@ -221,11 +197,5 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("eventType", NullValueHandling = NullValueHandling.Ignore)]
         public int? EventType { get; set; }
-    }
-
-    public class UnsettleBettingDataLC_Allbet
-    {
-        public long BetNum { get; set; }
-        public string Client { get; set; }
     }
 }

@@ -96,14 +96,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string token { get; set; }
         }
 
-        public class CancelBetResp : ErrorResp
-        {
-            public string username { get; set; }
-            public string currency { get; set; }
-            public int balance { get; set; }
-            //public int txId { get; set; }
-        }
-
         #endregion
 
         [HttpPost]
