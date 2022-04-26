@@ -369,6 +369,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
+        public bool SetBalance_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+          out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                    data.amount,
+                                    (int)Tp.Joker,
+                                    data.id,  //TpTransId
+                                    (int)GameType.Joker_RNG,
+                                    data.tournamentid,  //RefId
+                                    null,
+                                    TpCategory.Slots,
+                                    out afterAmount,
+                                    ref bonusId,
+                                    conn,
+                                    trans);
+
+            if (result <= 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
 
         #endregion
 

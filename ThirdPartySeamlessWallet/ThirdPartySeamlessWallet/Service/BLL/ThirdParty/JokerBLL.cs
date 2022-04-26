@@ -54,14 +54,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<JokerResponse> JoinTournament(Dictionary<string, string> request)
         {
             var message = string.Empty;
+            var isExist = true;
+            decimal beforeBalance = 0; decimal afterBalance = 0;
             var serializeRequest = JsonConvert.DeserializeObject<JoinAndWinRequest>(JsonConvert.SerializeObject(request));
 
-            if (!CheckSignature(serializeRequest.appid, serializeRequest.hash, request))
+            if (!CheckSignatureForJoinTournament(serializeRequest.appid, serializeRequest.hash, request, out message))
             {
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.InvalidSignature,
-                    Message = "Invalid Signature"
+                    Message = message
                 };
             }
 
@@ -83,11 +85,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetTpCustInfoForJoinTournament(serializeRequest.username, out message))
+            if (!GetTpCustInfoForJoinTournament(serializeRequest.username, out TpCustInfo tpCustInfo, out message))
             {
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.InvalidUserNameOrPassword,
+                    Message = message
+                };
+            }
+
+            if (!GetTpCurrencyForJoinTournament(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
+            {
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
+                    Message = message
+                };
+            }
+
+            if (!GetBalanceForJoinTournament(serializeRequest.username, out beforeBalance, out message))
+            {
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
                     Message = message
                 };
             }
@@ -107,23 +127,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.Related
             };
 
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-
-            if (!CheckDataForJoinTournament(data, out message))
+            if (tpCurrency.ExchangeRate > 0)
             {
-                trans.Rollback();
-                return new JokerResponse()
-                {
-                    Status = JokerErrorCode.Success,
-                    Message = message
-                };
+                data.amount = data.amount * tpCurrency.ExchangeRate;
             }
 
-            if (!PlaceJoinForJoinTournament(data, out message, trans))
+            //Join為減項
+            data.amount = data.amount * -1;
+
+            if (!CheckDataForJoinTournament(data, out isExist, out message))
             {
-                trans.Rollback();
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
@@ -131,35 +144,59 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            trans.Commit();
-
-            if (!GetBalanceForJoinTournament(serializeRequest.username, out decimal balance, out message))
+            if (!isExist)
             {
-                return new JokerResponse()
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+
+                //不存在，新增資料 + 更新Balance
+                if (!PlaceJoinForJoinTournament(data, out message, trans))
                 {
-                    Status = JokerErrorCode.Other,
-                    Message = message
-                };
+                    trans.Rollback();
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+
+                if (data.amount != 0)
+                {
+                    if (!SetBalanceForJoinTournament(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                    {
+                        trans.Rollback();
+                        return new JokerResponse()
+                        {
+                            Status = JokerErrorCode.Other,
+                            Message = message
+                        };
+                    }
+                }
+                trans.Commit();
             }
 
             return new JokerResponse()
             {
                 Status = JokerErrorCode.Success,
-                Balance = balance
+                Message = message,
+                Balance = afterBalance == 0 ? beforeBalance : afterBalance
             };
         }
 
         public async Task<JokerResponse> WinTournament(Dictionary<string, string> request)
         {
             var message = string.Empty;
+            var isExist = true;
+            decimal beforeBalance = 0; decimal afterBalance = 0;
             var serializeRequest = JsonConvert.DeserializeObject<JoinAndWinRequest>(JsonConvert.SerializeObject(request));
 
-            if (!CheckSignature(serializeRequest.appid, serializeRequest.hash, request))
+            if (!CheckSignatureForWinTournament(serializeRequest.appid, serializeRequest.hash, request, out message))
             {
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.InvalidSignature,
-                    Message = "Invalid Signature"
+                    Message = message
                 };
             }
 
@@ -181,11 +218,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetTpCustInfoForWinTournament(serializeRequest.username, out message))
+            if (!GetTpCustInfoForWinTournament(serializeRequest.username, out TpCustInfo tpCustInfo, out message))
             {
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.InvalidUserNameOrPassword,
+                    Message = message
+                };
+            }
+
+            if (!GetTpCurrencyForWinTournament(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
+            {
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
+                    Message = message
+                };
+            }
+
+            if (!GetBalanceForWinTournament(serializeRequest.username, out beforeBalance, out message))
+            {
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
                     Message = message
                 };
             }
@@ -205,23 +260,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.Related
             };
 
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-
-            if (!CheckDataForWinTournament(data, out message))
+            if (tpCurrency.ExchangeRate > 0)
             {
-                trans.Rollback();
-                return new JokerResponse()
-                {
-                    Status = JokerErrorCode.Success,
-                    Message = message
-                };
+                data.amount = data.amount * tpCurrency.ExchangeRate;
             }
 
-            if (!PlaceWinForWinTournament(data, out message, trans))
+            if (!CheckDataForWinTournament(data, out isExist, out message))
             {
-                trans.Rollback();
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
@@ -229,35 +274,59 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            trans.Commit();
-
-            if (!GetBalanceForWinTournament(serializeRequest.username, out decimal balance, out message))
+            if (!isExist)
             {
-                return new JokerResponse()
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+
+                //不存在，新增資料 + 更新Balance
+                if (!PlaceWinForWinTournament(data, out message, trans))
                 {
-                    Status = JokerErrorCode.Other,
-                    Message = message
-                };
+                    trans.Rollback();
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+
+                if (data.amount != 0)
+                {
+                    if (!SetBalanceForWinTournament(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                    {
+                        trans.Rollback();
+                        return new JokerResponse()
+                        {
+                            Status = JokerErrorCode.Other,
+                            Message = message
+                        };
+                    }
+                }
+                trans.Commit();
             }
 
             return new JokerResponse()
             {
                 Status = JokerErrorCode.Success,
-                Balance = balance
+                Message = message,
+                Balance = afterBalance == 0 ? beforeBalance : afterBalance
             };
         }
 
         public async Task<JokerResponse> CancelJoinTournament(Dictionary<string, string> request)
         {
             var message = string.Empty;
+            var isExist = true;
+            decimal beforeBalance = 0; decimal afterBalance = 0;
             var serializeRequest = JsonConvert.DeserializeObject<CancelRequest>(JsonConvert.SerializeObject(request));
 
-            if (!CheckSignature(serializeRequest.appid, serializeRequest.hash, request))
+            if (!CheckSignatureForCancelJoinTournament(serializeRequest.appid, serializeRequest.hash, request, out message))
             {
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.InvalidSignature,
-                    Message = "Invalid Signature"
+                    Message = message
                 };
             }
 
@@ -270,11 +339,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetTpCustInfoForCancelJoinTournament(serializeRequest.username, out message))
+            if (!GetTpCustInfoForCancelJoinTournament(serializeRequest.username, out TpCustInfo tpCustInfo, out message))
             {
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.InvalidUserNameOrPassword,
+                    Message = message
+                };
+            }
+
+            if (!GetTpCurrencyForCancelJoinTournament(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
+            {
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
+                    Message = message
+                };
+            }
+
+            if (!GetBalanceForCancelJoinTournament(serializeRequest.username, out beforeBalance, out message))
+            {
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
                     Message = message
                 };
             }
@@ -293,49 +380,64 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.Refund
             };
 
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-
-            if (!CheckDataForCancelJoinTournament(data, out int sq, out message))
+            if (tpCurrency.ExchangeRate > 0)
             {
-                trans.Rollback();
+                data.amount = data.amount * tpCurrency.ExchangeRate;
+            }
+
+            if (!CheckDataForCancelJoinTournament(data, out int sq, out isExist, out message))
+            {
                 return new JokerResponse()
                 {
-                    Status = JokerErrorCode.AlreadyProcessed,
+                    Status = JokerErrorCode.Success,
                     Message = message
                 };
             }
 
-            if (!CancelJoinForCancelJoinTournament(sq, out message, trans))
+            if (!isExist)
             {
-                trans.Rollback();
-                return new JokerResponse()
-                {
-                    Status = JokerErrorCode.Other,
-                    Message = message
-                };
-            }
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
 
-            trans.Commit();
-
-            if (!GetBalanceForCancelJoinTournament(serializeRequest.username, out decimal balance, out message))
-            {
-                return new JokerResponse()
+                //不存在，新增資料 + 更新Balance
+                if (!CancelJoinForCancelJoinTournament(sq, out message, trans))
                 {
-                    Status = JokerErrorCode.Other,
-                    Message = message
-                };
+                    trans.Rollback();
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+
+                if (data.amount != 0)
+                {
+                    if (!SetBalanceForCancelJoinTournament(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                    {
+                        trans.Rollback();
+                        return new JokerResponse()
+                        {
+                            Status = JokerErrorCode.Other,
+                            Message = message
+                        };
+                    }
+                }
+                trans.Commit();
+
             }
 
             return new JokerResponse()
             {
                 Status = JokerErrorCode.Success,
-                Balance = balance
+                Message = message,
+                Balance = afterBalance == 0 ? beforeBalance : afterBalance
             };
         }
 
         #region Private Methods
+
+        #region Global Method For Joker
 
         private bool CheckSignature(string appid, string hash, Dictionary<string, string> data)
         {
@@ -379,8 +481,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return sBuilder.ToString();
         }
 
-        #region Join Steps
+        #endregion
 
+        #region Join Tournament Steps
+
+        private bool CheckSignatureForJoinTournament(string appId, string hash, Dictionary<string, string> data, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = CheckSignature(appId, hash, data);
+
+                if (!result)
+                {
+                    message = "Invalid Signature";
+                    _logger.LogError($"CheckSignature Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"CheckSignature Exception:{ex.ToString()}");
+                return false;
+            }
+        }
         private bool CheckRequestForJoinTournament(JoinAndWinRequest request, out string message)
         {
             message = string.Empty;
@@ -466,12 +593,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        private bool GetTpCustInfoForJoinTournament(string username, out string message)
+        private bool GetTpCustInfoForJoinTournament(string username, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
+            tpCustInfo = null;
             try
             {
-                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
                 if (tpCustInfo == null)
                 {
                     message = "tpCustInfo is null.";
@@ -487,9 +615,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        private bool CheckDataForJoinTournament(RewardRNG_Joker data, out string message)
+        private bool GetTpCurrencyForJoinTournament(int currencyId, out TpCurrency tpCurrency, out string message)
         {
             message = string.Empty;
+            tpCurrency = null;
+            try
+            {
+                tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, currencyId);
+                if (tpCurrency == null)
+                {
+                    message = "tpCurrency is null.";
+                    _logger.LogError($"GetTpCurrency Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+        private bool CheckDataForJoinTournament(RewardRNG_Joker data, out bool isExist, out string message)
+        {
+            message = string.Empty;
+            isExist = false;
             try
             {
                 var slotDatas = _bettingService.IsExistReward_Joker(false, data);
@@ -499,7 +650,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     //已存在指定有效投注
                     message = "already exist valid join by username and id.";
                     _logger.LogError($"CheckData Fail:{message}");
-                    return false;
+                    isExist = true;
                 }
 
                 return true;
@@ -533,6 +684,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
+        private bool SetBalanceForJoinTournament(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+                                                out string message, out decimal afterAmount, out int bonusId,
+                                                MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            afterAmount = 0;
+            bonusId = 0;
+            try
+            {
+                var result = _bettingService.SetBalance_Joker(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+
+                if (!result)
+                {
+                    message = "set balance fail.";
+                    _logger.LogError($"SetBalance Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+                return false;
+            }
+        }
         private bool GetBalanceForJoinTournament(string username, out decimal balance, out string message)
         {
             message = string.Empty;
@@ -561,8 +738,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #endregion
 
-        #region Join Steps
+        #region Win Tournament Steps
+        private bool CheckSignatureForWinTournament(string appId, string hash, Dictionary<string, string> data, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = CheckSignature(appId, hash, data);
 
+                if (!result)
+                {
+                    message = "Invalid Signature";
+                    _logger.LogError($"CheckSignature Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"CheckSignature Exception:{ex.ToString()}");
+                return false;
+            }
+        }
         private bool CheckRequestForWinTournament(JoinAndWinRequest request, out string message)
         {
             message = string.Empty;
@@ -648,12 +847,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        private bool GetTpCustInfoForWinTournament(string username, out string message)
+        private bool GetTpCustInfoForWinTournament(string username, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
+            tpCustInfo = null;
             try
             {
-                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
                 if (tpCustInfo == null)
                 {
                     message = "tpCustInfo is null.";
@@ -669,9 +869,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        private bool CheckDataForWinTournament(RewardRNG_Joker data, out string message)
+        private bool GetTpCurrencyForWinTournament(int currencyId, out TpCurrency tpCurrency, out string message)
         {
             message = string.Empty;
+            tpCurrency = null;
+            try
+            {
+                tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, currencyId);
+                if (tpCurrency == null)
+                {
+                    message = "tpCurrency is null.";
+                    _logger.LogError($"GetTpCurrency Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+        private bool CheckDataForWinTournament(RewardRNG_Joker data, out bool isExist, out string message)
+        {
+            message = string.Empty;
+            isExist = false;
             try
             {
                 var slotDatas = _bettingService.IsExistReward_Joker(false, data);
@@ -680,8 +903,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     //已存在指定有效投注
                     message = "already exist valid win by username and id.";
-                    _logger.LogError($"CheckData Fail:{message}");
-                    return false;
+                    isExist = true;
+                    _logger.LogError($"CheckData Warning:{message}");
                 }
 
                 return true;
@@ -715,6 +938,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
+        private bool SetBalanceForWinTournament(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+                                        out string message, out decimal afterAmount, out int bonusId,
+                                        MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            afterAmount = 0;
+            bonusId = 0;
+            try
+            {
+                var result = _bettingService.SetBalance_Joker(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+
+                if (!result)
+                {
+                    message = "set balance fail.";
+                    _logger.LogError($"SetBalance Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+
         private bool GetBalanceForWinTournament(string username, out decimal balance, out string message)
         {
             message = string.Empty;
@@ -742,8 +992,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
         #endregion
 
-        #region Cancel Join Steps
+        #region Cancel Join Tournament Steps
+        private bool CheckSignatureForCancelJoinTournament(string appId, string hash, Dictionary<string, string> data, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var result = CheckSignature(appId, hash, data);
 
+                if (!result)
+                {
+                    message = "Invalid Signature";
+                    _logger.LogError($"CheckSignature Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"CheckSignature Exception:{ex.ToString()}");
+                return false;
+            }
+        }
         private bool CheckRequestForCancelJoinTournament(CancelRequest request, out string message)
         {
             message = string.Empty;
@@ -799,12 +1071,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return true;
         }
-        private bool GetTpCustInfoForCancelJoinTournament(string username, out string message)
+        private bool GetTpCustInfoForCancelJoinTournament(string username, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
+            tpCustInfo = null;
             try
             {
-                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, username);
                 if (tpCustInfo == null)
                 {
                     message = "tpCustInfo is null.";
@@ -820,10 +1093,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        private bool CheckDataForCancelJoinTournament(RewardRNG_Joker data, out int sq, out string message)
+        private bool GetTpCurrencyForCancelJoinTournament(int currencyId, out TpCurrency tpCurrency, out string message)
+        {
+            message = string.Empty;
+            tpCurrency = null;
+            try
+            {
+                tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, currencyId);
+                if (tpCurrency == null)
+                {
+                    message = "tpCurrency is null.";
+                    _logger.LogError($"GetTpCurrency Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+        private bool CheckDataForCancelJoinTournament(RewardRNG_Joker data, out int sq, out bool isExist, out string message)
         {
             message = string.Empty;
             sq = 0;
+            isExist = false;
             try
             {
                 var joinDatas = _bettingService.IsExistReward_Joker(true, data);
@@ -851,7 +1147,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     //該筆資料已被取消
                     message = "already cancel assign join by username and id.";
                     _logger.LogError($"CheckData Fail:{message}");
-                    return false;
+                    isExist = true;
                 }
 
                 sq = joinDatas.First().SQ;
@@ -884,6 +1180,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 message = "exception happen.";
                 _logger.LogError(ex, $"CancelJoin Exception:{ex.ToString()}");
+                return false;
+            }
+        }
+        private bool SetBalanceForCancelJoinTournament(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+                                out string message, out decimal afterAmount, out int bonusId,
+                                MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            afterAmount = 0;
+            bonusId = 0;
+            try
+            {
+                var result = _bettingService.SetBalance_Joker(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+
+                if (!result)
+                {
+                    message = "set balance fail.";
+                    _logger.LogError($"SetBalance Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
                 return false;
             }
         }
