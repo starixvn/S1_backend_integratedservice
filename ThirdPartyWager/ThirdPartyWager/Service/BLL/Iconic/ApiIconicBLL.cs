@@ -48,6 +48,21 @@ namespace ThirdPartyWager.Service.BLL
             var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
             return result;
         }
+        
+        public async Task<WagerIconicModel> GetBetListById(string apiUrl, string token, string id)
+        {
+            // param
+            var url = $"{apiUrl}/api/v1/profile/sets";
+            var param = new
+            {
+                id
+            };
+
+            // request
+            var r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
+            var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
+            return result;
+        }
 
         public async Task<JwtTokenIconic> GetJwtToken(string apiUrl, string username, string password)
         {
