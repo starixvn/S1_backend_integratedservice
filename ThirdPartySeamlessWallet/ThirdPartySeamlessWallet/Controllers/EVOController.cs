@@ -22,6 +22,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
     public class EVOController : ControllerBase
     {
+        #region Fields
+
         private readonly ILogger<EVOController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _environment;
@@ -34,6 +36,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp thisTp;
+
+        #endregion
+
+        #region Constructors
 
         public EVOController(
             IServiceProvider provider,
@@ -55,6 +61,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tools = provider.GetRequiredService<Tools>();
             thisTp = Tp.EVO;
         }
+
+        #endregion
 
         #region HttpStatusCode
 
@@ -80,7 +88,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #region Request
 
-
         public class AuthReq
         {
             public Channel channel { get; set; }
@@ -97,7 +104,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string gameProvider { get; set; }
         }
-
 
         #endregion
 
@@ -131,6 +137,29 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         #endregion
+
+        /// <summary>
+        /// 測試API有通
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[controller]/ping")]
+        public string PingTest() => "Ping Ok.";
+
+
+        [HttpPost]
+        [HttpGet]
+        [Route("[controller]/{path1?}")]
+        public async Task<dynamic> NotFoundAsync()
+        {
+            string logName = $"{thisTp}_common_NotFound";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            _log2File.Error(Content, logName);
+            Response.StatusCode = (int)Error.NotFound;
+            return 404;
+        }
 
         [HttpPost]
         [Route("[controller]/sid")]
@@ -563,7 +592,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Cancel, JsonConvert.SerializeObject(getReq), ex.Message);
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Cancel, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
         }
@@ -665,7 +694,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Credit, JsonConvert.SerializeObject(getReq), ex.Message);
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Credit, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
         }
@@ -765,23 +794,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.PromoPayout, JsonConvert.SerializeObject(getReq), ex.Message);
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.PromoPayout, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
-        }
-
-        [HttpPost]
-        [HttpGet]
-        [Route("[controller]/{path1?}")]
-        public async Task<dynamic> NotFoundAsync()
-        {
-            string logName = $"{thisTp}_common_NotFound";
-
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var Content = await reader.ReadToEndAsync();
-            _log2File.Error(Content, logName);
-            Response.StatusCode = (int)Error.NotFound;
-            return 404;
         }
 
         private CommonResp checkAuthorization(string authorization)
@@ -818,7 +833,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 tpId = Convert.ToInt32(sessionKeyArr[4])
             };
         }
-        
+
         private bool verifyGameId(int gameType, string gameId)
         {
             var getGameType = _thirdPartyBLL.GetGameType((int)Tp.EVO, gameId);
