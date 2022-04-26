@@ -17,11 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     public partial class SettledService
     {
         #region SA
-        public IEnumerable<PayoutDataLC_SA> GetUnsettledListLC_SA()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<PayoutDataLC_SA>("Service_BettransLC_SA_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
+
         public int CancelBetLC_SA(TpCustInfo tpCustInfo, BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
         {
             int bonusId = 0;
@@ -487,59 +483,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public SettleData GetSettle_TpWagerAG(string TransId)
         {
             return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerAG_Settle_Get_V2", parameters: new DynamicParameters(new { billNoList = TransId }));
-        }
-
-        #endregion
-
-        #region Allbet
-        public IEnumerable<UnsettleBettingDataLC_Allbet> GetUnsettledListLC_Allbet()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<UnsettleBettingDataLC_Allbet>("Service_BettransLC_Allbet_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_Allbet(long betNum)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_Allbet_SettleFlag_Set", new { betNum = betNum, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_TpWagerAllbet(long betNum)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerAllBet_Settle_Set", new { betNum = betNum }, commandType: CommandType.StoredProcedure);
-        }
-
-        public int Get_TpWagerAllbet_Settle(long betNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime)
-        {
-            stake = 0;
-            validBet = 0;
-            winLostAmount = 0;
-            settleTime = 0;
-            transTime = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            var p = new DynamicParameters(new { betNum = betNum });
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            p.Add("TransTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            int result = conn.Execute("Service_TpWagerAllBet_Settle_Get", p, commandType: CommandType.StoredProcedure);
-
-            if (p.Get<decimal?>("Stake") != null)
-            {
-                stake = p.Get<decimal>("Stake");
-                validBet = p.Get<decimal>("ValidBet");
-                winLostAmount = p.Get<decimal>("WinLostAmount");
-                settleTime = p.Get<long>("SettleTime");
-                transTime = p.Get<long>("TransTime");
-            }
-            else
-            {
-                result = 0;
-            }
-
-            return result;
         }
 
         #endregion

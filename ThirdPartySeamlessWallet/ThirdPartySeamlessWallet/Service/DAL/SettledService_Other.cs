@@ -212,12 +212,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData_CF>("Service_TpWagerCF_SettleList_Get", commandType: CommandType.StoredProcedure);
         }
 
-        public BetRecordData_CF GetBetRecord_CF(PayoutData_CF payoutData_CF)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<BetRecordData_CF>("Service_Bettrans_CF_Get", new { ticket_id = payoutData_CF.ticket_id }, commandType: CommandType.StoredProcedure);
-        }
-
         #endregion
 
         #region AWC

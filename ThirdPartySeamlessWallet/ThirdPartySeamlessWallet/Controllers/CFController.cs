@@ -63,24 +63,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal balance { get; set; }
         }
 
-        public class GetBetReq
-        {
-            public string api_key { get; set; }
-            public string agent_code { get; set; }
-            public long ticket_id { get; set; }
-            public string login_id { get; set; }
-            public string arena_code { get; set; }
-            public string match_no { get; set; }
-            public DateTime match_date { get; set; }
-            public int fight_no { get; set; }
-            public DateTime fight_datetime { get; set; }
-            public string bet_on { get; set; }
-            public decimal odds_given { get; set; }
-            public int stake { get; set; }
-            public decimal stake_money { get; set; }
-            public DateTime created_datetime { get; set; }
-        }
-
         [XmlRoot(ElementName = "bet")]
         public class GetBetResp
         {
@@ -95,13 +77,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             [XmlElement(ElementName = "balance")]
             public decimal balance { get; set; }
-        }
-
-        public class GetCancelBetReq
-        {
-            public string api_key { get; set; }
-            public string agent_code { get; set; }
-            public long ticket_id { get; set; }
         }
 
         [XmlRoot(ElementName = "cancel_bet")]

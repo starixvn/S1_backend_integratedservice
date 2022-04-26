@@ -117,20 +117,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return resp;
         }
-        public class BettingData
-        {
-            public string username { get; set; }
-            public string currency { get; set; }
-            public string amount { get; set; }
-            public string Payouttime { get; set; }
-            public string txnid { get; set; }
-            public string gametype { get; set; }
-            public string txn_reverse_id { get; set; }
-            public string timestamp { get; set; }
-            public string gameid { get; set; }
-            public string hostid { get; set; }
-            public string betdetails { get; set; }
-        }
 
         [HttpPost]
         [Produces("application/xml")]

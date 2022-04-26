@@ -458,19 +458,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData_YGG> GetUnsettledList_YGG()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_YGG>("Service_BettransRng_YGG_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_YGG(string reference, string subReference)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_BettransRng_YGG_SettleV2_Set", new { Reference = reference, SubReference = subReference }, commandType: CommandType.StoredProcedure);
-            return result;
-        }
-
         #endregion
 
         #region PP
@@ -570,40 +557,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int SetSettleFlag_BettransRng_PP_Payout(long roundId)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_SettledRng_PPV2_Set", new { roundId = roundId }, commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_BettransRng_PP(long TransId, string Account)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransRng_PP_Settle_Set", new { roundId = TransId, userId = Account }, commandType: CommandType.StoredProcedure);
-        }
-
-        public IEnumerable<SettleData_PP> GetUnsettledListRng_PP()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_PP>("Service_BettransRng_PP_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
-        }
-
         public int SetSettleFlag_BettransLC_PP_Payout(long roundId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("Service_BettransLC_PP_Settle_Pre_Set_V2", new { roundId = roundId }, commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_BettransLC_PP(long roundId, string Account)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_PP_Settle_Set_V2", new { roundId = roundId, userId = Account }, commandType: CommandType.StoredProcedure);
-        }
-
-        public IEnumerable<SettleData_PP> GetUnsettledListLC_PP()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_PP>("Service_BettransLC_PP_Unsettle_Get_V3", commandType: CommandType.StoredProcedure);
         }
 
         public int CancelBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
@@ -1020,93 +977,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData_SG> GetUnsettledList_SG(int gameType)
-        {
-            if (gameType == (int)GameType.SG_RNG)
-            {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                return conn.Query<SettleData_SG>("Service_BettransRng_SG_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
-            }
-            else
-            {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-                return conn.Query<SettleData_SG>("Service_TpWagerSG_Unsettle_Get", commandType: CommandType.StoredProcedure);
-            }
-        }
-
-        public int SetSettleFlag_SG(int gameType, string referenceId)
-        {
-            var result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            if (gameType == (int)GameType.SG_RNG)
-            {
-                result = conn.Execute("Service_BettransRng_SG_Settle_Set", new { transferIdList = referenceId }, commandType: CommandType.StoredProcedure);
-            }
-            else
-            {
-                result = conn.Execute("Service_BettransFish_SG_Settle_Set", new { referenceId = referenceId }, commandType: CommandType.StoredProcedure);
-            }
-
-            return result;
-        }
-
-        public int SettledFish_SG(TpCustInfo tpCustInfo, SettleData_SG settleData_SG, out decimal afterAmount)
-        {
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-
-            BetRecordInfo betRecordInfo = new BetRecordInfo
-            {
-                TpId = (int)Tp.SG,
-                Stake = settleData_SG.Stake,
-                ValidBet = settleData_SG.Stake,
-                WinlostAmount = settleData_SG.WinLostAmount,
-                TransId = settleData_SG.referenceId,
-                GameType = GameType.SG_Fish,
-                TpUserName = settleData_SG.Account,
-                SettledTime = settleData_SG.SettleTime,
-                TransTime = settleData_SG.SettleTime,
-                SettlementType = SettlementType.SettledForValid
-            };
-
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-
-            var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
-
-            if (result > 0)
-            {
-                trans.Commit();
-            }
-
-            using var conn_wag = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            conn_wag.Execute("Service_TpWagerSG_Settle_Set", new { ticketId = settleData_SG.ticketId }, commandType: CommandType.StoredProcedure);
-
-            using var conn_sec = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn_sec.Execute("Service_BettransFish_SG_Settle_Set", new { referenceId = settleData_SG.referenceId }, commandType: CommandType.StoredProcedure);
-
-            return result;
-        }
-
         public SettleData_SG GetSettle_TpWagerRng_SG(string TransId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.QueryFirstOrDefault<SettleData_SG>("Service_TpWagerRng_SG_Settle_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_TpWagerRng_SG(string TransId)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerRng_SG_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
@@ -1371,18 +1245,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
 
-            return result;
-        }
-
-        public IEnumerable<SettleData_PG> GetUnsettledList_PG()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_PG>("Service_BettransRng_PG_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-        public int SetSettleFlag_PG(string TransactionIdList)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_BettransRng_PG_Settle_Set", new { TransactionIdList = TransactionIdList }, commandType: CommandType.StoredProcedure);
             return result;
         }
 
