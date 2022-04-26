@@ -79,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
                         }
 
                         // insert wager to db
-                        foreach (var bet in dataWager.data.list)
+                        foreach (var bet in dataWager.data.list.OrderBy(item => item.betTime))
                         {
                             try
                             {
