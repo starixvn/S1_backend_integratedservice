@@ -190,10 +190,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         break;
                     case AllbetTransferType.ReSettle:
                         result = ReSettle(tpCustInfo, request, out afterAmount);
-                        if (result == -2)
-                        {
-                            return new AllBetTransferResponse(AllbetResultCode.Success, GetBalance(tpUserName));
-                        }
                         break;
                     case AllbetTransferType.EventSettle:
                         result = EventSettle(tpCustInfo, eventRequest, out afterAmount);
@@ -252,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = Cancel(tpCustInfo, request);
                 if (result == -3)
                 {
-                    Thread.Sleep(1000);
+                    await Task.Delay(2000);
                     result = Cancel(tpCustInfo, request);
                 }
 
@@ -282,7 +278,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private decimal GetBalance(string tpUserName)
         {
             var (tpCustInfo, _) = GetTPInfo(tpUserName);
-            var tpCustBalance = _tpCustInfoBll.GetBalance((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
+            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
             return tpCustBalance.Balance;
         }
         
@@ -317,10 +313,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             p.Add("hasCanceled", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_CancelBetLC_Allbet_Set_V2", trans, p);
 
-            if (p.Get<int>("hasCanceled") == 0 && result == request.OriginalDetails.Count)
+            if (p.Get<int>("hasCanceled") == 0 && result > 0)
             {
                 var amount = request.OriginalDetails.Sum(i => i.BetAmount + i.Deposit);
-                if (result > 0 && amount != 0)
+                if (amount != 0)
                 {
                     result = _settledService.PayoutV2(tpCustInfo, amount, (int)ThirdParty, $"T{request.OriginalTranId}",
                         (int)GameType, TpCategory.LiveCasino, request.OriginalTranId.ToString(), TransType.Refunds, null,
@@ -464,22 +460,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     if (request.Amount != settleAmount)
                     {
-                        decimal backAmount = 0;
-                        if (settleAmount == null)
-                        {
-                            backAmount = request.Amount + stake;
-                        }
-                        else
-                        {
-                            backAmount = request.Amount - (settleAmount ?? 0);
-                        }
+                        var backAmount = request.Amount - (settleAmount ?? 0);
 
                         if (backAmount != 0)
                         {
                             result = _settledService.PayoutV2(tpCustInfo, backAmount, (int)ThirdParty,
                                 request.Details[0].BetNum.ToString(), (int)GameType, TpCategory.LiveCasino,
                                 request.Details[0].BetNum.ToString(), TransType.Payout, null, out afterAmount,
-                                "Resettle", out _, conn, trans);
+                                "Resettle", out _, conn, trans, AllowNegative.Allow);
                         }
 
                         if (result > 0)
@@ -492,7 +480,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     else
                     {
                         trans.Commit();
-                        result = -2;
                     }
                 }
             }

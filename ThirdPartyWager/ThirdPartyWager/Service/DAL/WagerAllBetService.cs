@@ -32,9 +32,10 @@ namespace ThirdPartyWager.Service.DAL
             {
                 client = bet.player,
                 winOrLoss = bet.winOrLossAmount,
-                state = bet.status
+                state = bet.status,
+                depositAmount = bet.deposit
             });
-            var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", parameters);
+            var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins_V2", parameters);
             if (result)
             {
                 _tpUnsettleService.InsertTpUnsettle(Tp.Allbet, GameType.Allbet_LiveCasino, bet.betNum.ToString());

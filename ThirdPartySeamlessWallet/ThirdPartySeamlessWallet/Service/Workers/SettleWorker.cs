@@ -90,16 +90,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             timerSettleAG = new Timer(DoSettleAGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleAllbet = new Timer(DoSettleAllbetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleCQ9 = new Timer(DoSettleCQ9Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleCQ9Fish = new Timer(DoSettleCQ9FishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleGPI = new Timer(DoSettleGPIWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleSGRng = new Timer(DoSettleSGRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleSGFish = new Timer(DoSettleSGFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettlePG = new Timer(DoSettlePGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleKiss918 = new Timer(DoSettleKiss918Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -108,22 +104,17 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleIconicFish = new Timer(DoSettleIconicFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOneGaming = new Timer(DoSettleOneGamingWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleV8 = new Timer(DoSettleV8Work, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleYGG = new Timer(DoSettleYGGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleYLFish = new Timer(DoSettleYLFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettlePTLC = new Timer(DoSettlePTLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettlePPRng = new Timer(DoSettlePPRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettlePPLC = new Timer(DoSettlePPLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleTCGSEA = new Timer(DoSettleTCGWork, GameType.TCG_SEA_Lottery, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleTCGVN = new Timer(DoSettleTCGWork, GameType.TCG_VN_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -353,93 +344,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleDG.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoSettleAllbetWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.Allbet;
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
-
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListLC_Allbet();
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var result = settledBLL.Get_TpWagerAllbet_Settle(unsettled.BetNum, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime, out long transTime);
-
-                            if (result > 0)
-                            {
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Client);
-                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-
-                                if (tpCurrency.ExchangeRate > 1)
-                                {
-                                    stake *= tpCurrency.ExchangeRate;
-                                    validBet *= tpCurrency.ExchangeRate;
-                                    winLostAmount *= tpCurrency.ExchangeRate;
-                                }
-
-                                BetRecordInfo betRecordInfo = new BetRecordInfo
-                                {
-                                    TpId = thisTp,
-                                    Stake = stake,
-                                    ValidBet = validBet,
-                                    WinlostAmount = winLostAmount,
-                                    TransId = unsettled.BetNum.ToString(),
-                                    GameType = GameType.Allbet_LiveCasino,
-                                    TpUserName = unsettled.Client,
-                                    SettledTime = settleTime,
-                                    TransTime = transTime,
-                                    SettlementType = SettlementType.SettledForValid
-                                };
-
-                                result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
-
-                                Task.Run(() =>
-                                {
-                                    settledBLL.SetSettleFlag_TpWagerAllbet(unsettled.BetNum);
-                                    settledBLL.SetSettleFlag_Allbet(unsettled.BetNum);
-                                });
-                            }
-                        }
-                        catch (Exception ex1)
-                        {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleAllbet");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", tpName);
-                log2File.Error(ex.ToString(), "SettleAllbet");
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-
-                timerSettleAllbet.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -963,96 +867,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettlePTLC.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoSettlePPLCWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.PP;
-            var gameType = GameType.PP_LiveCasino;
-            string logName = "Settle_PP_LC";
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
-
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListLC_PP();
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.Stake;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-
-                            if (winLostAmount >= 0 && winLostAmount < stake)
-                            {
-                                validBet = winLostAmount;
-                            }
-                            else if (winLostAmount < 0)
-                            {
-                                validBet = Math.Abs(winLostAmount);
-                            }
-
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.TransId.ToString(),
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime / 1000,
-                                TransTime = unsettled.TransTime / 1000,
-                                SettlementType = SettlementType.SettledForValid,
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
-                            };
-
-                            if (betRecordInfo.WinlostAmount == 0)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Draw;
-                            }
-
-                            settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
-                            settledBLL.SetSettleFlag_BettransLC_PP(unsettled.TransId, unsettled.Account);
-                        }
-                        catch (Exception ex1)
-                        {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", tpName);
-                log2File.Error(ex.ToString(), logName);
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-
-                timerSettlePPLC.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

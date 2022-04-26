@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySettleWorker.Model.Exceptions;
@@ -26,6 +27,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<AllbetWorker> _logger;
         private readonly string _tpName;
+        private readonly MySqlClient _mainDbClient;
 
         public AllbetWorker(IServiceProvider provider)
         {
@@ -35,6 +37,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<AllbetWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             LogContext.PushProperty("TP", _tpName);
         }
 
@@ -60,6 +63,7 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"Settle_SG_Fish";
             var getSP = $"Service_TpWagerAllBet_Settle_Get_V2";
             var setSP = $"Service_TpWagerAllBet_Settle_Set_V2";       
+            var checkSP = $"Service_BettransLC_Allbet_Settle_Get";
             var dueTimeSpan = TimeSpan.FromSeconds(30);
 
             try
@@ -80,7 +84,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Wager).First();
+                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<AllbetSettleData>(getSP, new { TransId = transId }, DataBase.Wager).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCurrency.ExchangeRate > 1)
@@ -90,6 +94,12 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
+                        var check = _mainDbClient.QueryFirst<CheckData>(checkSP, new { BetNum = transId, Client = unsettled.Account });
+                        if ((check.Stake - unsettled.DepositAmount) != unsettled.Stake || (check.SettleAmount - check.Stake) != unsettled.WinLostAmount)
+                        {
+                            _logger.LogWarning($"Settle Amount error || wager : {JsonConvert.SerializeObject(unsettled)} || bettrans : {JsonConvert.SerializeObject(check)}");
+                            continue;
+                        }
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -135,5 +145,16 @@ namespace ThirdPartySettleWorker.Workers
                 timerLive?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+    }
+
+    public class CheckData
+    { 
+        public decimal SettleAmount { get; set; }
+        public decimal Stake { get; set; }
+    }
+
+    public class AllbetSettleData : SettleData
+    {
+        public decimal DepositAmount { get; set; }
     }
 }
