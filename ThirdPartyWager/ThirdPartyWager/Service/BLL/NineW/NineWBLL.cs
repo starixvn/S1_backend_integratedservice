@@ -11,6 +11,7 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.NineW;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -27,6 +28,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly FincanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _currencyList;
         private readonly int TimeZone = 8;
+        private readonly List<int> _reportType = new List<int>() { 0, 2, 3, 7 };
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -77,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
-        public async Task<bool> GetReportAsync(DateTime date)
+        public async Task<bool> GetCountSummaryTransactionReportAsync(DateTime date)
         {
             try
             {
@@ -98,11 +100,27 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
+        public async Task<bool> GetSummaryTransactionReportAsync(DateTime date)
+        {
+            try
+            {
+                var summaryTransaction = await QuerySummaryTransactionAsync(_config, date);
+                var tasks = summaryTransaction.Select(item => Task.Run(() => InsertReport(item))).ToArray();
+                await Task.WhenAll(tasks);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "NineW GetReportAsync Exception.");
+                return false;
+            }
+
+        }
+
         private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(NineWConfig config, string startTime, string endTime)
         {
             var result = new List<SettleBet>();
-            var reportType = new List<int>() { 0, 2, 3, 7 };
-            foreach (var type in reportType)
+            foreach (var type in _reportType)
             {
                 var page = 1;
                 var totalPage = 1;
@@ -143,8 +161,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new List<SettleBet>();
             var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";
-            var reportType = new List<int>() { 0, 2, 3, 7 };
-            foreach (var type in reportType)
+            foreach (var type in _reportType)
             {
                 var page = 1;
                 var totalPage = 1;
@@ -192,9 +209,7 @@ namespace ThirdPartyWager.Service.BLL
             foreach (var currency in _currencyList)
             {
                 var checkDataList = new List<Checkdata>();
-                var reportType = new List<int>() { 0, 2, 3, 7 };
-
-                foreach (var type in reportType)
+                foreach (var type in _reportType)
                 {
                     foreach (var range in date.DateToTimeRange(TimeZone, 12))
                     {
@@ -217,7 +232,7 @@ namespace ThirdPartyWager.Service.BLL
 
                         var json = await response.Content.ReadAsStringAsync();
                         _logger.LogInformation(json);
-                        var queryReuslt = _common.FromJson<SummaryTransaction>(json);
+                        var queryReuslt = _common.FromJson<CountSummaryTransaction>(json);
                         if (queryReuslt.status == "1014")//no data.
                         {
                             continue;
@@ -254,9 +269,55 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        private async Task<List<SummaryTransaction>> QuerySummaryTransactionAsync(NineWConfig config, DateTime date)
+        {
+            var result = new List<SummaryTransaction>();
+            var range = date.DateToTimeRange(TimeZone);
+            foreach (var type in _reportType)
+            {
+                var page = 1;
+                var totalPage = 1;
+                while (page <= totalPage)
+                {
+                    await Task.Delay(1500);
+                    var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        { "cert", config.Cert },
+                        { "startDate", range.begin.ToString("yyyy-MM-dd HH:mm") },
+                        { "endDate", range.end.ToString("yyyy-MM-dd HH:mm") },
+                        { "timeZone", "1"},
+                        { "pageNumber", page.ToString() },
+                        { "reportType", type.ToString() }
+                    });
+                    var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
+                    }
+
+                    var json = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation(json);
+                    var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<SummaryTransaction>>(json);
+                    if (queryReuslt.status != "1")
+                    {
+                        throw new Exception($"NineW QuerySummaryTransaction fail. status is {queryReuslt.status}.");
+                    }
+                    result.AddRange(queryReuslt.BetList.Where(d => d.agentId == config.Agent));
+                    page++;
+                    totalPage = queryReuslt.totalPage;
+                }
+            }
+            return result;
+        }
+
         private Task<int> InsertWager(SettleBet bet)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWager9W_Ins", new DynamicParameters(bet));
+            return _wagerDbClient.ExecuteAsync("Service_TpWager9W_Ins", bet);
+        }
+
+        private Task<int> InsertReport(SummaryTransaction data)
+        {
+            return _wagerDbClient.ExecuteAsync("Service_TpReport9W_Ins", data);
         }
     }
 }

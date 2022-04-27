@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ThirdPartyWager.Service.Model
+namespace ThirdPartyWager.Service.Model.NineW
 {
     public class NineWConfig
     {
@@ -157,7 +157,7 @@ namespace ThirdPartyWager.Service.Model
     }
 
 
-    public class SummaryTransaction
+    public class CountSummaryTransaction
     {
         public string status { get; set; }
         public Checkdata[] checkData { get; set; }
@@ -172,6 +172,30 @@ namespace ThirdPartyWager.Service.Model
         public decimal commission { get; set; }
         public decimal stakeTotal { get; set; }
     }
+
+
+    public class SummaryTransaction
+    {
+        public string userId { get; set; }
+        public string agentId { get; set; }
+        public int categoryType { get; set; }
+        public int eventType { get; set; }
+        public string eventTypeName { get; set; }
+        public string eventName { get; set; }
+        public int eventId { get; set; }
+        public string marketName { get; set; }
+        public float marketId { get; set; }
+        public string startTime { get; set; }
+        public string settledDate { get; set; }
+        public object resettledDate { get; set; }
+        public float profitLoss { get; set; }
+        public float marketTotal { get; set; }
+        public float commission { get; set; }
+        public int agentCommission { get; set; }
+        public int stakeTotal { get; set; }
+        public int currencyType { get; set; }
+    }
+
 
 
 
