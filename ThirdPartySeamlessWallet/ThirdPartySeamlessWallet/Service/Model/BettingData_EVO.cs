@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -83,6 +84,33 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
+
+    #region Response Model
+
+    public class CommonResponse
+    {
+        public EVOStatus status { get; set; }
+        public string uuid { get; set; }
+    }
+    /// <summary>
+    /// CheckUserResponse(Check、Sid)
+    /// </summary>
+    public class CheckUserResponse : CommonResponse
+    {
+        public string sid { get; set; }
+    }
+
+    /// <summary>
+    /// StandardResponse(Balance、Debit、Credit、Cancel、PromoPayout)
+    /// </summary>
+    public class StandardResponse : CommonResponse
+    {
+        public decimal balance { get; set; }
+        public decimal bonus { get; set; }
+        public bool retransmission { get; set; }
+    }
+
+    #endregion
 
     //public class PromoDebitData_EVO : PromoDataCommon_EVO
     //{

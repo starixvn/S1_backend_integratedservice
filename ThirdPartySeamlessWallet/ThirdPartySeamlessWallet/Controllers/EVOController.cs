@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -36,6 +37,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp thisTp;
+        private readonly IEVOBLL _EVOBLL;
 
         #endregion
 
@@ -59,6 +61,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
             _tools = provider.GetRequiredService<Tools>();
+            _EVOBLL = provider.GetService<IEVOBLL>();
             thisTp = Tp.EVO;
         }
 
@@ -239,7 +242,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
         }
-
 
         [HttpPost]
         [Route("[controller]/check")]
@@ -701,7 +703,19 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/promo_payout")]
-        public async Task<dynamic> promoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<StandardResponse> promoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            var authToken = getQuery["authToken"];
+            PromoData_EVO getReq = JsonConvert.DeserializeObject<PromoData_EVO>("");
+
+            return await _EVOBLL.PromoPayout(Content, authToken);
+        }
+
+        [HttpPost]
+        [Route("[controller]/promo_payoutv1")]
+        public async Task<dynamic> promoPayoutv1Async([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_common_promo_payout";
 

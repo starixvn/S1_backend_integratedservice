@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
     public interface IEVOBLL
     {
-        AMBSlotGetBalanceResponse SlotGetBalance(Dictionary<string, string> request);
+        Task<StandardResponse> PromoPayout(string requestContent, string authToken);
     }
 }
