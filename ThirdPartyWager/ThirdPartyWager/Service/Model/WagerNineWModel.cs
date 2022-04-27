@@ -184,16 +184,39 @@ namespace ThirdPartyWager.Service.Model.NineW
         public string eventName { get; set; }
         public int eventId { get; set; }
         public string marketName { get; set; }
-        public float marketId { get; set; }
-        public string startTime { get; set; }
-        public string settledDate { get; set; }
-        public object resettledDate { get; set; }
-        public float profitLoss { get; set; }
-        public float marketTotal { get; set; }
-        public float commission { get; set; }
-        public int agentCommission { get; set; }
-        public int stakeTotal { get; set; }
+        public decimal marketId { get; set; }
+        public DateTime startTime { get; set; }
+        public DateTime settledDate { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DateTime? resettledDate { get; set; } = null;
+        public decimal profitLoss { get; set; }
+        public decimal marketTotal { get; set; }
+        public decimal commission { get; set; }
+        public decimal agentCommission { get; set; }
+        public decimal stakeTotal { get; set; }
         public int currencyType { get; set; }
+        public long startTimeUnix
+        {
+            get
+            {
+                return new DateTimeOffset(startTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+        public long settledDateUnix
+        {
+            get
+            {
+                return new DateTimeOffset(settledDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+        public long resettledDateUnix
+        {
+            get
+            {
+                return resettledDate != null ? new DateTimeOffset(resettledDate.Value, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds() : 0;
+            }
+        }
     }
 
 

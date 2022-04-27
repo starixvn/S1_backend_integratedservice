@@ -273,6 +273,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new List<SummaryTransaction>();
             var range = date.DateToTimeRange(TimeZone);
+            var apiurl = $"{config.ApiUrl}/{config.WebSite}/querySummaryTransaction";
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -289,7 +290,7 @@ namespace ThirdPartyWager.Service.BLL
                         { "pageNumber", page.ToString() },
                         { "reportType", type.ToString() }
                     });
-                    var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
+                    var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
@@ -298,6 +299,13 @@ namespace ThirdPartyWager.Service.BLL
                     var json = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation(json);
                     var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<SummaryTransaction>>(json);
+                    
+                    
+                    if (queryReuslt.status == "1014")//no data.
+                    {
+                        continue;
+                    }
+
                     if (queryReuslt.status != "1")
                     {
                         throw new Exception($"NineW QuerySummaryTransaction fail. status is {queryReuslt.status}.");
