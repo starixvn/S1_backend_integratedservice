@@ -380,12 +380,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.Refund
             };
 
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                data.amount = data.amount * tpCurrency.ExchangeRate;
-            }
-
-            if (!CheckDataForCancelJoinTournament(data, out int sq, out isExist, out message))
+            if (!CheckDataForCancelJoinTournament(data, out RewardRNG_Joker cancelData, out isExist, out message))
             {
                 return new JokerResponse()
                 {
@@ -401,7 +396,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 await using var trans = await conn.BeginTransactionAsync();
 
                 //不存在，新增資料 + 更新Balance
-                if (!CancelJoinForCancelJoinTournament(sq, out message, trans))
+                if (!CancelJoinForCancelJoinTournament(cancelData.SQ, out message, trans))
                 {
                     trans.Rollback();
                     return new JokerResponse()
@@ -411,9 +406,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     };
                 }
 
-                if (data.amount != 0)
+                if (tpCurrency.ExchangeRate > 0)
                 {
-                    if (!SetBalanceForCancelJoinTournament(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                    cancelData.amount = Math.Abs(cancelData.amount) * tpCurrency.ExchangeRate;
+                }
+                //Cancel的id太長(length=51)，沒辦法塞到FinancialLog
+                //cancelData.id = data.id;
+
+                if (cancelData.amount != 0)
+                {
+                    if (!SetBalanceForCancelJoinTournament(tpCustInfo, cancelData, out message, out afterBalance, out int bonusId, conn, trans))
                     {
                         trans.Rollback();
                         return new JokerResponse()
@@ -424,7 +426,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
                 trans.Commit();
-
             }
 
             return new JokerResponse()
@@ -947,7 +948,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bonusId = 0;
             try
             {
-                var result = _bettingService.SetBalance_Joker(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+
+                var result = _settledService.SetBalance_Joker(tpCustInfo, data,
+                    TransType.Payout, "Win Tournament",
+                    out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
                 {
@@ -1115,10 +1119,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        private bool CheckDataForCancelJoinTournament(RewardRNG_Joker data, out int sq, out bool isExist, out string message)
+        private bool CheckDataForCancelJoinTournament(RewardRNG_Joker data, out RewardRNG_Joker cancelData, out bool isExist, out string message)
         {
             message = string.Empty;
-            sq = 0;
+            cancelData = null;
             isExist = false;
             try
             {
@@ -1150,7 +1154,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     isExist = true;
                 }
 
-                sq = joinDatas.First().SQ;
+                cancelData = joinDatas.First();
+
                 return true;
 
             }
@@ -1192,7 +1197,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bonusId = 0;
             try
             {
-                var result = _bettingService.SetBalance_Joker(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+                var result = _settledService.SetBalance_Joker(tpCustInfo, data,
+                    TransType.Refunds, "Cancel Join Tournament",
+                    out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
                 {
