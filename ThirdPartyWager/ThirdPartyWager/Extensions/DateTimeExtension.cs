@@ -21,5 +21,11 @@ namespace ThirdPartyWager.Extensions
             }
             return result;
         }
+
+        public static (DateTimeOffset begin, DateTimeOffset end) DateToTimeRange(this DateTime date, int timeZone)
+        {
+            var baseDate = new DateTimeOffset(date).ToOffset(new TimeSpan(timeZone, 0, 0));
+            return (baseDate, baseDate.AddDays(1).AddMilliseconds(-1));
+        }
     }
 }
