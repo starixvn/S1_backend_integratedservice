@@ -171,15 +171,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = unsettled.Stake,
-                                ValidBet = unsettled.ValidBet,
+                                ValidBet = unsettled.Stake,
                                 WinlostAmount = unsettled.WinLostAmount,
                                 TransId = unsettled.roundid,
                                 GameType = gameType,
