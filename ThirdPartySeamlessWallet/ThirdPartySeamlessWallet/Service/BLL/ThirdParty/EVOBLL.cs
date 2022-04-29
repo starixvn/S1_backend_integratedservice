@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -23,12 +24,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly TpRequestFailBLL _tpRequestFailBLL;
         private readonly ILogger<EVOBLL> _logger;
 
         private readonly MySqlClient _mainDbClient;
 
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+
+        public string[] promoTransactionTypeList { get; set; }
+
 
         #endregion
 
@@ -38,51 +43,229 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+            _tpRequestFailBLL = provider.GetService<TpRequestFailBLL>();
             _logger = provider.GetService<ILogger<EVOBLL>>();
 
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            promoTransactionTypeList = new string[] { "JackpotWin", "FreeRoundPlayableSpent", "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached", "FromGame", "RtrMonetaryReward" };
         }
 
         #endregion
 
         #region Methods
 
-        public async Task<StandardResponse> PromoPayout(string requestContent, string authToken)
+        public async Task<StandardResponse> PromoPayout(PromoData_EVO request, string authToken)
         {
             var message = string.Empty;
             decimal afterBalance = 0;
 
-            if (string.IsNullOrWhiteSpace(requestContent))
+            if (request == null || string.IsNullOrWhiteSpace(authToken))
             {
-                message = $"Request.Body is Empty.Request.Body={requestContent}.AuthToken={authToken}.";
+                message = $"Request or AuthToken is Empty.Request.Body={JsonConvert.SerializeObject(request)}.AuthToken={authToken}.";
                 return new StandardResponse()
                 {
                     status = EVOStatus.INVALID_PARAMETER,
-                    uuid = message,
                     retransmission = false
                 };
             }
 
-            PromoData_EVO deserializeRequest = JsonConvert.DeserializeObject<PromoData_EVO>(requestContent);
-
-            if (!CheckRequestForPromoPayout(deserializeRequest, out EVOStatus status, out message))
+            if (!CheckRequestForPromoPayout(request, out EVOStatus status, out message))
             {
                 return new StandardResponse()
                 {
                     status = status,
-                    uuid = message,
                     retransmission = false
                 };
             }
 
+            if (!CheckSidTokenForPromoPayout(request, out int tpId, out int tpGameType, out EVOStatus sidStatus, out message))
+            {
+                return new StandardResponse()
+                {
+                    status = sidStatus,
+                    retransmission = false
+                };
+            }
+
+            if (!CheckAuthTokenForPromoPayout(authToken, tpId, out message))
+            {
+                return new StandardResponse()
+                {
+                    status = EVOStatus.UNKNOWN_ERROR,
+                    retransmission = false
+                };
+            }
+
+            if (!GetTpCustInfoForPromoPayout(request.userId, tpId, out TpCustInfo tpCustInfo, out message))
+            {
+                return new StandardResponse()
+                {
+                    status = EVOStatus.UNKNOWN_ERROR,
+                    retransmission = false
+                };
+            }
+
+            if (!GetTpCurrencyForPromoPayout(tpCustInfo.CurrencyId, tpId, out TpCurrency tpCurrency, out message))
+            {
+                return new StandardResponse()
+                {
+                    status = EVOStatus.UNKNOWN_ERROR,
+                    retransmission = false
+                };
+            }
+
+            var data = new Rewaard_EVO()
+            {
+                sid = request.sid,
+                userId = request.userId,
+                currency = request.currency,
+                game = JsonConvert.SerializeObject(request.game),
+                //promotionTransaction = JsonConvert.SerializeObject(deserializeRequest.promoTransaction),  //可能會有匯率換算，先不塞值
+                uuid = request.uuid,
+                GameId = request.game.id,
+                GameType = request.game.type,
+                TableId = request.game.details.table.id,
+                TableVId = request.game.details.table.vid,
+                PromoTransactionType = request.promoTransaction.type,
+                PromoTransactionId = request.promoTransaction.id,
+                PromoTransactionAmount = request.promoTransaction.amount,
+                PromoTransactionVoucherId = request.promoTransaction.voucherId,
+                PromoTransactionRemainingRounds = request.promoTransaction.remainingRounds,
+                PromoTransactionPlayableBalance = request.promoTransaction.playableBalance,
+                PromoTransactionBonusConfigId = request.promoTransaction.bonusConfigId,
+                PromoTransactionRewardId = request.promoTransaction.rewardId,
+                TpId = tpId,
+                TpGameType = tpGameType,
+                PaidFrom = PaidFromEnum.NVC,
+                TicketType = BettransType.Bonus,
+                TicketStatus = TicketStatus.Related,
+                SettleFlag = SettleFlag.EndGame
+            };
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+
+                data.PromoTransactionAmount = data.PromoTransactionAmount * tpCurrency.ExchangeRate;
+                data.PromoTransactionPlayableBalance = data.PromoTransactionPlayableBalance * tpCurrency.ExchangeRate;
+
+                if (string.Equals(data.PromoTransactionType, "JackpotWin", StringComparison.OrdinalIgnoreCase))
+                {
+                    _ = request.promoTransaction.jackpots.Select(x =>
+                    {
+                        x.winAmount = x.winAmount * tpCurrency.ExchangeRate;
+                        return x;
+                    });
+                }
+            }
+
+            data.promotionTransaction = JsonConvert.SerializeObject(request.promoTransaction);
+
+            if (!CheckPayoutForPromoPayout(data, out bool isExist, out message))
+            {
+                return new StandardResponse()
+                {
+                    status = EVOStatus.UNKNOWN_ERROR,
+                    retransmission = false
+                };
+            }
+
+            if (!isExist)
+            {
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+
+                if (!PlacePayoutForPromoPayout(data, out message, trans))
+                {
+                    trans.Rollback();
+                    return new StandardResponse()
+                    {
+                        status = EVOStatus.UNKNOWN_ERROR,
+                        uuid = request.uuid,
+                        retransmission = false
+                    };
+                }
+
+                if (data.PromoTransactionAmount != 0)
+                {
+                    if (!SetBalanceForPromoPayout(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                    {
+                        trans.Rollback();
+                        return new StandardResponse()
+                        {
+                            status = EVOStatus.UNKNOWN_ERROR,
+                            uuid = request.uuid,
+                            retransmission = false
+                        };
+                    }
+                }
+                else
+                {
+                    if (!GetBalanceForPromoPayout(request.userId, tpId, tpGameType, out afterBalance, out message))
+                    {
+                        return new StandardResponse()
+                        {
+                            status = EVOStatus.UNKNOWN_ERROR,
+                            uuid = request.uuid,
+                            retransmission = false
+                        };
+                    }
+                }
+
+                trans.Commit();
+            }
+            else
+            {
+                if (!GetBalanceForPromoPayout(request.userId, tpId, tpGameType, out afterBalance, out message))
+                {
+                    return new StandardResponse()
+                    {
+                        status = EVOStatus.UNKNOWN_ERROR,
+                        uuid = request.uuid,
+                        retransmission = false
+                    };
+                }
+
+                return new StandardResponse()
+                {
+                    status = EVOStatus.BET_ALREADY_SETTLED,
+                    uuid = request.uuid,
+                    balance = afterBalance,
+                    bonus = 0,
+                    retransmission = false
+                };
+            }
+
+            //if (!CheckSettleForSlotPayout(data.gameId, out bool doSettle, out message))
+            //{
+            //    trans.Rollback();
+            //    return new AMBSlotPayoutResponse()
+            //    {
+            //        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+            //    };
+            //}
+
+            //if (doSettle || data.isEndRound)
+            //{
+            //    if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
+            //    {
+            //        trans.Rollback();
+            //        return new AMBSlotPayoutResponse()
+            //        {
+            //            status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+            //        };
+            //    }
+            //}
 
             return new StandardResponse()
             {
-                status = EVOStatus.ACCOUNT_LOCKED,
-                uuid = requestContent,
+                status = EVOStatus.OK,
+                uuid = request.uuid,
+                balance = afterBalance,
+                bonus = 0,
                 retransmission = false
             };
         }
@@ -120,113 +303,95 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
+            if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
+            {
+                message = "request.promoTransaction.Type is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
             return true;
         }
 
-        //private bool CheckAgentIdForPromoPayout(string agentId, out string message)
-        //{
-        //    message = string.Empty;
-        //    try
-        //    {
-        //        var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+        private bool CheckSidTokenForPromoPayout(PromoData_EVO request, out int tpId, out int gameType, out EVOStatus status, out string message)
+        {
+            message = string.Empty;
+            status = EVOStatus.OK;
 
-        //        if (thirdPartySetting == null)
-        //        {
-        //            message = "tpinfo not found.";
-        //            _logger.LogError($"CheckAgentId Fail:{message}");
-        //            return false;
-        //        }
+            string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(request.sid));
+            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
 
-        //        string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
+            string tpUserName = sessionKeyArr[2];
+            gameType = Convert.ToInt32(sessionKeyArr[3]);
+            tpId = Convert.ToInt32(sessionKeyArr[4]);
 
-        //        if (string.IsNullOrWhiteSpace(slotAgent))
-        //        {
-        //            message = "tpinfo.agent is null.";
-        //            _logger.LogError($"CheckAgentId Fail:{message}");
-        //            return false;
-        //        }
+            if (tpId == 0 || gameType == 0)
+            {
+                message = $"sid.tpId or sid.gametype is Invalid. sid.tp={tpId}. sid.gametype={gameType}.";
+                _logger.LogError($"CheckSidToken Fail:{message}");
+                status = EVOStatus.INVALID_SID;
+                return false;
+            }
 
-        //        if (slotAgent != agentId)
-        //        {
-        //            message = "tpinfo.agent is not equal request.agentId.";
-        //            _logger.LogError($"CheckAgentId Fail:{message}");
-        //            return false;
-        //        }
+            if (tpUserName != request.userId)
+            {
+                message = "sid.tpUserName is equal request.userId.";
+                _logger.LogError($"CheckSidToken Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
 
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        message = "exception happen.";
-        //        _logger.LogError(ex, $"CheckAgentId Exception:{ex.ToString()}");
-        //        return false;
-        //    }
-        //}
+            return true;
+        }
 
-        //private bool CheckThirdPartyForPromoPayout(string username, out string message)
-        //{
-        //    message = string.Empty;
-        //    try
-        //    {
-        //        var result = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, username);
+        private bool CheckAuthTokenForPromoPayout(string authToken, int tpId, out string message)
+        {
+            message = string.Empty;
+            try
+            {
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)tpId);
 
-        //        if (result == null)
-        //        {
-        //            message = "player not found.";
-        //            _logger.LogError($"CheckTpCustInfo Fail:{message}");
-        //            return false;
-        //        }
+                if (thirdPartySetting == null)
+                {
+                    message = "tpinfo not found.";
+                    _logger.LogError($"CheckAuthToken Fail:{message}");
+                    return false;
+                }
 
-        //        if (result.Locked)
-        //        {
-        //            message = "player is Locked.";
-        //            _logger.LogError($"CheckTpCustInfo Fail:{message}");
-        //            return false;
-        //        }
+                string tpAuthToken = thirdPartySetting.TpSetting["AuthToken"];
 
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        message = "exception happen.";
-        //        _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
-        //        return false;
-        //    }
-        //}
+                if (string.IsNullOrWhiteSpace(tpAuthToken))
+                {
+                    message = "tpinfo.AuthToken is null.";
+                    _logger.LogError($"CheckAuthToken Fail:{message}");
+                    return false;
+                }
 
-        //private bool GetBalanceForPromoPayout(string username, out decimal beforeBalance, out string message)
-        //{
-        //    message = string.Empty;
-        //    beforeBalance = 0;
-        //    try
-        //    {
-        //        var result = _tpCustInfoBLL.GetBalance((int)ThirdParty, username, (int)GameType);
+                if (HttpUtility.UrlDecode(authToken) != tpAuthToken)
+                {
+                    message = "tpinfo.AuthToken is not equal AuthToken.";
+                    _logger.LogError($"CheckAuthToken Fail:{message}");
+                    return false;
+                }
 
-        //        if (result == null)
-        //        {
-        //            message = "balance not found.";
-        //            _logger.LogError($"GetBalance Fail:{message}");
-        //            return false;
-        //        }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"CheckAuthToken Exception:{ex.ToString()}");
+                return false;
+            }
+        }
 
-        //        beforeBalance = result.Balance;
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        message = "exception happen.";
-        //        _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
-        //        return false;
-        //    }
-        //}
-
-        private bool GetTpCustInfoForPromoPayout(string username, out TpCustInfo tpCustInfo, out string message)
+        private bool GetTpCustInfoForPromoPayout(string username, int tpId, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
             tpCustInfo = null;
             try
             {
-                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AMB, username);
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, username);
                 if (tpCustInfo == null)
                 {
                     message = "tpCustInfo is null.";
@@ -243,43 +408,43 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        //private bool GetTpCurrencyForPromoPayout(int currencyId, out TpCurrency tpCurrency, out string message)
-        //{
-        //    message = string.Empty;
-        //    tpCurrency = null;
-        //    try
-        //    {
-        //        tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, currencyId);
-        //        if (tpCurrency == null)
-        //        {
-        //            message = "tpCurrency is null.";
-        //            _logger.LogError($"GetTpCurrency Fail:{message}");
-        //            return false;
-        //        }
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        message = "exception happen.";
-        //        _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
-        //        return false;
-        //    }
-        //}
-
-        private bool CheckPayoutForPromoPayout(DateTime partitionTime, BettingDataRNG_AMB data, out string message)
+        private bool GetTpCurrencyForPromoPayout(int currencyId, int tpId, out TpCurrency tpCurrency, out string message)
         {
             message = string.Empty;
+            tpCurrency = null;
             try
             {
-                var slotDatas = _bettingService.IsExist_AMB(false, partitionTime, data);
+                tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, currencyId);
+                if (tpCurrency == null)
+                {
+                    message = "tpCurrency is null.";
+                    _logger.LogError($"GetTpCurrency Fail:{message}");
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+                return false;
+            }
+        }
 
+        private bool CheckPayoutForPromoPayout(Rewaard_EVO data, out bool isExist, out string message)
+        {
+            message = string.Empty;
+            isExist = false;
+            try
+            {
+                var promoDatas = _bettingService.IsRewardExist_EVO(data);
 
-                if (slotDatas.Any())
+                if (promoDatas.Any())
                 {
                     //已存在指定有效派彩
-                    message = "already exist valid payout by transactionId and roundId.";
+                    message = "already exist valid promo payout by transactionId and roundId.";
                     _logger.LogError($"CheckPayout Fail:{message}");
-                    return false;
+                    isExist = true;
                 }
 
                 return true;
@@ -292,12 +457,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool PlacePayoutForPromoPayout(DateTime partitionTime, BettingDataRNG_AMB data, out string message, MySqlTransaction trans)
+        private bool PlacePayoutForPromoPayout(Rewaard_EVO data, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
             try
             {
-                var result = _settledService.Payout_AMB(partitionTime, data, trans);
+                var result = _settledService.PromoPayout_EVO(data, trans);
 
                 if (!result)
                 {
@@ -315,7 +480,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool SetBalanceForPromoPayout(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+        private bool SetBalanceForPromoPayout(TpCustInfo tpCustInfo, Rewaard_EVO data,
             out string message, out decimal afterAmount, out int bonusId,
             MySqlConnection conn, MySqlTransaction trans)
         {
@@ -324,8 +489,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bonusId = 0;
             try
             {
-                var result = _settledService.SetBalance_AMB(tpCustInfo, data,
-                    TransType.Payout, "Payout",
+                var tpCategory = data.TpId == (int)Tp.EVO ? TpCategory.LiveCasino : TpCategory.Slots;
+
+                var result = _settledService.SetBalance_EVO(tpCustInfo, data,
+                    tpCategory, TransType.Prize, $"Prize:{data.PromoTransactionId}-{data.PromoTransactionType}",
                     out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
@@ -362,29 +529,36 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         //    }
         //}
 
-        private bool InsertUnsettleForSlotPayout(DateTime partitionTime, string roundId, out string message, MySqlTransaction trans)
+        private bool GetBalanceForPromoPayout(string username, int tpId, int tpGameType, out decimal beforeBalance, out string message)
         {
             message = string.Empty;
+            beforeBalance = 0;
             try
             {
-                var result = _settledService.InsertUnsettle_AMB(partitionTime, roundId, trans);
+                var result = _tpCustInfoBLL.GetBalance(tpId, username, tpGameType);
 
-                if (!result)
+                if (result == null)
                 {
-                    message = "insert unsettle transactionId fail.";
-                    _logger.LogError($"InsertUnsettle Fail:{message}");
+                    message = "balance not found.";
+                    _logger.LogError($"GetBalance Fail:{message}");
                     return false;
                 }
+
+                beforeBalance = result.Balance;
                 return true;
             }
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"InsertUnsettle Exception:{ex.ToString()}");
+                _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
                 return false;
             }
         }
 
+        private void Redo()
+        {
+            _tpRequestFailBLL.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.PromoPayout, JsonConvert.SerializeObject(getReq), ex.Message);
+        }
 
         #endregion
 

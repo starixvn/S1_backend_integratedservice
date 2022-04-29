@@ -68,6 +68,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string voucherId { get; set; }
         public decimal playableBalance { get; set; }
         public int remainingRounds { get; set; }
+        public string bonusConfigId { get; set; }
+        public string rewardId { get; set; }
     }
 
     public class Jackpot_EVO
@@ -111,6 +113,38 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     #endregion
+
+    public class Rewaard_EVO
+    {
+        public int SQ { get; set; }
+        public string sid { get; set; }
+        public string userId { get; set; }
+        public string currency { get; set; }
+        public string? game { get; set; }
+        public string? promotionTransaction { get; set; }
+        public string uuid { get; set; }
+        public string? GameId { get; set; }
+        public string? GameType { get; set; }
+        public string? TableId { get; set; }
+        public string? TableVId { get; set; }
+        public string PromoTransactionType { get; set; }
+        public string PromoTransactionId { get; set; }
+        public decimal PromoTransactionAmount { get; set; }
+        public string? PromoTransactionVoucherId { get; set; }
+        public int? PromoTransactionRemainingRounds { get; set; }
+        public decimal? PromoTransactionPlayableBalance { get; set; }
+        public string? PromoTransactionBonusConfigId { get; set; }
+        public string? PromoTransactionRewardId { get; set; }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
+        public PaidFromEnum PaidFrom { get; set; }
+        public BettransType TicketType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public SettleFlag SettleFlag { get; set; }
+        public DateTime CreateTime { get; set; }
+        public DateTime UpdateTime { get; set; }
+    }
+
 
     //public class PromoDebitData_EVO : PromoDataCommon_EVO
     //{

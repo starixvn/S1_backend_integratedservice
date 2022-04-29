@@ -32,4 +32,21 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         OPERATION_IN_PROCESS
 
     }
+
+    public enum PaidFromEnum
+    {
+        NVC = 1,
+        TP = 2
+    }
+
+    public enum PromoTransactionTypeEnum
+    {
+        JackpotWin,
+        FreeRoundPlayableSpent,
+        RewardGamePlayableSpent,
+        RewardGameWinCapReached,
+        RewardGameMinBetLimitReached,
+        FromGame,
+        RtrMonetaryReward
+    }
 }

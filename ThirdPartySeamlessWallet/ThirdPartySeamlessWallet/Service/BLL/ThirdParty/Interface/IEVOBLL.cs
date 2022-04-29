@@ -6,6 +6,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
     public interface IEVOBLL
     {
-        Task<StandardResponse> PromoPayout(string requestContent, string authToken);
+        Task<StandardResponse> PromoPayout(PromoData_EVO request, string authToken);
     }
 }

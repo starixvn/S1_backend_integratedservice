@@ -708,9 +708,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             var authToken = getQuery["authToken"];
-            PromoData_EVO getReq = JsonConvert.DeserializeObject<PromoData_EVO>("");
+            PromoData_EVO request = JsonConvert.DeserializeObject<PromoData_EVO>(Content);
 
-            return await _EVOBLL.PromoPayout(Content, authToken);
+            return await _EVOBLL.PromoPayout(request, authToken);
         }
 
         [HttpPost]
