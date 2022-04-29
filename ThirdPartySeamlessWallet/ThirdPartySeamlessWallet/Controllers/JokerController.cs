@@ -108,23 +108,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
-        private string GetMD5Signature(string rawData)
-        {
-            using MD5 md5Hash = MD5.Create();
-            string md5Content = GetMd5Hash(md5Hash, rawData);
-            return md5Content;
-        }
-        private string GetMd5Hash(MD5 md5Hash, string rawData)
-        {
-            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-            var sBuilder = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
-            {
-                sBuilder.Append(data[i].ToString("x2"));
-            }
-            return sBuilder.ToString();
-        }
-
         [Route("[controller]/authenticate-token")]
         public AuthenticateTokenRep AuthenticateToken([FromForm] AuthenticateTokenReq authenticateTokenReq)
         {
@@ -757,6 +740,24 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
+        #region Private Methods
+        private string GetMD5Signature(string rawData)
+        {
+            using MD5 md5Hash = MD5.Create();
+            string md5Content = GetMd5Hash(md5Hash, rawData);
+            return md5Content;
+        }
+        private string GetMd5Hash(MD5 md5Hash, string rawData)
+        {
+            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            var sBuilder = new StringBuilder();
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+            return sBuilder.ToString();
+        }
+
         private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter)
         {
             try
@@ -904,5 +905,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return (null, null);
             }
         }
+
+        #endregion
     }
 }
