@@ -33,6 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     public enum RewardRNG_JokerTypeEnum
     {
         FromJoin = 1,
+        FromCancel = 3,
         FromWin = 4
     }
 }
