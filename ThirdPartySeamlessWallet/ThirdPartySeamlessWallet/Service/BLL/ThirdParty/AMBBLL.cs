@@ -467,7 +467,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
                 TicketType = BettransType.CancelBet,
-                TicketStatus = TicketStatus.UnSettled
+                TicketStatus = TicketStatus.UnSettled,
+                FromAPIType = BettransRng_AMBTypeEnum.FromBet
             };
 
             if (tpCurrency.ExchangeRate > 0)
