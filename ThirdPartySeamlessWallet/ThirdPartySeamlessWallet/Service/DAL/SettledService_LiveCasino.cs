@@ -3484,7 +3484,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool SetBalance_EVO(TpCustInfo tpCustInfo, Rewaard_EVO data, TpCategory tpCategory,
+        public bool SetPromoPayout_EVO(TpCustInfo tpCustInfo, Rewaard_EVO data, TpCategory tpCategory,
                                    TransType transType, string memo,
                                    out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {

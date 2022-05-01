@@ -50,7 +50,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            promoTransactionTypeList = new string[] { "JackpotWin", "FreeRoundPlayableSpent", "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached", "FromGame", "RtrMonetaryReward" };
+            promoTransactionTypeList = new string[] { "JackpotWin",
+                "FreeRoundPlayableSpent",
+                "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
+                "FromGame", "RtrMonetaryReward" };
         }
 
         #endregion
@@ -72,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckRequestForPromoPayout(request, out EVOStatus status, out message))
+            if (!CheckRequest(request, out EVOStatus status, out message))
             {
                 return new StandardResponse()
                 {
@@ -81,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckSidTokenForPromoPayout(request, out int tpId, out int tpGameType, out EVOStatus sidStatus, out message))
+            if (!CheckSidToken(request, out int tpId, out int tpGameType, out EVOStatus sidStatus, out message))
             {
                 return new StandardResponse()
                 {
@@ -90,7 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckAuthTokenForPromoPayout(authToken, tpId, out message))
+            if (!CheckAuthToken(authToken, tpId, out message))
             {
                 return new StandardResponse()
                 {
@@ -99,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetTpCustInfoForPromoPayout(request.userId, tpId, out TpCustInfo tpCustInfo, out message))
+            if (!GetTpCustInfo(request.userId, tpId, out TpCustInfo tpCustInfo, out message))
             {
                 return new StandardResponse()
                 {
@@ -108,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetTpCurrencyForPromoPayout(tpCustInfo.CurrencyId, tpId, out TpCurrency tpCurrency, out message))
+            if (!GetTpCurrency(tpCustInfo.CurrencyId, tpId, out TpCurrency tpCurrency, out message))
             {
                 return new StandardResponse()
                 {
@@ -123,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 userId = request.userId,
                 currency = request.currency,
                 game = JsonConvert.SerializeObject(request.game),
-                //promotionTransaction = JsonConvert.SerializeObject(deserializeRequest.promoTransaction),  //可能會有匯率換算，先不塞值
+                promotionTransaction = JsonConvert.SerializeObject(request.promoTransaction), 
                 uuid = request.uuid,
                 GameId = request.game.id,
                 GameType = request.game.type,
@@ -145,25 +148,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 SettleFlag = SettleFlag.EndGame
             };
 
-            if (tpCurrency.ExchangeRate > 0)
-            {
-
-                data.PromoTransactionAmount = data.PromoTransactionAmount * tpCurrency.ExchangeRate;
-                data.PromoTransactionPlayableBalance = data.PromoTransactionPlayableBalance * tpCurrency.ExchangeRate;
-
-                if (string.Equals(data.PromoTransactionType, "JackpotWin", StringComparison.OrdinalIgnoreCase))
-                {
-                    _ = request.promoTransaction.jackpots.Select(x =>
-                    {
-                        x.winAmount = x.winAmount * tpCurrency.ExchangeRate;
-                        return x;
-                    });
-                }
-            }
-
-            data.promotionTransaction = JsonConvert.SerializeObject(request.promoTransaction);
-
-            if (!CheckPayoutForPromoPayout(data, out bool isExist, out message))
+            if (!GetExistReward(data, out IEnumerable<Rewaard_EVO> existDatas, out message))
             {
                 return new StandardResponse()
                 {
@@ -172,54 +157,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!isExist)
+            if (existDatas.Any())
             {
-                await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                await using var trans = await conn.BeginTransactionAsync();
-
-                if (!PlacePayoutForPromoPayout(data, out message, trans))
-                {
-                    trans.Rollback();
-                    return new StandardResponse()
-                    {
-                        status = EVOStatus.UNKNOWN_ERROR,
-                        uuid = request.uuid,
-                        retransmission = false
-                    };
-                }
-
-                if (data.PromoTransactionAmount != 0)
-                {
-                    if (!SetBalanceForPromoPayout(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
-                    {
-                        trans.Rollback();
-                        return new StandardResponse()
-                        {
-                            status = EVOStatus.UNKNOWN_ERROR,
-                            uuid = request.uuid,
-                            retransmission = false
-                        };
-                    }
-                }
-                else
-                {
-                    if (!GetBalanceForPromoPayout(request.userId, tpId, tpGameType, out afterBalance, out message))
-                    {
-                        return new StandardResponse()
-                        {
-                            status = EVOStatus.UNKNOWN_ERROR,
-                            uuid = request.uuid,
-                            retransmission = false
-                        };
-                    }
-                }
-
-                trans.Commit();
-            }
-            else
-            {
-                if (!GetBalanceForPromoPayout(request.userId, tpId, tpGameType, out afterBalance, out message))
+                //已存在指定有效派彩
+                _logger.LogError($"CheckPayout Fail: already exist valid promo payout by transactionId and roundId.");
+                if (!GetBalance(request.userId, tpId, tpGameType, out afterBalance, out message))
                 {
                     return new StandardResponse()
                     {
@@ -238,6 +180,65 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     retransmission = false
                 };
             }
+
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            if (!PlacePayout(data, out message, trans))
+            {
+                trans.Rollback();
+                return new StandardResponse()
+                {
+                    status = EVOStatus.UNKNOWN_ERROR,
+                    uuid = request.uuid,
+                    retransmission = false
+                };
+            }
+
+            if (data.PromoTransactionAmount != 0)
+            {
+                if (tpCurrency.ExchangeRate > 0)
+                {
+
+                    data.PromoTransactionAmount = data.PromoTransactionAmount * tpCurrency.ExchangeRate;
+                    data.PromoTransactionPlayableBalance = data.PromoTransactionPlayableBalance * tpCurrency.ExchangeRate;
+
+                    if (string.Equals(data.PromoTransactionType, "JackpotWin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _ = request.promoTransaction.jackpots.Select(x =>
+                        {
+                            x.winAmount = x.winAmount * tpCurrency.ExchangeRate;
+                            return x;
+                        });
+                    }
+                }
+
+                if (!SetBalance(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                {
+                    trans.Rollback();
+                    return new StandardResponse()
+                    {
+                        status = EVOStatus.UNKNOWN_ERROR,
+                        uuid = request.uuid,
+                        retransmission = false
+                    };
+                }
+            }
+            else
+            {
+                if (!GetBalance(request.userId, tpId, tpGameType, out afterBalance, out message))
+                {
+                    return new StandardResponse()
+                    {
+                        status = EVOStatus.UNKNOWN_ERROR,
+                        uuid = request.uuid,
+                        retransmission = false
+                    };
+                }
+            }
+
+            trans.Commit();
 
             //if (!CheckSettleForSlotPayout(data.gameId, out bool doSettle, out message))
             //{
@@ -272,9 +273,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #endregion
 
-        #region Promo Payout Step
+        #region Private Methods
 
-        private bool CheckRequestForPromoPayout(PromoData_EVO request, out EVOStatus status, out string message)
+        private bool CheckRequest(PromoData_EVO request, out EVOStatus status, out string message)
         {
             message = string.Empty;
             status = EVOStatus.OK;
@@ -303,9 +304,49 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
+            if (string.IsNullOrWhiteSpace(request.currency))
+            {
+                message = "request.currency is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.uuid))
+            {
+                message = "request.uuid is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (request.promoTransaction == null)
+            {
+                message = "request.promoTransaction is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.id))
+            {
+                message = "request.promoTransaction.id is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
+            {
+                message = "request.promoTransaction.type is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
             if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
             {
-                message = "request.promoTransaction.Type is Invalid.";
+                message = "request.promoTransaction.type can't define.";
                 _logger.LogError($"CheckRequest Fail:{message}");
                 status = EVOStatus.INVALID_PARAMETER;
                 return false;
@@ -314,7 +355,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return true;
         }
 
-        private bool CheckSidTokenForPromoPayout(PromoData_EVO request, out int tpId, out int gameType, out EVOStatus status, out string message)
+        //有重複，要搬到controller
+        private bool CheckSidToken(PromoData_EVO request, out int tpId, out int gameType, out EVOStatus status, out string message)
         {
             message = string.Empty;
             status = EVOStatus.OK;
@@ -345,7 +387,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return true;
         }
 
-        private bool CheckAuthTokenForPromoPayout(string authToken, int tpId, out string message)
+        //有重複，要搬到controller
+        private bool CheckAuthToken(string authToken, int tpId, out string message)
         {
             message = string.Empty;
             try
@@ -385,7 +428,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetTpCustInfoForPromoPayout(string username, int tpId, out TpCustInfo tpCustInfo, out string message)
+        private bool GetTpCustInfo(string username, int tpId, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
             tpCustInfo = null;
@@ -408,7 +451,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetTpCurrencyForPromoPayout(int currencyId, int tpId, out TpCurrency tpCurrency, out string message)
+        private bool GetTpCurrency(int currencyId, int tpId, out TpCurrency tpCurrency, out string message)
         {
             message = string.Empty;
             tpCurrency = null;
@@ -431,21 +474,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckPayoutForPromoPayout(Rewaard_EVO data, out bool isExist, out string message)
+        private bool GetExistReward(Rewaard_EVO data, out IEnumerable<Rewaard_EVO> existData, out string message)
         {
             message = string.Empty;
-            isExist = false;
+            existData = null;
             try
             {
-                var promoDatas = _bettingService.IsRewardExist_EVO(data);
-
-                if (promoDatas.Any())
-                {
-                    //已存在指定有效派彩
-                    message = "already exist valid promo payout by transactionId and roundId.";
-                    _logger.LogError($"CheckPayout Fail:{message}");
-                    isExist = true;
-                }
+                existData = _bettingService.IsRewardExist_EVO(data);
 
                 return true;
             }
@@ -457,7 +492,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool PlacePayoutForPromoPayout(Rewaard_EVO data, out string message, MySqlTransaction trans)
+        private bool PlacePayout(Rewaard_EVO data, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
             try
@@ -480,7 +515,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool SetBalanceForPromoPayout(TpCustInfo tpCustInfo, Rewaard_EVO data,
+        private bool SetBalance(TpCustInfo tpCustInfo, Rewaard_EVO data,
             out string message, out decimal afterAmount, out int bonusId,
             MySqlConnection conn, MySqlTransaction trans)
         {
@@ -491,7 +526,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var tpCategory = data.TpId == (int)Tp.EVO ? TpCategory.LiveCasino : TpCategory.Slots;
 
-                var result = _settledService.SetBalance_EVO(tpCustInfo, data,
+                var result = _settledService.SetPromoPayout_EVO(tpCustInfo, data,
                     tpCategory, TransType.Prize, $"Prize:{data.PromoTransactionId}-{data.PromoTransactionType}",
                     out afterAmount, ref bonusId, conn, trans);
 
@@ -529,7 +564,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         //    }
         //}
 
-        private bool GetBalanceForPromoPayout(string username, int tpId, int tpGameType, out decimal beforeBalance, out string message)
+        private bool GetBalance(string username, int tpId, int tpGameType, out decimal beforeBalance, out string message)
         {
             message = string.Empty;
             beforeBalance = 0;
