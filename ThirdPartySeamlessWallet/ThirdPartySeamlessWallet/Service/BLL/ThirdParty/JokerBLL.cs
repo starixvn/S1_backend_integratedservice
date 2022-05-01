@@ -316,7 +316,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<JokerResponse> CancelTournament(CancelRequest request)
         {
             var message = string.Empty;
-            var isExist = true;
             decimal beforeBalance = 0; decimal afterBalance = 0;
 
             if (!CheckRequest(true, request, out message))
@@ -413,15 +412,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     Balance = beforeBalance
                 };
             }
-            
-            if (!isExist)
-            {
-                await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                await using var trans = await conn.BeginTransactionAsync();
 
-                //不存在，新增資料 + 更新Balance
-                if (!PlaceReward(RewardRNG_JokerTypeEnum.FromCancel, joinData, out message, conn, trans))
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            if (!PlaceReward(RewardRNG_JokerTypeEnum.FromCancel, joinData, out message, conn, trans))
+            {
+                trans.Rollback();
+                return new JokerResponse()
+                {
+                    Status = JokerErrorCode.Other,
+                    Message = message
+                };
+            }
+
+            if (joinData.amount != 0)
+            {
+                joinData.amount = Math.Abs(joinData.amount);
+                //joinData.id = data.id; //Cancel的id太長(length=51)，沒辦法塞到FinancialLog(50)
+
+                if (!SetBalance(RewardRNG_JokerTypeEnum.FromCancel, tpCustInfo, joinData, tpCurrency.ExchangeRate,
+                                out message, out afterBalance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
                     return new JokerResponse()
@@ -430,31 +442,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         Message = message
                     };
                 }
-
-                //Cancel的id太長(length=51)，沒辦法塞到FinancialLog
-                //cancelData.id = data.id;
-
-                if (data.amount != 0)
-                {
-                    joinData.amount = Math.Abs(joinData.amount);
-                    //joinData.id = data.id; //Cancel的id太長(length=51)，沒辦法塞到FinancialLog(50)
-
-                    if (!SetBalance(RewardRNG_JokerTypeEnum.FromCancel, tpCustInfo, joinData, tpCurrency.ExchangeRate,
-                                    out message, out afterBalance, out int bonusId, conn, trans))
-                    {
-                        trans.Rollback();
-                        return new JokerResponse()
-                        {
-                            Status = JokerErrorCode.Other,
-                            Message = message
-                        };
-                    }
-                }
-
-                trans.Commit();
             }
 
-            afterBalance /= tpCurrency.ExchangeRate;
+            trans.Commit();
+
             return new JokerResponse()
             {
                 Status = JokerErrorCode.Success,
