@@ -55,7 +55,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<JokerResponse> JoinTournament(JoinAndWinRequest request)
         {
             var message = string.Empty;
-            decimal beforeBalance = 0; decimal afterBalance = 0;
+            decimal balance = 0;
 
             if (!CheckRequest(false, request, out message))
             {
@@ -93,22 +93,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetBalance(request.username, tpCurrency.ExchangeRate, out beforeBalance, out message))
-            {
-                return new JokerResponse()
-                {
-                    Status = JokerErrorCode.Other,
-                    Message = message
-                };
-            }
-
             var data = new RewardRNG_Joker()
             {
                 appid = request.appid,
                 hash = request.hash,
                 id = request.id,
                 tournamentid = request.tournamentid,
-                amount = request.amount,
+                amount = Math.Abs(request.amount) * -1, //Join為減項
                 username = request.username,
                 extendedinfo = request.extendedinfo,
                 timestamp = request.timestamp,
@@ -116,9 +107,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketType = BettransType.Bonus,
                 TicketStatus = TicketStatus.Related
             };
-
-            //Join為減項
-            data.amount = Math.Abs(data.amount) * -1;
 
             if (!GetExistReward(false, data, out IEnumerable<RewardRNG_Joker> existDatas, out message))
             {
@@ -131,13 +119,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (existDatas.Any())
             {
-                beforeBalance /= tpCurrency.ExchangeRate;
                 //已存在指定有效投注
+                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                {
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Success,
                     Message = "already exist valid join by username and id.",
-                    Balance = beforeBalance
+                    Balance = balance
                 };
             }
 
@@ -158,9 +154,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (data.amount != 0)
             {
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromJoin, tpCustInfo, data, tpCurrency.ExchangeRate,
-                                out message, out afterBalance, out int bonusId, conn, trans))
+                                out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+            }
+            else
+            {
+                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                {
                     return new JokerResponse()
                     {
                         Status = JokerErrorCode.Other,
@@ -175,14 +182,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 Status = JokerErrorCode.Success,
                 Message = message,
-                Balance = afterBalance
+                Balance = balance
             };
         }
 
         public async Task<JokerResponse> WinTournament(JoinAndWinRequest request)
         {
             var message = string.Empty;
-            decimal beforeBalance = 0; decimal afterBalance = 0;
+            decimal balance = 0;
 
             if (!CheckRequest(false, request, out message))
             {
@@ -226,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 hash = request.hash,
                 id = request.id,
                 tournamentid = request.tournamentid,
-                amount = request.amount,
+                amount = Math.Abs(request.amount),
                 username = request.username,
                 extendedinfo = request.extendedinfo,
                 timestamp = request.timestamp,
@@ -234,11 +241,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketType = BettransType.Bonus,
                 TicketStatus = TicketStatus.Related
             };
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                data.amount = data.amount * tpCurrency.ExchangeRate;
-            }
 
             if (!GetExistReward(false, data, out IEnumerable<RewardRNG_Joker> existDatas, out message))
             {
@@ -251,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (existDatas.Any())
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out beforeBalance, out message))
+                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -260,17 +262,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     };
                 }
 
-                if (tpCurrency.ExchangeRate > 0)
-                {
-                    beforeBalance /= tpCurrency.ExchangeRate;
-                }
-
-                //已存在指定有效投注
+                //已存在指定有效派彩
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Success,
                     Message = "already exist valid win by username and id.",
-                    Balance = beforeBalance
+                    Balance = balance
                 };
             }
 
@@ -292,9 +289,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (data.amount != 0)
             {
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromWin, tpCustInfo, data, tpCurrency.ExchangeRate,
-                                out message, out afterBalance, out int bonusId, conn, trans))
+                                out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+            }
+            else
+            {
+                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                {
                     return new JokerResponse()
                     {
                         Status = JokerErrorCode.Other,
@@ -309,14 +317,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 Status = JokerErrorCode.Success,
                 Message = message,
-                Balance = afterBalance
+                Balance = balance
             };
         }
 
         public async Task<JokerResponse> CancelTournament(CancelRequest request)
         {
             var message = string.Empty;
-            decimal beforeBalance = 0; decimal afterBalance = 0;
+            decimal balance = 0;
 
             if (!CheckRequest(true, request, out message))
             {
@@ -371,10 +379,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (!existDatas.Any())
             {
                 //不存在指定有效資料
+                message = "not exist join by username and id.";
+                _logger.LogError($"CheckExist Fail:{message}");
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
-                    Message = "not exist join by username and id."
+                    Message = message
                 };
             }
 
@@ -382,7 +392,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 //存在多筆指定有效資料
                 message = "exist multi join by username and id.";
-                _logger.LogError($"CheckData Fail:{message}");
+                _logger.LogError($"CheckExist Fail:{message}");
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
@@ -395,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (joinData.TicketType == BettransType.CancelBet
                 && joinData.TicketStatus == TicketStatus.Refund)
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out beforeBalance, out message))
+                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -409,7 +419,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     Status = JokerErrorCode.Success,
                     Message = "already cancel assign join by username and id.",
-                    Balance = beforeBalance
+                    Balance = balance
                 };
             }
 
@@ -433,9 +443,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 //joinData.id = data.id; //Cancel的id太長(length=51)，沒辦法塞到FinancialLog(50)
 
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromCancel, tpCustInfo, joinData, tpCurrency.ExchangeRate,
-                                out message, out afterBalance, out int bonusId, conn, trans))
+                                out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
+                    return new JokerResponse()
+                    {
+                        Status = JokerErrorCode.Other,
+                        Message = message
+                    };
+                }
+            }
+            else
+            {
+                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                {
                     return new JokerResponse()
                     {
                         Status = JokerErrorCode.Other,
@@ -450,7 +471,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 Status = JokerErrorCode.Success,
                 Message = message,
-                Balance = afterBalance
+                Balance = balance
             };
         }
 
@@ -617,8 +638,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return false;
                 }
 
-                balance = (rate > 0) ? result.Balance / rate : result.Balance;
-
                 return true;
             }
             catch (Exception ex)
@@ -638,7 +657,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 existDatas = _bettingService.GetRewardRNG_Joker(isCancel, data);
 
                 return true;
-
             }
             catch (Exception ex)
             {
