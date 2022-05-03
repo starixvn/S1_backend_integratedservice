@@ -6,8 +6,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
     public interface IJokerBLL
     {
-        Task<JokerResponse> JoinTournament(Dictionary<string, string> request);
-        Task<JokerResponse> WinTournament(Dictionary<string, string> request);
-        Task<JokerResponse> CancelJoinTournament(Dictionary<string, string> request);
+        Task<JokerResponse> JoinTournament(JoinAndWinRequest request);
+        Task<JokerResponse> WinTournament(JoinAndWinRequest request);
+        Task<JokerResponse> CancelTournament(CancelRequest request);
     }
 }
