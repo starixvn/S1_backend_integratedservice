@@ -38,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tools _tools;
         private readonly Tp thisTp;
         private readonly IEVOBLL _EVOBLL;
-
+        public string[] promoTransactionTypeList { get; set; }
         #endregion
 
         #region Constructors
@@ -63,6 +63,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tools = provider.GetRequiredService<Tools>();
             _EVOBLL = provider.GetService<IEVOBLL>();
             thisTp = Tp.EVO;
+
+            promoTransactionTypeList = new string[] { "JackpotWin",
+                "FreeRoundPlayableSpent",
+                "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
+                "FromGame", "RtrMonetaryReward" };
         }
 
         #endregion
@@ -707,10 +712,68 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            var authToken = getQuery["authToken"];
             PromoData_EVO request = JsonConvert.DeserializeObject<PromoData_EVO>(Content);
+            var authToken = getQuery["authToken"];
 
-            return await _EVOBLL.PromoPayout(request, authToken);
+            if (request == null || string.IsNullOrWhiteSpace(authToken))
+            {
+                _logger.LogError($"Request or AuthToken is Empty.Request.Body={JsonConvert.SerializeObject(request)}.AuthToken={authToken}.");
+                return new StandardResponse()
+                {
+                    status = EVOStatus.INVALID_PARAMETER,
+                    retransmission = false
+                };
+            }
+
+            if (!CheckRequest(request, out EVOStatus status))
+            {
+                return new StandardResponse()
+                {
+                    status = status,
+                    uuid = request.uuid,
+                    retransmission = false
+                };
+            }
+
+            var tokenInfo = getTokenInfo(request.sid);
+            int tpId = tokenInfo.tpId;
+            int gameType = tokenInfo.gameType;
+            if (tpId == 0 || gameType == 0)
+            {
+                _logger.LogError($"CheckSidToken Fail: sid.tpId or sid.gametype is Invalid. sid.tp={tpId}. sid.gametype={gameType}.");
+                return new StandardResponse()
+                {
+                    status = EVOStatus.INVALID_SID,
+                    uuid = request.uuid,
+                    retransmission = false
+                };
+            }
+            if (tokenInfo.tpUserName != request.userId)
+            {
+                _logger.LogError($"CheckSidToken Fail: sid.tpUserName is equal request.userId.");
+                return new StandardResponse()
+                {
+                    status = EVOStatus.INVALID_PARAMETER,
+                    uuid = request.uuid,
+                    retransmission = false
+                };
+            }
+
+            var check = checkAuthorization(authToken);
+            if (check.status != "OK")
+            {
+                _logger.LogError($"CheckAuthToken Fail.");
+                var result = Enum.TryParse("Active", out EVOStatus enumStatus);
+                return new StandardResponse()
+                {
+                    //status = Enum.(EVOStatus, check.status, out EVOStatus parsedEnumValue),
+                    status = enumStatus,
+                    uuid = request.uuid,
+                    retransmission = false
+                };
+            }
+
+            return await _EVOBLL.PromoPayout(request, tokenInfo.tpId, tokenInfo.gameType, authToken);
         }
 
         [HttpPost]
@@ -857,5 +920,76 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return false;
         }
+
+        private bool CheckRequest(PromoData_EVO request, out EVOStatus status)
+        {
+            status = EVOStatus.OK;
+
+            if (request == null)
+            {
+                _logger.LogError($"CheckRequest Fail: request is null.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.sid))
+            {
+                _logger.LogError($"CheckRequest Fail: request.sid is Invalid.");
+                status = EVOStatus.INVALID_SID;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.userId))
+            {
+                _logger.LogError($"CheckRequest Fail: request.userId is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.currency))
+            {
+                _logger.LogError($"CheckRequest Fail: request.currency is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.uuid))
+            {
+                _logger.LogError($"CheckRequest Fail: request.uuid is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (request.promoTransaction == null)
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.id))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.id is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            return true;
+        }
+
     }
 }
