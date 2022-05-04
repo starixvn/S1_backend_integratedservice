@@ -200,15 +200,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!CheckThirdParty(request.username, out message))
-            {
-                return new JokerResponse()
-                {
-                    Status = JokerErrorCode.InvalidUserNameOrPassword,
-                    Message = message
-                };
-            }
-
             if (!GetTpCustInfo(request.username, out TpCustInfo tpCustInfo, out message))
             {
                 return new JokerResponse()
@@ -545,7 +536,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return true;
         }
 
-        //win可能不需要檢查玩家是否在線上？也不需要管玩家是否被lock？
         private bool CheckThirdParty(string username, out string message)
         {
             message = string.Empty;
@@ -675,11 +665,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 switch (type)
                 {
                     case RewardRNG_JokerTypeEnum.FromJoin:
+                        result = _bettingService.InsertReward_Joker(data, conn, trans);
+                        break;
                     case RewardRNG_JokerTypeEnum.FromWin:
-                        result = _bettingService.PlaceReward_Joker(data, conn, trans);
+                        result = _settledService.InsertReward_Joker(data, conn, trans);
                         break;
                     case RewardRNG_JokerTypeEnum.FromCancel:
-                        result = _settledService.CancelReward_Joker(data.SQ, conn, trans);
+                        result = _settledService.CancelUpdateReward_Joker(data.SQ, conn, trans);
                         break;
                 }
 

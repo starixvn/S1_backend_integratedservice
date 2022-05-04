@@ -366,7 +366,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public bool PlaceReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
+        public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
         {
             var insResult = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
 
