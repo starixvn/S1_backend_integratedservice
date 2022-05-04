@@ -758,6 +758,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var category = TpCategory.Slots;
+                var tpGameType = GameType.PP_RNG;
                 if (gameType == (int)GameType.PP_RNG)
                 {
                     result = conn.Execute("Service_BettransRng_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -765,6 +766,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 else
                 {
                     category = TpCategory.LiveCasino;
+                    tpGameType = GameType.PP_LiveCasino;
                     result = conn.Execute("Service_BettransLC_PP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 }
 
@@ -792,6 +794,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        _tpUnsettleService.InsertTpUnsettle(Tp.PP, tpGameType, bettingDataRNG_PP.roundId.ToString());
                         trans.Commit();
                         var setFlag = SetSettleFlag_BettransLC_PP_Payout(bettingDataRNG_PP.roundId);
                     }
