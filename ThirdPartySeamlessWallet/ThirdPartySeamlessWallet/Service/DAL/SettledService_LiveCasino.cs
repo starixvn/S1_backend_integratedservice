@@ -3473,7 +3473,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerLC_EVO_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
-        public bool PromoPayout_EVO(Rewaard_EVO data, MySqlTransaction trans)
+        public bool PromoPayout_EVO(Reward_EVO data, MySqlTransaction trans)
         {
             var result = _mainDbClient.QueryFirstAsync<int>("Service_Reward_EVO_Ins", trans, new DynamicParameters(data)).Result;
 
@@ -3484,7 +3484,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool SetPromoPayout_EVO(TpCustInfo tpCustInfo, Rewaard_EVO data, TpCategory tpCategory,
+        public bool SetPromoPayout_EVO(TpCustInfo tpCustInfo, Reward_EVO data, TpCategory tpCategory,
                                    TransType transType, string memo,
                                    out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -23,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Game_EVO
     {
         public string id { get; set; }
@@ -30,11 +33,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public Details_EVO details { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Details_EVO
     {
         public Table_EVO table { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Table_EVO
     {
         public string id { get; set; }
@@ -46,7 +51,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string sid { get; set; }
         public string userId { get; set; }
         public string currency { get; set; }
-        public Game_EVO game { get; set; }
+        public Game_EVO? game { get; set; }
         public string uuid { get; set; }
     }
 
@@ -71,7 +76,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string bonusConfigId { get; set; }
         public string rewardId { get; set; }
     }
-
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Jackpot_EVO
     {
         public string id { get; set; }
@@ -91,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class CommonResponse
     {
-        public EVOStatus status { get; set; }
+        public string status { get; set; }
         public string uuid { get; set; }
     }
     /// <summary>
@@ -114,14 +119,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     #endregion
 
-    public class Rewaard_EVO
+    public class Reward_EVO
     {
         public int SQ { get; set; }
-        public string sid { get; set; }
         public string userId { get; set; }
         public string currency { get; set; }
         public string? game { get; set; }
-        public string? promotionTransaction { get; set; }
+        public string? promoTransaction { get; set; }
         public string uuid { get; set; }
         public string? GameId { get; set; }
         public string? GameType { get; set; }

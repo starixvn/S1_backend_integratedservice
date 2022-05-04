@@ -712,6 +712,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
+
             PromoData_EVO request = JsonConvert.DeserializeObject<PromoData_EVO>(Content);
             var authToken = getQuery["authToken"];
 
@@ -720,7 +721,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogError($"Request or AuthToken is Empty.Request.Body={JsonConvert.SerializeObject(request)}.AuthToken={authToken}.");
                 return new StandardResponse()
                 {
-                    status = EVOStatus.INVALID_PARAMETER,
+                    status = EVOStatus.INVALID_PARAMETER.ToString(),
                     retransmission = false
                 };
             }
@@ -729,7 +730,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return new StandardResponse()
                 {
-                    status = status,
+                    status = status.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
@@ -743,7 +744,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogError($"CheckSidToken Fail: sid.tpId or sid.gametype is Invalid. sid.tp={tpId}. sid.gametype={gameType}.");
                 return new StandardResponse()
                 {
-                    status = EVOStatus.INVALID_SID,
+                    status = EVOStatus.INVALID_SID.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
@@ -753,7 +754,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogError($"CheckSidToken Fail: sid.tpUserName is equal request.userId.");
                 return new StandardResponse()
                 {
-                    status = EVOStatus.INVALID_PARAMETER,
+                    status = EVOStatus.INVALID_PARAMETER.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
@@ -763,11 +764,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (check.status != "OK")
             {
                 _logger.LogError($"CheckAuthToken Fail.");
-                var result = Enum.TryParse("Active", out EVOStatus enumStatus);
+                var result = Enum.TryParse(check.status, out EVOStatus enumStatus);
                 return new StandardResponse()
                 {
-                    //status = Enum.(EVOStatus, check.status, out EVOStatus parsedEnumValue),
-                    status = enumStatus,
+                    status = enumStatus.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };

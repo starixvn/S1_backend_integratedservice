@@ -94,7 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new StandardResponse()
                 {
-                    status = EVOStatus.UNKNOWN_ERROR,
+                    status = EVOStatus.UNKNOWN_ERROR.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
@@ -104,24 +104,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new StandardResponse()
                 {
-                    status = EVOStatus.UNKNOWN_ERROR,
+                    status = EVOStatus.UNKNOWN_ERROR.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
             }
 
-            var data = new Rewaard_EVO()
+            var data = new Reward_EVO()
             {
-                sid = request.sid,
                 userId = request.userId,
                 currency = request.currency,
-                game = JsonConvert.SerializeObject(request.game),
-                promotionTransaction = JsonConvert.SerializeObject(request.promoTransaction),
+                game = (request.game == null) ? null : JsonConvert.SerializeObject(request.game),
+                promoTransaction = JsonConvert.SerializeObject(request.promoTransaction),
                 uuid = request.uuid,
-                GameId = request.game.id,
-                GameType = request.game.type,
-                TableId = request.game.details.table.id,
-                TableVId = request.game.details.table.vid,
+                GameId = request.game?.id,
+                GameType = request.game?.type,
+                TableId = request.game?.details?.table?.id,
+                TableVId = request.game?.details?.table?.vid,
                 PromoTransactionType = request.promoTransaction.type,
                 PromoTransactionId = request.promoTransaction.id,
                 PromoTransactionAmount = request.promoTransaction.amount,
@@ -138,11 +137,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 SettleFlag = SettleFlag.EndGame
             };
 
-            if (!GetExistReward(data, out IEnumerable<Rewaard_EVO> existDatas))
+            if (!GetExistReward(data, out IEnumerable<Reward_EVO> existDatas))
             {
                 return new StandardResponse()
                 {
-                    status = EVOStatus.UNKNOWN_ERROR,
+                    status = EVOStatus.UNKNOWN_ERROR.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
@@ -156,7 +155,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return new StandardResponse()
                     {
-                        status = EVOStatus.UNKNOWN_ERROR,
+                        status = EVOStatus.UNKNOWN_ERROR.ToString(),
                         uuid = request.uuid,
                         retransmission = false
                     };
@@ -164,7 +163,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 return new StandardResponse()
                 {
-                    status = EVOStatus.BET_ALREADY_SETTLED,
+                    status = EVOStatus.BET_ALREADY_SETTLED.ToString(),
                     uuid = request.uuid,
                     balance = balance,
                     bonus = 0,
@@ -181,7 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 trans.Rollback();
                 return new StandardResponse()
                 {
-                    status = EVOStatus.UNKNOWN_ERROR,
+                    status = EVOStatus.UNKNOWN_ERROR.ToString(),
                     uuid = request.uuid,
                     retransmission = false
                 };
@@ -196,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     trans.Rollback();
                     return new StandardResponse()
                     {
-                        status = EVOStatus.UNKNOWN_ERROR,
+                        status = EVOStatus.UNKNOWN_ERROR.ToString(),
                         uuid = request.uuid,
                         retransmission = false
                     };
@@ -208,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return new StandardResponse()
                     {
-                        status = EVOStatus.UNKNOWN_ERROR,
+                        status = EVOStatus.UNKNOWN_ERROR.ToString(),
                         uuid = request.uuid,
                         retransmission = false
                     };
@@ -240,7 +239,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new StandardResponse()
             {
-                status = EVOStatus.OK,
+                status = EVOStatus.OK.ToString(),
                 uuid = request.uuid,
                 balance = balance,
                 bonus = 0,
@@ -430,7 +429,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetExistReward(Rewaard_EVO data, out IEnumerable<Rewaard_EVO> existData)
+        private bool GetExistReward(Reward_EVO data, out IEnumerable<Reward_EVO> existData)
         {
             existData = null;
             try
@@ -447,7 +446,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool PlaceReward(Rewaard_EVO data, MySqlTransaction trans)
+        private bool PlaceReward(Reward_EVO data, MySqlTransaction trans)
         {
             //存放TP Request的資料，跟匯率無關
             try
@@ -469,7 +468,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool SetBalance(TpCustInfo tpCustInfo, Rewaard_EVO data, decimal rate,
+        private bool SetBalance(TpCustInfo tpCustInfo, Reward_EVO data, decimal rate,
             out decimal afterAmount, out int bonusId,
             MySqlConnection conn, MySqlTransaction trans)
         {
@@ -483,7 +482,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var tpCategory = data.TpId == (int)Tp.EVO ? TpCategory.LiveCasino : TpCategory.Slots;
 
                 var result = _settledService.SetPromoPayout_EVO(tpCustInfo, data,
-                    tpCategory, TransType.Prize, $"Prize:{data.PromoTransactionId}-{data.PromoTransactionType}",
+                    tpCategory, TransType.Prize, $"Prize: {data.PromoTransactionType} ",
                     out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)

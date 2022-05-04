@@ -901,10 +901,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<Rewaard_EVO> IsRewardExist_EVO(Rewaard_EVO data)
+        public IEnumerable<Reward_EVO> IsRewardExist_EVO(Reward_EVO data)
         {
             var query = new { userId = data.userId, PromoTransactionId = data.PromoTransactionId, TpId = data.TpId, TpGameType = data.TpGameType };
-            return _mainDbClient.Query<Rewaard_EVO>("Service_Reward_EVO_Check", CommandType.StoredProcedure, new DynamicParameters(query));
+            return _mainDbClient.Query<Reward_EVO>("Service_Reward_EVO_Check", CommandType.StoredProcedure, new DynamicParameters(query));
         }
 
         #endregion
