@@ -356,7 +356,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             if (isCancel)
             {
-                var query = new { username = data.username,tournamentid = data.tournamentid, FromAPIType = data.FromAPIType };
+                var query = new { username = data.username, tournamentid = data.tournamentid, FromAPIType = data.FromAPIType };
                 return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Cancel_Check", CommandType.StoredProcedure, new DynamicParameters(query));
             }
             else
@@ -368,14 +368,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
         {
-            var insResult = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
 
-            if (insResult == 0)
-            {
-                return false;
-            }
-
-            return true;
+            return (result == 0) ? false : true;
         }
 
         public bool PlaceBetReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
@@ -399,7 +394,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return true;
             }
 
-            return false;
+            return (result > 0) ? true : false;
         }
 
         #endregion

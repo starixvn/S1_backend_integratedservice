@@ -318,27 +318,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
         {
-            var insResult = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
 
-            if (insResult == 0)
-            {
-                return false;
-            }
-
-            return true;
+            return (result == 0) ? false : true;
         }
 
         public bool CancelUpdateReward_Joker(int sq, MySqlConnection conn, MySqlTransaction trans)
         {
             var param = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
             var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Cancel_Set", new DynamicParameters(param), trans, commandType: CommandType.StoredProcedure).Result;
-            
-            if (result > 0)
-            {
-                return true;
-            }
 
-            return false;
+            return (result > 0) ? true : false;
         }
 
         public bool PayoutReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
@@ -360,13 +350,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                   conn,
                                   trans);
 
-            if (result > 0)
-            {
-                return true;
-            }
-            return false;
+            return (result > 0) ? true : false;
         }
-        
+
         #endregion
 
         #region YGG
