@@ -2233,7 +2233,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerLC_EVO(TransId);
         }
 
-        public IEnumerable<SettleData> GetUnsettledRewardList_EVO()
+        public IEnumerable<SettledReward_EVO> GetUnsettledRewardList_EVO()
         {
             return settledService.GetUnsettledRewardList_EVO();
         }

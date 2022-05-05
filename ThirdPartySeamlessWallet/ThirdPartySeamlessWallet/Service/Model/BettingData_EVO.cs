@@ -149,6 +149,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime UpdateTime { get; set; }
     }
 
+    public class SettledReward_EVO
+    {
+        public int SQ { get; set; }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
+        public string PromoTransactionId { get; set; }
+        public string userId { get; set; }
+        public decimal PromoTransactionAmount { get; set; }
+        public long CreateTime { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public BettransType TicketType { get; set; }
+    }
+
 
     //public class PromoDebitData_EVO : PromoDataCommon_EVO
     //{

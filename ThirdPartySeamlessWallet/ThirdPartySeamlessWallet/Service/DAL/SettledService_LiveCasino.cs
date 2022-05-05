@@ -3468,9 +3468,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
-        public IEnumerable<SettleData> GetUnsettledRewardList_EVO()
+        public IEnumerable<SettledReward_EVO> GetUnsettledRewardList_EVO()
         {
-            return _mainDbClient.Query<SettleData>("Service_Reward_EVO_Unsettle_Get");
+            return _mainDbClient.Query<SettledReward_EVO>("Service_Reward_EVO_Unsettle_Get");
         }
 
         public int SetRewardSettleFlag_EVO(int sq)

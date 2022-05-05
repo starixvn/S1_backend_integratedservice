@@ -130,6 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleNetent = new Timer(DoSettleNetentWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleRedTiger = new Timer(DoSettleRedTigerWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1229,11 +1230,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             bool forContinue = false;
             bool isError = false;
-            //int thisTp = (int)Tp.EVO;
-            //var gameType = GameType.EVO_LiveCasino;
-            var category = TpCategory.LiveCasino;
-            //string logName = "Settle_EVO_LC";
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
+            string logName = "Settle_Reward_EVO";
+            var tpName = string.Empty;
 
             try
             {
@@ -1244,40 +1242,38 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     forContinue = unsettledList.Count() == 200;
                     foreach (var unsettled in unsettledList)
                     {
-                        string TransId = unsettled.TransId;
-
+                        tpName = Enum.GetName(typeof(Tp), unsettled.TpId);
                         try
                         {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(unsettled.TpId, unsettled.userId);
+                            var tpCurrency = thirdPartyBLL.GetTpCurrency(unsettled.TpId, tpCustInfo.CurrencyId);
                             if (tpCurrency.ExchangeRate > 1)
                             {
-                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                                unsettled.PromoTransactionAmount *= tpCurrency.ExchangeRate;
                             }
-                            decimal winLostAmount = unsettled.WinLostAmount;
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
-                                TpId = thisTp,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
+                                TpId = unsettled.TpId,
+                                GameType = (GameType)unsettled.TpGameType,
+                                TpUserName = unsettled.userId,
                                 Stake = 0,
                                 ValidBet = 0,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.TransId.ToString(),
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
+                                WinlostAmount = unsettled.PromoTransactionAmount,
+                                TransId = unsettled.PromoTransactionId,
+                                SettledTime = unsettled.CreateTime,
+                                TransTime = unsettled.CreateTime,
                                 SettlementType = SettlementType.SettledForValid,
                             };
 
-                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetRewardSettleFlag_EVO(unsettled.TransId);
+                            var tpCategory = unsettled.TpId == (int)Tp.EVO ? TpCategory.LiveCasino : TpCategory.Slots;
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                            settledBLL.SetRewardSettleFlag_EVO(unsettled.SQ);
                         }
-                        catch (Exception ex1)
+                        catch (Exception ex)
                         {
-                            LogContext.PushProperty("TP", tpName);
+                            _logger.LogError($"{logName}：Settle Fail. TpName={tpName}. data={JsonConvert.SerializeObject(unsettled)}. exception={ex.Message}");
                             isError = true;
-                            //log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                         }
 
                     }
@@ -1285,8 +1281,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
             catch (Exception ex)
             {
-                LogContext.PushProperty("TP", tpName);
-                //log2File.Error(ex.ToString(), logName);
+                _logger.LogError($"{logName}：Worker Exception. TpName={tpName}. exception={ex.Message}");
                 isError = true;
             }
             finally
@@ -1302,7 +1297,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerSettleEVO.Change(dueTimeSpan, TimeSpan.Zero);
+                timerSettleRewardEVO.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
         #endregion
