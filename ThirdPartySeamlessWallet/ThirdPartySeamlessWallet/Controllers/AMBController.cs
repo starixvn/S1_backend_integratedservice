@@ -435,8 +435,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/v2/bet")]
-        public async Task<AMBSlotBetResponse> SlotBetAsync(AMBSlotBetRequest request)
+        public async Task<AMBSlotBetResponse> SlotBetAsync()
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<AMBSlotBetRequest>(content);
             return await _AMBBLL.SlotBet(request);
         }
 
@@ -446,8 +449,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/v2/payout")]
-        public async Task<AMBSlotPayoutResponse> SlotPayoutAsync(AMBSlotPayoutRequest request)
+        public async Task<AMBSlotPayoutResponse> SlotPayoutAsync()
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<AMBSlotPayoutRequest>(content);
             return await _AMBBLL.SlotPayout(request);
         }
 
@@ -457,8 +463,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/v2/cancel")]
-        public async Task<AMBSlotCancelResponse> SlotCancelAsync(AMBSlotCancelRequest request)
+        public async Task<AMBSlotCancelResponse> SlotCancelAsync()
         {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<AMBSlotCancelRequest>(content);
             return await _AMBBLL.SlotCancel(request);
         }
 
