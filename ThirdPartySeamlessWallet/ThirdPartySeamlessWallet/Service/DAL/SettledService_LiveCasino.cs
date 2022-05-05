@@ -3470,12 +3470,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledRewardList_EVO()
         {
-            return _mainDbClient.Query<SettleData>("Service_BettransLC_EVO_Unsettle_Get");
+            return _mainDbClient.Query<SettleData>("Service_Reward_EVO_Unsettle_Get");
         }
 
-        public int SetRewardSettleFlag_EVO(string TransId)
+        public int SetRewardSettleFlag_EVO(int sq)
         {
-            return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
+            return _mainDbClient.Execute("Service_Reward_EVO_Settle_Set", parameters: new DynamicParameters(new { _SQ = sq }));
         }
 
         public SettleData GetSettle_TpWagerLC_EVO(string TransId)

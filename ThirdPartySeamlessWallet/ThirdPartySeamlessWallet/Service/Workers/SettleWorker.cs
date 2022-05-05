@@ -1229,15 +1229,15 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             bool forContinue = false;
             bool isError = false;
-            int thisTp = (int)Tp.EVO;
-            var gameType = GameType.EVO_LiveCasino;
+            //int thisTp = (int)Tp.EVO;
+            //var gameType = GameType.EVO_LiveCasino;
             var category = TpCategory.LiveCasino;
             //string logName = "Settle_EVO_LC";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
-                var unsettledList = settledBLL.GetUnsettledList_EVO();
+                var unsettledList = settledBLL.GetUnsettledRewardList_EVO();
 
                 if (unsettledList != null)
                 {
@@ -1271,7 +1271,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             };
 
                             settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_EVO(unsettled.TransId);
+                            settledBLL.SetRewardSettleFlag_EVO(unsettled.TransId);
                         }
                         catch (Exception ex1)
                         {

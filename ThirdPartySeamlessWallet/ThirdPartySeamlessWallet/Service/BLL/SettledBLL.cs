@@ -2233,6 +2233,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerLC_EVO(TransId);
         }
 
+        public IEnumerable<SettleData> GetUnsettledRewardList_EVO()
+        {
+            return settledService.GetUnsettledRewardList_EVO();
+        }
+
+        public int SetRewardSettleFlag_EVO(int sq)
+        {
+            return settledService.SetRewardSettleFlag_EVO(sq);
+        }
+
+
         #endregion
 
         #region Netent
