@@ -177,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 gameId = request.gameId,
                 roundId = request.roundId,
                 amount = Math.Abs(request.amount) * -1,  //Bet為減項
-                roundAmount = string.IsNullOrWhiteSpace(request.roundAmount) ? 0 : Convert.ToDecimal(request.roundAmount),
+                roundAmount = request.roundAmount ?? 0,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
@@ -303,7 +303,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 roundId = request.roundId,
                 amount = Math.Abs(request.amount),
                 turnover = request.turnover,
-                roundAmount = string.IsNullOrWhiteSpace(request.roundAmount) ? 0 : Convert.ToDecimal(request.roundAmount),
+                roundAmount = request.roundAmount ?? 0,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
