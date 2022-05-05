@@ -95,7 +95,7 @@ namespace ThirdPartyService.Service.DAL
         {
             using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
             {
-                return conn.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get", new { WalletType = walletType, SiteId = siteId, CustId = custId }, commandType: CommandType.StoredProcedure);
+                return conn.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get_V2", new { WalletType = walletType, SiteId = siteId, CustId = custId }, commandType: CommandType.StoredProcedure);
             }
         }
         public BonusWallet CheckBonusWallet(int custid, int tpId)
