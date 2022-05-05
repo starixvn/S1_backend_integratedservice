@@ -828,15 +828,19 @@ namespace ThirdPartyService.Service.BLL
                     int betaTpId = item.Id;
                     if (betaTpId == alphaTpId)
                     {
+                        // 判斷是否為進入該款遊戲 是:轉入該款遊戲
                         toTransferGame = true;
                         //continue;
-                    }
-                    if(item.WalletMode == (int)WalletMode.Manual)
-                    {
-                        if (toTransferGame)
+                        
+                        if ((item.WalletMode == (int)WalletMode.Manual) && toTransferGame)
                         {
+                            // 判斷是否手動轉帳遊戲 是:跳過不轉入該款遊戲
                             toTransferGame = false;
                         }
+                    }
+
+                    if (item.WalletMode == (int)WalletMode.Manual)
+                    {
                         msg += $"Skip Manual Transfer Game : {item.Id}\r\n";
                         continue;
                     }
