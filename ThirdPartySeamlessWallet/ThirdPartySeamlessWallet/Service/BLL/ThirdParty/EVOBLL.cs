@@ -33,7 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly SettledService _settledService;
 
         public PromoData_EVO redoRequest;
-
+        public string[] promoTransactionTypeList { get; set; }
         #endregion
 
         #region Constructors
@@ -50,15 +50,88 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
 
+            promoTransactionTypeList = new string[] { "JackpotWin",
+                "FreeRoundPlayableSpent",
+                "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
+                "FromGame", "RtrMonetaryReward" };
         }
 
         #endregion
 
         #region Methods
 
+        public bool CheckRequest(PromoData_EVO request, out EVOStatus status)
+        {
+            status = EVOStatus.OK;
+
+            if (request == null)
+            {
+                _logger.LogError($"CheckRequest Fail: request is null.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.sid))
+            {
+                _logger.LogError($"CheckRequest Fail: request.sid is Invalid.");
+                status = EVOStatus.INVALID_SID;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.userId))
+            {
+                _logger.LogError($"CheckRequest Fail: request.userId is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.currency))
+            {
+                _logger.LogError($"CheckRequest Fail: request.currency is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.uuid))
+            {
+                _logger.LogError($"CheckRequest Fail: request.uuid is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (request.promoTransaction == null)
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.id))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.id is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
+                status = EVOStatus.INVALID_PARAMETER;
+                return false;
+            }
+
+            return true;
+        }
+
         public async Task<StandardResponse> PromoPayout(PromoData_EVO request, int tpId, int tpGameType, string authToken)
         {
-            bool isException = false;
             decimal balance = 0;
             redoRequest = request;
 
