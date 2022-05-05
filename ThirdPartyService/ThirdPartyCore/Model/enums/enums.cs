@@ -29,6 +29,7 @@ namespace ThirdPartyCore.Model.enums
         TransferNotExist = 1204,// Check Transfer
         TransferPending = 1205,// Check Transfer
         TransferWaitManualCheck = 1206,// Check Transfer
+        DecimalOutOfRange = 1207,// 小數超出支援範圍
         // auto transfer (13xxx)
         AutoTransferFail = 1300,
         AutoTransferIsOff = 1301,
@@ -117,6 +118,14 @@ namespace ThirdPartyCore.Model.enums
         Transfer = 0,
         Seamless = 1,
     }
+
+    public enum WalletMode
+    {
+        Seamless = 0,
+        Restore = 1,
+        Manual = 2,
+    }
+
     public enum DataBase
     {
         Main, //ConnectionString
