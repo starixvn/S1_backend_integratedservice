@@ -389,11 +389,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     conn,
                                     trans);
 
-            if (result > 0)
-            {
-                return true;
-            }
-
             return (result > 0) ? true : false;
         }
 
