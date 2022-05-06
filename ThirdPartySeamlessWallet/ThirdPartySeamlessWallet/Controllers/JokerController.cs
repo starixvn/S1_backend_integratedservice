@@ -108,23 +108,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
-        private string GetMD5Signature(string rawData)
-        {
-            using MD5 md5Hash = MD5.Create();
-            string md5Content = GetMd5Hash(md5Hash, rawData);
-            return md5Content;
-        }
-        private string GetMd5Hash(MD5 md5Hash, string rawData)
-        {
-            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-            var sBuilder = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
-            {
-                sBuilder.Append(data[i].ToString("x2"));
-            }
-            return sBuilder.ToString();
-        }
-
         [Route("[controller]/authenticate-token")]
         public AuthenticateTokenRep AuthenticateToken([FromForm] AuthenticateTokenReq authenticateTokenReq)
         {
@@ -719,8 +702,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             //string test = @"{""appid"":""TFEB"",""hash"":""7e3a05a92e9b1a4f8c5d655443440ac1"",""id"":""B-qc3ogwwgx3wzg"",""tournamentid"":""qc3ogwwgx3wzg"",""amount"":""1.20"",""username"":""DNova88_127590"",""timestamp"":""1585853879309"",""extendedinfo"":""{}""}";
             //parameter = JsonConvert.DeserializeObject<Dictionary<string, string>>(test);
             //}
+            var request = JsonConvert.DeserializeObject<JoinAndWinRequest>(JsonConvert.SerializeObject(parameter));
 
-            return await _jokerBll.JoinTournament(parameter);
+            if (!CheckSign(request.appid, request.hash, parameter))
+            {
+                return new JokerResponse
+                {
+                    Status = JokerErrorCode.InvalidSignature,
+                    Message = "Invalid signature"
+                };
+            }
+
+            return await _jokerBll.JoinTournament(request);
         }
 
         /// <summary>
@@ -736,7 +729,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             //parameter = JsonConvert.DeserializeObject<Dictionary<string, string>>(test);
             //}
 
-            return await _jokerBll.WinTournament(parameter);
+            var request = JsonConvert.DeserializeObject<JoinAndWinRequest>(JsonConvert.SerializeObject(parameter));
+
+            if (!CheckSign(request.appid, request.hash, parameter))
+            {
+                return new JokerResponse
+                {
+                    Status = JokerErrorCode.InvalidSignature,
+                    Message = "Invalid signature"
+                };
+            }
+
+            return await _jokerBll.WinTournament(request);
         }
 
         /// <summary>
@@ -744,7 +748,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/cancel-join-tournament")]
-        public async Task<JokerResponse> CancelJoinTournamentAsync([FromForm] Dictionary<string, string> parameter)
+        public async Task<JokerResponse> CancelTournamentAsync([FromForm] Dictionary<string, string> parameter)
         {
             //if (environment.IsDevelopment())
             //{
@@ -752,10 +756,39 @@ namespace ThirdPartySeamlessWallet.Controllers
             //parameter = JsonConvert.DeserializeObject<Dictionary<string, string>>(test);
             //}
 
-            return await _jokerBll.CancelJoinTournament(parameter);
+            var request = JsonConvert.DeserializeObject<CancelRequest>(JsonConvert.SerializeObject(parameter));
+
+            if (!CheckSign(request.appid, request.hash, parameter))
+            {
+                return new JokerResponse
+                {
+                    Status = JokerErrorCode.InvalidSignature,
+                    Message = "Invalid signature"
+                };
+            }
+
+            return await _jokerBll.CancelTournament(request);
         }
 
         #endregion
+
+        #region Private Methods
+        private string GetMD5Signature(string rawData)
+        {
+            using MD5 md5Hash = MD5.Create();
+            string md5Content = GetMd5Hash(md5Hash, rawData);
+            return md5Content;
+        }
+        private string GetMd5Hash(MD5 md5Hash, string rawData)
+        {
+            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            var sBuilder = new StringBuilder();
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+            return sBuilder.ToString();
+        }
 
         private Rep FishBet(JokerFishTransType transType, Dictionary<string, string> parameter)
         {
@@ -904,5 +937,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return (null, null);
             }
         }
+
+        #endregion
     }
 }

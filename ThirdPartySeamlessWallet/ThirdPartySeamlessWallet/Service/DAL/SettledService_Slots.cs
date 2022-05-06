@@ -316,19 +316,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public bool CancelReward_Joker(int sq, MySqlTransaction trans)
+        public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
         {
-            var param = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
-            var result = _mainDbClient.QueryFirstAsync<int>("Service_RewardRNG_Joker_Set", trans, new DynamicParameters(param)).Result;
-            if (result == 0)
-            {
-                return false;
-            }
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
 
-            return true;
+            return (result == 0) ? false : true;
         }
 
-        public bool SetBalance_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+        public bool CancelUpdateReward_Joker(int sq, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var param = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Cancel_Set", new DynamicParameters(param), trans, commandType: CommandType.StoredProcedure).Result;
+
+            return (result > 0) ? true : false;
+        }
+
+        public bool PayoutReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
             TransType transType, string memo,
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -347,12 +350,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                   conn,
                                   trans);
 
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
+            return (result > 0) ? true : false;
         }
+
         #endregion
 
         #region YGG

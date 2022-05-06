@@ -352,25 +352,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-
-        public IEnumerable<RewardRNG_Joker> IsExistReward_Joker(bool isCancel,RewardRNG_Joker data)
+        public IEnumerable<RewardRNG_Joker> GetRewardRNG_Joker(bool isCancel, RewardRNG_Joker data)
         {
-            var query = new { IsCancel= isCancel, username = data.username, id = data.id, tournamentid = data.tournamentid, FromAPIType = data.FromAPIType };
-            return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Check", CommandType.StoredProcedure, new DynamicParameters(query));
-        }
-
-        public bool PlaceReward_Joker(RewardRNG_Joker data, MySqlTransaction trans)
-        {
-            var result = _mainDbClient.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", trans, new DynamicParameters(data)).Result;
-            if (result == 0)
+            if (isCancel)
             {
-                return false;
+                var query = new { username = data.username, tournamentid = data.tournamentid, FromAPIType = data.FromAPIType };
+                return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Cancel_Check", CommandType.StoredProcedure, new DynamicParameters(query));
             }
-            return true;
+            else
+            {
+                var query = new { username = data.username, id = data.id, FromAPIType = data.FromAPIType };
+                return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Check", CommandType.StoredProcedure, new DynamicParameters(query));
+            }
         }
 
-        public bool SetBalance_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
-          out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
+
+            return (result == 0) ? false : true;
+        }
+
+        public bool PlaceBetReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+               out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = PlaceBetV2(tpCustInfo,
                                     data.amount,
@@ -385,14 +389,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     conn,
                                     trans);
 
-            if (result <= 0)
-            {
-                return false;
-            }
-
-            return true;
+            return (result > 0) ? true : false;
         }
-
 
         #endregion
 
