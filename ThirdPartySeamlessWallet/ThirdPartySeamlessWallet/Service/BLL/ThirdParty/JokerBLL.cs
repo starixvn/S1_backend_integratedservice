@@ -627,7 +627,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _logger.LogError($"GetBalance Fail:{message}");
                     return false;
                 }
-
+                balance = result.Balance;
                 return true;
             }
             catch (Exception ex)
