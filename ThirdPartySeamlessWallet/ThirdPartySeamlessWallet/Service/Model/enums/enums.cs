@@ -255,4 +255,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         TpCategory,
         TpId,
     }
+    
+    public enum WalletType
+    {
+        TransferWallet = 0,
+        SeamlessWallet = 1
+    }
 }
