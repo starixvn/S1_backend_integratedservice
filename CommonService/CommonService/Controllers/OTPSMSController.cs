@@ -35,7 +35,7 @@ namespace CommonService.Controllers
             this.supportOTPConfig = supportOTPConfig;
             perCurrency = new Dictionary<int, string>()
             {
-              {2,"MYR" },{4,"THB" },{13,"RMB" },{15,"IDR" },{61,"INR" },{51,"VND" },{96,"USDT" }
+              {2,"MYR" },{4,"THB" },{13,"CNY" },{15,"IDR" },{61,"INR" },{51,"VND" },{96,"USDT" }
             };
         }
         private string GetSupportOTP(CustInfoProfile custInfo) //"Movider","SkyLine","NxCloud"
