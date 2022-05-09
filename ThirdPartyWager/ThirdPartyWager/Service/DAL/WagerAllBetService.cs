@@ -15,16 +15,32 @@ namespace ThirdPartyWager.Service.DAL
     {
         private readonly MySqlClient _wagerDbClient;
         private readonly MySqlClient _mainDbClient;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public WagerAllBetService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
         public bool InsertWager(BetAllBet bet)
         {
-            return _wagerDbClient.Execute("Service_TpWagerAllBet_Ins", new DynamicParameters(bet));
+            var parameters = new DynamicParameters(bet);
+            //將新api回傳欄位對應回舊的table欄位
+            parameters.AddDynamicParams(new
+            {
+                client = bet.player,
+                winOrLoss = bet.winOrLossAmount,
+                state = bet.status,
+                depositAmount = bet.deposit
+            });
+            var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins_V2", parameters);
+            if (result)
+            {
+                _tpUnsettleService.InsertTpUnsettle(Tp.Allbet, GameType.Allbet_LiveCasino, bet.betNum.ToString());
+            }
+            return result;  
         }
 
         public WagerAllBetTotal GetWagerTotal(long beginTime, long endTime)

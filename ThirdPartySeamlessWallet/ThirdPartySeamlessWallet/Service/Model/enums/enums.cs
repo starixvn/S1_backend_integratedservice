@@ -171,6 +171,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         ConfirmReserve = 9,
         EndRound = 10, //回合結束
     }
+    
+    [Description ("是否允許餘額變負值")]
     public enum AllowNegative
     {
         Allow = 1,
