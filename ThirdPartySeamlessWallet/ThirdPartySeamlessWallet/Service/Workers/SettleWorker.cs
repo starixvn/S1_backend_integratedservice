@@ -60,6 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleMP;
         private Timer timerSettleSexy;
         private Timer timerSettleEVO;
+        private Timer timerSettleRewardEVO;
         private Timer timerSettleNetent;
         private Timer timerSettleRedTiger;
 
@@ -120,6 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleNetent = new Timer(DoSettleNetentWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleRedTiger = new Timer(DoSettleRedTigerWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -1042,6 +1044,80 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
+        private void DoSettleRewardEVOWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            string logName = "Settle_Reward_EVO";
+            var tpName = string.Empty;
+
+            try
+            {
+                var unsettledList = settledBLL.GetUnsettledRewardList_EVO();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        tpName = Enum.GetName(typeof(Tp), unsettled.TpId);
+                        try
+                        {
+                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(unsettled.TpId, unsettled.userId);
+                            var tpCurrency = thirdPartyBLL.GetTpCurrency(unsettled.TpId, tpCustInfo.CurrencyId);
+                            if (tpCurrency.ExchangeRate > 1)
+                            {
+                                unsettled.PromoTransactionAmount *= tpCurrency.ExchangeRate;
+                            }
+
+                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = unsettled.TpId,
+                                GameType = (GameType)unsettled.TpGameType,
+                                TpUserName = unsettled.userId,
+                                Stake = 0,
+                                ValidBet = 0,
+                                WinlostAmount = unsettled.PromoTransactionAmount,
+                                TransId = unsettled.PromoTransactionId,
+                                SettledTime = unsettled.CreateTime,
+                                TransTime = unsettled.CreateTime,
+                                SettlementType = SettlementType.SettledForValid,
+                            };
+
+                            var tpCategory = unsettled.TpId == (int)Tp.EVO ? TpCategory.LiveCasino : TpCategory.Slots;
+                            settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                            settledBLL.SetRewardSettleFlag_EVO(unsettled.SQ);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"{logName}：Settle Fail. TpName={tpName}. data={JsonConvert.SerializeObject(unsettled)}. exception={ex.Message}");
+                            isError = true;
+                        }
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{logName}：Worker Exception. TpName={tpName}. exception={ex.Message}");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timerSettleRewardEVO.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
         #endregion
 
         public override Task StopAsync(CancellationToken cancellationToken)

@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -22,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Game_EVO
     {
         public string id { get; set; }
@@ -29,11 +33,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public Details_EVO details { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Details_EVO
     {
         public Table_EVO table { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Table_EVO
     {
         public string id { get; set; }
@@ -45,7 +51,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string sid { get; set; }
         public string userId { get; set; }
         public string currency { get; set; }
-        public Game_EVO game { get; set; }
+        public Game_EVO? game { get; set; }
         public string uuid { get; set; }
     }
 
@@ -67,8 +73,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string voucherId { get; set; }
         public decimal playableBalance { get; set; }
         public int remainingRounds { get; set; }
+        public string bonusConfigId { get; set; }
+        public string rewardId { get; set; }
     }
-
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Jackpot_EVO
     {
         public string id { get; set; }
@@ -83,6 +91,77 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
+
+    #region Response Model
+
+    public class CommonResponse
+    {
+        public string status { get; set; }
+        public string uuid { get; set; }
+    }
+    /// <summary>
+    /// CheckUserResponse(Check、Sid)
+    /// </summary>
+    public class CheckUserResponse : CommonResponse
+    {
+        public string sid { get; set; }
+    }
+
+    /// <summary>
+    /// StandardResponse(Balance、Debit、Credit、Cancel、PromoPayout)
+    /// </summary>
+    public class StandardResponse : CommonResponse
+    {
+        public decimal balance { get; set; }
+        public decimal bonus { get; set; }
+        public bool retransmission { get; set; }
+    }
+
+    #endregion
+
+    public class Reward_EVO
+    {
+        public int SQ { get; set; }
+        public string userId { get; set; }
+        public string currency { get; set; }
+        public string? game { get; set; }
+        public string? promoTransaction { get; set; }
+        public string uuid { get; set; }
+        public string? GameId { get; set; }
+        public string? GameType { get; set; }
+        public string? TableId { get; set; }
+        public string? TableVId { get; set; }
+        public string PromoTransactionType { get; set; }
+        public string PromoTransactionId { get; set; }
+        public decimal PromoTransactionAmount { get; set; }
+        public string? PromoTransactionVoucherId { get; set; }
+        public int? PromoTransactionRemainingRounds { get; set; }
+        public decimal? PromoTransactionPlayableBalance { get; set; }
+        public string? PromoTransactionBonusConfigId { get; set; }
+        public string? PromoTransactionRewardId { get; set; }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
+        public PaidFromEnum PaidFrom { get; set; }
+        public BettransType TicketType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public SettleFlag SettleFlag { get; set; }
+        public DateTime CreateTime { get; set; }
+        public DateTime UpdateTime { get; set; }
+    }
+
+    public class SettledReward_EVO
+    {
+        public int SQ { get; set; }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
+        public string PromoTransactionId { get; set; }
+        public string userId { get; set; }
+        public decimal PromoTransactionAmount { get; set; }
+        public long CreateTime { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public BettransType TicketType { get; set; }
+    }
+
 
     //public class PromoDebitData_EVO : PromoDataCommon_EVO
     //{

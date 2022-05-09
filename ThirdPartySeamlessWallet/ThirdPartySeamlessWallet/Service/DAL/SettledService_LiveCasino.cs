@@ -3152,9 +3152,60 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
+        public IEnumerable<SettledReward_EVO> GetUnsettledRewardList_EVO()
+        {
+            return _mainDbClient.Query<SettledReward_EVO>("Service_Reward_EVO_Unsettle_Get");
+        }
+
+        public int SetRewardSettleFlag_EVO(int sq)
+        {
+            return _mainDbClient.Execute("Service_Reward_EVO_Settle_Set", parameters: new DynamicParameters(new { _SQ = sq }));
+        }
+
         public SettleData GetSettle_TpWagerLC_EVO(string TransId)
         {
             return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerLC_EVO_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
+        public bool PromoPayout_EVO(Reward_EVO data, MySqlTransaction trans)
+        {
+            var result = _mainDbClient.QueryFirstAsync<int>("Service_Reward_EVO_Ins", trans, new DynamicParameters(data)).Result;
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetPromoPayout_EVO(TpCustInfo tpCustInfo, Reward_EVO data, TpCategory tpCategory,
+                                   TransType transType, string memo,
+                                   out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.PromoTransactionAmount,
+                data.TpId,
+                data.PromoTransactionId,
+                data.TpGameType,
+                tpCategory,
+                data.PromoTransactionId,
+                transType,
+                null,
+                out afterAmount,
+                memo,
+                out bonusId,
+                conn,
+                trans
+            );
+
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         #endregion
