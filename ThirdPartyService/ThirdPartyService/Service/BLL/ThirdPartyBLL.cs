@@ -1364,6 +1364,7 @@ namespace ThirdPartyService.Service.BLL
         {
             execute = true;
             skip = true;
+            amount = Math.Truncate(amount);
 
             if (exchangeRate != 0)
             {
