@@ -38,6 +38,7 @@
 
     public enum GameType
     {
+        Allbet_LiveCasino = 6,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
         One789_Lottery = 35,
@@ -45,6 +46,8 @@
         One789_LiveCasino = 37,
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
+        SG_RNG = 15,
+        SG_Fish = 31,
     }
 
     public enum DataBase

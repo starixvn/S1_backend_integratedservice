@@ -56,7 +56,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int MoneyOutPK_MP(TransferData_MP transferData_MP, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.MP, transferData_MP.player);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.MP, transferData_MP.playerId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.MP, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)

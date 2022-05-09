@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string orderId { get; set; }
             public string roundId { get; set; }
             public string gameNo { get; set; }
+            public string playerId { get; set; }
         }
 
         #endregion
@@ -129,10 +130,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             string account = check.account;
-            string[] acc = account.Split('_');
-            string player = acc[1];
+            string playerId = check.playerId;
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, player);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, playerId);
             if (tpCustBalance != null)
             {
                 Response.StatusCode = (int)Error.OK;
@@ -191,7 +191,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, transfer.player).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, transfer.playerId).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.player);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.playerId);
 
                     Response.StatusCode = (int)Error.INVALID_DATA;
                     var Param = new
@@ -283,7 +283,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, transfer.player).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, transfer.playerId).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.player);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.playerId);
 
                     Response.StatusCode = (int)Error.INVALID_DATA;
                     var Param = new
@@ -376,7 +376,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.player).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)Tp.MP, transfer.playerId).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
@@ -394,7 +394,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.player);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.playerId);
 
                     Response.StatusCode = (int)Error.INVALID_DATA;
                     var Param = new
@@ -439,6 +439,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var orderId = jsonParsedArray["orderId"]?.ToString();
                 var roundId = jsonParsedArray["roundId"]?.ToString();
                 var gameNo = jsonParsedArray["gameNo"]?.ToString();
+                var playerId = jsonParsedArray["playerId"]?.ToString();
 
                 if (string.IsNullOrEmpty(channelId) || channelId != agent)
                 {
@@ -460,12 +461,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
 
-                string[] acc = account.Split('_');
-                string player = acc[1];
-
                 if (checkOnline)
                 {
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, player);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, playerId);
                     if (tpCheck == null || tpCheck.Locked)
                     {
                         var Param = new
@@ -504,6 +502,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 resp.roundId = roundId;
                 resp.gameNo = gameNo;
                 resp.orderId = orderId;
+                resp.playerId = playerId;
                 _logger.LogInformation($"Request Check: {JsonConvert.SerializeObject(resp)}");
                 return resp;
             }

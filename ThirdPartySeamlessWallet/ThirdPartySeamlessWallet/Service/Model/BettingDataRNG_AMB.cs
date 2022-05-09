@@ -157,7 +157,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string timestamp { get; set; }
 
         //The following don't refer from TP Doc. but exit when testing in tp UAT.
-        public decimal roundAmount { get; set; }
+        public decimal? roundAmount { get; set; } //Tp maybe send "", so can't define to decimal
         public string type { get; set; }
         public string tranId { get; set; }
     }

@@ -12,5 +12,6 @@ namespace ThirdPartyService.Service.Model
         public string Setting { set; get; }
         public int Status { set; get; }
         public int WalletType { set; get; }
+        public int WalletMode { set; get; }
     }
 }
