@@ -2,6 +2,7 @@
 
 namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
+
     public enum EVOStatus
     {
         OK,

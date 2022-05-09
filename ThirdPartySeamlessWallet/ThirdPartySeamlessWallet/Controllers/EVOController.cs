@@ -773,7 +773,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            return await _EVOBLL.PromoPayout(request, tokenInfo.tpId, tokenInfo.gameType, authToken);
+            return await _EVOBLL.PromoPayout(request, tokenInfo.tpId, tokenInfo.gameType);
         }
 
         [HttpPost]

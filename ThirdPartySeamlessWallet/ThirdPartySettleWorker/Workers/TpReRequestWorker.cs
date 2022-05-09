@@ -92,9 +92,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             var tokenInfoPromoPayout = getTokenInfo(reqPromoPayout.sid);
                             var gameTypePromoPayout = tokenInfoPromoPayout.gameType;
 
-                            var redoResult = _EVOBLL.PromoPayout(reqPromoPayout, tokenInfoPromoPayout.tpId, tokenInfoPromoPayout.gameType).Status;
+                            var redoResult = _EVOBLL.PromoPayout(reqPromoPayout, tokenInfoPromoPayout.tpId, tokenInfoPromoPayout.gameType);
 
-                            result = redoResult != EVOStatus.OK ? 0 : 1;
+                            var redoStatus = redoResult.Result.GetType().GetProperty("status").GetValue(redoResult.Result);
+                            result = redoStatus.ToString() != EVOStatus.OK.ToString() ? 0 : 1;
                             break;
 
                     }

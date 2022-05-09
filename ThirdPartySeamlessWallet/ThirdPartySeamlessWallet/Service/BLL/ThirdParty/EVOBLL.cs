@@ -130,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return true;
         }
 
-        public async Task<StandardResponse> PromoPayout(PromoData_EVO request, int tpId, int tpGameType, string authToken)
+        public async Task<StandardResponse> PromoPayout(PromoData_EVO request, int tpId, int tpGameType)
         {
             decimal balance = 0;
             redoRequest = request;
