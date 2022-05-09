@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.DAL
                 depositAmount = bet.deposit
             });
             var result = _wagerDbClient.Execute("Service_TpWagerAllBet_Ins_V2", parameters);
-            if (result)
+            if (result && bet.status == 111)
             {
                 _tpUnsettleService.InsertTpUnsettle(Tp.Allbet, GameType.Allbet_LiveCasino, bet.betNum.ToString());
             }

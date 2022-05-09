@@ -60,7 +60,7 @@ namespace ThirdPartySettleWorker.Workers
 
             var gameType = (GameType)state;
             var tpCategory = TpCategory.LiveCasino;
-            var logName = $"Settle_SG_Fish";
+            var logName = $"Settle_AllBet";
             var getSP = $"Service_TpWagerAllBet_Settle_Get_V2";
             var setSP = $"Service_TpWagerAllBet_Settle_Set_V2";       
             var checkSP = $"Service_BettransLC_Allbet_Settle_Get";
