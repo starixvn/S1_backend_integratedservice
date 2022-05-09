@@ -529,7 +529,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-
         public void Info(string InfoContent, string PrefixName)
         {
             var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";

@@ -121,7 +121,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                         }
 
-                        if (Losses != 0 && bonusId > 0)
+                        if (bonusId > 0)
                         {
                             AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
                             //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
@@ -143,7 +143,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                                     "Settled", bonusId, betRecord.TransId, conn, trans);
                             }
 
-                            if (Losses != 0 && bonusId > 0)
+                            if (bonusId > 0)
                             {
                                 AutoCancelBonus(bonusId, betRecord.TransId, conn, trans);
                                 //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);

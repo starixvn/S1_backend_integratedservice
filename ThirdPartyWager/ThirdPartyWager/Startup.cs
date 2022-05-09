@@ -190,7 +190,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
-            services.AddHostedService<LatestHighlightVideo>();
+            // services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
             services.AddHostedService<WagerMG>();
