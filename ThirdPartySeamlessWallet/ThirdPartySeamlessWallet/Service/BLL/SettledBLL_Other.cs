@@ -277,7 +277,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region BTI
         
-        public IEnumerable<SettleData> GetUnsettledListBTI()
+        public IEnumerable<BTISettleData> GetUnsettledListBTI()
         {
             return settledService.GetUnsettledList_BTI();
         }
