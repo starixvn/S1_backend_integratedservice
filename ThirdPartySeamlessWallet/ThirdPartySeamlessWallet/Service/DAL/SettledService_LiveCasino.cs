@@ -1736,6 +1736,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    conn.Execute("Service_BettransLC_EBet_ReSettle_Set", new { TransId = mixUniqueId }, transaction: trans, commandType: CommandType.StoredProcedure);
                     trans.Commit();
                 }
             }
@@ -1787,6 +1788,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    conn.Execute("Service_BettransLC_EBet_ReSettle_Set", new { TransId = mixUniqueId }, transaction: trans, commandType: CommandType.StoredProcedure);
                     trans.Commit();
                 }
             }
@@ -1900,7 +1902,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V3", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_EBet(string TransId)

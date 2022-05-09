@@ -384,7 +384,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 TransTime = unsettled.TransTime / 1000,
                                 SettlementType = SettlementType.SettledForValid
                             };
-
+                            // check refund
+                            if (unsettled.TicketStatus > 0)
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Refund;
+                            }
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                             Task.Run(() =>
