@@ -27,7 +27,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 if (unsettledList != null)
                 {
                     forContinue = unsettledList.Count() == 200;
-                    var spName = "Service_BettransSports_BTI_Settle_Set";
                     foreach (var unsettled in unsettledList)
                     {
                         try
@@ -39,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 Stake = unsettled.Stake,
                                 ValidBet = unsettled.ValidBet,
                                 WinlostAmount = unsettled.WinLostAmount,
-                                TransId = unsettled.TransId,
+                                TransId = unsettled.BetID,
                                 GameType = GameType.BTI_Sports,
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
