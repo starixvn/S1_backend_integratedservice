@@ -45,8 +45,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleYLFish;
         private Timer timerSettleN2Live;
         private Timer timerSettleN2LiveLC_Smart;
-        private Timer timerSettlePTRng;
-        private Timer timerSettlePTLC;
         private Timer timerSettleBTI;
         private Timer timerSettlePPRng;
         private Timer timerSettlePPLC;
@@ -107,8 +105,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleYLFish = new Timer(DoSettleYLFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettlePTRng = new Timer(DoSettlePTRngWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettlePTLC = new Timer(DoSettlePTLCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -779,101 +775,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             }
         }
 
-        private void DoSettlePTLCWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.PT;
-            var gameType = GameType.PT_LiveCasino;
-            var category = TpCategory.LiveCasino;
-            string logName = "Settle_PT_LC";
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
-
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListLC_PT();
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-                            var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-                            if (tpCurrency.ExchangeRate > 0)
-                            {
-                                unsettled.Stake *= tpCurrency.ExchangeRate;
-                                unsettled.ValidBet *= tpCurrency.ExchangeRate;
-                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
-                                unsettled.ProgressiveBet *= tpCurrency.ExchangeRate;
-                                unsettled.ProgressiveWin *= tpCurrency.ExchangeRate;
-                            }
-
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                WinlostAmount = winLostAmount,
-                                ProgressiveBet = unsettled.ProgressiveBet,
-                                ProgressiveWin = unsettled.ProgressiveWin,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
-                            };
-
-
-                            if (stake == 0 && validBet == 0 && winLostAmount == 0)
-                            {
-                                settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
-                            }
-                            else
-                            {
-                                settledBLL.Settled(tpCustInfo, betRecordInfo, PromotionCategory.PTLiveCasino);
-                                settledBLL.SetSettleFlag_TpWagerLC_PT(long.Parse(unsettled.TransId));
-                            }
-                        }
-                        catch (Exception ex1)
-                        {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", tpName);
-                log2File.Error(ex.ToString(), logName);
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-
-                timerSettlePTLC.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
         private void DoSettleSexyWork(object state)
         {
             bool forContinue = false;
@@ -1072,8 +973,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleYLFish?.Change(Timeout.Infinite, 0);
             timerSettleN2Live?.Change(Timeout.Infinite, 0);
             timerSettleN2LiveLC_Smart?.Change(Timeout.Infinite, 0);
-            timerSettlePTRng?.Change(Timeout.Infinite, 0);
-            timerSettlePTLC?.Change(Timeout.Infinite, 0);
             timerSettleBTI?.Change(Timeout.Infinite, 0);
             timerSettlePPRng?.Change(Timeout.Infinite, 0);
             timerSettlePPLC?.Change(Timeout.Infinite, 0);
