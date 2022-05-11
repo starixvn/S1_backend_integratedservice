@@ -183,6 +183,9 @@ namespace ThirdParty.RedTiger
 
             var CreateTime = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
 
+            if (CreateTime == null)
+                CreateTime = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
+
             var BetDetail = new
             {
                 startDate = CreateTime,

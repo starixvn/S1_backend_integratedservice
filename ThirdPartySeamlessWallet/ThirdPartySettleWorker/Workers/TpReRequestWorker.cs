@@ -25,7 +25,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private readonly ILogger<TpReRequestWorker> _logger;
         private Timer _evoTimer;
         private Timer _ppTimer;
-        private readonly IEVOBLL _EVOBLL;
 
         public TpReRequestWorker(IServiceProvider provider)
         {
@@ -35,7 +34,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBll = provider.GetRequiredService<SettledBLL>();
             _logger = provider.GetRequiredService<ILogger<TpReRequestWorker>>();
-            _EVOBLL = provider.GetService<IEVOBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -92,12 +90,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             var tokenInfoPromoPayout = getTokenInfo(reqPromoPayout.sid);
                             var gameTypePromoPayout = tokenInfoPromoPayout.gameType;
 
-                            var redoResult = _EVOBLL.PromoPayout(reqPromoPayout, tokenInfoPromoPayout.tpId, tokenInfoPromoPayout.gameType);
+                            result = gameTypePromoPayout switch
+                            {
+                                (int)GameType.Netent_RNG => _settledBll.PromoPayoutRNG_Netent(reqPromoPayout, out _),
+                                (int)GameType.RedTiger_RNG => _settledBll.PromoPayoutRNG_RedTiger(reqPromoPayout, out _),
+                                _ => _settledBll.PromoPayoutLC_EVO(reqPromoPayout, out _),
+                            };
 
-                            var redoStatus = redoResult.Result.GetType().GetProperty("status").GetValue(redoResult.Result);
-                            result = redoStatus.ToString() != EVOStatus.OK.ToString() ? 0 : 1;
                             break;
-
                     }
 
                     if (result > 0 || result == -1)

@@ -2627,20 +2627,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V2",
-                    new {cancelDataRng_MG.betId}, transaction: trans, commandType: CommandType.StoredProcedure);
+                    new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
                 // 不存在有效下注
                 if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
                     logger.LogError($"No valid bet {cancelDataRng_MG.betId}");
-                    return new MGCancelResult() {Result = 1};
+                    return new MGCancelResult() { Result = 1 };
                 }
 
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
                 {
                     logger.LogError($"{cancelDataRng_MG.betId} is completed");
-                    return new MGCancelResult() {Result = 1};
+                    return new MGCancelResult() { Result = 1 };
                 }
 
                 var bet = bettrans.FirstOrDefault();
@@ -2652,10 +2652,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 //已取消
-                if (bettrans.Any(a=> a.TxnId == cancelDataRng_MG.txnId && a.TicketType == (int)BettransType.CancelBet))
+                if (bettrans.Any(a => a.TxnId == cancelDataRng_MG.txnId && a.TicketType == (int)BettransType.CancelBet))
                 {
                     logger.LogError($"betId:{cancelDataRng_MG.betId}, txnId:{cancelDataRng_MG.txnId} is canceled");
-                    return new MGCancelResult() {Result = 1};
+                    return new MGCancelResult() { Result = 1 };
                 }
 
                 var result = conn.Execute("Service_BettransRng_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
@@ -2718,7 +2718,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            
+
             var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V2", p, commandType: CommandType.StoredProcedure);
             if (slot != null)
             {
@@ -2728,7 +2728,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             long unixTimestamp = tools.GetUnixTimestampByTicks(creationTime);
             var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
-            
+
             var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", p);
             if (live.Any())
             {
@@ -3355,7 +3355,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int PromoPayoutRNG_Netent(TpCustInfo tpCustInfo, PromoData_EVO promoData_EVO, out decimal afterAmount)
+        public int PromoPayoutRNG_Netent(TpCustInfo tpCustInfo, Reward_EVO data, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
@@ -3364,62 +3364,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                //var p = new DynamicParameters(new
-                //{
-                //    PromoTransactionId = promoData_EVO.promoTransaction.id,
-                //    userId = promoData_EVO.userId,
-                //    currency = promoData_EVO.currency,
-                //    amount = promoData_EVO.promoTransaction.amount,
-                //    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
-                //    game = JsonConvert.SerializeObject(promoData_EVO.game),
-                //    TicketType = (int)BettransType.Payout,
-                //    TicketStatus = (int)TicketStatus.Win,
-                //    SettleFlag = (int)SettleFlag.EndGame
-                //});
-
-                //result = conn.Execute("Service_RewardRng_Netent_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                var p = new DynamicParameters(new
-                {
-                    TransactionId = promoData_EVO.promoTransaction.id,
-                    TransactionRefId = promoData_EVO.promoTransaction.id,
-                    userId = promoData_EVO.userId,
-                    uuid = promoData_EVO.uuid,
-                    currency = promoData_EVO.currency,
-                    amount = promoData_EVO.promoTransaction.amount,
-                    transaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
-                    game = JsonConvert.SerializeObject(promoData_EVO.game),
-                    GameId = promoData_EVO.game?.id,
-                    GameType = promoData_EVO.game?.type,
-                    GameDetailsId = promoData_EVO.game?.details.table.id,
-                    SiteId = tpCustInfo.SiteId,
-                    CustId = tpCustInfo.CustId,
-                    CurrencyId = tpCustInfo.CurrencyId,
-                    TicketType = (int)BettransType.Payout,
-                    TicketStatus = (int)TicketStatus.Win,
-                    SettleFlag = (int)SettleFlag.EndGame
-                });
-
-                result = conn.Execute("Service_BettransRng_Netent_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.QueryFirstAsync<int>("Service_Reward_EVO_Ins", trans, new DynamicParameters(data)).Result;
 
                 if (result > 0)
                 {
                     int bonusId = 0;
 
-                    if (promoData_EVO.promoTransaction.amount != 0)
+                    if (data.PromoTransactionAmount != 0)
                     {
                         result = PayoutV2(
                             tpCustInfo,
-                            Math.Abs(promoData_EVO.promoTransaction.amount),
+                            Math.Abs(data.PromoTransactionAmount),
                             (int)Tp.Netent,
-                            promoData_EVO.promoTransaction.id,
+                            data.PromoTransactionId,
                             (int)GameType.Netent_RNG,
                             TpCategory.Slots,
-                            promoData_EVO.promoTransaction.id,
+                            data.PromoTransactionId,
                             TransType.Prize,
                             null,
                             out afterAmount,
-                            $"{promoData_EVO.promoTransaction.id} Prize",
+                            $"{data.PromoTransactionId} Prize",
                             out bonusId,
                             conn,
                             trans
@@ -3431,6 +3395,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans.Commit();
                     }
                 }
+                trans.Rollback();
             }
             catch (MySqlException mySqlEx)
             {
@@ -3623,7 +3588,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int PromoPayoutRNG_RedTiger(TpCustInfo tpCustInfo, PromoData_EVO promoData_EVO, out decimal afterAmount)
+        public int PromoPayoutRNG_RedTiger(TpCustInfo tpCustInfo, Reward_EVO data, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
@@ -3632,61 +3597,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                //var p = new DynamicParameters(new
-                //{
-                //    PromoTransactionId = promoData_EVO.promoTransaction.id,
-                //    userId = promoData_EVO.userId,
-                //    currency = promoData_EVO.currency,
-                //    amount = promoData_EVO.promoTransaction.amount,
-                //    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
-                //    game = JsonConvert.SerializeObject(promoData_EVO.game),
-                //    TicketType = (int)BettransType.Payout,
-                //    TicketStatus = (int)TicketStatus.Win,
-                //    SettleFlag = (int)SettleFlag.EndGame
-                //});
-                //result = conn.Execute("Service_RewardRng_RedTiger_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                var p = new DynamicParameters(new
-                {
-                    TransactionId = promoData_EVO.promoTransaction.id,
-                    TransactionRefId = promoData_EVO.promoTransaction.id,
-                    userId = promoData_EVO.userId,
-                    uuid = promoData_EVO.uuid,
-                    currency = promoData_EVO.currency,
-                    amount = promoData_EVO.promoTransaction.amount,
-                    transaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
-                    game = JsonConvert.SerializeObject(promoData_EVO.game),
-                    GameId = promoData_EVO.game?.id,
-                    GameType = promoData_EVO.game?.type,
-                    GameDetailsId = promoData_EVO.game?.details.table.id,
-                    SiteId = tpCustInfo.SiteId,
-                    CustId = tpCustInfo.CustId,
-                    CurrencyId = tpCustInfo.CurrencyId,
-                    TicketType = (int)BettransType.Payout,
-                    TicketStatus = (int)TicketStatus.Win,
-                    SettleFlag = (int)SettleFlag.EndGame
-                });
-
-                result = conn.Execute("Service_BettransRng_RedTiger_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.QueryFirstAsync<int>("Service_Reward_EVO_Ins", trans, new DynamicParameters(data)).Result;
 
                 if (result > 0)
                 {
                     int bonusId = 0;
 
-                    if (promoData_EVO.promoTransaction.amount != 0)
+                    if (data.PromoTransactionAmount != 0)
                     {
                         result = PayoutV2(
                             tpCustInfo,
-                            Math.Abs(promoData_EVO.promoTransaction.amount),
+                            Math.Abs(data.PromoTransactionAmount),
                             (int)Tp.RedTiger,
-                            promoData_EVO.promoTransaction.id,
+                            data.PromoTransactionId,
                             (int)GameType.RedTiger_RNG,
                             TpCategory.Slots,
-                            promoData_EVO.promoTransaction.id,
+                            data.PromoTransactionId,
                             TransType.Prize,
                             null,
                             out afterAmount,
-                            $"{promoData_EVO.promoTransaction.id} Prize",
+                            $"{data.PromoTransactionId} Prize",
                             out bonusId,
                             conn,
                             trans
@@ -3710,7 +3640,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw;
                 }
             }
-
             return result;
         }
 
@@ -3895,7 +3824,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 payoutRngDto.TicketStatus = (int)TicketStatus.Win;
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_HB_Ins", payoutRngDto, trans);
                 var transType = payoutRngDto.isbonus ? TransType.Prize : TransType.Payout;
-                
+
                 var roundId = payoutRngDto.friendlygameinstanceid.ToString();
                 if (result > 0 && payoutRngDto.amount != 0)
                 {
@@ -3995,9 +3924,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PayoutV2(
                         tpCustInfo,
                         cancelBetRngDto.Amount,
-                        (int) Tp.HB,
+                        (int)Tp.HB,
                         cancelBetRngDto.BetId,
-                        (int) GameType.HB_RNG,
+                        (int)GameType.HB_RNG,
                         TpCategory.Slots,
                         cancelBetRngDto.TransferId,
                         TransType.Refunds,

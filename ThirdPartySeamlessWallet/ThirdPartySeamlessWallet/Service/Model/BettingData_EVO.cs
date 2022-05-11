@@ -94,28 +94,28 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     #region Response Model
 
-    public class CommonResponse
-    {
-        public string status { get; set; }
-        public string uuid { get; set; }
-    }
-    /// <summary>
-    /// CheckUserResponse(Check、Sid)
-    /// </summary>
-    public class CheckUserResponse : CommonResponse
-    {
-        public string sid { get; set; }
-    }
+    //public class CommonResponse
+    //{
+    //    public string status { get; set; }
+    //    public string uuid { get; set; }
+    //}
+    ///// <summary>
+    ///// CheckUserResponse(Check、Sid)
+    ///// </summary>
+    //public class CheckUserResponse : CommonResponse
+    //{
+    //    public string sid { get; set; }
+    //}
 
-    /// <summary>
-    /// StandardResponse(Balance、Debit、Credit、Cancel、PromoPayout)
-    /// </summary>
-    public class StandardResponse : CommonResponse
-    {
-        public decimal balance { get; set; }
-        public decimal bonus { get; set; }
-        public bool retransmission { get; set; }
-    }
+    ///// <summary>
+    ///// StandardResponse(Balance、Debit、Credit、Cancel、PromoPayout)
+    ///// </summary>
+    //public class StandardResponse : CommonResponse
+    //{
+    //    public decimal balance { get; set; }
+    //    public decimal bonus { get; set; }
+    //    public bool retransmission { get; set; }
+    //}
 
     #endregion
 

@@ -164,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.QueryFirst<SettleData_SA>("Service_BettransLC_SA_Settle_Get_V2", new DynamicParameters(new { GameId = gameId, UserName = userName }));
         }
 
-        
+
         #endregion
         #region DG
         public int CancelBetLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
@@ -2773,7 +2773,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataRNG_MG.completed)
                     {
-                         _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_LiveCasino, bettingDataRNG_MG.betId, trans, partitionTime);
+                        _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_LiveCasino, bettingDataRNG_MG.betId, trans, partitionTime);
                     }
 
                     trans.Commit();
@@ -2833,7 +2833,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { cancelDataRng_MG.betId }, trans);
-                
+
                 if (result > 0 && cancelDataRng_MG.amount != 0)
                 {
                     result = PayoutV2(
@@ -2879,7 +2879,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             var trans = conn.BeginTransaction();
             result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Settle_Set", new DynamicParameters(new { TransId = transId }), trans);
-            if(result > 0)
+            if (result > 0)
             {
                 trans.Commit();
             }
@@ -3050,7 +3050,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int PromoPayoutLC_EVO(TpCustInfo tpCustInfo, PromoData_EVO promoData_EVO, out decimal afterAmount)
+        public int PromoPayoutLC_EVO(TpCustInfo tpCustInfo, Reward_EVO data, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
@@ -3059,62 +3059,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                //var p = new DynamicParameters(new
-                //{
-                //    PromoTransactionId = promoData_EVO.promoTransaction.id,
-                //    userId = promoData_EVO.userId,
-                //    currency = promoData_EVO.currency,
-                //    amount = promoData_EVO.promoTransaction.amount,
-                //    promoTransaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
-                //    game = JsonConvert.SerializeObject(promoData_EVO.game),
-                //    TicketType = (int)BettransType.Payout,
-                //    TicketStatus = (int)TicketStatus.Win,
-                //    SettleFlag = (int)SettleFlag.EndGame
-                //});
-
-                //result = conn.Execute("Service_RewardLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                var p = new DynamicParameters(new
-                {
-                    TransactionId = promoData_EVO.promoTransaction.id,
-                    TransactionRefId = promoData_EVO.promoTransaction.id,
-                    userId = promoData_EVO.userId,
-                    uuid = promoData_EVO.uuid,
-                    currency = promoData_EVO.currency,
-                    amount = promoData_EVO.promoTransaction.amount,
-                    transaction = JsonConvert.SerializeObject(promoData_EVO.promoTransaction),
-                    game = JsonConvert.SerializeObject(promoData_EVO.game),
-                    GameId = promoData_EVO.game?.id,
-                    GameType = promoData_EVO.game?.type,
-                    GameDetailsId = promoData_EVO.game?.details.table.id,
-                    SiteId = tpCustInfo.SiteId,
-                    CustId = tpCustInfo.CustId,
-                    CurrencyId = tpCustInfo.CurrencyId,
-                    TicketType = (int)BettransType.Payout,
-                    TicketStatus = (int)TicketStatus.Win,
-                    SettleFlag = (int)SettleFlag.EndGame
-                });
-
-                result = conn.Execute("Service_BettransLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.QueryFirstAsync<int>("Service_Reward_EVO_Ins", trans, new DynamicParameters(data)).Result;
 
                 if (result > 0)
                 {
                     int bonusId = 0;
 
-                    if (promoData_EVO.promoTransaction.amount != 0)
+                    if (data.PromoTransactionAmount != 0)
                     {
                         result = PayoutV2(
                             tpCustInfo,
-                            Math.Abs(promoData_EVO.promoTransaction.amount),
+                            Math.Abs(data.PromoTransactionAmount),
                             (int)Tp.EVO,
-                            promoData_EVO.promoTransaction.id,
+                            data.PromoTransactionId,
                             (int)GameType.EVO_LiveCasino,
                             TpCategory.LiveCasino,
-                            promoData_EVO.promoTransaction.id,
+                            data.PromoTransactionId,
                             TransType.Prize,
                             null,
                             out afterAmount,
-                            $"{promoData_EVO.promoTransaction.id} Prize",
+                            $"{data.PromoTransactionId} Prize",
                             out bonusId,
                             conn,
                             trans
@@ -3138,7 +3102,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw;
                 }
             }
-
             return result;
         }
 
@@ -3165,6 +3128,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public SettleData GetSettle_TpWagerLC_EVO(string TransId)
         {
             return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerLC_EVO_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
+        }
+
+        public IEnumerable<Reward_EVO> GetExistReward_EVO(PromoData_EVO data, int tpId, int tpGameType)
+        {
+            var query = new { userId = data.userId, PromoTransactionId = data.promoTransaction.id, TpId = tpId, TpGameType = tpGameType };
+            return _mainDbClient.Query<Reward_EVO>("Service_Reward_EVO_Check", CommandType.StoredProcedure, new DynamicParameters(query));
         }
 
         public bool PromoPayout_EVO(Reward_EVO data, MySqlTransaction trans)
