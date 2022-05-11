@@ -966,10 +966,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                         {
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(unsettled.TpId, unsettled.userId);
                             var tpCurrency = thirdPartyBLL.GetTpCurrency(unsettled.TpId, tpCustInfo.CurrencyId);
-                            if (tpCurrency.ExchangeRate > 1)
-                            {
-                                unsettled.PromoTransactionAmount *= tpCurrency.ExchangeRate;
-                            }
 
                             BetRecordInfo betRecordInfo = new BetRecordInfo
                             {
@@ -1062,6 +1058,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleMP?.Change(Timeout.Infinite, 0);
             timerSettleSexy?.Change(Timeout.Infinite, 0);
             timerSettleEVO?.Change(Timeout.Infinite, 0);
+            timerSettleRewardEVO?.Change(Timeout.Infinite, 0);
             timerSettleNetent?.Change(Timeout.Infinite, 0);
             timerSettleRedTiger?.Change(Timeout.Infinite, 0);
 
