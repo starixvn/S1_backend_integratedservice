@@ -103,7 +103,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = UnsettleData.Account,
                             SettledTime = UnsettleData.SettleTime,
                             TransTime = UnsettleData.TransTime,
-                            SettlementType = SettlementType.SettledForValidNotRollover,
+                            SettlementType = SettlementType.SettledForValid,
                             TicketStatus = UnsettleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                         };
 
