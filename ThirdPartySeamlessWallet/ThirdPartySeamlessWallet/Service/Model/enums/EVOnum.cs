@@ -40,14 +40,4 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         TP = 2
     }
 
-    public enum PromoTransactionTypeEnum
-    {
-        JackpotWin,
-        FreeRoundPlayableSpent,
-        RewardGamePlayableSpent,
-        RewardGameWinCapReached,
-        RewardGameMinBetLimitReached,
-        FromGame,
-        RtrMonetaryReward
-    }
 }

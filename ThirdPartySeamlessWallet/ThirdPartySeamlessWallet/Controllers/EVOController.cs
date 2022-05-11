@@ -726,11 +726,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            if (!CheckRequest(getReq, out EVOStatus status))
+            if (!CheckRequest(getReq, out string status))
             {
                 return new BetResp()
                 {
-                    status = status.ToString(),
+                    status = status,
                     uuid = getReq.uuid,
                     retransmission = false
                 };
@@ -886,70 +886,70 @@ namespace ThirdPartySeamlessWallet.Controllers
             return false;
         }
 
-        private bool CheckRequest(PromoData_EVO request, out EVOStatus status)
+        private bool CheckRequest(PromoData_EVO request, out string status)
         {
-            status = EVOStatus.OK;
+            status = "OK";
 
             if (request == null)
             {
                 _logger.LogError($"CheckRequest Fail: request is null.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.sid))
             {
                 _logger.LogError($"CheckRequest Fail: request.sid is Invalid.");
-                status = EVOStatus.INVALID_SID;
+                status = "INVALID_SID";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.userId))
             {
                 _logger.LogError($"CheckRequest Fail: request.userId is Invalid.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.currency))
             {
                 _logger.LogError($"CheckRequest Fail: request.currency is Invalid.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.uuid))
             {
                 _logger.LogError($"CheckRequest Fail: request.uuid is Invalid.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (request.promoTransaction == null)
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction is Invalid.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.promoTransaction.id))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.id is Invalid.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
             if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
-                status = EVOStatus.INVALID_PARAMETER;
+                status = "INVALID_PARAMETE";
                 return false;
             }
 
