@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -13,6 +10,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -63,7 +61,7 @@ namespace ThirdPartyService.Controllers
             var apiResult = new ApiResult();
 
             try
-            {
+            {            
                 apiResult = thirdPartyBLL.GotoGame(tpInfo);
                 logger.LogInformation(apiResult.Message);
 
@@ -214,6 +212,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+
         [HttpPost]
         public ActionResult<ApiResult<TransferResult>> AdjustWallet([FromBody] AdminTpTransfer adminTpTransfer)
         {
@@ -294,6 +293,37 @@ namespace ThirdPartyService.Controllers
             {
                 logger.LogError(ex, ex.Message);
                 return new ApiResult<object>()
+                {
+                    ErrorCode = ErrorCode.SystemError,
+                    RawMessage = ex.Message,
+                };
+            }
+        }
+
+        /// <summary>
+        /// 取得商戶餘額
+        /// </summary>
+        /// <param name="tpCustInfo"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ActionResult<ApiResult<MerchantBalanceResponse>> GetMerchantBalance(TpCustInfo tpCustInfo)
+        {
+            try
+            {
+                return thirdPartyBLL.GetMerchantBalance(tpCustInfo);
+            }
+            catch (GetMerchantBalanceNotImplementedException ex)
+            {
+                return new ApiResult<MerchantBalanceResponse>()
+                {
+                    ErrorCode = ErrorCode.GetMerchantBalanceNotImplemented,
+                    RawMessage = ex.Message,
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new ApiResult<MerchantBalanceResponse>()
                 {
                     ErrorCode = ErrorCode.SystemError,
                     RawMessage = ex.Message,

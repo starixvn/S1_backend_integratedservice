@@ -50,7 +50,13 @@ namespace ThirdPartyCore.Model.enums
         GetBetDetailNotImplemented = 3001,
         BetDetailIsUrl = 3002,
         #endregion
-        
+
+        #region MerchantBalance (4xxxx)
+
+        GetMerchantBalanceNotImplemented = 4000,
+
+        #endregion
+
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
         Not_allowed_environment = 5003,
