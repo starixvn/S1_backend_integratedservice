@@ -3,15 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
 
 namespace ThirdParty.PT
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public partial class TpHelper : ThirdPartyHelperBase
     {
         private readonly string storagePath = Path.Combine(ContentRootPath, "Storage", "PT");
 
@@ -24,167 +25,314 @@ namespace ThirdParty.PT
             {"INR",5},
         };
 
-        #region Param
-
-        private class DepositParam
+        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            public string playername { get; set; }
-            public decimal amount { get; set; }
-            public string adminname { get; set; }
-            public string externaltranid { get; set; }
+            var currency = tpCustInfo.TpCurrencyId;
+            var apiUrl = GetApiUrl(inputs);
+            var adminName = GetAdminName(inputs, currency);
+            var entityKey = GetEntityKey(inputs, currency);
+            var pass = GetPass(inputs, currency);
+            var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
+            apiUrl = $"{apiUrl}/player/create";
+
+            var header = GetHeader(entityKey);
+            var certificate = GetCertificate(currency, pass);
+            var playerName = $"{prefix}_{tpCustInfo.TpUserName}";
+
+            var signUp = new
+            {
+                playername = playerName.ToUpper(),
+                adminname = adminName,
+                password = tpCustInfo.TpPwd,
+                custom02 = prefix
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(signUp));
+
+            var result = HttpPostWithX509(
+                apiUrl,
+                dicP,
+                "application/x-www-form-urlencoded",
+                header,
+                certificate
+            );
+
+            var oApiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                if (error.error != null)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = error.error ?? "";
+                    oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
+                }
+                else
+                {
+                    var json = JsonConvert.DeserializeObject<CreateMemberResponse>(result);
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    tpCustInfo.TpUserName = playerName.ToUpper();
+                    oApiResult.RawMessage = "";
+                    oApiResult.RawErrorCode = "";
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+            }
+
+            return oApiResult;
         }
 
-        private class WithdrawParam : DepositParam
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            public bool isForce { get; set; }
-            public bool losebonus { get; set; }
+            var gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+
+            var client = "";
+            if (gameId == "0")
+            {
+                // live casino
+                gameId = "";
+                client = appType == AppType.Desktop ? "live_desk" : "live_mob";
+            }
+            else
+            {
+                // slot
+                client = appType == AppType.Desktop ? "ngm_desktop" : "ngm_mobile";
+            }
+
+            if (fun.Equals("0", StringComparison.OrdinalIgnoreCase))
+            {
+                // change password (error:2) - will also clean lock minutes
+                ChangePassword(tpCustInfo, inputs);
+            }
+
+            var oApiResult = new ApiResult
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = JsonConvert.SerializeObject(new
+                {
+                    account = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "guest" : tpCustInfo.TpUserName,
+                    password = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "guest" : tpCustInfo.TpPwd,
+                    game = gameId,
+                    lang = TpLangId,
+                    client = client,
+                    mode = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "offline" : "real"
+                })
+            };
+            return oApiResult;
         }
 
-        #endregion
-
-        #region Response
-
-        private class ApiErrorResponse
+        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            public string? error { get; set; }
-            public int errorcode { get; set; }
+            var currency = tpCustInfo.TpCurrencyId;
+            var apiUrl = GetApiUrl(inputs);
+            var entityKey = GetEntityKey(inputs, currency);
+            var pass = GetPass(inputs, currency);
+            apiUrl = $"{apiUrl}/player/balance";
+
+            var header = GetHeader(entityKey);
+            var certificate = GetCertificate(currency, pass);
+
+            var balance = new
+            {
+                playername = tpCustInfo.TpUserName
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(balance));
+
+            var result = HttpPostWithX509(
+                apiUrl,
+                dicP,
+                "application/x-www-form-urlencoded",
+                header,
+                certificate
+            );
+
+            var oApiResult = new ApiResult<UserBalance>();
+            if (IsJSON(result))
+            {
+                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                if (error.error != null)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = error.error ?? "";
+                    oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
+                }
+                else
+                {
+                    var json = JsonConvert.DeserializeObject<BalanceResponse>(result);
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Data.balance = json.result.balance;
+                }
+            }
+            else
+            {
+                oApiResult.RawMessage = result;
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+
+            return oApiResult;
         }
 
-        private class CreateMemberResponse
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            public CreateMemberResult result { get; set; }
+
+            var evnName = EnvironmentName;
+
+
+            var currency = tpCustInfo.TpCurrencyId;
+            var apiUrl = GetApiUrl(inputs);
+            var adminName = GetAdminName(inputs, currency);
+            var entityKey = GetEntityKey(inputs, currency);
+            var pass = GetPass(inputs, currency);
+
+            var transUrl = $"{apiUrl}/player/deposit";
+
+            var header = GetHeader(entityKey);
+            var certificate = GetCertificate(currency, pass);
+
+            var transfer = new DepositParam
+            {
+                playername = tpCustInfo.TpUserName,
+                amount = Math.Floor(Amount * 100) / 100,
+                adminname = adminName,
+                externaltranid = TransID
+            };
+
+            if (direction == Direction.ToMain)
+            {
+                transUrl = $"{apiUrl}/player/withdraw";
+                transfer = new WithdrawParam
+                {
+                    playername = tpCustInfo.TpUserName,
+                    amount = Math.Floor(Amount * 100) / 100,
+                    adminname = adminName,
+                    isForce = false,
+                    externaltranid = TransID,
+                    losebonus = false
+                };
+            }
+
+
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(transfer));
+
+            var result = HttpPostWithX509(
+                transUrl,
+                dicP,
+                "application/x-www-form-urlencoded",
+                header,
+                certificate
+            );
+
+            var apiResult = new ApiResult<TransferResult>();
+            if (IsJSON(result))
+            {
+                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                if (error.error != null)
+                {
+                    #region 註解Code
+                    /*
+                      {
+                          "code": 71,
+                          "description": "Could not load player data. Error: 'UMS API return error on access request attempt'"
+                      },
+                      {
+                          "code": 72,
+                          "description": "Could not load player data. Error: 'Service error accessing UMS API'"
+                      },
+                      {
+                          "code": 73,
+                          "description": "Could not load player data from database. Error: 'Database error occured, please contact support'. Please, try again later"
+                      },
+                      {
+                          "code": 301,
+                          "description": "API error."
+                      }
+                   */
+                    #endregion
+
+                    int[] pend = { 71, 72, 73, 301 };
+                    if (pend.Contains(error.errorcode))
+                    {
+                        apiResult.RawMessage = error.error;
+                        apiResult.RawErrorCode = error.errorcode.ToString();
+                        apiResult.ErrorCode = ErrorCode.TransferPending;
+                        apiResult.Data.Status = TransferStatus.Pending;
+                    }
+                    else
+                    {
+                        CheckErrorCodeWithSendNotification(tpCustInfo, Amount, error);
+                        apiResult.RawMessage = error.error;
+                        apiResult.RawErrorCode = error.errorcode.ToString();
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.Data.Status = TransferStatus.Fail;
+                    }
+                }
+                else
+                {
+                    var json = JsonConvert.DeserializeObject<TransferResponse>(result);
+                    if (json.result.externaltransactionid == TransID)
+                    {
+                        apiResult.ErrorCode = ErrorCode.Success;
+                        apiResult.Data.Status = TransferStatus.Success;
+                    }
+                    else
+                    {
+                        apiResult.RawMessage = "No Result";
+                        apiResult.RawErrorCode = "1";
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.Data.Status = TransferStatus.Fail;
+                    }
+                }
+            }
+            else
+            {
+                apiResult.RawMessage = "No Result";
+                apiResult.RawErrorCode = "1";
+                apiResult.ErrorCode = ErrorCode.TransferPending;
+                apiResult.Data.Status = TransferStatus.Pending;
+            }
+
+            return apiResult;
         }
 
-        private class CreateMemberResult
-        {
-            public string result { get; set; }
-            public string playername { get; set; }
-            public string password { get; set; }
-        }
 
-        private class ChangePasswordResponse
-        {
-            public ChangePasswordResult result { get; set; }
-        }
-
-        private class ChangePasswordResult
-        {
-            public string playername { get; set; }
-            public string password { get; set; }
-        }
-
-        private class BalanceResponse
-        {
-            public BalanceResult result { get; set; }
-        }
-
-        private class BalanceResult
-        {
-            public string currencycode { get; set; }
-            public decimal balance { get; set; }
-            public decimal bonusbalance { get; set; }
-            // public decimal rc_balance { get; set; }
-            // public decimal current_bet { get; set; }
-            public string playername { get; set; }
-        }
-
-        private class BrokenGamesResponse
-        {
-            public IList<BrokenGamesResult> result { get; set; }
-        }
-
-        public class BrokenGamesResult
-        {
-            public string PLAYERNAME { get; set; }
-            public DateTime GAMEDATE { get; set; }
-            public string CLIENTTYPE { get; set; }
-            public string PLATFORM { get; set; }
-            public string GAMENAME { get; set; }
-            public string SHORTNAME { get; set; }
-            public decimal BET { get; set; }
-            public string REMOTEIP { get; set; }
-            public string BROKENGAMETYPE { get; set; }
-            public string BROKENGAMECODE { get; set; }
-            public string STATUS { get; set; }
-            public string FINISHEDGAMECODE { get; set; }
-            public DateTime FINISHEDGAMEDATE { get; set; }
-
-        }
-
-        private class TransferResponse
-        {
-            public TransResult result { get; set; }
-        }
-
-        private class TransResult
-        {
-            public decimal amount { get; set; }
-            public string currentplayerbalance { get; set; }
-            public string executiontime { get; set; }
-            public string externaltransactionid { get; set; }
-            public string instantcashtype { get; set; }
-            public string kiosktransactionid { get; set; }
-            public DateTime kiosktransactiontime { get; set; }
-            public string ptinternaltransactionid { get; set; }
-            public string result { get; set; }
-        }
-
-        private class CheckTransferResponse
-        {
-            public CheckTransResult result { get; set; }
-        }
-
-        private class CheckTransResult
-        {
-            public string status { get; set; }
-            public string externaltransactionid { get; set; }
-            public string executiontime { get; set; }
-        }
-
-        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             try
             {
-                string currency = tpCustInfo.TpCurrencyId;
-                string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"])
-                    ? inputs["ApiUrl"]
-                    : throw new Exception("ApiUrl");
-                string EntityKey =
-                    inputs.ContainsKey($"XEntityKey_{currency}") &&
-                    !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"])
-                        ? inputs[$"XEntityKey_{currency}"]
-                        : throw new Exception($"XEntityKey_{currency}");
-                string Pass =
-                    inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"])
-                        ? inputs[$"Pass_{currency}"]
-                        : throw new Exception($"Pass_{currency}");
-                ApiUrl = $"{ApiUrl}/player/checktransaction";
+                var currency = tpCustInfo.TpCurrencyId;
+                var apiUrl = GetApiUrl(inputs);
+                var entityKey = GetEntityKey(inputs, currency);
+                var pass = GetPass(inputs, currency);
+                apiUrl = $"{apiUrl}/player/checktransaction";
 
-                Dictionary<string, string> header = new Dictionary<string, string>();
-                header.Add("X_ENTITY_KEY", EntityKey);
+                var header = GetHeader(entityKey);
+                var certificate = GetCertificate(currency, pass);
 
-                Dictionary<string, string> certificate = new Dictionary<string, string>();
-                certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
-                certificate.Add("password", Pass);
-
-                var CheckTransfer = new
+                var checkTransfer = new
                 {
                     externaltransactionid = TransID,
                 };
 
-                var dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
+                var dicP = FromJson<Dictionary<string, string>>(ToJson(checkTransfer));
 
                 var result = HttpPostWithX509(
-                    ApiUrl,
+                    apiUrl,
                     dicP,
                     "application/x-www-form-urlencoded",
                     header,
                     certificate
                 );
 
-                ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+                var apiResult = new ApiResult<TransferResult>();
                 if (IsJSON(result))
                 {
                     var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
@@ -236,303 +384,13 @@ namespace ThirdParty.PT
             }
         }
 
-        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string AdminName = inputs.ContainsKey($"AdminName_{currency}") && !string.IsNullOrEmpty(inputs[$"AdminName_{currency}"]) ? inputs[$"AdminName_{currency}"] : throw new Exception($"AdminName_{currency}");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-            string Prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
-            ApiUrl = $"{ApiUrl}/player/create";
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
-            certificate.Add("password", Pass);
-
-            string playerName = $"{Prefix}_{tpCustInfo.TpUserName}";
-
-            var SignUp = new
-            {
-                playername = playerName.ToUpper(),
-                adminname = AdminName,
-                password = tpCustInfo.TpPwd,
-                custom02 = Prefix
-            };
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
-
-            var result = HttpPostWithX509(
-                ApiUrl,
-                dicP,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
-
-            ApiResult oApiResult = new ApiResult();
-            if (IsJSON(result))
-            {
-                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-                if (error.error != null)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = error.error ?? "";
-                    oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
-                }
-                else
-                {
-                    var json = JsonConvert.DeserializeObject<CreateMemberResponse>(result);
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    tpCustInfo.TpUserName = playerName.ToUpper();
-                    oApiResult.RawMessage = "";
-                    oApiResult.RawErrorCode = "";
-                }
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-            }
-
-            return oApiResult;
-        }
-
-        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-            ApiUrl = $"{ApiUrl}/player/balance";
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
-            certificate.Add("password", Pass);
-
-            var Balance = new
-            {
-                playername = tpCustInfo.TpUserName
-            };
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
-
-            var result = HttpPostWithX509(
-                ApiUrl,
-                dicP,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
-
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            if (IsJSON(result))
-            {
-                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-                if (error.error != null)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = error.error ?? "";
-                    oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
-                }
-                else
-                {
-                    var json = JsonConvert.DeserializeObject<BalanceResponse>(result);
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data.balance = json.result.balance;
-                }
-            }
-            else
-            {
-                oApiResult.RawMessage = result;
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-            }
-
-            return oApiResult;
-        }
-
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            TransIdModel transIdModel = new TransIdModel();
-            transIdModel.Implemented = false;
-            return transIdModel;
-        }
-
-        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
-        {
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-
-            string client = "";
-            if (gameId == "0")
+            TransIdModel transIdModel = new TransIdModel
             {
-                gameId = "";
-                // live casino
-                if (appType == AppType.Desktop)
-                {
-                    client = "live_desk";
-                }
-                else
-                {
-                    client = "live_mob";
-                }
-            }
-            else
-            {
-                // slot
-                if (appType == AppType.Desktop)
-                {
-                    client = "ngm_desktop";
-                }
-                else
-                {
-                    client = "ngm_mobile";
-                }
-            }
-
-            if (fun.Equals("0", StringComparison.OrdinalIgnoreCase))
-            {
-                // change password (error:2) - will also clean lock minutes
-                ChangePassword(tpCustInfo, inputs);
-            }
-
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = JsonConvert.SerializeObject(new
-            {
-                account = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "guest" : tpCustInfo.TpUserName,
-                password = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "guest" : tpCustInfo.TpPwd,
-                game = gameId,
-                lang = TpLangId,
-                client = client,
-                mode = fun.Equals("1", StringComparison.OrdinalIgnoreCase) ? "offline" : "real"
-            });
-            return oApiResult;
-        }
-
-        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
-        {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string AdminName = inputs.ContainsKey($"AdminName_{currency}") && !string.IsNullOrEmpty(inputs[$"AdminName_{currency}"]) ? inputs[$"AdminName_{currency}"] : throw new Exception($"AdminName_{currency}");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-
-            string TransUrl = $"{ApiUrl}/player/deposit";
-
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
-
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
-            certificate.Add("password", Pass);
-
-            var Transfer = new DepositParam
-            {
-                playername = tpCustInfo.TpUserName,
-                amount = Math.Floor(Amount * 100) / 100,
-                adminname = AdminName,
-                externaltranid = TransID
+                Implemented = false
             };
-
-            if (direction == Direction.ToMain)
-            {
-                TransUrl = $"{ApiUrl}/player/withdraw";
-                Transfer = new WithdrawParam
-                {
-                    playername = tpCustInfo.TpUserName,
-                    amount = Math.Floor(Amount * 100) / 100,
-                    adminname = AdminName,
-                    isForce = false,
-                    externaltranid = TransID,
-                    losebonus = false
-                };
-            }
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
-
-            var result = HttpPostWithX509(
-                TransUrl,
-                dicP,
-                "application/x-www-form-urlencoded",
-                header,
-                certificate
-            );
-
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            if (IsJSON(result))
-            {
-                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
-                if (error.error != null)
-                {
-                    /*
-                        {
-                            "code": 71,
-                            "description": "Could not load player data. Error: 'UMS API return error on access request attempt'"
-                        },
-                        {
-                            "code": 72,
-                            "description": "Could not load player data. Error: 'Service error accessing UMS API'"
-                        },
-                        {
-                            "code": 73,
-                            "description": "Could not load player data from database. Error: 'Database error occured, please contact support'. Please, try again later"
-                        },
-                        {
-                            "code": 301,
-                            "description": "API error."
-                        }
-                     */
-                    int[] pend = { 71, 72, 73, 301 };
-                    if (pend.Contains(error.errorcode))
-                    {
-                        apiResult.RawMessage = error.error;
-                        apiResult.RawErrorCode = error.errorcode.ToString();
-                        apiResult.ErrorCode = ErrorCode.TransferPending;
-                        apiResult.Data.Status = TransferStatus.Pending;
-                    }
-                    else
-                    {
-                        apiResult.RawMessage = error.error;
-                        apiResult.RawErrorCode = error.errorcode.ToString();
-                        apiResult.ErrorCode = ErrorCode.Fail;
-                        apiResult.Data.Status = TransferStatus.Fail;
-                    }
-                }
-                else
-                {
-                    var json = JsonConvert.DeserializeObject<TransferResponse>(result);
-                    if (json.result.externaltransactionid == TransID)
-                    {
-                        apiResult.ErrorCode = ErrorCode.Success;
-                        apiResult.Data.Status = TransferStatus.Success;
-                    }
-                    else
-                    {
-                        apiResult.RawMessage = "No Result";
-                        apiResult.RawErrorCode = "1";
-                        apiResult.ErrorCode = ErrorCode.Fail;
-                        apiResult.Data.Status = TransferStatus.Fail;
-                    }
-                }
-            }
-            else
-            {
-                apiResult.RawMessage = "No Result";
-                apiResult.RawErrorCode = "1";
-                apiResult.ErrorCode = ErrorCode.TransferPending;
-                apiResult.Data.Status = TransferStatus.Pending;
-            }
-
-            return apiResult;
+            return transIdModel;
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -540,21 +398,15 @@ namespace ThirdParty.PT
             try
             {
                 int timeSpan = timeZoneList[tpCustInfo.TpCurrencyId];
+                var currency = tpCustInfo.TpCurrencyId;
+                var apiUrl = GetApiUrl(inputs);
+                var entityKey = GetEntityKey(inputs, currency);
+                var pass = GetPass(inputs, currency);
 
-                var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
-                var entityKey = inputs.GetValueOrDefault($"XEntityKey_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-                var pass = inputs.GetValueOrDefault($"Pass_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-  
                 apiUrl = $"{apiUrl}/player/games";
-                var header = new Dictionary<string, string>
-                {
-                    { "X_ENTITY_KEY", entityKey }
-                };
-                var certificate = new Dictionary<string, string>
-                {
-                    { "path", Path.Combine(storagePath, $"{tpCustInfo.TpCurrencyId}.p12") },
-                    { "password", pass }
-                };
+
+                var header = GetHeader(entityKey);
+                var certificate = GetCertificate(currency, pass);
 
                 var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_PT_Detail_Get",
                    new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type });
@@ -600,36 +452,32 @@ namespace ThirdParty.PT
 
         private ApiResult ChangePassword(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string EntityKey = inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
-            string Pass = inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
-            ApiUrl = $"{ApiUrl}/player/changepassword";
+            var currency = tpCustInfo.TpCurrencyId;
+            var apiUrl = GetApiUrl(inputs);
+            var entityKey = GetEntityKey(inputs, currency);
+            var pass = GetPass(inputs, currency);
+            apiUrl = $"{apiUrl}/player/changepassword";
 
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X_ENTITY_KEY", EntityKey);
+            var header = GetHeader(entityKey);
+            var certificate = GetCertificate(currency, pass);
 
-            Dictionary<string, string> certificate = new Dictionary<string, string>();
-            certificate.Add("path", Path.Combine(storagePath, $"{currency}.p12"));
-            certificate.Add("password", Pass);
-
-            var ChangePassword = new
+            var changePassword = new
             {
                 playername = tpCustInfo.TpUserName,
                 password = tpCustInfo.TpPwd,
             };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(ChangePassword));
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(changePassword));
 
             var result = HttpPostWithX509(
-                ApiUrl,
+                apiUrl,
                 dicP,
                 "application/x-www-form-urlencoded",
                 header,
                 certificate
             );
 
-            ApiResult oApiResult = new ApiResult();
+            var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
                 var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
@@ -657,16 +505,204 @@ namespace ThirdParty.PT
             return oApiResult;
         }
 
-
-        public class DetailResult
+        /// <summary>
+        /// 取得商餘額
+        /// </summary>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        public override ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            public List<Result> result { get; set; }
+            var currency = tpCustInfo.TpCurrencyId;
+            var apiUrl = GetApiUrl(inputs);
+            var adminName = GetAdminName(inputs, currency);
+            var entityKey = GetEntityKey(inputs, currency);
+            var pass = GetPass(inputs, currency);
+
+            apiUrl = $"{apiUrl}/admin/info/adminname/{adminName}";
+
+            var header = GetHeader(entityKey);
+            var certificate = GetCertificate(currency, pass);
+
+            var signUp = new
+            {
+                adminname = adminName
+            };
+
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(signUp));
+
+            var result = HttpPostWithX509(
+              apiUrl,
+              dicP,
+              "application/x-www-form-urlencoded",
+              header,
+              certificate
+          );
+
+            var oApiResult = new ApiResult<MerchantBalanceResponse>();
+
+            if (IsJSON(result))
+            {
+                var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
+                if (error.error != null)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = error.error ?? "";
+                    oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
+                }
+                else
+                {
+                    var json = JsonConvert.DeserializeObject<TpMerchantBalanceResponse>(result);
+                    oApiResult.Data = new MerchantBalanceResponse()
+                    {
+                        MerchantBalance = json.Result.MerchantBalance,
+                        MerchantName = json.Result.MerchantName,
+                        CurrencyName = currency
+                    };
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.RawMessage = "";
+                    oApiResult.RawErrorCode = "";
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+            }
+
+            return oApiResult;
         }
 
-        public class Result
+        #region private method
+
+        /// <summary>
+        /// 取得憑證
+        /// </summary>
+        /// <param name="currency"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
+        private Dictionary<string, string> GetCertificate(string currency, string pass)
         {
-            public string URL { get; set; }
+            var certificate = new Dictionary<string, string>
+           {
+               { "path", Path.Combine(storagePath, $"{currency}.p12") },
+               { "password", pass }
+           };
+            return certificate;
         }
 
+        /// <summary>
+        /// 取得Http標頭
+        /// </summary>
+        /// <param name="entityKey"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> GetHeader(string entityKey)
+        {
+            var header = new Dictionary<string, string> { { "X_ENTITY_KEY", entityKey } };
+            return header;
+        }
+
+        private static string GetPass(Dictionary<string, string> inputs, string currency)
+        {
+            return inputs.ContainsKey($"Pass_{currency}") && !string.IsNullOrEmpty(inputs[$"Pass_{currency}"]) ? inputs[$"Pass_{currency}"] : throw new Exception($"Pass_{currency}");
+        }
+
+        private static string GetEntityKey(Dictionary<string, string> inputs, string currency)
+        {
+            return inputs.ContainsKey($"XEntityKey_{currency}") && !string.IsNullOrEmpty(inputs[$"XEntityKey_{currency}"]) ? inputs[$"XEntityKey_{currency}"] : throw new Exception($"XEntityKey_{currency}");
+        }
+
+        private static string GetAdminName(Dictionary<string, string> inputs, string currency)
+        {
+            return inputs.ContainsKey($"AdminName_{currency}") && !string.IsNullOrEmpty(inputs[$"AdminName_{currency}"]) ? inputs[$"AdminName_{currency}"] : throw new Exception($"AdminName_{currency}");
+        }
+
+        private static string GetApiUrl(Dictionary<string, string> inputs)
+        {
+            return inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        }
+
+        /// <summary>
+        /// 檢查 Deposit 的 ErrorCode 是否要發送通知
+        /// </summary>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="Amount"></param>
+        /// <param name="error"></param>
+        private void CheckErrorCodeWithSendNotification(TpCustInfo tpCustInfo, decimal Amount, ApiErrorResponse error)
+        {
+            var adminDepositBalanceInsufficient = 97; //97 商戶餘額不足，玩家轉帳金額 > 商戶餘額
+            if (error.errorcode == adminDepositBalanceInsufficient)
+            {
+                SandLesTalkMessage(tpCustInfo, Amount);
+            }
+        }
+
+        /// <summary>
+        /// 發送 LetsTalk 通知給客服
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="merchantBalanceResponse"></param>
+        /// <returns></returns>
+        private void SandLesTalkMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
+        {
+            var letsTalkGroupName = string.Empty;
+            var commonServiceHost = string.Empty;
+
+            switch (EnvironmentName) // 有機會改成 di 取得，先暫時這樣
+            {
+                case "Local":
+                    letsTalkGroupName = "TestNotification";
+                    commonServiceHost = "http://52.221.19.140:59359";
+                    break;
+                case "Development":
+                    letsTalkGroupName = "TestNotification";
+                    commonServiceHost = "http://172.31.17.90:59359";
+                    break;
+                case "Production":
+                    letsTalkGroupName = "SMSNotification";
+                    commonServiceHost = "http://10.4.194.104:59359";
+                    break;
+            }
+
+            var message = GetAlertMessage(tpCustInfo, userTransferAmount);
+
+            var postData = new
+            {
+                GroupName = letsTalkGroupName,
+                Message = message
+            };
+            var parameters = JsonConvert.SerializeObject(postData);
+
+            var httpResponse = HttpPostClient($"{commonServiceHost}/Common/LetsTalk/SendMessage",
+                parameters, "application/json");
+        }
+
+        private string GetAlertMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
+        {
+            var tpIdMapToSiteName = new Dictionary<int, string>()
+            {
+                { (int)SiteId.Nova88, "NOVA88" },
+                { (int)SiteId.Goal123, "GOAL123" },
+                { (int)SiteId.Bwing, "BWING" }
+            };
+
+            var message =
+                $"* PlayTech User Transfer Balance Alert * \r\n" +
+                $"* Time : {DateTime.UtcNow.AddHours(8):yyyy-MM-dd HH:mm:ss} * \r\n" +
+                $"=======================\r\n" +
+                $"User Transfer Balance more than the Merchant Balance \r\n" +
+                $"Please Add Balance.\r\n" +
+                $"=======================\r\n" +
+                $"TpUserName：{tpCustInfo.TpUserName}\r\n" +
+                $"TransferBalance：{userTransferAmount}\r\n" +
+                $"Site：{tpIdMapToSiteName[tpCustInfo.SiteId]}\r\n" +
+                $"TPName : PlayTech \r\n" +
+                $"MerchantName : {tpIdMapToSiteName[tpCustInfo.SiteId]}{tpCustInfo.TpCurrencyId}\r\n" +
+                $"Currency:{tpCustInfo.TpCurrencyId}";
+            return message;
+        }
+
+        #endregion
     }
 }

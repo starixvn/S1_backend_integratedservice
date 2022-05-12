@@ -15,6 +15,7 @@ using System.Xml.Serialization;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
 
 namespace ThirdPartyCore
 {
@@ -54,7 +55,7 @@ namespace ThirdPartyCore
         ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
-    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail
+    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
     {
         public static string proxyHost;
         public static int proxyPort;
@@ -155,7 +156,7 @@ namespace ThirdPartyCore
             return sb.ToString();
         }
         
-         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             var parametersLog = parameters;
             if (headers != null)
@@ -587,14 +588,22 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-
         public virtual BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new GetBetDetailNotImplementedException($"TpId:{getBetDetail.TpGameTypeOption.TpId} GetBetDetail NotImplemented.");
+        }
+        public virtual ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new GetMerchantBalanceNotImplementedException($"TpId:{tpCustInfo.TpId} GetMerchantBalance NotImplemented.");
         }
     }
     public interface IThirdPartyTpBetRecordDetail
     {
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
+
+    public interface IThirdPartyTpGetMerchantBalance
+    {
+        ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 }
