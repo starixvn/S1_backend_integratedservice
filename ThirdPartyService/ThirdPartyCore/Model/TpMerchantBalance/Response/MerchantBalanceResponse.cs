@@ -5,7 +5,7 @@
         /// <summary>
         /// 商戶餘額，餘額不足會影響玩家轉帳
         /// </summary>
-        public decimal MerchantBalalce { get; set; }
+        public decimal MerchantBalance { get; set; }
 
         /// <summary>
         /// 商戶名稱
