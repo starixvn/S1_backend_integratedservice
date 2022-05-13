@@ -542,7 +542,7 @@ namespace ThirdParty.PT
                     var json = JsonConvert.DeserializeObject<TpMerchantBalanceResponse>(result);
                     oApiResult.Data = new MerchantBalanceResponse()
                     {
-                        MerchantBalalce = json.Result.MerchantBalalce,
+                        MerchantBalance = json.Result.MerchantBalance,
                         MerchantName = json.Result.MerchantName,
                         CurrencyName = currency
                     };                    
