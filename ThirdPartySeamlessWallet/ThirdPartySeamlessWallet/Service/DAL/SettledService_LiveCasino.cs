@@ -3136,47 +3136,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Query<Reward_EVO>("Service_Reward_EVO_Check", CommandType.StoredProcedure, new DynamicParameters(query));
         }
 
-        public bool PromoPayout_EVO(Reward_EVO data, MySqlTransaction trans)
-        {
-            var result = _mainDbClient.QueryFirstAsync<int>("Service_Reward_EVO_Ins", trans, new DynamicParameters(data)).Result;
-
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public bool SetPromoPayout_EVO(TpCustInfo tpCustInfo, Reward_EVO data, TpCategory tpCategory,
-                                   TransType transType, string memo,
-                                   out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
-        {
-
-            var result = PayoutV2(
-                tpCustInfo,
-                data.PromoTransactionAmount,
-                data.TpId,
-                data.PromoTransactionId,
-                data.TpGameType,
-                tpCategory,
-                data.PromoTransactionId,
-                transType,
-                null,
-                out afterAmount,
-                memo,
-                out bonusId,
-                conn,
-                trans
-            );
-
-
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
-        }
-
         #endregion
     }
 }
