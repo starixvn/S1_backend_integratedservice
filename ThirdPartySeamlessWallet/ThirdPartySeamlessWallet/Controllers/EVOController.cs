@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -22,6 +23,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
     public class EVOController : ControllerBase
     {
+        #region Fields
+
         private readonly ILogger<EVOController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _environment;
@@ -34,6 +37,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp thisTp;
+        public string[] promoTransactionTypeList { get; set; }
+        #endregion
+
+        #region Constructors
 
         public EVOController(
             IServiceProvider provider,
@@ -54,7 +61,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
             _tools = provider.GetRequiredService<Tools>();
             thisTp = Tp.EVO;
+
+            promoTransactionTypeList = new string[] { "JackpotWin",
+                "FreeRoundPlayableSpent",
+                "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
+                "FromGame", "RtrMonetaryReward" };
         }
+
+        #endregion
 
         #region HttpStatusCode
 
@@ -80,7 +94,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #region Request
 
-
         public class AuthReq
         {
             public Channel channel { get; set; }
@@ -97,7 +110,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string gameProvider { get; set; }
         }
-
 
         #endregion
 
@@ -131,6 +143,29 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         #endregion
+
+        /// <summary>
+        /// 測試API有通
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("[controller]/ping")]
+        public string PingTest() => "Ping Ok.";
+
+
+        [HttpPost]
+        [HttpGet]
+        [Route("[controller]/{path1?}")]
+        public async Task<dynamic> NotFoundAsync()
+        {
+            string logName = $"{thisTp}_common_NotFound";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+            _log2File.Error(Content, logName);
+            Response.StatusCode = (int)Error.NotFound;
+            return 404;
+        }
 
         [HttpPost]
         [Route("[controller]/sid")]
@@ -210,7 +245,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
         }
-
 
         [HttpPost]
         [Route("[controller]/check")]
@@ -563,7 +597,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Cancel, JsonConvert.SerializeObject(getReq), ex.Message);
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Cancel, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
         }
@@ -665,7 +699,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Credit, JsonConvert.SerializeObject(getReq), ex.Message);
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.Credit, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
         }
@@ -674,27 +708,32 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/promo_payout")]
         public async Task<dynamic> promoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_common_promo_payout";
-
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            _log2File.Info(Content, logName);
 
             PromoData_EVO getReq = JsonConvert.DeserializeObject<PromoData_EVO>(Content);
-            BetResp getApiResponse = new BetResp();
-            getApiResponse.status = "UNKNOWN_ERROR";
+            BetResp getApiResponse = new BetResp() { status = "UNKNOWN_ERROR" };
+            var authToken = getQuery["authToken"];
 
-            if (string.IsNullOrEmpty(getReq.sid))
+            if (getReq == null || string.IsNullOrWhiteSpace(authToken))
             {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
+                _logger.LogError($"Request or AuthToken is Empty.Request.Body={JsonConvert.SerializeObject(getReq)}.AuthToken={authToken}.");
+
+                return new BetResp()
+                {
+                    status = "INVALID_PARAMETER",
+                    retransmission = false
+                };
             }
-            if (string.IsNullOrEmpty(getReq.userId))
+
+            if (!CheckRequest(getReq, out string status))
             {
-                getApiResponse.status = "INVALID_PARAMETER";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
+                return new BetResp()
+                {
+                    status = status,
+                    uuid = getReq.uuid,
+                    retransmission = false
+                };
             }
 
             var tokenInfo = getTokenInfo(getReq.sid);
@@ -702,31 +741,57 @@ namespace ThirdPartySeamlessWallet.Controllers
             int gameType = tokenInfo.gameType;
             if (tpId == 0 || gameType == 0)
             {
-                getApiResponse.status = "INVALID_SID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
+                _logger.LogError($"CheckSidToken Fail: sid.tpId or sid.gametype is Invalid. sid.tp={tpId}. sid.gametype={gameType}.");
+                return new BetResp()
+                {
+                    status = "INVALID_SID",
+                    uuid = getReq.uuid,
+                    retransmission = false
+                };
             }
             if (tokenInfo.tpUserName != getReq.userId)
             {
-                getApiResponse.status = "INVALID_PARAMETER";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
+                _logger.LogError($"CheckSidToken Fail: sid.tpUserName is equal request.userId.");
+                return new BetResp()
+                {
+                    status = "INVALID_PARAMETER",
+                    uuid = getReq.uuid,
+                    retransmission = false
+                };
             }
 
-            logName = $"{(Tp)tpId}_promo_payout";
-
-            var authToken = getQuery["authToken"];
             var check = checkAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
-                return getApiResponse;
+                _logger.LogError($"CheckAuthToken Fail.");
+                return new BetResp()
+                {
+                    status = check.status,
+                    uuid = getReq.uuid,
+                    retransmission = false
+                };
             }
 
             decimal tpAffterAmount = 0;
             try
             {
+                var existDatas = _settledBLL.GetExistReward_EVO(getReq, tpId, gameType);
+
+                if (existDatas.Any())
+                {
+                    //已存在指定有效派彩
+                    _logger.LogError($"CheckPromoPayout Fail: already exist valid promo payout by transactionId and roundId.");
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+                    return new BetResp()
+                    {
+                        status = "BET_ALREADY_SETTLED",
+                        uuid = getReq.uuid,
+                        balance = tpCustBalance.Balance,
+                        retransmission = false
+                    };
+                }
+
                 var result = 0;
 
                 result = gameType switch
@@ -743,45 +808,37 @@ namespace ThirdPartySeamlessWallet.Controllers
                         var tpCustBalance = _tpCustInfoBLL.GetBalance(tpId, getReq.userId, gameType);
                         tpAffterAmount = tpCustBalance.Balance;
                     }
-                    getApiResponse.status = "OK";
-                    getApiResponse.balance = tpAffterAmount;
-                    getApiResponse.retransmission = false;
-                    getApiResponse.uuid = getReq.uuid;
-                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
-                    return getApiResponse;
+                    return new BetResp()
+                    {
+                        status = "OK",
+                        uuid = getReq.uuid,
+                        balance = tpAffterAmount,
+                        retransmission = false
+                    };
                 }
                 else if (result == -1)
                 {
+                    //已存在指定有效派彩
+                    _logger.LogError($"InsertPromoPayout Fail: already exist valid promo payout by transactionId and roundId.");
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
-                    getApiResponse.status = "BET_ALREADY_SETTLED";
-                    getApiResponse.balance = tpCustBalance.Balance;
-                    getApiResponse.retransmission = false;
-                    getApiResponse.uuid = getReq.uuid;
+                    return new BetResp()
+                    {
+                        status = "BET_ALREADY_SETTLED",
+                        uuid = getReq.uuid,
+                        balance = tpCustBalance.Balance,
+                        retransmission = false
+                    };
                 }
 
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _logger.LogError($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n");
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.PromoPayout, JsonConvert.SerializeObject(getReq), ex.Message);
+                _logger.LogError(ex, $"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}");
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.EVO, TpRequestFailureCategory.PromoPayout, JsonConvert.SerializeObject(getReq), ex.Message);
                 return getApiResponse;
             }
-        }
-
-        [HttpPost]
-        [HttpGet]
-        [Route("[controller]/{path1?}")]
-        public async Task<dynamic> NotFoundAsync()
-        {
-            string logName = $"{thisTp}_common_NotFound";
-
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var Content = await reader.ReadToEndAsync();
-            _log2File.Error(Content, logName);
-            Response.StatusCode = (int)Error.NotFound;
-            return 404;
         }
 
         private CommonResp checkAuthorization(string authorization)
@@ -818,7 +875,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 tpId = Convert.ToInt32(sessionKeyArr[4])
             };
         }
-        
+
         private bool verifyGameId(int gameType, string gameId)
         {
             var getGameType = _thirdPartyBLL.GetGameType((int)Tp.EVO, gameId);
@@ -828,5 +885,76 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return false;
         }
+
+        private bool CheckRequest(PromoData_EVO request, out string status)
+        {
+            status = "OK";
+
+            if (request == null)
+            {
+                _logger.LogError($"CheckRequest Fail: request is null.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.sid))
+            {
+                _logger.LogError($"CheckRequest Fail: request.sid is Invalid.");
+                status = "INVALID_SID";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.userId))
+            {
+                _logger.LogError($"CheckRequest Fail: request.userId is Invalid.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.currency))
+            {
+                _logger.LogError($"CheckRequest Fail: request.currency is Invalid.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.uuid))
+            {
+                _logger.LogError($"CheckRequest Fail: request.uuid is Invalid.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (request.promoTransaction == null)
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction is Invalid.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.id))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.id is Invalid.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
+            {
+                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
+                status = "INVALID_PARAMETE";
+                return false;
+            }
+
+            return true;
+        }
+
     }
 }
