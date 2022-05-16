@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -213,6 +214,8 @@ namespace ThirdParty.PT
                 };
             }
 
+            
+
             var dicP = FromJson<Dictionary<string, string>>(ToJson(transfer));
 
             var result = HttpPostWithX509(
@@ -229,24 +232,27 @@ namespace ThirdParty.PT
                 var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
                 if (error.error != null)
                 {
+                    #region 註解Code
                     /*
-                        {
-                            "code": 71,
-                            "description": "Could not load player data. Error: 'UMS API return error on access request attempt'"
-                        },
-                        {
-                            "code": 72,
-                            "description": "Could not load player data. Error: 'Service error accessing UMS API'"
-                        },
-                        {
-                            "code": 73,
-                            "description": "Could not load player data from database. Error: 'Database error occured, please contact support'. Please, try again later"
-                        },
-                        {
-                            "code": 301,
-                            "description": "API error."
-                        }
-                     */
+                      {
+                          "code": 71,
+                          "description": "Could not load player data. Error: 'UMS API return error on access request attempt'"
+                      },
+                      {
+                          "code": 72,
+                          "description": "Could not load player data. Error: 'Service error accessing UMS API'"
+                      },
+                      {
+                          "code": 73,
+                          "description": "Could not load player data from database. Error: 'Database error occured, please contact support'. Please, try again later"
+                      },
+                      {
+                          "code": 301,
+                          "description": "API error."
+                      }
+                   */
+                    #endregion
+
                     int[] pend = { 71, 72, 73, 301 };
                     if (pend.Contains(error.errorcode))
                     {
@@ -257,6 +263,7 @@ namespace ThirdParty.PT
                     }
                     else
                     {
+                        CheckErrorCodeWithSendNotification(tpCustInfo, Amount, error);
                         apiResult.RawMessage = error.error;
                         apiResult.RawErrorCode = error.errorcode.ToString();
                         apiResult.ErrorCode = ErrorCode.Fail;
@@ -290,6 +297,8 @@ namespace ThirdParty.PT
 
             return apiResult;
         }
+
+     
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -608,6 +617,82 @@ namespace ThirdParty.PT
         private static string GetApiUrl(Dictionary<string, string> inputs)
         {
             return inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        }
+
+        /// <summary>
+        /// 檢查 Deposit 的 ErrorCode 是否要發送通知
+        /// </summary>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="Amount"></param>
+        /// <param name="error"></param>
+        private void CheckErrorCodeWithSendNotification(TpCustInfo tpCustInfo, decimal Amount, ApiErrorResponse error)
+        {
+            var adminDepositBalanceInsufficient = 97; //97 商戶餘額不足，玩家轉帳金額 > 商戶餘額
+            if (error.errorcode == adminDepositBalanceInsufficient)
+            {
+                SandLesTalkMessage(tpCustInfo, Amount);
+            }
+        }
+
+        /// <summary>
+        /// 發送 LetsTalk 通知給客服
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="merchantBalanceResponse"></param>
+        /// <returns></returns>
+        private void SandLesTalkMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
+        {
+            // local
+            //var letsTalkGroupName = "TestNotification";
+            //var commonServiceHost = "http://52.221.19.140:59359";
+
+            // dev
+            //var letsTalkGroupName = "TestNotification";
+            //var commonServiceHost = "http://172.31.17.90:59359";
+
+            // prd
+            //var letsTalkGroupName = "SMSNotification";
+            //var commonServiceHost = "http://10.4.194.104:59359"; 
+
+            var letsTalkGroupName = "TestNotification";
+            var commonServiceHost = "http://172.31.17.90:59359";
+
+            var message = GetAlertMessage(tpCustInfo, userTransferAmount);
+
+            var postData = new
+            {
+                GroupName = letsTalkGroupName,
+                Message = message
+            };
+            var parameters = JsonConvert.SerializeObject(postData);
+
+            var httpResponse = HttpPostClient($"{commonServiceHost}/Common/LetsTalk/SendMessage",
+                parameters, "application/json");
+        }
+
+        private string GetAlertMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
+        {
+            var tpIdMapToSiteName = new Dictionary<int, string>()
+            {
+                { (int)SiteId.Nova88, "NOVA88" },
+                { (int)SiteId.Goal123, "GOAL123" },
+                { (int)SiteId.Bwing, "BWING" }
+            };
+
+            var message =
+                $"* PlayTech User Transfer Balance Alert * \r\n" +
+                $"* Time : {DateTime.UtcNow.AddHours(8):yyyy-MM-dd HH:mm:ss} * \r\n" +
+                $"=======================\r\n" +
+                $"User Transfer Balance more than the Merchant Balance \r\n" +
+                $"Please Add Balance.\r\n" +
+                $"=======================\r\n" +
+                $"TpUserName：{tpCustInfo.TpUserName}\r\n" +
+                $"TransferBalance：{userTransferAmount}\r\n" +
+                $"Site：{tpIdMapToSiteName[tpCustInfo.SiteId]}\r\n" +
+                $"TPName : PlayTech \r\n" +
+                $"MerchantName : {tpIdMapToSiteName[tpCustInfo.SiteId]}{tpCustInfo.TpCurrencyId}\r\n" +
+                $"Currency:{tpCustInfo.TpCurrencyId}";
+            return message;
         }
 
         #endregion
