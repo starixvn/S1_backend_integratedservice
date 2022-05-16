@@ -190,6 +190,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.UnSettled
             };
 
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
+
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
@@ -315,6 +317,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
                 TicketStatus = TicketStatus.UnSettled
             };
+
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -461,6 +465,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
+
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             if (!CheckCancelForSlotCancel(partitionTime, data, out int sq, out message))
             {
@@ -925,7 +931,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bonusId = 0;
             try
             {
-                data.amount = (rate > 0) ? data.amount * rate : data.amount;
                 var result = _bettingService.SetBalance_AMB(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
 
                 if (!result)
@@ -1220,7 +1225,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bonusId = 0;
             try
             {
-                data.amount = (rate > 0) ? data.amount * rate : data.amount;
                 var result = _settledService.SetBalance_AMB(tpCustInfo, data,
                     TransType.Payout, "Payout",
                     out afterAmount, ref bonusId, conn, trans);
@@ -1522,7 +1526,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bonusId = 0;
             try
             {
-                data.amount = (rate > 0) ? data.amount * rate : data.amount;
                 var result = _settledService.SetBalance_AMB(tpCustInfo, data,
                     TransType.Refunds, "CancelBet",
                     out afterAmount, ref bonusId, conn, trans);
