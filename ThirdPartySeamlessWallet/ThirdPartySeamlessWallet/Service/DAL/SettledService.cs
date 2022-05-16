@@ -14,6 +14,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
+using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -30,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly PartitionService _partitionService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
         public SettledService(IServiceProvider provider)
         {
@@ -41,10 +43,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             logger = provider.GetRequiredService<ILogger<SettledService>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _thirdPartyBLL= provider.GetRequiredService<ThirdPartyBLL>();
+            _tpBetRecordExtendBLL = provider.GetRequiredService<TpBetRecordExtendBLL>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _partitionService = provider.GetRequiredService<PartitionService>();
+            _partitionService = provider.GetRequiredService<PartitionService>();         
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()
@@ -569,6 +572,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = SetTpBetRecord(betRecord, tpCustInfo, conn, trans);
                 }
+
+                Task.Run(() =>
+                {
+                    _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
+                });
             }
             catch (Exception ex)
             {

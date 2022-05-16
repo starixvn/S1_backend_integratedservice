@@ -1,4 +1,7 @@
 using System;
+using System.Configuration;
+using System.Net;
+using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -43,18 +46,21 @@ namespace ThirdPartySeamlessWallet
             });
 
             services.AddMemoryCache();
-            ////if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
-            ////{
-            ////    var proxy = new HttpClientHandler
-            ////    {
-            ////        Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
-            ////        UseProxy = true
-            ////    };
+            if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
+            {
+                var proxy = new HttpClientHandler
+                {
+                    Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
+                    UseProxy = true
+                };
 
-            ////    services.AddHttpClient("with_proxy")
-            ////    .ConfigurePrimaryHttpMessageHandler(() => proxy);
-            ////    //services.AddHttpClient();
-            ////}
+                services.AddHttpClient("with_proxy")
+                .ConfigurePrimaryHttpMessageHandler(() => proxy);
+            }
+            else
+            {
+                services.AddHttpClient();
+            }
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
             services.AddDatabaseConnection(Configuration);
@@ -88,6 +94,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
             services.AddSingleton<TpUnSettledBLL>();
+            services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
