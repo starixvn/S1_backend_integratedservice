@@ -503,25 +503,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                 }
 
-                if (!string.IsNullOrEmpty(requestAmount) && !string.IsNullOrEmpty(totalWithdraw))
-                {
-                    //Total withdraw amount (return amount divided by 100  is bet amount) Example: Return(10000) = Amount 100.00
-                    decimal reqAmount = Convert.ToDecimal(requestAmount);
-                    decimal twAmount = Convert.ToDecimal(totalWithdraw) / 100;
-                    if(reqAmount != twAmount)
-                    {
-                        var Param = new
-                        {
-                            code = (int)MPErrorCode.InvalidWithdrawAmount
-                        };
-                        resp.StatusCode = (int)Error.INVALID_DATA;
-                        resp.Result = DoEncrypt(Param, desKey);
-                        resp.Code = Param.code;
-                        _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}\r\nrequestAmount={requestAmount}\r\ntotalWithdraw={totalWithdraw}");
-                        return resp;
-                    }
-                }
-
                 resp.channelId = channelId;
                 resp.account = account;
                 resp.requestAmount = requestAmount;
