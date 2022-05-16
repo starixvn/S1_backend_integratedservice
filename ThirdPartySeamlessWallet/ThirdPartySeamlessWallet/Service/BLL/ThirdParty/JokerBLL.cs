@@ -108,6 +108,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.Related
             };
 
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
+
             if (!GetExistReward(false, data, out IEnumerable<RewardRNG_Joker> existDatas, out message))
             {
                 return new JokerResponse()
@@ -120,7 +122,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (existDatas.Any())
             {
                 //已存在指定有效投注
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                if (!GetBalance(request.username, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -166,7 +168,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                if (!GetBalance(request.username, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -233,6 +235,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.Related
             };
 
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
+
             if (!GetExistReward(false, data, out IEnumerable<RewardRNG_Joker> existDatas, out message))
             {
                 return new JokerResponse()
@@ -244,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (existDatas.Any())
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                if (!GetBalance(request.username, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -292,7 +296,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                if (!GetBalance(request.username, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -396,7 +400,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (joinData.TicketType == BettransType.CancelBet
                 && joinData.TicketStatus == TicketStatus.Refund)
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                if (!GetBalance(request.username, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -430,8 +434,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (joinData.amount != 0)
             {
-                joinData.amount = Math.Abs(joinData.amount);
-                //joinData.id = data.id; //Cancel的id太長(length=51)，沒辦法塞到FinancialLog(50)
+                joinData.amount = Math.Abs(joinData.amount); //原本存在table的數字已經是換算過匯率的數字
+                //joinData.id = data.id;                     //Cancel的id太長(length=51)，沒辦法塞到FinancialLog(50)
 
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromCancel, tpCustInfo, joinData, tpCurrency.ExchangeRate,
                                 out message, out balance, out int bonusId, conn, trans))
@@ -446,7 +450,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                if (!GetBalance(request.username, tpCurrency.ExchangeRate, out balance, out message))
+                if (!GetBalance(request.username, out balance, out message))
                 {
                     return new JokerResponse()
                     {
@@ -613,7 +617,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetBalance(string username, decimal rate, out decimal balance, out string message)
+        private bool GetBalance(string username, out decimal balance, out string message)
         {
             message = string.Empty;
             balance = 0;
@@ -701,8 +705,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = false;
             try
             {
-                data.amount = (rate > 0) ? data.amount * rate : data.amount;
-
                 switch (type)
                 {
                     case RewardRNG_JokerTypeEnum.FromJoin:
