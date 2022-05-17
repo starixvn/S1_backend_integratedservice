@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Web;
+using System.Xml.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.BTI
 {
@@ -70,6 +73,47 @@ namespace ThirdParty.BTI
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var sportsDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { getBetDetail.TransId });
+            var xd = XDocument.Parse(sportsDetail.GetValueOrDefault("BodyData")?.ToString());
+            var selection = xd.Descendants("Selection").FirstOrDefault();
+            var detail = ToJson(sportsDetail);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    TpUserName = sportsDetail.GetValueOrDefault("cust_id")?.ToString(),
+                    UTCBetTime = DateTime.Parse(sportsDetail.GetValueOrDefault("TransTime").ToString()),
+                    UTCSettledTime = DateTime.Parse(sportsDetail.GetValueOrDefault("SettleTime").ToString()),                 
+                    Stake = (decimal)sportsDetail.GetValueOrDefault("Stake"),
+                    WinlostAmount = (decimal)sportsDetail.GetValueOrDefault("WinLostAmount"),
+                    RefTransId = sportsDetail.GetValueOrDefault("reserve_id")?.ToString(),
+
+                    Odds = selection.Attribute("DecimalOdds").Value,
+                    LeagueName = selection.Attribute("LeagueName").Value,
+                    SelectionName = selection.Attribute("YourBet").Value,
+                    HomeTeamName = selection.Attribute("HomeTeam").Value,
+                    AwayTeamName = selection.Attribute("AwayTeam").Value,                
+                    EventName = selection.Attribute("EventTypeName").Value,
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
         }
     }
 }
