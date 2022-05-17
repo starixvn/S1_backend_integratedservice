@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -181,10 +180,6 @@ namespace ThirdParty.PT
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-
-            var evnName = EnvironmentName;
-
-
             var currency = tpCustInfo.TpCurrencyId;
             var apiUrl = GetApiUrl(inputs);
             var adminName = GetAdminName(inputs, currency);
@@ -646,35 +641,17 @@ namespace ThirdParty.PT
         /// <returns></returns>
         private void SandLesTalkMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
         {
-            var letsTalkGroupName = string.Empty;
-            var commonServiceHost = string.Empty;
-
-            switch (EnvironmentName) // 有機會改成 di 取得，先暫時這樣
-            {
-                case "Local":
-                    letsTalkGroupName = "TestNotification";
-                    commonServiceHost = "http://52.221.19.140:59359";
-                    break;
-                case "Development":
-                    letsTalkGroupName = "TestNotification";
-                    commonServiceHost = "http://172.31.17.90:59359";
-                    break;
-                case "Production":
-                    letsTalkGroupName = "SMSNotification";
-                    commonServiceHost = "http://10.4.194.104:59359";
-                    break;
-            }
-
+         
             var message = GetAlertMessage(tpCustInfo, userTransferAmount);
 
             var postData = new
             {
-                GroupName = letsTalkGroupName,
+                GroupName = LetsTalkGroupName,
                 Message = message
             };
             var parameters = JsonConvert.SerializeObject(postData);
 
-            var httpResponse = HttpPostClient($"{commonServiceHost}/Common/LetsTalk/SendMessage",
+            var httpResponse = HttpPostClient($"{CommonServiceHost}/Common/LetsTalk/SendMessage",
                 parameters, "application/json");
         }
 
