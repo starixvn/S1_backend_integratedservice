@@ -35,6 +35,8 @@ namespace ThirdPartyService.Controllers
             ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
             ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
             ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
+            ThirdPartyHelperBase.CommonServiceHost = configuration.GetValue<string>("AiLabServiceHost:CommonServiceHost");
+            ThirdPartyHelperBase.LetsTalkGroupName = configuration.GetValue<string>("LetsTalkConfig:LetsTalkGroupName");
             this.configuration = configuration;
             this.common = common;
             this.tpCustInfoService = tpCustInfoService;

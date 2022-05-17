@@ -178,7 +178,7 @@ namespace ThirdParty.PT
 
             return oApiResult;
         }
-   
+
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             var currency = tpCustInfo.TpCurrencyId;
@@ -214,7 +214,7 @@ namespace ThirdParty.PT
                 };
             }
 
-            
+
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(transfer));
 
@@ -298,7 +298,7 @@ namespace ThirdParty.PT
             return apiResult;
         }
 
-     
+
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -508,13 +508,13 @@ namespace ThirdParty.PT
         /// <param name="inputs"></param>
         /// <returns></returns>
         public override ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {                      
+        {
             var currency = tpCustInfo.TpCurrencyId;
             var apiUrl = GetApiUrl(inputs);
             var adminName = GetAdminName(inputs, currency);
             var entityKey = GetEntityKey(inputs, currency);
             var pass = GetPass(inputs, currency);
-          
+
             apiUrl = $"{apiUrl}/admin/info/adminname/{adminName}";
 
             var header = GetHeader(entityKey);
@@ -522,7 +522,7 @@ namespace ThirdParty.PT
 
             var signUp = new
             {
-                adminname = adminName                
+                adminname = adminName
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(signUp));
@@ -536,7 +536,7 @@ namespace ThirdParty.PT
           );
 
             var oApiResult = new ApiResult<MerchantBalanceResponse>();
-          
+
             if (IsJSON(result))
             {
                 var error = JsonConvert.DeserializeObject<ApiErrorResponse>(result);
@@ -547,15 +547,15 @@ namespace ThirdParty.PT
                     oApiResult.RawErrorCode = error.errorcode.ToString() ?? "";
                 }
                 else
-                {                   
+                {
                     var json = JsonConvert.DeserializeObject<TpMerchantBalanceResponse>(result);
                     oApiResult.Data = new MerchantBalanceResponse()
                     {
                         MerchantBalance = json.Result.MerchantBalance,
                         MerchantName = json.Result.MerchantName,
                         CurrencyName = currency
-                    };                    
-                    oApiResult.ErrorCode = ErrorCode.Success;          
+                    };
+                    oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.RawMessage = "";
                     oApiResult.RawErrorCode = "";
                 }
@@ -567,7 +567,7 @@ namespace ThirdParty.PT
                 oApiResult.RawErrorCode = "1";
             }
 
-            return oApiResult;          
+            return oApiResult;
         }
 
         #region private method
@@ -642,31 +642,17 @@ namespace ThirdParty.PT
         /// <returns></returns>
         private void SandLesTalkMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
         {
-            // local
-            //var letsTalkGroupName = "TestNotification";
-            //var commonServiceHost = "http://52.221.19.140:59359";
-
-            // dev
-            //var letsTalkGroupName = "TestNotification";
-            //var commonServiceHost = "http://172.31.17.90:59359";
-
-            // prd
-            //var letsTalkGroupName = "SMSNotification";
-            //var commonServiceHost = "http://10.4.194.104:59359"; 
-
-            var letsTalkGroupName = "TestNotification";
-            var commonServiceHost = "http://172.31.17.90:59359";
-
+         
             var message = GetAlertMessage(tpCustInfo, userTransferAmount);
 
             var postData = new
             {
-                GroupName = letsTalkGroupName,
+                GroupName = LetsTalkGroupName,
                 Message = message
             };
             var parameters = JsonConvert.SerializeObject(postData);
 
-            var httpResponse = HttpPostClient($"{commonServiceHost}/Common/LetsTalk/SendMessage",
+            var httpResponse = HttpPostClient($"{CommonServiceHost}/Common/LetsTalk/SendMessage",
                 parameters, "application/json");
         }
 
