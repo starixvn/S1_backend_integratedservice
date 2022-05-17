@@ -35,7 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             _tpUnSettledBll = provider.GetRequiredService<TpUnSettledBLL>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBll = provider.GetRequiredService<SettledBLL>();
-            _allBetBll = provider.GetRequiredService<AllbetBll>();
+            _allBetBll = new AllbetBll(provider);
             _logger = provider.GetRequiredService<ILogger<TpReRequestWorker>>();
         }
         
