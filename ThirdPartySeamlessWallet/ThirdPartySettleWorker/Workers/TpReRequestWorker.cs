@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Controllers;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
@@ -21,10 +22,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private readonly TpUnSettledBLL _tpUnSettledBll;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly SettledBLL _settledBll;
+        private readonly AllbetBll _allBetBll;
         private readonly ILogger<TpReRequestWorker> _logger;
         private Timer _evoTimer;
         private Timer _ppTimer;
-
+        private Timer _allBetTimer;
+        
         public TpReRequestWorker(IServiceProvider provider)
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
@@ -32,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             _tpUnSettledBll = provider.GetRequiredService<TpUnSettledBLL>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBll = provider.GetRequiredService<SettledBLL>();
+            _allBetBll = provider.GetRequiredService<AllbetBll>();
             _logger = provider.GetRequiredService<ILogger<TpReRequestWorker>>();
         }
 
@@ -39,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             _evoTimer = new Timer(DoEvoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             _ppTimer = new Timer(DoPPTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _allBetTimer = new Timer(DoAllBetTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -158,6 +163,49 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 _ppTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+        
+        private void DoAllBetTask(object state)
+        {
+            try
+            {
+                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, Tp.Allbet);
+                foreach (var data in list)
+                {
+                    var result = 0;
+                    var betReq = JsonConvert.DeserializeObject<AllBetTransferRequest<AllBetTransferDetails>>(data.Request);
+                    var (tpCustInfo, _) = _allBetBll.GetTPInfo(betReq.Player);
+
+                    switch (betReq.Type)
+                    {
+                        case AllbetTransferType.Settle:
+                            result = _allBetBll.Settle(tpCustInfo, betReq, out _);
+                            break;
+                        case AllbetTransferType.ReSettle:
+                            result = _allBetBll.ReSettle(tpCustInfo, betReq, out _);
+                            break;
+                    }
+                    
+                    if (result > 0 )
+                    {
+                        _tpRequestFailBll.DelRequestFail(data.Id);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, GetCurrentMethod());
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
+                if (_environment.IsDevelopment())
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                _allBetTimer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+        
         #region Evo Private Method
 
         private EVOController.TokenInfo getTokenInfo(string token)

@@ -26,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly TpRequestFailBLL _tpRequestFailBll;
         private readonly MySqlClient _mainDbClient;
         private readonly ILogger<AllbetBll> _logger;
         private readonly Dictionary<AllbetType, Func<AllbetType, string, Task<AllBetTransferResponse>>> _requestHandler;
@@ -38,6 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _logger = provider.GetService<ILogger<AllbetBll>>();
             _requestHandler = new Dictionary<AllbetType, Func<AllbetType, string, Task<AllBetTransferResponse>>>
@@ -214,6 +216,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (Exception ex)
             {
+                switch (type.Type)
+                {
+                    case AllbetTransferType.Settle:
+                        _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.Allbet, TpRequestFailureCategory.Settle, JsonConvert.SerializeObject(request), ex.Message);
+                        break;
+                    case AllbetTransferType.ReSettle:
+                        _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.Allbet, TpRequestFailureCategory.ReSettle, JsonConvert.SerializeObject(request), ex.Message);
+                        break;
+                }
+              
                 _logger.LogError(ex, ex.Message);
                 return new AllBetTransferResponse(AllbetResultCode.SystemError);
             }
@@ -282,7 +294,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return tpCustBalance.Balance;
         }
         
-        private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
+        public (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
             if (tpCustInfo == null)
@@ -393,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
         
-        private int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+        public int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
@@ -444,7 +456,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
 
-        private int ReSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+        public int ReSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
