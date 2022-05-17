@@ -294,7 +294,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return tpCustBalance.Balance;
         }
         
-        private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
+        public (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
             if (tpCustInfo == null)
@@ -405,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
         
-        private int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+        public int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
@@ -456,7 +456,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
 
-        private int ReSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
+        public int ReSettle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
