@@ -15,6 +15,7 @@ using System.Xml.Serialization;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdPartyCore
 {
@@ -592,9 +593,16 @@ namespace ThirdPartyCore
         {
             throw new GetBetDetailNotImplementedException($"TpId:{getBetDetail.TpGameTypeOption.TpId} GetBetDetail NotImplemented.");
         }
+
+        public virtual TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException($"TpId:{betRecordInfo.TpId} GetTpBetRecordExtend NotImplemented.");
+        }
     }
     public interface IThirdPartyTpBetRecordDetail
     {
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+
+        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 }

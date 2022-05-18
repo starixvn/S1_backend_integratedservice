@@ -24,25 +24,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}TpBetRecordExtend"; 
+            _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend"; 
         }
 
         public void AddTpBetRecordExtend(BetRecordInfo BetRecordInfo, TpCustInfo TpCustInfo)
         {
-            var httpContent = new StringContent(JsonConvert.SerializeObject(new { BetRecordInfo, TpCustInfo }), Encoding.UTF8, "application/json");
-            var response = _httpHelper.GetClient().PostAsync(_apiUrl, httpContent).Result;
-            var responseBody = response.Content.ReadAsStringAsync().Result;
-            var tpBetRecordExtend = JsonConvert.DeserializeObject<TpBetRecordExtend>(responseBody);
-            InsertTpBetRecordExtend(tpBetRecordExtend);
+            try
+            {         
+                var content = JsonConvert.SerializeObject(new
+                {
+                    CustId = TpCustInfo.CustId,
+                    BetRecordInfo = BetRecordInfo,
+                });
+                var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
+                var response = _httpHelper.GetClient().PostAsync(_apiUrl, httpContent).Result;
+                var responseBody = response.Content.ReadAsStringAsync().Result;         
+                var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
+                if (result.ErrorCode == 0)
+                {       
+                    _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: result.Data);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
-
-        public int InsertTpBetRecordExtend(TpBetRecordExtend tpBetRecordExtend)
-        {
-            return _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: tpBetRecordExtend);
-        }
-
-
-
-
     }
 }
