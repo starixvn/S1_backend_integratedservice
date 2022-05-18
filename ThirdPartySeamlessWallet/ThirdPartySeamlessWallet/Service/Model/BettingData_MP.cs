@@ -19,14 +19,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string orderId { get; set; }
         public string roundId { get; set; }
         public string gameNo { get; set; }
-        public string player
-        {
-            get
-            {
-                string[] acc = account.Split('_');
-                return acc[1];
-            }
-        }
+        public decimal? totalBet { get; set; }
+        public decimal? validBet { get; set; }
+        public int? betCount { get; set; }
+        public decimal? totalWithdraw { get; set; }
     }
 
     public class SettleDataPK_MP : SettleData
