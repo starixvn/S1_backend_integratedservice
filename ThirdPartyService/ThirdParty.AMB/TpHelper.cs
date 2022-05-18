@@ -41,9 +41,9 @@ namespace ThirdParty.AMB
                 }
             }
             
-            if (inputs.ContainsKey($"{tpCustInfo.TpCurrencyId}SlotApiUrl") && 
-                inputs.ContainsKey($"{tpCustInfo.TpCurrencyId}SlotAgent") && 
-                inputs.ContainsKey($"{tpCustInfo.TpCurrencyId}SlotSecretKey"))
+            if (inputs.ContainsKey($"SlotApiUrl{tpCustInfo.TpCurrencyId}") && 
+                inputs.ContainsKey($"SlotAgent{tpCustInfo.TpCurrencyId}") && 
+                inputs.ContainsKey($"SlotSecretKey{tpCustInfo.TpCurrencyId}"))
             {
                 var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs, tpCustInfo.TpCurrencyId);
                 var slotResult = ambSlot.CreateMember(tpCustInfo.TpUserName, HttpPost);

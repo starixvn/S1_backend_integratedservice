@@ -11,9 +11,9 @@ namespace ThirdParty.AMB
         {
             Setting = new AMBSetting()
             {
-                ApiUrl = inputs[$"{tpCurrency}SlotApiUrl"], 
-                Agent = inputs[$"{tpCurrency}SlotAgent"], 
-                SecretKey = inputs[$"{tpCurrency}SlotSecretKey"]
+                ApiUrl = inputs[$"SlotApiUrl{tpCurrency}"], 
+                Agent = inputs[$"SlotAgent{tpCurrency}"], 
+                SecretKey = inputs[$"SlotSecretKey{tpCurrency}"]
             };
         }
 
