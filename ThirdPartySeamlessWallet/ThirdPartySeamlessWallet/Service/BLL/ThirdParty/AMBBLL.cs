@@ -68,15 +68,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
                 };
             }
-
+            
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.username, (int)GameType);
+            if (tpCustBalance == null)
+            {
+                _logger.LogError($"GetBalance Fail: balance not found.");
+                return new AMBSlotGetBalanceResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
+                };
+            }
+            
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotGetBalance(agent, out message))
+            if (!CheckAgentId(agent, tpCustBalance.TpCurrencyId))
             {
                 return new AMBSlotGetBalanceResponse()
                 {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = "Invalid agent id" }
                 };
             }
 
@@ -88,18 +98,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (!GetBalanceForSlotGetBalance(request.username, out decimal balance, out message))
-            {
-                return new AMBSlotGetBalanceResponse()
-                {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
-                };
-            }
-
             return new AMBSlotGetBalanceResponse()
             {
                 status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
-                data = new AMBSlotDataModelForBalance() { balance = balance }
+                data = new AMBSlotDataModelForBalance() { balance = tpCustBalance.Balance }
             };
         }
 
@@ -119,11 +121,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotBet(agent, out message))
+            if (!CheckAgentId(agent, request.currency))
             {
                 return new AMBSlotBetResponse()
                 {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = "Invalid agent id" }
                 };
             }
 
@@ -243,11 +245,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request)
         {
-            //if (string.Equals(request.gameId, "ANGRYBIRD", StringComparison.OrdinalIgnoreCase))
-            //{
-            //    Thread.Sleep(60 * 1000);//Test Cancel Bet
-            //}
-
             var message = string.Empty;
             decimal beforeBalance = 0; decimal afterBalance = 0;
 
@@ -262,11 +259,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotPayout(agent, out message))
+            if (!CheckAgentId(agent, request.currency))
             {
                 return new AMBSlotPayoutResponse()
                 {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = "Invalid agent id" }
                 };
             }
 
@@ -420,11 +417,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
-            if (!CheckAgentIdForSlotCancel(agent, out message))
+            if (!CheckAgentId(agent, request.currency))
             {
                 return new AMBSlotCancelResponse()
                 {
-                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = message }
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = "Invalid agent id" }
                 };
             }
 
@@ -546,46 +543,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return true;
         }
-
-        private bool CheckAgentIdForSlotGetBalance(string agentId, out string message)
-        {
-            message = string.Empty;
-            try
-            {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-                if (thirdPartySetting == null)
-                {
-                    message = "tpinfo not found.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
-
-                if (string.IsNullOrWhiteSpace(slotAgent))
-                {
-                    message = "tpinfo.agent is null.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                if (slotAgent != agentId)
-                {
-                    message = "tpinfo.agent is not equal request.agentId.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
-                return false;
-            }
-        }
-
         private bool CheckThirdPartyForSlotGetBalance(string username, out string message)
         {
             message = string.Empty;
@@ -715,46 +672,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             return true;
-        }
-
-        private bool CheckAgentIdForSlotBet(string agentId, out string message)
-        {
-            message = string.Empty;
-            try
-            {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-                if (thirdPartySetting == null)
-                {
-                    message = "tpinfo not found.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
-
-                if (string.IsNullOrWhiteSpace(slotAgent))
-                {
-                    message = "tpinfo.agent is null.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                if (slotAgent != agentId)
-                {
-                    message = "tpinfo.agent is not equal request.agentId.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"CheckAgentId Exception:{ex.ToString()}");
-                return false;
-            }
         }
 
         private bool CheckThirdPartyForSlotBet(string username, out string message)
@@ -1022,46 +939,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             return true;
-        }
-
-        private bool CheckAgentIdForSlotPayout(string agentId, out string message)
-        {
-            message = string.Empty;
-            try
-            {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-                if (thirdPartySetting == null)
-                {
-                    message = "tpinfo not found.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
-
-                if (string.IsNullOrWhiteSpace(slotAgent))
-                {
-                    message = "tpinfo.agent is null.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                if (slotAgent != agentId)
-                {
-                    message = "tpinfo.agent is not equal request.agentId.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"CheckAgentId Exception:{ex.ToString()}");
-                return false;
-            }
         }
 
         private bool CheckThirdPartyForSlotPayout(string username, out string message)
@@ -1361,46 +1238,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return true;
         }
 
-        private bool CheckAgentIdForSlotCancel(string agentId, out string message)
-        {
-            message = string.Empty;
-            try
-            {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-                if (thirdPartySetting == null)
-                {
-                    message = "tpinfo not found.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                string slotAgent = thirdPartySetting.TpSetting["SlotAgent"];
-
-                if (string.IsNullOrWhiteSpace(slotAgent))
-                {
-                    message = "tpinfo.agent is null.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                if (slotAgent != agentId)
-                {
-                    message = "tpinfo.agent is not equal request.agentId.";
-                    _logger.LogError($"CheckAgentId Fail:{message}");
-                    return false;
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"CheckAgentId Exception:{ex.ToString()}");
-                return false;
-            }
-        }
-
         private bool GetTpCustInfoForSlotCancel(string username, out TpCustInfo tpCustInfo, out string message)
         {
             message = string.Empty;
@@ -1553,6 +1390,41 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");
+        }
+
+        private bool CheckAgentId(string agentId, string currencyId)
+        {
+            try
+            {
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+
+                if (thirdPartySetting == null)
+                {
+                    _logger.LogError("CheckAgentId Fail: tpinfo not found.");
+                    return false;
+                }
+
+                var slotAgent = thirdPartySetting.TpSetting[$"SlotAgent{currencyId}"];
+
+                if (string.IsNullOrWhiteSpace(slotAgent))
+                {
+                    _logger.LogError("CheckAgentId Fail: tpinfo.geant is null.");
+                    return false;
+                }
+
+                if (slotAgent != agentId)
+                {
+                    _logger.LogError($"CheckAgentId Fail: {slotAgent} is not equal {agentId}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"CheckAgentId Exception:{ex.Message}");
+                return false;
+            }
         }
 
         #endregion
