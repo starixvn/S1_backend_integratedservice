@@ -105,7 +105,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBSW_Keno = 73,
         SBSW_Lottery = 74,
         SBSW_TableGame = 75,
-        AMB_RNG = 76
+        AMB_RNG = 76,
+        SBO_Sports = 77
     }
     public enum Tp
     {
@@ -149,7 +150,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         RedTiger = 38,
         AP = 39,
         HB = 40,
-        SBSW = 41
+        SBSW = 41,
+        SBO = 42,
     }
     public enum TransferType : int
     {
