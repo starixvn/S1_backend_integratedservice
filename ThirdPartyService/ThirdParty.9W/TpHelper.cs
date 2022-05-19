@@ -279,7 +279,7 @@ namespace ThirdParty.NineW
 
         private string GetKey(string user, string currency, NineWConfig config)
         {
-            var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/getKey";
+            var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/getKey";
             var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -329,20 +329,26 @@ namespace ThirdParty.NineW
         private class NineWConfig
         {
             public string ApiUrl { get; set; }
+
+            public string OldApiUrl { get; set; }
             public string WebSite { get; set; }
             public string Cert { get; set; }
             public string Agent { get; set; }
 
+
+
             public NineWConfig(Dictionary<string, string> inputs)
             {
                 ApiUrl = inputs.ContainsKey($"ApiUrl") && !string.IsNullOrEmpty(inputs[$"ApiUrl"])
-                ? inputs[$"ApiUrl"] : throw new Exception($"apihost is empty");
+                ? inputs[$"ApiUrl"] : throw new Exception($"ApiHost is empty");
                 WebSite = inputs.ContainsKey($"website") && !string.IsNullOrEmpty(inputs[$"website"])
                 ? inputs[$"website"] : throw new Exception($"website is empty");
                 Cert = inputs.ContainsKey($"cert") && !string.IsNullOrEmpty(inputs[$"cert"])
                 ? inputs[$"cert"] : throw new Exception($"cert is empty");
                 Agent = inputs.ContainsKey($"agent") && !string.IsNullOrEmpty(inputs[$"agent"])
                 ? inputs[$"agent"] : throw new Exception($"agent is empty");
+                OldApiUrl = inputs.ContainsKey($"OldApiUrl") && !string.IsNullOrEmpty(inputs[$"OldApiUrl"])
+                    ? inputs[$"OldApiUrl"] : throw new Exception($"OldApiHost is empty");
             }
         }
 
