@@ -182,14 +182,14 @@ namespace ThirdParty.RedTiger
             string[] cutHost = ApiUrl.Split(word);
             string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
 
-            var CreateTime = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
+            var slotData = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId });
 
-            if (!string.IsNullOrWhiteSpace(CreateTime))
+            if (slotData != null)
             {
                 //General Data
                 var BetDetail = new
                 {
-                    startDate = CreateTime,
+                    startDate = slotData.GetValueOrDefault("CreateTime")?.ToString(),
                     gameProvider = GameProvider,
                     transactionId = getBetDetail.TransId
                 };
