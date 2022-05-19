@@ -14,7 +14,8 @@ namespace ThirdPartyCore.Model.TpBetRecordExtend
         {
             TpId = betRecordInfo.TpId;
             TransId = betRecordInfo.TransId;
-            GameType = betRecordInfo.GameType;
+            GameType = betRecordInfo.GameType;     
+            ProviderID = betRecordInfo.TpId.ToString();
         }
         public int TpId { get; set; }
         public string TransId { get; set; }
