@@ -1,0 +1,145 @@
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog.Context;
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Model.Exceptions;
+using ThirdPartySettleWorker.Model.Interfaces;
+
+namespace ThirdPartySettleWorker.Workers
+{
+    public class SBOWorker : BackgroundService, ISettleWorker
+    {
+        public Tp Tp => Tp.SBO;
+        private Timer _timer;
+        private readonly SettledBLL _settledBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ILogger<SBOWorker> _logger;
+        private readonly string _tpName;
+
+        public SBOWorker(IServiceProvider provider)
+        {
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _logger = provider.GetRequiredService<ILogger<SBOWorker>>();
+            _tpName = Enum.GetName(typeof(Tp), Tp);
+            LogContext.PushProperty("TP", _tpName);
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _timer = new Timer(DoSettle, GameType.SBO_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            _timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+
+        private void DoSettle(object state)
+        {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
+            var forContinue = false;
+            var isError = false;
+
+            var gameType = (GameType)state;
+            var tpCategory = TpCategory.Sports;
+
+            const string logName = "SettleSBO";
+            const string getSpName = "Service_BettransSports_SBO_Unsettle_Get";
+
+            try
+            {
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                if (!tpUnsettleList.Any())
+                {
+                    throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+                }
+
+                forContinue = tpUnsettleList.Count() == 200;
+                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
+                {
+                    try
+                    {
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSpName, new { TransId = transId }, DataBase.Main).First();
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = settleData.Stake,
+                            ValidBet = settleData.Stake,
+                            WinlostAmount = settleData.WinLostAmount,
+                            TransId = settleData.TransId,
+                            GameType = gameType,
+                            TpUserName = settleData.Account,
+                            SettledTime = settleData.SettleTime,
+                            TransTime = settleData.TransTime,
+                            SettlementType = SettlementType.SettledForValid,
+                            TicketStatus = SetTicketStatus(settleData.WinLostAmount),
+                        };
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, true);
+                            });
+                        }
+                    }
+                    catch (Exception ex1)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, false);
+                        });
+                        isError = true;
+                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
+                    }
+                }
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{logName} exMessage:{ex.Message}");
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(30);
+                }
+
+                _timer?.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private TicketStatus SetTicketStatus(decimal winLostAmount)
+        {
+            if (winLostAmount == 0) return TicketStatus.Draw;
+
+            return winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost;
+        }
+    }
+}

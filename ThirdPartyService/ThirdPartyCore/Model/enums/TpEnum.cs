@@ -101,7 +101,9 @@ namespace ThirdPartyCore.Model.enums
         Netent_RNG = 64,
         RedTiger_RNG = 65,
         HB_RNG = 68,
-        AMB_RNG = 76
+        AMB_RNG = 76,
+        SBO_Sports = 77,
+        SBO_Games = 78,
+        SBO_Casino = 79
     }
-
 }
