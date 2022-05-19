@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Allbet
 {
@@ -168,6 +169,34 @@ namespace ThirdParty.Allbet
                     TpCurrency = tpCurrency,
                 }
             };  
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId });
+            var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
+            return new TpBetRecordExtend(betRecordInfo)
+            {
+                Provider = TpBetRecordProvider.GetTpName(betRecordInfo.TpId),
+                Currency = tpCustInfo.TpCurrencyId,
+                Product = tpGameTypeOption.TypeName,
+                VIPlevel = "",
+                Tag = "",
+                GameID = gameCode,                       
+                Category = TpCategory.LiveCasino.ToString(),
+                Game = GetGameName(gameCode),
+                RefNo = wagerDetail.GetValueOrDefault("betNum")?.ToString(),
+                Title = wagerDetail.GetValueOrDefault("tableName")?.ToString(),
+                MatchID = wagerDetail.GetValueOrDefault("gameRoundId")?.ToString(),
+                BetType = wagerDetail.GetValueOrDefault("betType")?.ToString(), 
+                BetChoice = "",
+                Result = wagerDetail.GetValueOrDefault("gameResult")?.ToString(),
+                Odds = 0,
+                OddsType = "",
+                Platform = wagerDetail.GetValueOrDefault("appType")?.ToString(),
+                Live = "",
+                IP = "",
+            };
         }
 
         private string GetGameName(string gameCode)

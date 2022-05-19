@@ -9,14 +9,21 @@ namespace ThirdPartySeamlessWallet.Service.Library
 {
     public class HttpHelper
     {
-        private readonly IHttpClientFactory clientFactory;
-        private readonly IConfiguration configuration;
+        private readonly HttpClient client;
         public HttpHelper(IHttpClientFactory clientFactory, IConfiguration configuration)
         {
-            this.clientFactory = clientFactory;
-            this.configuration = configuration;
+            if (!string.IsNullOrEmpty(configuration.GetValue<string>("ProxyHost")))
+            {
+                client = clientFactory.CreateClient("with_proxy");
+            }
+            else
+            {
+                client = clientFactory.CreateClient();
+            }
         }
-        public HttpClient GetClient() => configuration.GetValue<string>("ProxyHost") != null ? clientFactory.CreateClient("with_proxy") : clientFactory.CreateClient();
 
+        public HttpClient GetClient() => client;
+
+        public HttpClient GetClientWithHandler(HttpClientHandler handler) => new HttpClient(handler);
     }
 }

@@ -63,6 +63,7 @@ namespace ThirdPartyService
 
             services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
             services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get");
+            services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

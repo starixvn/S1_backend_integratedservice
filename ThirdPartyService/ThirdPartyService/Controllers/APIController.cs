@@ -10,6 +10,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -326,6 +327,40 @@ namespace ThirdPartyService.Controllers
             {
                 logger.LogError(ex, ex.Message);
                 return new ApiResult<MerchantBalanceResponse>()
+                {
+                    ErrorCode = ErrorCode.SystemError,
+                    RawMessage = ex.Message,
+                };
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiResult<TpBetRecordExtend>> GetTpBetRecordExtend([FromBody] GetTpBetRecordExtendRequest request)
+        {
+            try
+            {
+                return thirdPartyBLL.GetTpBetRecordExtend(request);
+            }
+            catch (TpBetRecordExtendNotFoundException ex)
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = ErrorCode.TpBetRecordExtendNotFound,
+                    RawMessage = ex.Message,
+                };
+            }
+            catch (GetTpBetRecordExtendNotImplementedException ex)
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = ErrorCode.GetTpBetRecordExtendNotImplemented,
+                    RawMessage = ex.Message,
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new ApiResult<TpBetRecordExtend>()
                 {
                     ErrorCode = ErrorCode.SystemError,
                     RawMessage = ex.Message,

@@ -16,6 +16,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdPartyCore
 {
@@ -600,10 +601,16 @@ namespace ThirdPartyCore
         {
             throw new GetMerchantBalanceNotImplementedException($"TpId:{tpCustInfo.TpId} GetMerchantBalance NotImplemented.");
         }
+        public virtual TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new GetTpBetRecordExtendNotImplementedException($"TpId:{betRecordInfo.TpId} GetTpBetRecordExtend NotImplemented.");
+        }
     }
     public interface IThirdPartyTpBetRecordDetail
     {
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+
+        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
     public interface IThirdPartyTpGetMerchantBalance

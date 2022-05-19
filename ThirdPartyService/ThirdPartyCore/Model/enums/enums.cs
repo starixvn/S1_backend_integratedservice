@@ -49,6 +49,8 @@ namespace ThirdPartyCore.Model.enums
         BetDetailNotFound = 3000,
         GetBetDetailNotImplemented = 3001,
         BetDetailIsUrl = 3002,
+        TpBetRecordExtendNotFound = 3003,
+        GetTpBetRecordExtendNotImplemented = 3004,
         #endregion
 
         #region MerchantBalance (4xxxx)

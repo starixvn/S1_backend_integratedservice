@@ -13,6 +13,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
@@ -1135,6 +1136,35 @@ namespace ThirdPartyService.Service.BLL
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
             var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpCustInfo, inputs);
             return merchantBalanceResponse;
+        }
+
+        public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+        {
+            var tpId = request.BetRecordInfo.TpId;
+
+            if (!tpGameTypeConfig.TryGetValue(request.BetRecordInfo.GameType, out var gameTypeOption))
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = ErrorCode.InvalidParameter,
+                    RawMessage = "GameType not found."
+                };
+            }
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, tpId);
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = tpCustInfoResult.ErrorCode,
+                    RawMessage = tpCustInfoResult.RawMessage
+                };
+            }
+
+            var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
+            var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
+            return new ApiResult<TpBetRecordExtend>(result);
         }
 
         #region Private Methods
