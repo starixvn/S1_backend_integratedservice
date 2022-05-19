@@ -41,7 +41,8 @@ namespace ThirdParty.NineW.Tests
 
             _inputs = new Dictionary<string, string>
             {
-                { "ApiUrl", "https://test81.cckk77.net/apiWallet" },
+                { "ApiUrl", "https://apiinfo.cckk77.net/api/apiWallet" },
+                { "OldApiUrl", "https://test81.cckk77.net/apiWallet" },
                 { "cert", "wkVwQ8sMVr252EA9" },
                 { "agent", "testnvccricma" },             
                 { "website", "WICKETSPRO" },
