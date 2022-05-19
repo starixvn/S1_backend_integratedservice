@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Web;
+using System.Xml.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.BTI
 {
@@ -37,7 +40,7 @@ namespace ThirdParty.BTI
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var GameUrl = inputs.ContainsKey($"GameUrl") && !string.IsNullOrEmpty(inputs[$"GameUrl"]) 
+            var GameUrl = inputs.ContainsKey($"GameUrl") && !string.IsNullOrEmpty(inputs[$"GameUrl"])
                 ? inputs[$"GameUrl"] : throw new Exception($"GameUrl is empty");
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
@@ -48,10 +51,10 @@ namespace ThirdParty.BTI
                     Message = $"{GameUrl}/{TpLangId}/"
                 };
             }
-            
+
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token , tpCustInfo.TpUserName };
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             var host = inputs.ContainsKey($"Host") && !string.IsNullOrEmpty(inputs[$"Host"])
@@ -70,6 +73,144 @@ namespace ThirdParty.BTI
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var sportsDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { getBetDetail.TransId });
+            var xd = XDocument.Parse(sportsDetail.GetValueOrDefault("BodyData")?.ToString());
+            var selection = xd.Descendants("Selection").FirstOrDefault();
+            var detail = ToJson(sportsDetail);
+            var (homeyScore, awayScore) = FindScore(selection);
+            var (homeyHandicap, awayHandicap, handicap) = FindHandicap(selection);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    TpUserName = sportsDetail.GetValueOrDefault("cust_id")?.ToString(),
+                    UTCBetTime = DateTime.Parse(sportsDetail.GetValueOrDefault("TransTime").ToString()),
+                    UTCSettledTime = DateTime.Parse(sportsDetail.GetValueOrDefault("SettleTime").ToString()),
+                    Stake = (decimal)sportsDetail.GetValueOrDefault("Stake"),
+                    WinlostAmount = (decimal)sportsDetail.GetValueOrDefault("WinLostAmount"),
+                    RefTransId = sportsDetail.GetValueOrDefault("reserve_id")?.ToString(),
+
+                    Odds = selection.Attribute("DecimalOdds").Value,
+                    LeagueName = selection.Attribute("LeagueName").Value,
+                    SelectionName = selection.Attribute("YourBet").Value,
+                    HomeTeamName = selection.Attribute("HomeTeam").Value,
+                    AwayTeamName = selection.Attribute("AwayTeam").Value,
+                    EventName = selection.Attribute("EventTypeName").Value,
+                    TicketStatus = FindTicketStatus(xd),
+                    HomeyScore = homeyScore,
+                    AwayScore = awayScore,
+                    AwayHandicap = awayHandicap,
+                    HomeHandicap = homeyHandicap,
+                    Handicap = handicap,
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
+        }
+
+        private string FindTicketStatus(XDocument XD)
+        {
+            try
+            {
+                foreach (XElement item in XD.Descendants("Bet"))
+                {
+                    //比對狀態不同的回傳ID
+                    if (item.Attribute("OldStatus").Value != item.Attribute("NewStatus").Value)
+                    {
+                        return item.Attribute("NewStatus").Value;
+                    }
+                }
+                //都沒找到使用第一筆找到的
+                return XD.Descendants("Bet").FirstOrDefault().Attribute("NewStatus").Value;
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+        private (string homeyScore, string awayScore) FindScore(XElement element)
+        {
+            try
+            {
+                var result = element.Attribute("CurrentResult").Value.Split(":");
+                return (result[0].Trim(), result[1].Trim());
+            }
+            catch (Exception)
+            {
+                return ("", "");
+            }
+        }
+
+        private (string homeyHandicap, string awayHandicap, string handicap) FindHandicap(XElement element)
+        {
+            var homeyHandicap = string.Empty;
+            var awayHandicap = string.Empty;
+            var handicap = string.Empty;
+            try
+            {
+
+                //Marseille (Pipis) -0.25
+                //LA Galaxy -0
+                //Le Havre +0.5
+                var yourBet = element.Attribute("YourBet").Value;
+                var homeTeamName = element.Attribute("HomeTeam").Value;
+                var awayTeamName = element.Attribute("AwayTeam").Value;
+
+                var plus = yourBet.IndexOf("+");
+                if (plus > 0)
+                {
+                    handicap = yourBet.Substring(plus + 1, yourBet.Length - (plus + 1));
+                    if (yourBet.Contains(homeTeamName))
+                    {
+                        homeyHandicap = $"+{handicap}";
+                        awayHandicap = $"-{handicap}";
+                    }
+                    if (yourBet.Contains(awayTeamName))
+                    {
+                        awayHandicap = $"+{handicap}";
+                        homeyHandicap = $"-{handicap}";
+                    }
+                }
+
+                var minus = yourBet.IndexOf("-");
+                if (minus > 0)
+                {
+                    handicap = yourBet.Substring(minus + 1, yourBet.Length - (minus + 1));
+                    if (yourBet.Contains(homeTeamName))
+                    {
+                        homeyHandicap = $"-{handicap}";
+                        awayHandicap = $"+{handicap}";
+                    }
+                    if (yourBet.Contains(awayTeamName))
+                    {
+                        awayHandicap = $"-{handicap}";
+                        homeyHandicap = $"+{handicap}";
+                    }
+                }
+
+
+            }
+            catch (Exception)
+            {
+                // use default
+            }
+            return (homeyHandicap, awayHandicap, handicap);
         }
     }
 }
