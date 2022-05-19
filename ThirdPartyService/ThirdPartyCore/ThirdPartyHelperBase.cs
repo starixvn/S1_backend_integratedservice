@@ -69,6 +69,10 @@ namespace ThirdPartyCore
         public static ITpCustInfoProvider TpCustInfoProvider { set; get; }
         public static IBetLimitProvider BetLimitProvider { set; get; }
 
+        public static string CommonServiceHost { get; set; }
+
+        public static string LetsTalkGroupName { get; set; }
+
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }
         public static string ContentRootPath { set; get; }
