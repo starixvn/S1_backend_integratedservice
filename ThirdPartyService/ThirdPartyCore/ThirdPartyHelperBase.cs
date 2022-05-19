@@ -596,7 +596,7 @@ namespace ThirdPartyCore
 
         public virtual TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException($"TpId:{betRecordInfo.TpId} GetTpBetRecordExtend NotImplemented.");
+            throw new GetTpBetRecordExtendNotImplementedException($"TpId:{betRecordInfo.TpId} GetTpBetRecordExtend NotImplemented.");
         }
     }
     public interface IThirdPartyTpBetRecordDetail
