@@ -1044,7 +1044,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("WinAmount", bettingDataRNG_PG.TransferAmount);
             try
             {
-                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PG_Ins_V3", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -1191,7 +1191,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PG_Ins_V3", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
