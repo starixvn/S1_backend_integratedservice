@@ -195,7 +195,7 @@ namespace ThirdParty.EVO
             else
             {
                 //promo_payout data
-                wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _promotionTransactionId = getBetDetail.TransId });
+                wagerDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _promotionTransactionId = getBetDetail.TransId });
 
                 var detail = ToJson(wagerDetail);
                 return getBetDetail.TpGameTypeOption.CategoryId switch
