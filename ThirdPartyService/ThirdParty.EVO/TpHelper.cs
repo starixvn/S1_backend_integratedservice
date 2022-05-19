@@ -164,30 +164,65 @@ namespace ThirdParty.EVO
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId });
-            var detail = ToJson(wagerDetail);
-            return getBetDetail.TpGameTypeOption.CategoryId switch
+            if (wagerDetail != null)
             {
-                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                //general data
+                var detail = ToJson(wagerDetail);
+                return getBetDetail.TpGameTypeOption.CategoryId switch
                 {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("transactionId")?.ToString(),
-                    TpUserName = wagerDetail.GetValueOrDefault("playerId")?.ToString(),
-                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("placedOn", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settledAt", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("stake") * tpCurrency.ExchangeRate,
-                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("payout") - (decimal)wagerDetail.GetValueOrDefault("stake")) * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString(),
-                    GameName = wagerDetail.GetValueOrDefault("gameType")?.ToString(),
-                },
-                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                    TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        Detail = detail,
+                        TpCurrency = tpCurrency,
+                        RefTransId = wagerDetail.GetValueOrDefault("transactionId")?.ToString(),
+                        TpUserName = wagerDetail.GetValueOrDefault("playerId")?.ToString(),
+                        UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("placedOn", DateTime.MinValue),
+                        UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settledAt", DateTime.MinValue),
+                        Stake = (decimal)wagerDetail.GetValueOrDefault("stake") * tpCurrency.ExchangeRate,
+                        WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("payout") - (decimal)wagerDetail.GetValueOrDefault("stake")) * tpCurrency.ExchangeRate,
+                        GameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString(),
+                        GameName = wagerDetail.GetValueOrDefault("gameType")?.ToString(),
+                    },
+                    _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        Detail = detail,
+                        TpCurrency = tpCurrency,
+                    }
+                };
+            }
+            else
+            {
+                //promo_payout data
+                wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _promotionTransactionId = getBetDetail.TransId });
+
+                var detail = ToJson(wagerDetail);
+                return getBetDetail.TpGameTypeOption.CategoryId switch
                 {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                }
-            };
+                    TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        Detail = detail,
+                        TpCurrency = tpCurrency,
+                        RefTransId = wagerDetail.GetValueOrDefault("promotionTransactionId")?.ToString(),
+                        TpUserName = wagerDetail.GetValueOrDefault("userId")?.ToString(),
+                        UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("placedOn", DateTime.MinValue),
+                        UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("CreateTime", DateTime.MinValue),
+                        Stake = 0,
+                        WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("payout"),
+                        GameCode = wagerDetail.GetValueOrDefault("gameId")?.ToString(),
+                        GameName = wagerDetail.GetValueOrDefault("gameType")?.ToString()
+                    },
+                    _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        Detail = detail,
+                        TpCurrency = tpCurrency,
+                    }
+                };
+            }
+
         }
     }
 }
