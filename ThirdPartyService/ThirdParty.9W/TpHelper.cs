@@ -170,7 +170,7 @@ namespace ThirdParty.NineW
                 ErrorCode = ErrorCode.Success,
                 Message = JsonConvert.SerializeObject(new
                 {
-                    url = $"{config.ApiUrl}/player/{config.WebSite}/login",
+                    url = $"{config.OldApiUrl}/player/{config.WebSite}/login",
                     key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config),
                     userId = tpCustInfo.TpUserName,
                 })
@@ -255,7 +255,7 @@ namespace ThirdParty.NineW
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
-            var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/logout";
+            var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/logout";
             var sParam = $"cert={config.Cert}&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
