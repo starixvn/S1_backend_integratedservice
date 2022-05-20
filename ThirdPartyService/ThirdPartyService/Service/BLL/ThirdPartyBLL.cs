@@ -1127,14 +1127,14 @@ namespace ThirdPartyService.Service.BLL
         /// <summary>
         /// 取的商戶餘額
         /// </summary>
-        /// <param name="tpCustInfo"></param>
+        /// <param name="tpMerchantInfo"></param>
         /// <returns></returns>
-        public ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpCustInfo tpCustInfo)
+        public ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo)
         {
-            var tpHelper = (IThirdPartyTpGetMerchantBalance)thirdPartyHelper.GetThirdPartyHelper(tpCustInfo.TpId, tpCustInfo.SiteId);
-            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpCustInfo.TpId, tpCustInfo.SiteId);
+            var tpHelper = (IThirdPartyTpGetMerchantBalance)thirdPartyHelper.GetThirdPartyHelper(tpMerchantInfo.TpId, tpMerchantInfo.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpMerchantInfo.TpId, tpMerchantInfo.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
-            var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpCustInfo, inputs);
+            var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpMerchantInfo, inputs);
             return merchantBalanceResponse;
         }
 
