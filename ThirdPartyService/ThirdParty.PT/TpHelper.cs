@@ -506,9 +506,9 @@ namespace ThirdParty.PT
         /// <param name="tpCustInfo"></param>
         /// <param name="inputs"></param>
         /// <returns></returns>
-        public override ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public override ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs)
         {
-            var currency = tpCustInfo.TpCurrencyId;
+            var currency = tpMerchantInfo.TpCurrencyId;
             var apiUrl = GetApiUrl(inputs);
             var adminName = GetAdminName(inputs, currency);
             var entityKey = GetEntityKey(inputs, currency);
