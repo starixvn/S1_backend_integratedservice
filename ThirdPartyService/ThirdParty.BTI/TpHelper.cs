@@ -148,7 +148,7 @@ namespace ThirdParty.BTI
         {
             try
             {
-                var result = element.Attribute("CurrentResult").Value.Split(":");
+                var result = element.Attribute("Score").Value.Split(":");
                 return (result[0].Trim(), result[1].Trim());
             }
             catch (Exception)
