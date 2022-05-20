@@ -1408,7 +1408,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (string.IsNullOrWhiteSpace(slotAgent))
                 {
-                    _logger.LogError("CheckAgentId Fail: tpinfo.geant is null.");
+                    _logger.LogError("CheckAgentId Fail: tpinfo.agent is null.");
                     return false;
                 }
 
