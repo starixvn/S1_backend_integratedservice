@@ -7,13 +7,13 @@ namespace ThirdParty.AMB
 {
     public class AMBSlot :AMB
     {
-        public AMBSlot(IReadOnlyDictionary<string, string> inputs)
+        public AMBSlot(IReadOnlyDictionary<string, string> inputs, string tpCurrency)
         {
             Setting = new AMBSetting()
             {
-                ApiUrl = inputs["SlotApiUrl"], 
-                Agent = inputs["SlotAgent"], 
-                SecretKey = inputs["SlotSecretKey"]
+                ApiUrl = inputs[$"SlotApiUrl{tpCurrency}"], 
+                Agent = inputs[$"SlotAgent{tpCurrency}"], 
+                SecretKey = inputs[$"SlotSecretKey{tpCurrency}"]
             };
         }
 
