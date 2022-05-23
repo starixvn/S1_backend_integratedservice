@@ -2654,10 +2654,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
 
-                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3",
-
-                    new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
+
                 // 不存在有效下注
                 if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
@@ -2759,7 +2758,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             long unixTimestamp = tools.GetUnixTimestampByTicks(creationTime);
             var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
 
-            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLCByBet_MG_Get", p);
+            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", p);
             if (live.Any())
             {
                 tpGameType = (int)GameType.MG_LiveCasino;
