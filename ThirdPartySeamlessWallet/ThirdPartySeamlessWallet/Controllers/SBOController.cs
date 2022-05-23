@@ -58,15 +58,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("Deduct")]
-        public SBOBalanceResponse Deduct()
+        public SBODeductResponse Deduct(SBODeductRequest request)
         {
-            return new SBOBalanceResponse()
+            try
             {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+                return _sbobll.Deduct(request);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
         
         /// <summary>

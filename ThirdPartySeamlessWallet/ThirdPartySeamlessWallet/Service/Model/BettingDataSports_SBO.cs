@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using System;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -6,7 +7,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         
     }
-    
+
+    public class SBOResult
+    {
+        public int Result { get; set; }
+
+        public long Trx_id { get; set; }
+
+        public decimal AfterAmount { get; set; }
+    }
+
     public class SBOBalanceRequest
     {
         public string CompanyKey { get; set; }
@@ -22,5 +32,53 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Balance { get; set; }
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
+    }
+    
+    public class SBODeductRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public decimal Amount { get; set; }
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public DateTime BetTime { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public string GameRoundId { get; set; }
+        public string GamePeriodId { get; set; }
+        public string OrderDetail { get; set; }
+        public string PlayerIp { get; set; }
+        public string GameTypeName { get; set; }
+        public int Gpid { get; set; }
+        public int GameId { get; set; }
+    }
+    
+    public class SBODeductResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+        public decimal BetAmount { get; set; }
+    }
+
+    public class PlaceBetSportDto_SBO
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public decimal Amount { get; set; }
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public DateTime BetTime { get; set; }
+        public int ProductType { get; set; }
+        public string GameRoundId { get; set; }
+        public string GamePeriodId { get; set; }
+        public string OrderDetail { get; set; }
+        public string PlayerIp { get; set; }
+        public string GameTypeName { get; set; }
+        public int Gpid { get; set; }
+        public int GameId { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
     }
 }
