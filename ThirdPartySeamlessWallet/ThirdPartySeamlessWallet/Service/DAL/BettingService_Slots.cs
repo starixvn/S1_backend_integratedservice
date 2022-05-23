@@ -322,7 +322,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("WinAmount", 0);
             try
             {
-                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PG_Ins_V3", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
                 {
