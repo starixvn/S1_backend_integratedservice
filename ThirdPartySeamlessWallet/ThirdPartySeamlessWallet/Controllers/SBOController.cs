@@ -62,7 +62,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                return _sbobll.Deduct(request);
+                return _sbobll.Deduct(request).Result;
             }
             catch (Exception e)
             {

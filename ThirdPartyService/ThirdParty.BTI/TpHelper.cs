@@ -102,7 +102,7 @@ namespace ThirdParty.BTI
                     WinlostAmount = (decimal)sportsDetail.GetValueOrDefault("WinLostAmount"),
                     RefTransId = sportsDetail.GetValueOrDefault("reserve_id")?.ToString(),
 
-                    Odds = selection.Attribute("DecimalOdds").Value,
+                    Odds = selection.Attribute("OddsInUserStyle").Value,
                     LeagueName = selection.Attribute("LeagueName").Value,
                     SelectionName = selection.Attribute("YourBet").Value,
                     HomeTeamName = selection.Attribute("HomeTeam").Value,
@@ -148,7 +148,7 @@ namespace ThirdParty.BTI
         {
             try
             {
-                var result = element.Attribute("CurrentResult").Value.Split(":");
+                var result = element.Attribute("Score").Value.Split(":");
                 return (result[0].Trim(), result[1].Trim());
             }
             catch (Exception)
