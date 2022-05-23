@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string ErrorMessage { get; set; }
         public decimal BetAmount { get; set; }
     }
-
+    
     public class PlaceBetSportDto_SBO
     {
         public string CompanyKey { get; set; }
@@ -77,6 +77,47 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string GameTypeName { get; set; }
         public int Gpid { get; set; }
         public int GameId { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+    }
+    
+    public class SBOSettleRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public decimal WinLoss { get; set; }
+        public SBOResultType ResultType { get; set; }
+        public DateTime ResultTime { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public int GameType { get; set; }
+        public string GameResult { get; set; }
+        public decimal CommissionStake { get; set; }
+        public int Gpid { get; set; }
+    }
+    
+    public class SBOSettleResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+    
+    public class PayoutSportDto_SBO
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public decimal WinLoss { get; set; }
+        public int ResultType { get; set; }
+        public DateTime ResultTime { get; set; }
+        public int ProductType { get; set; }
+        public int GameType { get; set; }
+        public string GameResult { get; set; }
+        public decimal CommissionStake { get; set; }
+        public int Gpid { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
