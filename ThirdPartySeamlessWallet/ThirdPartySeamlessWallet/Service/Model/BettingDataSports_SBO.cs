@@ -150,4 +150,28 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal WinLoss { get; set; }
         public decimal Stake { get; set; }
     }
+    
+    public class SBOCancelRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public bool IsCancelAll { get; set; }
+        public string TransactionId { get; set; }
+        public int Gpid { get; set; }
+    }
+    public class SBOCancelResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+    
+    public class CancelSportDto_SBO
+    {
+        public string TransferCode { get; set; }
+        public decimal Amount { get; set; }
+    }
 }
