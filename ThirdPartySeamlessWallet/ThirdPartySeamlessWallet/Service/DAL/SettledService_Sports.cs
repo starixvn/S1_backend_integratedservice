@@ -294,6 +294,63 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+        public async Task<SBOResult> CancelBetSports_SBO(TpCustInfo tpCustInfo, CancelSportDto_SBO dto)
+        {
+            try
+            {
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+                
+                var p = new DynamicParameters(new
+                {
+                    dto.TransferCode
+                });
+
+                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                var sboResult = new SBOResult();
+                if (result != 1)
+                {
+                    sboResult.Result = result;
+                    return sboResult;
+                }
+
+                result = PayoutV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: dto.Amount,
+                    tpId: (int)Tp.SBO,
+                    tpTransId: dto.TransferCode,
+                    gameType: (int)GameType.SBO_Sports,
+                    tpCategory: TpCategory.Sports,
+                    refId: dto.TransferCode,
+                    TransType.Refunds,
+                    betData: null,
+                    out var afterAmount,
+                    "Cancel",
+                    out var bonusId,
+                    conn,
+                    trans);
+
+                if (result == 1)
+                {
+                    sboResult.AfterAmount = afterAmount;
+                    sboResult.Result = 1;
+                    trans.Commit();
+                }
+
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
+
         private TicketStatus GetSboTicketStatus(int resultType)
         {
             return resultType switch
