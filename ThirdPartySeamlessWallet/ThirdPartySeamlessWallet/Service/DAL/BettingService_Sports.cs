@@ -131,15 +131,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 await using var trans = await conn.BeginTransactionAsync();
-
-                var isExits = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransSports_SBO_Check", new { dto.TransferCode }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (isExits)
-                {
-                    return new SBOResult()
-                    {
-                        Result = -1
-                    };
-                }
                 
                 dto.TicketType = (int)BettransType.Bet;
                 dto.TicketStatus = (int)TicketStatus.UnSettled;

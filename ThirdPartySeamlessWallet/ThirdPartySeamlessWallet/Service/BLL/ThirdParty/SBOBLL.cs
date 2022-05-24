@@ -84,6 +84,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
 
+            var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+            if (betStatus != null)
+            {
+                throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
+            }
+
             var result = new SBOResult();
             if (request.ProductType == SBOProductType.SportsBook)
             {
@@ -129,6 +135,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<SBOSettleResponse> Settle(SBOSettleRequest request)
         {
+            
+            var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+            if (betStatus != null && (betStatus.TicketStatus == 1 || betStatus.TicketStatus == 2 || betStatus.TicketStatus == 4))
+            {
+                throw new SBOException(SBOErrorCode.BetAlreadySettled);
+            }
+            
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
             request.WinLoss *= tpCurrency.ExchangeRate;
             
@@ -169,7 +182,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<SBOGetBetStatusResponse> GetBetStatus(SBOGetBetStatusRequest request)
         {
-            
+            if (string.IsNullOrEmpty(request.TransferCode))
+            {
+                throw new SBOException(SBOErrorCode.BetNotExists);
+            }
+
             if (request.ProductType == SBOProductType.SportsBook)
             {
                 var data = await _sboService.GetBetStatus(request.TransferCode);
