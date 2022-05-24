@@ -1,9 +1,11 @@
-﻿using Dapper;
+﻿using System;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -225,8 +227,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-
-
+        
         public IEnumerable<BTISettleData> GetUnsettledList_BTI()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -239,8 +240,70 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_BettransSports_BTI_Settle_Set", parameters: parameters);
         }
 
+        public async Task<SBOResult> PayoutSports_SBO(TpCustInfo tpCustInfo, PayoutSportDto_SBO dto)
+        {
+            try
+            {
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
 
-      
+                dto.TicketType = (int)BettransType.Payout;
+                dto.TicketStatus = (int)GetSboTicketStatus(dto.ResultType);
+                var p = new DynamicParameters(dto);
+                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Settle_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var sboResult = new SBOResult()
+                {
+                    Result = result,
+                };
+                if (result < 1)
+                {
+                    return sboResult;
+                }
+                
+                result = PayoutV2(
+                        tpCustInfo: tpCustInfo,
+                        amount: dto.WinLoss,
+                        tpId: (int)Tp.SBO,
+                        tpTransId: dto.TransferCode,
+                        gameType: (int)GameType.SBO_Sports,
+                        tpCategory: TpCategory.Sports,
+                        refId: dto.TransferCode,
+                        TransType.Payout,
+                        betData: null,
+                        out var afterAmount,
+                        "Payout",
+                        out var bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow);
+                
+                if (result == 1)
+                {
+                    sboResult.AfterAmount = afterAmount;
+                    await trans.CommitAsync();
+                }
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
 
+        private TicketStatus GetSboTicketStatus(int resultType)
+        {
+            return resultType switch
+            {
+                0 => TicketStatus.Win,
+                1 => TicketStatus.Lost,
+                2 => TicketStatus.Draw,
+                _ => TicketStatus.UnSettled
+            };
+        }
     }
 }

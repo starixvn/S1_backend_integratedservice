@@ -306,14 +306,14 @@ namespace ThirdPartyService.Controllers
         /// <summary>
         /// 取得商戶餘額
         /// </summary>
-        /// <param name="tpCustInfo"></param>
+        /// <param name="tpMerchantInfo"></param>
         /// <returns></returns>
         [HttpPost]
-        public ActionResult<ApiResult<MerchantBalanceResponse>> GetMerchantBalance(TpCustInfo tpCustInfo)
+        public ActionResult<ApiResult<MerchantBalanceResponse>> GetMerchantBalance(TpMerchantInfo tpMerchantInfo)
         {
             try
             {
-                return thirdPartyBLL.GetMerchantBalance(tpCustInfo);
+                return thirdPartyBLL.GetMerchantBalance(tpMerchantInfo);
             }
             catch (GetMerchantBalanceNotImplementedException ex)
             {
