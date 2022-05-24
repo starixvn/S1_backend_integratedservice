@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Controllers;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
@@ -27,6 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer _evoTimer;
         private Timer _ppTimer;
         private Timer _allBetTimer;
+        
         public TpReRequestWorker(IServiceProvider provider)
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
@@ -40,17 +42,21 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _evoTimer = new Timer(DoEvoTask, null, TimeSpan.Zero, TimeSpan.Zero);
-            _ppTimer = new Timer(DoPPTask, null, TimeSpan.Zero, TimeSpan.Zero);
-            _allBetTimer = new Timer(DoAllBetTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _evoTimer = new Timer(DoEvoTask, Tp.EVO, TimeSpan.Zero, TimeSpan.Zero);
+            _ppTimer = new Timer(DoPPTask, Tp.PP, TimeSpan.Zero, TimeSpan.Zero);
+            _allBetTimer = new Timer(DoAllBetTask, Tp.Allbet, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         private void DoEvoTask(object state)
         {
+            var tp = (Tp)state;
+            LogContext.PushProperty("TP", Enum.GetName(typeof(Tp), tp));
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            
             try
             {
-                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, Tp.EVO);
+                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, tp);
                 foreach (var data in list)
                 {
                     var result = 0;
@@ -126,9 +132,13 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
         private void DoPPTask(object state)
         {
+            var tp = (Tp)state;
+            LogContext.PushProperty("TP", Enum.GetName(typeof(Tp), tp));
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            
             try
             {
-                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, Tp.PP);
+                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, tp);
                 foreach (var data in list)
                 {
                     var result = 0;
@@ -165,9 +175,13 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         
         private void DoAllBetTask(object state)
         {
+            var tp = (Tp)state;
+            LogContext.PushProperty("TP", Enum.GetName(typeof(Tp), tp));
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            
             try
             {
-                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, Tp.Allbet);
+                var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, tp);
                 foreach (var data in list)
                 {
                     var result = 0;
