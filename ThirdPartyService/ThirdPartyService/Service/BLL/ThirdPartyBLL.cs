@@ -13,6 +13,8 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -192,7 +194,7 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                     return apiResult;
                 }
-                
+
                 if (ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
                 {
                     apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
@@ -420,7 +422,7 @@ namespace ThirdPartyService.Service.BLL
                 tpTransferInfo.TpTransferCommit(apiResult, tpCustInfoResult.Data, tpTransfer,
                     tpTransferInfoModel.TransId);
 
-                if (tpTransferInfoModel.TransId.StartsWith(TransferPrefix.BT.ToString()) 
+                if (tpTransferInfoModel.TransId.StartsWith(TransferPrefix.BT.ToString())
                     && !string.IsNullOrEmpty(tpTransferInfoModel.ExtensionInfo))
                 {
                     tpTransferBonusInfoService.TpTransferBonusCancelCommit(
@@ -445,7 +447,7 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.RawMessage = "Transfer processing";
                 return apiResult;
             }
-            
+
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpBonusTransfer.CustId, tpBonusTransfer.TpId);
 
             // Test account create 3rd party only for saba
@@ -513,7 +515,7 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
-        
+
         public void BonusCheckTransfer(TpPendingBonusTransferInfoModel tpTransferInfoModel)
         {
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransferInfoModel.CustId, tpTransferInfoModel.TpId);
@@ -521,18 +523,18 @@ namespace ThirdPartyService.Service.BLL
             var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpTransferInfoModel.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
             var amount = tpTransferInfoModel.Bonus;
-            
+
             var apiResult = tpHelper.CheckTransfer(tpCustInfoResult.Data, inputs, amount, Direction.ToTp, tpTransferInfoModel.TransId, tpTransferInfoModel.ThirdId);
 
             var req = new TpBonusTransfer
             {
-                TpId  = tpTransferInfoModel.TpId,
-                CustId =tpTransferInfoModel.CustId,
-                Bonus =tpTransferInfoModel.Bonus,
-                BonusAmount= tpTransferInfoModel.BonusAmount,
-                LockedAmount =tpTransferInfoModel.LockedAmount,
-                RolloverAmount =tpTransferInfoModel.RolloverAmount,
-                ExpiryTime =tpTransferInfoModel.ExpiredDate
+                TpId = tpTransferInfoModel.TpId,
+                CustId = tpTransferInfoModel.CustId,
+                Bonus = tpTransferInfoModel.Bonus,
+                BonusAmount = tpTransferInfoModel.BonusAmount,
+                LockedAmount = tpTransferInfoModel.LockedAmount,
+                RolloverAmount = tpTransferInfoModel.RolloverAmount,
+                ExpiryTime = tpTransferInfoModel.ExpiredDate
             };
             tpTransferBonusInfoService.TpTransferBonusCheckCommit(apiResult, tpCustInfoResult.Data, req,
                 tpTransferInfoModel);
@@ -542,7 +544,7 @@ namespace ThirdPartyService.Service.BLL
                 BonusTransfer(req);
             }
         }
-        
+
         public ApiResult BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)
         {
             var apiResult = new ApiResult<TransferResult>();
@@ -599,7 +601,7 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.RawMessage = balanceApiResult.RawMessage;
                 return apiResult;
             }
-            
+
             //檢查第三方剩餘金額並判斷是否需要修改 Bonus Amount
             var checkTransferAmount = tpTransfer.Amount;
             var thirdPartyBalance = balanceApiResult.Data.balance;
@@ -630,7 +632,7 @@ namespace ThirdPartyService.Service.BLL
                 }
 
                 tpBonusCancelTransfer.RemainingBonus = amount;
-                
+
                 _logger.LogInformation($"After Calculate: CustId={tpTransfer.CustId}, BonusId={tpBonusCancelTransfer.BonusId}, " +
                                        $"ThirdPartyBalance={thirdPartyBalance}, CheckTransferAmount={checkTransferAmount}, TransferAmount={tpTransfer.Amount}, " +
                                        $"RemainingBonus={tpBonusCancelTransfer.RemainingBonus}, " +
@@ -832,7 +834,7 @@ namespace ThirdPartyService.Service.BLL
                         // 判斷是否為進入該款遊戲 是:轉入該款遊戲
                         toTransferGame = true;
                         //continue;
-                        
+
                         if ((item.WalletMode == (int)WalletMode.Manual) && toTransferGame)
                         {
                             // 判斷是否手動轉帳遊戲 是:跳過不轉入該款遊戲
@@ -999,10 +1001,10 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
-            
-            var tpHelper = (IThirdPartyBetLimitParticular) thirdPartyHelper.GetThirdPartyHelper(setBetLimit.TpId, 
+
+            var tpHelper = (IThirdPartyBetLimitParticular)thirdPartyHelper.GetThirdPartyHelper(setBetLimit.TpId,
                 tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = 
+            var oThirdPartyModel =
                 thirdPartyHelper.GetThirdPartyBySite(setBetLimit.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
@@ -1023,16 +1025,16 @@ namespace ThirdPartyService.Service.BLL
                 apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                 return apiResult;
             }
-            
-            var tpHelper = (IThirdPartyBetLimitParticular) thirdPartyHelper.GetThirdPartyHelper(getBetLimit.TpId, 
+
+            var tpHelper = (IThirdPartyBetLimitParticular)thirdPartyHelper.GetThirdPartyHelper(getBetLimit.TpId,
                 tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel = 
+            var oThirdPartyModel =
                 thirdPartyHelper.GetThirdPartyBySite(getBetLimit.TpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             return tpHelper.GetBetLimit(tpCustInfoResult.Data, inputs);
         }
-        
+
         /// <summary>
         /// 新增餘額資料
         /// </summary>
@@ -1094,7 +1096,7 @@ namespace ThirdPartyService.Service.BLL
 
         public ApiResult<object> GetBetDetail(GetBetDetailRequest request)
         {
-            if (!tpGameTypeConfig.TryGetValue(request.GameType,out var gameTypeOption))
+            if (!tpGameTypeConfig.TryGetValue(request.GameType, out var gameTypeOption))
             {
                 return new ApiResult<object>()
                 {
@@ -1122,7 +1124,21 @@ namespace ThirdPartyService.Service.BLL
 
         }
 
-        public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+        /// <summary>
+        /// 取的商戶餘額
+        /// </summary>
+        /// <param name="tpMerchantInfo"></param>
+        /// <returns></returns>
+        public ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo)
+        {
+            var tpHelper = (IThirdPartyTpGetMerchantBalance)thirdPartyHelper.GetThirdPartyHelper(tpMerchantInfo.TpId, tpMerchantInfo.SiteId);
+            var oThirdPartyModel = thirdPartyHelper.GetThirdPartyBySite(tpMerchantInfo.TpId, tpMerchantInfo.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+            var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpMerchantInfo, inputs);
+            return merchantBalanceResponse;
+        }
+		
+		 public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
         {
             var tpId = request.BetRecordInfo.TpId;
 
@@ -1151,6 +1167,7 @@ namespace ThirdPartyService.Service.BLL
             return new ApiResult<TpBetRecordExtend>(result);
         }
 
+		
         #region Private Methods
 
         /// <summary>

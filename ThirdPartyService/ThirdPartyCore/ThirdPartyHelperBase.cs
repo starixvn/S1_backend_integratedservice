@@ -15,6 +15,7 @@ using System.Xml.Serialization;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdPartyCore
@@ -55,7 +56,7 @@ namespace ThirdPartyCore
         ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
-    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail
+    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
     {
         public static string proxyHost;
         public static int proxyPort;
@@ -68,6 +69,10 @@ namespace ThirdPartyCore
 
         public static ITpCustInfoProvider TpCustInfoProvider { set; get; }
         public static IBetLimitProvider BetLimitProvider { set; get; }
+
+        public static string CommonServiceHost { get; set; }
+
+        public static string LetsTalkGroupName { get; set; }
 
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }
@@ -156,7 +161,7 @@ namespace ThirdPartyCore
             return sb.ToString();
         }
         
-         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             var parametersLog = parameters;
             if (headers != null)
@@ -588,12 +593,14 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-
         public virtual BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new GetBetDetailNotImplementedException($"TpId:{getBetDetail.TpGameTypeOption.TpId} GetBetDetail NotImplemented.");
         }
-
+        public virtual ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs)
+        {
+            throw new GetMerchantBalanceNotImplementedException($"TpId:{tpMerchantInfo.TpId} GetMerchantBalance NotImplemented.");
+		}
         public virtual TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new GetTpBetRecordExtendNotImplementedException($"TpId:{betRecordInfo.TpId} GetTpBetRecordExtend NotImplemented.");
@@ -604,5 +611,10 @@ namespace ThirdPartyCore
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
 
         TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
+
+    public interface IThirdPartyTpGetMerchantBalance
+    {
+        ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs);
     }
 }

@@ -50,7 +50,7 @@ namespace CommonService.Controllers
         public class LetsTalkRequest
         {
             public string GroupName { get; set; }
-            public string Messge { get; set; }
+            public string Message { get; set; }
         }
 
         [HttpPost]
@@ -70,7 +70,7 @@ namespace CommonService.Controllers
                 data.msg = new LetsTalkMsgtext();
                 data.receiver = group["SandMessageRoomID"];
                 data.msg.type = "text";
-                data.msg.text = req.Messge;
+                data.msg.text = req.Message;
 
                 _ = await HttpPostAsync(url, token, JsonConvert.SerializeObject(data));
                 return true;

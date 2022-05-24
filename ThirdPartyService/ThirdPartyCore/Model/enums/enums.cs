@@ -53,6 +53,12 @@ namespace ThirdPartyCore.Model.enums
         GetTpBetRecordExtendNotImplemented = 3004,
         #endregion
 
+        #region MerchantBalance (4xxxx)
+
+        GetMerchantBalanceNotImplemented = 4000,
+
+        #endregion
+
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
         Not_allowed_environment = 5003,
@@ -157,5 +163,12 @@ namespace ThirdPartyCore.Model.enums
         Day,
         Week,
         Month
+    }
+
+    public enum SiteId
+    {
+        Nova88 = 1,
+        Goal123 = 2,
+        Bwing = 3
     }
 }
