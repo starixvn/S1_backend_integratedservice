@@ -43,7 +43,7 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerSettleJILIRng = new Timer(DoSettleJILIRngWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleJILIFish = new Timer(DoSettleJILIFishWork, GameType.JILI_Fish, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, GameType.JILI_Fish, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
