@@ -180,8 +180,6 @@ namespace ThirdParty.Allbet
                 Provider = TpBetRecordProvider.GetTpName(betRecordInfo.TpId),
                 Currency = tpCustInfo.TpCurrencyId,
                 Product = tpGameTypeOption.TypeName,
-                VIPlevel = "",
-                Tag = "",
                 GameID = gameCode,                       
                 Category = TpCategory.LiveCasino.ToString(),
                 Game = GetGameName(gameCode),

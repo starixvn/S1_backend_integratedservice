@@ -7,8 +7,6 @@
         public int GameType { get; set; }
         public string ProviderID { get; set; }
         public string Currency { get; set; }
-        public string VIPlevel { get; set; }
-        public string Tag { get; set; }
         public string RefNo { get; set; }
         public string GameID { get; set; }
         public string Provider { get; set; }
