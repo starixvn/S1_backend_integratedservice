@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Web;
+using Newtonsoft.Json.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -19,16 +20,23 @@ namespace ThirdParty.NineW
         {
             var config = new NineWConfig(inputs);
 
-            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/checkBalanceOperation";
-            var sParam = $"cert={config.Cert}&userId={tpCustInfo.TpUserName}&tsCode={TransID}";
+            var tsCodesObj = new
+            {
+                userId = tpCustInfo.TpUserName,
+                tsCode = TransID
+            };
+
+            var tsCodes = JsonConvert.SerializeObject(tsCodesObj);
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/checkTransferRecord";
+            var sParam = $"cert={config.Cert}&tsCodes={tsCodes}";
 
             var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 300);
-            var result = FromJson<NineWResult>(json);
+            var result = GetCheckTransferRecordResult(TransID, json);
 
             if (result.status != "1012"
                 || !result.TransferResult.Any(d => d.tscode == TransID
-                && d.userId.Equals(tpCustInfo.TpUserName, StringComparison.OrdinalIgnoreCase)
-                && Math.Abs(d.balance) == Amount))
+                    && d.userId.Equals(tpCustInfo.TpUserName, StringComparison.OrdinalIgnoreCase)
+                    && Math.Abs(d.balance) == Amount))
             {
                 return new ApiResult<TransferResult>()
                 {
@@ -50,6 +58,46 @@ namespace ThirdParty.NineW
                     Status = TransferStatus.Success
                 }
             };
+        }
+
+        private NineWResult GetCheckTransferRecordResult(string TransID, string json)
+        {
+            #region 註解
+
+            // Json 的 key 是動態的，依據 TransID 給 key，故用 JObject 方式取值
+            //{
+            //    "result": {
+            //        "test132972571808490060": {
+            //            "balance": 1000,
+            //            "createdate": "05/17/2022 18:33:01",
+            //            "tsCode": "test132972571808490060",
+            //            "userId": "xnova88249951",
+            //            "status": "1012"
+            //        }
+            //    },
+            //    "status": "1"
+            //}
+
+            #endregion
+
+            var response = JObject.Parse(json);
+            var responseResult = response.GetValue("result").Value<JObject>();
+            var item = responseResult.GetValue(TransID).Value<JObject>();
+
+            var result = new NineWResult()
+            {
+                TransferResult = new List<NineWTransfer>()
+                {
+                    new NineWTransfer()
+                    {
+                        userId = item.GetValue("userId").Value<string>(),
+                        tscode = item.GetValue("tsCode").Value<string>(),
+                        balance = item.GetValue("balance").Value<decimal>(),
+                    }
+                },
+                status = item.GetValue("status").Value<string>()
+            };
+            return result;
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -122,7 +170,7 @@ namespace ThirdParty.NineW
                 ErrorCode = ErrorCode.Success,
                 Message = JsonConvert.SerializeObject(new
                 {
-                    url = $"{config.ApiUrl}/player/{config.WebSite}/login",
+                    url = $"{config.OldApiUrl}/player/{config.WebSite}/login",
                     key = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config),
                     userId = tpCustInfo.TpUserName,
                 })
@@ -207,7 +255,7 @@ namespace ThirdParty.NineW
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = new NineWConfig(inputs);
-            var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/logout";
+            var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/logout";
             var sParam = $"cert={config.Cert}&userIds={tpCustInfo.TpUserName}";
 
             var json = HttpPost(apiUrl, sParam, ContentType);
@@ -231,7 +279,7 @@ namespace ThirdParty.NineW
 
         private string GetKey(string user, string currency, NineWConfig config)
         {
-            var apiUrl = $"{config.ApiUrl}/player/{config.WebSite}/getKey";
+            var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/getKey";
             var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
@@ -281,20 +329,26 @@ namespace ThirdParty.NineW
         private class NineWConfig
         {
             public string ApiUrl { get; set; }
+
+            public string OldApiUrl { get; set; }
             public string WebSite { get; set; }
             public string Cert { get; set; }
             public string Agent { get; set; }
 
+
+
             public NineWConfig(Dictionary<string, string> inputs)
             {
                 ApiUrl = inputs.ContainsKey($"ApiUrl") && !string.IsNullOrEmpty(inputs[$"ApiUrl"])
-                ? inputs[$"ApiUrl"] : throw new Exception($"apihost is empty");
+                ? inputs[$"ApiUrl"] : throw new Exception($"ApiHost is empty");
                 WebSite = inputs.ContainsKey($"website") && !string.IsNullOrEmpty(inputs[$"website"])
                 ? inputs[$"website"] : throw new Exception($"website is empty");
                 Cert = inputs.ContainsKey($"cert") && !string.IsNullOrEmpty(inputs[$"cert"])
                 ? inputs[$"cert"] : throw new Exception($"cert is empty");
                 Agent = inputs.ContainsKey($"agent") && !string.IsNullOrEmpty(inputs[$"agent"])
                 ? inputs[$"agent"] : throw new Exception($"agent is empty");
+                OldApiUrl = inputs.ContainsKey($"OldApiUrl") && !string.IsNullOrEmpty(inputs[$"OldApiUrl"])
+                    ? inputs[$"OldApiUrl"] : throw new Exception($"OldApiHost is empty");
             }
         }
 
