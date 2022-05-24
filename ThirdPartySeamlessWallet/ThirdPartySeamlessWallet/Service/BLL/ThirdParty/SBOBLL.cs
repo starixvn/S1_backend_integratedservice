@@ -130,6 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ProductType = (int)request.ProductType,
                     WinLoss = request.WinLoss * tpCurrency.ExchangeRate,
                     TransferCode = request.TransferCode,
+                    TransactionId = request.TransferCode,
                     CommissionStake = request.CommissionStake,
                     GameResult = request.GameResult,
                     ResultType = (int)request.ResultType,

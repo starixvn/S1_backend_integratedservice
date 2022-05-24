@@ -110,6 +110,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string CompanyKey { get; set; }
         public string Username { get; set; }
         public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
         public decimal WinLoss { get; set; }
         public int ResultType { get; set; }
         public DateTime ResultTime { get; set; }

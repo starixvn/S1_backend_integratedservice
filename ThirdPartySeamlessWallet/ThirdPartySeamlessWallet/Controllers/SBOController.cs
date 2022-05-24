@@ -64,10 +64,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return await _sbobll.Deduct(request);
             }
+            catch (SBOException ex)
+            {
+                return new SBODeductResponse()
+                {
+                    ErrorCode = (int)ex.SBOErrorCode,
+                    ErrorMessage = ex.ErrorMessage
+                };
+            }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                _logger.LogError(e, e.Message);
+                return new SBODeductResponse()
+                {
+                    ErrorCode = (int)SBOErrorCode.InternalError,
+                    ErrorMessage = SBOErrorCode.InternalError.GetEnumDescription()
+                };
             }
         }
         
