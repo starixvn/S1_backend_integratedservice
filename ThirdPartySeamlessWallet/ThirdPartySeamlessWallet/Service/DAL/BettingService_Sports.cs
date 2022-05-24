@@ -4,6 +4,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -121,5 +122,69 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        public async Task<SBOResult> PlaceBetSport_SBO(TpCustInfo tpCustInfo, PlaceBetSportDto_SBO dto)
+        {
+            try
+            {
+                var bonusId = 0;
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+
+                var isExits = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransSports_SBO_Check", new { dto.TransferCode }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (isExits)
+                {
+                    return new SBOResult()
+                    {
+                        Result = -1
+                    };
+                }
+                
+                dto.TicketType = (int)BettransType.Bet;
+                dto.TicketStatus = (int)TicketStatus.UnSettled;
+                dto.SettleFlag = (int)SettleFlag.Running;
+                var p = new DynamicParameters(dto);
+                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                var sboResult = new SBOResult()
+                {
+                    Result = result,
+                };
+                if (result < 1)
+                {
+                    return sboResult;
+                }
+
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(dto.Amount) * -1,
+                    tpId: (int)Tp.SBO,
+                    tpTransId: dto.TransferCode,
+                    gameType:(int)GameType.SBO_Sports,
+                    refId: dto.TransferCode,
+                    betData: null,
+                    tpCategory: TpCategory.Sports,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans
+                );
+
+                if (result != 1) return sboResult;
+                sboResult.AfterAmount = afterAmount;
+                await trans.CommitAsync();
+
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
     }
 }
