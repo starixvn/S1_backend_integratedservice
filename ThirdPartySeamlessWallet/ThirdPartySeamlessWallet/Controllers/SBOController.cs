@@ -124,6 +124,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return await _sbobll.GetBetStatus(request);
             }
+            catch (SBOException ex)
+            {
+                return new SBOGetBetStatusResponse()
+                {
+                    ErrorCode = (int)ex.SBOErrorCode,
+                    ErrorMessage = ex.ErrorMessage
+                };
+            }
             catch (Exception e)
             {
                 _logger.LogError(e, e.Message);
