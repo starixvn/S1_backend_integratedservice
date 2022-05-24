@@ -10,8 +10,8 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -333,7 +333,7 @@ namespace ThirdPartyService.Controllers
                 };
             }
         }
-
+        
         [HttpPost]
         public ActionResult<ApiResult<TpBetRecordExtend>> GetTpBetRecordExtend([FromBody] GetTpBetRecordExtendRequest request)
         {
