@@ -117,6 +117,28 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// 下注
         /// </summary>
         [HttpPost]
+        [Route("GetBetStatus")]
+        public async Task<SBOGetBetStatusResponse> GetBetStatus(SBOGetBetStatusRequest request)
+        {
+            try
+            {
+                return await _sbobll.GetBetStatus(request);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                return new SBOGetBetStatusResponse()
+                {
+                    ErrorCode = (int)SBOErrorCode.InternalError,
+                    ErrorMessage = SBOErrorCode.InternalError.GetEnumDescription()
+                };
+            }
+        }
+        
+        /// <summary>
+        /// 下注
+        /// </summary>
+        [HttpPost]
         [Route("Rollback")]
         public SBOBalanceResponse Rollback()
         {
@@ -199,22 +221,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         [Route("LiveCoinTransaction")]
         public SBOBalanceResponse LiveCoinTransaction()
-        {
-            return new SBOBalanceResponse()
-            {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
-        }
-        
-        /// <summary>
-        /// 下注
-        /// </summary>
-        [HttpPost]
-        [Route("GetBetStatus")]
-        public SBOBalanceResponse GetBetStatus()
         {
             return new SBOBalanceResponse()
             {
