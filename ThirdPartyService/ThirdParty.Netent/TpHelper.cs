@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.Netent
 {
@@ -181,49 +182,92 @@ namespace ThirdParty.Netent
             string[] cutHost = ApiUrl.Split(word);
             string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
 
-            var CreateTime = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_Netent_Detail_Get", new { TransId = getBetDetail.TransId }).GetValueOrDefault("CreateTime")?.ToString();
+            var slotData = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId });
 
-            var BetDetail = new
+            if (slotData != null)
             {
-                startDate = CreateTime,
-                gameProvider = GameProvider,
-                transactionId = getBetDetail.TransId
-            };
+                //General Data
+                var BetDetail = new
+                {
+                    startDate = slotData.GetValueOrDefault("CreateTime")?.ToString(),
+                    gameProvider = GameProvider,
+                    transactionId = getBetDetail.TransId
+                };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(BetDetail));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{CasinoKey}:{gameHistoryApiToken}")));
+                var dicP = FromJson<Dictionary<string, string>>(ToJson(BetDetail));
+                var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(
-                WagerUrl,
-                sParam,
-                "text/plain",
-                header
-            );
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{CasinoKey}:{gameHistoryApiToken}")));
 
-            if (!IsJSON(result))
-            {
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result}");
+                var result = HttpGet(
+                    WagerUrl,
+                    sParam,
+                    "text/plain",
+                    header
+                );
+
+                if (!IsJSON(result))
+                {
+                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result}");
+                }
+
+                var json = JsonConvert.DeserializeObject<DetailResponse>(result);
+                if (json.result == null || string.IsNullOrEmpty(json.result.link))
+                {
+                    throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
+                }
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = $"{BetDetailUrl}{json.result.link}",
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
             }
-
-            var json = JsonConvert.DeserializeObject<DetailResponse>(result);
-            if (json.result == null || string.IsNullOrEmpty(json.result.link))
+            else
             {
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
-            }
+                //Reward Data
 
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
-            {
-                TransId = getBetDetail.TransId,
-                DetailUrl = $"{BetDetailUrl}{json.result.link}",
-                TpCurrency = new TpCurrency()
+                var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
-                },
-            };
+                };
+
+                var wagerDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId });
+
+                var detail = ToJson(wagerDetail);
+                return getBetDetail.TpGameTypeOption.CategoryId switch
+                {
+                    TpCategory.LiveCasino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        Detail = detail,
+                        TpCurrency = tpCurrency,
+                        RefTransId = wagerDetail.GetValueOrDefault("promotionTransactionId")?.ToString(),
+                        TpUserName = wagerDetail.GetValueOrDefault("userId")?.ToString(),
+                        UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("CreateTime", DateTime.MinValue),
+                        UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("UpdateTime", DateTime.MinValue),
+                        Stake = 0,
+                        WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("payout"),
+                        GameCode = wagerDetail.GetValueOrDefault("gameId")?.ToString(),
+                        GameName = wagerDetail.GetValueOrDefault("gameType")?.ToString()
+                    },
+                    _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        Detail = detail,
+                        TpCurrency = tpCurrency,
+                    }
+                };
+            }
+
         }
     }
 }
