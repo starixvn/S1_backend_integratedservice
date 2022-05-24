@@ -32,17 +32,29 @@ namespace ThirdParty.YGG
             if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase)) return GetPlayForFunLaunchUrl(TpLangId, config, channel);
             
             // YGG 正式遊戲
-            var apiUrl = config.GameUrl; // "https://seamless-stage.248ka.com/restless/launchClient.html";
-            var sParam = $@"loaginame={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=no";
-            var json = HttpPost(apiUrl, sParam, config.ContentType);
+            var apiUrl = "https://seamless-stage.248ka.com/restless/launchClient.html"; //config.GameUrl; // "https://seamless-stage.248ka.com/restless/launchClient.html";
+            var sParam = $"loaginame={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}" +
+                $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
 
-            var oApiResult = new ApiResult
+            var responseJson = HttpPost(apiUrl, sParam, config.ContentType);
+            var responseResult = FromJson<LoginResponse>(responseJson);
+
+            if (responseResult.Code != 0)
+            {
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    Message = responseResult.ErrorMsg,
+                    RawErrorCode = responseResult.Code.ToString(),
+                    RawMessage = responseResult.ErrorMsg
+                };
+            }
+
+            return new ApiResult
             {
                 ErrorCode = ErrorCode.Success,
-                Message = "lanchUrl"
+                Message = responseResult.Data.LaunchUrl
             };
-
-            return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -113,28 +125,63 @@ namespace ThirdParty.YGG
 
         private class YggConfig
         {
+            /// <summary>
+            /// login Api Url
+            /// </summary>
             public string GameUrl { get; }
 
+            /// <summary>
+            /// 試玩Url
+            /// </summary>
             public string FunGameUrl { get; }
 
+            /// <summary>
+            /// 品牌Id
+            /// </summary>
             public string Org { get; }
 
-            public string GameId { get; }
-
+            /// <summary>
+            /// 試玩 0 否 1是
+            /// </summary>
             public string Fun { get; }
 
+            /// <summary>
+            /// 子遊戲Id
+            /// </summary>
+            public string GameId { get; }
+
+            /// <summary>
+            /// 我方首頁Url
+            /// </summary>
             public string HomeUrl { get; }
 
             public string ContentType => "application/x-www-form-urlencoded";
 
             public YggConfig(Dictionary<string, string> inputs)
             {
-                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-                FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception();
-                Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"]) ? inputs["org"] : "";
-                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) 
+                    ? inputs["GameUrl"] 
+                    : throw new Exception();
+
+                FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"])
+                    ? inputs["FunGameUrl"] 
+                    : throw new Exception();
+
+                Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"])
+                    ? inputs["org"] 
+                    : string.Empty;
+
+                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) 
+                    ? inputs["gameId"] 
+                    : string.Empty;
+
+                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) 
+                    ? inputs["homeUrl"] 
+                    : string.Empty;
+
+                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) 
+                    ? inputs["fun"] 
+                    : "0";
             }
         }
 
@@ -170,6 +217,25 @@ namespace ThirdParty.YGG
                     $"{config.FunGameUrl}?lang={TpLangId}&gameid={config.GameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(config.HomeUrl)}&fullscreen=yes"
             };
         }
+
+        public class LoginData
+        {
+            [JsonProperty("launchurl")]
+            public string LaunchUrl { get; set; }
+        }
+
+        public class LoginResponse
+        {
+            [JsonProperty("code")]
+            public int Code { get; set; }
+
+            [JsonProperty("msg")]
+            public string ErrorMsg { get; set; }
+
+            [JsonProperty("data")]
+            public LoginData Data { get; set; }
+        }
+
 
 
         #endregion
