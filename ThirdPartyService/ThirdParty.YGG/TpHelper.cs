@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -12,65 +13,45 @@ namespace ThirdParty.YGG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
-        {
-            throw new NotImplementedException();
-        }
-
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
+            var oApiResult = new ApiResult
+            {
+                ErrorCode = ErrorCode.Success
+            };
+            return oApiResult;
+        }
+
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        {
+            var config = new YggConfig(inputs);
+            var channel = (appType == AppType.Desktop ? "pc" : "mobile");
+            var sessionKey = GetSessionKey(tpCustInfo, inputs);
+
+            // YGG 試玩遊戲，Fun = 1 是試玩 ，不用打Api，自組登入 Url。
+            if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase)) return GetPlayForFunLaunchUrl(TpLangId, config, channel);
+            
+            // YGG 正式遊戲
+            var apiUrl = config.GameUrl; // "https://seamless-stage.248ka.com/restless/launchClient.html";
+            var sParam = $@"loaginame={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=no";
+            var json = HttpPost(apiUrl, sParam, config.ContentType);
+
+            var oApiResult = new ApiResult
+            {
+                ErrorCode = ErrorCode.Success,
+                Message = "lanchUrl"
+            };
+
             return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
-            return oApiResult;
-        }
-
-        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
-        {
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-            string org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"]) ? inputs["org"] : "";
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-
-            ApiResult oApiResult = new ApiResult();
-
-            string channel = (appType == AppType.Desktop ? "pc" : "mobile");
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            var oApiResult = new ApiResult<UserBalance>
             {
-                GameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception();
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{GameUrl}?lang={TpLangId}&gameid={gameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes";
-                return oApiResult;
-            }
-
-            var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token };
-            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            string sessionKey = Convert.ToBase64String(bytes);
-
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?key={sessionKey}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={gameId}&org={org}&channel={channel}&home={HttpUtility.UrlEncode(homeUrl)}&fullscreen=yes&redirectType=top";
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
-        }
-
-        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
-        {
-            throw new NotImplementedException();
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -96,7 +77,7 @@ namespace ThirdParty.YGG
                     UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
                     UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
                     Stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("type") == 1)
-                        .Sum(i => Math.Abs( (decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
                     WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
                     GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("cat3")?.ToString(),
                     GameName = detailList.FirstOrDefault()?.GetValueOrDefault("cat4")?.ToString(),
@@ -109,5 +90,88 @@ namespace ThirdParty.YGG
                 }
             };
         }
+
+        #region 不實作
+
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region config & privateMethod
+
+        private class YggConfig
+        {
+            public string GameUrl { get; }
+
+            public string FunGameUrl { get; }
+
+            public string Org { get; }
+
+            public string GameId { get; }
+
+            public string Fun { get; }
+
+            public string HomeUrl { get; }
+
+            public string ContentType => "application/x-www-form-urlencoded";
+
+            public YggConfig(Dictionary<string, string> inputs)
+            {
+                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
+                FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception();
+                Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"]) ? inputs["org"] : "";
+                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
+                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            }
+        }
+
+        /// <summary>
+        /// 取得 SessionKey
+        /// </summary>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        private string GetSessionKey(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var key = ApplyToken(tpCustInfo);
+            inputs.TryGetValue("Token", out var token);
+            var sessionKeyArr = new string[] { key, token };
+            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            var sessionKey = Convert.ToBase64String(bytes);
+            return sessionKey;
+        }
+
+        /// <summary>
+        /// 取得 YGG 試玩遊戲登入url
+        /// </summary>
+        /// <param name="TpLangId"></param>
+        /// <param name="config"></param>
+        /// <param name="channel"></param>
+        /// <returns></returns>
+        private static ApiResult GetPlayForFunLaunchUrl(string TpLangId, YggConfig config, string channel)
+        {
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message =
+                    $"{config.FunGameUrl}?lang={TpLangId}&gameid={config.GameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(config.HomeUrl)}&fullscreen=yes"
+            };
+        }
+
+
+        #endregion
     }
 }
