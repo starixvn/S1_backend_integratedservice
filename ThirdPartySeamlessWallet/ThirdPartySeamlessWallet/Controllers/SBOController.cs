@@ -156,15 +156,29 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("Cancel")]
-        public SBOBalanceResponse Cancel()
+        public async Task<SBOCancelResponse> Cancel(SBOCancelRequest request)
         {
-            return new SBOBalanceResponse()
+            try
             {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+                return await _sbobll.Cancel(request);
+            }
+            catch (SBOException ex)
+            {
+                return new SBOCancelResponse()
+                {
+                    ErrorCode = (int)ex.SBOErrorCode,
+                    ErrorMessage = ex.ErrorMessage
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                return new SBOCancelResponse()
+                {
+                    ErrorCode = (int)SBOErrorCode.InternalError,
+                    ErrorMessage = SBOErrorCode.InternalError.GetEnumDescription()
+                };
+            }
         }
         
         /// <summary>
