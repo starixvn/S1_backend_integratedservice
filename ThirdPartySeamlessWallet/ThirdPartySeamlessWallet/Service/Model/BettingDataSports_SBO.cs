@@ -108,10 +108,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class PayoutSportDto_SBO
     {
-        public string CompanyKey { get; set; }
-        public string Username { get; set; }
         public string TransferCode { get; set; }
-        public string TransactionId { get; set; }
         public decimal WinLoss { get; set; }
         public int ResultType { get; set; }
         public DateTime ResultTime { get; set; }
@@ -122,7 +119,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Gpid { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
-        public int SettleFlag { get; set; }
     }
     
     public class SBOGetBetStatusRequest

@@ -137,12 +137,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var payoutDto = new PayoutSportDto_SBO()
                 {
-                    CompanyKey = request.CompanyKey,
-                    Username = request.Username,
-                    ProductType = (int)request.ProductType,
                     WinLoss = request.WinLoss * tpCurrency.ExchangeRate,
                     TransferCode = request.TransferCode,
-                    TransactionId = request.TransferCode,
                     CommissionStake = request.CommissionStake,
                     GameResult = request.GameResult,
                     ResultType = (int)request.ResultType,
