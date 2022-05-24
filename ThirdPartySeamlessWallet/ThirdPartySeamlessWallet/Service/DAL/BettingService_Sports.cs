@@ -145,14 +145,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
                 dto.SettleFlag = (int)SettleFlag.Running;
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 
                 var sboResult = new SBOResult()
                 {
                     Result = result,
-                    Trx_id = p.Get<long>("trx_id"),
                 };
-                if (sboResult.Result < 1)
+                if (result < 1)
                 {
                     return sboResult;
                 }
@@ -161,7 +160,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(dto.Amount) * -1,
                     tpId: (int)Tp.SBO,
-                    tpTransId: dto.GameRoundId,
+                    tpTransId: dto.TransferCode,
                     gameType:(int)GameType.SBO_Sports,
                     refId: dto.TransferCode,
                     betData: null,

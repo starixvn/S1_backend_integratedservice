@@ -58,16 +58,28 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("Deduct")]
-        public SBODeductResponse Deduct(SBODeductRequest request)
+        public async Task<SBODeductResponse> Deduct(SBODeductRequest request)
         {
             try
             {
-                return _sbobll.Deduct(request).Result;
+                return await _sbobll.Deduct(request);
+            }
+            catch (SBOException ex)
+            {
+                return new SBODeductResponse()
+                {
+                    ErrorCode = (int)ex.SBOErrorCode,
+                    ErrorMessage = ex.ErrorMessage
+                };
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                _logger.LogError(e, e.Message);
+                return new SBODeductResponse()
+                {
+                    ErrorCode = (int)SBOErrorCode.InternalError,
+                    ErrorMessage = SBOErrorCode.InternalError.GetEnumDescription()
+                };
             }
         }
         
@@ -76,15 +88,29 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("Settle")]
-        public SBOBalanceResponse Settle()
+        public async Task<SBOSettleResponse> Settle(SBOSettleRequest request)
         {
-            return new SBOBalanceResponse()
+            try
             {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+                return await _sbobll.Settle(request);
+            }
+            catch (SBOException ex)
+            {
+                return new SBOSettleResponse()
+                {
+                    ErrorCode = (int)ex.SBOErrorCode,
+                    ErrorMessage = ex.ErrorMessage
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                return new SBOSettleResponse()
+                {
+                    ErrorCode = (int)SBOErrorCode.InternalError,
+                    ErrorMessage = SBOErrorCode.InternalError.GetEnumDescription()
+                };
+            }
         }
         
         /// <summary>

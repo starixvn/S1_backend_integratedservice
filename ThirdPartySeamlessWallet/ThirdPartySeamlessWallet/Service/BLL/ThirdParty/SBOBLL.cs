@@ -101,7 +101,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result.Result switch
             {
-                // 訂單已存在
                 -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
                 0 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
                 1 => new SBODeductResponse()
@@ -115,7 +114,51 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }
-        
+
+        public async Task<SBOSettleResponse> Settle(SBOSettleRequest request)
+        {
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
+            request.WinLoss *= tpCurrency.ExchangeRate;
+            
+            var result = new SBOResult();
+            if (request.ProductType == SBOProductType.SportsBook)
+            {
+                var payoutDto = new PayoutSportDto_SBO()
+                {
+                    CompanyKey = request.CompanyKey,
+                    Username = request.Username,
+                    ProductType = (int)request.ProductType,
+                    WinLoss = request.WinLoss * tpCurrency.ExchangeRate,
+                    TransferCode = request.TransferCode,
+                    TransactionId = request.TransferCode,
+                    CommissionStake = request.CommissionStake,
+                    GameResult = request.GameResult,
+                    ResultType = (int)request.ResultType,
+                    ResultTime = request.ResultTime,
+                    Gpid = request.Gpid,
+                };
+                result = await _settledService.PayoutSports_SBO(tpCustInfo, payoutDto);
+            }
+            else
+            {
+                throw new SBOException(SBOErrorCode.InternalError);
+            }
+
+            return result.Result switch
+            {
+                1 => new SBOSettleResponse()
+                {
+                    AccountName = request.Username,
+                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    ErrorCode = (int)SBOErrorCode.NoError,
+                    ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
+                },
+                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
+                0 => throw new SBOException(SBOErrorCode.BetAlreadySettled),
+                _ => throw new SBOException(SBOErrorCode.InternalError)
+            };
+        }
+
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);

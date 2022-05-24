@@ -7,5 +7,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
     {
         SBOBalanceResponse GetBalance(SBOBalanceRequest request);
         Task<SBODeductResponse> Deduct(SBODeductRequest request);
+        Task<SBOSettleResponse> Settle(SBOSettleRequest request);
     }
 }

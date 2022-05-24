@@ -2,6 +2,13 @@
 
 namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
+    public enum SBOResultType
+    {
+        Win = 0,
+        Lose = 1,
+        Tie = 2
+    }
+
     public enum SBOProductType
     {
         [Description("体育博彩")]
