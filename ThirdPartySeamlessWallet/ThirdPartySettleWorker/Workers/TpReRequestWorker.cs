@@ -16,7 +16,7 @@ using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
-    public class TpReRequestWorker: BackgroundService
+    public class TpReRequestWorker : BackgroundService
     {
         private readonly IHostEnvironment _environment;
         private readonly TpRequestFailBLL _tpRequestFailBll;
@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             _allBetBll = new AllbetBll(provider);
             _logger = provider.GetRequiredService<ILogger<TpReRequestWorker>>();
         }
-        
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _evoTimer = new Timer(DoEvoTask, Tp.EVO, TimeSpan.Zero, TimeSpan.Zero);
@@ -47,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             _allBetTimer = new Timer(DoAllBetTask, Tp.Allbet, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
-        
+
         private void DoEvoTask(object state)
         {
             var tp = (Tp)state;
@@ -60,56 +60,55 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 foreach (var data in list)
                 {
                     var result = 0;
-                    
-                    switch (data.CategoryId) 
+
+                    switch (data.CategoryId)
                     {
-                        case (int) TpRequestFailureCategory.Credit:
-                                    
+                        case (int)TpRequestFailureCategory.Credit:
+
                             var reqCredit = JsonConvert.DeserializeObject<BettingData_EVO>(data.Request);
                             var tokenInfoCredit = getTokenInfo(reqCredit.sid);
                             var gameTypeCredit = tokenInfoCredit.gameType;
-                            
+
                             result = gameTypeCredit switch
                             {
                                 (int)GameType.Netent_RNG => _settledBll.PayoutRNG_Netent(reqCredit, out _),
                                 (int)GameType.RedTiger_RNG => _settledBll.PayoutRNG_RedTiger(reqCredit, out _),
                                 _ => _settledBll.PayoutLC_EVO(reqCredit, out _),
                             };
-                                    
+
                             break;
-                                
-                        case (int) TpRequestFailureCategory.Cancel:  
-                                
+
+                        case (int)TpRequestFailureCategory.Cancel:
+
                             var req = JsonConvert.DeserializeObject<BettingData_EVO>(data.Request);
                             var tokenInfo = getTokenInfo(req.sid);
                             var gameType = tokenInfo.gameType;
-                        
+
                             result = gameType switch
                             {
                                 (int)GameType.Netent_RNG => _settledBll.CancelBetRNG_Netent(req, out _),
                                 (int)GameType.RedTiger_RNG => _settledBll.CancelBetRNG_RedTiger(req, out _),
                                 _ => _settledBll.CancelBetLC_EVO(req, out _),
                             };
-                                
+
                             break;
-                            
-                        case (int) TpRequestFailureCategory.PromoPayout:  
-                            
+
+                        case (int)TpRequestFailureCategory.PromoPayout:
+
                             var reqPromoPayout = JsonConvert.DeserializeObject<PromoData_EVO>(data.Request);
                             var tokenInfoPromoPayout = getTokenInfo(reqPromoPayout.sid);
                             var gameTypePromoPayout = tokenInfoPromoPayout.gameType;
-                    
-                             result = gameTypePromoPayout switch
+
+                            result = gameTypePromoPayout switch
                             {
                                 (int)GameType.Netent_RNG => _settledBll.PromoPayoutRNG_Netent(reqPromoPayout, out _),
                                 (int)GameType.RedTiger_RNG => _settledBll.PromoPayoutRNG_RedTiger(reqPromoPayout, out _),
                                 _ => _settledBll.PromoPayoutLC_EVO(reqPromoPayout, out _),
                             };
-                            
+
                             break;
-                        
                     }
-                    
+
                     if (result > 0 || result == -1)
                     {
                         _tpRequestFailBll.DelRequestFail(data.Id);
@@ -144,16 +143,16 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 {
                     var result = 0;
                     var betReq = JsonConvert.DeserializeObject<PPController.BetReq>(data.Request);
-                    
-                    switch (data.CategoryId) 
+
+                    switch (data.CategoryId)
                     {
-                        case (int) TpRequestFailureCategory.EndRound: 
+                        case (int)TpRequestFailureCategory.EndRound:
                             var gameType = _thirdPartyBll.GetGameType_PP(betReq.gameId);
                             result = _tpUnSettledBll.InsertTpUnsettle(Tp.PP, gameType, betReq.roundId.ToString());
                             break;
                     }
-                    
-                    if (result > 0 )
+
+                    if (result > 0)
                     {
                         _tpRequestFailBll.DelRequestFail(data.Id);
                     }
@@ -237,6 +236,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         }
 
         #endregion
-        
+
     }
 }
