@@ -6,6 +6,7 @@ using Renci.SshNet.Common;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -19,21 +20,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly ISBOService _sboService;
         private readonly ILogger<SBOBLL> _logger;
+
+        public Dictionary<int, string> SBOStatusMap = new Dictionary<int, string>()
+        {
+            { 0, "running" },
+            { 1, "settled " },
+            { 2, "settled " },
+            { 3, "void " },
+            { 4, "settled " }
+        };
 
         private Dictionary<SBOProductType, GameType> _sboGameTypeMap = new Dictionary<SBOProductType, GameType>()
         {
             { SBOProductType.SportsBook, GameType.SBO_Sports }
         };
 
-        public SBOBLL(ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll, ILogger<SBOBLL> logger, BettingService bettingService, SettledService settledService)
+        public SBOBLL(ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll, ILogger<SBOBLL> logger, BettingService bettingService, SettledService settledService, ISBOService sboService)
         {
             ThirdParty = Tp.SBO;
             _thirdPartyBLL = thirdPartyBll;
             _tpCustInfoBLL = tpCustInfoBll;
-            _logger = logger;
             _bettingService = bettingService;
             _settledService = settledService;
+            _sboService = sboService;
+            _logger = logger;
         }
 
         public SBOBalanceResponse GetBalance(SBOBalanceRequest request)
@@ -159,6 +171,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        public async Task<SBOGetBetStatusResponse> GetBetStatus(SBOGetBetStatusRequest request)
+        {
+            
+            if (request.ProductType == SBOProductType.SportsBook)
+            {
+                var data = await _sboService.GetBetStatus(request.TransferCode);
+                var betStatus = new SBOGetBetStatusResponse()
+                {
+                    TransferCode = request.TransferCode,
+                    TransactionId = request.TransactionId,
+                    Stake = data.Stake,
+                    WinLoss = data.WinLoss,
+                    Status = SBOStatusMap[data.TicketStatus],
+                    ErrorCode = (int)SBOErrorCode.NoError,
+                    ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
+                };
+                return betStatus;
+            }
+            else
+            {
+                throw new SBOException(SBOErrorCode.InternalError);
+            }
+        }
+        
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);

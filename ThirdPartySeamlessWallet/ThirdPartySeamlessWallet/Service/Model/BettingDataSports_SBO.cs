@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.AccessControl;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -122,5 +123,35 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
+    }
+    
+    public class SBOGetBetStatusRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public int Gpid { get; set; }
+    }
+
+    public class SBOGetBetStatusResponse
+    {
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public string Status { get; set; }
+        public decimal WinLoss { get; set; }
+        public decimal Stake { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+    
+    public class SBOGetBetStatusData
+    {
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public int TicketStatus { get; set; }
+        public decimal WinLoss { get; set; }
+        public decimal Stake { get; set; }
     }
 }
