@@ -334,7 +334,7 @@ namespace ThirdPartyService.Controllers
             }
         }
         
-         [HttpPost]
+        [HttpPost]
         public ActionResult<ApiResult<TpBetRecordExtend>> GetTpBetRecordExtend([FromBody] GetTpBetRecordExtendRequest request)
         {
             try

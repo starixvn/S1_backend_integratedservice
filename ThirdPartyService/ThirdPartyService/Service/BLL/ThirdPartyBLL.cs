@@ -1138,7 +1138,7 @@ namespace ThirdPartyService.Service.BLL
             return merchantBalanceResponse;
         }
 		
-		 public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+		public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
         {
             var tpId = request.BetRecordInfo.TpId;
 
@@ -1166,7 +1166,6 @@ namespace ThirdPartyService.Service.BLL
             var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
             return new ApiResult<TpBetRecordExtend>(result);
         }
-
 		
         #region Private Methods
 
