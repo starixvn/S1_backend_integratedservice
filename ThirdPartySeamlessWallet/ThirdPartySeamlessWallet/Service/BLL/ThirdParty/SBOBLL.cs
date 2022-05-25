@@ -32,7 +32,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private Dictionary<SBOProductType, GameType> _sboGameTypeMap = new Dictionary<SBOProductType, GameType>()
         {
-            { SBOProductType.SportsBook, GameType.SBO_Sports }
+            { SBOProductType.SportsBook, GameType.SBO_Sports },
+            { SBOProductType.VirtualSports, GameType.SBO_Sports }
         };
 
         public SBOBLL(ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll, ILogger<SBOBLL> logger, BettingService bettingService, SettledService settledService, ISBOService sboService)
@@ -64,8 +65,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
                 throw new SBOException(SBOErrorCode.MemberNotExist, $"{request.Username} is locked");
             }
-            
-            var gameType = _sboGameTypeMap[request.ProductType];
+
+            var gameType = request.ProductType == SBOProductType.LiveCoin ? 0 : _sboGameTypeMap[request.ProductType];
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.Username, (int)gameType);
             if (tpCustBalance != null)
             {
