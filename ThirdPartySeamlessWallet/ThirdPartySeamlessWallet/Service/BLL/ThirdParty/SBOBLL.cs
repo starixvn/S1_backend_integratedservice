@@ -48,6 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public SBOBalanceResponse GetBalance(SBOBalanceRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Username)) throw new SBOException(SBOErrorCode.UsernameEmpty);
             var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
             if (thirdPartySetting == null)
             {
