@@ -233,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             TransferCode = request.TransferCode,
                             Amount = liveCoinData.Amount
                         };
-                        result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
+                        result = await _settledService.CancelBetLiveCoin_SBO(tpCustInfo, cancelDto);
                         break;
                     }
                 }
@@ -343,11 +343,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
 
-            var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
-            if (betStatus != null)
-            {
-                throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
-            }
+            var liveCoinData = await _sboService.GetLiveCoinTransaction(request.TransferCode);
+            if (liveCoinData != null) throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
 
             var result = new SBOResult();
             if (request.ProductType == SBOProductType.LiveCoin)

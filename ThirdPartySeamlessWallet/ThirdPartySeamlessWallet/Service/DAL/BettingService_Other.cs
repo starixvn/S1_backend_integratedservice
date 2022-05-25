@@ -724,7 +724,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
-                        dto.Amount,
+                        Math.Abs(dto.Amount) * -1,
                         (int)Tp.MP,
                         TransType.Wagers,
                         $"LiveCoin: {dto.Selection}",
