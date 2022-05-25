@@ -222,7 +222,53 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
                 -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
-                0 => throw new SBOException(SBOErrorCode.BetAlreadySettled),
+                0 => throw new SBOException(SBOErrorCode.BetAlreadyCanceled),
+                _ => throw new SBOException(SBOErrorCode.InternalError)
+            };
+        }
+
+        public async Task<SBORollbackResponse> Rollback(SBORollbackRequest request)
+        {
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
+            
+            var result = new SBOResult();
+            if (request.ProductType == SBOProductType.SportsBook)
+            {
+                var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+                switch (betStatus)
+                {
+                    case null:
+                        throw new SBOException(SBOErrorCode.BetNotExists);
+                    case { Status: 2 }:
+                        throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
+                    default:
+                    {
+                        var rollbackDto = new RollbackSportDto_SBO()
+                        {
+                            TransferCode = request.TransferCode,
+                            Amount = betStatus.WinLoss
+                        };
+                        result = await _settledService.RollbackSport_SBO(tpCustInfo, rollbackDto);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                throw new SBOException(SBOErrorCode.InternalError);
+            }
+            
+            return result.Result switch
+            {
+                1 => new SBORollbackResponse()
+                {
+                    AccountName = request.Username,
+                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    ErrorCode = (int)SBOErrorCode.NoError,
+                    ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
+                },
+                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
+                0 => throw new SBOException(SBOErrorCode.BetAlreadyRollback),
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }

@@ -175,4 +175,26 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TransferCode { get; set; }
         public decimal Amount { get; set; }
     }
+    
+    public class SBORollbackRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public int Gpid { get; set; }
+    }
+    public class SBORollbackResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
+    public class RollbackSportDto_SBO
+    {
+        public string TransferCode { get; set; }
+        public decimal Amount { get; set; }
+    }
 }

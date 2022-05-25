@@ -134,7 +134,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 dto.TicketType = (int)BettransType.Bet;
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
-                dto.SettleFlag = (int)SettleFlag.Running;
                 var p = new DynamicParameters(dto);
                 var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 
