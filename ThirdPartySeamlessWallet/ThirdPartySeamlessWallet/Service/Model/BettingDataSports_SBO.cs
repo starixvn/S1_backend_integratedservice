@@ -146,9 +146,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string TransferCode { get; set; }
         public string TransactionId { get; set; }
-        public int TicketStatus { get; set; }
-        public decimal WinLoss { get; set; }
         public decimal Stake { get; set; }
+        public decimal WinLoss { get; set; }
+        public int Status { get; set; }
+        public int TicketStatus { get; set; }
     }
     
     public class SBOCancelRequest

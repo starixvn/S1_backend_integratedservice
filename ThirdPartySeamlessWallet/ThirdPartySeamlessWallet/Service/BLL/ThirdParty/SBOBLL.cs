@@ -28,9 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             { 0, "running" },
             { 1, "settled " },
-            { 2, "settled " },
-            { 3, "void " },
-            { 4, "settled " }
+            { 2, "void " }
         };
 
         private Dictionary<SBOProductType, GameType> _sboGameTypeMap = new Dictionary<SBOProductType, GameType>()
@@ -142,11 +140,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (request.ProductType == SBOProductType.SportsBook)
             {
                 var betStatus = await _sboService.GetBetStatus(request.TransferCode);
-                if (betStatus != null && (betStatus.TicketStatus == 1 || betStatus.TicketStatus == 2 || betStatus.TicketStatus == 4))
+                switch (betStatus)
                 {
-                    throw new SBOException(SBOErrorCode.BetAlreadySettled);
+                    case null:
+                        throw new SBOException(SBOErrorCode.BetNotExists);
+                    case { Status: 1 }:
+                        throw new SBOException(SBOErrorCode.BetAlreadySettled);
+                    case { Status: 2 }:
+                        throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
                 }
-                
                 var payoutDto = new PayoutSportDto_SBO()
                 {
                     WinLoss = request.WinLoss * tpCurrency.ExchangeRate,
@@ -187,15 +189,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (request.ProductType == SBOProductType.SportsBook)
             {
                 var betStatus = await _sboService.GetBetStatus(request.TransferCode);
-                if (betStatus == null) throw new SBOException(SBOErrorCode.BetNotExists);
-                if (betStatus is { TicketStatus: 3 }) throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
-                
-                var cancelDto = new CancelSportDto_SBO()
+                switch (betStatus)
                 {
-                    TransferCode = request.TransferCode,
-                    Amount = -1 * betStatus.WinLoss + betStatus.Stake
-                };
-                result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
+                    case null:
+                        throw new SBOException(SBOErrorCode.BetNotExists);
+                    case { Status: 2 }:
+                        throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
+                    default:
+                    {
+                        var cancelDto = new CancelSportDto_SBO()
+                        {
+                            TransferCode = request.TransferCode,
+                            Amount = -1 * betStatus.WinLoss + betStatus.Stake
+                        };
+                        result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
+                        break;
+                    }
+                }
             }
             else
             {
@@ -235,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TransactionId = request.TransactionId,
                     Stake = data.Stake,
                     WinLoss = data.WinLoss,
-                    Status = SBOStatusMap[data.TicketStatus],
+                    Status = SBOStatusMap[data.Status],
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 };
