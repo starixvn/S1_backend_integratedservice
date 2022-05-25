@@ -49,6 +49,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public SBOBalanceResponse GetBalance(SBOBalanceRequest request)
         {
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+            if (thirdPartySetting == null)
+            {
+                _logger.LogError("thirdPartySetting not found");
+                throw new SBOException(SBOErrorCode.CompanyKeyError);
+            }
+            var companyKey = thirdPartySetting.TpSetting["CompanyKey"];
+            if (companyKey != request.CompanyKey) throw new SBOException(SBOErrorCode.CompanyKeyError);
+            
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.Username);
             if (tpCheck == null || tpCheck.Locked)
             {
