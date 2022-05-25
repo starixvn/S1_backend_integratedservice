@@ -99,7 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             var result = new SBOResult();
-            if (request.ProductType == SBOProductType.SportsBook)
+            if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
                 var placeBetDto = new PlaceBetSportDto_SBO()
                 {
@@ -146,7 +146,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
 
             var result = new SBOResult();
-            if (request.ProductType == SBOProductType.SportsBook)
+            if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
                 var betStatus = await _sboService.GetBetStatus(request.TransferCode);
                 switch (betStatus)
@@ -195,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
             
             var result = new SBOResult();
-            if (request.ProductType == SBOProductType.SportsBook)
+            if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
                 var betStatus = await _sboService.GetBetStatus(request.TransferCode);
                 switch (betStatus)
@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
             
             var result = new SBOResult();
-            if (request.ProductType == SBOProductType.SportsBook)
+            if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
                 var betStatus = await _sboService.GetBetStatus(request.TransferCode);
                 switch (betStatus)
@@ -287,7 +287,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 throw new SBOException(SBOErrorCode.BetNotExists);
             }
 
-            if (request.ProductType == SBOProductType.SportsBook)
+            if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
                 var data = await _sboService.GetBetStatus(request.TransferCode);
                 if (data == null) throw new SBOException(SBOErrorCode.BetNotExists);
