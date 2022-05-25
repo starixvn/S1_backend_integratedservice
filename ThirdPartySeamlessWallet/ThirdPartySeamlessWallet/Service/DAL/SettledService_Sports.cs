@@ -386,13 +386,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     "Rollback",
                     out bonusId,
                     conn: conn,
-                    trans: trans
-                );
+                    trans: trans,
+                    AllowNegative.Allow);
 
-                if (result != 1) return sboResult;
-                sboResult.AfterAmount = afterAmount;
-                await trans.CommitAsync();
-
+                sboResult.Result = result;
+                if (result == 1)
+                {
+                    sboResult.AfterAmount = afterAmount;
+                    await trans.CommitAsync();
+                }
                 return sboResult;
             }
             catch (Exception ex)
