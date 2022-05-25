@@ -78,8 +78,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 };
             }
-            throw new SBOException(SBOErrorCode.NotEnoughBalance,
-                $"{ThirdParty} {gameType}: {request.Username} get balance failed");
+            throw new SBOException(SBOErrorCode.InternalError,$"{gameType}: {request.Username} get balance failed");
         }
 
         public async Task<SBODeductResponse> Deduct(SBODeductRequest request)
@@ -94,10 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
 
             var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
-            if (betStatus != null)
-            {
-                throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
-            }
+            if (betStatus != null) throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
 
             var result = new SBOResult();
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
@@ -106,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     CompanyKey = request.CompanyKey,
                     Username = request.Username,
-                    Amount = request.Amount * tpCurrency.ExchangeRate,
+                    Amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
                     TransferCode = request.TransferCode,
                     TransactionId = request.TransactionId,
                     BetTime = request.BetTime,
@@ -133,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 1 => new SBODeductResponse()
                 {
                     AccountName = request.Username,
-                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate),
                     BetAmount = request.Amount,
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
@@ -161,7 +157,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 var payoutDto = new PayoutSportDto_SBO()
                 {
-                    WinLoss = request.WinLoss * tpCurrency.ExchangeRate,
+                    WinLoss = request.WinLoss.ConvertToMain(tpCurrency.ExchangeRate),
                     TransferCode = request.TransferCode,
                     CommissionStake = request.CommissionStake,
                     GameResult = request.GameResult,
@@ -181,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 1 => new SBOSettleResponse()
                 {
                     AccountName = request.Username,
-                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate),
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
@@ -248,7 +244,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 1 => new SBOCancelResponse()
                 {
                     AccountName = request.Username,
-                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate),
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
@@ -292,7 +288,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 1 => new SBORollbackResponse()
                 {
                     AccountName = request.Username,
-                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate),
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
@@ -308,6 +304,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 throw new SBOException(SBOErrorCode.BetNotExists);
             }
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
 
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
@@ -318,8 +315,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     TransferCode = request.TransferCode,
                     TransactionId = request.TransactionId,
-                    Stake = data.Stake,
-                    WinLoss = data.WinLoss,
+                    Stake = data.Stake / tpCurrency.ExchangeRate,
+                    WinLoss = data.WinLoss / tpCurrency.ExchangeRate,
                     Status = SBOStatusMap[data.Status],
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
@@ -353,7 +350,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     CompanyKey = request.CompanyKey,
                     Username = request.Username,
-                    Amount = request.Amount,
+                    Amount = request.Amount * tpCurrency.ExchangeRate,
                     TransferCode = request.TransferCode,
                     TransactionId = request.TransactionId,
                     TransactionTime = request.TransactionTime,
