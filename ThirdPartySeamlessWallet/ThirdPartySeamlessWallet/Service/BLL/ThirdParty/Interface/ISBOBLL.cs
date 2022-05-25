@@ -9,6 +9,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         Task<SBODeductResponse> Deduct(SBODeductRequest request);
         Task<SBOSettleResponse> Settle(SBOSettleRequest request);
         Task<SBOCancelResponse> Cancel(SBOCancelRequest request);
+        Task<SBORollbackResponse> Rollback(SBORollbackRequest request);
         Task<SBOGetBetStatusResponse> GetBetStatus(SBOGetBetStatusRequest request);
     }
 }

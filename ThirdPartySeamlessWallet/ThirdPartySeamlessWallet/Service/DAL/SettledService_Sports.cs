@@ -350,6 +350,60 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
             }
         }
+        
+        public async Task<SBOResult> RollbackSport_SBO(TpCustInfo tpCustInfo, RollbackSportDto_SBO dto)
+        {
+            try
+            {
+                var bonusId = 0;
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+                
+                var p = new DynamicParameters(dto);
+                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                var sboResult = new SBOResult()
+                {
+                    Result = result,
+                };
+                if (result < 1)
+                {
+                    return sboResult;
+                }
+
+                result = PayoutV2(
+                    tpCustInfo,
+                    Math.Abs(dto.Amount) * -1,
+                    (int)Tp.SBO,
+                    dto.TransferCode,
+                    (int)GameType.SBO_Sports,
+                    TpCategory.Sports,
+                    dto.TransferCode,
+                    TransType.Undo,
+                    null,
+                    out var afterAmount,
+                    "Rollback",
+                    out bonusId,
+                    conn: conn,
+                    trans: trans
+                );
+
+                if (result != 1) return sboResult;
+                sboResult.AfterAmount = afterAmount;
+                await trans.CommitAsync();
+
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
 
         private TicketStatus GetSboTicketStatus(int resultType)
         {
