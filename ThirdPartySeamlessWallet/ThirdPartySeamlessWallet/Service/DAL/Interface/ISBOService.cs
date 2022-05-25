@@ -5,6 +5,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL.Interface
 {
     public interface ISBOService
     {
-        Task<SBOGetBetStatusData> GetBetStatus(string transferCode);
+        Task<SBOGetBetStatusData> GetSportsBetStatus(string transferCode);
+        Task<SBOLiveCoinTransactionData> GetLiveCoinTransaction(string transferCode);
     }
 }

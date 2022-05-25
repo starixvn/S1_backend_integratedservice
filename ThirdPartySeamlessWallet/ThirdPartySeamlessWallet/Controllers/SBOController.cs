@@ -256,15 +256,29 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("LiveCoinTransaction")]
-        public SBOBalanceResponse LiveCoinTransaction()
+        public async Task<SBOLiveCoinTransactionResponse> LiveCoinTransaction(SBOLiveCoinTransactionRequest request)
         {
-            return new SBOBalanceResponse()
+            try
             {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+                return await _sbobll.LiveCoinTransaction(request);
+            }
+            catch (SBOException ex)
+            {
+                return new SBOLiveCoinTransactionResponse()
+                {
+                    ErrorCode = (int)ex.SBOErrorCode,
+                    ErrorMessage = ex.ErrorMessage
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                return new SBOLiveCoinTransactionResponse()
+                {
+                    ErrorCode = (int)SBOErrorCode.InternalError,
+                    ErrorMessage = SBOErrorCode.InternalError.GetEnumDescription()
+                };
+            }
         }
     }
 }

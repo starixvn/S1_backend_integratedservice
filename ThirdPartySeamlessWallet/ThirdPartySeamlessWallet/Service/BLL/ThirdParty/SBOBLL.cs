@@ -92,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
 
-            var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+            var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
             if (betStatus != null)
             {
                 throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
@@ -148,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = new SBOResult();
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
-                var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+                var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
                 switch (betStatus)
                 {
                     case null:
@@ -197,7 +197,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = new SBOResult();
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
-                var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+                var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
                 switch (betStatus)
                 {
                     case null:
@@ -210,6 +210,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             TransferCode = request.TransferCode,
                             Amount = -1 * betStatus.WinLoss + betStatus.Stake
+                        };
+                        result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
+                        break;
+                    }
+                }
+            }
+            else if (request.ProductType == SBOProductType.LiveCoin)
+            {
+                var liveCoinData = await _sboService.GetLiveCoinTransaction(request.TransferCode);
+                switch (liveCoinData)
+                {
+                    case null:
+                        throw new SBOException(SBOErrorCode.BetNotExists);
+                    case { Status: 2 }:
+                        throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
+                    default:
+                    {
+                        var cancelDto = new CancelSportDto_SBO()
+                        {
+                            TransferCode = request.TransferCode,
+                            Amount = liveCoinData.Amount
                         };
                         result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
                         break;
@@ -230,8 +251,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
-                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
-                0 => throw new SBOException(SBOErrorCode.BetAlreadyCanceled),
+                0 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
+                -1 => throw new SBOException(SBOErrorCode.BetAlreadyCanceled),
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }
@@ -243,7 +264,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = new SBOResult();
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
-                var betStatus = await _sboService.GetBetStatus(request.TransferCode);
+                var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
                 switch (betStatus)
                 {
                     case null:
@@ -289,7 +310,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
-                var data = await _sboService.GetBetStatus(request.TransferCode);
+                var data = await _sboService.GetSportsBetStatus(request.TransferCode);
                 if (data == null) throw new SBOException(SBOErrorCode.BetNotExists);
                 
                 var betStatus = new SBOGetBetStatusResponse()
@@ -308,6 +329,59 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 throw new SBOException(SBOErrorCode.InternalError);
             }
+        }
+
+        public async Task<SBOLiveCoinTransactionResponse> LiveCoinTransaction(SBOLiveCoinTransactionRequest request)
+        {
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.Username);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
+                throw new SBOException(SBOErrorCode.MemberNotExist);
+            }
+            
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.Username);
+
+            var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
+            if (betStatus != null)
+            {
+                throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
+            }
+
+            var result = new SBOResult();
+            if (request.ProductType == SBOProductType.LiveCoin)
+            {
+                var liveCoinDto = new LiveCoinTransactionDto_SBO()
+                {
+                    CompanyKey = request.CompanyKey,
+                    Username = request.Username,
+                    Amount = request.Amount,
+                    TransferCode = request.TransferCode,
+                    TransactionId = request.TransactionId,
+                    TransactionTime = request.TransactionTime,
+                    ProductType = (int)request.ProductType,
+                    Selection = request.Selection
+                };
+                result = await _bettingService.TransferLiveCoin_SBO(tpCustInfo, liveCoinDto);
+            }
+            else
+            {
+                throw new SBOException(SBOErrorCode.InternalError);
+            }
+
+            return result.Result switch
+            {
+                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
+                0 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
+                1 => new SBOLiveCoinTransactionResponse()
+                {
+                    AccountName = request.Username,
+                    Balance = result.AfterAmount / tpCurrency.ExchangeRate,
+                    ErrorCode = (int)SBOErrorCode.NoError,
+                    ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
+                },
+                _ => throw new SBOException(SBOErrorCode.InternalError)
+            };
         }
 
         public decimal CaculateRollbackAmount(SBOGetBetStatusData betData)

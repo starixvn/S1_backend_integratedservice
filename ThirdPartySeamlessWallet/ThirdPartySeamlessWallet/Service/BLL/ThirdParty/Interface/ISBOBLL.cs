@@ -11,5 +11,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         Task<SBOCancelResponse> Cancel(SBOCancelRequest request);
         Task<SBORollbackResponse> Rollback(SBORollbackRequest request);
         Task<SBOGetBetStatusResponse> GetBetStatus(SBOGetBetStatusRequest request);
+        Task<SBOLiveCoinTransactionResponse> LiveCoinTransaction(SBOLiveCoinTransactionRequest request);
     }
 }
