@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Renci.SshNet.Common;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -49,6 +48,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public SBOBalanceResponse GetBalance(SBOBalanceRequest request)
         {
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+            if (thirdPartySetting == null)
+            {
+                _logger.LogError("thirdPartySetting not found");
+                throw new SBOException(SBOErrorCode.CompanyKeyError);
+            }
+            var companyKey = thirdPartySetting.TpSetting["CompanyKey"];
+            if (companyKey != request.CompanyKey) throw new SBOException(SBOErrorCode.CompanyKeyError);
+            
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.Username);
             if (tpCheck == null || tpCheck.Locked)
             {
@@ -239,14 +247,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     case null:
                         throw new SBOException(SBOErrorCode.BetNotExists);
-                    case { Status: 2 }:
-                        throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
                     default:
                     {
                         var rollbackDto = new RollbackSportDto_SBO()
                         {
                             TransferCode = request.TransferCode,
-                            Amount = betStatus.WinLoss
+                            Amount = CaculateRollbackAmount(betStatus)
                         };
                         result = await _settledService.RollbackSport_SBO(tpCustInfo, rollbackDto);
                         break;
@@ -302,7 +308,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 throw new SBOException(SBOErrorCode.InternalError);
             }
         }
-        
+
+        public decimal CaculateRollbackAmount(SBOGetBetStatusData betData)
+        {
+            return betData.Status switch
+            {
+                1 => betData.WinLoss,
+                2 => betData.Stake,
+                _ => throw new SBOException(SBOErrorCode.BetAlreadyRollback)
+            };
+        }
+
         private (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
