@@ -18,10 +18,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL.ThirdParty
             _sqlClient = sqlClients.FirstOrDefault(a => a.DataBase == DataBase.Main);
         }
 
-        public async Task<SBOGetBetStatusData> GetBetStatus(string transferCode)
+        public async Task<SBOGetBetStatusData> GetSportsBetStatus(string transferCode)
         {
             var p = new DynamicParameters(new { _TransferCode = transferCode });
             return await _sqlClient.QueryFirstAsync<SBOGetBetStatusData>("Service_BettransSports_SBO_Status_Get", p);
+        }
+        
+        public async Task<SBOLiveCoinTransactionData> GetLiveCoinTransaction(string transferCode)
+        {
+            var p = new DynamicParameters(new { _TransferCode = transferCode });
+            return await _sqlClient.QueryFirstAsync<SBOLiveCoinTransactionData>("Service_BettransLiveCoin_SBO_Get", p);
         }
     }
 }
