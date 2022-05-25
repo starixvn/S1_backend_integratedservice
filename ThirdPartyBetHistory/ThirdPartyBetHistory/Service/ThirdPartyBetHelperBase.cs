@@ -28,8 +28,6 @@ namespace ThirdPartyBetHistory.Service
 
     public abstract class ThirdPartyBetHelperBase : IThirdPartyBetHelper
     {
-        public static string proxyHost;
-        public static int proxyPort;
         public bool IsDebug { get; set; }
         public bool IsRunning { get; set; }
         public SyncParams syncParams { set; get; }
@@ -45,20 +43,7 @@ namespace ThirdPartyBetHistory.Service
                 LogContext.PushProperty("TpInfo", parameters);
                 LogContext.PushProperty("Tp.Request.URL", url);
                 var data = new StringContent(parameters, Encoding.UTF8, contentType);
-                HttpClientHandler handler = null;
-                if (!string.IsNullOrEmpty(proxyHost))
-                {
-                    handler = new HttpClientHandler()
-                    {
-                        Proxy = new WebProxy(proxyHost, proxyPort),
-                        UseProxy = true,
-                    };
-                }
-                else
-                {
-                    handler = new HttpClientHandler();
-                }
-
+                var handler =  new HttpClientHandler();
                 using var client = new HttpClient(handler);
 
                 var response = await client.PostAsync(url, data);
