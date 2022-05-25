@@ -260,21 +260,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 
                 result = PayoutV2(
-                        tpCustInfo: tpCustInfo,
-                        amount: dto.WinLoss,
-                        tpId: (int)Tp.SBO,
-                        tpTransId: dto.TransferCode,
-                        gameType: (int)GameType.SBO_Sports,
-                        tpCategory: TpCategory.Sports,
-                        refId: dto.TransferCode,
+                        tpCustInfo,
+                        dto.WinLoss,
+                        (int)Tp.SBO,
+                        dto.TransferCode,
+                        (int)GameType.SBO_Sports,
+                        TpCategory.Sports,
+                        dto.TransferCode,
                         TransType.Payout,
-                        betData: null,
+                        null,
                         out var afterAmount,
                         "Payout",
                         out var bonusId,
                         conn,
-                        trans,
-                        AllowNegative.Allow);
+                        trans);
                 
                 if (result == 1)
                 {
@@ -317,20 +316,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 result = PayoutV2(
-                    tpCustInfo: tpCustInfo,
-                    amount: dto.Amount,
-                    tpId: (int)Tp.SBO,
-                    tpTransId: dto.TransferCode,
-                    gameType: (int)GameType.SBO_Sports,
-                    tpCategory: TpCategory.Sports,
-                    refId: dto.TransferCode,
+                    tpCustInfo,
+                    dto.Amount,
+                    (int)Tp.SBO,
+                    dto.TransferCode,
+                    (int)GameType.SBO_Sports,
+                    TpCategory.Sports,
+                    dto.TransferCode,
                     TransType.Refunds,
-                    betData: null,
+                    null,
                     out var afterAmount,
                     "Cancel",
                     out var bonusId,
                     conn,
-                    trans);
+                    trans,
+                    AllowNegative.Allow);
 
                 if (result == 1)
                 {
