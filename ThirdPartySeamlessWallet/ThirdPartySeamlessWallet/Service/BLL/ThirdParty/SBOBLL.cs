@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             
             var gameType = _sboGameTypeMap[request.ProductType];
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.Username, (int)gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.Username, (int)gameType);
             if (tpCustBalance != null)
             {
                 return new SBOBalanceResponse()
