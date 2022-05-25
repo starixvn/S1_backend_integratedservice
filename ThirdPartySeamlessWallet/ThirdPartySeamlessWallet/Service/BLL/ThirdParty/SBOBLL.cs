@@ -188,7 +188,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var betStatus = await _sboService.GetBetStatus(request.TransferCode);
                 if (betStatus == null) throw new SBOException(SBOErrorCode.BetNotExists);
-                if (betStatus != null && betStatus.TicketStatus != 3) throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
+                if (betStatus is { TicketStatus: 3 }) throw new SBOException(SBOErrorCode.BetAlreadyCanceled);
                 
                 var cancelDto = new CancelSportDto_SBO()
                 {
@@ -227,10 +227,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (request.ProductType == SBOProductType.SportsBook)
             {
                 var data = await _sboService.GetBetStatus(request.TransferCode);
-                if (data == null)
-                {
-                    throw new SBOException(SBOErrorCode.BetNotExists);
-                }
+                if (data == null) throw new SBOException(SBOErrorCode.BetNotExists);
+                
                 var betStatus = new SBOGetBetStatusResponse()
                 {
                     TransferCode = request.TransferCode,
