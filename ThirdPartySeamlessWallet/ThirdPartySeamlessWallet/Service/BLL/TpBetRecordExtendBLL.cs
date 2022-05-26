@@ -64,7 +64,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         SettlementType = (int)betRecordInfo.SettlementType,
                         TicketStatus = (int)betRecordInfo.TicketStatus,
                         betRecordInfo.BonusId,
-                        OriginalState = betRecordInfo.OriginalState ?? string.Empty
+                        OriginalState = betRecordInfo.OriginalState ?? string.Empty,
+                        betRecordInfo.TicketKey,
                     });
                     parameters.AddDynamicParams(result.Data);
                     _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
