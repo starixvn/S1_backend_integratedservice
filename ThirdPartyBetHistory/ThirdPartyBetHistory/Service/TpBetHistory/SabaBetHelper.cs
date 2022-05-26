@@ -278,11 +278,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                                 TransTime = ConvertLocTime(betDetial.transaction_time),
                             };
 
-                            if (betDetial.sport_type >= 180 || betDetial.sport_type <= 189)
+                            if (betDetial.sport_type >= 180 && betDetial.sport_type <= 189)
                             {
                                 betRecordInfo.GameType = GameType.Saba_VirtualSport;
                             }
-                            else
+                            if (betDetial.sport_type >= 190 && betDetial.sport_type <= 199)
                             {
                                 betRecordInfo.GameType = GameType.Saba_VirtualSports2;
                             }

@@ -38,9 +38,6 @@ namespace ThirdPartyBetHistory
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
-
-            ThirdPartyBetHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
-            ThirdPartyBetHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
