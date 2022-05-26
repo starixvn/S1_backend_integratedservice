@@ -82,4 +82,9 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         [Description("比分让球盘(足球)")] FootballScoreHandicap = 468,
         [Description("比分大小盘(足球)")] FootballScoreOverUnder = 469
     }
+    public enum DataBase
+    {
+        Main, //MainDB
+        Report,//ReportDB
+    }
 }

@@ -11,44 +11,36 @@ using Serilog.Context;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyBetHistory.Service.Worker
 {
     public class WorkerService : BackgroundService
     {
-        private readonly IHostEnvironment environment;
-        private readonly ILogger<WorkerService> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private IEnumerable<ThirdPartyModel> tpList;
-        private List<IThirdPartyBetHelper> WorkerList;
-        private ConcurrentDictionary<int, SyncParams> syncParamsList;
-        private Dictionary<int, Timer> timerWorkerList;
-        public WorkerService(ILogger<WorkerService> logger, IHostEnvironment environment, ThirdPartyBLL thirdPartyBLL)
+        private readonly ILogger<WorkerService> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
+        private readonly Dictionary<SiteId, Timer> timerWorkerList;
+        public WorkerService(IServiceProvider provider)
         {
-            this.environment = environment;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            WorkerList = new List<IThirdPartyBetHelper>();
-            syncParamsList = new ConcurrentDictionary<int, SyncParams>();
-            timerWorkerList = new Dictionary<int, Timer>();
+            _logger = provider.GetRequiredService<ILogger<WorkerService>>();
+            _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            timerWorkerList = new Dictionary<SiteId, Timer>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            tpList = thirdPartyBLL.GetTpList();
-            foreach (var tp in tpList.Where(item => item.Id == (int)Tp.Saba))
+
+            foreach (var siteTpBetHelper in _sabaSiteList)
             {
                 try
                 {
-                    var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(
-                        Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.{tp.TpName}BetHelper"), logger);
-                    TpBetHelper.thirdPartyModel = tp;
-                    TpBetHelper.syncParams = TpBetHelper.InitialSyncParams();
-                    var timer = new Timer(DoTask, TpBetHelper, TimeSpan.Zero, TimeSpan.Zero);
-                    timerWorkerList.Add(TpBetHelper.thirdPartyModel.SiteId, timer);
+                    var timer = new Timer(DoTask, siteTpBetHelper, TimeSpan.Zero, TimeSpan.Zero);
+                    timerWorkerList.Add(siteTpBetHelper.SiteId, timer);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error: Worker Service");
+                    _logger.LogError(ex, "Error: Worker Service");
                 }
             }
 
@@ -57,7 +49,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private void DoTask(object state)
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
-            var taskProperty = $"Name:{tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.thirdPartyModel.SiteId} , key:{tpBetHelp.syncParams.key}";
+            var taskProperty = $"Name:{tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.SiteId} , key:{tpBetHelp.syncParams.key}";
 
             try
             {
@@ -67,7 +59,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                     _ = Task.Factory.StartNew(async () =>
                     {
                         LogContext.PushProperty("WorkerId", Guid.NewGuid());
-                        logger.LogDebug("AddBetRecord at: {time}", DateTimeOffset.Now);
+                        _logger.LogDebug("AddBetRecord at: {time}", DateTimeOffset.Now);
                         try
                         {
                             await tpBetHelp.AddBetRecord((betRecordInfos) =>
@@ -77,26 +69,26 @@ namespace ThirdPartyBetHistory.Service.Worker
                                     betRecord.TpId = tpBetHelp.thirdPartyModel.Id;
                                 }
 
-                                thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
+                                _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
                                 if (betRecordInfos.Count() > 50)
                                     tpBetHelp.syncParams.DoneTime = DateTime.Now.AddSeconds(-tpBetHelp.syncParams.timeOfFrequency);
                             });
 
-                            if (tpBetHelp.thirdPartyModel.SiteId == 0)
+                            if (tpBetHelp.SiteId == SiteId.Nova88)
                             {
-                                thirdPartyBLL.SetTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.syncParams.key);
+                                _thirdPartyBLL.SetTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.syncParams.key);
                             }
                             else
                             {
-                                thirdPartyBLL.SiteTpTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.thirdPartyModel.SiteId, tpBetHelp.syncParams.key);
+                                _thirdPartyBLL.SiteTpTicketKey(tpBetHelp.thirdPartyModel.Id, tpBetHelp.thirdPartyModel.SiteId, tpBetHelp.syncParams.key);
                             }
 
                             tpBetHelp.syncParams.DoneTime = DateTime.Now;
-                            logger.LogDebug($"Success: {taskProperty}");
+                            _logger.LogInformation($"Success: {taskProperty}");
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex, $"StartNew Exception: {taskProperty}");
+                            _logger.LogError(ex, $"StartNew Exception: {taskProperty}");
                         }
                         finally
                         {
@@ -107,12 +99,12 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"DoTask Exception: {taskProperty}");
+                _logger.LogError(ex, $"DoTask Exception: {taskProperty}");
             }
             finally
             {
                 //tpBetHelp
-                timerWorkerList[tpBetHelp.thirdPartyModel.SiteId].Change(TimeSpan.FromSeconds(1), TimeSpan.Zero);
+                timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromSeconds(1), TimeSpan.Zero);
             }
         }
     }

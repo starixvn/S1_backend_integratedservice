@@ -36,7 +36,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             var mySqlLogger = serviceProvider.GetRequiredService<ILogger<MySqlClient>>();
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _connectionString = configuration.GetConnectionString("ConnectionString");
-            _mainDbClient = new MySqlClient(_connectionString, mySqlLogger);
+            _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()

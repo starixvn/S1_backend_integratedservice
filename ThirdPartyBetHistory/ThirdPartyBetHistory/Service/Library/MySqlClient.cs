@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Serilog.Context;
+using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Library
 {
@@ -17,10 +18,13 @@ namespace ThirdPartyBetHistory.Service.Library
 
         private readonly ILogger<MySqlClient> _logger;
 
-        public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
+        public DataBase DataBase { get; set; }
+
+        public MySqlClient(string connectionString, ILogger<MySqlClient> logger, DataBase dataBase)
         {
             _connectionString = connectionString;
             _logger = logger;
+            DataBase = dataBase;
         }
 
         public async Task<T> QueryFirstAsync<T>(string name, DynamicParameters parameters)
