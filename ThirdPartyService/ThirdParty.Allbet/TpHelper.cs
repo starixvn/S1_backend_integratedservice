@@ -201,17 +201,17 @@ namespace ThirdParty.Allbet
         {
             return gameCode switch
             {
-                "101" => "普通百家乐",
-                "102" => "VIP百家乐",
-                "103" => "快速百家乐",
-                "104" => "咪牌百家乐",
-                "201" => "骰宝(HiLo)",
-                "301" => "龙虎",
-                "401" => "轮盘",
-                "501" => "博丁",
-                "601" => "石头剪刀布",
-                "801" => "牛牛",
-                "901" => "炸金花/三公",
+                "101" => "Normal Baccarat",
+                "102" => "VIP Baccarat",
+                "103" => "Quick Baccarat",
+                "104" => "See Card Baccarat",
+                "201" => "Sicbo(HiLo)",
+                "301" => "Dragon Tiger",
+                "401" => "Roulette",
+                "501" => "Pok Deng",
+                "601" => "Rock Paper Scissors",
+                "801" => "Bull Bull",
+                "901" => "Win Three Cards / Three Pictures",
                 _ => string.Empty,
             };
         }
