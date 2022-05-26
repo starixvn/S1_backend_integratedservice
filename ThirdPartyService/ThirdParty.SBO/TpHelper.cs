@@ -242,6 +242,7 @@ namespace ThirdParty.SBO
             var gameTypeDict = new Dictionary<int, string>()
             {
                 {(int)TpGameType.SBO_Sports,"SportsBook"},
+                {(int)TpGameType.SBO_VirtualSports,"VirtualSports"}
             };
 
             return gameTypeDict[gameTypeId];
