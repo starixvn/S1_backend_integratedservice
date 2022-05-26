@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -24,25 +25,48 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend"; 
+            _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend";
         }
 
-        public void AddTpBetRecordExtend(BetRecordInfo BetRecordInfo, TpCustInfo TpCustInfo)
+        public void AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo)
         {
             try
-            {         
+            {
                 var content = JsonConvert.SerializeObject(new
                 {
-                    CustId = TpCustInfo.CustId,
-                    BetRecordInfo = BetRecordInfo,
+                    CustId = tpCustInfo.CustId,
+                    BetRecordInfo = betRecordInfo,
                 });
                 var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
                 var response = _httpHelper.GetClient().PostAsync(_apiUrl, httpContent).Result;
-                var responseBody = response.Content.ReadAsStringAsync().Result;         
+                var responseBody = response.Content.ReadAsStringAsync().Result;
                 var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
                 if (result.ErrorCode == 0)
-                {       
-                    _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: result.Data);
+                {
+                    var parameters = new DynamicParameters( new
+                    {
+                        betRecordInfo.TpId,
+                        betRecordInfo.TransId,
+                        GameType = (int)betRecordInfo.GameType,
+                        tpCustInfo.CustId,
+                        tpCustInfo.UserName,
+                        tpCustInfo.CurrencyId,
+                        tpCustInfo.SiteId,
+                        betRecordInfo.TpUserName,
+                        betRecordInfo.SettledTime,
+                        betRecordInfo.TransTime,
+                        betRecordInfo.Stake,
+                        betRecordInfo.ValidBet,
+                        betRecordInfo.Revenue,
+                        betRecordInfo.ProgressiveBet,
+                        betRecordInfo.ProgressiveWin,
+                        betRecordInfo.WinlostAmount,
+                        SettlementType = (int)betRecordInfo.SettlementType,
+                        TicketStatus = (int)betRecordInfo.TicketStatus,
+                        betRecordInfo.BonusId
+                    });
+                    parameters.AddDynamicParams(result.Data);
+                    _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
                 }
             }
             catch (Exception ex)
