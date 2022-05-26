@@ -66,10 +66,11 @@ namespace ThirdParty.SBO
             var responseResult = FromJson<PlayerLoginResponse>(responseJson);
             if (responseResult.Error.Id == 0)
             {
+                var device = (appType == AppType.Desktop ? "d" : "m");
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
-                    Message = $"https:{responseResult.LoginUrl}"
+                    Message = $"https:{responseResult.LoginUrl}&lang={TpLangId}&oddstyle=MY&theme=sbo&oddsmode=double&device={device}"
                 };
             }
 
