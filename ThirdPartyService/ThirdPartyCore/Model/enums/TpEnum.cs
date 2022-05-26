@@ -104,6 +104,7 @@ namespace ThirdPartyCore.Model.enums
         AMB_RNG = 76,
         SBO_Sports = 77,
         SBO_Games = 78,
-        SBO_Casino = 79
+        SBO_Casino = 79,
+        SBO_VirtualSports = 80
     }
 }
