@@ -57,9 +57,7 @@ namespace ThirdParty.SBO
                 Username = tpCustInfo.TpUserName,
                 Portfolio = TpGameTypeMap(int.Parse(config.TpGameTypeId)),
                 CompanyKey = config.CompanyKey,
-                ServerId = config.ServerId,
-                Username = tpCustInfo.TpUserName,
-                Portfolio = TpGameTypeMap(int.Parse(config.TpGameTypeId)) 
+                ServerId = config.ServerId
             };
 
             var responseJson = HttpPostClient(apiUrl,
