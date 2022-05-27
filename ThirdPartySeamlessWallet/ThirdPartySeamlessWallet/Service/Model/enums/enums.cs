@@ -106,7 +106,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBSW_Lottery = 74,
         SBSW_TableGame = 75,
         AMB_RNG = 76,
-        SBO_Sports = 77
+        SBO_Sports = 77,
+        SBO_Games = 78,
+        SBO_Casino = 79,
+        SBO_VirtualSports = 80
     }
     public enum Tp
     {
