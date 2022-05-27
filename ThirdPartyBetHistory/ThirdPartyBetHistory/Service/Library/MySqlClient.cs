@@ -48,7 +48,7 @@ namespace ThirdPartyBetHistory.Service.Library
             return result;
         }
 
-        public T QueryFirst<T>(string name, DynamicParameters parameters)
+        public T QueryFirst<T>(string name, object parameters)
         {
             T result;
             var sw = Stopwatch.StartNew();
@@ -69,7 +69,7 @@ namespace ThirdPartyBetHistory.Service.Library
             return result;
         }
 
-        public int Execute(string name, DynamicParameters parameters)
+        public int Execute(string name, object parameters)
         {
             var result = 0;
             var sw = Stopwatch.StartNew();
@@ -170,7 +170,7 @@ namespace ThirdPartyBetHistory.Service.Library
             return result;
         }
 
-        public IEnumerable<T> Query<T>(string name, DynamicParameters parameters)
+        public IEnumerable<T> Query<T>(string name, object parameters)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();

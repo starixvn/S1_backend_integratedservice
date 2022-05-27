@@ -24,7 +24,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     }
 
     public enum GameType
-    {      
+    {
         Saba_Sports = 1,
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
@@ -49,7 +49,8 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         SBSW_VirtualSports2 = 72,
         SBSW_Keno = 73,
         SBSW_Lottery = 74,
-        SBSW_TableGame = 75
+        SBSW_TableGame = 75,
+        Saba_LGVirtualSports = 80,
     }
 
     public enum Tp
@@ -57,7 +58,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba = 1,
         SBSW = 41
     }
-    
+
     public enum SiteId
     {
         Nova88 = 1,
@@ -86,5 +87,11 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     {
         Main, //MainDB
         Report,//ReportDB
+    }
+
+    public enum WorkerType
+    {
+        MainWager = 1,
+        LGVirtualSportsWager = 2,
     }
 }

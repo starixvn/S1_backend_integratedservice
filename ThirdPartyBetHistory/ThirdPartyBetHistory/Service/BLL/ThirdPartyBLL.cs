@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
+using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.BLL
 {
@@ -43,6 +44,16 @@ namespace ThirdPartyBetHistory.Service.BLL
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             return _thirdPartyService.GetTpCurrency(tpId, currencyId);
+        }
+
+        public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
+        {
+            return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType);
+        }
+
+        public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
+        {
+            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType, betHelper.syncParams.key);
         }
 
     }
