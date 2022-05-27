@@ -120,6 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Gpid { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
+        public GameType TpGameType { get; set; }
     }
     
     public class SBOGetBetStatusRequest
@@ -150,6 +151,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Stake { get; set; }
         public decimal WinLoss { get; set; }
         public int Status { get; set; }
+        public DateTime? ResultTime { get; set; }
         public int TicketStatus { get; set; }
     }
     
@@ -176,7 +178,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Username { get; set; }
         public string TransferCode { get; set; }
         public decimal Amount { get; set; }
+        public DateTime? ResultTime { get; set; }
         public int Status { get; set; }
+        public GameType TpGameType { get; set; }
     }
     
     public class SBORollbackRequest
@@ -200,7 +204,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Username { get; set; }
         public string TransferCode { get; set; }
         public decimal Amount { get; set; }
+        public DateTime? ResultTime { get; set; }
         public int Status { get; set; }
+        public GameType TpGameType { get; set; }
     }
     
     public class SBOLiveCoinTransactionRequest
