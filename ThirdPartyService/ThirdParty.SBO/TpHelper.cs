@@ -91,7 +91,7 @@ namespace ThirdParty.SBO
             {
                 CompanyKey = config.CompanyKey,
                 ServerId = config.ServerId,
-                Portfolio = "SeamlessGameProviderApi",// 無縫遊戲
+                Portfolio = TpGameTypeMap(getBetDetail.TpGameTypeOption.Type),
                 Refno = getBetDetail.TransId
             };
 
