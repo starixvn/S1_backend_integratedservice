@@ -136,12 +136,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
                 var p = new DynamicParameters(dto);
                 var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                var sboResult = new SBOResult();
+                
                 if (result < 1)
                 {
-                    sboResult.Result = -1;
-                    return sboResult;
+                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
+                                    $" exec Service_BettransSports_SBO_Deduct_Ins failed return Result:-1");
+                    return new SBOResult() { Result = -1 };
                 }
 
                 result = PlaceBetV2(
@@ -158,16 +158,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     conn: conn,
                     trans: trans
                 );
-                
-                sboResult.Result = result;
-                if (result == 1)
+                if (result != 1)
                 {
-                    sboResult.AfterAmount = afterAmount;
-                    await trans.CommitAsync();
+                    logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
+                    return new SBOResult() { Result = -2 };
                 }
-                return sboResult;
                 
-
+                var sboResult = new SBOResult
+                {
+                    Result = 1,
+                    AfterAmount = afterAmount
+                };
+                await trans.CommitAsync();
                 return sboResult;
             }
             catch (Exception ex)

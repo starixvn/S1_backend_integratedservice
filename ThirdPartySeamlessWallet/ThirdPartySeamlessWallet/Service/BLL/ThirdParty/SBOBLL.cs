@@ -33,7 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private Dictionary<SBOProductType, GameType> _sboGameTypeMap = new Dictionary<SBOProductType, GameType>()
         {
             { SBOProductType.SportsBook, GameType.SBO_Sports },
-            { SBOProductType.VirtualSports, GameType.SBO_Sports }
+            { SBOProductType.VirtualSports, GameType.SBO_VirtualSports }
         };
 
         public SBOBLL(ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll, ILogger<SBOBLL> logger, BettingService bettingService, SettledService settledService, ISBOService sboService)
@@ -95,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var betStatus = await _sboService.GetSportsBetStatus(request.TransferCode);
             if (betStatus != null) throw new SBOException(SBOErrorCode.BetWithSameRefNoExists);
 
-            var result = new SBOResult();
+            SBOResult result;
             if (request.ProductType == SBOProductType.SportsBook || request.ProductType == SBOProductType.VirtualSports)
             {
                 var placeBetDto = new PlaceBetSportDto_SBO()
@@ -124,8 +124,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result.Result switch
             {
-                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
-                0 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
                 1 => new SBODeductResponse()
                 {
                     AccountName = request.Username,
@@ -134,6 +132,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
+                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
+                -2 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }
@@ -157,6 +157,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 var payoutDto = new PayoutSportDto_SBO()
                 {
+                    Username = request.Username,
                     WinLoss = request.WinLoss.ConvertToMain(tpCurrency.ExchangeRate),
                     TransferCode = request.TransferCode,
                     CommissionStake = request.CommissionStake,
@@ -181,8 +182,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
-                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
-                0 => throw new SBOException(SBOErrorCode.BetAlreadySettled),
+                -1 => throw new SBOException(SBOErrorCode.BetAlreadySettled),
+                -2 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
+                -3 => throw new SBOException(SBOErrorCode.InternalError),
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }
@@ -205,8 +207,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         var cancelDto = new CancelSportDto_SBO()
                         {
+                            Username = request.Username,
                             TransferCode = request.TransferCode,
-                            Amount = -1 * betStatus.WinLoss + betStatus.Stake
+                            Amount = -1 * betStatus.WinLoss + betStatus.Stake,
+                            Status = betStatus.Status
                         };
                         result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
                         break;
@@ -248,8 +252,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
-                0 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
                 -1 => throw new SBOException(SBOErrorCode.BetAlreadyCanceled),
+                -2 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
+                -3 => throw new SBOException(SBOErrorCode.InternalError),
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }
@@ -270,8 +275,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         var rollbackDto = new RollbackSportDto_SBO()
                         {
+                            Username = request.Username,
                             TransferCode = request.TransferCode,
-                            Amount = CaculateRollbackAmount(betStatus)
+                            Amount = CaculateRollbackAmount(betStatus),
+                            Status = betStatus.Status
                         };
                         result = await _settledService.RollbackSport_SBO(tpCustInfo, rollbackDto);
                         break;
@@ -292,8 +299,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorCode = (int)SBOErrorCode.NoError,
                     ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
                 },
-                -1 => throw new SBOException(SBOErrorCode.BetWithSameRefNoExists),
-                0 => throw new SBOException(SBOErrorCode.BetAlreadyRollback),
+                -1 => throw new SBOException(SBOErrorCode.BetAlreadyRollback),
+                -2 => throw new SBOException(SBOErrorCode.NotEnoughBalance),
+                -3 => throw new SBOException(SBOErrorCode.InternalError),
                 _ => throw new SBOException(SBOErrorCode.InternalError)
             };
         }
