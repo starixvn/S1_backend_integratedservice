@@ -282,13 +282,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return new SBOResult() { Result = -2 };
                 }
                 
-                var settleQueue = new DynamicParameters(new
-                {
-                    dto.Username,
-                    dto.TransferCode,
-                    SettleFlag = (int) SettleFlag.EndGame
-                });
-                result = await conn.ExecuteAsync("Service_BettransSports_SBO_Unsettle_Ins", settleQueue, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, dto.ResultTime);
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
@@ -359,13 +353,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 if (dto.Status == 1)
                 {
-                    var settleQueue = new DynamicParameters(new
-                    {
-                        dto.Username,
-                        dto.TransferCode,
-                        SettleFlag = (int) SettleFlag.EndGame
-                    });
-                    result = await conn.ExecuteAsync("Service_BettransSports_SBO_Unsettle_Ins", settleQueue, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var partitionTime = dto.ResultTime.HasValue ? dto.ResultTime : DateTime.Now;
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, partitionTime);
                     if (result < 1)
                     {
                         logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
@@ -434,13 +423,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (dto.Status == 1)
                 {
-                    var settleQueue = new DynamicParameters(new
-                    {
-                        dto.Username,
-                        dto.TransferCode,
-                        SettleFlag = (int) SettleFlag.Running
-                    });
-                    result = await conn.ExecuteAsync("Service_BettransSports_SBO_Unsettle_Ins", settleQueue, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var partitionTime = dto.ResultTime.HasValue ? dto.ResultTime : DateTime.Now;
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, partitionTime);
                     if (result < 1)
                     {
                         logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +

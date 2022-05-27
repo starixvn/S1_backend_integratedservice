@@ -165,6 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ResultType = (int)request.ResultType,
                     ResultTime = request.ResultTime,
                     Gpid = request.Gpid,
+                    TpGameType = _sboGameTypeMap[request.ProductType]
                 };
                 result = await _settledService.PayoutSports_SBO(tpCustInfo, payoutDto);
             }
@@ -210,7 +211,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             Username = request.Username,
                             TransferCode = request.TransferCode,
                             Amount = -1 * betStatus.WinLoss + betStatus.Stake,
-                            Status = betStatus.Status
+                            ResultTime = betStatus.ResultTime,
+                            Status = betStatus.Status,
+                            TpGameType = _sboGameTypeMap[request.ProductType]
                         };
                         result = await _settledService.CancelBetSports_SBO(tpCustInfo, cancelDto);
                         break;
@@ -278,7 +281,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             Username = request.Username,
                             TransferCode = request.TransferCode,
                             Amount = CaculateRollbackAmount(betStatus),
-                            Status = betStatus.Status
+                            ResultTime = betStatus.ResultTime,
+                            Status = betStatus.Status,
+                            TpGameType = _sboGameTypeMap[request.ProductType]
                         };
                         result = await _settledService.RollbackSport_SBO(tpCustInfo, rollbackDto);
                         break;
