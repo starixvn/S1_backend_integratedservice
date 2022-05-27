@@ -349,7 +349,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     "Cancel",
                     out var bonusId,
                     conn,
-                    trans);
+                    trans,
+                    AllowNegative.Allow);
                 if (result != 1)
                 {
                     logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
@@ -423,7 +424,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     "Rollback",
                     out bonusId,
                     conn: conn,
-                    trans: trans);
+                    trans: trans,
+                    AllowNegative.Allow);
                 if (result != 1)
                 {
                     logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
