@@ -108,6 +108,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class PayoutSportDto_SBO
     {
+        public string Username { get; set; }
         public string TransferCode { get; set; }
         public decimal WinLoss { get; set; }
         public int ResultType { get; set; }
@@ -172,8 +173,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class CancelSportDto_SBO
     {
+        public string Username { get; set; }
         public string TransferCode { get; set; }
         public decimal Amount { get; set; }
+        public int Status { get; set; }
     }
     
     public class SBORollbackRequest
@@ -194,8 +197,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class RollbackSportDto_SBO
     {
+        public string Username { get; set; }
         public string TransferCode { get; set; }
         public decimal Amount { get; set; }
+        public int Status { get; set; }
     }
     
     public class SBOLiveCoinTransactionRequest
