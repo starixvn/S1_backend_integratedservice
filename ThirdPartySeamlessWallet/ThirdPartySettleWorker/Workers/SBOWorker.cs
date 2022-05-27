@@ -17,7 +17,8 @@ namespace ThirdPartySettleWorker.Workers
     public class SBOWorker : BackgroundService, ISettleWorker
     {
         public Tp Tp => Tp.SBO;
-        private Timer _timer;
+        private Timer _timerSports;
+        private Timer _timerVirtualSports;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -36,13 +37,15 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettle, GameType.SBO_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSports = new Timer(DoSettle, GameType.SBO_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            _timerVirtualSports = new Timer(DoSettle, GameType.SBO_VirtualSports, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _timer?.Change(Timeout.Infinite, 0);
+            _timerSports?.Change(Timeout.Infinite, 0);
+            _timerVirtualSports?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -53,12 +56,11 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
-
             var gameType = (GameType)state;
-            var tpCategory = TpCategory.Sports;
+            var tpCategory = TpCategory.Sports; // SBO_Sports、SBO_VirtualSports 都是體育分類
 
             const string logName = "SettleSBO";
-            const string getSpName = "Service_BettransSports_SBO_Unsettle_Get";
+            const string getSpName = "Service_BettransSports_SBO_Unsettle_Get"; // 取得未結算的注單
 
             try
             {
@@ -87,7 +89,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = settleData.Account,
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
-                            SettlementType = SettlementType.SettledForValid,
+                            SettlementType = SetSettlementType((TicketStatus)settleData.TicketStatus), // 判斷 TicketStatus，因為可能重新結算
                             TicketStatus = SetTicketStatus(settleData.WinLostAmount),
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -121,7 +123,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                var dueTimeSpan = TimeSpan.FromSeconds(30);
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
@@ -131,7 +133,8 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                _timer?.Change(dueTimeSpan, TimeSpan.Zero);
+                _timerSports?.Change(dueTimeSpan, TimeSpan.Zero);
+                _timerVirtualSports?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -140,6 +143,28 @@ namespace ThirdPartySettleWorker.Workers
             if (winLostAmount == 0) return TicketStatus.Draw;
 
             return winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost;
+        }
+
+        private SettlementType SetSettlementType(TicketStatus ticketStatus)
+        {
+            var settlementType = SettlementType.UnSettled;
+
+            switch (ticketStatus)
+            {
+                case TicketStatus.UnSettled:
+                    settlementType = SettlementType.UnSettled;
+                    break;
+                case TicketStatus.Win:
+                case TicketStatus.Lost:
+                case TicketStatus.Draw:
+                    settlementType = SettlementType.SettledForValid;
+                    break;
+                case TicketStatus.Refund:
+                    settlementType = SettlementType.SettledForInvalid;
+                    break;
+            }
+
+            return settlementType;
         }
     }
 }
