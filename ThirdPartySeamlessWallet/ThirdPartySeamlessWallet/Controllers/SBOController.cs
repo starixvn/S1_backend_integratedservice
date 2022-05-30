@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// 结算投注
         /// </summary>
         [HttpPost]
         [Route("Settle")]
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// 回滚
         /// </summary>
         [HttpPost]
         [Route("Rollback")]
@@ -174,7 +174,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// 取消投注
         /// </summary>
         [HttpPost]
         [Route("Cancel")]
@@ -204,7 +204,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// 小费
         /// </summary>
         [HttpPost]
         [Route("Tip")]
@@ -220,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// 红利
         /// </summary>
         [HttpPost]
         [Route("Bonus")]
@@ -236,7 +236,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// 归还注额
         /// </summary>
         [HttpPost]
         [Route("ReturnStake")]
@@ -252,7 +252,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         /// <summary>
-        /// 下注
+        /// LiveCoin购买
         /// </summary>
         [HttpPost]
         [Route("LiveCoinTransaction")]

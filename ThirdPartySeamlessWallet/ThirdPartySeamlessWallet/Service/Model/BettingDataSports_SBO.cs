@@ -80,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int GameId { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
-        public int SettleFlag { get; set; }
+        public GameType TpGameType { get; set; }
     }
     
     public class SBOSettleRequest
