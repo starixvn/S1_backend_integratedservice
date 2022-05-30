@@ -114,6 +114,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     OrderDetail = request.OrderDetail,
                     PlayerIp = request.PlayerIp,
                     Gpid = request.Gpid,
+                    TpGameType = _sboGameTypeMap[request.ProductType]
                 };
                 result = await _bettingService.PlaceBetSport_SBO(tpCustInfo, placeBetDto);
             }

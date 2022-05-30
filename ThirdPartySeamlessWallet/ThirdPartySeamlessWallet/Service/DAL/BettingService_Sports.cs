@@ -164,6 +164,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return new SBOResult() { Result = -2 };
                 }
                 
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, dto.BetTime);
+                if (result < 1)
+                {
+                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
+                                    $"exec Service_BettransSports_SBO_Unsettle_Ins failed return Result:-3");
+                    return new SBOResult() { Result = -3 };
+                }
+                
                 var sboResult = new SBOResult
                 {
                     Result = 1,
