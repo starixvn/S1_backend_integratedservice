@@ -24,7 +24,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     }
 
     public enum GameType
-    {      
+    {
         Saba_Sports = 1,
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
@@ -49,7 +49,8 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         SBSW_VirtualSports2 = 72,
         SBSW_Keno = 73,
         SBSW_Lottery = 74,
-        SBSW_TableGame = 75
+        SBSW_TableGame = 75,
+        Saba_LGVirtualSports = 80,
     }
 
     public enum Tp
@@ -57,7 +58,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Saba = 1,
         SBSW = 41
     }
-    
+
     public enum SiteId
     {
         Nova88 = 1,
@@ -81,5 +82,23 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         [Description("单场串关(足球)")] SingleMatchParlay = 38,
         [Description("比分让球盘(足球)")] FootballScoreHandicap = 468,
         [Description("比分大小盘(足球)")] FootballScoreOverUnder = 469
+    }
+    public enum DataBase
+    {
+        Main, //MainDB
+        Report,//ReportDB
+	}
+	
+    public enum TimeType
+    {
+        ByBetTime = 1,
+        BySettleTime = 2
+    }
+
+    public enum WorkerType
+    {
+        MainWager = 1,
+        LGVirtualSportsWager = 2,
+        ByTransIdWager = 3
     }
 }
