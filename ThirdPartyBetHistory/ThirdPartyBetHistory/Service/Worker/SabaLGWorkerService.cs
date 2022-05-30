@@ -19,6 +19,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
         private readonly Dictionary<SiteId, Timer> timerWorkerList;
         private readonly WorkerType workerType = WorkerType.LGVirtualSportsWager;
+
         public SabaLGWorkerService(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<SabaLGWorkerService>>();
@@ -26,6 +27,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             timerWorkerList = new Dictionary<SiteId, Timer>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
@@ -44,6 +46,7 @@ namespace ThirdPartyBetHistory.Service.Worker
 
             return Task.CompletedTask;
         }
+
         private void DoTask(object state)
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
