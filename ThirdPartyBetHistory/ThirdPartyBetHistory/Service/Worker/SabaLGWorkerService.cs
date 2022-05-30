@@ -14,14 +14,14 @@ namespace ThirdPartyBetHistory.Service.Worker
 {
     public class SabaLGWorkerService : BackgroundService
     {
-        private readonly ILogger<WorkerService> _logger;
+        private readonly ILogger<SabaLGWorkerService> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
         private readonly Dictionary<SiteId, Timer> timerWorkerList;
         private readonly WorkerType workerType = WorkerType.LGVirtualSportsWager;
         public SabaLGWorkerService(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<WorkerService>>();
+            _logger = provider.GetRequiredService<ILogger<SabaLGWorkerService>>();
             _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             timerWorkerList = new Dictionary<SiteId, Timer>();
@@ -47,43 +47,19 @@ namespace ThirdPartyBetHistory.Service.Worker
         private void DoTask(object state)
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
-            var taskProperty = $"{workerType}:{tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.SiteId} , key:{tpBetHelp.syncParams.key}";
-
+            LogContext.PushProperty("RequestId", Guid.NewGuid());
+            LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
+            LogContext.PushProperty("WorkerType", workerType);
+            LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
+         
+            var lastTicketKey = _thirdPartyBLL.GetSiteTicketKey(workerType, tpBetHelp);
+            var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
             try
-            {
-                if (tpBetHelp.syncParams.DoneTime.AddSeconds(tpBetHelp.syncParams.timeOfFrequency) < DateTime.Now && !tpBetHelp.IsRunning)
-                {
-                    tpBetHelp.IsRunning = true;
-                    _ = Task.Factory.StartNew(async () =>
-                    {
-                        LogContext.PushProperty("WorkerId", Guid.NewGuid());
-                        _logger.LogDebug("AddBetRecord at: {time}", DateTimeOffset.Now);
-                        try
-                        {
-                            var siteTicketKey =_thirdPartyBLL.GetSiteTicketKey(workerType, tpBetHelp);
-
-                            await tpBetHelp.GetVS3rdBetDetail(siteTicketKey ,(betRecordInfos) =>
-                            {
-                                _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
-                                if (betRecordInfos.Count() > 50)
-                                    tpBetHelp.syncParams.DoneTime = DateTime.Now.AddSeconds(-tpBetHelp.syncParams.timeOfFrequency);
-                            });
-
-                            _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp);
-
-                            tpBetHelp.syncParams.DoneTime = DateTime.Now;
-                            _logger.LogInformation($"Success: {taskProperty}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"StartNew Exception: {taskProperty}");
-                        }
-                        finally
-                        {
-                            tpBetHelp.IsRunning = false;
-                        }
-                    });
-                }
+            {          
+                var nextTicketKey = tpBetHelp.GetVS3rdBetDetail(lastTicketKey).Result;
+                _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
+                _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
+                
             }
             catch (Exception ex)
             {
@@ -91,7 +67,6 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             finally
             {
-                //tpBetHelp
                 timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromSeconds(1), TimeSpan.Zero);
             }
         }

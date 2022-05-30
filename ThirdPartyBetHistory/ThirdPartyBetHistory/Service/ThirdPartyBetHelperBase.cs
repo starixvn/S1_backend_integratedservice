@@ -20,7 +20,7 @@ namespace ThirdPartyBetHistory.Service
     {
         Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
 
-        Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action);
+        Task<long> GetVS3rdBetDetail(long siteTicketKey);
 
         SyncParams InitialSyncParams();
         bool IsDebug { set; get; }
@@ -38,7 +38,7 @@ namespace ThirdPartyBetHistory.Service
         public SyncParams syncParams { set; get; }
         public ThirdPartyModel thirdPartyModel { set; get; }
         public abstract Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
-        public abstract Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action);
+        public abstract Task<long> GetVS3rdBetDetail(long siteTicketKey);
         public abstract SyncParams InitialSyncParams();
 
         protected ILogger<ThirdPartyBetHelperBase> _logger;
