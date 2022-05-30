@@ -49,7 +49,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private void DoTask(object state)
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
-            var taskProperty = $"Name:{tpBetHelp.thirdPartyModel.TpName} ,SiteId:{tpBetHelp.SiteId} , key:{tpBetHelp.syncParams.key}";
+            var taskProperty = $"Name:{tpBetHelp.thirdPartyModel.TpName}, SiteId:{tpBetHelp.SiteId}, key:{tpBetHelp.syncParams.key}";
 
             try
             {
@@ -58,7 +58,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                     tpBetHelp.IsRunning = true;
                     _ = Task.Factory.StartNew(async () =>
                     {
-                        LogContext.PushProperty("WorkerId", Guid.NewGuid());
+                        LogContext.PushProperty("RequestId", Guid.NewGuid());
                         _logger.LogDebug("AddBetRecord at: {time}", DateTimeOffset.Now);
                         try
                         {
