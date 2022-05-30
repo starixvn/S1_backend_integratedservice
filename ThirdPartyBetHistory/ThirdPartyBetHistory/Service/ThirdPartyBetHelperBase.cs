@@ -14,11 +14,9 @@ namespace ThirdPartyBetHistory.Service
 {
     public interface IThirdPartyBetHelper
     {
-        Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
-
+        Task<long> AddBetRecord(long siteTicketKey);
         Task<long> GetVS3rdBetDetail(long siteTicketKey);
         Task UpdateBetRecordByTransId();
-
         SyncParams InitialSyncParams();
         bool IsDebug { set; get; }
         bool IsRunning { set; get; }
@@ -34,7 +32,7 @@ namespace ThirdPartyBetHistory.Service
         public bool IsRunning { get; set; }
         public SyncParams syncParams { set; get; }
         public ThirdPartyModel thirdPartyModel { set; get; }
-        public abstract Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
+        public abstract Task<long> AddBetRecord(long siteTicketKey);
         public abstract Task<long> GetVS3rdBetDetail(long siteTicketKey);
         public abstract Task UpdateBetRecordByTransId();
         public abstract SyncParams InitialSyncParams();

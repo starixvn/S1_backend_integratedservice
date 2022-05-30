@@ -22,164 +22,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
-
-        private class Req
-        {
-            public string vendor_id { set; get; }
-            public long version_key { set; get; }
-        }
-        
-        private class RequestByTransId
-        {
-            
-            public string vendor_id { set; get; }
-            public string trans_id  { set; get; }
-        }
-        
-        private class CashOutData
-        {
-            public long cashout_id { get; set; }
-            public DateTime transdate { get; set; }
-            public decimal stake { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal buyback_amount { get; set; }
-            public decimal real_stake { get; set; }
-            public int bet_type { get; set; }
-            public string ticket_status { get; set; }
-            public DateTime winlost_datetime { get; set; }
-        }
-        private class BetDetail : ISabaBet
-        {
-            public long trans_id { get; set; }
-            public string vendor_member_id { get; set; }
-            public string operator_id { get; set; }
-            public int? league_id { get; set; }
-            public int? match_id { get; set; }
-            public int? home_id { get; set; }
-            public int? away_id { get; set; }
-            public string match_datetime { get; set; }
-            public int? sport_type { get; set; }
-            public int? bet_type { get; set; }
-            public long? parlay_ref_no { get; set; }
-            public decimal odds { get; set; }
-            public decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public DateTime transaction_time { get; set; }
-            public string ticket_status { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal after_amount { get; set; }
-            public int currency { get; set; }
-            public DateTime winlost_datetime { get; set; }
-            public int? odds_type { get; set; }
-            public string bet_team { get; set; }
-            public string isLucky { get; set; }
-            public decimal home_hdp { get; set; }
-            public decimal away_hdp { get; set; }
-            public decimal? hdp { get; set; }
-            public string betfrom { get; set; }
-            public string islive { get; set; }
-            public int? home_score { get; set; }
-            public int? away_score { get; set; }
-            public string settlement_time { get; set; }
-            public string customInfo1 { get; set; }
-            public string customInfo2 { get; set; }
-            public string customInfo3 { get; set; }
-            public string customInfo4 { get; set; }
-            public string customInfo5 { get; set; }
-            public string ba_status { get; set; }
-            public string tokenmoney { get; set; }
-            public int version_key { get; set; }
-            public object ParlayData { get; set; }
-            public decimal? original_stake { get; set; }
-            public IEnumerable<CashOutData> CashOutData { get; set; }
-        }
-        public class BetNumberDetail : ISabaBet
-        {
-            public long trans_id { get; set; }
-            public string vendor_member_id { get; set; }
-            public string operator_id { get; set; }
-            public int? match_id { get; set; }
-            public DateTime transaction_time { get; set; }
-            public decimal odds { get; set; }
-            public decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public string ticket_status { get; set; }
-            public string betfrom { get; set; }
-            public string islive { get; set; }
-            public int? last_ball_no { get; set; }
-            public string bet_team { get; set; }
-            public DateTime winlost_datetime { get; set; }
-            public int? bet_type { get; set; }
-            public int currency { get; set; }
-            public int? odds_type { get; set; }
-            public int sport_type { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal after_amount { get; set; }
-            public string customInfo1 { get; set; }
-            public string customInfo2 { get; set; }
-            public string customInfo3 { get; set; }
-            public string customInfo4 { get; set; }
-            public string customInfo5 { get; set; }
-            public string ba_status { get; set; }
-            public string tokenmoney { get; set; }
-            public long version_key { get; set; }
-        }
-        public class BetVirtualSportDetail : ISabaBet
-        {
-            public long trans_id { get; set; }
-            public string vendor_member_id { get; set; }
-            public string operator_id { get; set; }
-            public int? league_id { get; set; }
-            public int? match_id { get; set; }
-            public int? home_id { get; set; }
-            public int? away_id { get; set; }
-            public string match_datetime { get; set; }
-            public int? sport_type { get; set; }
-            public int? bet_type { get; set; }
-            public long? parlay_ref_no { get; set; }
-            public decimal odds { get; set; }
-            public decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public DateTime transaction_time { get; set; }
-            public string ticket_status { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal after_amount { get; set; }
-            public int currency { get; set; }
-            public DateTime winlost_datetime { get; set; }
-            public int? odds_type { get; set; }
-            public string bet_team { get; set; }
-            public decimal? home_hdp { get; set; }
-            public decimal? away_hdp { get; set; }
-            public decimal? hdp { get; set; }
-            public string betfrom { get; set; }
-            public string islive { get; set; }
-            public string customInfo1 { get; set; }
-            public string customInfo2 { get; set; }
-            public string customInfo3 { get; set; }
-            public string customInfo4 { get; set; }
-            public string customInfo5 { get; set; }
-            public string ba_status { get; set; }
-            public string tokenmoney { get; set; }
-            public long version_key { get; set; }
-            public dynamic ParlayData { get; set; }
-            public string race_number { get; set; }
-            public string race_lane { get; set; }
-        }
-        private class Data
-        {
-            public long last_version_key { get; set; }
-            public IEnumerable<BetDetail> BetDetails { get; set; }
-            public IEnumerable<BetNumberDetail> BetNumberDetails { get; set; }
-            public IEnumerable<BetVirtualSportDetail> BetVirtualSportDetails { get; set; }
-            public IEnumerable<dynamic> BetCasinoDetails { get; set; }
-        }
-        private class GetBetDetail
-        {
-            public int error_code { get; set; }
-            public string message { get; set; }
-            public Data Data { get; set; }
-        }
-        
         public override async Task UpdateBetRecordByTransId()
         {
             try
@@ -187,7 +29,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 var start = Convert.ToDateTime("2022-03-31 00:00:00");
                 var end = DateTime.UtcNow.AddHours(8).AddDays(-2);
                 var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
-                
+
                 var tpSetting = thirdPartyModel.TpSetting;
                 var url = $"{tpSetting["ApiUrl"]}/GetBetDetailByTransID";
 
@@ -195,13 +37,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     try
                     {
-                        var request = new RequestByTransId
+                        var parameters = new Dictionary<string, string>
                         {
-                            vendor_id = tpSetting["VendorId"],
-                            trans_id = ticket.TransId
+                            { "vendor_id", tpSetting["VendorId"] },
+                            { "trans_id", ticket.TransId}
                         };
-                        var dicP = FromJson<Dictionary<string, string>>(ToJson(request));
-                        var p = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+                        var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
                         var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
                         var getBetDetail = FromJson<GetBetDetail>(result);
@@ -213,11 +54,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         if (getBetDetail.Data.last_version_key != 0 && DataExists(getBetDetail))
                         {
                             var betRecordInfos = ProcessData(getBetDetail);
-                            foreach (var betRecord in betRecordInfos)
-                            {
-                                betRecord.TpId = thirdPartyModel.Id;
-                            }
-                            
                             _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
                         }
                     }
@@ -231,21 +67,21 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 _logger.LogError(e, "UpdateBetRecordByTransId");
             }
-            
+
         }
-        public override async Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action)
+
+        public override async Task<long> AddBetRecord(long siteTicketKey)
         {
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
-            var req = new Req
+            var parameters = new Dictionary<string, string>
             {
-                version_key = syncParams.key,
-                vendor_id = tpSetting["VendorId"]
+                { "vendor_id", tpSetting["VendorId"] },
+                { "version_key", siteTicketKey.ToString()}
             };
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(req));
-            var P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
-            var result = await HttpPostAsync(getBetDetailUrl, P, "application/x-www-form-urlencoded");
+            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
             var getBetDetail = FromJson<GetBetDetail>(result);
 
             if (getBetDetail.error_code != 0)
@@ -255,22 +91,75 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             if (!DataExists(getBetDetail))
             {
-                syncParams.key = getBetDetail.Data.last_version_key;
+                return getBetDetail.Data.last_version_key;
             }
-            else
-            {
-                var betRecordInfoList = ProcessData(getBetDetail);
 
-                if (betRecordInfoList.Count == 0)
-                {
-                    syncParams.key = getBetDetail.Data.last_version_key;
-                }
-                else
-                {
-                    action(betRecordInfoList);
-                    syncParams.key = getBetDetail.Data.last_version_key;
-                }
+            var betRecordInfoList = ProcessData(getBetDetail);
+
+            if (betRecordInfoList.Count == 0)
+            {
+                return getBetDetail.Data.last_version_key;
             }
+
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            return getBetDetail.Data.last_version_key;
+        }
+
+        public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
+        {
+            var tpSetting = thirdPartyModel.TpSetting;
+            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
+            var parameters = new Dictionary<string, string>
+            {
+                { "vendor_id", tpSetting["VendorId"] },
+                { "sport_type", "231" },
+                { "version_key", siteTicketKey.ToString()}
+            };
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
+            var getBetDetail = FromJson<GetVS3rdBetDetail>(result);
+
+            if (getBetDetail.error_code != 0)
+            {
+                throw new Exception(getBetDetail.message);
+            }
+
+            if (!getBetDetail.Data.VS3rdBetDetails.Any())
+            {
+                return getBetDetail.Data.last_version_key;
+            }
+
+            var betRecordInfoList = new List<BetRecordInfo>();
+
+            foreach (var betDetial in getBetDetail.Data?.VS3rdBetDetails)
+            {
+                var betRecordInfo = new BetRecordInfo
+                {
+                    TpId = thirdPartyModel.Id,
+                    GameType = GameType.Saba_LGVirtualSports,
+                    TransId = betDetial.trans_id.ToString(),
+                    TransTime = ConvertLocTime(betDetial.transaction_time),
+                    SettledTime = ConvertLocTime(betDetial.transaction_time),
+                    OriginalState = betDetial.ticket_status,
+                    WinlostAmount = betDetial.winlost_amount,
+                    Stake = betDetial.stake,
+                    TpUserName = betDetial.vendor_member_id,
+                    TicketKey = betDetial.version_key,
+                    tokenmoney = betDetial.tokenmoney
+                };
+
+                CalculateAvailableBet(betDetial, betRecordInfo);
+                betRecordInfoList.Add(betRecordInfo);
+
+            }
+
+            if (!betRecordInfoList.Any())
+            {
+                return getBetDetail.Data.last_version_key;
+            }
+
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            return getBetDetail.Data.last_version_key;
         }
 
         private bool DataExists(GetBetDetail getBetDetail)
@@ -288,6 +177,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
+                        TpId = thirdPartyModel.Id,
                         GameType = GetBetDetailGameType(betDetial.sport_type),
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
@@ -328,6 +218,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
+                        TpId = thirdPartyModel.Id,
                         GameType = GameType.Saba_NumberGame,
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
@@ -350,6 +241,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
+                        TpId = thirdPartyModel.Id,
                         OriginalState = betDetial.ticket_status,
                         WinlostAmount = betDetial.winlost_amount,
                         Stake = betDetial.stake,
@@ -555,6 +447,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 betRecordInfo.TicketStatus = TicketStatus.Refund;
             }
         }
+
         public override SyncParams InitialSyncParams()
         {
             var syncParams = new SyncParams();
@@ -578,6 +471,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 var betRecordInfo = new BetRecordInfo
                 {
+                    TpId = thirdPartyModel.Id,
                     TransId = cashOut.cashout_id.ToString(),
                     TransTime = ConvertLocTime(betDetial.transaction_time),
                     SettledTime = ConvertLocTime(cashOut.transdate),
@@ -625,63 +519,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 248 => GameType.PP,
                 _ => sport_type > 200 ? GameType.Saba_RNG : GameType.Saba_Sports,
             };
-        }
-
-        public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
-        {
-            var tpSetting = thirdPartyModel.TpSetting;
-            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
-            var parameters = new Dictionary<string, string>
-            {
-                { "vendor_id", tpSetting["VendorId"] },
-                { "sport_type", "231" },
-                { "version_key", siteTicketKey.ToString()}
-            };
-            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
-            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
-            var getBetDetail = FromJson<GetVS3rdBetDetail>(result);
-
-            if (getBetDetail.error_code != 0)
-            {
-                throw new Exception(getBetDetail.message);
-            }
-
-            if (!getBetDetail.Data.VS3rdBetDetails.Any())
-            {
-                return getBetDetail.Data.last_version_key;
-            }
-
-            var betRecordInfoList = new List<BetRecordInfo>();
-
-            foreach (var betDetial in getBetDetail.Data?.VS3rdBetDetails)
-            {
-                var betRecordInfo = new BetRecordInfo
-                {
-                    TpId = thirdPartyModel.Id,
-                    GameType = GameType.Saba_LGVirtualSports,
-                    TransId = betDetial.trans_id.ToString(),
-                    TransTime = ConvertLocTime(betDetial.transaction_time),
-                    SettledTime = ConvertLocTime(betDetial.transaction_time),
-                    OriginalState = betDetial.ticket_status,
-                    WinlostAmount = betDetial.winlost_amount,
-                    Stake = betDetial.stake,
-                    TpUserName = betDetial.vendor_member_id,
-                    TicketKey = betDetial.version_key,
-                    tokenmoney = betDetial.tokenmoney
-                };
-
-                CalculateAvailableBet(betDetial, betRecordInfo);
-                betRecordInfoList.Add(betRecordInfo);
-
-            }
-
-            if (!betRecordInfoList.Any())
-            {
-                return getBetDetail.Data.last_version_key;
-            }
-
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
-            return getBetDetail.Data.last_version_key;
         }
     }
 }
