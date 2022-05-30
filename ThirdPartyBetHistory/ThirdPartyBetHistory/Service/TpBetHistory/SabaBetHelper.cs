@@ -52,7 +52,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             throw new Exception(getBetDetail.message);
                         }
 
-                        if (getBetDetail.Data.last_version_key != 0 && !DataNotExists(getBetDetail))
+                        if (!DataNotExists(getBetDetail))
                         {
                             var betRecordInfos = ProcessData(getBetDetail);
                             _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
