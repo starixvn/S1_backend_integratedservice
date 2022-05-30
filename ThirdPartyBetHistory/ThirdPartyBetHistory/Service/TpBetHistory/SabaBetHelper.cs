@@ -26,7 +26,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
         {
             try
             {
-                var start = Convert.ToDateTime("2022-03-31 00:00:00");
+                var start = DateTime.UtcNow.AddHours(8).AddDays(-7);
                 var end = DateTime.UtcNow.AddHours(8).AddDays(-2);
                 var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
 
