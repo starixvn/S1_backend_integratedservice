@@ -602,14 +602,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int CancelBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
-            //GameType gameType = GameType.PP_RNG;
             int bonusId = 0;
-
-            //if (bettingDataRNG_PP.gameId.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
-            //{
-            //    gameType = GameType.PP_LiveCasino;
-            //}
-
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
@@ -636,38 +629,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (cancelStake != bettingDataRNG_PP.amount)
                 {
-                    throw new Exception($"Cancel amount {bettingDataRNG_PP.amount.ToString("#,##0.##")} it not equal {cancelStake.ToString("#,##0.##")}");
+                    throw new Exception($"Cancel amount {bettingDataRNG_PP.amount:#,##0.##} it not equal {cancelStake:#,##0.##}");
                 }
 
                 if (cancelStake != 0)
                 {
-                    //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, cancelStake, (int)Tp.PP, TransType.Refunds, $"Refund: {cancelStake.ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
                     result = PayoutV2(tpCustInfo, cancelStake, (int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), (int)gameType, category, bettingDataRNG_PP.reference, TransType.Refunds, null, out afterAmount, "Refund", out bonusId, conn, trans);
                 }
 
                 if (result > 0)
                 {
-                    BetRecordInfo betRecordInfo = new BetRecordInfo
-                    {
-                        TpId = (int)Tp.PP,
-                        Stake = cancelStake,
-                        ValidBet = 0,
-                        WinlostAmount = 0,
-                        TransId = bettingDataRNG_PP.roundId.ToString(),
-                        GameType = (GameType)gameType,
-                        TpUserName = bettingDataRNG_PP.userId,
-                        SettledTime = bettingDataRNG_PP.timestamp / 1000,
-                        SettlementType = SettlementType.SettledForInvalid,
-                        TicketStatus = TicketStatus.Refund,
-                        BonusId = bonusId
-                    };
-
-                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
-
-                    if (result > 0)
-                    {
-                        trans.Commit();
-                    }
+                    trans.Commit();
                 }
             }
             else
