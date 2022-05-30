@@ -1,19 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using Serilog.Core;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
-using ThirdPartyBetHistory.Service.Worker;
 
 namespace ThirdPartyBetHistory.Service
 {
@@ -22,7 +17,7 @@ namespace ThirdPartyBetHistory.Service
         Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
 
         Task<long> GetVS3rdBetDetail(long siteTicketKey);
-        Task UpdateBetRecordByTransId(Action<IEnumerable<BetRecordInfo>> action);
+        Task UpdateBetRecordByTransId();
 
         SyncParams InitialSyncParams();
         bool IsDebug { set; get; }
@@ -41,7 +36,7 @@ namespace ThirdPartyBetHistory.Service
         public ThirdPartyModel thirdPartyModel { set; get; }
         public abstract Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
         public abstract Task<long> GetVS3rdBetDetail(long siteTicketKey);
-        public abstract Task UpdateBetRecordByTransId(Action<IEnumerable<BetRecordInfo>> action);
+        public abstract Task UpdateBetRecordByTransId();
         public abstract SyncParams InitialSyncParams();
 
         protected ILogger<ThirdPartyBetHelperBase> _logger;

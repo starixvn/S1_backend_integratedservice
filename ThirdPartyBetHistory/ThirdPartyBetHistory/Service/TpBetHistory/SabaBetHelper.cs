@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
+using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 using ThirdPartyBetHistory.Service.Model.Interfaces;
@@ -180,18 +180,18 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             public Data Data { get; set; }
         }
         
-        public override async Task UpdateBetRecordByTransId(Action<IEnumerable<BetRecordInfo>> action)
+        public override async Task UpdateBetRecordByTransId()
         {
             try
             {
                 var start = Convert.ToDateTime("2022-03-31 00:00:00");
                 var end = DateTime.UtcNow.AddHours(8).AddDays(-2);
-                var tickets = _thirdPartyService.GetSabaUnSettleTicket(thirdPartyModel.SiteId, start, end);
+                var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
                 
                 var tpSetting = thirdPartyModel.TpSetting;
                 var url = $"{tpSetting["ApiUrl"]}/GetBetDetailByTransID";
 
-                foreach (var ticket in tickets)
+                foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
                 {
                     try
                     {
@@ -212,7 +212,13 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                         if (getBetDetail.Data.last_version_key != 0 && DataExists(getBetDetail))
                         {
-                            ProcessData(getBetDetail);
+                            var betRecordInfos = ProcessData(getBetDetail);
+                            foreach (var betRecord in betRecordInfos)
+                            {
+                                betRecord.TpId = thirdPartyModel.Id;
+                            }
+                            
+                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
                         }
                     }
                     catch (Exception e)

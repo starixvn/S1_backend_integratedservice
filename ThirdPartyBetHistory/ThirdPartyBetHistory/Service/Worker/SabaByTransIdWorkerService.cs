@@ -48,22 +48,16 @@ namespace ThirdPartyBetHistory.Service.Worker
         
         private void DoTask(object state)
         {
-            LogContext.PushProperty("RequestId", Guid.NewGuid());
             var tpBetHelp = (IThirdPartyBetHelper)state;
+            LogContext.PushProperty("RequestId", Guid.NewGuid());
+            LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
+            LogContext.PushProperty("WorkerType", WorkerType);
+            LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
             var taskProperty = $"{WorkerType}:{tpBetHelp.thirdPartyModel.TpName}, SiteId:{tpBetHelp.SiteId}";
-            tpBetHelp.thirdPartyModel.SiteId = (int)tpBetHelp.SiteId;
 
             try
             {
-                tpBetHelp.UpdateBetRecordByTransId((betRecordInfos) =>
-                {
-                    foreach (var betRecord in betRecordInfos)
-                    {
-                        betRecord.TpId = tpBetHelp.thirdPartyModel.Id;
-                    }
-
-                    _thirdPartyBll.ToDoAddBetRecord(betRecordInfos);
-                });
+                tpBetHelp.UpdateBetRecordByTransId();
             }
             catch (Exception ex)
             {
