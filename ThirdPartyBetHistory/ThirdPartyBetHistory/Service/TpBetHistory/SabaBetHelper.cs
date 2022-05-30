@@ -51,7 +51,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             throw new Exception(getBetDetail.message);
                         }
 
-                        if (getBetDetail.Data.last_version_key != 0 && DataExists(getBetDetail))
+                        if (getBetDetail.Data.last_version_key != 0 && !DataNotExists(getBetDetail))
                         {
                             var betRecordInfos = ProcessData(getBetDetail);
                             _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
@@ -89,7 +89,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 throw new Exception(getBetDetail.message);
             }
 
-            if (!DataExists(getBetDetail))
+            if (DataNotExists(getBetDetail))
             {
                 return getBetDetail.Data.last_version_key;
             }
@@ -162,9 +162,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             return getBetDetail.Data.last_version_key;
         }
 
-        private bool DataExists(GetBetDetail getBetDetail)
+        private bool DataNotExists(GetBetDetail getBetDetail)
         {
-            return getBetDetail.Data is { BetDetails: { }, BetNumberDetails: { }, BetVirtualSportDetails: { }, BetCasinoDetails: { } };
+            return getBetDetail.Data?.BetDetails == null
+                   && getBetDetail.Data?.BetNumberDetails == null
+                   && getBetDetail.Data?.BetVirtualSportDetails == null
+                   && getBetDetail.Data?.BetCasinoDetails == null;
         }
 
         private List<BetRecordInfo> ProcessData(GetBetDetail getBetDetail)
