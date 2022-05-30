@@ -66,7 +66,7 @@ namespace ThirdPartySettleWorker.Workers
             var tpCategory = gametype == GameType.PP_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
             var type = gametype == GameType.PP_RNG ? "Rng" : "LC";
             var logName = $"Settle_PP_{type}";
-            var getSP = $"Service_Bettrans{type}_PP_Unsettle_Get_V5";
+            var getSP = $"Service_Bettrans{type}_PP_Unsettle_Get_V6";
             var setSP = $"Service_Bettrans{type}_PP_Settle_Set_V4";
 
             try
