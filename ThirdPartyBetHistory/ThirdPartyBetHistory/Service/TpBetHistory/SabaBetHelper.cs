@@ -188,7 +188,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 var tpSetting = thirdPartyModel.TpSetting;
                 var url = $"{tpSetting["ApiUrl"]}/GetBetDetailByTransID";
 
-                foreach (var ticket in tickets)
+                foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
                 {
                     try
                     {
