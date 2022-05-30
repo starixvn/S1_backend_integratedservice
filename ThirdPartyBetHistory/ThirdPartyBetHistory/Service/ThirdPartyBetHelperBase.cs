@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using Serilog.Core;
+using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 using ThirdPartyBetHistory.Service.Worker;
@@ -21,6 +22,7 @@ namespace ThirdPartyBetHistory.Service
         Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
 
         Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action);
+        Task UpdateBetRecordByTransId(Action<IEnumerable<BetRecordInfo>> action);
 
         SyncParams InitialSyncParams();
         bool IsDebug { set; get; }
@@ -39,9 +41,11 @@ namespace ThirdPartyBetHistory.Service
         public ThirdPartyModel thirdPartyModel { set; get; }
         public abstract Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
         public abstract Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action);
+        public abstract Task UpdateBetRecordByTransId(Action<IEnumerable<BetRecordInfo>> action);
         public abstract SyncParams InitialSyncParams();
 
         protected ILogger<ThirdPartyBetHelperBase> _logger;
+        protected ThirdPartyService _thirdPartyService;
 
         protected async Task<string> HttpPostAsync(string url, string parameters, string contentType)
         {

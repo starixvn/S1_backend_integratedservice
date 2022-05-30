@@ -87,11 +87,18 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     {
         Main, //MainDB
         Report,//ReportDB
+	}
+	
+    public enum TimeType
+    {
+        ByBetTime = 1,
+        BySettleTime = 2
     }
 
     public enum WorkerType
     {
         MainWager = 1,
         LGVirtualSportsWager = 2,
+        ByTransIdWager = 3
     }
 }
