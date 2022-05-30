@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
@@ -14,10 +15,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         public SabaBetHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<ThirdPartyBetHelperBase>>();
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         private class Req
@@ -618,7 +621,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             };
         }
 
-        public async override Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action)
+        public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
         {
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
@@ -639,8 +642,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             if (!getBetDetail.Data.VS3rdBetDetails.Any())
             {
-                syncParams.key = getBetDetail.Data.last_version_key;
-                return;
+                return getBetDetail.Data.last_version_key;
             }
 
             var betRecordInfoList = new List<BetRecordInfo>();
@@ -667,11 +669,13 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             }
 
-            if (betRecordInfoList.Any())
+            if (!betRecordInfoList.Any())
             {
-                action(betRecordInfoList);
-                syncParams.key = getBetDetail.Data.last_version_key;
+                return getBetDetail.Data.last_version_key;
             }
+
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            return getBetDetail.Data.last_version_key;
         }
     }
 }
