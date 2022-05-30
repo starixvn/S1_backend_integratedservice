@@ -189,12 +189,13 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
                 
                 var tpSetting = thirdPartyModel.TpSetting;
-                var url = $"{tpSetting["ApiUrl"]}/GetBetDetailByTransID";
 
                 foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
                 {
                     try
                     {
+                        var api = ticket.GameType == (int)GameType.Saba_Keno ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
+                        var url = $"{tpSetting["ApiUrl"]}/{api}";
                         var request = new RequestByTransId
                         {
                             vendor_id = tpSetting["VendorId"],
