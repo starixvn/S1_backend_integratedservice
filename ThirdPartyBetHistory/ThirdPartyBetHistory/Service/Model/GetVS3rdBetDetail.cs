@@ -14,7 +14,7 @@ namespace ThirdPartyBetHistory.Service.Model
 
     public class Data
     {
-        public int last_version_key { get; set; }
+        public long last_version_key { get; set; }
         public IEnumerable<Vs3rdbetdetails> VS3rdBetDetails { get; set; }
     }
 

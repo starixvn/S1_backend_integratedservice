@@ -51,9 +51,9 @@ namespace ThirdPartyBetHistory.Service.BLL
             return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType);
         }
 
-        public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
+        public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
         {
-            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType, betHelper.syncParams.key);
+            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType, ticketKey);
         }
 
     }
