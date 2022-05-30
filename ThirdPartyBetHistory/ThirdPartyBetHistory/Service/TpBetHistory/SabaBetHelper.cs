@@ -2,29 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
-using ThirdPartyBetHistory.Service.Worker;
+using ThirdPartyBetHistory.Service.Model.Interfaces;
 
 namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
-        public SabaBetHelper(ILogger<WorkerService> logger)
+        public SabaBetHelper(IServiceProvider provider)
         {
-            Logger = logger;
+            _logger = provider.GetRequiredService<ILogger<ThirdPartyBetHelperBase>>();
         }
-        public interface ISabaBet
-        {
-            decimal odds { get; set; }
-            decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public int? odds_type { get; set; }
-            public int? bet_type { get; set; }
-            public string ticket_status { get; set; }
-            string tokenmoney { get; }
-        }
+
         private class Req
         {
             public string vendor_id { set; get; }
@@ -554,6 +546,62 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 248 => GameType.PP,
                 _ => sport_type > 200 ? GameType.Saba_RNG : GameType.Saba_Sports,
             };
+        }
+
+        public async override Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action)
+        {
+            var tpSetting = thirdPartyModel.TpSetting;
+            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
+            var parameters = new Dictionary<string, string>
+            {
+                { "vendor_id", tpSetting["VendorId"] },
+                { "sport_type", "231" },
+                { "version_key", siteTicketKey.ToString()}
+            };
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
+            var getBetDetail = FromJson<GetVS3rdBetDetail>(result);
+
+            if (getBetDetail.error_code != 0)
+            {
+                throw new Exception(getBetDetail.message);
+            }
+
+            if (!getBetDetail.Data.VS3rdBetDetails.Any())
+            {
+                syncParams.key = getBetDetail.Data.last_version_key;
+                return;
+            }
+
+            var betRecordInfoList = new List<BetRecordInfo>();
+
+            foreach (var betDetial in getBetDetail.Data?.VS3rdBetDetails)
+            {
+                var betRecordInfo = new BetRecordInfo
+                {
+                    TpId = thirdPartyModel.Id,
+                    GameType = GameType.Saba_LGVirtualSports,
+                    TransId = betDetial.trans_id.ToString(),
+                    TransTime = ConvertLocTime(betDetial.transaction_time),
+                    SettledTime = ConvertLocTime(betDetial.transaction_time),
+                    OriginalState = betDetial.ticket_status,
+                    WinlostAmount = betDetial.winlost_amount,
+                    Stake = betDetial.stake,
+                    TpUserName = betDetial.vendor_member_id,
+                    TicketKey = betDetial.version_key,
+                    tokenmoney = betDetial.tokenmoney
+                };
+
+                CalculateAvailableBet(betDetial, betRecordInfo);
+                betRecordInfoList.Add(betRecordInfo);
+
+            }
+
+            if (betRecordInfoList.Any())
+            {
+                action(betRecordInfoList);
+                syncParams.key = getBetDetail.Data.last_version_key;
+            }
         }
     }
 }

@@ -19,22 +19,29 @@ namespace ThirdPartyBetHistory.Service
     public interface IThirdPartyBetHelper
     {
         Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
+
+        Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action);
+
         SyncParams InitialSyncParams();
         bool IsDebug { set; get; }
         bool IsRunning { set; get; }
         SyncParams syncParams { set; get; }
         ThirdPartyModel thirdPartyModel { set; get; }
+        SiteId SiteId { set; get; }
     }
 
     public abstract class ThirdPartyBetHelperBase : IThirdPartyBetHelper
     {
+        public SiteId SiteId { get; set; }
         public bool IsDebug { get; set; }
         public bool IsRunning { get; set; }
         public SyncParams syncParams { set; get; }
         public ThirdPartyModel thirdPartyModel { set; get; }
         public abstract Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action);
+        public abstract Task GetVS3rdBetDetail(long siteTicketKey, Action<IEnumerable<BetRecordInfo>> action);
         public abstract SyncParams InitialSyncParams();
-        protected ILogger<WorkerService> Logger;
+
+        protected ILogger<ThirdPartyBetHelperBase> _logger;
 
         protected async Task<string> HttpPostAsync(string url, string parameters, string contentType)
         {
@@ -43,21 +50,21 @@ namespace ThirdPartyBetHistory.Service
                 LogContext.PushProperty("TpInfo", parameters);
                 LogContext.PushProperty("Tp.Request.URL", url);
                 var data = new StringContent(parameters, Encoding.UTF8, contentType);
-                var handler =  new HttpClientHandler();
+                var handler = new HttpClientHandler();
                 using var client = new HttpClient(handler);
 
                 var response = await client.PostAsync(url, data);
                 var result = response.Content.ReadAsStringAsync().Result;
-                Logger.LogInformation(result);
+                _logger.LogInformation(result);
 
                 return result;
             }
             catch (Exception e)
             {
-                Logger.LogError(e, e.Message);
+                _logger.LogError(e, e.Message);
                 throw new Exception($"url:{url}, parameters:{parameters}, contentType:{contentType}, ex:{e.Message}");
             }
-           
+
         }
         protected T FromJson<T>(string jsonString)
         {

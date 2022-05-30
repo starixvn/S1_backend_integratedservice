@@ -33,10 +33,9 @@ namespace ThirdPartyBetHistory.Service.DAL
             _logger = serviceProvider.GetRequiredService<ILogger<ThirdPartyService>>();
             var configuration = serviceProvider.GetRequiredService<IConfiguration>();
             _settledService = serviceProvider.GetRequiredService<SettledService>();
-            var mySqlLogger = serviceProvider.GetRequiredService<ILogger<MySqlClient>>();
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _connectionString = configuration.GetConnectionString("ConnectionString");
-            _mainDbClient = new MySqlClient(_connectionString, mySqlLogger);
+            _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()
@@ -153,7 +152,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
 
                     #endregion
-                    
+
                     #region Set TurnOver of RollOver OR WithdrawalLimit
 
                     if (hasJoinBonus) //有Bonus走SetRollOverTurnOver
@@ -226,7 +225,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
 
                     #endregion
-                    
+
                     if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
                         && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                     {
@@ -422,6 +421,17 @@ namespace ThirdPartyBetHistory.Service.DAL
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 1 : 0;
+        }
+
+        public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)
+        {
+            var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType };
+            return _mainDbClient.QueryFirst<long>("Service_SiteTicketKey_Get", parameters);
+        }
+        public int SetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType, long TicketKey)
+        {
+            var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType, TicketKey };
+            return _mainDbClient.Execute("Service_SiteTicketKey_Set", parameters);
         }
     }
 }
