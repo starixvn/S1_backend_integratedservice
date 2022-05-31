@@ -25,7 +25,6 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync(int tpId, long startUnix, long endUnix, string currency)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -37,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await _apiIconicBLL.GetBetListByTime(setting["ApiUrl"], setting[$"token_{currency}"], startUnix, endUnix, page, perPage, guid);
+                    var dataWager = await _apiIconicBLL.GetBetListByTime(setting["ApiUrl"], setting[$"token_{currency}"], startUnix, endUnix, page, perPage);
 
                     // error condition
                     if (dataWager.error != null)

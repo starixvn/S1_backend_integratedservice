@@ -8,42 +8,37 @@ using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyWager.Workers
 {
     public class WagerRedoOneGaming : BackgroundService
     {
-        private readonly ILogger<WagerRedoOneGaming> logger;
-        private readonly WagerOneGamingBLL wagerOneGamingBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
-        private readonly CommonBLL commonBLL;
-        private readonly IHostEnvironment environment;
+        private readonly ILogger<WagerRedoOneGaming> _logger;
+        private readonly WagerOneGamingBLL _wagerOneGamingBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly CommonBLL _commonBLL;
+        private readonly IHostEnvironment _environment;
         private Timer timer;
-        private int intervalDays = 1;
-        private int iRangMins = 1440;
-        private int tpId = (int)Tp.OneGaming;
+        private readonly int intervalDays = 1;
+        private readonly int iRangMins = 1440;
+        private readonly int tpId = (int)Tp.OneGaming;
         private readonly string _tpName = Tp.OneGaming.ToString();
-        private int tpType = 2;
-        private int iDays = 2;
+        private readonly int tpType = 2;
+        private readonly int iDays = 2;
         private readonly int timeZone = 8;
 
-        public WagerRedoOneGaming(
-            ILogger<WagerRedoOneGaming> logger,
-            WagerOneGamingBLL wagerOneGamingBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            CommonBLL commonBLL,
-            IHostEnvironment environment
-        )
+        public WagerRedoOneGaming(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerOneGamingBLL = wagerOneGamingBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
-            this.commonBLL = commonBLL;
-            this.environment = environment;
+            _logger = provider.GetRequiredService<ILogger<WagerRedoOneGaming>>();
+            _wagerOneGamingBLL = provider.GetRequiredService<WagerOneGamingBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -59,16 +54,13 @@ namespace ThirdPartyWager.Workers
             var tasks = new List<Task>();
             try
             {
-                var tpCurrencyList = commonBLL.GetTpCurrencyList(tpId);
+                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
 
                 foreach (var item in tpCurrencyList)
                 {
-                    if (!environment.IsProduction())
+                    if (!_environment.IsProduction() && item.TpCurrencyId != "IDR")
                     {
-                        if (item.TpCurrencyId != "IDR")
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     var currency = item.TpCurrencyId;
@@ -84,7 +76,7 @@ namespace ThirdPartyWager.Workers
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError(ex, ex.Message);
+                            _logger.LogError(ex, ex.Message);
                             Interlocked.Increment(ref failed);
                         }
                     }));
@@ -92,14 +84,11 @@ namespace ThirdPartyWager.Workers
                 }
                 var t = Task.WhenAll(tasks);
                 t.Wait();
-                //foreach (var ti in tasks)
-                //{
-                //    Console.WriteLine("Task {0}: {1}", ti.Id, ti.Status);
-                //}
+                
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
@@ -119,7 +108,7 @@ namespace ThirdPartyWager.Workers
         private async Task<int> Main(string currency)
         {
             var quick = 0;
-            var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+            var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
 
             DateTime timerTime;
             if (dataTpTimer == null)
@@ -131,14 +120,14 @@ namespace ThirdPartyWager.Workers
                 timerTime = dataTpTimer.StartTime.AddSeconds(1);
             }
 
-            var time = dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyyMMddHHmmss", timerTime);
+            var time = _dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyyMMddHHmmss", timerTime);
             var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                var result = await _wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
                 if (result)
                 {
-                    thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                 }
             }
 
