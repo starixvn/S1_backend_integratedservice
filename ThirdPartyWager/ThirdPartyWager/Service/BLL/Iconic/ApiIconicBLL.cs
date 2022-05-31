@@ -30,7 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiIconicBLL>>();
         }
 
-        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage, string guid)
+        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage)
         {
             // param
             var url = $"{apiUrl}/api/v1/profile/sets";
