@@ -2543,29 +2543,47 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
-                // 檢查該局是否已經結算
-                var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (isCompleted)
+                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettrans = bettransMg.ToList();
+                // 已結束局
+                if (bettrans.Any(a => a.Completed))
                 {
+                    logger.LogError($"{bettingDataRNG_MG.betId} is completed");
+                    
+                    var refSettleFlag = bettrans.FirstOrDefault(b => b.Completed).SettleFlag;
+                    // refSettleFlag -2 為已Settle注單手動調整 將執行此段重新結算 (避免會員重新進入遊戲對方會再重送資料)
+                    if (bettingDataRNG_MG.completed && refSettleFlag == -2)
+                    {
+                        // 記錄重新結算時間
+                        conn.Execute("Service_BettransRng_MG_Resettle_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                        // 重新結算
+                        var r = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId, trans);
+                        if (r > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+
                     return new MGPayoutResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount
                     };
                 }
-
                 // 檢查注單是否已經存在
-                var bettransRngMg = await conn.QueryFirstOrDefaultAsync<BettransRng_MG>("Service_BettransRng_MG_Get", new { bettingDataRNG_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                if (bettransRngMg != null)
+                if (bettrans.Any(a => a.TxnId == bettingDataRNG_MG.txnId))
                 {
+                    logger.LogError($"{bettingDataRNG_MG.txnId} exist");
+                    
                     return new MGPayoutResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = bettransRngMg.ExtTxnId
+                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == bettingDataRNG_MG.txnId).ExtTxnId
                     };
                 }
-
+                
                 var result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
@@ -2585,7 +2603,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         $"Payout",
                         out bonusId,
                         conn,
-                        trans);
+                        trans
+                    );
                 }
 
                 if (bettingDataRNG_MG.completed)
@@ -2635,7 +2654,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V2",
+                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3",
                     new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
                 // 不存在有效下注
@@ -2728,7 +2747,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
 
-            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V2", p, commandType: CommandType.StoredProcedure);
+            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V3", p, commandType: CommandType.StoredProcedure);
             if (slot != null)
             {
                 tpGameType = (int)GameType.MG_RNG;
