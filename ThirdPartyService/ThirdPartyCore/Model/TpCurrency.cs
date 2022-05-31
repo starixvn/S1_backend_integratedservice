@@ -9,4 +9,11 @@ namespace ThirdPartyCore.Model
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
     }
+
+    public class TpCountryCode
+    {
+        public string CountryCode { set; get; }
+        public int CurrencyId { set; get; }
+        public string TpCurrencyId { set; get; }
+    }
 }

@@ -47,10 +47,11 @@ namespace ThirdPartyService.Service.DAL
             tpCustInfo = cache.Get<TpCustInfo>(sTpCustInfoKey);
             if (tpCustInfo == null)
             {
-                // pt development not available
-                if (environment.EnvironmentName != "Production" && tpId == 27)
+                // dev not available
+                if (CheckTpForbidden(custId, tpId))
                 {
                     apiResult.ErrorCode = ErrorCode.Not_allowed_environment;
+                    apiResult.Message = "Test environment not supported";
                     return apiResult;
                 }
                 using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
@@ -197,6 +198,35 @@ namespace ThirdPartyService.Service.DAL
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Execute("Service_CustGotoGame_Set", new { CustId = custId, TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
+        }
+
+        public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
+        {
+            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", new { TpId = tpId, TpCurrencyId = tpCurrencyId }, commandType: CommandType.StoredProcedure);
+        }
+
+        private bool CheckTpForbidden(int custId, int tpId)
+        {
+            // priority custid > tpid
+            if (environment.EnvironmentName != "Production")
+            {
+                if (tpId == (int)TpEnum.PT)
+                {
+                    // allow test custid
+                    var _testCustId = new List<long> {  };
+                    if (_testCustId.Contains(custId))
+                    {
+                        return false;
+                    }
+                }
+                var _forbiddenTpId = new List<int> { (int)TpEnum.PT };
+                if (_forbiddenTpId.Contains(tpId))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
