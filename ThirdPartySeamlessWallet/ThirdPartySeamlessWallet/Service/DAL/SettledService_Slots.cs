@@ -2168,8 +2168,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetSettleFlag_BettransRng_Iconic(long transactionId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransRng_Iconic_Settle_Set", new { transactionId = transactionId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransRng_Iconic_Settle_Set", parameters: new DynamicParameters(new { transactionId = transactionId }));
         }
 
         public int CancelBetFish_Iconic(TpCustInfo tpCustInfo, BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)

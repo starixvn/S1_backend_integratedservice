@@ -75,6 +75,7 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<PTWorker>();
                    services.AddHostedService<JILIWorker>();
                    services.AddHostedService<SBOWorker>();
+                   services.AddHostedService<ATWorker>();
                });     
         
         private static MemoryStream GetRemoteConfig(IEnumerable<string> remoteUrls)
