@@ -16,6 +16,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class BettingService
     {
+
+
         public int PlaceBetRNG_GPI(TpCustInfo tpCustInfo, BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string Transid)
         {
             int bonusId = 0;
@@ -48,91 +50,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
-        public int PlaceBetRNG_Joker(TpCustInfo tpCustInfo, BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
-        {
-            int bonusId = 0;
-            int gameType = (int)GameType.Joker_RNG;
-
-            afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            var result = 0;
-            bettingDataRNG_Joker.amount *= -1;
-            bettingDataRNG_Joker.type = "bet";
-            bettingDataRNG_Joker.TicketStatus = (int)TicketStatus.UnSettled;
-            var p = new DynamicParameters(bettingDataRNG_Joker);
-            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransRng_Joker_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            if (result > 0 && bettingDataRNG_Joker.amount != 0)
-            {
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.roundid, gameType, bettingDataRNG_Joker.id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
-            }
-
-            if (result > 0)
-            {
-                trans.Commit();
-            }
-
-            return result;
-        }
-
-        public int WithdrawFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
-        {
-            var result = 0;
-            afterAmount = 0;
-            try
-            {
-                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
-                var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
-                if (check.Any())
-                {
-                    return -1;//Duplicated
-                }
-
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                var trans = conn.BeginTransaction();
-
-
-
-                bettingDataFish_Joker.TicketType = (int)BettransType.Bet;
-                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
-
-                if (result > 0 && bettingDataFish_Joker.amount != 0)
-                {
-                    var bonusId = 0;
-                    result = PlaceBetV2(
-                        tpCustInfo,
-                        Math.Abs(bettingDataFish_Joker.amount) * -1,
-                        (int)Tp.Joker,
-                        bettingDataFish_Joker.roundid,
-                        (int)GameType.Joker_Fish,
-                        bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
-                        null,
-                        TpCategory.Fish,
-                        out afterAmount,
-                        ref bonusId,
-                        conn,
-                        trans);
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-                result = 0;
-            }
-
-            return result;
-        }
-
 
         public int PlaceBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
@@ -348,6 +265,134 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        #region Joker
+        public int PlaceBetRNG_Joker(TpCustInfo tpCustInfo, BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.Joker_RNG;
+
+            afterAmount = 0;
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+            bettingDataRNG_Joker.amount *= -1;
+            bettingDataRNG_Joker.type = "bet";
+            bettingDataRNG_Joker.TicketStatus = (int)TicketStatus.UnSettled;
+            var p = new DynamicParameters(bettingDataRNG_Joker);
+            p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            result = conn.Execute("Service_BettransRng_Joker_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+            if (result > 0 && bettingDataRNG_Joker.amount != 0)
+            {
+                result = PlaceBetV2(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.roundid, gameType, bettingDataRNG_Joker.id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
+
+        public int WithdrawFish_Joker(TpCustInfo tpCustInfo, BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataFish_Joker.timestamp).DateTime;
+                var check = _partitionService.Query<string>(partitionTime, "Service_BettransFish_Joker_Check", bettingDataFish_Joker);
+                if (check.Any())
+                {
+                    return -1;//Duplicated
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+
+
+                bettingDataFish_Joker.TicketType = (int)BettransType.Bet;
+                result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
+
+                if (result > 0 && bettingDataFish_Joker.amount != 0)
+                {
+                    var bonusId = 0;
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bettingDataFish_Joker.amount) * -1,
+                        (int)Tp.Joker,
+                        bettingDataFish_Joker.roundid,
+                        (int)GameType.Joker_Fish,
+                        bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
+                        null,
+                        TpCategory.Fish,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                result = 0;
+            }
+
+            return result;
+        }
+
+        public IEnumerable<RewardRNG_Joker> GetRewardRNG_Joker(bool isCancel, RewardRNG_Joker data)
+        {
+            if (isCancel)
+            {
+                var query = new { username = data.username, tournamentid = data.tournamentid, FromAPIType = data.FromAPIType };
+                return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Cancel_Check", CommandType.StoredProcedure, new DynamicParameters(query));
+            }
+            else
+            {
+                var query = new { username = data.username, id = data.id, FromAPIType = data.FromAPIType };
+                return _mainDbClient.Query<RewardRNG_Joker>("Service_RewardRNG_Joker_Check", CommandType.StoredProcedure, new DynamicParameters(query));
+            }
+        }
+
+        public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
+
+            return (result == 0) ? false : true;
+        }
+
+        public bool PlaceBetReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+               out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                    data.amount,
+                                    (int)Tp.Joker,
+                                    data.id,  //TpTransId
+                                    (int)GameType.Joker_RNG,
+                                    data.tournamentid,  //RefId
+                                    null,
+                                    TpCategory.Slots,
+                                    out afterAmount,
+                                    ref bonusId,
+                                    conn,
+                                    trans);
+
+            return (result > 0) ? true : false;
+        }
+
+        #endregion
 
         #region MG
         public async Task<MGPlaceBetResult> PlaceBetRNG_MG(TpCustInfo tpCustInfo, BettingDataRNG_MG bettingDataRNG_MG, int gameType)
