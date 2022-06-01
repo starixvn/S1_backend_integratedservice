@@ -63,26 +63,25 @@ namespace ThirdPartyBetHistory.Service.Model
             //體育結算日期會超過下個月改用現在日期
             SettledTime = vsDetails.transaction_time > DateTime.UtcNow.AddMonths(1) ? DateTime.UtcNow : vsDetails.transaction_time;
 
-            var detail = new GetBetDetail()
+            var detail = new GetBetDetailData
             {
-                Data = new GetBetDetailData()
-            };
-            detail.Data.BetVirtualSportDetails = new List<BetVirtualSportDetail>()
-            {
-              new BetVirtualSportDetail()
-              {
-                trans_id = vsDetails.trans_id,
-                vendor_member_id = vsDetails.vendor_member_id,
-                transaction_time = vsDetails.transaction_time,              
-                stake = vsDetails.stake,           
-                ticket_status = vsDetails.ticket_status,
-                winlost_amount = vsDetails.winlost_amount,
-                bet_type = vsDetails.bet_type,
-                currency = vsDetails.currency,
-                version_key =vsDetails.version_key,
-                odds = vsDetails.odds,
-                customInfo1 = vsDetails.betchoice,
-              }
+                BetVirtualSportDetails = new List<BetVirtualSportDetail>()
+                {
+                  new BetVirtualSportDetail()
+                  {
+                    trans_id = vsDetails.trans_id,
+                    vendor_member_id = vsDetails.vendor_member_id,
+                    transaction_time = vsDetails.transaction_time,
+                    stake = vsDetails.stake,
+                    ticket_status = vsDetails.ticket_status,
+                    winlost_amount = vsDetails.winlost_amount,
+                    bet_type = vsDetails.bet_type,
+                    currency = vsDetails.currency,
+                    version_key =vsDetails.version_key,
+                    odds = vsDetails.odds,
+                    customInfo1 = vsDetails.betchoice,
+                  }
+                }
             };
 
             Detail = detail;
