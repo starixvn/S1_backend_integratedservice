@@ -958,13 +958,29 @@ namespace ThirdPartyService.Service.BLL
             //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
             var custInfoList = GetTpCustInfoList(firstrRun, tpId, siteId);
+            var tpCurrencyId = "";
 
-            if (tpId == (int)TpEnum.NineW || tpId == (int)TpEnum.Saba)
+            if (tpId == (int)TpEnum.Saba)
             {
-                if (!GetBalanceAtSameTime(tpId, siteId, custInfoList,
+                if (!GetBalanceAtSameTime(tpId, siteId, custInfoList, tpCurrencyId,
                     out balanceDatas))
                 {
                     return false;
+                }
+            }
+            else if (tpId == (int)TpEnum.NineW)
+            {
+                var currencyList = custInfoList.GroupBy(g => g.TpCurrencyId);
+
+                foreach (var tpCurData in currencyList)
+                {
+                    tpCurrencyId = tpCurData.Key;
+                    if (!GetBalanceAtSameTime(tpId, siteId, tpCurData, tpCurrencyId,
+                                        out List<TpCustBalanceModel> tmpBalanceDatas))
+                    {
+                        return false;
+                    }
+                    balanceDatas.AddRange(tmpBalanceDatas);
                 }
             }
             else
@@ -1195,11 +1211,13 @@ namespace ThirdPartyService.Service.BLL
         /// <param name="tpId">第三方ID</param>
         /// <param name="siteId">平台ID</param>
         /// <param name="custInfoList">客戶資料清單</param>
+        /// <param name="tpCurrencyId">第三方幣別</param>
         /// <param name="balanceDatas">餘額資料</param>
         /// <returns></returns>
         private bool GetBalanceAtSameTime(int tpId,
             int siteId,
             IEnumerable<BalanceTpCustInfoModel> custInfoList,
+            string tpCurrencyId,
             out List<TpCustBalanceModel> balanceDatas)
         {
             balanceDatas = new List<TpCustBalanceModel>();
@@ -1221,7 +1239,7 @@ namespace ThirdPartyService.Service.BLL
 
                 requestTime = DateTime.UtcNow;
 
-                var balanceResult = tpHelper.GetBalance(inputs, tpUserNameString);
+                var balanceResult = tpHelper.GetBalance(inputs, tpUserNameString, tpCurrencyId);
 
                 responseTime = DateTime.UtcNow;
 

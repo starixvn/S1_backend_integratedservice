@@ -27,6 +27,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly NineWConfig _config;
         private readonly FincanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _currencyList;
+        private readonly Dictionary<string, string> _setting;
         private readonly int TimeZone = 8;
         private readonly List<int> _reportType = new List<int>() { 0, 2, 3, 7 };
 
@@ -37,8 +38,8 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-            _config = new NineWConfig(setting);
+            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+            _config = new NineWConfig(_setting);
             _fincanceService = provider.GetRequiredService<FincanceService>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
         }
@@ -120,6 +121,7 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<List<SettleBet>> QuerySettleBetHistoryAsync(NineWConfig config, string startTime, string endTime)
         {
             var result = new List<SettleBet>();
+            var agents = getAgents();
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -149,7 +151,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
                     }
-                    result.AddRange(queryReuslt.BetList.Where(d => d.agentId == config.Agent));
+                    result.AddRange(queryReuslt.BetList.Where(d => agents.Contains(d.agentId)));
                     page++;
                     totalPage = queryReuslt.totalPage;
                 }
@@ -161,6 +163,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new List<SettleBet>();
             var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryReSettleSummaryTransaction";
+            var agents = getAgents();
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -192,7 +195,7 @@ namespace ThirdPartyWager.Service.BLL
                         throw new Exception($"NineW querySettleBetHistory fail. status is {queryReuslt.status}.");
                     }
 
-                    var betlist = queryReuslt.BetList.Where(d => d.agentId == config.Agent)?.Select(resettle => new SettleBet(resettle));
+                    var betlist = queryReuslt.BetList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));
                     result.AddRange(betlist);
                     page++;
                     totalPage = queryReuslt.totalPage;
@@ -274,6 +277,7 @@ namespace ThirdPartyWager.Service.BLL
             var result = new List<SummaryTransaction>();
             var range = date.DateToTimeRange(TimeZone);
             var apiurl = $"{config.ApiUrl}/{config.WebSite}/querySummaryTransaction";
+            var agents = getAgents();
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -310,7 +314,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         throw new Exception($"NineW QuerySummaryTransaction fail. status is {queryReuslt.status}.");
                     }
-                    result.AddRange(queryReuslt.BetList.Where(d => d.agentId == config.Agent));
+                    result.AddRange(queryReuslt.BetList.Where(d => agents.Contains(d.agentId)));
                     page++;
                     totalPage = queryReuslt.totalPage;
                 }
@@ -326,6 +330,17 @@ namespace ThirdPartyWager.Service.BLL
         private Task<int> InsertReport(SummaryTransaction data)
         {
             return _wagerDbClient.ExecuteAsync("Service_TpReport9W_Ins", data);
+        }
+    
+        private List<string> getAgents()
+        {
+            var data = new List<string>();
+            foreach (var currency in _currencyList)
+            {
+                var Agent = _setting.ContainsKey($"agent_{currency.TpCurrencyId}") && !string.IsNullOrEmpty(_setting[$"agent_{currency.TpCurrencyId}"]) ? _setting[$"agent_{currency.TpCurrencyId}"] : throw new Exception($"agent {currency.TpCurrencyId} is empty");
+                data.Add(Agent);
+            }
+            return data;
         }
     }
 }

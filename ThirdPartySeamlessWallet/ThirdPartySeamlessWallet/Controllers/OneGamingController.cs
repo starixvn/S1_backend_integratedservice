@@ -519,6 +519,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.datetime = getCurrentGameTime();
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, mobileReq.username);
 
+            // temporally block inr app login
+            if (tpCustInfo.CurrencyId == 61)
+            {
+                getApiResponse.status_code = "1";
+                getApiResponse.error_code = "321";
+                getApiResponse.message = "Invalid User Info from Validation verified";
+                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+
             if (!string.IsNullOrEmpty(mobileReq.password) && tpCustInfo?.TpPwd == mobileReq.password)
             {
                 string token = null;

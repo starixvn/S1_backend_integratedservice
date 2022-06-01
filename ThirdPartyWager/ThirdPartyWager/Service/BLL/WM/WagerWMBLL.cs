@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -15,6 +17,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiWMBLL _apiWMBLL;
         private readonly WagerWMService _wagerWMService;
         private readonly ILogger<WagerWMBLL> _logger;
+        private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly IHostEnvironment _environment;
 
         public WagerWMBLL(IServiceProvider provider, IHostEnvironment environment)
@@ -23,6 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiWMBLL = provider.GetRequiredService<ApiWMBLL>();
             _wagerWMService = provider.GetRequiredService<WagerWMService>();
             _logger = provider.GetRequiredService<ILogger<WagerWMBLL>>();
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)Tp.WM);
             _environment = environment;
         }
 
@@ -35,25 +39,18 @@ namespace ThirdPartyWager.Service.BLL
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                var currencyList = new List<string> { "RMB" };
-                if (_environment.IsProduction())
+                foreach (var currency in _tpCurrency)
                 {
-                    currencyList.Add("THB");
-                    currencyList.Add("MYR");
-                    currencyList.Add("IDRK");
-                    currencyList.Add("VNDK");
-                    currencyList.Add("USD");
-                    currencyList.Add("INR");
-                }
-
-                foreach (var curr in currencyList)
-                {
+                    if (!_environment.IsProduction() && currency.TpCurrencyId != "RMB")
+                    {
+                        continue;
+                    }
+                    
                     // get wager
-                    var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{curr}"], setting[$"signature_{curr}"], startTime, endTime, guid);
+                    var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{currency.TpCurrencyId}"], setting[$"signature_{currency.TpCurrencyId}"], startTime, endTime, guid);
 
                     // error condition
                     var errorCode = dataWager.errorCode;
-                    var errorMsg = dataWager.errorMessage;
 
                     if (errorCode == 107)
                     {
@@ -74,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         try
                         {
-                            bet.Currency = curr;
+                            bet.Currency = currency.TpCurrencyId;
                             _wagerWMService.InsertWager(bet);
                         }
                         catch (Exception ex)

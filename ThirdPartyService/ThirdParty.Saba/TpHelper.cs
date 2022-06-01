@@ -501,8 +501,9 @@ namespace ThirdParty.Saba
         /// </summary>
         /// <param name="inputs">第三方相關參數</param>
         /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
+        /// <param name="tpCurrencyId">第三方幣別</param>
         /// <returns></returns>
-        public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString)
+        public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId)
         {
             string ApiUrl = new SabaConfig(inputs).ApiUrl;
             GetBalanceReg input = new GetBalanceReg();
