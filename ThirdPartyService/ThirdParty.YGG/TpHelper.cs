@@ -30,9 +30,10 @@ namespace ThirdParty.YGG
 
             // YGG 試玩遊戲，Fun = 1 是試玩 ，不用打Api，自組登入 Url。
             if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase)) return GetPlayForFunLaunchUrl(TpLangId, config, channel);
-            
+
             // YGG 正式遊戲
-            var apiUrl = "https://seamless-stage.248ka.com/restless/launchClient.html"; //config.GameUrl; // "https://seamless-stage.248ka.com/restless/launchClient.html";
+
+            var apiUrl = config.GameUrl;
             var sParam = $"loaginame={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}" +
                 $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
 
@@ -159,28 +160,28 @@ namespace ThirdParty.YGG
 
             public YggConfig(Dictionary<string, string> inputs)
             {
-                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) 
-                    ? inputs["GameUrl"] 
+                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"])
+                    ? inputs["GameUrl"]
                     : throw new Exception();
 
                 FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"])
-                    ? inputs["FunGameUrl"] 
+                    ? inputs["FunGameUrl"]
                     : throw new Exception();
 
                 Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"])
-                    ? inputs["org"] 
+                    ? inputs["org"]
                     : string.Empty;
 
-                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) 
-                    ? inputs["gameId"] 
+                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"])
+                    ? inputs["gameId"]
                     : string.Empty;
 
-                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) 
-                    ? inputs["homeUrl"] 
+                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"])
+                    ? inputs["homeUrl"]
                     : string.Empty;
 
-                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) 
-                    ? inputs["fun"] 
+                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"])
+                    ? inputs["fun"]
                     : "0";
             }
         }
@@ -235,8 +236,6 @@ namespace ThirdParty.YGG
             [JsonProperty("data")]
             public LoginData Data { get; set; }
         }
-
-
 
         #endregion
     }
