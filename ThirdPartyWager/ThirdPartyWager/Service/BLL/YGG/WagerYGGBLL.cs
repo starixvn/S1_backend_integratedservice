@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,44 +20,89 @@ namespace ThirdPartyWager.Service.BLL.YGG
         private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.YGG;
         private readonly YggConfig _config;
-        private readonly int TimeZone = 0;
+
+        private const int SuccessCode = 0;
 
         public WagerYGGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+
             _logger = provider.GetRequiredService<ILogger<WagerYGGBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            //var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+            var setting = _thirdPartyBLL.GetThirdPartySetting(-8);
             _config = new YggConfig(setting);
-
         }
 
+        /// <summary>
+        ///  去第三方取得注單，寫入 DB
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             try
             {
-                //var result = await QuerySettleBetHistoryAsync(_config, startTime, endTime);
-                //var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
-                //await Task.WhenAll(tasks);
-                await Task.Delay(1);
+                await QueryBetRecordAsync(_config, startTime, endTime);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "YGG GetWagersAsync Exception.");
+                _logger.LogError(ex, "YGG GetWagersAsync Exception.", ex.Message);
                 return false;
             }
-
         }
 
-        private async Task<List<object>> QueryBetRecordAsync(YggConfig config, string startTime, string endTime) {
+        private async Task QueryBetRecordAsync(YggConfig config, string startTime, string endTime)
+        {
+            var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "topOrg", config.TopOrg },
+                { "org", config.Org },
+                { "lastId", "0"},
+                { "startTime", startTime},
+                { "endTime",endTime },
+                { "sign", _common.ToMD5($"{config.TopOrg}{config.Org}{config.Key}") },
+                { "gametype", "yg" }
+            });
 
-            await Task.Delay(1);
-            return null;
+            var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
+            }
+            var json = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation(json);
+
+            var betRecordResponse = _common.FromJson<WagerYggResponse>(json);
+
+            if (betRecordResponse.Code == SuccessCode && betRecordResponse.Data.Count > 0)
+            {
+                var insertData = betRecordResponse.Data.Where(r => r.Type == "wager").ToList(); // wager 投注
+                var updateData = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
+
+                var tasks = new List<Task<int>>();
+
+                if (insertData.Count > 0) tasks.AddRange(insertData.Select(item => Task.Run(() => InsertWager(item))).ToList());
+                if (updateData.Count > 0) tasks.AddRange(updateData.Select(item => Task.Run(() => UpdateWager(item))).ToList());
+
+                if (tasks.Count > 0)
+                    await Task.WhenAll(tasks);
+            }
+        }
+
+        private Task<int> InsertWager(WagerYGGModel betData)
+        {
+            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Ins", betData);
+        }
+
+        private Task<int> UpdateWager(WagerYGGModel betData)
+        {
+            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Set", betData);
         }
     }
-
 }
 

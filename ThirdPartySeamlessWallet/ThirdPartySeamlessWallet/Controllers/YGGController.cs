@@ -203,6 +203,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                     var authToken = sessionKeyArr[0]; /* 1 Time*/
                     var sessionToken = sessionKeyArr[1];/* Long Time*/
+
                     if (_authBll.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     {
                         var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);

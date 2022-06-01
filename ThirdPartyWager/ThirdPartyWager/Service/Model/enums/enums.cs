@@ -48,6 +48,7 @@
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,
         SG_Fish = 31,
+        YGG_RNG = 14
     }
 
     public enum DataBase
