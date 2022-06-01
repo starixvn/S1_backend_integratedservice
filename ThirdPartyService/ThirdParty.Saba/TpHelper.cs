@@ -775,6 +775,7 @@ namespace ThirdParty.Saba
                     UTCSettledTime = GetUTCTime(betVirtualSportDetail?.match_datetime, (DateTime)betVirtualSportDetail?.transaction_time),
                     Stake = betVirtualSportDetail.stake * tpCurrency.ExchangeRate,
                     WinlostAmount = betVirtualSportDetail.winlost_amount * tpCurrency.ExchangeRate,
+                    Odds = betVirtualSportDetail.odds,
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {

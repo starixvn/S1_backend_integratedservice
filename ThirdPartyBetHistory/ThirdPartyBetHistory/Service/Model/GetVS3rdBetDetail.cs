@@ -37,15 +37,63 @@ namespace ThirdPartyBetHistory.Service.Model
         {
             get
             {
-                //"m=belgium - turkey;s=fulltime result;b=home;o=1.75;"
-                var o = betchoice.Split(";").First(i => i.StartsWith("o")).Replace("o=", "");
-                return decimal.Parse(o);
+                return decimal.Parse(BetchoiceList.First().o);
             }
             set => odds = value;
         }
+    
         public decimal? discount_stake { get; set; } 
         public int? odds_type { get; set; }
         public string tokenmoney { get; set; } = string.Empty;
+
+        public List<Betchoice> BetchoiceList
+        {
+            get 
+            {
+                var result = new List<Betchoice>();
+                foreach (var item in betchoice.Split("|"))
+                {
+                    result.Add(new Betchoice(item));
+                }
+                return result;
+            }
+        }   
+    }
+
+    public class Betchoice
+    {
+        public Betchoice(string betchoice)
+        {
+            // "m=belgium - turkey;s=fulltime result;b=home;o=1.75;"
+            // "m=england - spain;s=fulltime result;b=home;o=3.52;ht=0-1;ft=1-3; mo = lose;| m = portugal - germany; s = home to score; b = no; o = 3.69; ht = 1 - 1; ft = 1 - 2; mo = lose; ",
+            foreach (var item in betchoice.Split(";"))
+            {
+                if (item.StartsWith("m="))
+                    m = item.Replace("m=", "");
+                if (item.StartsWith("s="))
+                    s = item.Replace("s=", "");
+                if (item.StartsWith("b="))
+                    b = item.Replace("b=", "");
+                if (item.StartsWith("o="))
+                    o = item.Replace("o=", "");
+            }
+        }
+        /// <summary>
+        /// 球赛队伍
+        /// </summary>
+        public string m { get; set; }
+        /// <summary>
+        /// 投注类型
+        /// </summary>
+        public string s { get; set; }
+        /// <summary>
+        /// 投注选项
+        /// </summary>
+        public string b { get; set; }
+        /// <summary>
+        /// 赔率
+        /// </summary>
+        public string o { get; set; }
     }
 
 }
