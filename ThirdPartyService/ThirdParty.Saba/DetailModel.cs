@@ -116,7 +116,7 @@ namespace ThirdParty.Saba
     public class Cashoutdata
     {
         public decimal stake { get; set; }
-        public int bet_type { get; set; }
+        public int? bet_type { get; set; }
         public DateTime? transdate { get; set; }
         public string cashout_id { get; set; }
         public decimal real_stake { get; set; }
@@ -234,7 +234,7 @@ namespace ThirdParty.Saba
         public string race_number { get; set; }
         public string version_key { get; set; }
         public string after_amount { get; set; }
-        public int parlay_ref_no { get; set; }
+        public long? parlay_ref_no { get; set; }
         public string ticket_status { get; set; }
         public DateTime? match_datetime { get; set; }
         public decimal winlost_amount { get; set; }
