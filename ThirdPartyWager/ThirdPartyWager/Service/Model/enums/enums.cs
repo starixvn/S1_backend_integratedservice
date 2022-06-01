@@ -33,7 +33,8 @@
         MP = 35,
         EVO = 36,
         Netent = 37,
-        RedTiger = 38
+        RedTiger = 38,
+        SBO = 42
     }
 
     public enum GameType
