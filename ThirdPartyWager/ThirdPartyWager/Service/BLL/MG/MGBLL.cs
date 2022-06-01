@@ -16,11 +16,11 @@ namespace ThirdPartyWager.Service.BLL.MG
     {
         private readonly IApiMGBLL _mgApi;
         private readonly IApiSWBLL _swApi;
-        private readonly List<string> _tpCurrency = new List<string> { "VND", "USD", "INR", "IDR", "MYR", "THB" };
         private readonly ILogger<MGBLL> _logger;
         private readonly FincanceService _fincanceService;
-        private Tp tp = Tp.MG;
-        private Dictionary<string, int> _currencyId = new Dictionary<string, int>();
+        private readonly Tp tp = Tp.MG;
+        private readonly IEnumerable<TpCurrency> _tpCurrency;
+        private readonly Dictionary<string, int> _currencyId;
 
         public MGBLL(IServiceProvider provider)
         {
@@ -30,17 +30,17 @@ namespace ThirdPartyWager.Service.BLL.MG
             _mgApi.MgConfig = config;
             _logger = provider.GetRequiredService<ILogger<MGBLL>>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _currencyId = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)tp)
-                .ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)tp);
+            _currencyId = _tpCurrency.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
         }
 
         public async Task ReSettle()
         {
-            foreach (var currencyId in _tpCurrency)
+            foreach (var currency in _tpCurrency)
             {
-                var token = await _mgApi.GetToken(currencyId);
+                var token = await _mgApi.GetToken(currency.TpCurrencyId);
                 if (string.IsNullOrEmpty(token)) return;
-                var mgFailedTransactions = await _mgApi.GetFailedTransactionsAsync(token, currencyId);
+                var mgFailedTransactions = await _mgApi.GetFailedTransactionsAsync(token, currency.TpCurrencyId);
                 if (mgFailedTransactions != null && mgFailedTransactions.Count > 0)
                 {
                     foreach (var transaction in mgFailedTransactions)
@@ -51,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                             txnEventType = transaction.txnEventType,
                             playerId = transaction.playerId,
                             amount = transaction.amount,
-                            currency = currencyId,
+                            currency = currency.TpCurrencyId,
                             txnId = transaction.txnId,
                             creationTime = DateTime.UtcNow.Ticks,
                             contentCode = transaction.contentCode,
@@ -64,8 +64,8 @@ namespace ThirdPartyWager.Service.BLL.MG
                         var isSuccess = await _swApi.MgUpdateBalance(request);
                         if (isSuccess)
                         {
-                            _logger.LogInformation($"currency:{currencyId},transaction {JsonConvert.SerializeObject(request)}", "MG_ReSettle");
-                            await _mgApi.UpdateFailedTransactionToResolvedState(token, transaction.txnId, currencyId);
+                            _logger.LogInformation($"currency:{currency.TpCurrencyId},transaction {JsonConvert.SerializeObject(request)}", "MG_ReSettle");
+                            await _mgApi.UpdateFailedTransactionToResolvedState(token, transaction.txnId, currency.TpCurrencyId);
                         }
                     }
                 }
@@ -75,16 +75,15 @@ namespace ThirdPartyWager.Service.BLL.MG
 
         public async Task<bool> GetReport(DateTime date)
         {
-            foreach (var tpCurrencyId in _tpCurrency)
+            foreach (var currency in _tpCurrency)
             {
-                var token = await _mgApi.GetToken(tpCurrencyId);
+                var token = await _mgApi.GetToken(currency.TpCurrencyId);
                 if (string.IsNullOrEmpty(token))
                 {
                     return false;
                 }
 
-
-                var gameAnalyses = await _mgApi.GetPlayerGameAnalysisAsync(token, tpCurrencyId, date);
+                var gameAnalyses = await _mgApi.GetPlayerGameAnalysisAsync(token, currency.TpCurrencyId, date);
                 if (gameAnalyses.Any())
                 {
                     var stake = gameAnalyses.Sum(i => i.income);
@@ -92,7 +91,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                         SummaryType = SummaryType.TpBetRecord,
                         SummaryDate = date,
                         TpId = (int)tp,
-                        CurrencyId = _currencyId[tpCurrencyId],
+                        CurrencyId = _currencyId[currency.TpCurrencyId],
                         Stake = stake,
                         ValidBet = stake,
                         Payout = gameAnalyses.Sum(i => i.payout),
@@ -104,10 +103,10 @@ namespace ThirdPartyWager.Service.BLL.MG
 
                 Thread.Sleep(10000);
 
-                var fortuneRewards = await _mgApi.GetFortuneRewardsAsync(token, tpCurrencyId, date);
+                var fortuneRewards = await _mgApi.GetFortuneRewardsAsync(token, currency.TpCurrencyId, date);
                 if (fortuneRewards.Any())
                 {
-                    var fortun = GetRewardSummary(date, tpCurrencyId, fortuneRewards);
+                    var fortun = GetRewardSummary(date, currency.TpCurrencyId, fortuneRewards);
                     _fincanceService.SetFinanceTpDailySummary(fortun);
                 }
 

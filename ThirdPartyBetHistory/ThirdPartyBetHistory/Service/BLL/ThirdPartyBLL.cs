@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
+using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.BLL
 {
     public class ThirdPartyBLL
     {
-        private readonly ThirdPartyService thirdPartyService;
-        public ThirdPartyBLL(ThirdPartyService thirdPartyService)
+        private readonly ThirdPartyService _thirdPartyService;
+        public ThirdPartyBLL(IServiceProvider provider)
         {
-            this.thirdPartyService = thirdPartyService;
+            _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
         }
         public IEnumerable<ThirdPartyModel> GetTpList()
         {
-            var tpList = thirdPartyService.GetTpList().ToList();
-            var siteTpList = thirdPartyService.GetSiteTpList();
+            var tpList = _thirdPartyService.GetTpList().ToList();
+            var siteTpList = _thirdPartyService.GetSiteTpList();
             if (siteTpList != null)
             {
                 foreach (var siteTp in siteTpList)
@@ -31,19 +31,29 @@ namespace ThirdPartyBetHistory.Service.BLL
         }
         public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
         {
-            thirdPartyService.ToDoAddBetRecord(betRecordInfos);
+            _thirdPartyService.ToDoAddBetRecord(betRecordInfos);
         }
         public int SetTicketKey(int TpId, long TicketKey)
         {
-            return thirdPartyService.SetTicketKey(TpId, TicketKey);
+            return _thirdPartyService.SetTicketKey(TpId, TicketKey);
         }
         public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
         {
-            return thirdPartyService.SiteTpTicketKey(TpId, SiteId, TicketKey);
+            return _thirdPartyService.SiteTpTicketKey(TpId, SiteId, TicketKey);
         }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
-            return thirdPartyService.GetTpCurrency(tpId, currencyId);
+            return _thirdPartyService.GetTpCurrency(tpId, currencyId);
+        }
+
+        public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
+        {
+            return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType);
+        }
+
+        public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
+        {
+            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType, ticketKey);
         }
 
     }

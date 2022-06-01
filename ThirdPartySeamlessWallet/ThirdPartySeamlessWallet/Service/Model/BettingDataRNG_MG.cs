@@ -110,6 +110,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bool Completed { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
     }
     
     public class BettransLC_MG
