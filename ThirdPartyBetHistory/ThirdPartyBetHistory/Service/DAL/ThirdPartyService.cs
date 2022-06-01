@@ -270,7 +270,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             }
         }
 
-        private TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var key = $"TpCustInfo_{tpId}_{tpUserName}";
             var tpCustInfo = _cache.Get<TpCustInfo>(key);
@@ -437,6 +437,11 @@ namespace ThirdPartyBetHistory.Service.DAL
         {
             var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType, TicketKey };
             return _mainDbClient.Execute("Service_SiteTicketKey_Set", parameters);
+        }
+
+        public int AddTpBetRecordDetail(TpBetRecordDetail detail)
+        {
+            return _mainDbClient.QueryFirst<int>("Service_TpBetRecordDetail_Ins_V2", detail); 
         }
     }
 }

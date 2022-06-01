@@ -48,13 +48,22 @@ namespace ThirdPartyBetHistory.Service.BLL
 
         public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
         {
-            return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType);
+            return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType);
         }
 
         public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
         {
-            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, betHelper.thirdPartyModel.Id, workerType, ticketKey);
+            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
         }
 
+        public int AddTpBetRecordDetail(TpBetRecordDetail detail)
+        {
+            return _thirdPartyService.AddTpBetRecordDetail(detail);
+        }
+
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+        {
+            return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
+        }
     }
 }

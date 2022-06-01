@@ -22,6 +22,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
+
         public override async Task UpdateBetRecordByTransId()
         {
             try
@@ -108,6 +109,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
         public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
         {
+            var gameType = GameType.Saba_LGVirtualSports;
+
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
             var parameters = new Dictionary<string, string>
@@ -136,8 +139,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 var betRecordInfo = new BetRecordInfo
                 {
-                    TpId = thirdPartyModel.Id,
-                    GameType = GameType.Saba_LGVirtualSports,
+                    TpId = (int)Tp,
+                    GameType = gameType,
                     TransId = betDetial.trans_id.ToString(),
                     TransTime = ConvertLocTime(betDetial.transaction_time),
                     SettledTime = ConvertLocTime(betDetial.transaction_time),
@@ -148,10 +151,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     TicketKey = betDetial.version_key,
                     tokenmoney = betDetial.tokenmoney
                 };
-
                 CalculateAvailableBet(betDetial, betRecordInfo);
                 betRecordInfoList.Add(betRecordInfo);
 
+                var currencyId = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp, betDetial.vendor_member_id).CurrencyId;
+                var detail = new TpBetRecordDetail((int)Tp, gameType, currencyId, betDetial);
+                _thirdPartyBLL.AddTpBetRecordDetail(detail);
             }
 
             if (!betRecordInfoList.Any())
@@ -160,6 +165,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
 
             _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            
             return getBetDetail.Data.last_version_key;
         }
 
@@ -181,7 +187,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
-                        TpId = thirdPartyModel.Id,
+                        TpId = (int)Tp,
                         GameType = GetBetDetailGameType(betDetial.sport_type),
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
@@ -222,7 +228,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
-                        TpId = thirdPartyModel.Id,
+                        TpId = (int)Tp,
                         GameType = GameType.Saba_NumberGame,
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
@@ -245,7 +251,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
-                        TpId = thirdPartyModel.Id,
+                        TpId = (int)Tp,
                         OriginalState = betDetial.ticket_status,
                         WinlostAmount = betDetial.winlost_amount,
                         Stake = betDetial.stake,
@@ -475,7 +481,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 var betRecordInfo = new BetRecordInfo
                 {
-                    TpId = thirdPartyModel.Id,
+                    TpId = (int)Tp,
                     TransId = cashOut.cashout_id.ToString(),
                     TransTime = ConvertLocTime(betDetial.transaction_time),
                     SettledTime = ConvertLocTime(cashOut.transdate),

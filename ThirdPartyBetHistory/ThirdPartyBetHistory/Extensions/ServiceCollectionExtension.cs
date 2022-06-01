@@ -25,8 +25,9 @@ namespace ThirdPartyBetHistory.Extensions
 
         public static IServiceCollection RegisterSabaSiteHelper(this IServiceCollection services)
         {
+            var tp = Tp.Saba;
             var provider = services.BuildServiceProvider();
-            var sabaSiteList = provider.GetRequiredService<ThirdPartyBLL>().GetTpList().Where(item => item.Id == (int)Tp.Saba);
+            var sabaSiteList = provider.GetRequiredService<ThirdPartyBLL>().GetTpList().Where(item => item.Id == (int)tp);
             var type = Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.SabaBetHelper");
 
             foreach (var site in sabaSiteList)
@@ -34,6 +35,7 @@ namespace ThirdPartyBetHistory.Extensions
                 services.AddSingleton(provider =>
                 {
                     var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(type, new object[] { provider });
+                    TpBetHelper.Tp = tp;
                     TpBetHelper.thirdPartyModel = site;
                     TpBetHelper.syncParams = TpBetHelper.InitialSyncParams();
                     TpBetHelper.SiteId = site.SiteId == 0 ? SiteId.Nova88 : (SiteId)site.SiteId;

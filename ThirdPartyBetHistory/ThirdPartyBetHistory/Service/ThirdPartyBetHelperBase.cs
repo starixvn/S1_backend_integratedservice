@@ -23,10 +23,12 @@ namespace ThirdPartyBetHistory.Service
         SyncParams syncParams { set; get; }
         ThirdPartyModel thirdPartyModel { set; get; }
         SiteId SiteId { set; get; }
+        Tp Tp { set; get; }
     }
 
     public abstract class ThirdPartyBetHelperBase : IThirdPartyBetHelper
     {
+        public Tp Tp { get; set; }
         public SiteId SiteId { get; set; }
         public bool IsDebug { get; set; }
         public bool IsRunning { get; set; }
