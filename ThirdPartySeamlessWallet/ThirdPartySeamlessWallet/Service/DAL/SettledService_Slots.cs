@@ -2654,7 +2654,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+
                 var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3",
+
                     new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
                 // 不存在有效下注
@@ -2748,6 +2750,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
 
             var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V3", p, commandType: CommandType.StoredProcedure);
+
             if (slot != null)
             {
                 tpGameType = (int)GameType.MG_RNG;
