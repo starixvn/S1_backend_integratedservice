@@ -316,6 +316,43 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public bool InsertReward_Joker(RewardRNG_Joker data, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Ins", new DynamicParameters(data), trans, commandType: CommandType.StoredProcedure).Result;
+
+            return (result == 0) ? false : true;
+        }
+
+        public bool CancelUpdateReward_Joker(int sq, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var param = new { SQ = sq, TicketType = BettransType.CancelBet, TicketStatus = TicketStatus.Refund };
+            var result = conn.QueryFirstAsync<int>("Service_RewardRNG_Joker_Cancel_Set", new DynamicParameters(param), trans, commandType: CommandType.StoredProcedure).Result;
+
+            return (result > 0) ? true : false;
+        }
+
+        public bool PayoutReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
+            TransType transType, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PayoutV2(tpCustInfo,
+                                  data.amount,
+                                  (int)Tp.Joker,
+                                  data.id, //TpTransId
+                                  (int)GameType.Joker_RNG,
+                                  TpCategory.Slots,
+                                  data.tournamentid, //refId
+                                  transType,
+                                  null,
+                                  out afterAmount,
+                                  memo,
+                                  out bonusId,
+                                  conn,
+                                  trans);
+
+            return (result > 0) ? true : false;
+        }
+
         #endregion
 
         #region YGG
@@ -2617,7 +2654,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+
                 var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3",
+
                     new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
                 // 不存在有效下注
@@ -2711,6 +2750,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
 
             var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V3", p, commandType: CommandType.StoredProcedure);
+
             if (slot != null)
             {
                 tpGameType = (int)GameType.MG_RNG;
