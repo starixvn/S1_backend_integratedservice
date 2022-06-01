@@ -75,6 +75,25 @@ namespace ThirdPartyCore.Model
         public int Status { get; set; }
         public int CStatus { get; set; }
     }
+
+    public class TpMerchantInfo
+    {
+        /// <summary>
+        /// 第三方Id
+        /// </summary>
+        public int TpId { get; set; }
+
+        /// <summary>
+        /// 站台Id
+        /// </summary>
+        public int SiteId { get; set; }
+
+        /// <summary>
+        /// 幣別Id
+        /// </summary>
+        public string TpCurrencyId { get; set; }
+    }
+
     public class TransIdModel
     {
         public string ThirdId { set; get; }

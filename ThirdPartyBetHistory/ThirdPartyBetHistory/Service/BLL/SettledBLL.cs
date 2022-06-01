@@ -1,11 +1,6 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 
@@ -13,19 +8,19 @@ namespace ThirdPartyBetHistory.Service.BLL
 {
     public class SettledBLL
     {
-        private readonly SettledService settledService;
+        private readonly SettledService _settledService;
 
-        public SettledBLL(SettledService settledService)
+        public SettledBLL(IServiceProvider provider)
         {
-            this.settledService = settledService;
+            _settledService = provider.GetRequiredService<SettledService>();
         }
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
-            return settledService.GetBonusFulfill();
+            return _settledService.GetBonusFulfill();
         }
         public bool BonusSettle(BonusFulfill bonusFulfill)
         {
-            return settledService.BonusSettle(bonusFulfill);
+            return _settledService.BonusSettle(bonusFulfill);
         }
     }
 }

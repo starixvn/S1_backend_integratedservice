@@ -78,5 +78,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return GuidString;
         }
+
+        public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
+        {
+            var parameters = new DynamicParameters(new { TpId = tpId, TpCurrencyId = tpCurrencyId });
+            return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", parameters: parameters);
+        }
     }
 }

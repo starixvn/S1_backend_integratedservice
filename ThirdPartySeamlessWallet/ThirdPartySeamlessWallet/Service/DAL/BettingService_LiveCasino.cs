@@ -34,12 +34,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         Txnid = bettingDataLC_SA.txnid,
                         TransId = $"{bettingDataLC_SA.gameid}_{bettingDataLC_SA.username}",
-                        Currency = bettingDataLC_SA.currency, 
+                        Currency = bettingDataLC_SA.currency,
                         Username = bettingDataLC_SA.username,
-                        Gametype = bettingDataLC_SA.gametype, 
+                        Gametype = bettingDataLC_SA.gametype,
                         Amount = bettingDataLC_SA.amount,
                         bettingDataLC_SA.BetAmount,
-                        bettingDataLC_SA.Betdetails, 
+                        bettingDataLC_SA.Betdetails,
                         Gameid = bettingDataLC_SA.gameid
                     }, trans, commandType: CommandType.StoredProcedure);
 

@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiMegaBLL>>();
         }
 
-        public async Task<ReportMega> GetReportPlayerListByTime(dynamic setting, string currency, string startTime, string endTime)
+        public async Task<ReportDataMega> GetReportPlayerListByTime(dynamic setting, string currency, string startTime, string endTime)
         {
             // param
             var contentType = "application/json";
@@ -79,14 +79,14 @@ namespace ThirdPartyWager.Service.BLL
             var error = JsonConvert.DeserializeObject<ErrorResponse>(r);
             if (error.error != null)
             {
-                var result = new ReportMega();
+                var result = new ReportDataMega();
                 result.code = error.error.code;
                 result.message = error.error.message;
                 return result;
             }
             else
             {
-                var result = JsonConvert.DeserializeObject<ReportMega>(r);
+                var result = JsonConvert.DeserializeObject<ReportDataMega>(r);
                 return result;
             }
         }

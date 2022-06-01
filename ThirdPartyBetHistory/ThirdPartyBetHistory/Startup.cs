@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
@@ -21,15 +22,11 @@ namespace ThirdPartyBetHistory
         {
             Configuration = configuration;
         }
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDatabaseConnection(Configuration);
             services.AddMemoryCache();
-            /*Library*/
-            //services.AddSingleton<Tools>();
-            //services.AddSingleton<Common>();
-            //services.AddSingleton<IBCDBLibrary>();
 
             /*DAL*/
             services.AddSingleton<SettledService>();
@@ -39,11 +36,9 @@ namespace ThirdPartyBetHistory
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
 
-            ThirdPartyBetHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
-            ThirdPartyBetHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
+            services.RegisterSabaSiteHelper();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
