@@ -423,11 +423,17 @@ namespace ThirdPartyBetHistory.Service.DAL
             return afterAmount >= 0 ? 1 : 0;
         }
 
-        public IEnumerable<UnSettle> GetSabaUnSettleTicket(SiteId siteId, DateTime startTime, DateTime endTime)
+        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
+            DateTime startTime, DateTime endTime)
         {
-            return _mainDbClient.Query<UnSettle>("Service_SabaUnSettle_Get",
-                new { _SiteId = (int)siteId, StartTime = startTime, EndTime = endTime });
+            return _mainDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
+                new
+                {
+                    _TpId = (int)tp, _SiteId = (int)siteId, SettlementTypeList = settlementTypeList,
+                    StartTime = startTime, EndTime = endTime
+                });
         }
+
         public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)
         {
             var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType };

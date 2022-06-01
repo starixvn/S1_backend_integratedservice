@@ -60,7 +60,8 @@ namespace ThirdPartyBetHistory
                     services.AddHostedService<WorkerService>();
                     services.AddHostedService<BonusWorker>();
                     services.AddHostedService<SabaLGWorkerService>();
-                    services.AddHostedService<SabaByTransIdWorkerService>();
+                    services.AddHostedService<SabaByTransIdUnSettleWorkerService>();
+                    services.AddHostedService<SabaByTransIdSettleWorkerService>();
                 });
         
         private static MemoryStream GetRemoteConfig(IEnumerable<string> remoteUrls)
