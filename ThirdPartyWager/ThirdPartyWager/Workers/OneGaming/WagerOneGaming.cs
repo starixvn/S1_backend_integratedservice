@@ -7,509 +7,143 @@ using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 
 namespace ThirdPartyWager.Workers
 {
     public class WagerOneGaming : BackgroundService
     {
-        private readonly ILogger<WagerOneGaming> logger;
-        private readonly WagerOneGamingBLL wagerOneGamingBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private Timer timerTHB;
-        private Timer timerMYR;
-        private Timer timerIDR;
-        private Timer timerCNY;
-        private Timer timerVND;
-        private Timer timerUSD;
-        private Timer timerINR;
-        private int intervalMins = 3;
-        private int iRangMins = 20;
-        private int tpId = (int)Tp.OneGaming;
+        private readonly ILogger<WagerOneGaming> _logger;
+        private readonly WagerOneGamingBLL _wagerOneGamingBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly CommonBLL _commonBLL;
+        private readonly IHostEnvironment _environment;
+        private Timer timer;
+        private readonly int intervalMins = 3;
+        private readonly int iRangMins = 20;
+        private readonly int tpId = (int)Tp.OneGaming;
         private readonly string _tpName = Tp.OneGaming.ToString();
-        private int tpType = 1;
-        private int quickTHB = 0;
-        private int quickMYR = 0;
-        private int quickIDR = 0;
-        private int quickCNY = 0;
-        private int quickUSD = 0;
-        private int beyond = 5;
+        private readonly int tpType = 1;
+        private readonly int beyond = 5;
         private readonly int timeZone = 8;
 
-        public WagerOneGaming(
-            ILogger<WagerOneGaming> logger,
-            WagerOneGamingBLL wagerOneGamingBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
-        )
+        public WagerOneGaming(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerOneGamingBLL = wagerOneGamingBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
+            _logger = provider.GetRequiredService<ILogger<WagerOneGaming>>();
+            _wagerOneGamingBLL = provider.GetRequiredService<WagerOneGamingBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
+        
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timerTHB = new Timer(DoTaskTHB, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerMYR = new Timer(DoTaskMYR, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerIDR = new Timer(DoTaskIDR, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerCNY = new Timer(DoTaskCNY, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerVND = new Timer(DoTaskVND, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerUSD = new Timer(DoTaskUSD, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerINR = new Timer(DoTaskINR, null, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoTaskTHB(object state)
+        private async void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            if (environment.IsProduction())
-            {
-                try
-                {
-                    var currency = "THB";
-                    quickTHB = 0;
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
-                    {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime;
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
-                        var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                        if (result)
-                        {
-                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                        }
-                    }
-                    var ts = DateTime.Now - timerTime;
-                    var diffMin = (int)ts.TotalMinutes;
-                    if (diffMin > beyond)
-                    {
-                        quickTHB = 1;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    if (quickTHB == 1)
-                    {
-                        var dueTimeSpan = TimeSpan.FromSeconds(45);
-                        timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                    else
-                    {
-                        var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                        timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                }
-            }
-        }
-
-        private async void DoTaskMYR(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            if (environment.IsProduction())
-            {
-                try
-                {
-                    var currency = "MYR";
-                    quickMYR = 0;
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
-                    {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime;
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
-                        var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                        if (result)
-                        {
-                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                        }
-                    }
-                    var ts = DateTime.Now - timerTime;
-                    var diffMin = (int)ts.TotalMinutes;
-                    if (diffMin > beyond)
-                    {
-                        quickMYR = 1;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    if (quickMYR == 1)
-                    {
-                        var dueTimeSpan = TimeSpan.FromSeconds(45);
-                        timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                    else
-                    {
-                        var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                        timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                }
-            }
-        }
-
-        private async void DoTaskIDR(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
+            var quick = 0;
+            var failed = 0;
+            var tasks = new List<Task>();
             try
             {
-                var currency = "IDR";
-                quickIDR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
+                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+
+                foreach (var item in tpCurrencyList)
                 {
-                    last = iRangMins - 1;
-                    timerTime = DateTime.Now.AddMinutes(-1 * last);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime;
-                    last = iRangMins - 1;
-                }
-                if (timerTime < DateTime.Now)
-                {
-                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                    //if (time.endUnix < cvTime)
-                    //{
-                    var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                    if (result)
+                    if (!_environment.IsProduction() && item.TpCurrencyId != "IDR")
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+                        continue;
                     }
+
+                    var currency = item.TpCurrencyId;
+                    tasks.Add(Task.Run(() =>
+                    {
+                        try
+                        {
+                            var res = Main(currency);
+                            if (res.Result == 1)
+                            {
+                                quick = 1;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                            Interlocked.Increment(ref failed);
+                        }
+                    }));
+
                 }
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin > beyond)
-                {
-                    quickIDR = 1;
-                }
+                var t = Task.WhenAll(tasks);
+                t.Wait();
 
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
-                if (quickIDR == 1)
+                if (quick == 1)
                 {
                     var dueTimeSpan = TimeSpan.FromSeconds(45);
-                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
 
-        private async void DoTaskCNY(object state)
+        private async Task<int> Main(string currency)
         {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            if (environment.IsProduction())
-            {
-                try
-                {
-                    var currency = "CNY";
-                    quickCNY = 0;
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
-                    {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime;
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
-                        var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                        if (result)
-                        {
-                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                        }
-                    }
-                    var ts = DateTime.Now - timerTime;
-                    var diffMin = (int)ts.TotalMinutes;
-                    if (diffMin > beyond)
-                    {
-                        quickCNY = 1;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    if (quickCNY == 1)
-                    {
-                        var dueTimeSpan = TimeSpan.FromSeconds(45);
-                        timerCNY.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                    else
-                    {
-                        var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                        timerCNY.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                }
-            }
-        }
-
-        private async void DoTaskVND(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
             var quick = 0;
-            if (environment.IsProduction())
-            {
-                try
-                {
-                    var currency = "VND";
+            var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
 
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
-                    {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime;
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
-                        var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                        if (result)
-                        {
-                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                        }
-                    }
-                    var ts = DateTime.Now - timerTime;
-                    var diffMin = (int)ts.TotalMinutes;
-                    if (diffMin > beyond)
-                    {
-                        quick = 1;
-                    }
-                }
-                catch (Exception ex)
+            DateTime timerTime;
+            int last = iRangMins - 1;
+            if (dataTpTimer == null)
+            {
+                timerTime = DateTime.Now.AddMinutes(-1 * last);
+            }
+            else
+            {
+                timerTime = dataTpTimer.StartTime;
+            }
+
+            var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
+            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+            if (time.endUnix < cvTime)
+            {
+                var result = await _wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
+                if (result)
                 {
-                    logger.LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    if (quick == 1)
-                    {
-                        var dueTimeSpan = TimeSpan.FromSeconds(45);
-                        timerVND.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                    else
-                    {
-                        var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                        timerVND.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
+                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
                 }
             }
-        }
 
-        private async void DoTaskUSD(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            if (environment.IsProduction())
+            var ts = DateTime.Now - timerTime;
+            var diffMin = (int)ts.TotalMinutes;
+            if (diffMin > beyond)
             {
-                try
-                {
-                    var currency = "USD";
-                    quickUSD = 0;
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
-                    {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime;
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
-                        var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                        if (result)
-                        {
-                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                        }
-                    }
-                    var ts = DateTime.Now - timerTime;
-                    var diffMin = (int)ts.TotalMinutes;
-                    if (diffMin > beyond)
-                    {
-                        quickUSD = 1;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    if (quickUSD == 1)
-                    {
-                        var dueTimeSpan = TimeSpan.FromSeconds(45);
-                        timerUSD.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                    else
-                    {
-                        var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                        timerUSD.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                }
+                quick = 1;
             }
-        }
-
-        private async void DoTaskINR(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            var quick = 0;
-            if (environment.IsProduction())
-            {
-                try
-                {
-                    var currency = "INR";
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
-                    {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime;
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
-                        var result = await wagerOneGamingBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency);
-                        if (result)
-                        {
-                            thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                        }
-                    }
-                    var ts = DateTime.Now - timerTime;
-                    var diffMin = (int)ts.TotalMinutes;
-                    if (diffMin > beyond)
-                    {
-                        quick = 1;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                finally
-                {
-                    if (quick == 1)
-                    {
-                        var dueTimeSpan = TimeSpan.FromSeconds(45);
-                        timerINR.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                    else
-                    {
-                        var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                        timerINR.Change(dueTimeSpan, TimeSpan.Zero);
-                    }
-                }
-            }
+            return quick;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timerTHB?.Change(Timeout.Infinite, 0);
-            timerMYR?.Change(Timeout.Infinite, 0);
-            timerIDR?.Change(Timeout.Infinite, 0);
-            timerCNY?.Change(Timeout.Infinite, 0);
-            timerVND?.Change(Timeout.Infinite, 0);
-            timerUSD?.Change(Timeout.Infinite, 0);
-            timerINR?.Change(Timeout.Infinite, 0);
+            timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
