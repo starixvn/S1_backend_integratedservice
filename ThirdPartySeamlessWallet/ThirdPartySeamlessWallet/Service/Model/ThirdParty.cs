@@ -13,6 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Setting { set; get; }
         public Dictionary<string, string> TpSetting => JsonConvert.DeserializeObject<Dictionary<string, string>>(Setting);
         public int Status { set; get; }
+        public int WalletType { set; get; }
     }
     public class TpCurrency
     {
@@ -51,5 +52,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Info { set; get; }
         public int Status { set; get; }
         public long TransTime { set; get; }
+    }
+
+    public class TpCountryCode
+    {
+        public string CountryCode { set; get; }
+        public int CurrencyId { set; get; }
+        public string TpCurrencyId { set; get; }
     }
 }

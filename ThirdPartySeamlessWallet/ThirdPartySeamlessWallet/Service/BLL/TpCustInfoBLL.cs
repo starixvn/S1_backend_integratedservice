@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
         private readonly Tools tools;
+        private ConcurrentDictionary<string, TpCountryCode> tpCountryCodeCache = new ConcurrentDictionary<string, TpCountryCode>();
+
         public TpCustInfoBLL(IMemoryCache cache, IConfiguration configuration, WalletService walletService, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL, Tools tools)
         {
             this.walletService = walletService;
@@ -98,6 +101,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public void AddUserLoginLog(int custId, string userName, int siteId, string loginIp, string fromUrl, string userAgent)
         {
             tpCustInfoService.AddUserLoginLog(custId, userName, siteId, loginIp, fromUrl, userAgent);
+        }
+
+        public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
+        {
+            var key = $"GetTpCurrencyCodeByCurrencyId{tpId}{tpCurrencyId}";
+            if (tpCountryCodeCache.ContainsKey(key))
+            {
+                return tpCountryCodeCache[key];
+            }
+            else
+            {
+                var tpCountryCode = tpCustInfoService.GetTpCurrencyCodeByCurrencyId(tpId, tpCurrencyId);
+                tpCountryCodeCache.TryAdd(key, tpCountryCode);
+                return tpCountryCode;
+            }
         }
     }
 }

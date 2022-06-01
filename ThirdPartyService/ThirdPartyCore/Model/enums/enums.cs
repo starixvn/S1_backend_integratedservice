@@ -29,6 +29,7 @@ namespace ThirdPartyCore.Model.enums
         TransferNotExist = 1204,// Check Transfer
         TransferPending = 1205,// Check Transfer
         TransferWaitManualCheck = 1206,// Check Transfer
+        DecimalOutOfRange = 1207,// 小數超出支援範圍
         // auto transfer (13xxx)
         AutoTransferFail = 1300,
         AutoTransferIsOff = 1301,
@@ -49,7 +50,13 @@ namespace ThirdPartyCore.Model.enums
         GetBetDetailNotImplemented = 3001,
         BetDetailIsUrl = 3002,
         #endregion
-        
+
+        #region MerchantBalance (4xxxx)
+
+        GetMerchantBalanceNotImplemented = 4000,
+
+        #endregion
+
         Not_allowed_country = 5001,
         Not_allowed_currency = 5002,
         Not_allowed_environment = 5003,
@@ -117,6 +124,14 @@ namespace ThirdPartyCore.Model.enums
         Transfer = 0,
         Seamless = 1,
     }
+
+    public enum WalletMode
+    {
+        Seamless = 0,
+        Restore = 1,
+        Manual = 2,
+    }
+
     public enum DataBase
     {
         Main, //ConnectionString
@@ -146,5 +161,12 @@ namespace ThirdPartyCore.Model.enums
         Day,
         Week,
         Month
+    }
+
+    public enum SiteId
+    {
+        Nova88 = 1,
+        Goal123 = 2,
+        Bwing = 3
     }
 }

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ThirdPartyWager.Service.Model
+namespace ThirdPartyWager.Service.Model.NineW
 {
     public class NineWConfig
     {
@@ -157,7 +157,7 @@ namespace ThirdPartyWager.Service.Model
     }
 
 
-    public class SummaryTransaction
+    public class CountSummaryTransaction
     {
         public string status { get; set; }
         public Checkdata[] checkData { get; set; }
@@ -174,6 +174,49 @@ namespace ThirdPartyWager.Service.Model
     }
 
 
+    public class SummaryTransaction
+    {
+        public string userId { get; set; }
+        public string agentId { get; set; }
+        public int categoryType { get; set; }
+        public int eventType { get; set; }
+        public string eventTypeName { get; set; }
+        public string eventName { get; set; }
+        public int eventId { get; set; }
+        public string marketName { get; set; }
+        public decimal marketId { get; set; }
+        public DateTime startTime { get; set; }
+        public DateTime settledDate { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public DateTime? resettledDate { get; set; } = null;
+        public decimal profitLoss { get; set; }
+        public decimal marketTotal { get; set; }
+        public decimal commission { get; set; }
+        public decimal agentCommission { get; set; }
+        public decimal stakeTotal { get; set; }
+        public int currencyType { get; set; }
+        public long startTimeUnix
+        {
+            get
+            {
+                return new DateTimeOffset(startTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+        public long settledDateUnix
+        {
+            get
+            {
+                return new DateTimeOffset(settledDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+        public long resettledDateUnix
+        {
+            get
+            {
+                return resettledDate != null ? new DateTimeOffset(resettledDate.Value, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds() : 0;
+            }
+        }
+    }
 
 }

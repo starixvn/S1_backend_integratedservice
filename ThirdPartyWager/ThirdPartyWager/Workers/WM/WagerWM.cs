@@ -53,22 +53,20 @@ namespace ThirdPartyWager.Workers
                 var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 DateTime timerTime;
                 int last;
+                last = iRangMins - 1;
                 if (dataTpTimer == null)
                 {
-                    last = iRangMins - 1;
                     timerTime = DateTime.Now.AddMinutes(-1 * last);
                 }
                 else
                 {
                     timerTime = dataTpTimer.StartTime;
-                    last = iRangMins - 1;
                 }
-                if (timerTime < DateTime.Now)
+
+                var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                if (time.endUnix < cvTime)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                    //if (time.endUnix < cvTime)
-                    //{
                     var result = await wagerWMBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
                     if (result)
                     {

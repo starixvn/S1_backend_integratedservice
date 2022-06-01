@@ -227,10 +227,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
 
-        public IEnumerable<SettleData> GetUnsettledList_BTI()
+        public IEnumerable<BTISettleData> GetUnsettledList_BTI()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BTI(string account, string transId, bool isSuccess)

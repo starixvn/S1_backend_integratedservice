@@ -13,9 +13,10 @@ namespace ThirdPartyService.Service.Library
         {
             this.environment = environment;
         }
+
         public string GetEnv()
         {
-            if (environment.EnvironmentName == "Development")
+            if (environment.EnvironmentName == "Development" || environment.EnvironmentName == "Local")
             {
                 return "D";
             }
@@ -31,7 +32,8 @@ namespace ThirdPartyService.Service.Library
             {
                 return "Q";
             }
-            return "X";
+
+            return "P";
         }
     }
 }

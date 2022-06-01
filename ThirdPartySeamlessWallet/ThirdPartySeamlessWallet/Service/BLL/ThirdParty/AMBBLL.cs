@@ -176,8 +176,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
-                amount = request.amount,
-                roundAmount = request.roundAmount,
+                amount = Math.Abs(request.amount) * -1,  //Bet為減項
+                roundAmount = request.roundAmount ?? 0,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
@@ -190,13 +190,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.UnSettled
             };
 
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                data.amount = data.amount * tpCurrency.ExchangeRate;
-            }
-
-            //Bet為減項
-            data.amount = data.amount * -1;
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -222,7 +216,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
-                if (!SetBalanceForSlotBet(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                if (!SetBalanceForSlotBet(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out afterBalance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
                     return new AMBSlotBetResponse()
@@ -309,9 +303,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
-                amount = request.amount,
+                amount = Math.Abs(request.amount),
                 turnover = request.turnover,
-                roundAmount = request.roundAmount,
+                roundAmount = request.roundAmount ?? 0,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
@@ -324,10 +318,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketStatus = TicketStatus.UnSettled
             };
 
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                data.amount = data.amount * tpCurrency.ExchangeRate;
-            }
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -353,7 +344,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
-                if (!SetBalanceForSlotPayout(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                if (!SetBalanceForSlotPayout(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out afterBalance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
                     return new AMBSlotPayoutResponse()
@@ -462,22 +453,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 game = request.game,
                 gameId = request.gameId,
                 roundId = request.roundId,
-                amount = request.amount,
+                amount = Math.Abs(request.amount),
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
                 TicketType = BettransType.CancelBet,
-                TicketStatus = TicketStatus.UnSettled
+                TicketStatus = TicketStatus.UnSettled,
+                FromAPIType = BettransRng_AMBTypeEnum.FromBet
             };
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                data.amount = data.amount * tpCurrency.ExchangeRate;
-            }
 
             await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
+
+            data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             if (!CheckCancelForSlotCancel(partitionTime, data, out int sq, out message))
             {
@@ -499,7 +488,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
-                if (!SetBalanceForSlotCancel(tpCustInfo, data, out message, out afterBalance, out int bonusId, conn, trans))
+                if (!SetBalanceForSlotCancel(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out afterBalance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
                     return new AMBSlotCancelResponse()
@@ -933,7 +922,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool SetBalanceForSlotBet(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+        private bool SetBalanceForSlotBet(TpCustInfo tpCustInfo, BettingDataRNG_AMB data, decimal rate,
             out string message, out decimal afterAmount, out int bonusId,
             MySqlConnection conn, MySqlTransaction trans)
         {
@@ -950,6 +939,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _logger.LogError($"SetBalance Fail:{message}");
                     return false;
                 }
+                afterAmount = (rate > 0) ? afterAmount / rate : afterAmount;
                 return true;
             }
             catch (Exception ex)
@@ -1226,7 +1216,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool SetBalanceForSlotPayout(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+        private bool SetBalanceForSlotPayout(TpCustInfo tpCustInfo, BettingDataRNG_AMB data, decimal rate,
             out string message, out decimal afterAmount, out int bonusId,
             MySqlConnection conn, MySqlTransaction trans)
         {
@@ -1245,6 +1235,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _logger.LogError($"SetBalance Fail:{message}");
                     return false;
                 }
+                afterAmount = (rate > 0) ? afterAmount / rate : afterAmount;
                 return true;
             }
             catch (Exception ex)
@@ -1526,7 +1517,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool SetBalanceForSlotCancel(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
+        private bool SetBalanceForSlotCancel(TpCustInfo tpCustInfo, BettingDataRNG_AMB data, decimal rate,
             out string message, out decimal afterAmount, out int bonusId,
             MySqlConnection conn, MySqlTransaction trans)
         {
@@ -1545,6 +1536,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _logger.LogError($"SetBalance Fail:{message}");
                     return false;
                 }
+                afterAmount = (rate > 0) ? afterAmount / rate : afterAmount;
                 return true;
             }
             catch (Exception ex)

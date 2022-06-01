@@ -3,20 +3,26 @@ using System.Collections.Generic;
 
 namespace ThirdPartyWager.Service.Model
 {
-    public class WagerAllBetModel
+    public class WagerAllBetModel<T>
     {
-        public DateTime endTime { get; set; }
-        public string error_code { get; set; }
+        public string resultCode { get; set; }
         public string message { get; set; }
-        public Page page { get; set; }
-        public DateTime startTime { get; set; }
+        public data<T> data { get; set; }
     }
 
-    public class Page
+    public class data<T>
     {
-        public int count { get; set; }
-        public IList<BetAllBet> datas { get; set; }
+        public string startDateTime { get; set; }
 
+        public string endDateTime { get; set; }
+
+        public int total { get; set; }
+
+        public int pageNum { get; set; }
+
+        public int pageSize { get; set; }
+
+        public T[] list { get; set; }
     }
 
     public class BetAllBet
@@ -26,7 +32,7 @@ namespace ThirdPartyWager.Service.Model
         public long betNum { get; set; }
         public DateTime betTime { get; set; }
         public int betType { get; set; }
-        public string client { get; set; }
+        public string player { get; set; }
         public int commission { get; set; }
         public string currency { get; set; }
         public decimal exchangeRate { get; set; }
@@ -36,10 +42,12 @@ namespace ThirdPartyWager.Service.Model
         public long gameRoundId { get; set; }
         public DateTime gameRoundStartTime { get; set; }
         public int gameType { get; set; }
-        public int state { get; set; }
+        public int status { get; set; }
         public string tableName { get; set; }
         public decimal validAmount { get; set; }
-        public decimal winOrLoss { get; set; }
+        public decimal winOrLossAmount { get; set; }
+        public decimal deposit { get; set; }
+        
 
         public long betUnix
         {
@@ -71,26 +79,11 @@ namespace ThirdPartyWager.Service.Model
         public int wagerCount { get; set; }
     }
 
-    public class RewardAllBetModel
-    {
-        public DateTime endTime { get; set; }
-        public string error_code { get; set; }
-        public string message { get; set; }
-        public RewardPage page { get; set; }
-        public DateTime startTime { get; set; }
-    }
-
-    public class RewardPage
-    {
-        public int count { get; set; }
-        public IList<RewardAllBet> datas { get; set; }
-    }
-
     public class RewardAllBet
     {
         public string agent { get; set; }
         public decimal amount { get; set; }
-        public string client { get; set; }
+        public string player { get; set; }
         public string currency { get; set; }
         public string eventCode { get; set; }
         public long eventRecordNum { get; set; }
@@ -98,7 +91,6 @@ namespace ThirdPartyWager.Service.Model
         public decimal exchangeRate { get; set; }
         public DateTime settleTime { get; set; }
         public int status { get; set; }
-
         public long settleUnix
         {
             get
@@ -119,4 +111,28 @@ namespace ThirdPartyWager.Service.Model
         public dynamic details { get; set; }
         public int SettleFlag { get; set; }
     }
+
+    public class AllBetTransferResponse
+    {
+        public int resultCode { get; set; }
+
+        public string message { get; set; }
+
+        public decimal balance { get; set; }
+
+        public int version { get; set; }
+    }
+
+
+    public class RewardAllBetRequest
+    {
+        public decimal amount { get; set; }
+        public string currency { get; set; }
+        public List<RewardAllBet> details { get; set; }
+        public bool isRetry { get; set; }
+        public string player { get; set; }
+        public long tranId { get; set; }
+        public int type { get; set; }
+    }
+
 }

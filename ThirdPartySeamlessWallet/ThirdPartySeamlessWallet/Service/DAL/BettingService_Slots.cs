@@ -239,7 +239,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("WinAmount", 0);
             try
             {
-                result = conn.Execute("Service_BettransRng_PG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_PG_Ins_V3", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
                 {
@@ -411,16 +411,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                //// 檢查該局是否已經結算
-                //var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                //if (isCompleted)
-                //{
-                //    return new MGPlaceBetResult()
-                //    {
-                //        Result = 1,
-                //        AfterAmount = afterAmount
-                //    };
-                //}
+                // 檢查該局是否已經結算 (避免會員重新進入遊戲對方會再重送資料)
+                var isCompleted = await conn.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", new { bettingDataRNG_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (isCompleted)
+                {
+                    logger.LogError($"{bettingDataRNG_MG.betId} is completed");
+                    return new MGPlaceBetResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount
+                    };
+                }
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);

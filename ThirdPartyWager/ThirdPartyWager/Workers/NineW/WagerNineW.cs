@@ -180,8 +180,9 @@ namespace ThirdPartyWager.Workers
 
                 if (date < DateTime.UtcNow)
                 {         
-                    var isSuccess = await _nineWService.GetReportAsync(date);
-                    if (isSuccess)
+                    var countSummary =  _nineWService.GetCountSummaryTransactionReportAsync(date);//countSummaryTransaction
+                    var summaryTransaction =  _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
+                    if (await countSummary && await summaryTransaction)
                     {
                         _logger.LogInformation($"9W Get {date:yyyy-MM-dd} Report");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds(), tpType);

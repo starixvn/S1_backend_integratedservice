@@ -190,7 +190,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<LiveStreaming>();
-            services.AddHostedService<LatestHighlightVideo>();
+            // services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
             services.AddHostedService<WagerMG>();
@@ -201,7 +201,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<TpRefundWorker>();
-            services.AddHostedService<Workers.ReportMega>();
+            services.AddHostedService<ReportMega>();
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
         }

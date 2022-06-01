@@ -15,6 +15,7 @@ using System.Xml.Serialization;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
 
 namespace ThirdPartyCore
 {
@@ -44,8 +45,9 @@ namespace ThirdPartyCore
         /// </summary>
         /// <param name="inputs">第三方相關參數</param>
         /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
+        /// <param name="tpCurrencyId">第三方幣別</param>
         /// <returns></returns>
-        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString);
+        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId);
     }
 
     public interface IThirdPartyBetLimitParticular
@@ -54,7 +56,7 @@ namespace ThirdPartyCore
         ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
-    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail
+    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
     {
         public static string proxyHost;
         public static int proxyPort;
@@ -67,6 +69,10 @@ namespace ThirdPartyCore
 
         public static ITpCustInfoProvider TpCustInfoProvider { set; get; }
         public static IBetLimitProvider BetLimitProvider { set; get; }
+
+        public static string CommonServiceHost { get; set; }
+
+        public static string LetsTalkGroupName { get; set; }
 
         public static string EnvironmentName { set; get; }
         public static bool IsDevelopment { set; get; }
@@ -98,7 +104,12 @@ namespace ThirdPartyCore
         protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null, int timeOutTime = 0)
         {
 
-            InsertLog?.Invoke(url, parameters, "1");
+            var parametersLog = parameters;
+            if (headers != null)
+            {
+                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+            }
+            InsertLog?.Invoke(url, parametersLog, "1");
 
             if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
             {
@@ -148,6 +159,66 @@ namespace ThirdPartyCore
 
             InsertLog?.Invoke(url, parameters, sb.ToString());
             return sb.ToString();
+        }
+        
+        protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+            var parametersLog = parameters;
+            if (headers != null)
+            {
+                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+            }
+            InsertLog?.Invoke(url, parametersLog, "1");
+
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+            }
+
+            using var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            using var client = new HttpClient(handler);
+            try
+            {
+                var httpRequestMessage = new HttpRequestMessage();
+                httpRequestMessage.Content = new StringContent(parameters);
+                httpRequestMessage.Method = HttpMethod.Post;
+                httpRequestMessage.RequestUri = new Uri(url);
+                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(contentType);
+                if (headers != null)
+                {
+                    foreach (var (key, value) in headers)
+                    {
+                        if (string.Compare(key, "Accept", StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(value));
+                        }
+                        else if (key.Contains("-"))
+                        {
+                            httpRequestMessage.Content.Headers.TryAddWithoutValidation(key, value);
+                        }
+                        else
+                        {
+                            httpRequestMessage.Headers.TryAddWithoutValidation(key, value);
+                        }
+                    }
+                }
+
+                var response = client.SendAsync(httpRequestMessage).Result;
+                var sb = response.Content.ReadAsStringAsync().Result;
+                InsertLog?.Invoke(url, parametersLog, sb);
+                return sb;
+            }
+            catch (Exception e)
+            {
+                InsertLog?.Invoke(url, parametersLog, e.Message);
+                return e.Message;
+            }
         }
 
         protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, Dictionary<string, string> certificate = null)
@@ -464,7 +535,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-
         public void Info(string InfoContent, string PrefixName)
         {
             var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";
@@ -523,14 +593,22 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-
         public virtual BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new GetBetDetailNotImplementedException($"TpId:{getBetDetail.TpGameTypeOption.TpId} GetBetDetail NotImplemented.");
+        }
+        public virtual ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs)
+        {
+            throw new GetMerchantBalanceNotImplementedException($"TpId:{tpMerchantInfo.TpId} GetMerchantBalance NotImplemented.");
         }
     }
     public interface IThirdPartyTpBetRecordDetail
     {
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+    }
+
+    public interface IThirdPartyTpGetMerchantBalance
+    {
+        ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs);
     }
 }

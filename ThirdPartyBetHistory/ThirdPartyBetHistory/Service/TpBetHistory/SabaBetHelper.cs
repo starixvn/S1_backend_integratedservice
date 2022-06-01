@@ -1,327 +1,294 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ThirdPartyBetHistory.Service.DAL;
+using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
-using ThirdPartyBetHistory.Service.Worker;
+using ThirdPartyBetHistory.Service.Model.Interfaces;
 
 namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
-        public SabaBetHelper(ILogger<WorkerService> logger)
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        public SabaBetHelper(IServiceProvider provider)
         {
-            Logger = logger;
+            _logger = provider.GetRequiredService<ILogger<ThirdPartyBetHelperBase>>();
+            _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
-        public interface ISabaBet
+        public override async Task UpdateBetRecordByTransId()
         {
-            decimal odds { get; set; }
-            decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public int? odds_type { get; set; }
-            public int? bet_type { get; set; }
-            public string ticket_status { get; set; }
-            string tokenmoney { get; }
+            try
+            {
+                var start = DateTime.UtcNow.AddHours(8).AddDays(-7);
+                var end = DateTime.UtcNow.AddHours(8).AddDays(-2);
+                var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
+
+                var tpSetting = thirdPartyModel.TpSetting;
+
+                foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
+                {
+                    try
+                    {
+                        var api = ticket.GameType == (int)GameType.Saba_Keno ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
+                        var url = $"{tpSetting["ApiUrl"]}/{api}";
+                        var parameters = new Dictionary<string, string>
+                        {
+                            { "vendor_id", tpSetting["VendorId"] },
+                            { "trans_id", ticket.TransId}
+                        };
+                        var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+
+                        var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
+                        var getBetDetail = FromJson<GetBetDetail>(result);
+                        if (getBetDetail.error_code != 0)
+                        {
+                            throw new Exception(getBetDetail.message);
+                        }
+
+                        if (!DataNotExists(getBetDetail))
+                        {
+                            var betRecordInfos = ProcessData(getBetDetail);
+                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "UpdateBetRecordByTransId");
+            }
+
         }
-        private class Req
-        {
-            public string vendor_id { set; get; }
-            public long version_key { set; get; }
-        }
-        private class CashOutData
-        {
-            public long cashout_id { get; set; }
-            public DateTime transdate { get; set; }
-            public decimal stake { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal buyback_amount { get; set; }
-            public decimal real_stake { get; set; }
-            public int bet_type { get; set; }
-            public string ticket_status { get; set; }
-            public DateTime winlost_datetime { get; set; }
-        }
-        private class BetDetail : ISabaBet
-        {
-            public long trans_id { get; set; }
-            public string vendor_member_id { get; set; }
-            public string operator_id { get; set; }
-            public int? league_id { get; set; }
-            public int? match_id { get; set; }
-            public int? home_id { get; set; }
-            public int? away_id { get; set; }
-            public string match_datetime { get; set; }
-            public int? sport_type { get; set; }
-            public int? bet_type { get; set; }
-            public long? parlay_ref_no { get; set; }
-            public decimal odds { get; set; }
-            public decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public DateTime transaction_time { get; set; }
-            public string ticket_status { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal after_amount { get; set; }
-            public int currency { get; set; }
-            public DateTime winlost_datetime { get; set; }
-            public int? odds_type { get; set; }
-            public string bet_team { get; set; }
-            public string isLucky { get; set; }
-            public decimal home_hdp { get; set; }
-            public decimal away_hdp { get; set; }
-            public decimal? hdp { get; set; }
-            public string betfrom { get; set; }
-            public string islive { get; set; }
-            public int? home_score { get; set; }
-            public int? away_score { get; set; }
-            public string settlement_time { get; set; }
-            public string customInfo1 { get; set; }
-            public string customInfo2 { get; set; }
-            public string customInfo3 { get; set; }
-            public string customInfo4 { get; set; }
-            public string customInfo5 { get; set; }
-            public string ba_status { get; set; }
-            public string tokenmoney { get; set; }
-            public int version_key { get; set; }
-            public object ParlayData { get; set; }
-            public decimal? original_stake { get; set; }
-            public IEnumerable<CashOutData> CashOutData { get; set; }
-        }
-        public class BetNumberDetail : ISabaBet
-        {
-            public long trans_id { get; set; }
-            public string vendor_member_id { get; set; }
-            public string operator_id { get; set; }
-            public int? match_id { get; set; }
-            public DateTime transaction_time { get; set; }
-            public decimal odds { get; set; }
-            public decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public string ticket_status { get; set; }
-            public string betfrom { get; set; }
-            public string islive { get; set; }
-            public int? last_ball_no { get; set; }
-            public string bet_team { get; set; }
-            public DateTime winlost_datetime { get; set; }
-            public int? bet_type { get; set; }
-            public int currency { get; set; }
-            public int? odds_type { get; set; }
-            public int sport_type { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal after_amount { get; set; }
-            public string customInfo1 { get; set; }
-            public string customInfo2 { get; set; }
-            public string customInfo3 { get; set; }
-            public string customInfo4 { get; set; }
-            public string customInfo5 { get; set; }
-            public string ba_status { get; set; }
-            public string tokenmoney { get; set; }
-            public long version_key { get; set; }
-        }
-        public class BetVirtualSportDetail : ISabaBet
-        {
-            public long trans_id { get; set; }
-            public string vendor_member_id { get; set; }
-            public string operator_id { get; set; }
-            public int? league_id { get; set; }
-            public int? match_id { get; set; }
-            public int? home_id { get; set; }
-            public int? away_id { get; set; }
-            public string match_datetime { get; set; }
-            public int? sport_type { get; set; }
-            public int? bet_type { get; set; }
-            public long? parlay_ref_no { get; set; }
-            public decimal odds { get; set; }
-            public decimal stake { get; set; }
-            public decimal? discount_stake { get; set; }
-            public DateTime transaction_time { get; set; }
-            public string ticket_status { get; set; }
-            public decimal winlost_amount { get; set; }
-            public decimal after_amount { get; set; }
-            public int currency { get; set; }
-            public DateTime winlost_datetime { get; set; }
-            public int? odds_type { get; set; }
-            public string bet_team { get; set; }
-            public decimal? home_hdp { get; set; }
-            public decimal? away_hdp { get; set; }
-            public decimal? hdp { get; set; }
-            public string betfrom { get; set; }
-            public string islive { get; set; }
-            public string customInfo1 { get; set; }
-            public string customInfo2 { get; set; }
-            public string customInfo3 { get; set; }
-            public string customInfo4 { get; set; }
-            public string customInfo5 { get; set; }
-            public string ba_status { get; set; }
-            public string tokenmoney { get; set; }
-            public long version_key { get; set; }
-            public dynamic ParlayData { get; set; }
-            public string race_number { get; set; }
-            public string race_lane { get; set; }
-        }
-        private class Data
-        {
-            public long last_version_key { get; set; }
-            public IEnumerable<BetDetail> BetDetails { get; set; }
-            public IEnumerable<BetNumberDetail> BetNumberDetails { get; set; }
-            public IEnumerable<BetVirtualSportDetail> BetVirtualSportDetails { get; set; }
-            public IEnumerable<dynamic> BetCasinoDetails { get; set; }
-        }
-        private class GetBetDetail
-        {
-            public int error_code { get; set; }
-            public string message { get; set; }
-            public Data Data { get; set; }
-        }
-        public async override Task AddBetRecord(Action<IEnumerable<BetRecordInfo>> action)
+
+        public override async Task<long> AddBetRecord(long siteTicketKey)
         {
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
-            Req req = new Req();
-            req.version_key = syncParams.key;
-            req.vendor_id = tpSetting["VendorId"];
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(req));
-            string P = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
+            var parameters = new Dictionary<string, string>
+            {
+                { "vendor_id", tpSetting["VendorId"] },
+                { "version_key", siteTicketKey.ToString()}
+            };
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
-            var result = await HttpPostAsync(getBetDetailUrl, P, "application/x-www-form-urlencoded");
+            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
             var getBetDetail = FromJson<GetBetDetail>(result);
 
             if (getBetDetail.error_code != 0)
             {
                 throw new Exception(getBetDetail.message);
             }
-            else
+
+            if (DataNotExists(getBetDetail))
             {
-                if (getBetDetail.Data?.BetDetails == null
-                    && getBetDetail.Data?.BetNumberDetails == null
-                    && getBetDetail.Data?.BetVirtualSportDetails == null
-                    && getBetDetail.Data?.BetCasinoDetails == null)
+                return getBetDetail.Data.last_version_key;
+            }
+
+            var betRecordInfoList = ProcessData(getBetDetail);
+
+            if (betRecordInfoList.Count == 0)
+            {
+                return getBetDetail.Data.last_version_key;
+            }
+
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            return getBetDetail.Data.last_version_key;
+        }
+
+        public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
+        {
+            var tpSetting = thirdPartyModel.TpSetting;
+            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
+            var parameters = new Dictionary<string, string>
+            {
+                { "vendor_id", tpSetting["VendorId"] },
+                { "sport_type", "231" },
+                { "version_key", siteTicketKey.ToString()}
+            };
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
+            var getBetDetail = FromJson<GetVS3rdBetDetail>(result);
+
+            if (getBetDetail.error_code != 0)
+            {
+                throw new Exception(getBetDetail.message);
+            }
+
+            if (!getBetDetail.Data.VS3rdBetDetails.Any())
+            {
+                return getBetDetail.Data.last_version_key;
+            }
+
+            var betRecordInfoList = new List<BetRecordInfo>();
+
+            foreach (var betDetial in getBetDetail.Data?.VS3rdBetDetails)
+            {
+                var betRecordInfo = new BetRecordInfo
                 {
-                    syncParams.key = getBetDetail.Data.last_version_key;
-                }
-                else
+                    TpId = thirdPartyModel.Id,
+                    GameType = GameType.Saba_LGVirtualSports,
+                    TransId = betDetial.trans_id.ToString(),
+                    TransTime = ConvertLocTime(betDetial.transaction_time),
+                    SettledTime = ConvertLocTime(betDetial.transaction_time),
+                    OriginalState = betDetial.ticket_status,
+                    WinlostAmount = betDetial.winlost_amount,
+                    Stake = betDetial.stake,
+                    TpUserName = betDetial.vendor_member_id,
+                    TicketKey = betDetial.version_key,
+                    tokenmoney = betDetial.tokenmoney
+                };
+
+                CalculateAvailableBet(betDetial, betRecordInfo);
+                betRecordInfoList.Add(betRecordInfo);
+
+            }
+
+            if (!betRecordInfoList.Any())
+            {
+                return getBetDetail.Data.last_version_key;
+            }
+
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            return getBetDetail.Data.last_version_key;
+        }
+
+        private bool DataNotExists(GetBetDetail getBetDetail)
+        {
+            return getBetDetail.Data?.BetDetails == null
+                   && getBetDetail.Data?.BetNumberDetails == null
+                   && getBetDetail.Data?.BetVirtualSportDetails == null
+                   && getBetDetail.Data?.BetCasinoDetails == null;
+        }
+
+        private List<BetRecordInfo> ProcessData(GetBetDetail getBetDetail)
+        {
+            var betRecordInfoList = new List<BetRecordInfo>();
+
+            if (getBetDetail.Data?.BetDetails != null)
+            {
+                foreach (var betDetial in getBetDetail.Data?.BetDetails)
                 {
-                    var betRecordInfoList = new List<BetRecordInfo>();
-
-                    if (getBetDetail.Data?.BetDetails != null)
+                    var betRecordInfo = new BetRecordInfo
                     {
-                        foreach (var betDetial in getBetDetail.Data?.BetDetails)
-                        {
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                GameType = GetBetDetailGameType(betDetial.sport_type),
-                                TransId = betDetial.trans_id.ToString(),
-                                TransTime = ConvertLocTime(betDetial.transaction_time),
-                                OriginalState = betDetial.ticket_status,
-                                WinlostAmount = betDetial.winlost_amount,
-                                Stake = betDetial.stake,
-                                TpUserName = betDetial.vendor_member_id,
-                                TicketKey = betDetial.version_key,
-                                tokenmoney = betDetial.tokenmoney
-                            };
+                        TpId = thirdPartyModel.Id,
+                        GameType = GetBetDetailGameType(betDetial.sport_type),
+                        TransId = betDetial.trans_id.ToString(),
+                        TransTime = ConvertLocTime(betDetial.transaction_time),
+                        OriginalState = betDetial.ticket_status,
+                        WinlostAmount = betDetial.winlost_amount,
+                        Stake = betDetial.stake,
+                        TpUserName = betDetial.vendor_member_id,
+                        TicketKey = betDetial.version_key,
+                        tokenmoney = betDetial.tokenmoney
+                    };
 
-                            if (betDetial.settlement_time != null)
-                            {
-                                var settlementTime = DateTime.Parse(betDetial.settlement_time);
-                                betRecordInfo.SettledTime = ConvertLocTime(settlementTime);
-                            }
-                            else
-                            {
-                                betRecordInfo.SettledTime = ConvertLocTime(betDetial.transaction_time > betDetial.winlost_datetime ? betDetial.transaction_time : betDetial.winlost_datetime);
-                            }
-
-                            CalculateAvailableBet(betDetial, betRecordInfo);
-                            betRecordInfoList.Add(betRecordInfo);
-
-                            // 處理CashOut的注單
-                            if (TryGetCashOut(betDetial, out var cashout))
-                            {
-                                betRecordInfoList.AddRange(cashout);
-                            }
-                        }
-                    }
-
-                    if (getBetDetail.Data?.BetNumberDetails != null)
+                    if (betDetial.settlement_time != null)
                     {
-                        foreach (var betDetial in getBetDetail.Data?.BetNumberDetails)
-                        {
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                GameType = GameType.Saba_NumberGame,
-                                TransId = betDetial.trans_id.ToString(),
-                                TransTime = ConvertLocTime(betDetial.transaction_time),
-                                SettledTime = ConvertLocTime(betDetial.transaction_time),
-                                OriginalState = betDetial.ticket_status,
-                                WinlostAmount = betDetial.winlost_amount,
-                                Stake = betDetial.stake,
-                                TpUserName = betDetial.vendor_member_id,
-                                TicketKey = betDetial.version_key
-                            };
-
-                            CalculateAvailableBet(betDetial, betRecordInfo);
-                            betRecordInfoList.Add(betRecordInfo);
-                        }
-                    }
-
-                    if (getBetDetail.Data?.BetVirtualSportDetails != null)
-                    {
-                        foreach (var betDetial in getBetDetail.Data?.BetVirtualSportDetails)
-                        {
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                OriginalState = betDetial.ticket_status,
-                                WinlostAmount = betDetial.winlost_amount,
-                                Stake = betDetial.stake,
-                                TpUserName = betDetial.vendor_member_id,
-                                TicketKey = betDetial.version_key,
-                                TransId = betDetial.trans_id.ToString(),
-                                TransTime = ConvertLocTime(betDetial.transaction_time),
-                            };
-
-                            if (betDetial.sport_type >= 180 || betDetial.sport_type <= 189)
-                            {
-                                betRecordInfo.GameType = GameType.Saba_VirtualSport;
-                            }
-                            else
-                            {
-                                betRecordInfo.GameType = GameType.Saba_VirtualSports2;
-                            }
-
-                            if (betDetial.match_datetime != null)
-                            {
-                                var settlementTime = DateTime.Parse(betDetial.match_datetime);
-                                betRecordInfo.SettledTime = ConvertLocTime(settlementTime);
-                            }
-
-                            CalculateAvailableBet(betDetial, betRecordInfo);
-                            betRecordInfoList.Add(betRecordInfo);
-                        }
-                    }
-
-                    if (getBetDetail.Data?.BetCasinoDetails != null)
-                    {
-                        foreach (var betDetial in getBetDetail.Data?.BetCasinoDetails)
-                        {
-
-                        }
-                    }
-
-                    if (betRecordInfoList.Count == 0)
-                    {
-                        syncParams.key = getBetDetail.Data.last_version_key;
+                        var settlementTime = DateTime.Parse(betDetial.settlement_time);
+                        betRecordInfo.SettledTime = ConvertLocTime(settlementTime);
                     }
                     else
                     {
-                        action(betRecordInfoList);
-                        syncParams.key = getBetDetail.Data.last_version_key;
+                        betRecordInfo.SettledTime = ConvertLocTime(betDetial.transaction_time > betDetial.winlost_datetime
+                            ? betDetial.transaction_time
+                            : betDetial.winlost_datetime);
+                    }
+
+                    CalculateAvailableBet(betDetial, betRecordInfo);
+                    betRecordInfoList.Add(betRecordInfo);
+
+                    // 處理CashOut的注單
+                    if (TryGetCashOut(betDetial, out var cashout))
+                    {
+                        betRecordInfoList.AddRange(cashout);
                     }
                 }
             }
+
+            if (getBetDetail.Data?.BetNumberDetails != null)
+            {
+                foreach (var betDetial in getBetDetail.Data?.BetNumberDetails)
+                {
+                    var betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = thirdPartyModel.Id,
+                        GameType = GameType.Saba_NumberGame,
+                        TransId = betDetial.trans_id.ToString(),
+                        TransTime = ConvertLocTime(betDetial.transaction_time),
+                        SettledTime = ConvertLocTime(betDetial.transaction_time),
+                        OriginalState = betDetial.ticket_status,
+                        WinlostAmount = betDetial.winlost_amount,
+                        Stake = betDetial.stake,
+                        TpUserName = betDetial.vendor_member_id,
+                        TicketKey = betDetial.version_key
+                    };
+
+                    CalculateAvailableBet(betDetial, betRecordInfo);
+                    betRecordInfoList.Add(betRecordInfo);
+                }
+            }
+
+            if (getBetDetail.Data?.BetVirtualSportDetails != null)
+            {
+                foreach (var betDetial in getBetDetail.Data?.BetVirtualSportDetails)
+                {
+                    var betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = thirdPartyModel.Id,
+                        OriginalState = betDetial.ticket_status,
+                        WinlostAmount = betDetial.winlost_amount,
+                        Stake = betDetial.stake,
+                        TpUserName = betDetial.vendor_member_id,
+                        TicketKey = betDetial.version_key,
+                        TransId = betDetial.trans_id.ToString(),
+                        TransTime = ConvertLocTime(betDetial.transaction_time),
+                    };
+
+                    if (betDetial.sport_type >= 180 && betDetial.sport_type <= 189)
+                    {
+                        betRecordInfo.GameType = GameType.Saba_VirtualSport;
+                    }
+
+                    if (betDetial.sport_type >= 190 && betDetial.sport_type <= 199)
+                    {
+                        betRecordInfo.GameType = GameType.Saba_VirtualSports2;
+                    }
+
+                    if (betDetial.match_datetime != null)
+                    {
+                        var settlementTime = DateTime.Parse(betDetial.match_datetime);
+                        betRecordInfo.SettledTime = ConvertLocTime(settlementTime);
+                    }
+
+                    CalculateAvailableBet(betDetial, betRecordInfo);
+                    betRecordInfoList.Add(betRecordInfo);
+                }
+            }
+
+            if (getBetDetail.Data?.BetCasinoDetails != null)
+            {
+                foreach (var betDetial in getBetDetail.Data?.BetCasinoDetails)
+                {
+                }
+            }
+
+            return betRecordInfoList;
         }
 
         void CalculateAvailableBet(ISabaBet betDetial, BetRecordInfo betRecordInfo)
         {
-            bool isEBV = false;
+            var isEBV = false;
 
             if (betDetial.ticket_status.Equals("running", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("waiting", StringComparison.OrdinalIgnoreCase))
             {
@@ -484,9 +451,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 betRecordInfo.TicketStatus = TicketStatus.Refund;
             }
         }
+
         public override SyncParams InitialSyncParams()
         {
-            SyncParams syncParams = new SyncParams();
+            var syncParams = new SyncParams();
             syncParams.key = thirdPartyModel.TicketKey;
             syncParams.Offsets = -4;
             syncParams.timeOfFrequency = 3;
@@ -507,6 +475,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 var betRecordInfo = new BetRecordInfo
                 {
+                    TpId = thirdPartyModel.Id,
                     TransId = cashOut.cashout_id.ToString(),
                     TransTime = ConvertLocTime(betDetial.transaction_time),
                     SettledTime = ConvertLocTime(cashOut.transdate),

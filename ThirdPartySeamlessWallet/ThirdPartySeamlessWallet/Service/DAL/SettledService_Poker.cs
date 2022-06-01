@@ -797,7 +797,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    throw mySqlEx;
+                    throw;
                 }
             }
 
@@ -863,6 +863,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     // insert cancel record
                     trans.Commit();
+                    result = -2;
+                    return result;
                 }
                 result = -1;
             }

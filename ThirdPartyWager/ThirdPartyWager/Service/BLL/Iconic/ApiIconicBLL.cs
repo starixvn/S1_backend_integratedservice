@@ -30,7 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiIconicBLL>>();
         }
 
-        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage, string guid)
+        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage)
         {
             // param
             var url = $"{apiUrl}/api/v1/profile/sets";
@@ -41,6 +41,21 @@ namespace ThirdPartyWager.Service.BLL
                 lang = "en",
                 pageSize = perPage,
                 page = page
+            };
+
+            // request
+            var r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
+            var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
+            return result;
+        }
+        
+        public async Task<WagerIconicModel> GetBetListById(string apiUrl, string token, string id)
+        {
+            // param
+            var url = $"{apiUrl}/api/v1/profile/sets";
+            var param = new
+            {
+                id
             };
 
             // request

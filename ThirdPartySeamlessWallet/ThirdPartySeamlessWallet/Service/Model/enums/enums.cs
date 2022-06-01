@@ -171,6 +171,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         ConfirmReserve = 9,
         EndRound = 10, //回合結束
     }
+    
+    [Description ("是否允許餘額變負值")]
     public enum AllowNegative
     {
         Allow = 1,
@@ -198,7 +200,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Sports = 6,
         PTSlotsGame = 7,
         PTLiveCasino = 8,
-        SBSW = 9
+        SBSW = 9,
+        Mega888SlotRNGFishing = 10
     }
 
     public enum Direction
@@ -247,12 +250,20 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Credit = 1,
         Cancel = 2,
         PromoPayout = 3,
-        EndRound = 4
+        EndRound = 4,
+        Settle = 4,
+        ReSettle = 4
     }
     
     public enum SeamlessBonusType
     {
         TpCategory,
         TpId,
+    }
+    
+    public enum WalletType
+    {
+        TransferWallet = 0,
+        SeamlessWallet = 1
     }
 }

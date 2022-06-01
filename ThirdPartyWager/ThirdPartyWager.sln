@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartyWager", "ThirdPar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartyWager.IntegrationTest", "ThirdPartyWager.IntegrationTest\ThirdPartyWager.IntegrationTest.csproj", "{931EC173-A23B-45AA-8E27-6B0B2CF84227}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartyWager.Manual", "ThirdPartyWager.Manual\ThirdPartyWager.Manual.csproj", "{99F5632A-79C3-4A43-823A-3DF027314632}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{931EC173-A23B-45AA-8E27-6B0B2CF84227}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{931EC173-A23B-45AA-8E27-6B0B2CF84227}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{931EC173-A23B-45AA-8E27-6B0B2CF84227}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99F5632A-79C3-4A43-823A-3DF027314632}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F5632A-79C3-4A43-823A-3DF027314632}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99F5632A-79C3-4A43-823A-3DF027314632}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99F5632A-79C3-4A43-823A-3DF027314632}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

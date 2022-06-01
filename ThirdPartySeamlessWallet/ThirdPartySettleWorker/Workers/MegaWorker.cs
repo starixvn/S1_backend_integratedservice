@@ -103,7 +103,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = UnsettleData.Account,
                             SettledTime = UnsettleData.SettleTime,
                             TransTime = UnsettleData.TransTime,
-                            SettlementType = SettlementType.SettledForValidNotRollover,
+                            SettlementType = SettlementType.SettledForValid,
                             TicketStatus = UnsettleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                         };
 
@@ -112,7 +112,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo.TicketStatus = TicketStatus.Draw;
                         }
 
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, PromotionCategory.Mega888SlotRNGFishing);
                         if (result == 1)
                         {
                             Task.Run(() =>

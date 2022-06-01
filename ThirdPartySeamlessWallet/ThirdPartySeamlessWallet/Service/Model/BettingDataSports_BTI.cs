@@ -163,4 +163,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         }
     }
 
+    public class BTISettleData : SettleData
+    {
+        public string BetID { get; set; }
+    }
+
 }
