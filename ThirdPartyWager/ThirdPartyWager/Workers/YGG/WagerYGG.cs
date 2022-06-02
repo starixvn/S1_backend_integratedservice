@@ -8,7 +8,6 @@ using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers.YGG
@@ -16,9 +15,10 @@ namespace ThirdPartyWager.Workers.YGG
     public class WagerYGG : BackgroundService
     {
         private readonly ILogger<WagerYGG> _logger;
-        private readonly WagerYGGBLL _wagerYGGBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly WagerYGGBLL _wagerYGGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+       
         private readonly string _tpName = Tp.YGG.ToString();
 
         private Timer _timer;

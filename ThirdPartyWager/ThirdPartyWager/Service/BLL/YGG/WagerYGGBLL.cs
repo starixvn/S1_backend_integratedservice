@@ -18,21 +18,19 @@ namespace ThirdPartyWager.Service.BLL.YGG
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly MySqlClient _wagerDbClient;
-        private readonly int _tpId = (int)Tp.YGG;
         private readonly YggConfig _config;
 
+        private const int TpId = (int)Tp.YGG;
         private const int SuccessCode = 0;
 
         public WagerYGGBLL(IServiceProvider provider)
         {
-
             _logger = provider.GetRequiredService<ILogger<WagerYGGBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            //var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-            var setting = _thirdPartyBLL.GetThirdPartySetting(-8);
+            var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
             _config = new YggConfig(setting);
         }
 
