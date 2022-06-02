@@ -29,18 +29,11 @@ namespace ThirdPartyBetHistory.Service.BLL
 
             return tpList;
         }
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
+        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos, WorkerType workerType)
         {
-            _thirdPartyService.ToDoAddBetRecord(betRecordInfos);
+            _thirdPartyService.ToDoAddBetRecord(betRecordInfos, workerType);
         }
-        public int SetTicketKey(int TpId, long TicketKey)
-        {
-            return _thirdPartyService.SetTicketKey(TpId, TicketKey);
-        }
-        public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
-        {
-            return _thirdPartyService.SiteTpTicketKey(TpId, SiteId, TicketKey);
-        }
+
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             return _thirdPartyService.GetTpCurrency(tpId, currencyId);
@@ -53,7 +46,7 @@ namespace ThirdPartyBetHistory.Service.BLL
 
         public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
         {
-            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
+            return _thirdPartyService.SetSiteTicketKey((int)betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
         }
 
         public int AddTpBetRecordDetail(TpBetRecordDetail detail)

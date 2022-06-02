@@ -80,7 +80,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         if (!DataNotExists(getBetDetail))
                         {
                             var betRecordInfos = ProcessData(getBetDetail);
-                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
+                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos, workerType);
                         }
                     }
                     catch (Exception e)
@@ -95,7 +95,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
         }
 
-        public override async Task<long> AddBetRecord(long siteTicketKey)
+        public override async Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey)
         {
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
@@ -126,11 +126,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return getBetDetail.Data.last_version_key;
             }
 
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList, workerType);
             return getBetDetail.Data.last_version_key;
         }
 
-        public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
+        public async override Task<long> GetVS3rdBetDetail(WorkerType workerType, long siteTicketKey)
         {
             var gameType = GameType.Saba_LGVirtualSports;
 
@@ -187,7 +187,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return getBetDetail.Data.last_version_key;
             }
 
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList, workerType);
             
             return getBetDetail.Data.last_version_key;
         }
