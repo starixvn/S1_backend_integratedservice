@@ -9,6 +9,7 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
+using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -76,6 +77,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
+            services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
@@ -111,6 +113,9 @@ namespace ThirdPartyWager
             // SG
             services.AddSingleton<WagerSGBLL>();
             services.AddSingleton<ApiSGBLL>();
+            //SBO
+            services.AddSingleton<ISBOBLL, SBOBLL>();
+            services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
             // WM
             services.AddSingleton<WagerWMBLL>();
             services.AddSingleton<ApiWMBLL>();
@@ -176,6 +181,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<WagerSG>();
+            services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
             services.AddHostedService<WagerOne789>();
