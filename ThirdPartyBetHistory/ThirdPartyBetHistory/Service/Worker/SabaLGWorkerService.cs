@@ -59,7 +59,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
             try
             {          
-                var nextTicketKey = tpBetHelp.GetVS3rdBetDetail(lastTicketKey).Result;
+                var nextTicketKey = tpBetHelp.GetVS3rdBetDetail(workerType,lastTicketKey).Result;
                 _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
                 _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
                 

@@ -48,7 +48,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
         }
 
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
+        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos, WorkerType workerType)
         {
             foreach (var betRecord in betRecordInfos.OrderBy(x => x.TicketKey))
             {
@@ -251,15 +251,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                         trans.Commit();
                     }
 
-                    if (tpCustInfo.SiteId == (int)SiteId.Nova88)
-                    {
-                        SetTicketKey((int)Tp.Saba, betRecord.TicketKey);
-                    }
-                    else
-                    {
-                        SiteTpTicketKey((int)Tp.Saba, tpCustInfo.SiteId, betRecord.TicketKey);
-                    }
-
+                    SetSiteTicketKey(tpCustInfo.SiteId, betRecord.TpId, workerType, betRecord.TicketKey);
                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
                 }
                 catch (Exception ex)
@@ -352,16 +344,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_EffectiveBetSum_Set", parameters, conn, trans);
         }
 
-        public int SetTicketKey(int TpId, long TicketKey)
-        {
-            var parameters = new DynamicParameters(new { TpId, TicketKey });
-            return _mainDbClient.Execute("Service_TpTicketKey_Set", parameters);
-        }
-        public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
-        {
-            var parameters = new DynamicParameters(new { TpId, SiteId, TicketKey });
-            return _mainDbClient.Execute("Service_SiteTpTicketKey_Set", parameters);
-        }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             var parameters = new DynamicParameters(new { TpId = tpId, CurrencyId = currencyId });
@@ -439,9 +421,9 @@ namespace ThirdPartyBetHistory.Service.DAL
             var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType };
             return _mainDbClient.QueryFirst<long>("Service_SiteTicketKey_Get", parameters);
         }
-        public int SetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType, long TicketKey)
+        public int SetSiteTicketKey(int SiteId, int TpId, WorkerType workerType, long TicketKey)
         {
-            var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType, TicketKey };
+            var parameters = new { SiteId, TpId, WorkerType = (int)workerType, TicketKey };
             return _mainDbClient.Execute("Service_SiteTicketKey_Set", parameters);
         }
 
