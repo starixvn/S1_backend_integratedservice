@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
@@ -22,13 +23,37 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
-        public override async Task UpdateBetRecordByTransId()
+
+        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour)
         {
             try
             {
-                var start = DateTime.UtcNow.AddHours(8).AddDays(-7);
-                var end = DateTime.UtcNow.AddHours(8).AddDays(-2);
-                var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
+                IEnumerable<UnSettle> tickets;
+                switch (workerType)
+                {
+                    case WorkerType.ByTransIdUnSettleWager:
+                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId,
+                            JsonConvert.SerializeObject(new List<int> { (int)SettlementType.UnSettled }),
+                            today.AddDays(-7), today.AddDays(-1).AddSeconds(-1));
+                        break;
+                    
+                    case WorkerType.ByTransIdSettleWager:
+                        var startTime = today.AddDays(-1).AddHours(hour);
+                        var endTime = startTime.AddHours(1).AddSeconds(-1);
+                        var settlementTypeList = JsonConvert.SerializeObject(new List<int>
+                        {
+                            (int)SettlementType.SettledForValid ,
+                            (int)SettlementType.SettledForInvalid,
+                            (int)SettlementType.SettledForValidNotRollover
+                        });
+                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);
+                        break;
+                    
+                    case WorkerType.MainWager:
+                    case WorkerType.LGVirtualSportsWager:
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(workerType), workerType, null);
+                }
 
                 var tpSetting = thirdPartyModel.TpSetting;
 
@@ -68,7 +93,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 _logger.LogError(e, "UpdateBetRecordByTransId");
             }
-
         }
 
         public override async Task<long> AddBetRecord(long siteTicketKey)
