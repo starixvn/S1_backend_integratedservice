@@ -105,6 +105,6 @@ namespace ThirdPartyCore.Model.enums
         SBO_Sports = 77,
         SBO_Games = 78,
         SBO_Casino = 79,
-        SBO_VirtualSports = 80
+        SBO_VirtualSports = 81
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -57,7 +56,7 @@ namespace ThirdParty.SBO
                 Username = tpCustInfo.TpUserName,
                 Portfolio = TpGameTypeMap(int.Parse(config.TpGameTypeId)),
                 CompanyKey = config.CompanyKey,
-                ServerId = config.ServerId
+                ServerId = config.ServerId,
             };
 
             var responseJson = HttpPostClient(apiUrl,

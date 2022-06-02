@@ -109,7 +109,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBO_Sports = 77,
         SBO_Games = 78,
         SBO_Casino = 79,
-        SBO_VirtualSports = 80
+        SBO_VirtualSports = 81
     }
     public enum Tp
     {
@@ -154,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         AP = 39,
         HB = 40,
         SBSW = 41,
-        SBO = 42,
+        SBO = 42
     }
     public enum TransferType : int
     {
