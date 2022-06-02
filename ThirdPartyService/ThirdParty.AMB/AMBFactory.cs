@@ -9,12 +9,12 @@ namespace ThirdParty.AMB
 {
     public static class AMBFactory
     {
-        public static AMB Create(TpGameType gameType, Dictionary<string, string> inputs)
+        public static AMB Create(TpGameType gameType, Dictionary<string, string> inputs, string tpCurrency)
         {
             return gameType switch
             {
                 TpGameType.AMB_Poker => new AMBPoker(inputs),
-                TpGameType.AMB_RNG => new AMBSlot(inputs),
+                TpGameType.AMB_RNG => new AMBSlot(inputs, tpCurrency),
                 _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
             };
         }
