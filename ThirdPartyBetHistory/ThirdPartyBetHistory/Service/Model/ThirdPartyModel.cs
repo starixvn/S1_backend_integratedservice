@@ -25,6 +25,7 @@ namespace ThirdPartyBetHistory.Service.Model
     }
     public class TpCurrency
     {
+        public int CurrencyId { set; get; }
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
     }
