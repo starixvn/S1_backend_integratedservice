@@ -49,6 +49,8 @@
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,
         SG_Fish = 31,
+        SBO_Sports = 77,
+        SBO_VirtualSports = 81,
     }
 
     public enum DataBase

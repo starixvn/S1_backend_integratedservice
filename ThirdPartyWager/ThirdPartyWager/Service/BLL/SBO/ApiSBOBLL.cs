@@ -15,33 +15,30 @@ namespace ThirdPartyWager.Service.BLL.SBO
 {
     public interface IApiSBOBLL
     {
-        SboSetting SboSetting { get; set; }
-        Task<SboWagers> GetBetListByModifyDateAsync(DateTime startTime, DateTime endTime, SBOPortfolio portfolio);
+        Task<SboWagers> GetBetListByModifyDateAsync(string startTime, string endTime, SBOPortfolio portfolio, SboSetting setting);
     }
 
     public class ApiSBOBLL : IApiSBOBLL
     {
-        public SboSetting SboSetting { get; set; }
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<ApiSBOBLL> _logger;
-
         public ApiSBOBLL(HttpHelper httpHelper, ILogger<ApiSBOBLL> logger)
         {
             _httpHelper = httpHelper;
             _logger = logger;
         }
 
-        public async Task<SboWagers> GetBetListByModifyDateAsync(DateTime startTime, DateTime endTime, SBOPortfolio portfolio)
+        public async Task<SboWagers> GetBetListByModifyDateAsync(string startTime, string endTime, SBOPortfolio portfolio, SboSetting setting)
         {
-            var betListApi = $"{SboSetting.ApiUrl}/web-root/restricted/report/get-bet-list-by-modify-date.aspx";
+            var betListApi = $"{setting.ApiUrl}/web-root/restricted/report/get-bet-list-by-modify-date.aspx";
             var param = new
             {
-                CompanyKey = SboSetting.CompanyKey,
-                ServerId = SboSetting.ServerId,
-                Username = SboSetting.Agent,
+                CompanyKey = setting.CompanyKey,
+                ServerId = setting.ServerId,
+                Username = setting.Agent,
                 Portfolio = portfolio.ToString(),
-                StartDate = startTime.ToString("s"),
-                EndDate = endTime.ToString("s")
+                StartDate = startTime,
+                EndDate = endTime
             };
             try
             {

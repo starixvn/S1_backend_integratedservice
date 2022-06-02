@@ -20,47 +20,47 @@ namespace ThirdPartyWager.Workers
         private readonly ISBOBLL _sboBll;
 
         private const int TpId = (int)Tp.SBO;
-        private const int TpType = 77;
         private const int TimeZone = 0;
-        private Timer _wagerTimer;
+        private Timer _sportsBookWagerTimer;
+        private Timer _virtualSportsWagerTimer;
 
-        public WagerSBO(ISBOBLL sboBll, DateTimeHelper dateTimeHelper, ThirdPartyBLL thirdPartyBll, ILogger<WagerSBO> logger)
+        public WagerSBO(ISBOBLL sboBll, ThirdPartyBLL thirdPartyBll, ILogger<WagerSBO> logger, DateTimeHelper dateTimeHelper)
         {
             _sboBll = sboBll;
-            _dateTimeHelper = dateTimeHelper;
             _thirdPartyBLL = thirdPartyBll;
             _logger = logger;
+            _dateTimeHelper = dateTimeHelper;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _wagerTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
+            _sportsBookWagerTimer = new Timer(DoSportsBookSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
+            _virtualSportsWagerTimer = new Timer(DoVirtualSportsSettle, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoSettle(object? state)
+        private async void DoSportsBookSettle(object? state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", Tp.SBO.ToString());
             var doQuickly = false;
-            var timerType = 1; //Settle
-            var dataRangeMins = 20;
-            var intervalMins = 3;
-            var intervalSec = 30;
+            const int tpType = (int)GameType.SBO_Sports;
+            const int dataRangeMins = 15;
+            const int intervalMins = 3;
+            const int intervalSec = 30;
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, TpType);
-                var thisTime = lastTime?.StartTime ?? DateTime.Now.AddMinutes(-1 * dataRangeMins);
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, tpType);
+                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddMinutes(-1 * dataRangeMins);
 
-                if (thisTime < DateTime.Now)
+                if (thisTime < DateTime.UtcNow)
                 {
-                    var startTime = thisTime.AddMinutes(-20);
-                    var isSuccess = await _sboBll.GetWagersAsync(thisTime.AddMinutes(-20), thisTime);
+                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "s", thisTime);
+                    var isSuccess = await _sboBll.GetWagersAsync(timeCast.startTime, timeCast.endTime, SBOPortfolio.SportsBook);
                     if (isSuccess)
                     {
-                        var endTimestamp = new DateTimeOffset(thisTime).ToUnixTimeSeconds();
-                        _logger.LogInformation($"SBO Get Wagers: {startTime} ~ {thisTime}");
-                        _thirdPartyBLL.SetThirdPartyTimer(TpId, TpType, endTimestamp);
+                        _logger.LogInformation($"SBO Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimer(TpId, tpType, timeCast.endUnix);
                     }
                 }
                 if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
@@ -70,12 +70,51 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WagerSBO.DoSettle.Exception");
+                _logger.LogError(ex, "WagerSBO.DoSportsBookSettle.Exception");
             }
             finally
             {
                 var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(intervalSec) : TimeSpan.FromMinutes(intervalMins);
-                _wagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
+                _sportsBookWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+        private async void DoVirtualSportsSettle(object? state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", Tp.SBO.ToString());
+            var doQuickly = false;
+            const int tpType = (int)GameType.SBO_VirtualSports;
+            const int dataRangeMins = 15;
+            const int intervalMins = 3;
+            const int intervalSec = 30;
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, tpType);
+                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddMinutes(-1 * dataRangeMins);
+
+                if (thisTime < DateTime.UtcNow)
+                {
+                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "s", thisTime);
+                    var isSuccess = await _sboBll.GetWagersAsync(timeCast.startTime, timeCast.endTime, SBOPortfolio.VirtualSports);
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"SBO Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimer(TpId, tpType, timeCast.endUnix);
+                    }
+                }
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                {
+                    doQuickly = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WagerSBO.DoVirtualSportsSettle.Exception");
+            }
+            finally
+            {
+                var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(intervalSec) : TimeSpan.FromMinutes(intervalMins);
+                _virtualSportsWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
     }
