@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -11,7 +10,7 @@ namespace ThirdParty.SBO
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private const string ContentType = "Content-Type: application";
+        private const string ContentType = "application/json";
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
@@ -20,13 +19,13 @@ namespace ThirdParty.SBO
 
             var registerPlayer = new
             {
-                CompanyKey = config.CompanyKey,
-                ServerId = config.ServerId,
+                Username = tpCustInfo.TpUserName,
                 Agent = config.Agent,
-                Username = tpCustInfo.TpUserName
+                CompanyKey = config.CompanyKey,
+                ServerId = config.ServerId
             };
 
-            var responseJson = HttpPost(apiUrl,
+            var responseJson = HttpPostClient(apiUrl,
                 JsonConvert.SerializeObject(registerPlayer),
                 ContentType);
 
@@ -54,23 +53,24 @@ namespace ThirdParty.SBO
 
             var playerLogin = new
             {
+                Username = tpCustInfo.TpUserName,
+                Portfolio = TpGameTypeMap(int.Parse(config.TpGameTypeId)),
                 CompanyKey = config.CompanyKey,
                 ServerId = config.ServerId,
-                Username = tpCustInfo.TpUserName,
-                Portfolio = TpGameTypeMap(int.Parse(config.TpGameTypeId)) 
             };
 
-            var responseJson = HttpPost(apiUrl,
+            var responseJson = HttpPostClient(apiUrl,
                 JsonConvert.SerializeObject(playerLogin),
                 ContentType);
 
             var responseResult = FromJson<PlayerLoginResponse>(responseJson);
             if (responseResult.Error.Id == 0)
             {
+                var device = (appType == AppType.Desktop ? "d" : "m");
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
-                    Message = responseResult.LoginUrl
+                    Message = $"https:{responseResult.LoginUrl}&lang={TpLangId}&oddstyle=MY&theme=sbo&oddsmode=double&device={device}"
                 };
             }
 
@@ -91,11 +91,11 @@ namespace ThirdParty.SBO
             {
                 CompanyKey = config.CompanyKey,
                 ServerId = config.ServerId,
-                Portfolio = "SeamlessGameProviderApi",// 無縫遊戲
+                Portfolio = TpGameTypeMap(getBetDetail.TpGameTypeOption.Type),
                 Refno = getBetDetail.TransId
             };
 
-            var responseJson = HttpPost(apiUrl,
+            var responseJson = HttpPostClient(apiUrl,
                 JsonConvert.SerializeObject(betDetail),
                 ContentType);
 
@@ -163,7 +163,20 @@ namespace ThirdParty.SBO
             public SboConfig(Dictionary<string, string> config)
             {
                 ApiUrl = config.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(config["ApiUrl"])
-                    ? config["ApiUrl"] : throw new Exception("ApiUrl is empty");
+                    ? config["ApiUrl"] 
+                    : throw new Exception("ApiUrl is empty");
+
+                CompanyKey = config.ContainsKey("CompanyKey") && !string.IsNullOrEmpty(config["CompanyKey"])
+                    ? config["CompanyKey"] 
+                    : throw new Exception("CompanyKey is empty");
+
+                ServerId = config.ContainsKey("ServerId") && !string.IsNullOrEmpty(config["ServerId"])
+                    ? config["ServerId"] 
+                    : throw new Exception("ServerId is empty");
+
+                Agent = config.ContainsKey("Agent") && !string.IsNullOrEmpty(config["Agent"])
+                    ? config["Agent"] 
+                    : throw new Exception("Agent is empty");
 
                 TpGameTypeId = config.ContainsKey("tpGameType") ? config["tpGameType"] : string.Empty;
             }
@@ -228,7 +241,8 @@ namespace ThirdParty.SBO
 
             var gameTypeDict = new Dictionary<int, string>()
             {
-                {(int)TpGameType.SBO_Sports,"SportsBook"}
+                {(int)TpGameType.SBO_Sports,"SportsBook"},
+                {(int)TpGameType.SBO_VirtualSports,"VirtualSports"}
             };
 
             return gameTypeDict[gameTypeId];
