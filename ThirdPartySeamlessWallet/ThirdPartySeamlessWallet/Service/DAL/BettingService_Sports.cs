@@ -168,7 +168,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
-                                    $"exec Service_BettransSports_SBO_Unsettle_Ins failed return Result:-3");
+                                    $"exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                     return new SBOResult() { Result = -3 };
                 }
                 
