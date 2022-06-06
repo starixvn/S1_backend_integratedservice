@@ -62,8 +62,8 @@ namespace ThirdPartySettleWorker.Workers
             var tpCategory = TpCategory.Sports; // SBO_Sports、SBO_VirtualSports 都是體育分類
 
             const string logName = "SettleSBO";
-            const string getSpName = "Service_BettransSports_SBO_Unsettle_Get"; // 取得未結算的注單
-            const string getWagerSpName = "Service_TpWagerSports_SBO_Unsettle_Get"; // 取得未結算的注單
+            const string getBettransSp = "Service_BettransSports_SBO_Unsettle_Get"; // 取得未結算的注單
+            const string getWagerSp = "Service_TpWagerSports_SBO_Unsettle_Get"; // 取得未結算的注單
 
             try
             {
@@ -78,8 +78,8 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSpName, new { TransId = transId }, DataBase.Main).First();
-                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSpName, new { TransId = transId }, DataBase.Wager).First();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = transId }, DataBase.Main).First();
+                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { TransId = transId }, DataBase.Wager).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         
@@ -93,7 +93,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = settleData.Stake,
-                            ValidBet = settleData.Stake,
+                            ValidBet = settleData.ValidBet,
                             WinlostAmount = settleData.WinLostAmount,
                             TransId = settleData.TransId,
                             GameType = gameType,
