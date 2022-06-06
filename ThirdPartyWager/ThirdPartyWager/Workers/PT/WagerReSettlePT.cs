@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
@@ -73,15 +74,16 @@ namespace ThirdPartyWager.Workers
                         {
                             for (var min = 0; min < 2; min++)
                             {
+                                var time = dateTimeHelper.GetTimeByMinute(29, task.TimeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                                 try
                                 {
-                                    var time = dateTimeHelper.GetTimeByMinute(29, task.TimeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                                     await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, task.Currency, task.SiteId, task.TimeZone , WagerType.WagerReSettle);
                                     timerTime = timerTime.AddMinutes(30);
                                 }
                                 catch (Exception e)
                                 {
-                                    logger.LogError(e, e.Message);
+                                    var msg = $"Input Task: {JsonConvert.SerializeObject(task)} , Input Time:{JsonConvert.SerializeObject(time)} )";
+                                    logger.LogError(e, $"WagerReSettlePT {msg}\r\n{e.Message}");
                                 }
                             }
                         }
