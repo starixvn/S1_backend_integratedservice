@@ -259,8 +259,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     $" exec Service_BettransSports_SBO_Settle_Set failed return Result:-1");
                     return new SBOResult() { Result = -1 };
                 }
-                
-                result = PayoutV2(
+
+                var afterAmount = 0m;
+                if (dto.WinLoss != 0)
+                {
+                    result = PayoutV2(
                         tpCustInfo,
                         dto.WinLoss,
                         (int)Tp.SBO,
@@ -270,16 +273,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         dto.TransferCode,
                         TransType.Payout,
                         null,
-                        out var afterAmount,
+                        out afterAmount,
                         "Payout",
                         out var bonusId,
                         conn,
                         trans);
-
-                if (result != 1)
-                {
-                    logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
-                    return new SBOResult() { Result = -2 };
+                    
+                    if (result != 1)
+                    {
+                        logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
+                        return new SBOResult() { Result = -2 };
+                    }
                 }
                 
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, dto.ResultTime);
