@@ -188,7 +188,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [Route("[controller]/playerinfo.json")]
-        public PlayerInfoRep PlayerInfo([FromForm] Dictionary<string, string> playerInfoReq)
+        public PlayerInfoRep PlayerInfo([FromBody] Dictionary<string, string> playerInfoReq)
         {
             var playerInfoRep = new PlayerInfoRep
             {
@@ -262,7 +262,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <param name="wagerReq"></param>
         /// <returns></returns>
         [Route("[controller]/wager.json")]
-        public WagerRep Wager([FromForm] Dictionary<string, string> wagerReq)
+        public WagerRep Wager([FromBody] Dictionary<string, string> wagerReq)
         {
             WagerRep wagerRep;
             var statusCode = 1;
@@ -367,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <param name="endWagerReq"></param>
         /// <returns></returns>
         [Route("[controller]/endwager.json")]
-        public WagerRep EndWager([FromForm] Dictionary<string, string> endWagerReq)
+        public WagerRep EndWager([FromBody] Dictionary<string, string> endWagerReq)
         {
             WagerRep wagerRep;
             var statusCode = 1;
@@ -442,7 +442,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <param name="cancelWagerReq"></param>
         /// <returns></returns>
         [Route("[controller]/cancelwager.json")]
-        public CancelwagerRep CancelWager([FromForm] Dictionary<string, string> cancelWagerReq)
+        public CancelwagerRep CancelWager([FromBody] Dictionary<string, string> cancelWagerReq)
         {
             var cancelWagerData = new CancelwagerData();
             var statusCode = 1;
@@ -508,7 +508,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <param name="appendWagerResultReq"></param>
         /// <returns></returns>
         [Route("[controller]/appendwagerresult.json")]
-        public WagerRep AppendWagerResult([FromForm] Dictionary<string, string> appendWagerResultReq)
+        public WagerRep AppendWagerResult([FromBody] Dictionary<string, string> appendWagerResultReq)
         {
             _log2File.Info(JsonConvert.SerializeObject(appendWagerResultReq), "YGG_Appendwagerresult");
             WagerRep wagerRep;
@@ -584,7 +584,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <param name="campaignPayoutReq"></param>
         /// <returns></returns>
         [Route("[controller]/campaignpayout.json")]
-        public WagerRep CampaignPayout([FromForm] Dictionary<string, string> campaignPayoutReq)
+        public WagerRep CampaignPayout([FromBody] Dictionary<string, string> campaignPayoutReq)
         {
             if (_environment.IsDevelopment())
             {
@@ -633,7 +633,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <param name="getBalanceReq"></param>
         /// <returns></returns>
         [Route("[controller]/getbalance.json")]
-        public GetbalanceRep GetBalance([FromForm] Dictionary<string, string> getBalanceReq)
+        public GetbalanceRep GetBalance([FromBody] Dictionary<string, string> getBalanceReq)
         {
             var statusCode = 1;
             var getBalanceData = new GetbalanceData();
