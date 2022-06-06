@@ -96,7 +96,18 @@ namespace ThirdPartyWager.Service.BLL.YGG
 
         private Task<int> InsertWager(WagerYGGModel betData)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Ins", betData);
+            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Ins", new
+            {
+                Org = betData.Org,
+                LoginName = betData.LoginName,
+                Currency = betData.Currency,
+                Type = betData.Type,
+                Amount = betData.Amount,
+                GameName = betData.GameName,
+                _Reference = betData.Reference,
+                CreateTime = betData.CreateTime,
+                DCGameID = betData.DCGameID
+            });
         }
 
         private Task<int> UpdateWager(WagerYGGModel betData)
