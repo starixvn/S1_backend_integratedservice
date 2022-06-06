@@ -31,9 +31,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int tickets { get; set; }
     }
 
-    public class SettleData_YGG :SettleData
+    public class SettleData_YGG 
     {
-        public string subreference { get; set; }
-        public string reference { get; set; }
+        /// <summary>
+        /// 注單號碼
+        /// </summary>
+        public string TransId { get; set; }
+
+        /// <summary>
+        /// 投注額
+        /// </summary>
+        public decimal Stake { get; set; }
+
+        /// <summary>
+        /// 輸贏值，如果 NULL 表示 Wager 還沒拉到結算的注單
+        /// </summary>
+        public decimal? WinLostAmount { get; set; }
     }
 }

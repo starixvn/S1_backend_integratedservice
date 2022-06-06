@@ -2157,5 +2157,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         #endregion
+
+        #region YGG
+
+        public SettleData_YGG GetSettle_TpWager_YGG(string transId)
+        {
+            return settledService.GetSettle_TpWager_YGG(transId);
+        }
+
+        #endregion
     }
 }
