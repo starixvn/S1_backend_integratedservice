@@ -612,7 +612,7 @@ namespace ThirdPartyWager.Workers
                         time.endTime = DateTime.Parse(time.endTime).AddMinutes(-3).ToString("yyyy-MM-dd HH:mm:ss");
                         time.endUnix -= 180;
                     }
-                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt, gmtMinute);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt, WagerType.Wager, gmtMinute);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
