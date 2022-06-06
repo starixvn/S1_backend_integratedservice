@@ -21,11 +21,12 @@ namespace ThirdPartyWager.Service.BLL.SBO
         private readonly IApiSBOBLL _apiSboBll;
         private readonly ILogger<SBOBLL> _logger;
         private readonly List<int> _siteList = new List<int>() { 2, 3 };
-        public SBOBLL(IWagerSBOService wagerSboService, ThirdPartyBLL thirdPartyBll, IApiSBOBLL apiSboBll)
+        public SBOBLL(IWagerSBOService wagerSboService, ThirdPartyBLL thirdPartyBll, IApiSBOBLL apiSboBll, ILogger<SBOBLL> logger)
         {
             _wagerSboService = wagerSboService;
             _thirdPartyBLL = thirdPartyBll;
             _apiSboBll = apiSboBll;
+            _logger = logger;
         }
         
         public async Task<bool> GetWagersAsync(string startTime, string endTime, SBOPortfolio portfolio)
@@ -51,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL.SBO
                         foreach (var wager in sboWagers.result)
                         {
                             var result = await _wagerSboService.InsertWager(wager);
-                            if (result != 1)
+                            if (result < 1)
                             {
                                 _logger.LogError($"insert TpWagerSBO failed:{JsonConvert.SerializeObject(wager)}");
                             }

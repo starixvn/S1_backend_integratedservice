@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly ISBOBLL _sboBll;
 
         private const int TpId = (int)Tp.SBO;
-        private const int TimeZone = 0;
+        private const int TimeZone = -4;
         private Timer _sportsBookWagerTimer;
         private Timer _virtualSportsWagerTimer;
 
@@ -46,14 +46,14 @@ namespace ThirdPartyWager.Workers
             var doQuickly = false;
             const int tpType = (int)GameType.SBO_Sports;
             const int dataRangeMins = 15;
-            const int intervalMins = 3;
-            const int intervalSec = 30;
+            const int intervalMins = 1;
+            const int intervalSec = 5;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, tpType);
-                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddMinutes(-1 * dataRangeMins);
+                var thisTime = lastTime?.StartTime ?? DateTime.Now.AddMinutes(-1 * dataRangeMins);
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "s", thisTime);
                     var isSuccess = await _sboBll.GetWagersAsync(timeCast.startTime, timeCast.endTime, SBOPortfolio.SportsBook);
@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Workers
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, tpType, timeCast.endUnix);
                     }
                 }
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 5)
                 {
                     doQuickly = true;
                 }
@@ -85,14 +85,14 @@ namespace ThirdPartyWager.Workers
             var doQuickly = false;
             const int tpType = (int)GameType.SBO_VirtualSports;
             const int dataRangeMins = 15;
-            const int intervalMins = 3;
-            const int intervalSec = 30;
+            const int intervalMins = 1;
+            const int intervalSec = 5;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, tpType);
-                var thisTime = lastTime?.StartTime ?? DateTime.UtcNow.AddMinutes(-1 * dataRangeMins);
+                var thisTime = lastTime?.StartTime ?? DateTime.Now.AddMinutes(-1 * dataRangeMins);
 
-                if (thisTime < DateTime.UtcNow)
+                if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "s", thisTime);
                     var isSuccess = await _sboBll.GetWagersAsync(timeCast.startTime, timeCast.endTime, SBOPortfolio.VirtualSports);
@@ -102,7 +102,7 @@ namespace ThirdPartyWager.Workers
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, tpType, timeCast.endUnix);
                     }
                 }
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 5)
                 {
                     doQuickly = true;
                 }
