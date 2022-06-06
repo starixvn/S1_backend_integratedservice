@@ -184,7 +184,8 @@ namespace ThirdPartySettleWorker.Workers
             tpWager.Stake *= tpCurrency.ExchangeRate;
             tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
             
-            if (bettrans.TicketStatus == (int)SettlementType.UnSettled)
+            if (bettrans.TicketStatus == (int)SettlementType.UnSettled || 
+                bettrans.TicketStatus == (int)TicketStatus.Refund)
             {
                 tpWager.WinLostAmount -= tpWager.Stake;
             }
