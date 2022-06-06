@@ -290,7 +290,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
-                                    $"exec Service_BettransSports_SBO_Unsettle_Ins failed return Result:-3");
+                                    $"exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                     return new SBOResult() { Result = -3 };
                 }
                 
@@ -329,7 +329,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result != 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
-                                    $"exec Service_BettransSports_SBO_Settle_Set failed return Result:-1");
+                                    $"exec Service_BettransSports_SBO_Cancel_Set failed return Result:-1");
                     return new SBOResult() { Result = -1 };
                 }
                 
@@ -362,7 +362,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result < 1)
                     {
                         logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
-                                        $" exec Service_BettransSports_SBO_Unsettle_Ins failed return Result:-3");
+                                        $" exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                         return new SBOResult() { Result = -3 };
                     }
                 }
@@ -399,7 +399,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
-                                    $" exec Service_BettransSports_SBO_Settle_Set failed return Result:-1");
+                                    $" exec Service_BettransSports_SBO_Rollback_Set failed return Result:-1");
                     return new SBOResult() { Result = -1 };
                 }
 
@@ -432,7 +432,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result < 1)
                     {
                         logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
-                                        $" exec Service_BettransSports_SBO_Unsettle_Ins failed return Result:-3");
+                                        $" exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                         return new SBOResult() { Result = -3 };
                     }
                 }
