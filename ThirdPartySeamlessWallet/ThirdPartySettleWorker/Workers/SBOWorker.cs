@@ -22,6 +22,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<SBOWorker> _logger;
         private readonly string _tpName;
 
@@ -30,6 +31,7 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<SBOWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -61,6 +63,7 @@ namespace ThirdPartySettleWorker.Workers
 
             const string logName = "SettleSBO";
             const string getSpName = "Service_BettransSports_SBO_Unsettle_Get"; // 取得未結算的注單
+            const string getWagerSpName = "Service_TpWagerSports_SBO_Unsettle_Get"; // 取得未結算的注單
 
             try
             {
@@ -76,7 +79,15 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSpName, new { TransId = transId }, DataBase.Main).First();
+                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSpName, new { TransId = transId }, DataBase.Wager).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        
+                        if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
+                        {
+                            _logger.LogError($"transId: {transId} is not equal");
+                            continue;
+                        }
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -165,6 +176,20 @@ namespace ThirdPartySettleWorker.Workers
             }
 
             return settlementType;
+        }
+
+        private bool IsBettransSameAsTpWager(SettleData bettrans, SettleData tpWager, TpCurrency tpCurrency)
+        {
+            if (bettrans == null || tpWager == null || tpCurrency.ExchangeRate <= 0) return false;
+            tpWager.Stake *= tpCurrency.ExchangeRate;
+            tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
+            
+            if (bettrans.TicketStatus == (int)SettlementType.UnSettled)
+            {
+                tpWager.WinLostAmount -= tpWager.Stake;
+            }
+            
+            return bettrans.Stake == tpWager.Stake && bettrans.WinLostAmount == tpWager.WinLostAmount;
         }
     }
 }
