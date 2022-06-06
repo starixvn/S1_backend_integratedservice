@@ -51,6 +51,7 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
+        YGG_RNG = 14
     }
 
     public enum DataBase
