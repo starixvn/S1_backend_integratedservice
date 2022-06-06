@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection.Emit;
 using System.Threading.Tasks;
+using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -83,7 +86,6 @@ namespace ThirdPartyWager.Service.BLL.YGG
                 var updateData = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
 
                 var tasks = new List<Task<int>>();
-
                 if (insertData.Count > 0) tasks.AddRange(insertData.Select(item => Task.Run(() => InsertWager(item))).ToList());
                 if (updateData.Count > 0) tasks.AddRange(updateData.Select(item => Task.Run(() => UpdateWager(item))).ToList());
 
@@ -99,7 +101,11 @@ namespace ThirdPartyWager.Service.BLL.YGG
 
         private Task<int> UpdateWager(WagerYGGModel betData)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Set", betData);
+            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Set", new
+            {
+                Amount = betData.Amount,
+                _Reference = betData.Reference
+            });
         }
     }
 }
