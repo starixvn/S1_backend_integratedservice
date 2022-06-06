@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -81,6 +82,10 @@ namespace ThirdPartySettleWorker.Workers
                         var wager = _settledBLL.GetSettle_TpWager_YGG(settleData.TransId);
 
                         if (wager == null) continue; // wager 沒注單，無法比對(投注額、輸贏值)，故不結算
+
+                        var wagerJson = JsonConvert.SerializeObject(wager);
+                        var settleDataJson = JsonConvert.SerializeObject(settleData);
+                        _logger.LogError($"wagerJson：{wagerJson},settleDataJson:{settleDataJson}");
 
                         if (!CanSettle(wager, settleData)) continue;
 

@@ -73,7 +73,7 @@ namespace ThirdPartyWager.Service.BLL.YGG
                 throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
             }
             var json = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation(json);
+            _logger.LogInformation($"WagerYGG：{json}");
 
             var betRecordResponse = _common.FromJson<WagerYggResponse>(json);
 
