@@ -174,7 +174,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 throw new SBOException(SBOErrorCode.InternalError);
             }
-
+            
+            if (result.Result == 1 && result.AfterAmount == 0)
+            {
+                var gameType = _sboGameTypeMap[request.ProductType];
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.Username, (int)gameType);
+                return new SBOSettleResponse()
+                {
+                    AccountName = request.Username,
+                    Balance = tpCustBalance.Balance,
+                    ErrorCode = (int)SBOErrorCode.NoError,
+                    ErrorMessage = SBOErrorCode.NoError.GetEnumDescription()
+                };
+            }
+            
             return result.Result switch
             {
                 1 => new SBOSettleResponse()
