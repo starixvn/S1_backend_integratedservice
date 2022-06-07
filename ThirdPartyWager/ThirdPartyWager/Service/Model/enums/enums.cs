@@ -1,5 +1,12 @@
 ﻿namespace ThirdPartyWager.Service.Model.enums
 {
+    public enum Site
+    {
+        Nova88 = 1,
+        Goal123 = 2,
+        Bwing = 3
+    }
+    
     public enum Tp
     {
         None = 0,

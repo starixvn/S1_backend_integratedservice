@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt, WagerType wager = WagerType.Wager ,int gmtMinute = 0 )
+        public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt ,int gmtMinute = 0 ,WagerType wager = WagerType.Wager )
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
@@ -98,14 +98,17 @@ namespace ThirdPartyWager.Service.BLL
                                         break;
                                     }
                                     
+                                    var settledTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                                    settledTime = settledTime.AddSeconds( bet.gameUnix );
+                                    
                                     var settleData = new BetRecordInfo
                                     {
                                         TpId = (int) Tp.PT,
                                         TransId = bet.GAMECODE,
                                         GameType = string.Equals(bet.GAMETYPE, "Live Games", StringComparison.OrdinalIgnoreCase) ? GameType.PT_LiveCasino : GameType.PT_RNG,
                                         TpUserName = bet.PLAYERNAME,
-                                        SettledTime = bet.GAMEDATE,
-                                        TransTime = bet.GAMEDATE,
+                                        SettledTime = settledTime,
+                                        TransTime = settledTime,
                                         Stake = bet.BET,
                                         ValidBet = bet.BET,
                                         Revenue = null,

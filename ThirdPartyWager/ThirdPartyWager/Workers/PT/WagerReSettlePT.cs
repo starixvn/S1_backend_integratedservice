@@ -15,58 +15,59 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerReSettlePT : BackgroundService
     {
-        private readonly ILogger<WagerReSettlePT> logger;
-        private readonly WagerPTBLL wagerPTBLL;
-        private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private Timer timer;
-        private int tpId = (int)Tp.PT;
+        private readonly ILogger<WagerReSettlePT> _logger;
+        private readonly WagerPTBLL _wagerPtBll;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly IHostEnvironment _environment;
+        private Timer _timer;
+        private readonly int _tpId = (int)Tp.PT;
         private readonly string _tpName = Tp.PT.ToString();
-        private readonly List<PTRequestModel> _list;
 
         public WagerReSettlePT(ILogger<WagerReSettlePT> logger, WagerPTBLL wagerPTBLL, DateTimeHelper dateTimeHelper, IHostEnvironment environment)
         {
-            this.logger = logger;
-            this.wagerPTBLL = wagerPTBLL;
-            this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
-            _list = InitWagerList();
+            _logger = logger;
+            _wagerPtBll = wagerPTBLL;
+            _dateTimeHelper = dateTimeHelper;
+            _environment = environment;
         }
         
-        private List<PTRequestModel> InitWagerList()
+        private IEnumerable<PTRequestModel> InitWagerList()
         {
             var list = new List<PTRequestModel>
             {
-                new PTRequestModel() {SiteId = 1, Currency = "MYR", TimeZone = 8},
-                new PTRequestModel() {SiteId = 1, Currency = "THB", TimeZone = 7},
-                new PTRequestModel(){SiteId = 1 , Currency = "IDR" , TimeZone = 8},
-                new PTRequestModel(){SiteId = 1 , Currency = "USD" , TimeZone = 0},
-                new PTRequestModel(){SiteId = 1 , Currency = "CNY" , TimeZone = 8},
-                new PTRequestModel(){SiteId = 1 , Currency = "INR" , TimeZone = 5},
-                new PTRequestModel(){SiteId = 2 , Currency = "VND" , TimeZone = 7},
-                new PTRequestModel(){SiteId = 3 , Currency = "VND" , TimeZone = 7}
+                new PTRequestModel {SiteId = (int)Site.Nova88, Currency = "MYR", TimeZone = 8},
+                new PTRequestModel {SiteId = (int)Site.Nova88, Currency = "THB", TimeZone = 7},
+                new PTRequestModel {SiteId = (int)Site.Nova88 , Currency = "IDR" , TimeZone = 8},
+                new PTRequestModel {SiteId = (int)Site.Nova88 , Currency = "USD" , TimeZone = 0},
+                new PTRequestModel {SiteId = (int)Site.Nova88 , Currency = "CNY" , TimeZone = 8},
+                new PTRequestModel {SiteId = (int)Site.Nova88 , Currency = "INR" , TimeZone = 5},
+                new PTRequestModel {SiteId = (int)Site.Goal123 , Currency = "VND" , TimeZone = 7},
+                new PTRequestModel {SiteId = (int)Site.Bwing , Currency = "VND" , TimeZone = 7}
             };
             return list;
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoTask, InitWagerList(), TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         
         private async void DoTask(object state)
         {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            // if (!environment.IsProduction())
-            // {
-            //     return;
-            // }
+            
+            if (!_environment.IsProduction())
+            {
+                return;
+            }
+            
             try
             {
-                foreach (var task in _list)
+                var list = (IEnumerable<PTRequestModel>)state;
+                foreach (var task in list)
                 {
+                    LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
                     var timerTime = new DateTime(2022,04,01);
                     for (var day = 0; day < 31; day++)
                     {
@@ -74,16 +75,16 @@ namespace ThirdPartyWager.Workers
                         {
                             for (var min = 0; min < 2; min++)
                             {
-                                var time = dateTimeHelper.GetTimeByMinute(29, task.TimeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                                var time = _dateTimeHelper.GetTimeByMinute(29, task.TimeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                                 try
                                 {
-                                    await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, task.Currency, task.SiteId, task.TimeZone , WagerType.WagerReSettle);
+                                    await _wagerPtBll.GetWagersAsync(_tpId, time.startTime, time.endTime, task.Currency, task.SiteId, task.TimeZone ,0,WagerType.WagerReSettle);
                                     timerTime = timerTime.AddMinutes(30);
                                 }
                                 catch (Exception e)
                                 {
                                     var msg = $"Input Task: {JsonConvert.SerializeObject(task)} , Input Time:{JsonConvert.SerializeObject(time)} )";
-                                    logger.LogError(e, $"WagerReSettlePT {msg}\r\n{e.Message}");
+                                    _logger.LogError(e, $"WagerReSettlePT {msg}\r\n{e.Message}");
                                 }
                             }
                         }
@@ -92,18 +93,17 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
-                // var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                // timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _logger.LogInformation($"WagerReSettlePT FINISH");
             }
         }
         
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

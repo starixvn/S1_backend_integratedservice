@@ -505,7 +505,7 @@ namespace ThirdPartyWager.Workers
                 var diffMin = (cvTime - time.startUnix) / 60;
                 if (time.endUnix < cvTime && diffMin > beyond)
                 {
-                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt,WagerType.Wager, gmtMinute);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt, gmtMinute);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
