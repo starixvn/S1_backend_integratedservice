@@ -1,5 +1,12 @@
 ﻿namespace ThirdPartyWager.Service.Model.enums
 {
+    public enum Site
+    {
+        Nova88 = 1,
+        Goal123 = 2,
+        Bwing = 3
+    }
+    
     public enum Tp
     {
         None = 0,
@@ -51,9 +58,31 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
-        YGG_RNG = 14
+        YGG_RNG = 14,
+ 		PT_RNG = 46,
+        PT_LiveCasino = 48,
     }
 
+	 public enum SettlementType
+    {
+        UnSettled = 0,
+        SettledForValid = 1,
+        SettledForInvalid = 2,
+        SettledForValidNotRollover = 3,
+        Cheating = 4
+    }
+    
+    public enum TicketStatus
+    {
+        UnSettled = 0,/*Running, Waiting*/
+        Win = 1,
+        Lost = 2,
+        Refund = 3,/*Reject, Refund, Void, Draw*/
+        Draw = 4,
+        Related = 5,
+        FreeBetWin = 6
+    }
+    
     public enum DataBase
     {
         Main, //ConnectionString
@@ -67,5 +96,10 @@
         TpRewardTotalAmount = 2,//活動總金額
         TpRewardFreeGame = 3,//活動免費遊戲
         TpRewardCash = 4,//活動現金獎勵
+    }
+    public enum WagerType
+    {
+        Wager = 1,//下注紀錄
+        WagerReSettle = 2,//活動總金額
     }
 }

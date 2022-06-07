@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.Model
 {
@@ -9,6 +10,13 @@ namespace ThirdPartyWager.Service.Model
         public int errorcode { get; set; }
         public IList<BetPT> result { get; set; }
         public Pagination pagination { get; set; }
+    }
+    
+    public class PTRequestModel
+    {
+        public int SiteId { get; set; }
+        public string Currency { get; set; }
+        public int TimeZone { get; set; }
     }
 
     public class BetPT
@@ -46,5 +54,26 @@ namespace ThirdPartyWager.Service.Model
         public int itemsPerPage { get; set; }
         public int totalCount { get; set; }
 
+    }
+    
+    public class BetRecordInfo
+    {
+        public int TpId { get; set; }
+        public string TransId { get; set; }
+        public GameType GameType { get; set; }
+        public string TpUserName { get; set; }
+        public DateTime SettledTime { get; set; }
+        public DateTime TransTime { get; set; }
+        public decimal Stake { get; set; }
+        public decimal? ValidBet { get; set; }
+        public decimal? Revenue { get; set; }
+        public decimal ProgressiveBet { get; set; }
+        public decimal ProgressiveWin { get; set; }
+        public decimal WinlostAmount { get; set; }
+        public SettlementType SettlementType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public string OriginalState { get; set; }
+        public int TicketKey { get; set; }
+        public int BonusId { get; set; }
     }
 }

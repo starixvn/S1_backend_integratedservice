@@ -57,6 +57,7 @@ namespace ThirdPartyWager
 
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
+            services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
             services.AddSingleton<WagerDGService>();
             services.AddSingleton<WagerAllBetService>();
@@ -199,6 +200,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
+            services.AddHostedService<WagerReSettlePT>();
             services.AddHostedService<LiveStreaming>();
             // services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
