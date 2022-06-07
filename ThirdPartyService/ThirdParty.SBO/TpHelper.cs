@@ -5,6 +5,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.SBO
 {
@@ -64,58 +65,36 @@ namespace ThirdParty.SBO
                 ContentType);
 
             var responseResult = FromJson<PlayerLoginResponse>(responseJson);
-            if (responseResult.Error.Id == 0)
-            {
-                var device = (appType == AppType.Desktop ? "d" : "m");
+            if (responseResult.Error.Id != 0)
                 return new ApiResult()
                 {
-                    ErrorCode = ErrorCode.Success,
-                    Message = $"https:{responseResult.LoginUrl}&lang={TpLangId}&oddstyle=MY&theme=sbo&oddsmode=double&device={device}"
+                    ErrorCode = ErrorCode.Fail,
+                    RawMessage = responseResult.Error.Msg,
+                    RawErrorCode = responseResult.Error.Id.ToString()
                 };
-            }
 
+            var device = (appType == AppType.Desktop ? "d" : "m");
             return new ApiResult()
             {
-                ErrorCode = ErrorCode.Fail,
-                RawMessage = responseResult.Error.Msg,
-                RawErrorCode = responseResult.Error.Id.ToString()
+                ErrorCode = ErrorCode.Success,
+                Message = $"https:{responseResult.LoginUrl}&lang={TpLangId}&oddstyle=MY&theme=sbo&oddsmode=double&device={device}"
             };
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SboConfig(inputs);
-            var apiUrl = $"{config.ApiUrl}/web-root/restricted/report/get-bet-payload.aspx";
-
-            var betDetail = new
+            var tpCurrency = new TpCurrency()
             {
-                CompanyKey = config.CompanyKey,
-                ServerId = config.ServerId,
-                Portfolio = TpGameTypeMap(getBetDetail.TpGameTypeOption.Type),
-                Refno = getBetDetail.TransId
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
 
-            var responseJson = HttpPostClient(apiUrl,
-                JsonConvert.SerializeObject(betDetail),
-                ContentType);
 
-            var responseResult = FromJson<BetDetailResponse>(responseJson);
+            var betDetail = getBetDetail.TpGameTypeOption.Type == (int)TpGameType.SBO_Sports 
+                ? GetSportsBookDetail(getBetDetail, inputs, tpCurrency) // SportsBook(打第三方API取得)
+                : GetVirtualSportsDetail(getBetDetail, tpCurrency);  // VirtualSports(查TpWager)
 
-            if (responseResult.Error.Id == 0)
-            {
-                return new BaseDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    DetailUrl = responseResult.Url,
-                    TpCurrency = new TpCurrency()
-                    {
-                        ExchangeRate = tpCustInfo.ExchangeRate,
-                        TpCurrencyId = tpCustInfo.TpCurrencyId,
-                    },
-                };
-            }
-
-            throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {responseResult.Error.Msg}");
+            return betDetail;
         }
 
         #region 單一錢包不實作
@@ -163,19 +142,19 @@ namespace ThirdParty.SBO
             public SboConfig(Dictionary<string, string> config)
             {
                 ApiUrl = config.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(config["ApiUrl"])
-                    ? config["ApiUrl"] 
+                    ? config["ApiUrl"]
                     : throw new Exception("ApiUrl is empty");
 
                 CompanyKey = config.ContainsKey("CompanyKey") && !string.IsNullOrEmpty(config["CompanyKey"])
-                    ? config["CompanyKey"] 
+                    ? config["CompanyKey"]
                     : throw new Exception("CompanyKey is empty");
 
                 ServerId = config.ContainsKey("ServerId") && !string.IsNullOrEmpty(config["ServerId"])
-                    ? config["ServerId"] 
+                    ? config["ServerId"]
                     : throw new Exception("ServerId is empty");
 
                 Agent = config.ContainsKey("Agent") && !string.IsNullOrEmpty(config["Agent"])
-                    ? config["Agent"] 
+                    ? config["Agent"]
                     : throw new Exception("Agent is empty");
 
                 TpGameTypeId = config.ContainsKey("tpGameType") ? config["tpGameType"] : string.Empty;
@@ -248,6 +227,87 @@ namespace ThirdParty.SBO
             return gameTypeDict[gameTypeId];
         }
 
+        /// <summary>
+        /// 取得住單詳情，GameType = SportsBook 打第三方API要資料
+        /// </summary>
+        /// <param name="getBetDetail"></param>
+        /// <param name="inputs"></param>
+        /// <param name="tpCurrency"></param>
+        /// <returns></returns>
+        /// <exception cref="BetDetailNotFoundException"></exception>
+        private BaseDetail GetSportsBookDetail(GetBetDetail getBetDetail,
+            Dictionary<string, string> inputs,
+            TpCurrency tpCurrency)
+        {
+
+            var config = new SboConfig(inputs);
+            var apiUrl = $"{config.ApiUrl}/web-root/restricted/report/get-bet-payload.aspx";
+
+            var betDetail = new
+            {
+                CompanyKey = config.CompanyKey,
+                ServerId = config.ServerId,
+                Portfolio = "SportsBook",
+                Refno = getBetDetail.TransId
+            };
+
+            var responseJson = HttpPostClient(apiUrl,
+                JsonConvert.SerializeObject(betDetail),
+                ContentType);
+
+            var responseResult = FromJson<BetDetailResponse>(responseJson);
+
+            if (responseResult.Error.Id == 0)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = responseResult.Url,
+                    TpCurrency = tpCurrency
+                };
+            }
+
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {responseResult.Error.Msg}");
+        }
+
+        /// <summary>
+        /// 取得住單詳情，GameType = VirtualSports 去查 TpWager
+        /// </summary>
+        /// <param name="getBetDetail"></param>
+        /// <param name="tpCurrency"></param>
+        /// <returns></returns>
+        private SportsDetail GetVirtualSportsDetail(GetBetDetail getBetDetail, TpCurrency tpCurrency)
+        {
+            const string spName = "Service_TpWagerSBO_Get";
+            var wager = TpBetRecordProvider.WagerDbQueryFirst(spName, new { getBetDetail.TransId });
+            var result = new SportsDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = wager.GetValueOrDefault("wagerDetail")?.ToString(),
+                TpCurrency = tpCurrency,
+                TpUserName = wager.GetValueOrDefault("TpUserName")?.ToString(),
+                UTCBetTime = ConvertToUtcTime(wager.GetValueOrDefault("BetTime")?.ToString()),
+                UTCSettledTime = ConvertToUtcTime(wager.GetValueOrDefault("SettledTime")?.ToString()),
+                Stake = (decimal)wager.GetValueOrDefault("Stake"),
+                WinlostAmount = (decimal)wager.GetValueOrDefault("WinlostAmount"),
+                Odds = wager.GetValueOrDefault("Odds")?.ToString()
+            };
+
+            return result;
+        }
+
+        /// <summary>
+        /// 時區轉換 SBO 存 -4 時區，User要看 +0 時區
+        /// </summary>
+        /// <param name="dbDateTime"></param>
+        /// <returns></returns>
+        private DateTime ConvertToUtcTime(string dbDateTime)
+        {
+            var dateTime = DateTime.Parse(dbDateTime);
+            var dateTimeOffset = new DateTimeOffset(dateTime, new TimeSpan(-4, 0, 0));
+            return dateTimeOffset.ToOffset(new TimeSpan(0, 0, 0)).DateTime;
+        }
+
         #region ApiErrorCode對應
 
         // Value     描述
@@ -298,6 +358,5 @@ namespace ThirdParty.SBO
         // 9721	    无效的密码格式
 
         #endregion
-
     }
 }
