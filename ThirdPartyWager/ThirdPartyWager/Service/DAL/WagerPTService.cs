@@ -50,6 +50,7 @@ namespace ThirdPartyWager.Service.DAL
                 ValidBet = betRecordInfo.ValidBet, 
                 Revenue = betRecordInfo.Revenue, 
                 WinlostAmount = betRecordInfo.WinlostAmount,
+                OriginalState= betRecordInfo.OriginalState,
                 SettlementType = (int)betRecordInfo.SettlementType, 
                 TicketStatus = (int)betRecordInfo.TicketStatus, 
                 TicketKey = betRecordInfo.TicketKey,

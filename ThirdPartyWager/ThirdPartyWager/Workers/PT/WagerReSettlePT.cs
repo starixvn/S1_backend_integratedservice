@@ -93,7 +93,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, "WagerReSettlePT");
             }
             finally
             {
