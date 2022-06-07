@@ -101,7 +101,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
                             SettlementType = SetSettlementType((TicketStatus)settleData.TicketStatus), // 判斷 TicketStatus，因為可能重新結算
-                            TicketStatus = SetTicketStatus(settleData.WinLostAmount),
+                            TicketStatus = (TicketStatus)settleData.TicketStatus,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
@@ -147,13 +147,6 @@ namespace ThirdPartySettleWorker.Workers
                 _timerSports?.Change(dueTimeSpan, TimeSpan.Zero);
                 _timerVirtualSports?.Change(dueTimeSpan, TimeSpan.Zero);
             }
-        }
-
-        private TicketStatus SetTicketStatus(decimal winLostAmount)
-        {
-            if (winLostAmount == 0) return TicketStatus.Draw;
-
-            return winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost;
         }
 
         private SettlementType SetSettlementType(TicketStatus ticketStatus)
