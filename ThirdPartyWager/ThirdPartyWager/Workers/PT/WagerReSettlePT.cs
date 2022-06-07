@@ -68,14 +68,14 @@ namespace ThirdPartyWager.Workers
                 foreach (var task in list)
                 {
                     LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-                    var timerTime = new DateTimeOffset(new DateTime(2022,04,01)).ToOffset(TimeSpan.Zero);
+                    var timerTime = DateTime.SpecifyKind(new DateTime(2022,04,01), DateTimeKind.Utc);
                     for (var day = 0; day < 31; day++)
                     {
                         for (var hour = 0; hour < 24; hour++)
                         {
                             for (var min = 0; min < 2; min++)
                             {
-                                var time = _dateTimeHelper.GetTimeByMinute(29, task.TimeZone, "yyyy-MM-dd HH:mm:ss", timerTime.DateTime);
+                                var time = _dateTimeHelper.GetTimeByMinute(29, task.TimeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                                 try
                                 {
                                     await _wagerPtBll.GetWagersAsync(_tpId, time.startTime, time.endTime, task.Currency, task.SiteId, task.TimeZone ,0,WagerType.WagerReSettle);
