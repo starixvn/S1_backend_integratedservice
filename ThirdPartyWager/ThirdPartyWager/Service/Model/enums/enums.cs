@@ -52,6 +52,8 @@
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
+        Iconic_RNG = 39,
+        Iconic_Fish = 40,
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,
@@ -97,9 +99,17 @@
         TpRewardFreeGame = 3,//活動免費遊戲
         TpRewardCash = 4,//活動現金獎勵
     }
+
     public enum WagerType
     {
         Wager = 1,//下注紀錄
         WagerReSettle = 2,//活動總金額
+    }
+
+    public enum WagerTimerType
+    {
+        Wager = 1,//正常抄單
+        RedoWager = 2,//重作抄單
+        Finance = 4,//廠商報表
     }
 }
