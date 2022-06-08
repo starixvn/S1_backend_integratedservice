@@ -68,7 +68,7 @@ namespace ThirdPartyWager.Workers
                 foreach (var task in list)
                 {
                     LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-                    var timerTime = new DateTime(2022,04,01);
+                    var timerTime = DateTime.SpecifyKind(new DateTime(2022,04,01), DateTimeKind.Utc);
                     for (var day = 0; day < 31; day++)
                     {
                         for (var hour = 0; hour < 24; hour++)
