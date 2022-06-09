@@ -92,6 +92,15 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
+                        //settle amount check
+                        var  chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
+                           new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main).First();
+                        if (chcekData.Stake != unsettled.Stake 
+                            && unsettled.WinLostAmount != (chcekData.Payout - chcekData.Stake) )
+                        {
+                            continue;
+                        }
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -160,5 +169,11 @@ namespace ThirdPartySettleWorker.Workers
                 timerSettleTCGVN?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+    }
+
+    public class TCGCheckData
+    {
+        public decimal Stake { get; set; }
+        public decimal Payout { get; set; }
     }
 }
