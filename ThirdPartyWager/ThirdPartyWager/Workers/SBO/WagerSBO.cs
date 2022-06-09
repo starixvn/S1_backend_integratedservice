@@ -55,11 +55,12 @@ namespace ThirdPartyWager.Workers
 
                 if (thisTime < DateTime.Now)
                 {
-                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "s", thisTime);
+                    thisTime = thisTime.AddMinutes(1);
+                    var timeCast = _dateTimeHelper.GetTimeByMinuteRevert(dataRangeMins, TimeZone, "s", thisTime);
                     var isSuccess = await _sboBll.GetWagersAsync(timeCast.startTime, timeCast.endTime, SBOPortfolio.SportsBook);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"SBO Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"SBO {GameType.SBO_Sports} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, tpType, timeCast.endUnix);
                     }
                 }
@@ -94,11 +95,12 @@ namespace ThirdPartyWager.Workers
 
                 if (thisTime < DateTime.Now)
                 {
-                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "s", thisTime);
+                    thisTime = thisTime.AddMinutes(1);
+                    var timeCast = _dateTimeHelper.GetTimeByMinuteRevert(dataRangeMins, TimeZone, "s", thisTime);
                     var isSuccess = await _sboBll.GetWagersAsync(timeCast.startTime, timeCast.endTime, SBOPortfolio.VirtualSports);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"SBO Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"SBO {GameType.SBO_VirtualSports} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, tpType, timeCast.endUnix);
                     }
                 }
