@@ -102,7 +102,7 @@ namespace ThirdPartyWager.Service.BLL.YGG
                 LoginName = betData.LoginName,
                 Currency = betData.Currency,
                 Type = betData.Type,
-                Amount = betData.Amount,
+                Amount = betData.Amount.Value,
                 GameName = betData.GameName,
                 _Reference = betData.Reference,
                 CreateTime = betData.CreateTime,
@@ -114,7 +114,7 @@ namespace ThirdPartyWager.Service.BLL.YGG
         {
             return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Set", new
             {
-                Amount = betData.Amount,
+                Amount = betData.Amount.Value,
                 _Reference = betData.Reference
             });
         }

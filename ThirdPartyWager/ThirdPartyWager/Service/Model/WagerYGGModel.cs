@@ -65,7 +65,7 @@ namespace ThirdPartyWager.Service.Model
         public string Type { get; set; }
 
         [JsonProperty("amount")]
-        public decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
 
         [JsonProperty("gamename")]
         public string GameName { get; set; }
