@@ -50,7 +50,7 @@
         SG_RNG = 15,
         SG_Fish = 31,
         SBO_Sports = 77,
-        SBO_VirtualSports = 81,
+        SBO_VirtualSports = 81
     }
 
     public enum DataBase
