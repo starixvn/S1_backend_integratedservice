@@ -119,5 +119,38 @@ namespace ThirdPartyWager.Service.Library
 
             return timeCast;
         }
+        
+        public TimeCast GetTimeByMinuteRevert(int period, int timezone, string format, DateTime timerTime, int utcMinute = 0)
+        {
+            var current = timerTime;
+
+            var timeBase = new DateTime(
+                current.Year,
+                current.Month,
+                current.Day,
+                current.Hour,
+                current.Minute,
+                0
+            );
+
+            var dStartTime = timeBase.AddMinutes(-1 * period);
+
+            var beginAt = new DateTimeOffset(dStartTime);
+            var endAt = new DateTimeOffset(timeBase);
+            var startTime = beginAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
+            var endTime = endAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
+            var startUnix = beginAt.ToUnixTimeSeconds();
+            var endUnix = endAt.ToUnixTimeSeconds();
+
+            var timeCast = new TimeCast
+            {
+                startTime = startTime,
+                endTime = endTime,
+                startUnix = startUnix,
+                endUnix = endUnix
+            };
+
+            return timeCast;
+        }
     }
 }
