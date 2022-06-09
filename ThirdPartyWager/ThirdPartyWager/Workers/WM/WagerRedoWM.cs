@@ -62,8 +62,7 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     last = intervalMins;
                 }
-                //if (timerTime < DateTime.Now)
-                //{
+
                 var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyyMMddHHmmss", timerTime);
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                 if (time.endUnix < cvTime)

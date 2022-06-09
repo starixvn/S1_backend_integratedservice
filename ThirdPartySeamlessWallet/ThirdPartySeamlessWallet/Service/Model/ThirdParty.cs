@@ -53,4 +53,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Status { set; get; }
         public long TransTime { set; get; }
     }
+
+    public class TpCountryCode
+    {
+        public string CountryCode { set; get; }
+        public int CurrencyId { set; get; }
+        public string TpCurrencyId { set; get; }
+    }
 }

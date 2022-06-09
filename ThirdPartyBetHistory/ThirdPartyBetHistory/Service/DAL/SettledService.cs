@@ -7,6 +7,9 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
+using ThirdPartyBetHistory.Service.Model.enums;
+using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyBetHistory.Service.DAL
 {
@@ -15,10 +18,10 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly string _connectionString;
 
-        public SettledService(IConfiguration configuration, ILogger<MySqlClient> logger)
+        public SettledService(IServiceProvider provider)
         {
-            _connectionString = configuration.GetConnectionString("ConnectionString");
-            _mainDbClient = new MySqlClient(_connectionString, logger);
+            _connectionString = provider.GetRequiredService<IConfiguration>().GetConnectionString("ConnectionString");
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
         public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
         {

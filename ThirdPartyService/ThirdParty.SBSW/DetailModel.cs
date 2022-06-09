@@ -234,7 +234,7 @@ namespace ThirdParty.SBSW
         public string race_number { get; set; }
         public string version_key { get; set; }
         public string after_amount { get; set; }
-        public int parlay_ref_no { get; set; }
+        public string parlay_ref_no { get; set; }
         public string ticket_status { get; set; }
         public DateTime? match_datetime { get; set; }
         public decimal winlost_amount { get; set; }

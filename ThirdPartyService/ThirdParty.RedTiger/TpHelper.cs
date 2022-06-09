@@ -13,15 +13,6 @@ namespace ThirdParty.RedTiger
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<string, string> countryList = new Dictionary<string, string>() {
-            {"MYR","MY"},
-            {"CNY","CN"},
-            {"IDR","ID"},
-            {"THB","TH"},
-            {"VND","VN"},
-            {"INR","HT"},
-        };
-
         public class LoginResponse
         {
             public string entry { get; set; }
@@ -72,6 +63,10 @@ namespace ThirdParty.RedTiger
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string GameUrl = ApiUrl;
             ApiUrl = $"{ApiUrl}/ua/v1/{CasinoKey}/{Ua2Token}";
+            
+            var tpId = (int)TpEnum.RedTiger;
+            var tpCountryCode = TpCustInfoProvider.GetTpCurrencyCodeByCurrencyId(tpId, tpCustInfo.TpCurrencyId);
+            string countryCode = !string.IsNullOrEmpty(tpCountryCode.CountryCode) ? tpCountryCode.CountryCode : throw new Exception("CountryCode");
 
             bool mobile = appType != AppType.Desktop;
             var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
@@ -88,7 +83,6 @@ namespace ThirdParty.RedTiger
 
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
-            var tpId = (int)TpEnum.RedTiger;
             var gameType = (int)TpGameType.RedTiger_RNG;
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType.ToString(), tpId.ToString() };
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
@@ -101,7 +95,7 @@ namespace ThirdParty.RedTiger
                 {
                     id = tpCustInfo.TpUserName,
                     update = true,
-                    country = countryList[tpCustInfo.TpCurrencyId],
+                    country = countryCode,
                     language = TpLangId,
                     currency = tpCustInfo.TpCurrencyId,
                     session = new

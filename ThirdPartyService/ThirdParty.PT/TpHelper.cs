@@ -23,6 +23,7 @@ namespace ThirdParty.PT
             {"THB",7},
             {"VND",7},
             {"INR",5},
+            {"USD",0},
         };
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -394,6 +395,7 @@ namespace ThirdParty.PT
             try
             {
                 int timeSpan = timeZoneList[tpCustInfo.TpCurrencyId];
+                int minuteSpan = tpCustInfo.TpCurrencyId == "INR" ? 30 : 0;
                 var currency = tpCustInfo.TpCurrencyId;
                 var apiUrl = GetApiUrl(inputs);
                 var entityKey = GetEntityKey(inputs, currency);
@@ -410,8 +412,8 @@ namespace ThirdParty.PT
                 {
                     { "playername", wagerDetail.GetValueOrDefault("PLAYERNAME").ToString()},
                     { "gametype", wagerDetail.GetValueOrDefault("SHORTNAME").ToString() },
-                    { "startdate", DateTime.Parse( wagerDetail.GetValueOrDefault("GAMEDATE").ToString()).AddHours(timeSpan).ToString("yyyy-MM-dd HH:mm:ss") },
-                    { "enddate", DateTime.Parse( wagerDetail.GetValueOrDefault("GAMEDATE").ToString()).AddHours(timeSpan).ToString("yyyy-MM-dd HH:mm:ss") },
+                    { "startdate", DateTime.Parse( wagerDetail.GetValueOrDefault("GAMEDATE").ToString()).AddHours(timeSpan).AddMinutes(minuteSpan).ToString("yyyy-MM-dd HH:mm:ss") },
+                    { "enddate", DateTime.Parse( wagerDetail.GetValueOrDefault("GAMEDATE").ToString()).AddHours(timeSpan).AddMinutes(minuteSpan).ToString("yyyy-MM-dd HH:mm:ss") },
                     { "currency", wagerDetail.GetValueOrDefault("CURRENCYCODE").ToString() }
                 };
 
