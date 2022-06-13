@@ -186,12 +186,11 @@ namespace ThirdPartySettleWorker.Workers
         private static bool IsBettransSameAsTpWager(SettleData bettrans, SettleData tpWager, TpCurrency tpCurrency)
         {
             if (bettrans == null || tpWager == null || tpCurrency.ExchangeRate <= 0) return false;
+            tpWager.Stake *= tpCurrency.ExchangeRate;
+            tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
+            
             var targetWinLost = tpWager.WinLostAmount;
-            var targetStake = tpWager.Stake; 
-            
-            targetStake *= tpCurrency.ExchangeRate;
-            targetWinLost *= tpCurrency.ExchangeRate;
-            
+            var targetStake = tpWager.Stake;
             if (bettrans.TicketStatus == (int)SettlementType.UnSettled || 
                 bettrans.TicketStatus == (int)TicketStatus.Refund)
             {
