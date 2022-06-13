@@ -2714,10 +2714,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 long unixTimestamp = tools.GetUnixTimestampByTicks(bettingDataRNG_MG.creationTime);
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
 
-                // check betId is completed
-                var checkBetId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Check", new { bettingDataRNG_MG.betId });
-                if (checkBetId.Any())
+                var bettransMg = _partitionService.Query<BettransRng_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", new { bettingDataRNG_MG.betId });
+                var bettrans = bettransMg.ToList();
+                
+                // 已結束局
+                if (bettrans.Any(a => a.Completed))
                 {
+                    logger.LogError($"{bettingDataRNG_MG.betId} is completed");
+
                     return new MGPayoutResult()
                     {
                         Result = 1,
@@ -2725,15 +2729,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                // check txnId is exist
-                var checkTxnId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Get", new { bettingDataRNG_MG.txnId });
-                if (checkTxnId.Any())
+                // 檢查注單是否已經存在
+                if (bettrans.Any(a => a.TxnId == bettingDataRNG_MG.txnId))
                 {
+                    logger.LogError($"{bettingDataRNG_MG.txnId} exist");
+
                     return new MGPayoutResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = checkTxnId.ElementAt(0).trx_id
+                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == bettingDataRNG_MG.txnId).ExtTxnId
                     };
                 }
 
@@ -2744,7 +2749,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 bettingDataRNG_MG.TransType = "C";
                 bettingDataRNG_MG.TicketType = (int)BettransType.Payout;
                 bettingDataRNG_MG.TicketStatus = bettingDataRNG_MG.amount == 0 ? (int)TicketStatus.Draw : (int)TicketStatus.Win;
-                bettingDataRNG_MG.SettleFlag = (int)SettleFlag.EndGame;
+                bettingDataRNG_MG.SettleFlag = (bettingDataRNG_MG.completed) ? (int)SettleFlag.EndGame : (int)SettleFlag.Running;
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
 
@@ -2785,10 +2790,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ExtTxnId = extTxnId
                 };
             }
-            catch (Exception e)
+            catch (MySqlException mySqlEx)
             {
-                logger.LogError(e, $"PayoutLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
-                throw;
+                // 重複注單派彩
+                if (mySqlEx.Number == 1062)
+                {
+                    return new MGPayoutResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount,
+                    };
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, $"PayoutLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                    throw;
+                }
             }
         }
 
@@ -2805,30 +2822,41 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 long unixTimestamp = tools.GetUnixTimestampByTicks(cancelDataRng_MG.creationTime);
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
-                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Bet_Get", new DynamicParameters(new { betId = cancelDataRng_MG.betId, txnId = cancelDataRng_MG.txnId }));
-                if (!check.Any() || check.ElementAt(0).TicketStatus == 3)
+
+                var bettransMg = _partitionService.Query<BettransRng_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", new { cancelDataRng_MG.betId });
+                var bettrans = bettransMg.ToList();
+
+                // 不存在有效下注
+                if (bettrans.Count == 0 || bettrans.All(a => a.TicketType != 1))
                 {
-                    return new MGCancelResult()
-                    {
-                        Result = 1,
-                    };
+                    logger.LogError($"No valid bet {cancelDataRng_MG.betId}");
+                    return new MGCancelResult() { Result = 1 };
                 }
 
-                var bettransLcMg = check.ElementAt(0);
-                var roundId = bettransLcMg.betId;
-
-                if (bettransLcMg.playerId != cancelDataRng_MG.playerId || Math.Abs(bettransLcMg.amount) != cancelDataRng_MG.amount)
+                // 已結束局
+                if (bettrans.Any(a => a.Completed))
                 {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
+                    return new MGCancelResult() { Result = 1 };
+                }
+
+                // 玩家或金額不符
+                var bet = bettrans.FirstOrDefault();
+                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || bettrans.Any(a => a.TxnId == cancelDataRng_MG.txnId && Math.Abs(bet.Amount) != cancelDataRng_MG.amount)))
+                {
+                    logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
-                if (bettransLcMg.TicketType == (int)BettransType.CancelBet)
+                //已取消
+                if (bettrans.Any(a => a.TxnId == cancelDataRng_MG.txnId && a.TicketType == (int)BettransType.CancelBet))
                 {
+                    logger.LogError($"betId:{cancelDataRng_MG.betId}, txnId:{cancelDataRng_MG.txnId} is canceled");
                     return new MGCancelResult()
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = bettransLcMg.trx_id
+                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == cancelDataRng_MG.txnId).ExtTxnId
                     };
                 }
 
@@ -2840,7 +2868,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         cancelDataRng_MG.amount,
                         (int)Tp.MG,
-                        roundId,
+                        cancelDataRng_MG.betId,
                         gameType, TpCategory.LiveCasino,
                         cancelDataRng_MG.txnId,
                         TransType.Refunds,
@@ -2861,7 +2889,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     Result = result,
                     AfterAmount = afterAmount,
-                    ExtTxnId = bettransLcMg.trx_id
+                    ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == cancelDataRng_MG.txnId).ExtTxnId
                 };
             }
             catch (Exception e)
