@@ -24,23 +24,28 @@ namespace ThirdParty.AMB
         {
             var oApiResult = new ApiResult();
             var ok = false;
-            if (inputs.ContainsKey("ApiUrl") && inputs.ContainsKey("Agent") && inputs.ContainsKey("SecretKey"))
+            if (tpCustInfo.TpCurrencyId == "THB")
             {
-                var ambPoker = AMBFactory.Create(TpGameType.AMB_Poker, inputs);
-                var pokerResult = ambPoker.CreateMember(tpCustInfo.TpUserName, HttpPost);
-                if (pokerResult.status.code != 0 && pokerResult.status.code != 902)
+                if (inputs.ContainsKey("ApiUrl") && inputs.ContainsKey("Agent") && inputs.ContainsKey("SecretKey"))
                 {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = pokerResult.status.message;
-                    oApiResult.RawErrorCode = pokerResult.status.code.ToString();
-                    return oApiResult;
+                    var ambPoker = AMBFactory.Create(TpGameType.AMB_Poker, inputs, tpCustInfo.TpCurrencyId);
+                    var pokerResult = ambPoker.CreateMember(tpCustInfo.TpUserName, HttpPost);
+                    if (pokerResult.status.code != 0 && pokerResult.status.code != 902)
+                    {
+                        oApiResult.ErrorCode = ErrorCode.Fail;
+                        oApiResult.RawMessage = pokerResult.status.message;
+                        oApiResult.RawErrorCode = pokerResult.status.code.ToString();
+                        return oApiResult;
+                    }
+                    ok = true;
                 }
-                ok = true;
             }
-
-            if (inputs.ContainsKey("SlotApiUrl") && inputs.ContainsKey("SlotAgent") && inputs.ContainsKey("SlotSecretKey"))
+            
+            if (inputs.ContainsKey($"SlotApiUrl{tpCustInfo.TpCurrencyId}") && 
+                inputs.ContainsKey($"SlotAgent{tpCustInfo.TpCurrencyId}") && 
+                inputs.ContainsKey($"SlotSecretKey{tpCustInfo.TpCurrencyId}"))
             {
-                var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs);
+                var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs, tpCustInfo.TpCurrencyId);
                 var slotResult = ambSlot.CreateMember(tpCustInfo.TpUserName, HttpPost);
                 if (slotResult.status.code != 0 && slotResult.status.code != 902)
                 {
@@ -51,7 +56,7 @@ namespace ThirdParty.AMB
                 }
                 ok = true;
             }
-            
+
             if(ok)
                 oApiResult.ErrorCode = ErrorCode.Success;
             
@@ -77,7 +82,8 @@ namespace ThirdParty.AMB
             var homeUrl = GetInputValue(inputs, "homeUrl", true);
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var enumGameType = (TpGameType)int.Parse(tpGameType);
-            var amb = AMBFactory.Create(enumGameType, inputs);
+            var tpCurrency = GetCurrency(tpCustInfo);
+            var amb = AMBFactory.Create(enumGameType, inputs, tpCurrency);
             var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
 
             var oApiResult = new ApiResult();
@@ -104,8 +110,6 @@ namespace ThirdParty.AMB
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var tpGameType = (TpGameType)getBetDetail.TpGameTypeOption.Type;
-            var amb = AMBFactory.Create(tpGameType, inputs);
-
             var roundId = "";
             var gameId = "";
             switch (tpGameType)
@@ -125,6 +129,7 @@ namespace ThirdParty.AMB
                     throw new ArgumentOutOfRangeException(nameof(tpGameType), tpGameType, null);
             }
 
+            var amb = AMBFactory.Create(tpGameType, inputs, tpCustInfo.TpCurrencyId);
             var gameReport = amb.GetRoundResult(tpCustInfo.TpUserName, roundId, gameId, HttpPost);
             if (gameReport.status.code != 0)
             {
@@ -181,6 +186,13 @@ namespace ThirdParty.AMB
             if (allowNull)
                 return "";
             throw new Exception($"inputs {key} is empty");
+        }
+
+        private static string GetCurrency(TpCustInfo tpCustInfo)
+        {
+            if (tpCustInfo != null && !string.IsNullOrEmpty(tpCustInfo.TpCurrencyId))
+                return tpCustInfo.TpCurrencyId;
+            return "THB";
         }
     }
 }

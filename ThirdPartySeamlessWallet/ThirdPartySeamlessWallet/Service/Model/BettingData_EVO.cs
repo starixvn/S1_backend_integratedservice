@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -22,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Game_EVO
     {
         public string id { get; set; }
@@ -29,11 +33,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public Details_EVO details { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Details_EVO
     {
         public Table_EVO table { get; set; }
     }
 
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Table_EVO
     {
         public string id { get; set; }
@@ -45,7 +51,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string sid { get; set; }
         public string userId { get; set; }
         public string currency { get; set; }
-        public Game_EVO game { get; set; }
+        public Game_EVO? game { get; set; }
         public string uuid { get; set; }
     }
 
@@ -67,8 +73,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string voucherId { get; set; }
         public decimal playableBalance { get; set; }
         public int remainingRounds { get; set; }
+        public string bonusConfigId { get; set; }
+        public string rewardId { get; set; }
     }
-
+    [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class Jackpot_EVO
     {
         public string id { get; set; }
@@ -84,71 +92,46 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int SettleFlag { get; set; }
     }
 
-    //public class PromoDebitData_EVO : PromoDataCommon_EVO
-    //{
-    //    public PromoTransactionDebit promoTransaction { get; set; }
-    //}
+    public class Reward_EVO
+    {
+        public int SQ { get; set; }
+        public string userId { get; set; }
+        public string currency { get; set; }
+        public string? game { get; set; }
+        public string? promoTransaction { get; set; }
+        public string uuid { get; set; }
+        public string? GameId { get; set; }
+        public string? GameType { get; set; }
+        public string? TableId { get; set; }
+        public string? TableVId { get; set; }
+        public string PromoTransactionType { get; set; }
+        public string PromoTransactionId { get; set; }
+        public decimal PromoTransactionAmount { get; set; }
+        public string? PromoTransactionVoucherId { get; set; }
+        public int? PromoTransactionRemainingRounds { get; set; }
+        public decimal? PromoTransactionPlayableBalance { get; set; }
+        public string? PromoTransactionBonusConfigId { get; set; }
+        public string? PromoTransactionRewardId { get; set; }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
+        public PaidFromEnum PaidFrom { get; set; }
+        public BettransType TicketType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public SettleFlag SettleFlag { get; set; }
+        public DateTime CreateTime { get; set; }
+        public DateTime UpdateTime { get; set; }
+    }
 
-    //public class PromoTransactionDebit : PromoTransactionCommon_EVO
-    //{
-    //    public string refId { get; set; }
-    //    public string voucherId { get; set; }
-    //    public int remainingRounds { get; set; }
-    //    public List<JackpotDebit> jackpots { get; set; }
-    //}
-
-    //public class JackpotDebit
-    //{
-    //    public string id { get; set; }
-    //    public decimal contributionAmount { get; set; }
-    //    public List<ContributionDebit> contributions { get; set; }
-    //}
-
-    //public class ContributionDebit
-    //{
-    //    public string pot { get; set; }
-    //    public decimal amount { get; set; }
-    //}
-
-    //public class PromoCreditData_EVO : PromoDataCommon_EVO
-    //{
-    //    public PromoTransactionCredit promoTransaction { get; set; }
-    //}
-
-    //public class PromoTransactionCredit : PromoTransactionCommon_EVO
-    //{
-    //    public string refId { get; set; }
-    //    public string voucherId { get; set; }
-    //    public int remainingRounds { get; set; }
-    //}
-
-    //public class PromoCancelData_EVO : PromoDataCommon_EVO
-    //{
-    //    public PromoTransactionCancel promoTransaction { get; set; }
-    //}
-
-    //public class PromoTransactionCancel : PromoTransactionCommon_EVO
-    //{
-    //    public string refId { get; set; }
-    //    public string voucherId { get; set; }
-    //    public int remainingRounds { get; set; }
-    //    public List<JackpotCancel> jackpots { get; set; }
-    //}
-
-    //public class JackpotCancel
-    //{
-    //    public string id { get; set; }
-    //    public decimal contributionAmount { get; set; }
-    //}
-
-    //public class PromoPayoutData_EVO : PromoDataCommon_EVO
-    //{
-    //    public PromoTransactionPayout promoTransaction { get; set; }
-    //}
-
-    //public class PromoTransactionPayout : PromoTransactionCommon_EVO
-    //{
-    //    public string voucherId { get; set; }
-    //    public int remainingRounds { get; set; }
-    //}
+    public class SettledReward_EVO
+    {
+        public int SQ { get; set; }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
+        public string PromoTransactionId { get; set; }
+        public string userId { get; set; }
+        public decimal PromoTransactionAmount { get; set; }
+        public long CreateTime { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public BettransType TicketType { get; set; }
+    }
 }

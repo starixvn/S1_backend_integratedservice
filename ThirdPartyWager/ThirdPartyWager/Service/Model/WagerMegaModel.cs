@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ThirdPartyWager.Service.Model
 {
-    public class ReportMega
+    public class ReportDataMega
     {
         public string code { get; set; }
         public string message { get; set; }

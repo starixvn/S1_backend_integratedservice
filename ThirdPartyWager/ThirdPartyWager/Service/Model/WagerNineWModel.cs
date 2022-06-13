@@ -219,8 +219,4 @@ namespace ThirdPartyWager.Service.Model.NineW
         }
     }
 
-
-
-
-
 }
