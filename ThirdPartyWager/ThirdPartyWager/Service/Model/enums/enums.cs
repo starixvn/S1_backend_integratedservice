@@ -83,7 +83,6 @@
         Draw = 4,
         Related = 5,
         FreeBetWin = 6
->>>>>>> PRD
     }
 
     public enum DataBase
