@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ThirdPartySeamlessWallet\ThirdPartySeamlessWallet.csproj" />
+    <ProjectReference Include="..\ThirdPartySettleWorker\ThirdPartySettleWorker.csproj" />
   </ItemGroup>
 
 </Project>
