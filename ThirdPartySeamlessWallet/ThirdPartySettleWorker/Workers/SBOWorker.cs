@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -85,7 +86,9 @@ namespace ThirdPartySettleWorker.Workers
                         
                         if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                         {
-                            _logger.LogError($"transId: {transId} is not equal");
+                            _logger.LogError($"transId: {transId} is not equal " +
+                                             $"settle: {JsonConvert.SerializeObject(settleData)} " +
+                                             $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                             continue;
                         }
 
@@ -94,7 +97,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = settleData.Stake,
                             ValidBet = settleData.ValidBet,
-                            WinlostAmount = settleData.WinLostAmount,
+                            WinlostAmount = tpWagerData.WinLostAmount,
                             TransId = settleData.TransId,
                             GameType = gameType,
                             TpUserName = settleData.Account,
@@ -144,8 +147,17 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                _timerSports?.Change(dueTimeSpan, TimeSpan.Zero);
-                _timerVirtualSports?.Change(dueTimeSpan, TimeSpan.Zero);
+                switch (gameType)
+                {
+                    case GameType.SBO_Sports:
+                        _timerSports?.Change(dueTimeSpan, TimeSpan.Zero);
+                        break;
+                    case GameType.SBO_VirtualSports:
+                        _timerVirtualSports?.Change(dueTimeSpan, TimeSpan.Zero);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
@@ -171,19 +183,22 @@ namespace ThirdPartySettleWorker.Workers
             return settlementType;
         }
 
-        private bool IsBettransSameAsTpWager(SettleData bettrans, SettleData tpWager, TpCurrency tpCurrency)
+        private static bool IsBettransSameAsTpWager(SettleData bettrans, SettleData tpWager, TpCurrency tpCurrency)
         {
             if (bettrans == null || tpWager == null || tpCurrency.ExchangeRate <= 0) return false;
-            tpWager.Stake *= tpCurrency.ExchangeRate;
-            tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
+            var targetWinLost = tpWager.WinLostAmount;
+            var targetStake = tpWager.Stake; 
+            
+            targetStake *= tpCurrency.ExchangeRate;
+            targetWinLost *= tpCurrency.ExchangeRate;
             
             if (bettrans.TicketStatus == (int)SettlementType.UnSettled || 
                 bettrans.TicketStatus == (int)TicketStatus.Refund)
             {
-                tpWager.WinLostAmount -= tpWager.Stake;
+                targetWinLost -= targetStake;
             }
             
-            return bettrans.Stake == tpWager.Stake && bettrans.WinLostAmount == tpWager.WinLostAmount;
+            return bettrans.Stake == targetStake && bettrans.WinLostAmount == targetWinLost;
         }
     }
 }
