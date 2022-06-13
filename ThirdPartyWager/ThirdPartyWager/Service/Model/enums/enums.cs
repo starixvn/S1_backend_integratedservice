@@ -40,7 +40,8 @@
         MP = 35,
         EVO = 36,
         Netent = 37,
-        RedTiger = 38
+        RedTiger = 38,
+        SBO = 42
     }
 
     public enum GameType
@@ -57,6 +58,8 @@
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,
         SG_Fish = 31,
+        SBO_Sports = 77,
+        SBO_VirtualSports = 81,
         PT_RNG = 46,
         PT_LiveCasino = 48,
     }

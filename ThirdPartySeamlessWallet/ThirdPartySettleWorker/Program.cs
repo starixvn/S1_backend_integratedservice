@@ -73,6 +73,7 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<SGWorker>();
                    services.AddHostedService<AllbetWorker>();
                    services.AddHostedService<PTWorker>();
+                   services.AddHostedService<SBOWorker>();
                    services.AddHostedService<JILIWorker>();
                    services.AddHostedService<ATWorker>();
                    services.AddHostedService<SBOWorker>();

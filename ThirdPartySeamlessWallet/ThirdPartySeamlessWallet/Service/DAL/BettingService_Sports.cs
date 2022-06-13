@@ -4,6 +4,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -121,5 +122,72 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        public async Task<SBOResult> PlaceBetSport_SBO(TpCustInfo tpCustInfo, PlaceBetSportDto_SBO dto)
+        {
+            try
+            {
+                var bonusId = 0;
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+                
+                dto.TicketType = (int)BettransType.Bet;
+                dto.TicketStatus = (int)TicketStatus.UnSettled;
+                var p = new DynamicParameters(dto);
+                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                
+                if (result < 1)
+                {
+                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
+                                    $" exec Service_BettransSports_SBO_Deduct_Ins failed return Result:-1");
+                    return new SBOResult() { Result = -1 };
+                }
+
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(dto.Amount) * -1,
+                    tpId: (int)Tp.SBO,
+                    tpTransId: dto.TransferCode,
+                    gameType:(int)GameType.SBO_Sports,
+                    refId: dto.TransferCode,
+                    betData: null,
+                    tpCategory: TpCategory.Sports,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans
+                );
+                if (result != 1)
+                {
+                    logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
+                    return new SBOResult() { Result = -2 };
+                }
+                
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, dto.BetTime);
+                if (result < 1)
+                {
+                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
+                                    $"exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
+                    return new SBOResult() { Result = -3 };
+                }
+                
+                var sboResult = new SBOResult
+                {
+                    Result = 1,
+                    AfterAmount = afterAmount
+                };
+                await trans.CommitAsync();
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
     }
 }
