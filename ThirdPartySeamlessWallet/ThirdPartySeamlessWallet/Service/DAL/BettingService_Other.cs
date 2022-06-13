@@ -703,5 +703,53 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        public async Task<SBOResult> TransferLiveCoin_SBO(TpCustInfo tpCustInfo, LiveCoinTransactionDto_SBO dto)
+        {
+            try
+            {
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+                
+                dto.TicketType = (int)BettransType.Tip;
+                dto.TicketStatus = (int)TicketStatus.Win;
+                var p = new DynamicParameters(dto);
+                var sboResult = new SBOResult();
+                var result = conn.Execute("Service_BettransLiveCoin_SBO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && dto.Amount != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(dto.Amount) * -1,
+                        (int)Tp.MP,
+                        TransType.Wagers,
+                        $"LiveCoin: {dto.Selection}",
+                        dto.TransactionId,
+                        out var afterAmount,
+                        conn,
+                        trans);
+                    
+                    if (result > 0)
+                    {
+                        sboResult.AfterAmount = afterAmount;
+                        trans.Commit();
+                    }
+                }
+                sboResult.Result = result;
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
     }
 }
