@@ -210,13 +210,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("Tip")]
         public SBOBalanceResponse Tip()
         {
-            return new SBOBalanceResponse()
-            {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+            return new SBOBalanceResponse();
         }
         
         /// <summary>
@@ -226,13 +220,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("Bonus")]
         public SBOBalanceResponse Bonus()
         {
-            return new SBOBalanceResponse()
-            {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+            return new SBOBalanceResponse();
         }
         
         /// <summary>
@@ -242,13 +230,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("ReturnStake")]
         public SBOBalanceResponse ReturnStake()
         {
-            return new SBOBalanceResponse()
-            {
-                AccountName = "DNova88_250032",
-                Balance = 500.0000m,
-                ErrorCode = 0,
-                ErrorMessage = "No Error"
-            };
+            return new SBOBalanceResponse();
         }
         
         /// <summary>
