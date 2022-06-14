@@ -204,6 +204,7 @@ namespace ThirdParty.Sexy
                 isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
                 externalURL = lobbyUrl,
                 gameType = "LIVE",
+                gameCode = "MX-LIVE-001",
                 platform = "SEXYBCRT",
                 language = TpLangId,
                 hall = "SEXY",
