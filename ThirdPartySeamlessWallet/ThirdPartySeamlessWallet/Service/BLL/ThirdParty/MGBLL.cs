@@ -126,19 +126,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 roundId = request.roundId,
                 deviceType = request.deviceType,
                 platformType = request.platformType,
-                completed = request.completed
+                completed = request.completed,
             };
 
             var placeBetResult = new MGPlaceBetResult();
 
-            var gameType = getGameType(request.contentCode, request.channel, request.txnEventType);
+            var gameType = getGameType(request.channel);
             if (gameType == (int)GameType.MG_RNG)
             {
-                placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, (int)gameType);
+                placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, gameType);
             }
             else if (gameType == (int)GameType.MG_LiveCasino)
             {
-                placeBetResult = _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, (int)gameType);
+                placeBetResult = _bettingService.PlaceBetLC_MG(tpCustInfo, bettingData, gameType);
             }
             else
             {
@@ -195,18 +195,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 roundId = request.roundId,
                 deviceType = request.deviceType,
                 platformType = request.platformType,
-                completed = request.completed
+                completed = request.completed,
+                transNum = request.transNum
             };
 
             var payoutResult = new MGPayoutResult();
-            var gameType = getGameType(request.contentCode, request.channel, request.txnEventType);
+            var gameType = getGameType(request.channel);
             if (gameType == (int)GameType.MG_RNG)
             {
-                payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, (int)gameType);
+                payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, gameType);
             }
             else if (gameType == (int)GameType.MG_LiveCasino)
             {
-                payoutResult = _settledService.PayoutLC_MG(tpCustInfo, bettingData, (int)gameType);
+                payoutResult = _settledService.PayoutLC_MG(tpCustInfo, bettingData, gameType);
             }
             else
             {
@@ -260,7 +261,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var cancelResult = new MGCancelResult();
 
-            var gameType = getGameType(request.contentCode, request.channel, request.txnEventType);
+            var gameType = getGameType(request.channel);
             if (gameType == 0)
             {
                 // check bettrans of gametype by table
@@ -326,20 +327,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var cancelResult = new MGCancelResult();
 
-            var gameType = getGameType(request.contentCode, request.channel, request.txnEventType);
+            var gameType = getGameType(request.channel);
             if (gameType == (int)GameType.MG_RNG)
             {
-                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, (int)gameType);
+                cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, gameType);
             }
             else if (gameType == (int)GameType.MG_LiveCasino)
             {
-                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, (int)gameType);
+                cancelResult = await _settledService.CancelBetLC_MG(tpCustInfo, cancelData, gameType);
             }
             else
             {
                 throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{gameType}");
             }
-
 
             // DB 錯誤
             if (cancelResult.Result <= 0)
@@ -382,21 +382,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return (tpCustInfo, tpCurrency);
         }
 
-        private int getGameType(string contentCode = null, string channel = null, string txnEventType = null)
+        private int getGameType(string channel = null)
         {
             var gameType = 0;
-            if (!string.IsNullOrEmpty(channel) && string.Equals(channel, "LIVEDEALER", StringComparison.OrdinalIgnoreCase))
+            if(!string.IsNullOrEmpty(channel) && string.Equals(channel, "LIVEDEALER", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = (int)GameType.MG_LiveCasino;
-            }
-            else if (!string.IsNullOrEmpty(channel) && string.Equals(channel, "SLOTS", StringComparison.OrdinalIgnoreCase))
-            {
-                gameType = (int)GameType.MG_RNG;
-            }
-            else if (!txnEventType.Equals("Game", StringComparison.OrdinalIgnoreCase))
-            {
-                // promotion
-                gameType = (int)GameType.MG_RNG;
             }
             else
             {
