@@ -78,6 +78,7 @@ namespace ThirdPartyWager.Service.BLL
                                     schemeid = (betTmp["betdetail"][0]["@schemeid"].ToString() != "") ? Convert.ToInt64(betTmp["betdetail"][0]["@schemeid"]) : 0,
                                     channel = betTmp["betdetail"][0]["@channel"].ToString(),
                                     betdetail = JsonConvert.SerializeObject(betTmp["betdetail"]),
+                                    winningodds = (betTmp.ContainsKey("winningodds") && !string.IsNullOrEmpty(betTmp["winningodds"].ToString())) ? JsonConvert.SerializeObject(betTmp["winningodds"]) : "{}",
                                     dealdetail = JsonConvert.SerializeObject(dealItem.dealdetails.dealdetail),
                                     result = (dealItem.results != null) ? JsonConvert.SerializeObject(dealItem.results) : null,
                                 };
