@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
 using System;
 using System.Linq;
@@ -79,6 +78,11 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var wager = _settledBLL.GetSettle_TpWager_YGG(settleData.TransId);
+
+                        if (wager == null) continue; // wager 沒注單，無法比對(投注額、輸贏值)，故不結算
+
+                        if (!CanSettle(wager, settleData)) continue;
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -137,6 +141,11 @@ namespace ThirdPartySettleWorker.Workers
 
                 timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private static bool CanSettle(SettleData_YGG wager, SettleData settleData)
+        {
+            return wager.Stake == settleData.Stake && wager.WinLostAmount == settleData.WinLostAmount;
         }
     }
 }
