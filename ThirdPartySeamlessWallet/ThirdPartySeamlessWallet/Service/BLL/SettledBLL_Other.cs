@@ -296,9 +296,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_KM(spName);
         }
 
-        public int SetSettleFlag_KM(string spName, string transId , bool isSuccess = true)
+        public int SetSettleFlag_KM(string spName, string transId)
         {
-            return settledService.SetSettleFlag_KM(spName, transId , isSuccess);
+            return settledService.SetSettleFlag_KM(spName, transId);
         }
 
         #endregion
