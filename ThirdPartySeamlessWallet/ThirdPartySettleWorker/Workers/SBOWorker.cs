@@ -71,7 +71,7 @@ namespace ThirdPartySettleWorker.Workers
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
                 if (!tpUnsettleList.Any())
                 {
-                    throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+                    throw new UnsettleNotFoundException($"{gameType} no unsettle data.");
                 }
 
                 forContinue = tpUnsettleList.Count() == 200;
