@@ -80,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int GameId { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
-        public int SettleFlag { get; set; }
+        public GameType TpGameType { get; set; }
     }
     
     public class SBOSettleRequest
@@ -108,6 +108,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class PayoutSportDto_SBO
     {
+        public string Username { get; set; }
         public string TransferCode { get; set; }
         public decimal WinLoss { get; set; }
         public int ResultType { get; set; }
@@ -119,6 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Gpid { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
+        public GameType TpGameType { get; set; }
     }
     
     public class SBOGetBetStatusRequest
@@ -146,8 +148,111 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string TransferCode { get; set; }
         public string TransactionId { get; set; }
-        public int TicketStatus { get; set; }
-        public decimal WinLoss { get; set; }
         public decimal Stake { get; set; }
+        public decimal WinLoss { get; set; }
+        public int Status { get; set; }
+        public DateTime? ResultTime { get; set; }
+        public int TicketStatus { get; set; }
+    }
+    
+    public class SBOCancelRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public bool IsCancelAll { get; set; }
+        public string TransactionId { get; set; }
+        public int Gpid { get; set; }
+    }
+    public class SBOCancelResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+    
+    public class CancelSportDto_SBO
+    {
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime? ResultTime { get; set; }
+        public int Status { get; set; }
+        public GameType TpGameType { get; set; }
+    }
+    
+    public class SBORollbackRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public int Gpid { get; set; }
+    }
+    public class SBORollbackResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
+    public class RollbackSportDto_SBO
+    {
+        public string Username { get; set; }
+        public string TransferCode { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime? ResultTime { get; set; }
+        public int Status { get; set; }
+        public GameType TpGameType { get; set; }
+    }
+    
+    public class SBOLiveCoinTransactionRequest
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime TransactionTime { get; set; }
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public SBOProductType ProductType { get; set; }
+        public string Selection { get; set; }
+    }
+    
+    public class SBOLiveCoinTransactionResponse
+    {
+        public string AccountName { get; set; }
+        public decimal Balance { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+    
+    public class LiveCoinTransactionDto_SBO
+    {
+        public string CompanyKey { get; set; }
+        public string Username { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime TransactionTime { get; set; }
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public int ProductType { get; set; }
+        public string Selection { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+    }
+    
+    public class SBOLiveCoinTransactionData
+    {
+        public string Username { get; set; }
+        public decimal Amount { get; set; }
+        public string TransferCode { get; set; }
+        public string TransactionId { get; set; }
+        public DateTime TransactionTime { get; set; }
+        public int ProductType { get; set; }
+        public string Selection { get; set; }
+        public int Status { get; set; }
+        public int TicketStatus { get; set; }
     }
 }

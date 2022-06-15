@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -17,10 +18,12 @@ namespace ThirdPartySettleWorker.Workers
     public class SBOWorker : BackgroundService, ISettleWorker
     {
         public Tp Tp => Tp.SBO;
-        private Timer _timer;
+        private Timer _timerSports;
+        private Timer _timerVirtualSports;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<SBOWorker> _logger;
         private readonly string _tpName;
 
@@ -29,6 +32,7 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<SBOWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -36,13 +40,15 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoSettle, GameType.SBO_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSports = new Timer(DoSettle, GameType.SBO_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            _timerVirtualSports = new Timer(DoSettle, GameType.SBO_VirtualSports, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _timer?.Change(Timeout.Infinite, 0);
+            _timerSports?.Change(Timeout.Infinite, 0);
+            _timerVirtualSports?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -53,12 +59,12 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
-
             var gameType = (GameType)state;
-            var tpCategory = TpCategory.Sports;
+            var tpCategory = TpCategory.Sports; // SBO_Sports、SBO_VirtualSports 都是體育分類
 
             const string logName = "SettleSBO";
-            const string getSpName = "Service_BettransSports_SBO_Unsettle_Get";
+            const string getBettransSp = "Service_BettransSports_SBO_Unsettle_Get"; // 取得未結算的注單
+            const string getWagerSp = "Service_TpWagerSports_SBO_Unsettle_Get"; // 取得未結算的注單
 
             try
             {
@@ -73,22 +79,33 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSpName, new { TransId = transId }, DataBase.Main).First();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = transId }, DataBase.Main).FirstOrDefault();
+                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { TransId = transId }, DataBase.Wager).FirstOrDefault();
+                        if(tpWagerData == null) continue;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        
+                        if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
+                        {
+                            _logger.LogError($"transId: {transId} is not equal " +
+                                             $"settle: {JsonConvert.SerializeObject(settleData)} " +
+                                             $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                            continue;
+                        }
 
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
                             Stake = settleData.Stake,
-                            ValidBet = settleData.Stake,
-                            WinlostAmount = settleData.WinLostAmount,
+                            ValidBet = settleData.ValidBet,
+                            WinlostAmount = tpWagerData.WinLostAmount,
                             TransId = settleData.TransId,
                             GameType = gameType,
                             TpUserName = settleData.Account,
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
-                            SettlementType = SettlementType.SettledForValid,
-                            TicketStatus = SetTicketStatus(settleData.WinLostAmount),
+                            SettlementType = SetSettlementType((TicketStatus)settleData.TicketStatus), // 判斷 TicketStatus，因為可能重新結算
+                            TicketStatus = (TicketStatus)settleData.TicketStatus,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
@@ -121,7 +138,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                var dueTimeSpan = TimeSpan.FromSeconds(30);
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
@@ -131,15 +148,57 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
-                _timer?.Change(dueTimeSpan, TimeSpan.Zero);
+                switch (gameType)
+                {
+                    case GameType.SBO_Sports:
+                        _timerSports?.Change(dueTimeSpan, TimeSpan.Zero);
+                        break;
+                    case GameType.SBO_VirtualSports:
+                        _timerVirtualSports?.Change(dueTimeSpan, TimeSpan.Zero);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
-        private TicketStatus SetTicketStatus(decimal winLostAmount)
+        private SettlementType SetSettlementType(TicketStatus ticketStatus)
         {
-            if (winLostAmount == 0) return TicketStatus.Draw;
+            var settlementType = SettlementType.UnSettled;
 
-            return winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost;
+            switch (ticketStatus)
+            {
+                case TicketStatus.UnSettled:
+                    settlementType = SettlementType.UnSettled;
+                    break;
+                case TicketStatus.Win:
+                case TicketStatus.Lost:
+                case TicketStatus.Draw:
+                    settlementType = SettlementType.SettledForValid;
+                    break;
+                case TicketStatus.Refund:
+                    settlementType = SettlementType.SettledForInvalid;
+                    break;
+            }
+
+            return settlementType;
+        }
+
+        private static bool IsBettransSameAsTpWager(SettleData bettrans, SettleData tpWager, TpCurrency tpCurrency)
+        {
+            if (bettrans == null || tpWager == null || tpCurrency.ExchangeRate <= 0) return false;
+            tpWager.Stake *= tpCurrency.ExchangeRate;
+            tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
+            
+            var targetWinLost = tpWager.WinLostAmount;
+            var targetStake = tpWager.Stake;
+            if (bettrans.TicketStatus == (int)SettlementType.UnSettled || 
+                bettrans.TicketStatus == (int)TicketStatus.Refund)
+            {
+                targetWinLost -= targetStake;
+            }
+            
+            return bettrans.Stake == targetStake && bettrans.WinLostAmount == targetWinLost;
         }
     }
 }

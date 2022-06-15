@@ -706,14 +706,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 long unixTimestamp = tools.GetUnixTimestampByTicks(bettingDataRNG_MG.creationTime);
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
-                var check = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Bet_Get", new DynamicParameters(new { betId = bettingDataRNG_MG.betId, txnId = bettingDataRNG_MG.txnId }));
-                if (check.Any())
+
+                // 檢查該局是否已經結算
+                var checkBetId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Check", new { bettingDataRNG_MG.betId });
+                if (checkBetId.Any())
                 {
+                    logger.LogError($"{bettingDataRNG_MG.betId} is completed");
                     return new MGPlaceBetResult()
                     {
                         Result = 1,
-                        AfterAmount = afterAmount,
-                        ExtTxnId = check.ElementAt(0).trx_id
+                        AfterAmount = afterAmount
                     };
                 }
 
@@ -746,7 +748,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         out afterAmount,
                         ref bonusId,
                         conn,
-                        trans);
+                        trans
+                   );
                 }
 
                 if (result > 0)
@@ -761,10 +764,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ExtTxnId = extTxnId
                 };
             }
-            catch (Exception e)
+            catch (MySqlException mySqlEx)
             {
-                logger.LogError(e, $"PlaceBetLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
-                throw;
+                // 重複注單下注
+                if (mySqlEx.Number == 1062)
+                {
+                    return new MGPlaceBetResult()
+                    {
+                        Result = 1,
+                        AfterAmount = afterAmount
+                    };
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, $"PlaceBetLC_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                    throw;
+                }
             }
         }
 

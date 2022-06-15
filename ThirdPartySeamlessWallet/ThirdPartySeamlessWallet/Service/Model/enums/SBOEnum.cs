@@ -9,6 +9,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Tie = 2
     }
 
+    public enum SBOBetStatus
+    {
+        running,
+        settle,
+        cancel
+    }
+
     public enum SBOProductType
     {
         [Description("体育博彩")]

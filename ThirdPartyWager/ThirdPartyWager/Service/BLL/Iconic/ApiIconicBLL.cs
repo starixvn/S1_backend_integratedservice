@@ -30,7 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiIconicBLL>>();
         }
 
-        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage, string guid)
+        public async Task<WagerIconicModel> GetBetListByTime(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage)
         {
             // param
             var url = $"{apiUrl}/api/v1/profile/sets";
@@ -48,7 +48,26 @@ namespace ThirdPartyWager.Service.BLL
             var result = JsonConvert.DeserializeObject<WagerIconicModel>(r);
             return result;
         }
-        
+
+        public async Task<BetList_AT> GetBetListByTimeV2(string apiUrl, string token, long startUnix, long endUnix, int page, int perPage)
+        {
+            // param
+            var url = $"{apiUrl}/api/v1/profile/rounds";
+            var param = new
+            {
+                updatedStart = startUnix * 1000,
+                updatedEnd = endUnix * 1000,
+                lang = "en",
+                pageSize = perPage,
+                page = page
+            };
+
+            // request
+            var r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
+            var result = JsonConvert.DeserializeObject<BetList_AT>(r);
+            return result;
+        }
+
         public async Task<WagerIconicModel> GetBetListById(string apiUrl, string token, string id)
         {
             // param
@@ -77,6 +96,22 @@ namespace ThirdPartyWager.Service.BLL
             // request
             var r = await DoHttpClientAsync(url, param, HttpMethod.Post, false);
             var result = JsonConvert.DeserializeObject<JwtTokenIconic>(r);
+            return result;
+        }
+
+        public async Task<CurrencyStats_AT> GetBetSummaryByTime(string apiUrl, string token, long startUnix, long endUnix)
+        {
+            // param
+            var url = $"{apiUrl}/api/v1/profile/currencyStats";
+            var param = new
+            {
+                start = startUnix * 1000,
+                end = endUnix * 1000,
+            };
+
+            // request
+            var r = await DoHttpClientAsync(url, param, HttpMethod.Get, true, token);
+            var result = JsonConvert.DeserializeObject<CurrencyStats_AT>(r);
             return result;
         }
 

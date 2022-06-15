@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
@@ -14,10 +15,10 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<ReportRedoMega> _logger;
         private readonly WagerMegaBLL _wagerMegaBLL;
+        private readonly CommonBLL _commonBLL;
+        private readonly IHostEnvironment _environment;
 
-        private Timer timerTHB;
-        private Timer timerMYR;
-        private Timer timerIDR;
+        private Timer timer;
 
         private readonly int tpType = 2;
         private readonly int timeRange = 1440; //in minutes
@@ -29,26 +30,56 @@ namespace ThirdPartyWager.Workers
         {
             _logger = provider.GetRequiredService<ILogger<ReportRedoMega>>();
             _wagerMegaBLL = provider.GetRequiredService<WagerMegaBLL>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timerTHB = new Timer(DoTaskTHB, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
-            timerMYR = new Timer(DoTaskMYR, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
-            timerIDR = new Timer(DoTaskIDR, null, TimeSpan.FromSeconds(5), TimeSpan.Zero);
+            timer = new Timer(DoTask, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoTaskTHB(object state)
+        private async void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-
-            bool quick = false;
-            var currency = "THB";
+            var quick = 0;
+            var failed = 0;
+            var tasks = new List<Task>();
             try
             {
-                quick = await _wagerMegaBLL.ExecReportPlayerListWorker(tpType, currency, timeRange);
+                var tpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Mega);
+
+                foreach (var item in tpCurrencyList)
+                {
+                    if (!_environment.IsProduction() && item.TpCurrencyId == "USD")
+                    {
+                        continue;
+                    }
+
+                    var currency = item.TpCurrencyId;
+                    tasks.Add(Task.Run(() =>
+                    {
+                        try
+                        {
+                            var res = _wagerMegaBLL.ExecReportPlayerListWorker(tpType, currency, timeRange);
+                            if (res.Result)
+                            {
+                                quick = 1;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                            Interlocked.Increment(ref failed);
+                        }
+                    }));
+
+                }
+                var t = Task.WhenAll(tasks);
+                t.Wait();
+
             }
             catch (Exception ex)
             {
@@ -56,60 +87,14 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromDays(runTime);
-                timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private async void DoTaskMYR(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-
-            bool quick = false;
-            var currency = "MYR";
-            try
-            {
-                quick = await _wagerMegaBLL.ExecReportPlayerListWorker(tpType, currency, timeRange);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromDays(runTime);
-                timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private async void DoTaskIDR(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-
-            bool quick = false;
-            var currency = "IDR";
-            try
-            {
-                quick = await _wagerMegaBLL.ExecReportPlayerListWorker(tpType, currency, timeRange);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromDays(runTime);
-                timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
+                TimeSpan dueTimeSpan = quick == 1 ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromDays(runTime);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timerTHB?.Change(Timeout.Infinite, 0);
-            timerMYR?.Change(Timeout.Infinite, 0);
-            timerIDR?.Change(Timeout.Infinite, 0);
+            timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

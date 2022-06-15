@@ -9,6 +9,7 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
+using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -54,6 +55,7 @@ namespace ThirdPartyWager
 
             /*DAL*/
             services.AddSingleton<ThirdPartyHelper>();
+            services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
             services.AddSingleton<WagerDGService>();
             services.AddSingleton<WagerAllBetService>();
@@ -76,6 +78,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
+            services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
@@ -101,6 +104,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerSABLL>();
             services.AddSingleton<ApiSABLL>();
             services.AddSingleton<WagerRedoSABLL>();
+            services.AddSingleton<FinanceSABLL>();
             // AG
             services.AddSingleton<WagerAGBLL>();
             services.AddSingleton<ApiAGBLL>();
@@ -111,6 +115,9 @@ namespace ThirdPartyWager
             // SG
             services.AddSingleton<WagerSGBLL>();
             services.AddSingleton<ApiSGBLL>();
+            //SBO
+            services.AddSingleton<ISBOBLL, SBOBLL>();
+            services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
             // WM
             services.AddSingleton<WagerWMBLL>();
             services.AddSingleton<ApiWMBLL>();
@@ -125,9 +132,10 @@ namespace ThirdPartyWager
             // Mega
             services.AddSingleton<WagerMegaBLL>();
             services.AddSingleton<ApiMegaBLL>();
-            // Iconic
+            // Iconic(AT)
             services.AddSingleton<WagerIconicBLL>();
             services.AddSingleton<ApiIconicBLL>();
+            services.AddSingleton<FinanceATBLL>();
             // OneGaming
             services.AddSingleton<WagerOneGamingBLL>();
             services.AddSingleton<ApiOneGamingBLL>();
@@ -173,14 +181,19 @@ namespace ThirdPartyWager
             services.AddHostedService<CheckRewardAllBet>();
             services.AddHostedService<WagerSA>();
             services.AddHostedService<WagerRedoSA>();
+            services.AddHostedService<FinanceSA>();
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<WagerSG>();
+            services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<JwtIconic>();
-            services.AddHostedService<WagerIconic>();
+            //services.AddHostedService<WagerIconic>();
+            services.AddHostedService<WagerAT>();
+            services.AddHostedService<WagerRedoAT>();
+            services.AddHostedService<FinanceAT>();
             services.AddHostedService<WagerOneGaming>();
             services.AddHostedService<WagerRedoOneGaming>();
             services.AddHostedService<WagerV8>();
@@ -189,6 +202,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
+            services.AddHostedService<WagerReSettlePT>();
             services.AddHostedService<LiveStreaming>();
             // services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
@@ -201,7 +215,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<TpRefundWorker>();
-            services.AddHostedService<Workers.ReportMega>();
+            services.AddHostedService<ReportMega>();
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
         }

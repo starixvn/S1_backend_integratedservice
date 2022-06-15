@@ -46,7 +46,7 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerRNG = new Timer(DoSettleRng, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerLC = new Timer(DoSettleLc, null,TimeSpan.Zero, TimeSpan.Zero);
+            timerLC = new Timer(DoSettleLc, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -179,33 +179,40 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_MG_Settle_Get", tpUnsettle).FirstOrDefault();
+                        var settleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_MG_Settle_Get", tpUnsettle);
+                        var tpUserName = settleData.FirstOrDefault().Account;
+                        var transId = settleData.FirstOrDefault().TransId;
+                        var settleTime1 = settleData.Max(x => x.SettleTime);
+                        var transTime1 = settleData.Min(x => x.TransTime);
+                        var stake = settleData.Sum(x => x.Stake);
+                        var validBet = settleData.Sum(x => x.ValidBet);
+                        var winLostAmount = settleData.Sum(x => x.WinLostAmount);
 
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         if (tpCustInfo == null)
                         {
-                            throw new UnsettleNotFoundException($"{settleData.Account} TpCustInfo not found.");
+                            throw new UnsettleNotFoundException($"{tpUserName} TpCustInfo not found.");
                         }
 
-                        long settleTime = settleData.SettleTime - new DateTime(1970, 1, 1).Ticks;
+                        long settleTime = settleTime1 - new DateTime(1970, 1, 1).Ticks;
                         settleTime /= TimeSpan.TicksPerSecond;
 
-                        long transTime = settleData.TransTime - new DateTime(1970, 1, 1).Ticks;
+                        long transTime = transTime1 - new DateTime(1970, 1, 1).Ticks;
                         transTime /= TimeSpan.TicksPerSecond;
 
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
-                            Stake = settleData.Stake,
-                            ValidBet = settleData.ValidBet,
-                            WinlostAmount = settleData.WinLostAmount,
-                            TransId = settleData.TransId,
+                            Stake = stake,
+                            ValidBet = validBet,
+                            WinlostAmount = winLostAmount,
+                            TransId = transId,
                             GameType = gametype,
-                            TpUserName = settleData.Account,
+                            TpUserName = tpUserName,
                             SettledTime = settleTime,
                             TransTime = transTime,
                             SettlementType = SettlementType.SettledForValid,
-                            TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                         };
 
                         if (betRecordInfo.WinlostAmount == 0)
