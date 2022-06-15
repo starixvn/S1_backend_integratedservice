@@ -81,10 +81,10 @@ namespace ThirdParty.PG
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
-            if (tpCustInfo.TpCurrencyId == "CNY")
-            {
-                GameUrl = inputs.ContainsKey($"GameUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"] : throw new Exception($"GameUrl_{tpCustInfo.TpCurrencyId}");
-            }
+            //if (tpCustInfo.TpCurrencyId == "CNY")
+            //{
+            //    GameUrl = inputs.ContainsKey($"GameUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"] : throw new Exception($"GameUrl_{tpCustInfo.TpCurrencyId}");
+            //}
 
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = string.Format(GameUrl, gameId, TpLangId, bet_type, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(sessionKey), HttpUtility.UrlEncode(lobbyUrl));
