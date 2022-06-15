@@ -76,7 +76,6 @@ namespace ThirdPartySettleWorker
                    services.AddHostedService<SBOWorker>();
                    services.AddHostedService<JILIWorker>();
                    services.AddHostedService<ATWorker>();
-                   services.AddHostedService<SBOWorker>();
                    services.AddHostedService<KMWoker>();
                });     
         
