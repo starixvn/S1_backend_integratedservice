@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
@@ -179,17 +180,17 @@ namespace ThirdParty.Allbet
             {             
                 GameID = gameCode,                       
                 Game = GetGameName(gameCode),
-                RefNo = wagerDetail.GetValueOrDefault("betNum")?.ToString(),
-                Title = wagerDetail.GetValueOrDefault("tableName")?.ToString(),
-                MatchID = wagerDetail.GetValueOrDefault("gameRoundId")?.ToString(),
-                BetType = wagerDetail.GetValueOrDefault("betType")?.ToString(), 
-                BetChoice = "",
-                Result = wagerDetail.GetValueOrDefault("gameResult")?.ToString(),
+                RefNo = wagerDetail.GetStringValue("betNum"),
+                Title = wagerDetail.GetStringValue("tableName"),
+                MatchID = wagerDetail.GetStringValue("gameRoundId"),
+                BetType = wagerDetail.GetStringValue("betType"), 
+                BetChoice = string.Empty,
+                Result = wagerDetail.GetStringValue("gameResult"),
                 Odds = 0,
-                OddsType = "",
-                Platform = wagerDetail.GetValueOrDefault("appType")?.ToString(),
-                Live = "",
-                IP = "",
+                OddsType = string.Empty,
+                Platform = wagerDetail.GetStringValue("appType"),
+                Live = string.Empty,
+                IP = string.Empty,
             };
         }
 

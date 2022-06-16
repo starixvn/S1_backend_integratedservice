@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -456,35 +457,35 @@ namespace ThirdParty.PT
             {
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = wagerDetail.GetValueOrDefault("SHORTNAME")?.ToString(),
-                    Game = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),
-                    RefNo = wagerDetail.GetValueOrDefault("GAMECODE")?.ToString(),
-                    Title = wagerDetail.GetValueOrDefault("GAMETYPE")?.ToString(),
-                    MatchID = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
-                    BetType = "",
-                    BetChoice = "",
-                    Result = wagerDetail.GetValueOrDefault("INFO")?.ToString(),
+                    GameID = wagerDetail.GetStringValue("SHORTNAME"),
+                    Game = wagerDetail.GetStringValue("GAMENAME"),
+                    RefNo = wagerDetail.GetStringValue("GAMECODE"),
+                    Title = wagerDetail.GetStringValue("GAMETYPE"),
+                    MatchID = wagerDetail.GetStringValue("GAMEID"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = wagerDetail.GetStringValue("INFO"),
                     Odds = 0,
-                    OddsType = "",
-                    Platform = "",
-                    Live = wagerDetail.GetValueOrDefault("LIVENETWORK")?.ToString(),
-                    IP = "",
+                    OddsType = string.Empty,
+                    Platform = string.Empty,
+                    Live = wagerDetail.GetStringValue("LIVENETWORK"),
+                    IP = string.Empty,
                 },
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = wagerDetail.GetValueOrDefault("SHORTNAME")?.ToString(),
-                    Game = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),
-                    RefNo = wagerDetail.GetValueOrDefault("GAMECODE")?.ToString(),
-                    Title = wagerDetail.GetValueOrDefault("GAMETYPE")?.ToString(),
-                    MatchID = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
-                    BetType = "",
-                    BetChoice = "",
-                    Result = wagerDetail.GetValueOrDefault("INFO")?.ToString(),
+                    GameID = wagerDetail.GetStringValue("SHORTNAME"),
+                    Game = wagerDetail.GetStringValue("GAMENAME"),
+                    RefNo = wagerDetail.GetStringValue("GAMECODE"),
+                    Title = wagerDetail.GetStringValue("GAMETYPE"),
+                    MatchID = wagerDetail.GetStringValue("GAMEID"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = wagerDetail.GetStringValue("INFO"),
                     Odds = 0,
-                    OddsType = "",
-                    Platform = "",
-                    Live = wagerDetail.GetValueOrDefault("LIVENETWORK")?.ToString(),
-                    IP = "",
+                    OddsType = string.Empty,
+                    Platform = string.Empty,
+                    Live = wagerDetail.GetStringValue("LIVENETWORK"),
+                    IP = string.Empty,
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
