@@ -15,6 +15,7 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
+using ThirdPartySeamlessWallet.Service.DAL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.Options;
 using ThirdPartySeamlessWallet.Service.Workers;
@@ -74,6 +75,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<WalletService>();
             services.AddTransient<RiskInspection>();
             services.AddTransient<ICustBetLimitService, CustBetLimitService>();
+            services.AddTransient<ISBOService, SBOService>();
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();
@@ -93,6 +95,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IMGBLL, MGBLL>();
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
+            services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddTransient<IJokerBLL, JokerBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();

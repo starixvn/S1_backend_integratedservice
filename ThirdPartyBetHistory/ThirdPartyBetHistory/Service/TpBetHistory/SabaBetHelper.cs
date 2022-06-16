@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
@@ -22,13 +23,37 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
-        public override async Task UpdateBetRecordByTransId()
+
+        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour)
         {
             try
             {
-                var start = DateTime.UtcNow.AddHours(8).AddDays(-7);
-                var end = DateTime.UtcNow.AddHours(8).AddDays(-2);
-                var tickets = _thirdPartyService.GetSabaUnSettleTicket(SiteId, start, end);
+                IEnumerable<UnSettle> tickets;
+                switch (workerType)
+                {
+                    case WorkerType.ByTransIdUnSettleWager:
+                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId,
+                            JsonConvert.SerializeObject(new List<int> { (int)SettlementType.UnSettled }),
+                            today.AddDays(-7), today.AddDays(-1).AddSeconds(-1));
+                        break;
+                    
+                    case WorkerType.ByTransIdSettleWager:
+                        var startTime = today.AddDays(-1).AddHours(hour);
+                        var endTime = startTime.AddHours(1).AddSeconds(-1);
+                        var settlementTypeList = JsonConvert.SerializeObject(new List<int>
+                        {
+                            (int)SettlementType.SettledForValid ,
+                            (int)SettlementType.SettledForInvalid,
+                            (int)SettlementType.SettledForValidNotRollover
+                        });
+                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);
+                        break;
+                    
+                    case WorkerType.MainWager:
+                    case WorkerType.LGVirtualSportsWager:
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(workerType), workerType, null);
+                }
 
                 var tpSetting = thirdPartyModel.TpSetting;
 
@@ -55,7 +80,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         if (!DataNotExists(getBetDetail))
                         {
                             var betRecordInfos = ProcessData(getBetDetail);
-                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos);
+                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos, workerType);
                         }
                     }
                     catch (Exception e)
@@ -68,10 +93,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 _logger.LogError(e, "UpdateBetRecordByTransId");
             }
-
         }
 
-        public override async Task<long> AddBetRecord(long siteTicketKey)
+        public override async Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey)
         {
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
@@ -102,12 +126,14 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return getBetDetail.Data.last_version_key;
             }
 
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList, workerType);
             return getBetDetail.Data.last_version_key;
         }
 
-        public async override Task<long> GetVS3rdBetDetail(long siteTicketKey)
+        public async override Task<long> GetVS3rdBetDetail(WorkerType workerType, long siteTicketKey)
         {
+            var gameType = GameType.Saba_LGVirtualSports;
+
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
             var parameters = new Dictionary<string, string>
@@ -136,8 +162,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 var betRecordInfo = new BetRecordInfo
                 {
-                    TpId = thirdPartyModel.Id,
-                    GameType = GameType.Saba_LGVirtualSports,
+                    TpId = (int)Tp,
+                    GameType = gameType,
                     TransId = betDetial.trans_id.ToString(),
                     TransTime = ConvertLocTime(betDetial.transaction_time),
                     SettledTime = ConvertLocTime(betDetial.transaction_time),
@@ -148,10 +174,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     TicketKey = betDetial.version_key,
                     tokenmoney = betDetial.tokenmoney
                 };
-
                 CalculateAvailableBet(betDetial, betRecordInfo);
                 betRecordInfoList.Add(betRecordInfo);
 
+                var currencyId = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp, betDetial.vendor_member_id).CurrencyId;
+                var detail = new TpBetRecordDetail((int)Tp, gameType, currencyId, betDetial);
+                _thirdPartyBLL.AddTpBetRecordDetail(detail);
             }
 
             if (!betRecordInfoList.Any())
@@ -159,7 +187,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return getBetDetail.Data.last_version_key;
             }
 
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList);
+            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList, workerType);
+            
             return getBetDetail.Data.last_version_key;
         }
 
@@ -181,7 +210,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
-                        TpId = thirdPartyModel.Id,
+                        TpId = (int)Tp,
                         GameType = GetBetDetailGameType(betDetial.sport_type),
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
@@ -222,7 +251,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
-                        TpId = thirdPartyModel.Id,
+                        TpId = (int)Tp,
                         GameType = GameType.Saba_NumberGame,
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
@@ -245,7 +274,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
-                        TpId = thirdPartyModel.Id,
+                        TpId = (int)Tp,
                         OriginalState = betDetial.ticket_status,
                         WinlostAmount = betDetial.winlost_amount,
                         Stake = betDetial.stake,
@@ -475,7 +504,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 var betRecordInfo = new BetRecordInfo
                 {
-                    TpId = thirdPartyModel.Id,
+                    TpId = (int)Tp,
                     TransId = cashOut.cashout_id.ToString(),
                     TransTime = ConvertLocTime(betDetial.transaction_time),
                     SettledTime = ConvertLocTime(cashOut.transdate),

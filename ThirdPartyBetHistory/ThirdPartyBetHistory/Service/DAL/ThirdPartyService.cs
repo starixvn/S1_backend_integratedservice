@@ -48,7 +48,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
         }
 
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
+        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos, WorkerType workerType)
         {
             foreach (var betRecord in betRecordInfos.OrderBy(x => x.TicketKey))
             {
@@ -251,15 +251,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                         trans.Commit();
                     }
 
-                    if (tpCustInfo.SiteId == (int)SiteId.Nova88)
-                    {
-                        SetTicketKey((int)Tp.Saba, betRecord.TicketKey);
-                    }
-                    else
-                    {
-                        SiteTpTicketKey((int)Tp.Saba, tpCustInfo.SiteId, betRecord.TicketKey);
-                    }
-
+                    SetSiteTicketKey(tpCustInfo.SiteId, betRecord.TpId, workerType, betRecord.TicketKey);
                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
                 }
                 catch (Exception ex)
@@ -270,7 +262,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             }
         }
 
-        private TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var key = $"TpCustInfo_{tpId}_{tpUserName}";
             var tpCustInfo = _cache.Get<TpCustInfo>(key);
@@ -352,16 +344,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_EffectiveBetSum_Set", parameters, conn, trans);
         }
 
-        public int SetTicketKey(int TpId, long TicketKey)
-        {
-            var parameters = new DynamicParameters(new { TpId, TicketKey });
-            return _mainDbClient.Execute("Service_TpTicketKey_Set", parameters);
-        }
-        public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
-        {
-            var parameters = new DynamicParameters(new { TpId, SiteId, TicketKey });
-            return _mainDbClient.Execute("Service_SiteTpTicketKey_Set", parameters);
-        }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             var parameters = new DynamicParameters(new { TpId = tpId, CurrencyId = currencyId });
@@ -423,20 +405,31 @@ namespace ThirdPartyBetHistory.Service.DAL
             return afterAmount >= 0 ? 1 : 0;
         }
 
-        public IEnumerable<UnSettle> GetSabaUnSettleTicket(SiteId siteId, DateTime startTime, DateTime endTime)
+        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
+            DateTime startTime, DateTime endTime)
         {
-            return _mainDbClient.Query<UnSettle>("Service_SabaUnSettle_Get",
-                new { _SiteId = (int)siteId, StartTime = startTime, EndTime = endTime });
+            return _mainDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
+                new
+                {
+                    _TpId = (int)tp, _SiteId = (int)siteId, SettlementTypeList = settlementTypeList,
+                    StartTime = startTime, EndTime = endTime
+                });
         }
+
         public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)
         {
             var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType };
             return _mainDbClient.QueryFirst<long>("Service_SiteTicketKey_Get", parameters);
         }
-        public int SetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType, long TicketKey)
+        public int SetSiteTicketKey(int SiteId, int TpId, WorkerType workerType, long TicketKey)
         {
-            var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType, TicketKey };
+            var parameters = new { SiteId, TpId, WorkerType = (int)workerType, TicketKey };
             return _mainDbClient.Execute("Service_SiteTicketKey_Set", parameters);
+        }
+
+        public int AddTpBetRecordDetail(TpBetRecordDetail detail)
+        {
+            return _mainDbClient.QueryFirst<int>("Service_TpBetRecordDetail_Ins_V2", detail); 
         }
     }
 }

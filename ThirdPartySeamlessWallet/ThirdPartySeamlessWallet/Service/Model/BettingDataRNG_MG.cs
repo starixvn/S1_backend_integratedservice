@@ -22,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
         public long trx_id { get; set; }
+        public int transNum { get; set; }
     }
 
     public class CancelDataRNG_MG
@@ -71,6 +72,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string platformType { get; set; }
         public bool completed { get; set; }
         public string channel { get; set; }
+        public int transNum { get; set; }
     }
 
     public class MGUpdatebalanceResponse
