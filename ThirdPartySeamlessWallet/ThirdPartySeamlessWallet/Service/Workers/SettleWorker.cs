@@ -50,7 +50,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettlePPLC;
         private Timer timerSettleAMB;
         private Timer timerSettle9W;
-        private Timer timerSettleKM;
         private Timer timerSettleTCGSEA;
         private Timer timerSettleTCGVN;
         private Timer timerSettleMP;
@@ -106,7 +105,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleKM = new Timer(DoSettleKMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -1045,7 +1043,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettlePPRng?.Change(Timeout.Infinite, 0);
             timerSettlePPLC?.Change(Timeout.Infinite, 0);
             timerSettle9W?.Change(Timeout.Infinite, 0);
-            timerSettleKM?.Change(Timeout.Infinite, 0);
             timerSettleAMB?.Change(Timeout.Infinite, 0);
             timerSettleTCGSEA?.Change(Timeout.Infinite, 0);
             timerSettleTCGVN?.Change(Timeout.Infinite, 0);
