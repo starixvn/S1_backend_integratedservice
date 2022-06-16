@@ -22,7 +22,7 @@ namespace ThirdParty.KM
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var apiUrl = GetInputValue(inputs, "ApiUrl");
-            var gameUrl = GetInputValue(inputs, "GameUrl");
+            var gameUrl = (tpCustInfo.TpCurrencyId == "RMB") ? GetInputValue(inputs, $"GameUrl_{tpCustInfo.TpCurrencyId}") : GetInputValue(inputs, "GameUrl");
             var clientId = GetInputValue(inputs, "X-QM-ClientId");
             var clientSecret = GetInputValue(inputs, "X-QM-ClientSecret");
 
@@ -58,7 +58,7 @@ namespace ThirdParty.KM
             else
             {
                 var platform = appType == AppType.Desktop ? "Nova88_Desktop" : "Nova88_Mobile";
-                
+
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
@@ -115,7 +115,6 @@ namespace ThirdParty.KM
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winloss") * tpCurrency.ExchangeRate,
                     GameCode = wagerDetail.GetValueOrDefault("gameid")?.ToString(),
                     GameName = wagerDetail.GetValueOrDefault("gamename")?.ToString(),
-                    
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -128,7 +127,7 @@ namespace ThirdParty.KM
 
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
-            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }
