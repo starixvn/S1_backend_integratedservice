@@ -9,5 +9,10 @@ namespace ThirdPartyCore.Extensions
         {
             return dic.TryGetValue(key, out TValue result) ? result : throw new ArgumentException($"{key} is empty");
         }
+
+        public static string GetStringValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key)
+        {
+            return dictionary.GetValueOrDefault(key)?.ToString() ?? string.Empty;
+        }
     }
 }

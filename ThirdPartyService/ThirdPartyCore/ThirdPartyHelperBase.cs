@@ -601,8 +601,8 @@ namespace ThirdPartyCore
         public virtual ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs)
         {
             throw new GetMerchantBalanceNotImplementedException($"TpId:{tpMerchantInfo.TpId} GetMerchantBalance NotImplemented.");
-        }
-        public virtual TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+		}
+        public virtual TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new GetTpBetRecordExtendNotImplementedException($"TpId:{betRecordInfo.TpId} GetTpBetRecordExtend NotImplemented.");
         }
@@ -611,7 +611,7 @@ namespace ThirdPartyCore
     {
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
 
-        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
     public interface IThirdPartyTpGetMerchantBalance
