@@ -40,6 +40,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
+        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
 
         private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
@@ -86,6 +87,8 @@ namespace ThirdPartyService.Service.BLL
 
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>();
             tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
+
+            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
         }
 
         #endregion
@@ -1120,6 +1123,7 @@ namespace ThirdPartyService.Service.BLL
                     RawMessage = "GameType not found."
                 };
             }
+            gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, gameTypeOption.TpId);
             if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
@@ -1166,6 +1170,7 @@ namespace ThirdPartyService.Service.BLL
                     RawMessage = "GameType not found."
                 };
             }
+            gameTypeOption.TpName = GetTpName(tpId);
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, tpId);
             if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
@@ -1182,7 +1187,12 @@ namespace ThirdPartyService.Service.BLL
             var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
             return new ApiResult<TpBetRecordExtend>(result);
         }
-		
+
+        public string GetTpName(int tpId)
+        {
+            return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
+        }
+
         #region Private Methods
 
         /// <summary>

@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 
 namespace ThirdParty.PT
@@ -445,6 +446,48 @@ namespace ThirdParty.PT
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
             }
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_PT_Detail_Get",
+                new { betRecordInfo.TransId, GameType = tpGameType.Type });
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = wagerDetail.GetValueOrDefault("SHORTNAME")?.ToString(),
+                    Game = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),
+                    RefNo = wagerDetail.GetValueOrDefault("GAMECODE")?.ToString(),
+                    Title = wagerDetail.GetValueOrDefault("GAMETYPE")?.ToString(),
+                    MatchID = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
+                    BetType = "",
+                    BetChoice = "",
+                    Result = wagerDetail.GetValueOrDefault("INFO")?.ToString(),
+                    Odds = 0,
+                    OddsType = "",
+                    Platform = "",
+                    Live = wagerDetail.GetValueOrDefault("LIVENETWORK")?.ToString(),
+                    IP = "",
+                },
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = wagerDetail.GetValueOrDefault("SHORTNAME")?.ToString(),
+                    Game = wagerDetail.GetValueOrDefault("GAMENAME")?.ToString(),
+                    RefNo = wagerDetail.GetValueOrDefault("GAMECODE")?.ToString(),
+                    Title = wagerDetail.GetValueOrDefault("GAMETYPE")?.ToString(),
+                    MatchID = wagerDetail.GetValueOrDefault("GAMEID")?.ToString(),
+                    BetType = "",
+                    BetChoice = "",
+                    Result = wagerDetail.GetValueOrDefault("INFO")?.ToString(),
+                    Odds = 0,
+                    OddsType = "",
+                    Platform = "",
+                    Live = wagerDetail.GetValueOrDefault("LIVENETWORK")?.ToString(),
+                    IP = "",
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
         }
 
         private ApiResult ChangePassword(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

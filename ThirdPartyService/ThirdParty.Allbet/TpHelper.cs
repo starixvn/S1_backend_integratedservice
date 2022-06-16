@@ -171,17 +171,13 @@ namespace ThirdParty.Allbet
             };  
         }
 
-        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameTypeOption, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId });
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
-            return new TpBetRecordExtend(betRecordInfo)
-            {
-                Provider = TpBetRecordProvider.GetTpName(betRecordInfo.TpId),
-                Currency = tpCustInfo.TpCurrencyId,
-                Product = tpGameTypeOption.TypeName,
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {             
                 GameID = gameCode,                       
-                Category = TpCategory.LiveCasino.ToString(),
                 Game = GetGameName(gameCode),
                 RefNo = wagerDetail.GetValueOrDefault("betNum")?.ToString(),
                 Title = wagerDetail.GetValueOrDefault("tableName")?.ToString(),

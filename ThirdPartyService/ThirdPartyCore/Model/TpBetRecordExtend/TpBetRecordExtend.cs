@@ -10,12 +10,18 @@ namespace ThirdPartyCore.Model.TpBetRecordExtend
         {
 
         }
-        public TpBetRecordExtend(BetRecordInfo betRecordInfo)
+        public TpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo)
         {
             TpId = betRecordInfo.TpId;
             TransId = betRecordInfo.TransId;
             GameType = betRecordInfo.GameType;     
-            ProviderID = betRecordInfo.TpId.ToString();
+            
+            ProviderID = tpGameType.TpId.ToString();
+            Provider = tpGameType.TpName;
+            Product = tpGameType.TypeName;
+            Category = tpGameType.CategoryId.ToString();
+
+            Currency = tpCustInfo.TpCurrencyId;
         }
         public int TpId { get; set; }
         public string TransId { get; set; }
