@@ -730,9 +730,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Query<SettleData>(spName);
         }
 
-        public int SetSettleFlag_KM(string spName, string transId, bool isSuccess)
+        public int SetSettleFlag_KM(string spName, string transId)
         {
-            var parameters = new DynamicParameters(new { transId, isSuccess });
+            var parameters = new DynamicParameters(new { transId });
             return _wagerDbClient.Execute(spName, parameters: parameters);
         }
 
