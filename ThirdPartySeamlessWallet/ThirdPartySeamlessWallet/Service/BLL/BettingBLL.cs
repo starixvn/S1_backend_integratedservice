@@ -314,10 +314,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int PlaceBetLC_EBet(BettingData_EBet bettingData_EBet, out decimal afterAmount)
         {
-            var t1 = DateTimeOffset.UtcNow.ToString("o");
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.EBet, bettingData_EBet.username);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.EBet, tpCustInfo.CurrencyId);
-            var t2 = DateTimeOffset.UtcNow.ToString("o");
 
             if (tpCurrency.ExchangeRate > 0)
             {
@@ -329,10 +327,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     item.betMoney *= tpCurrency.ExchangeRate;
                 }
             }
-            var t3 = DateTimeOffset.UtcNow.ToString("o");
 
             var result = bettingService.PlaceBetLC_EBet(tpCustInfo, bettingData_EBet, out afterAmount);
-            var t4 = DateTimeOffset.UtcNow.ToString("o");
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -344,8 +340,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingData_EBet.money /= tpCurrency.ExchangeRate;
             }
 
-            var t5 = DateTimeOffset.UtcNow.ToString("o");
-            _logger.LogWarning($"BettingBLL.PlaceBetLC_EBet\r\nt1:{t1}\r\nt2:{t2}\r\nt3:{t3}\r\nt4:{t4}\r\nt5:{t5}");
             return result;
         }
 

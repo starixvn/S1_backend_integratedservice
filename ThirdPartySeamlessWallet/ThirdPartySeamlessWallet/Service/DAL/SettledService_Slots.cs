@@ -2160,17 +2160,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleDataRng_Iconic> GetUnsettledListRng_Iconic()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataRng_Iconic>("Service_BettransRng_Iconic_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_BettransRng_Iconic(long transactionId)
-        {
-            return _mainDbClient.Execute("Service_BettransRng_Iconic_Settle_Set", parameters: new DynamicParameters(new { transactionId = transactionId }));
-        }
-
         public int CancelBetFish_Iconic(TpCustInfo tpCustInfo, BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
             var result = 0;
@@ -2291,18 +2280,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
-        }
-
-        public IEnumerable<SettleDataFish_Iconic> GetUnsettledListFish_Iconic()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleDataFish_Iconic>("Service_TpWagerFish_Iconic_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_TpWagerFish_Iconic(string transactionId)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerFish_Iconic_Settle_Set", new { transactionId = transactionId }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
