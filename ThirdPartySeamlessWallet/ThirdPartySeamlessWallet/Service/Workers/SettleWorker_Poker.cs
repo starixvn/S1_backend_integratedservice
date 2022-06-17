@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             // revenue games
                             GameType gameType;
-                            int[] kindId = { 220, 600, 610, 620, 630, 830, 860, 890, 930, 8100, 8540, 8600, 8700 };
+                            int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700 };
                             if (kindId.Contains(unsettled.KindID))
                             {
                                 gameType = GameType.V8_Poker;
