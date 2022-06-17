@@ -209,7 +209,7 @@ namespace ThirdParty.Allbet
                 "601" => "Rock Paper Scissors",
                 "801" => "Bull Bull",
                 "901" => "Win Three Cards / Three Pictures",
-                _ => string.Empty,
+                _ => gameCode,
             };
         }
         
