@@ -94,9 +94,10 @@ namespace ThirdPartySettleWorker.Workers
 
                         //settle amount check
                         var  chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
-                           new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main).First();
-                        if (chcekData.Stake != unsettled.Stake 
-                            || unsettled.WinLostAmount != (chcekData.Payout - chcekData.Stake) )
+                           new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
+                        if (chcekData == null 
+                            || chcekData.Stake != unsettled.Stake 
+                            || unsettled.WinLostAmount != (chcekData.Payout - chcekData.Stake))
                         {
                             continue;
                         }
