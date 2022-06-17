@@ -7,9 +7,11 @@ using System.Text;
 using System.Web;
 using System.Xml.Serialization;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SA
 {
@@ -241,7 +243,7 @@ namespace ThirdParty.SA
             var transIdList = getBetDetail.TransId.Split("_");
             var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] });
             var detail = ToJson(wagerDetail);
-
+            var gameCode = wagerDetail.GetStringValue("GameType");
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
@@ -255,8 +257,8 @@ namespace ThirdParty.SA
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("PayoutTime", DateTime.MinValue),
                     Stake = (decimal)wagerDetail.GetValueOrDefault("BetAmount") * tpCurrency.ExchangeRate,
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("ResultAmount") * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("GameType")?.ToString(),
-                    GameName = string.Empty,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -264,6 +266,47 @@ namespace ThirdParty.SA
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var transIdList = betRecordInfo.TransId.Split("_");
+            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] });
+            var gameCode = detail.GetStringValue("GameType");
+            
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detail.GetStringValue("GameID"),
+                    Title = string.Empty,
+                    MatchID = detail.GetStringValue("Round"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = detail.GetStringValue("GameResult"),
+                    Odds = 0,
+                    OddsType = string.Empty,
+                    Platform = detail.GetStringValue("BetSource"),
+                    Live = string.Empty,
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };               
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "bac" => "Baccarat",
+                "dtx" => "Dragon Tiger",
+                "sicbo" => "Sic Bo",
+                "rot" => "Roulette",
+                "pokdeng" => "Pok Deng",
+                _ => gameCode,
             };
         }
     }
