@@ -126,7 +126,7 @@ namespace ThirdParty.WM
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string vendorId = inputs.ContainsKey($"vendorId_{currency}") && !string.IsNullOrEmpty(inputs[$"vendorId_{currency}"]) ? inputs[$"vendorId_{currency}"] : throw new Exception($"vendorId_{currency}");
             string signature = inputs.ContainsKey($"signature_{currency}") && !string.IsNullOrEmpty(inputs[$"signature_{currency}"]) ? inputs[$"signature_{currency}"] : throw new Exception("signature");
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var Login = new
             {
@@ -137,7 +137,7 @@ namespace ThirdParty.WM
                 password = HttpUtility.UrlEncode(tpCustInfo.TpPwd),
                 lang = TpLangId,
                 timestamp = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                returnurl = lobbyUrl
+                returnurl = homeUrl
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
