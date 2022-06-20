@@ -83,6 +83,13 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        //cancel update success
+                        if ((gametype == GameType.TCG_SEA_Lottery && unsettled.betStatus == 3)
+                            || (gametype == GameType.TCG_VN_Lottery && unsettled.betStatus == 17))
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, unsettled.TransId, true);
+                        }
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCurrency.ExchangeRate > 0)
@@ -90,13 +97,6 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.Stake *= tpCurrency.ExchangeRate;
                             unsettled.ValidBet *= tpCurrency.ExchangeRate;
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
-                        }
-
-                        //cancel update success
-                        if ((gametype == GameType.TCG_SEA_Lottery && unsettled.betStatus == 3)
-                            || (gametype == GameType.TCG_VN_Lottery && unsettled.betStatus == 17))
-                        {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, unsettled.TransId, true);
                         }
 
                         //settle amount check
