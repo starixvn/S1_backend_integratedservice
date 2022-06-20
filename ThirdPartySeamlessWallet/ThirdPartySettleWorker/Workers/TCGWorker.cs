@@ -88,6 +88,7 @@ namespace ThirdPartySettleWorker.Workers
                             || (gametype == GameType.TCG_VN_Lottery && unsettled.betStatus == 17))
                         {
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, unsettled.TransId, true);
+                            continue;
                         }
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
