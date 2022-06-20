@@ -4,12 +4,12 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Xml;
-using System.Security.Cryptography;
-using System.Text;
-using System.IO;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using System.Linq;
 using Newtonsoft.Json;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
+
 
 namespace ThirdParty.AG
 {
@@ -248,26 +248,52 @@ namespace ThirdParty.AG
                 }
             };
         }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var billNoList = TpBetRecordProvider.ReportDbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = betRecordInfo.TransId })
+            .Select(item => item.GetValueOrDefault("billNo")?.ToString());
+            var detail = TpBetRecordProvider.WagerDbQuery("Service_TpWager_AG_Detail_Get",new { billNoList = JsonConvert.SerializeObject(billNoList) });
+            var gameCode = detail.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detail.FirstOrDefault()?.GetStringValue("gameCode"),
+                    Title = string.Empty,
+                    MatchID = detail.FirstOrDefault()?.GetStringValue("tableCode"),
+                    BetType = detail.FirstOrDefault()?.GetStringValue("playType"),
+                    BetChoice = string.Empty,
+                    Result = detail.FirstOrDefault()?.GetStringValue("result"),
+                    Odds = 0,
+                    OddsType = string.Empty,
+                    Platform = detail.FirstOrDefault()?.GetStringValue("platformType"),
+                    Live = string.Empty,
+                    IP = detail.FirstOrDefault()?.GetStringValue("betIP"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
         private string GetGameName(string gameCode)
         {
             return gameCode switch
             {
-                "BAC" => "百家乐",
-                "CBAC" => "包桌百家乐",
-                "LINK" => "连环百家乐",
-                "DT" => "龙虎",
-                "SHB" => "骰宝",
-                "ROU" => "轮盘",
-                "FT" => "番摊",
-                "LBAC" => "竞咪百家乐",
-                "ULPK" => "终极德州扑克",
-                "SBAC" => "保险百家乐",
-                "NN"=> "牛牛",
+                "BAC" => "Baccarat",
+                "CBAC" => "VIP Baccarat",
+                "DT" => "Dragon Tiger",
+                "SHB" => "Sicbo",
+                "ROU" => "Roulette",
+                "LBAC" => "Bid Baccarat",
+                "NN"=> "Bull Bull",
                 "BJ" => "Blackjack",
-                "ZJH" => "炸金花",
-                "BF" => "斗牛",
-                "SG" => "三公",
-                _ => string.Empty,
+                "ZJH" => "Win Three Cards",
+                "BF" => "Bull Fight",
+                "SG" => "Three Face",
+                _ => gameCode,
             };
         }
 

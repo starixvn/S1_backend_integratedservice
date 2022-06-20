@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.EVO
 {
@@ -217,6 +219,60 @@ namespace ThirdParty.EVO
                 };
             }
 
+        }
+
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId });
+            if (detail != null)
+            {
+                return tpGameType.CategoryId switch
+                {
+                    TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    {
+                        GameID = detail.GetStringValue("gameType"),
+                        Game = detail.GetStringValue("gameType"),
+                        RefNo = detail.GetStringValue("transactionId"),
+                        Title = detail.GetStringValue("description"),
+                        MatchID = detail.GetStringValue("RoundId"),
+                        BetType = string.Empty,
+                        BetChoice = string.Empty,
+                        Result = detail.GetStringValue("result"),
+                        Odds = 0,
+                        OddsType = string.Empty,
+                        Platform = detail.GetStringValue("channel"),                
+                        Live = detail.GetStringValue("playMode"),
+                        IP = string.Empty,
+                    },
+                    _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                };
+            }
+            else
+            {
+                //promo_payout data
+                detail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId });
+                return tpGameType.CategoryId switch
+                {
+                    TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    {
+                        GameID = detail.GetStringValue("gameId"),
+                        Game = detail.GetStringValue("gameType"),
+                        RefNo = detail.GetStringValue("PromoTransactionRewardId"),
+                        Title = detail.GetStringValue("PromoTransactionType"),
+                        MatchID = detail.GetStringValue("TableId"),
+                        BetType = string.Empty,
+                        BetChoice = string.Empty,
+                        Result = detail.GetStringValue("game"),
+                        Odds = 0,
+                        OddsType = string.Empty,
+                        Platform = string.Empty,
+                        Live = string.Empty,
+                        IP = string.Empty,
+                    },
+                    _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                };
+            }
         }
     }
 }
