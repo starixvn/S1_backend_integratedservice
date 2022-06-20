@@ -92,6 +92,13 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
+                        //cancel update success
+                        if ((gametype == GameType.TCG_SEA_Lottery && unsettled.betStatus == 3)
+                            || (gametype == GameType.TCG_VN_Lottery && unsettled.betStatus == 17))
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, unsettled.TransId, true);
+                        }
+
                         //settle amount check
                         var  chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
                            new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
