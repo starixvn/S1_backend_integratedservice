@@ -55,7 +55,7 @@ namespace ThirdPartyCore.Model.TpBetRecordExtend
         /// </summary>
         public string Category { get; set; }
         /// <summary>
-        /// 遊戲名稱
+        /// 遊戲名稱 (僅支援英文)
         /// </summary>
         public string Game { get; set; }
         /// <summary>
