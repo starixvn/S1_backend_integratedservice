@@ -241,8 +241,8 @@ namespace ThirdParty.EVO
                         Result = detail.GetStringValue("result"),
                         Odds = 0,
                         OddsType = string.Empty,
-                        Platform = detail.GetStringValue("channel"),                
-                        Live = detail.GetStringValue("playMode"),
+                        DeviceType = GetDeviceType( detail.GetStringValue("channel")),                
+                        Live = string.Empty,
                         IP = string.Empty,
                     },
                     _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -266,13 +266,23 @@ namespace ThirdParty.EVO
                         Result = detail.GetStringValue("game"),
                         Odds = 0,
                         OddsType = string.Empty,
-                        Platform = string.Empty,
+                        DeviceType = DeviceType.None,
                         Live = string.Empty,
                         IP = string.Empty,
                     },
                     _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 };
             }
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "desktop" => DeviceType.Desktop,
+                "mobile " => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
         }
     }
 }

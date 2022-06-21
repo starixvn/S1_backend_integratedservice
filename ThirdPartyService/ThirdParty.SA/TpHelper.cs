@@ -289,12 +289,43 @@ namespace ThirdParty.SA
                     Result = detail.GetStringValue("GameResult"),
                     Odds = 0,
                     OddsType = string.Empty,
-                    Platform = detail.GetStringValue("BetSource"),
+                    DeviceType = GetDeviceType(detail.GetStringValue("BetSource")),
                     Live = string.Empty,
                     IP = string.Empty,
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };               
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "2":
+                case "2114":
+                case "2640":
+                case "3":
+                case "2115":
+                case "2641":
+                    return DeviceType.Desktop;
+                case "16":
+                case "600":
+                case "8792":
+                case "8793":
+                    return DeviceType.Mobile;
+                case "1160":
+                case "1161":
+                case "5248":
+                case "5249":
+                    return DeviceType.iOS;
+                case "1288":
+                case "1289":
+                case "5376":
+                case "5377":
+                    return DeviceType.Android;
+                default:
+                    return DeviceType.None;
+            }
         }
 
         private string GetGameName(string gameCode)

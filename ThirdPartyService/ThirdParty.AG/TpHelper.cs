@@ -270,12 +270,27 @@ namespace ThirdParty.AG
                     Result = detail.FirstOrDefault()?.GetStringValue("result"),
                     Odds = 0,
                     OddsType = string.Empty,
-                    Platform = detail.FirstOrDefault()?.GetStringValue("platformType"),
+                    DeviceType = GetDeviceType(detail.FirstOrDefault()?.GetStringValue("deviceType")),
                     Live = string.Empty,
                     IP = detail.FirstOrDefault()?.GetStringValue("betIP"),
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "0":
+                case "7":
+                    return DeviceType.Desktop;
+                case "1":
+                case "3":
+                case "6":
+                    return DeviceType.Mobile;
+                default:
+                    return DeviceType.None;
+            }
         }
 
         private string GetGameName(string gameCode)
