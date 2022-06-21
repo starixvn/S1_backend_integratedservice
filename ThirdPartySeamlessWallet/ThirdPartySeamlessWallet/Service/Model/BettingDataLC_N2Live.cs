@@ -91,6 +91,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string area { get; set; }
         public decimal amount { get; set; }
         public string resultstatus { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public decimal? winningodds { get; set; }
         public Hand_N2Live? hand { get; set; }
     }
 
