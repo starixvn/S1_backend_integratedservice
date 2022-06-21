@@ -59,22 +59,11 @@ namespace ThirdParty.PG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
-            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
             string operator_token = inputs.ContainsKey("operator_token") && !string.IsNullOrEmpty(inputs["operator_token"]) ? inputs["operator_token"] : throw new Exception("operator_token");
-            string secret_key = inputs.ContainsKey("secret_key") && !string.IsNullOrEmpty(inputs["secret_key"]) ? inputs["secret_key"] : throw new Exception("secret_key");
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
             ApiResult oApiResult = new ApiResult();
-
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = string.Format(FunGameUrl, gameId, TpLangId, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(lobbyUrl));
-                return oApiResult;
-            }
 
             string bet_type = "1";
             var key = ApplyToken(tpCustInfo);
@@ -82,11 +71,6 @@ namespace ThirdParty.PG
             var sessionKeyArr = new string[] { key, token };
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
-
-            //if (tpCustInfo.TpCurrencyId == "CNY")
-            //{
-            //    GameUrl = inputs.ContainsKey($"GameUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"] : throw new Exception($"GameUrl_{tpCustInfo.TpCurrencyId}");
-            //}
 
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = string.Format(GameUrl, gameId, TpLangId, bet_type, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(sessionKey), HttpUtility.UrlEncode(lobbyUrl));
