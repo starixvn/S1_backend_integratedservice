@@ -93,8 +93,9 @@ namespace ThirdPartyWager.Service.Model
         [JsonProperty("@betid")]
         public string betid { get; set; }
 
-        //public Betdetail betdetail { get; set; }
         public dynamic betdetail { get; set; }
+
+        public dynamic winningodds { get; set; }
     }
 
     public class Betdetail
@@ -154,6 +155,7 @@ namespace ThirdPartyWager.Service.Model
         public long schemeid { get; set; }
         public string channel { get; set; }
         public string betdetail { get; set; }
+        public string winningodds { get; set; }
         public string dealdetail { get; set; }
         public string result { get; set; }
 
