@@ -67,7 +67,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    var dueTimeSpan = TimeSpan.FromDays(1);
+                    var dueTimeSpan = TimeSpan.FromHours(8);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -94,7 +94,7 @@ namespace ThirdPartyWager.Workers
                 };
 
                 // get time 
-                var day = -1;
+                var day = 0;
                 TimeCast reportTime = _financeSABLL.GetReportTime(execTime.StartTime, day);
 
                 // report
@@ -126,6 +126,7 @@ namespace ThirdPartyWager.Workers
                     quick = true;
                 }
 
+                _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
                 return quick;
             }
             catch (Exception ex)
