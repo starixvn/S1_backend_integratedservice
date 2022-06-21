@@ -957,6 +957,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int ResettleLC_AWC_Sexy(ResettleLC_Sexy resettleLC_Sexy)
+        {
+            foreach (var txn in resettleLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    txn.turnover *= tpCurrency.ExchangeRate;
+                    txn.betAmount *= tpCurrency.ExchangeRate;
+                    txn.winAmount *= tpCurrency.ExchangeRate;
+                    txn.gameInfo.winLoss *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.ResettleLC_AWC_Sexy(resettleLC_Sexy);
+            return result;
+        }
+
         public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
         {
             return settledService.GetUnsettledListLC_AWC_Sexy();
