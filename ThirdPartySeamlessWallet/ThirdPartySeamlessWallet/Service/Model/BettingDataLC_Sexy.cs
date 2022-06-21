@@ -346,6 +346,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string platformTxId { get; set; }
         public decimal betAmount { get; set; }
+        public decimal turnover { get; set; }
+        public decimal winAmount { get; set; }
+        public decimal winLoss { get; set; }
         public int TicketStatus { get; set; }
         public int TicketType { get; set; }
     }
@@ -391,6 +394,28 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string gameType { get; set; }
         public string gameName { get; set; }
         public dynamic tipInfo { get; set; }
+    }
+
+    public class ResettleLC_Sexy
+    {
+        public IList<ResettleDataLC_Sexy> txns { get; set; }
+    }
+
+    public class ResettleDataLC_Sexy : CommonData_Sexy
+    {
+        public string currency { get; set; }
+        public string gameName { get; set; }
+        public string betType { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal winAmount { get; set; }
+        public decimal turnover { get; set; }
+        public DateTime betTime { get; set; }
+        public DateTime updateTime { get; set; }
+        public GameInfoDataLC_Sexy gameInfo { get; set; }
+        public TpCustInfo tpCustInfo { get; set; }
+        public DateTime txTime { get; set; }
+        public string settleType { get; set; }
+        public string refPlatformTxId { get; set; }
     }
 
     #endregion
