@@ -188,9 +188,18 @@ namespace ThirdParty.Allbet
                 Result = wagerDetail.GetStringValue("gameResult"),
                 Odds = 0,
                 OddsType = string.Empty,
-                Platform = wagerDetail.GetStringValue("appType"),
+                DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
                 Live = string.Empty,
                 IP = string.Empty,
+            };
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "6" => DeviceType.Desktop,
+                "3 " => DeviceType.Mobile,
+                _ => DeviceType.None,
             };
         }
 

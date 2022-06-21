@@ -171,4 +171,15 @@ namespace ThirdPartyCore.Model.enums
         Goal123 = 2,
         Bwing = 3
     }
+
+    public enum DeviceType
+    {
+        None,
+        Desktop,
+        Mobile,
+        iOS,
+        Android
+    }
+    
+    
 }
