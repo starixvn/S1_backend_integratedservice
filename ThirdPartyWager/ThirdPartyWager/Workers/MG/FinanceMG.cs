@@ -37,16 +37,16 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var timerType = 1;
+            var timerType = (int)WagerTimerType.Finance;
             var intervalDays = 1;
-            var nextTimeSpan = TimeSpan.FromDays(intervalDays);
+            var nextTimeSpan = TimeSpan.FromHours(8);
 
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(tpId, timerType);
                 var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
-
-                if (date < DateTime.UtcNow)
+                var endTime = date.AddDays(1).AddMilliseconds(-1);
+                if (endTime < DateTime.UtcNow)
                 {
                     var isSuccess = await _mgBll.GetReport(date);
                     if (isSuccess)
@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(date).TotalDays > intervalDays)
+                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(30);
                 }

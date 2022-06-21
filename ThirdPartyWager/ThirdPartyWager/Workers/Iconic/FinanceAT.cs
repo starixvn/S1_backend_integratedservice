@@ -67,7 +67,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    var dueTimeSpan = TimeSpan.FromDays(1);
+                    var dueTimeSpan = TimeSpan.FromHours(8);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
@@ -84,7 +84,7 @@ namespace ThirdPartyWager.Workers
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-                
+
                 // default time
                 var execTime = new ThirdPartyTimerModel()
                 {
@@ -94,12 +94,13 @@ namespace ThirdPartyWager.Workers
                 };
 
                 // get time 
-                var day = -1;
+                var day = 0;
                 TimeCast reportTime = _financeATBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
                 var reportData = await _financeATBLL.GetReport(_tpId, setting, reportTime);
+                
                 int result;
                 if (reportData.Count > 0)
                 {
@@ -126,6 +127,7 @@ namespace ThirdPartyWager.Workers
                     quick = true;
                 }
 
+                _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
                 return quick;
             }
             catch (Exception ex)
