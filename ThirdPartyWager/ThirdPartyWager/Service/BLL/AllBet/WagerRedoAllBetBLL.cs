@@ -51,63 +51,70 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 foreach (var currency in _currencyList)
                 {
-                    // pagination
-                    var pageIndex = 1;
-                    var pageRowCnt = 1;
+                    try
+                    {                 
+                        // pagination
+                        var pageIndex = 1;
+                        var pageRowCnt = 1;
                     
-                    var agent = setting[$"{currency.TpCurrencyId}Agent"];
-                    while (pageRowCnt >= 1)
-                    {
-                        // bet 
-                        var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
-                        if (dataWager == null)
+                        var agent = setting[$"{currency.TpCurrencyId}Agent"];
+                        while (pageRowCnt >= 1)
                         {
-                            msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            return false;
-                        }
-
-                        // error condition
-                        var errorCode = dataWager.resultCode;
-                        if (errorCode != "OK")
-                        {
-                            msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            return false;
-                        }
-
-                        pageRowCnt = dataWager.data.list.Count();
-                        var totalNum = dataWager.data.total;
-                        if (pageRowCnt == 0)
-                        {
-                            msg = "NO_DATA";
-                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            return true;
-                        }
-
-                        // db wager count equals api bet count do nothing
-                        if (totalNum == wagerCount)
-                        {
-                            msg = "MATCH";
-                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            return true;
-                        }
-
-                        // insert wager to db
-                        foreach (var bet in dataWager.data.list)
-                        {
-                            try
+                            // bet 
+                            var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                            if (dataWager == null)
                             {
-                                var r = _wagerAllBetService.InsertWager(bet);
-                            }
-                            catch (Exception ex)
-                            {
-                                msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
-                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                msg = "THIRD_PARTY_ERROR";
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                                 return false;
                             }
+
+                            // error condition
+                            var errorCode = dataWager.resultCode;
+                            if (errorCode != "OK")
+                            {
+                                msg = "THIRD_PARTY_ERROR";
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                return false;
+                            }
+
+                            pageRowCnt = dataWager.data.list.Count();
+                            var totalNum = dataWager.data.total;
+                            if (pageRowCnt == 0)
+                            {
+                                msg = "NO_DATA";
+                                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                return true;
+                            }
+
+                            // db wager count equals api bet count do nothing
+                            if (totalNum == wagerCount)
+                            {
+                                msg = "MATCH";
+                                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                                return true;
+                            }
+
+                            // insert wager to db
+                            foreach (var bet in dataWager.data.list)
+                            {
+                                try
+                                {
+                                    var r = _wagerAllBetService.InsertWager(bet);
+                                }
+                                catch (Exception ex)
+                                {
+                                    msg = $"INSERT_WAGER(WAGERID: {bet.betNum} )";
+                                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                    return false;
+                                }
+                            }
+                            pageIndex++;
                         }
-                        pageIndex++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"{currency.TpCurrencyId}Agent Get RedoWagersAsync error. \r\n{ex.Message}");
                     }
                 }
                 msg = "FINISH";
