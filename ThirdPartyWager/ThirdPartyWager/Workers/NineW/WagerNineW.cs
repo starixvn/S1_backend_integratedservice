@@ -170,15 +170,15 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);         
-            var timerType = 4;
+            var timerType = (int)WagerTimerType.Finance;
             var intervalDays = 1;
-            var nextTimeSpan = TimeSpan.FromDays(intervalDays);
+            var nextTimeSpan = TimeSpan.FromHours(8);
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
                 var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
-
-                if (date < DateTime.UtcNow)
+                var endTime = date.AddDays(1).AddMilliseconds(-1);
+                if (endTime < DateTime.UtcNow)
                 {         
                     var countSummary =  _nineWService.GetCountSummaryTransactionReportAsync(date);//countSummaryTransaction
                     var summaryTransaction =  _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
@@ -189,7 +189,7 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(date).TotalDays > intervalDays)
+                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(1);
                 }
