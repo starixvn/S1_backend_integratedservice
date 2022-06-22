@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
@@ -51,6 +52,11 @@ namespace ThirdPartyWager.Service.DAL
         public Task<RewardAllBetData> GetRewardRecord(long eventRecordNum)
         {
             return _mainDbClient.QueryFirstAsync<RewardAllBetData>("Service_RewardLC_Allbet_Get", new DynamicParameters(new { eventRecordNum }));
+        }
+
+        public Task<IEnumerable<UnsettleCheck>> GetUnsettleCheckList()
+        {
+            return _mainDbClient.QueryAsync<UnsettleCheck>("Service_BettransLC_Allbet_Unsettle_Check",null);
         }
     }
 }
