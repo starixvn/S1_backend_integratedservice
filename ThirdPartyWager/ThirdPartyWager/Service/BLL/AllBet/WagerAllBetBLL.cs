@@ -145,5 +145,42 @@ namespace ThirdPartyWager.Service.BLL
                 return false;
             }
         }
+
+        public async Task<(bool Success, bool DoQuick)> UnsettleCheck()
+        {
+            try
+            {
+                // get api info
+                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+
+                var checkList = await _wagerAllBetService.GetUnsettleCheckList();
+                var doQuick = checkList.Count() == 200;
+                foreach (var chcek in checkList)
+                {
+                    try
+                    {
+                        var result = await _apiAllBetBLL.GetBetByBetNum(setting, chcek.betNum);
+                        if (result.resultCode == "OK")
+                        {
+                            _wagerAllBetService.InsertWager(result.data);
+                        }
+                       
+                    }
+                    catch (Exception ex)
+                    {
+                        var msg = $"INSERT WAGER Error betNum:{chcek.betNum}.";
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(chcek)}\r\n{ex.Message}");
+                    }
+                }
+
+                _logger.LogInformation($"Allbet Settle Check Success.");
+                return (true, doQuick);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Allbet Settle Check FATAL_ERROR.\r\n{ex.Message}");
+                return (false,true);
+            }
+        }
     }
 }

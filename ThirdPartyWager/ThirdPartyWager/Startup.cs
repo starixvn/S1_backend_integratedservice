@@ -183,6 +183,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerAllBet>();
             services.AddHostedService<WagerRedoAllBet>();
             services.AddHostedService<CheckRewardAllBet>();
+            services.AddHostedService<WagerUnsettleCheckAllBet>();
             services.AddHostedService<WagerSA>();
             services.AddHostedService<WagerRedoSA>();
             services.AddHostedService<FinanceSA>();
