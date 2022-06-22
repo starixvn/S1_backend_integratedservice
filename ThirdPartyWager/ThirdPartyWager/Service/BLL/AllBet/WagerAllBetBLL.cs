@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
@@ -45,7 +46,8 @@ namespace ThirdPartyWager.Service.BLL
                     _currencyList = _currencyList.Take(1);
                 }
                 foreach (var currency in _currencyList)
-                {       
+                {
+                    Thread.Sleep(15000);
                     // pagination
                     var pageIndex = 1;
                     var pageRowCnt = 1;
