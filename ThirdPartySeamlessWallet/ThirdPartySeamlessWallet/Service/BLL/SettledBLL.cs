@@ -957,6 +957,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int ResettleLC_AWC_Sexy(ResettleLC_Sexy resettleLC_Sexy)
+        {
+            foreach (var txn in resettleLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    txn.turnover *= tpCurrency.ExchangeRate;
+                    txn.betAmount *= tpCurrency.ExchangeRate;
+                    txn.winAmount *= tpCurrency.ExchangeRate;
+                    txn.gameInfo.winLoss *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.ResettleLC_AWC_Sexy(resettleLC_Sexy);
+            return result;
+        }
+
         public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
         {
             return settledService.GetUnsettledListLC_AWC_Sexy();
@@ -1542,16 +1563,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleDataRng_Iconic> GetUnsettledListRng_Iconic()
-        {
-            return settledService.GetUnsettledListRng_Iconic();
-        }
-
-        public int SetSettleFlag_BettransRng_Iconic(long transactionId)
-        {
-            return settledService.SetSettleFlag_BettransRng_Iconic(transactionId);
-        }
-
         public int CancelBetFish_Iconic(BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Iconic, bettingDataFish_Iconic.username);
@@ -1586,16 +1597,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
-        }
-
-        public IEnumerable<SettleDataFish_Iconic> GetUnsettledListFish_Iconic()
-        {
-            return settledService.GetUnsettledListFish_Iconic();
-        }
-
-        public int SetSettleFlag_TpWagerFish_Iconic(string transactionId)
-        {
-            return settledService.SetSettleFlag_TpWagerFish_Iconic(transactionId);
         }
 
         #endregion

@@ -1450,6 +1450,103 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return isError ? 0 : result;
         }
 
+        public int ResettleLC_AWC_Sexy(ResettleLC_Sexy resettleLC_Sexy)
+        {
+            bool isError = false;
+            var result = 0;
+            foreach (var item in resettleLC_Sexy.txns)
+            {
+                try
+                {
+                    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                    conn.Open();
+                    using var trans = conn.BeginTransaction();
+                    var check = conn.QueryFirstOrDefault<BettransDataLC_Sexy>("Service_BettransLC_AWC_Sexy_Get", new { platformTxId = item.platformTxId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                    if (check == null)
+                    {
+                        // no data
+                        log2File.Error($"not exist\r\n{JsonConvert.SerializeObject(item)}", $"{Tp.Sexy}_resettle");
+                        result = -1;
+                        continue;
+                    }
+
+                    decimal payout = 0;
+                    // Way to change Balance : Current Balance + new winAmount (resettle) - old winAmount (settle)
+                    if (check.TicketType == (int)BettransType.Payout && check.winAmount != item.winAmount)
+                    {
+                        payout = item.winAmount - check.winAmount;
+                    }
+
+                    int ticketStatus;
+                    ticketStatus = item.gameInfo.status switch
+                    {
+                        "WIN" => (int)TicketStatus.Win,
+                        "LOSE" => (int)TicketStatus.Lost,
+                        "DRAW" => (int)TicketStatus.Draw,
+                        "TIE" => (int)TicketStatus.Draw,
+                        "VOID" => (int)TicketStatus.Refund,
+                        "CANCEL" => (int)TicketStatus.Refund,
+                        _ => throw new NotImplementedException()
+                    };
+
+                    var p = new DynamicParameters(new
+                    {
+                        platformTxId = item.platformTxId,
+                        gameInfo = JsonConvert.SerializeObject(item.gameInfo),
+                        updateUnix = new DateTimeOffset(item.updateTime).ToUnixTimeSeconds(),
+                        txUnix = new DateTimeOffset(item.txTime).ToUnixTimeSeconds(),
+                        winAmount = item.winAmount,
+                        winLoss = item.gameInfo.winLoss,
+                        TicketType = (int)BettransType.Payout,
+                        TicketStatus = ticketStatus,
+                        SettleFlag = (int)SettleFlag.EndGame
+                    });
+
+                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Resettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    if (result > 0)
+                    {
+                        if (payout != 0)
+                        {
+                            result = PayoutV2(
+                                item.tpCustInfo,
+                                payout,
+                                (int)Tp.Sexy,
+                                item.platformTxId,
+                                (int)GameType.Sexy_LiveCasino,
+                                TpCategory.LiveCasino,
+                                item.platformTxId,
+                                TransType.Undo,
+                                null,
+                                out _,
+                                "Resettle",
+                                out _,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                           );
+                        }
+
+                        if (result > 0)
+                        {
+                            trans.Commit();
+                        }
+                    }
+                    else
+                    {
+                        result = -1;
+                        continue;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    isError = true;
+                    log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{mySqlEx}", $"{Tp.Sexy}_resettle", mySqlEx);
+                }
+            }
+
+            return isError ? 0 : result;
+        }
+
         public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
         {
             return _mainDbClient.Query<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get");
@@ -2716,7 +2813,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var bettransMg = _partitionService.Query<BettransRng_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", new { bettingDataRNG_MG.betId });
                 var bettrans = bettransMg.ToList();
-                
+
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
                 {
