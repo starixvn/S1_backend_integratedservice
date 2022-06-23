@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.WM
 {
@@ -210,6 +212,31 @@ namespace ThirdParty.WM
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_WM_Detail_Get", new { betRecordInfo.TransId });
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("gid"),
+                    Game = detail.GetStringValue("gname"),
+                    RefNo = detail.GetStringValue("betId"),
+                    Title = string.Empty,
+                    MatchID = detail.GetStringValue("round"),
+                    BetType = detail.GetStringValue("betCode"),
+                    BetChoice = detail.GetStringValue("betResult"),
+                    Result = detail.GetStringValue("gameResult"),
+                    Odds = 0,
+                    OddsType = string.Empty,
+                    DeviceType = DeviceType.None,
+                    Live = string.Empty,
+                    IP = detail.GetStringValue("ip"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
         }
     }
