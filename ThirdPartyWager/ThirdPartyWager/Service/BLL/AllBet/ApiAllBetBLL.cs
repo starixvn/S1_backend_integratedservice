@@ -67,6 +67,29 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<WagerAllBetModel<BetAllBet>>(r);
         }
 
+        public async Task<SettleCheckAllBetModel> GetBetByBetNum(IReadOnlyDictionary<string, string> setting, string betNum)
+        {
+            // param
+            var apiUrl = setting["ApiUrl"];
+            var path = "QueryBetRecordByBetNum";
+            var param = new
+            {
+                betNum
+            };
+            var parameters = JsonConvert.SerializeObject(param);
+            // log
+            _logger.LogInformation(parameters);
+            var header = GetAuthData(setting, path, parameters, out var contentType);
+            // request
+            var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
+            if (string.IsNullOrEmpty(r))
+            {
+                return null;
+            }
+
+            return JsonConvert.DeserializeObject<SettleCheckAllBetModel>(r);
+        }
+
         public async Task<WagerAllBetModel<BetAllBet>> GetModifiedBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime)
         {
             // param

@@ -10,6 +10,13 @@ namespace ThirdPartyWager.Service.Model
         public data<T> data { get; set; }
     }
 
+    public class SettleCheckAllBetModel
+    {
+        public string resultCode { get; set; }
+        public string message { get; set; }
+        public BetAllBet data { get; set; }
+    }
+
     public class data<T>
     {
         public string startDateTime { get; set; }
@@ -133,6 +140,11 @@ namespace ThirdPartyWager.Service.Model
         public string player { get; set; }
         public long tranId { get; set; }
         public int type { get; set; }
+    }
+
+    public class UnsettleCheck
+    {
+        public string betNum { get; set; }
     }
 
 }
