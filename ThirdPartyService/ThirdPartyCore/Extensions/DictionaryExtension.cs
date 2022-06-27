@@ -14,5 +14,18 @@ namespace ThirdPartyCore.Extensions
         {
             return dictionary.GetValueOrDefault(key)?.ToString() ?? string.Empty;
         }
+
+        public static string GetFirstStringValue<TKey, TValue>(this IEnumerable<IReadOnlyDictionary<TKey, TValue>> list, TKey key)
+        {
+            foreach (var dic in list)
+            {
+                var str = dic.GetStringValue(key);
+                if (!string.IsNullOrEmpty(str))
+                {
+                    return str;
+                }
+            }
+            return string.Empty;
+        }
     }
 }
