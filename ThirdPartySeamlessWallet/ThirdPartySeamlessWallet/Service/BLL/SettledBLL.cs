@@ -2160,6 +2160,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                rewardDataRNG_AP.cpwin *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP);
+            return result;
+        }
         #endregion
 
         #region YGG
