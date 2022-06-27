@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.One789
 {
@@ -145,6 +147,48 @@ namespace ThirdParty.One789
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_One789_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type });
+            
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Lottery => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("GameType"),
+                    Game = string.Empty,
+                    RefNo = detail.GetStringValue("Term"),
+                    Title = string.Empty,
+                    MatchID = string.Empty,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    Odds = 0,
+                    OddsType = string.Empty,
+                    DeviceType = DeviceType.None,
+                    Live = string.Empty,
+                    IP = detail.GetStringValue("IP"),
+                },
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = string.Empty,
+                    Game = string.Empty,
+                    RefNo = detail.GetStringValue("GameNumber"),
+                    Title = string.Empty,
+                    MatchID = detail.GetStringValue("GameRound"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = detail.GetStringValue("GameResult"),
+                    Odds = 0,
+                    OddsType = string.Empty,
+                    DeviceType = DeviceType.None,
+                    Live = string.Empty,
+                    IP = detail.GetStringValue("IP"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
         }
     }
