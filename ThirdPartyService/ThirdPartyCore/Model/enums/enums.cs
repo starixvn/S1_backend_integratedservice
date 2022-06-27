@@ -191,7 +191,7 @@ namespace ThirdPartyCore.Model.enums
         MalayOdds = 1,
 
         /// <summary>
-        /// 中国盘 OR 香港盘
+        /// 中国盘
         /// </summary>
         ChinaOdds = 2,
 
@@ -208,7 +208,12 @@ namespace ThirdPartyCore.Model.enums
         /// <summary>
         /// 美国盘
         /// </summary>
-        AmericanOdds = 5
+        AmericanOdds = 5,
+
+        /// <summary>
+        /// 香港盘
+        /// </summary>
+        HongKong = 6
     }
 
 

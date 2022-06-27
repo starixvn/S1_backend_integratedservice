@@ -403,7 +403,7 @@ namespace ThirdParty.SBO
             return oddsType switch
             {
                 "M" => OddsTypeEnum.MalayOdds,
-                "H" => OddsTypeEnum.ChinaOdds,
+                "H" => OddsTypeEnum.HongKong,
                 "E" => OddsTypeEnum.DecimalOdds,
                 "I" => OddsTypeEnum.IndoOdds,
                 _ => OddsTypeEnum.None,
