@@ -239,10 +239,7 @@ namespace ThirdParty.EVO
                         BetType = string.Empty,
                         BetChoice = string.Empty,
                         Result = detail.GetStringValue("result"),
-                        Odds = 0,
-                        OddsType = string.Empty,
                         DeviceType = GetDeviceType( detail.GetStringValue("channel")),                
-                        Live = string.Empty,
                         IP = string.Empty,
                     },
                     _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -264,10 +261,7 @@ namespace ThirdParty.EVO
                         BetType = string.Empty,
                         BetChoice = string.Empty,
                         Result = detail.GetStringValue("game"),
-                        Odds = 0,
-                        OddsType = string.Empty,
                         DeviceType = DeviceType.None,
-                        Live = string.Empty,
                         IP = string.Empty,
                     },
                     _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

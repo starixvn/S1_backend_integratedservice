@@ -186,10 +186,7 @@ namespace ThirdParty.Allbet
                 BetType = wagerDetail.GetStringValue("betType"), 
                 BetChoice = string.Empty,
                 Result = wagerDetail.GetStringValue("gameResult"),
-                Odds = 0,
-                OddsType = string.Empty,
                 DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
-                Live = string.Empty,
                 IP = string.Empty,
             };
         }

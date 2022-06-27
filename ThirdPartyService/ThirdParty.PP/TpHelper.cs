@@ -214,10 +214,7 @@ namespace ThirdParty.PP
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = isPromoWin ? string.Empty : detail.GetStringValue("result"),
-                Odds = 0,
-                OddsType = string.Empty,
                 DeviceType = DeviceType.None,
-                Live = string.Empty,
                 IP = string.Empty,
             };          
         }

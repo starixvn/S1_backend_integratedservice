@@ -16,6 +16,7 @@ using ThirdPartyService.Service.DAL;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using System.Collections.Generic;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdPartyService.Service.BLL.Tests
 {
@@ -32,7 +33,7 @@ namespace ThirdPartyService.Service.BLL.Tests
             configBuilder.SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false, false)
                 .AddJsonFile("appsettings.Local.json", false, false)
-                .AddJsonStream(Program.GetRemoteConfig(new List<string> { "http://52.221.19.140:7243/" }));;
+                .AddJsonStream(Program.GetRemoteConfig(new List<string> { "http://52.221.19.140:7243/" })); ;
             _configuration = configBuilder.Build();
             services.AddSingleton(_configuration);
 
@@ -73,8 +74,9 @@ namespace ThirdPartyService.Service.BLL.Tests
             Console.WriteLine(JsonConvert.SerializeObject(actual));
             return actual.ErrorCode;
         }
+
         [TestCase(39, 250072, "en", ExpectedResult = ErrorCode.Success)]
-        public ErrorCode GotoGameTest(int TpId,int CustId,string LangId)
+        public ErrorCode GotoGameTest(int TpId, int CustId, string LangId)
         {
             var actual = _thirdPartyBLL.GotoGame(new TpInfo
             {
@@ -87,6 +89,24 @@ namespace ThirdPartyService.Service.BLL.Tests
                 {
                     { "LangId", "en-US" },
                     { "gameId", "10001" }
+                }
+            });
+            Console.WriteLine(JsonConvert.SerializeObject(actual));
+            return actual.ErrorCode;
+        }
+
+        //[Ignore("dev")]
+        [TestCase(250385, "4095829", 77, 42, ExpectedResult = ErrorCode.Success)]
+        public ErrorCode GetTpBetRecordExtendTest(int custId, string transId, int gameType, int tpId)
+        {
+            var actual = _thirdPartyBLL.GetTpBetRecordExtend(new GetTpBetRecordExtendRequest
+            {
+                CustId = custId,
+                BetRecordInfo = new BetRecordInfo()
+                {
+                    TransId = transId,
+                    GameType = gameType,
+                    TpId = tpId,
                 }
             });
             Console.WriteLine(JsonConvert.SerializeObject(actual));

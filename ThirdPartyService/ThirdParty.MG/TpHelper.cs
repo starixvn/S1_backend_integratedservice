@@ -197,10 +197,7 @@ namespace ThirdParty.MG
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = string.Empty,
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = GetDeviceType(detail.GetFirstStringValue("deviceType")),
-                    Live = string.Empty,
                     IP = string.Empty
                 },
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -213,10 +210,7 @@ namespace ThirdParty.MG
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = string.Empty,
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = GetDeviceType(detail.GetFirstStringValue("deviceType")),
-                    Live = string.Empty,
                     IP = string.Empty
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

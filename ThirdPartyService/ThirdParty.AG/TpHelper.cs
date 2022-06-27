@@ -268,10 +268,7 @@ namespace ThirdParty.AG
                     BetType = detail.FirstOrDefault()?.GetStringValue("playType"),
                     BetChoice = string.Empty,
                     Result = detail.FirstOrDefault()?.GetStringValue("result"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = GetDeviceType(detail.FirstOrDefault()?.GetStringValue("deviceType")),
-                    Live = string.Empty,
                     IP = detail.FirstOrDefault()?.GetStringValue("betIP"),
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

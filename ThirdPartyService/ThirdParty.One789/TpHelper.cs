@@ -166,10 +166,7 @@ namespace ThirdParty.One789
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = string.Empty,
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = DeviceType.None,
-                    Live = string.Empty,
                     IP = detail.GetStringValue("IP"),
                 },
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -182,10 +179,7 @@ namespace ThirdParty.One789
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = detail.GetStringValue("GameResult"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = DeviceType.None,
-                    Live = string.Empty,
                     IP = detail.GetStringValue("IP"),
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
