@@ -7,6 +7,8 @@ using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.PP
 {
@@ -197,6 +199,28 @@ namespace ThirdParty.PP
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var isPromoWin = Regex.IsMatch(betRecordInfo.TransId, @"[a-z]");
+            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_Bettrans_PP_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type, isPromoWin });
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = isPromoWin ? detail.GetStringValue("campaignId") : detail.GetStringValue("gameId"),
+                Game = string.Empty,
+                RefNo = isPromoWin ? detail.GetStringValue("reference") : detail.GetStringValue("roundId"),
+                Title = isPromoWin ? "Promo Win" : detail.GetStringValue("roundDetails"),
+                MatchID = isPromoWin ? string.Empty : detail.GetStringValue("roundId"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = isPromoWin ? string.Empty : detail.GetStringValue("result"),
+                Odds = 0,
+                OddsType = string.Empty,
+                DeviceType = DeviceType.None,
+                Live = string.Empty,
+                IP = string.Empty,
+            };          
+        }
 
         public class DetailResult
         {
