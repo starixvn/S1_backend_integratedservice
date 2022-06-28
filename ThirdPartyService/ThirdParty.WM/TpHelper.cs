@@ -230,10 +230,7 @@ namespace ThirdParty.WM
                     BetType = detail.GetStringValue("betCode"),
                     BetChoice = detail.GetStringValue("betResult"),
                     Result = detail.GetStringValue("gameResult"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = DeviceType.None,
-                    Live = string.Empty,
                     IP = detail.GetStringValue("ip"),
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

@@ -466,10 +466,7 @@ namespace ThirdParty.PT
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = wagerDetail.GetStringValue("INFO"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = DeviceType.None,
-                    Live = string.Empty,
                     IP = string.Empty,
                 },
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -482,10 +479,7 @@ namespace ThirdParty.PT
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = wagerDetail.GetStringValue("INFO"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = DeviceType.None,
-                    Live = wagerDetail.GetStringValue("LIVENETWORK"),
                     IP = string.Empty,
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

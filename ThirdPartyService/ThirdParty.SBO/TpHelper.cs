@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SBO
 {
@@ -90,11 +93,40 @@ namespace ThirdParty.SBO
             };
 
 
-            var betDetail = getBetDetail.TpGameTypeOption.Type == (int)TpGameType.SBO_Sports 
+            var betDetail = getBetDetail.TpGameTypeOption.Type == (int)TpGameType.SBO_Sports
                 ? GetSportsBookDetail(getBetDetail, inputs, tpCurrency) // SportsBook(打第三方API取得)
                 : GetVirtualSportsDetail(getBetDetail, tpCurrency);  // VirtualSports(查TpWager)
 
             return betDetail;
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            if (tpGameType.CategoryId == TpCategory.Sports || tpGameType.CategoryId == TpCategory.VirtualSports)
+            {
+                var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerSBO_Get", new { betRecordInfo.TransId });
+                var betList = JsonConvert.DeserializeObject<IEnumerable<subBet>>(detail.GetStringValue("subBet"));
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("sportsType"),
+                    Game = detail.GetStringValue("sportsType"),
+                    RefNo = detail.GetStringValue("refNo"),
+                    Title = betList.FirstOrDefault()?.match ?? string.Empty,
+                    MatchID = string.Empty,
+                    BetType = betList.FirstOrDefault()?.marketType ?? string.Empty,
+                    BetChoice = betList.FirstOrDefault()?.betOption ?? string.Empty,
+                    Result = detail.GetStringValue("status"),
+                    Odds = decimal.TryParse(detail.GetStringValue("odds"), out var odds) ? odds : 0,
+                    OddsTypeEnum = GetOddsType(detail.GetStringValue("oddsStyle")),
+                    DeviceType = DeviceType.None,
+                    Live = detail.GetStringValue("isLive"),
+                    IP = detail.GetStringValue("ip"),
+                };
+            }
+            else
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }      
         }
 
         #region 單一錢包不實作
@@ -358,5 +390,25 @@ namespace ThirdParty.SBO
         // 9721	    无效的密码格式
 
         #endregion
+
+        private class subBet
+        {         
+            public string match { get; set; }       
+            public string betOption { get; set; }
+            public string marketType { get; set; }
+        }
+
+        private OddsTypeEnum GetOddsType(string oddsType)
+        {
+            return oddsType switch
+            {
+                "M" => OddsTypeEnum.MalayOdds,
+                "H" => OddsTypeEnum.HongKong,
+                "E" => OddsTypeEnum.DecimalOdds,
+                "I" => OddsTypeEnum.IndoOdds,
+                _ => OddsTypeEnum.None,
+            };
+        }
+
     }
 }

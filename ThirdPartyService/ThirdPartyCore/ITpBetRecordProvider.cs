@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ThirdPartyCore.Model;
 
 namespace ThirdPartyCore
 {
     public interface ITpBetRecordProvider
     {
-        TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail);
+        TpBetRecordDetailModel GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime);
 
         List<GameCasinoOption> GetGameCasinoList(int tpId);
 

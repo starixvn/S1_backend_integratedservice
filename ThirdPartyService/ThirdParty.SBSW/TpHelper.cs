@@ -317,7 +317,7 @@ namespace ThirdParty.SBSW
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var gameType = getBetDetail.TpGameTypeOption.Type;
-            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail.TpGameTypeOption.TpId, gameType, getBetDetail.TransId, getBetDetail.SettledTime);
 
             if (tpBetRecordDetail == null)
             {

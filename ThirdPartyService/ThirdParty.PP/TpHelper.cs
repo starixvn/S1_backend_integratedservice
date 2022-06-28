@@ -207,17 +207,14 @@ namespace ThirdParty.PP
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = isPromoWin ? detail.GetStringValue("campaignId") : detail.GetStringValue("gameId"),
-                Game = string.Empty,
+                Game = tpGameType.TypeName,
                 RefNo = isPromoWin ? detail.GetStringValue("reference") : detail.GetStringValue("roundId"),
                 Title = isPromoWin ? "Promo Win" : detail.GetStringValue("roundDetails"),
                 MatchID = isPromoWin ? string.Empty : detail.GetStringValue("roundId"),
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = isPromoWin ? string.Empty : detail.GetStringValue("result"),
-                Odds = 0,
-                OddsType = string.Empty,
                 DeviceType = DeviceType.None,
-                Live = string.Empty,
                 IP = string.Empty,
             };          
         }

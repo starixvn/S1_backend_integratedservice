@@ -180,10 +180,7 @@ namespace ThirdParty.EBet
                     BetType = ebet.betList?.First()?.betType.ToString() ?? string.Empty,
                     BetChoice = string.Empty,
                     Result = detail.GetStringValue("results"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = GetDeviceType(detail.GetStringValue("platform")),
-                    Live = string.Empty,
                     IP = string.Empty,
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

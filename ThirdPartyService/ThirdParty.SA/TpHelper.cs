@@ -287,10 +287,7 @@ namespace ThirdParty.SA
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = detail.GetStringValue("GameResult"),
-                    Odds = 0,
-                    OddsType = string.Empty,
                     DeviceType = GetDeviceType(detail.GetStringValue("BetSource")),
-                    Live = string.Empty,
                     IP = string.Empty,
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

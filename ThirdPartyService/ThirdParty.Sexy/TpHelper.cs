@@ -316,9 +316,7 @@ namespace ThirdParty.Sexy
                     BetChoice = string.Empty,
                     Result = JsonConvert.SerializeObject(bet.result),
                     Odds = decimal.TryParse(bet.odds, out var odds) ? odds : 0,
-                    OddsType = string.Empty,
                     DeviceType = DeviceType.None,
-                    Live = string.Empty,
                     IP = bet.ip ?? string.Empty,
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
