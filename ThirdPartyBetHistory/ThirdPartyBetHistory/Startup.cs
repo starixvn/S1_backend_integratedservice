@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,9 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartyBetHistory.Extensions;
-using ThirdPartyBetHistory.Service;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
+using ThirdPartyBetHistory.Service.Library;
 
 namespace ThirdPartyBetHistory
 {
@@ -27,7 +24,7 @@ namespace ThirdPartyBetHistory
         {
             services.AddDatabaseConnection(Configuration);
             services.AddMemoryCache();
-
+            services.AddSingleton<HttpHelper>();
             /*DAL*/
             services.AddSingleton<SettledService>();
             services.AddSingleton<ThirdPartyService>();
@@ -35,6 +32,7 @@ namespace ThirdPartyBetHistory
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
+            services.AddSingleton<TpBetRecordExtendBLL>();
 
             services.RegisterSabaSiteHelper();
         }
