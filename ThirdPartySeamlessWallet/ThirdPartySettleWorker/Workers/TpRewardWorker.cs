@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,14 +17,12 @@ namespace ThirdPartySettleWorker.Workers
 {
     public class TpRewardWorker : BackgroundService
     {
-        // timer{gametype}
-        private Timer timer57;
-        private Timer timer67;
-
         private readonly SettledBLL _settledBLL;
         private readonly TpUnRewardBLL _tpUnRewardBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<TpRewardWorker> _logger;
+        private readonly Dictionary<GameType, Timer> _timerList = new Dictionary<GameType, Timer>();
+        private readonly IEnumerable<TaskParam> _taskList;
 
         public TpRewardWorker(IServiceProvider provider)
         {
@@ -31,12 +30,28 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tpUnRewardBLL = provider.GetRequiredService<TpUnRewardBLL>();
             _logger = provider.GetRequiredService<ILogger<TpRewardWorker>>();
+            _taskList = new List<TaskParam>()
+            {
+                new TaskParam { Tp = Tp.AP, GameType = GameType.AP_RNG, TpCategory = TpCategory.Slots, SpName = "Service_RewardRNG_AP_Settle_Get" },
+                //new TaskParam { Tp = Tp.MG, GameType = GameType.MG_RNG, TpCategory = TpCategory.Slots, SpName = "Service_Reward_MG_Settle_Get" },
+            };
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //timer57 = new Timer(DoReward, new TaskParam { Tp = Tp.MG, GameType = GameType.MG_RNG, TpCategory = TpCategory.Slots, SpName = "Service_Reward_MG_Settle_Get" }, TimeSpan.Zero, TimeSpan.Zero);
-            timer67 = new Timer(DoReward, new TaskParam { Tp = Tp.AP, GameType = GameType.AP_RNG, TpCategory = TpCategory.Slots, SpName = "Service_RewardRNG_AP_Settle_Get" }, TimeSpan.Zero, TimeSpan.Zero);
+            foreach (var task in _taskList)
+            {
+                try
+                {
+                    var timer = new Timer(DoReward, task, TimeSpan.Zero, TimeSpan.Zero);
+                    _timerList.Add(task.GameType, timer);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error: WorkerService");
+                }
+            }
+
             return Task.CompletedTask;
         }
 
@@ -50,8 +65,10 @@ namespace ThirdPartySettleWorker.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer57?.Change(Timeout.Infinite, 0);
-            timer67?.Change(Timeout.Infinite, 0);
+            foreach (var timer in _timerList)
+            {
+                timer.Value?.Change(Timeout.Infinite, 0);
+            }
             return Task.CompletedTask;
         }
 
@@ -148,18 +165,7 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                switch (tpGameType)
-                {
-                    case GameType.MG_RNG:
-                        timer57?.Change(dueTimeSpan, TimeSpan.Zero);
-                        break;
-                    case GameType.AP_RNG:
-                        timer67?.Change(dueTimeSpan, TimeSpan.Zero);
-                        break;
-                    default:
-                        throw new UnRewardNotFoundException($"{tpGameType} GameType not found.");
-                        break;
-                }
+                _timerList[tpGameType]?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
