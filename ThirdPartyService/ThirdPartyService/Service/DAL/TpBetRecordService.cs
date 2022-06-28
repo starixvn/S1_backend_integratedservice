@@ -37,16 +37,16 @@ namespace ThirdPartyService.Service.DAL
         }
 
 
-        public TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail)
+        public TpBetRecordDetailModel GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
         {
             try
             {
                 var p = new DynamicParameters(new
                 {
-                    TpId = getBetDetail.TpGameTypeOption.TpId,
-                    GameType = getBetDetail.TpGameTypeOption.Type,
-                    TransId = getBetDetail.TransId,
-                    SettledTime = getBetDetail.SettledTime
+                    TpId,
+                    GameType,
+                    TransId,
+                    SettledTime
                 });
 
                 return _reportDbClient.QueryFirst<TpBetRecordDetailModel>("Service_TpBetRecordDetail_Get_V2", p);

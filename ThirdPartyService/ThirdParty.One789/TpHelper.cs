@@ -159,9 +159,9 @@ namespace ThirdParty.One789
                 TpCategory.Lottery => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detail.GetStringValue("GameType"),
-                    Game = string.Empty,
+                    Game = tpGameType.TypeName,
                     RefNo = detail.GetStringValue("Term"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = string.Empty,
                     BetType = string.Empty,
                     BetChoice = string.Empty,
@@ -172,9 +172,9 @@ namespace ThirdParty.One789
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = string.Empty,
-                    Game = string.Empty,
+                    Game = tpGameType.TypeName,
                     RefNo = detail.GetStringValue("GameNumber"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = detail.GetStringValue("GameRound"),
                     BetType = string.Empty,
                     BetChoice = string.Empty,

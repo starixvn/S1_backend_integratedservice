@@ -116,7 +116,7 @@ namespace ThirdParty.SBO
                     BetType = betList.FirstOrDefault()?.marketType ?? string.Empty,
                     BetChoice = betList.FirstOrDefault()?.betOption ?? string.Empty,
                     Result = detail.GetStringValue("status"),
-                    Odds = decimal.Parse(detail.GetStringValue("odds")),
+                    Odds = decimal.TryParse(detail.GetStringValue("odds"), out var odds) ? odds : 0,
                     OddsTypeEnum = GetOddsType(detail.GetStringValue("oddsStyle")),
                     DeviceType = DeviceType.None,
                     Live = detail.GetStringValue("isLive"),

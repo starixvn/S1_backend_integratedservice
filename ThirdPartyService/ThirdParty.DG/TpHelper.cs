@@ -309,9 +309,9 @@ namespace ThirdParty.DG
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detail.GetStringValue("gameId"),
-                    Game = string.Empty,
+                    Game = tpGameType.TypeName,
                     RefNo = detail.GetStringValue("id"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = detail.GetStringValue("tableId"),
                     BetType = string.Empty,
                     BetChoice = detail.GetStringValue("betDetail"),
