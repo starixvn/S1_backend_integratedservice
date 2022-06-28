@@ -1,4 +1,6 @@
 using System;
+using System.Net;
+using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +26,24 @@ namespace ThirdPartyBetHistory
         {
             services.AddDatabaseConnection(Configuration);
             services.AddMemoryCache();
+            if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
+            {
+                var proxy = new HttpClientHandler
+                {
+                    Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
+                    UseProxy = true
+                };
+
+                services.AddHttpClient("with_proxy")
+                .ConfigurePrimaryHttpMessageHandler(() => proxy);
+            }
+            else
+            {
+                services.AddHttpClient();
+            }
+
             services.AddSingleton<HttpHelper>();
+
             /*DAL*/
             services.AddSingleton<SettledService>();
             services.AddSingleton<ThirdPartyService>();
