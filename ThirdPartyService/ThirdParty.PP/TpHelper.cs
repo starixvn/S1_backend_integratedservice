@@ -202,7 +202,7 @@ namespace ThirdParty.PP
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var isPromoWin = Regex.IsMatch(betRecordInfo.TransId, @"[a-z]");
-            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_Bettrans_PP_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type, isPromoWin });
+            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_PP_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type, isPromoWin });
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
