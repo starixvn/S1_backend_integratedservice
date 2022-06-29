@@ -67,6 +67,10 @@ namespace ThirdPartyBetHistory.Service.Model
         public object ParlayData { get; set; }
         public decimal? original_stake { get; set; }
         public IEnumerable<CashOutData> CashOutData { get; set; }
+        public IEnumerable<Leaguename> leaguename { get; set; }
+        public IEnumerable<Sportname> sportname { get; set; }
+        public IEnumerable<Bettypename> bettypename { get; set; }
+        public string betchoice { get; set; } = string.Empty;
     }
     public class BetNumberDetail : ISabaBet
     {
@@ -98,6 +102,7 @@ namespace ThirdPartyBetHistory.Service.Model
         public string ba_status { get; set; }
         public string tokenmoney { get; set; }
         public long version_key { get; set; }
+        public string betchoice { get; set; } = string.Empty;
     }
     public class BetVirtualSportDetail : ISabaBet
     {
@@ -147,5 +152,23 @@ namespace ThirdPartyBetHistory.Service.Model
         public IEnumerable<BetNumberDetail> BetNumberDetails { get; set; }
         public IEnumerable<BetVirtualSportDetail> BetVirtualSportDetails { get; set; }
         public IEnumerable<dynamic> BetCasinoDetails { get; set; }
+    }
+
+    public class Sportname
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
+    }
+
+    public class Bettypename
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
+    }
+
+    public class Leaguename
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
     }
 }

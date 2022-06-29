@@ -28,48 +28,36 @@ namespace ThirdPartyBetHistory.Service.BLL
             _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend";
         }
 
-        public void AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo)
+        public void AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, TpBetRecordExtend tpBetRecordExtend)
         {
             try
             {
-                var content = JsonConvert.SerializeObject(new
+                var parameters = new DynamicParameters(new
                 {
-                    CustId = tpCustInfo.CustId,
-                    BetRecordInfo = betRecordInfo,
+                    betRecordInfo.TpId,
+                    betRecordInfo.TransId,
+                    GameType = (int)betRecordInfo.GameType,
+                    tpCustInfo.CustId,
+                    tpCustInfo.UserName,
+                    tpCustInfo.CurrencyId,
+                    tpCustInfo.SiteId,
+                    betRecordInfo.TpUserName,
+                    betRecordInfo.SettledTime,
+                    betRecordInfo.TransTime,
+                    betRecordInfo.Stake,
+                    betRecordInfo.ValidBet,
+                    Revenue = 0,
+                    ProgressiveBet = 0,
+                    ProgressiveWin = 0,
+                    betRecordInfo.WinlostAmount,
+                    SettlementType = (int)betRecordInfo.SettlementType,
+                    TicketStatus = (int)betRecordInfo.TicketStatus,
+                    betRecordInfo.BonusId,
+                    OriginalState = betRecordInfo.OriginalState ?? string.Empty,
+                    betRecordInfo.TicketKey,
                 });
-                var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
-                var response = _httpHelper.GetClient().PostAsync(_apiUrl, httpContent).Result;
-                var responseBody = response.Content.ReadAsStringAsync().Result;
-                var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
-                if (result.ErrorCode == 0)
-                {
-                    var parameters = new DynamicParameters(new
-                    {
-                        betRecordInfo.TpId,
-                        betRecordInfo.TransId,
-                        GameType = (int)betRecordInfo.GameType,
-                        tpCustInfo.CustId,
-                        tpCustInfo.UserName,
-                        tpCustInfo.CurrencyId,
-                        tpCustInfo.SiteId,
-                        betRecordInfo.TpUserName,
-                        betRecordInfo.SettledTime,
-                        betRecordInfo.TransTime,
-                        betRecordInfo.Stake,
-                        betRecordInfo.ValidBet,
-                        Revenue = 0,
-                        ProgressiveBet = 0,
-                        ProgressiveWin = 0,
-                        betRecordInfo.WinlostAmount,
-                        SettlementType = (int)betRecordInfo.SettlementType,
-                        TicketStatus = (int)betRecordInfo.TicketStatus,
-                        betRecordInfo.BonusId,
-                        OriginalState = betRecordInfo.OriginalState ?? string.Empty,
-                        betRecordInfo.TicketKey,
-                    });
-                    parameters.AddDynamicParams(result.Data);
-                    _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
-                }
+                parameters.AddDynamicParams(tpBetRecordExtend);
+                _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
             }
             catch (Exception ex)
             {

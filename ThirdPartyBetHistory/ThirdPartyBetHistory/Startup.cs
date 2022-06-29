@@ -11,6 +11,7 @@ using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Library;
+using ThirdPartyBetHistory.Service.Model;
 
 namespace ThirdPartyBetHistory
 {
@@ -47,6 +48,7 @@ namespace ThirdPartyBetHistory
             /*DAL*/
             services.AddSingleton<SettledService>();
             services.AddSingleton<ThirdPartyService>();
+            services.AddSingleton<ConfigService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -54,6 +56,9 @@ namespace ThirdPartyBetHistory
             services.AddSingleton<TpBetRecordExtendBLL>();
 
             services.RegisterSabaSiteHelper();
+
+            services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
+            services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

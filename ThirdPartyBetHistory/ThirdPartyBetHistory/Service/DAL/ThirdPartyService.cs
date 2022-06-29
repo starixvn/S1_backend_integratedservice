@@ -52,10 +52,11 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
         }
 
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos, WorkerType workerType)
+        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
         {
-            foreach (var betRecord in betRecordInfos.OrderBy(x => x.TicketKey))
+            foreach (var settleData in settleDataList.OrderBy(x => x.BetRecordInfo.TicketKey))
             {
+                var betRecord = settleData.BetRecordInfo;
                 var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
 
                 if (tpCustInfo == null/* || betRecord.TicketStatus == TicketStatus.UnSettled*/)
@@ -259,7 +260,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                     Task.Run(() =>
                     {
-                        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
+                        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
                     });
 
                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
