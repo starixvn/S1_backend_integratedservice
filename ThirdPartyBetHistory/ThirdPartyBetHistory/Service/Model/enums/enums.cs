@@ -96,4 +96,60 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         ByTransIdUnSettleWager = 3,
         ByTransIdSettleWager = 4
     }
+
+    public enum TpCategory
+    {
+        Sports = 1,
+        Casino = 2,
+        LiveCasino = 3,
+        Fishing = 4,
+        Cockfighting = 5,
+        Lottery = 6,
+        VirtualSports = 7,
+        Poker = 8,
+    }
+
+    public enum DeviceType
+    {
+        None,
+        Desktop,
+        Mobile,
+        iOS,
+        Android
+    }
+
+    public enum OddsTypeEnum
+    {
+        None = 0,
+
+        /// <summary>
+        /// 马来盘
+        /// </summary>
+        MalayOdds = 1,
+
+        /// <summary>
+        /// 中国盘
+        /// </summary>
+        ChinaOdds = 2,
+
+        /// <summary>
+        /// 欧洲盘
+        /// </summary>
+        DecimalOdds = 3,
+
+        /// <summary>
+        /// 印度尼西亚盘
+        /// </summary>
+        IndoOdds = 4,
+
+        /// <summary>
+        /// 美国盘
+        /// </summary>
+        AmericanOdds = 5,
+
+        /// <summary>
+        /// 香港盘
+        /// </summary>
+        HongKong = 6
+    }
 }

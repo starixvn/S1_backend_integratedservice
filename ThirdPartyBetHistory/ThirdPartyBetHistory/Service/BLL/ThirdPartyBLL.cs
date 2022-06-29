@@ -29,9 +29,10 @@ namespace ThirdPartyBetHistory.Service.BLL
 
             return tpList;
         }
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos, WorkerType workerType)
+
+        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
         {
-            _thirdPartyService.ToDoAddBetRecord(betRecordInfos, workerType);
+            _thirdPartyService.DoSettleTicket(settleDataList, workerType);
         }
 
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
