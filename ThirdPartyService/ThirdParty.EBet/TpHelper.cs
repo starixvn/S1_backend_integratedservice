@@ -175,7 +175,7 @@ namespace ThirdParty.EBet
                     GameID = ebet.tableType.ToString(),
                     Game = GetGameName(ebet.tableType.ToString()),
                     RefNo = detail.GetStringValue("seqNo"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = detail.GetStringValue("roundCode"),
                     BetType = ebet.betList?.First()?.betType.ToString() ?? string.Empty,
                     BetChoice = string.Empty,

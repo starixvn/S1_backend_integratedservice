@@ -225,7 +225,7 @@ namespace ThirdParty.WM
                     GameID = detail.GetStringValue("gid"),
                     Game = detail.GetStringValue("gname"),
                     RefNo = detail.GetStringValue("betId"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = detail.GetStringValue("round"),
                     BetType = detail.GetStringValue("betCode"),
                     BetChoice = detail.GetStringValue("betResult"),

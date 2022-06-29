@@ -111,7 +111,7 @@ namespace ThirdParty.SBO
                     GameID = detail.GetStringValue("sportsType"),
                     Game = detail.GetStringValue("sportsType"),
                     RefNo = detail.GetStringValue("refNo"),
-                    Title = betList.FirstOrDefault()?.match ?? string.Empty,
+                    Title = betList.FirstOrDefault()?.match ?? tpGameType.TypeName,
                     MatchID = string.Empty,
                     BetType = betList.FirstOrDefault()?.marketType ?? string.Empty,
                     BetChoice = betList.FirstOrDefault()?.betOption ?? string.Empty,
