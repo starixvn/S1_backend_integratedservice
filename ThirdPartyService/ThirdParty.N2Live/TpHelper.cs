@@ -163,7 +163,7 @@ namespace ThirdParty.N2Live
                     GameID = gameCode,
                     Game = GetGameName(gameCode),
                     RefNo = detail.GetStringValue("betid"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = string.Empty,
                     BetType = string.Empty,
                     BetChoice = string.Empty,

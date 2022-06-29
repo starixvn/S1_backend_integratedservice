@@ -263,7 +263,7 @@ namespace ThirdParty.AG
                     GameID = gameCode,
                     Game = GetGameName(gameCode),
                     RefNo = detail.FirstOrDefault()?.GetStringValue("gameCode"),
-                    Title = string.Empty,
+                    Title = tpGameType.TypeName,
                     MatchID = detail.FirstOrDefault()?.GetStringValue("tableCode"),
                     BetType = detail.FirstOrDefault()?.GetStringValue("playType"),
                     BetChoice = string.Empty,
