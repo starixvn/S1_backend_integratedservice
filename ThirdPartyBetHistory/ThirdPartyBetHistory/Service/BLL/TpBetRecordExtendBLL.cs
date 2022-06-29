@@ -55,8 +55,25 @@ namespace ThirdPartyBetHistory.Service.BLL
                     betRecordInfo.BonusId,
                     OriginalState = betRecordInfo.OriginalState ?? string.Empty,
                     betRecordInfo.TicketKey,
+                    tpBetRecordExtend.ProviderID,
+                    tpBetRecordExtend.Currency,
+                    tpBetRecordExtend.RefNo,
+                    tpBetRecordExtend.GameID,
+                    tpBetRecordExtend.Provider,
+                    tpBetRecordExtend.Product,
+                    tpBetRecordExtend.Category,
+                    tpBetRecordExtend.Game,
+                    tpBetRecordExtend.Title,
+                    tpBetRecordExtend.MatchID,
+                    tpBetRecordExtend.BetType,
+                    tpBetRecordExtend.BetChoice,
+                    tpBetRecordExtend.Result,
+                    tpBetRecordExtend.Odds,
+                    tpBetRecordExtend.OddsType,
+                    tpBetRecordExtend.Platform,
+                    tpBetRecordExtend.Live,
+                    tpBetRecordExtend.IP,
                 });
-                parameters.AddDynamicParams(tpBetRecordExtend);
                 _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
             }
             catch (Exception ex)
