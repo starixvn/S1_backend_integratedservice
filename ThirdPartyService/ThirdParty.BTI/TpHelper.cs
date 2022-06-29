@@ -5,9 +5,11 @@ using System.Text;
 using System.Web;
 using System.Xml.Linq;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.BTI
 {
@@ -124,6 +126,30 @@ namespace ThirdParty.BTI
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { betRecordInfo.TransId });
+            var xd = XDocument.Parse(detail.GetValueOrDefault("BodyData")?.ToString());
+            var selection = xd.Descendants("Selection").FirstOrDefault();
+            var bet = xd.Descendants("Bet").FirstOrDefault();
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = selection.Attribute("BranchID").Value,
+                Game = selection.Attribute("BranchName").Value,
+                RefNo = detail.GetStringValue("reserve_id"),
+                Title = selection.Attribute("EventName").Value,
+                MatchID = selection.Attribute("EventID").Value,
+                BetType = bet.Attribute("BetType").Value,
+                BetChoice = selection.Attribute("YourBet").Value,
+                Result = FindTicketStatus(xd),
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+                Odds = decimal.TryParse(selection.Attribute("OddsInUserStyle").Value, out var odds) ? odds : 0,
+                OddsTypeEnum = GetOddsType(selection.Attribute("UserOddStyle").Value),  
+                Live = selection.Attribute("IsLive").Value,
+            };
+        }
+
         private string FindTicketStatus(XDocument XD)
         {
             try
@@ -211,6 +237,18 @@ namespace ThirdParty.BTI
                 // use default
             }
             return (homeyHandicap, awayHandicap, handicap);
+        }
+
+        private OddsTypeEnum GetOddsType(string oddsType)
+        {
+            return oddsType switch
+            {
+                "Malay" => OddsTypeEnum.MalayOdds,
+                "Hongkong" => OddsTypeEnum.HongKong,
+                "Decimal" => OddsTypeEnum.DecimalOdds,
+                "Indo" => OddsTypeEnum.IndoOdds,
+                _ => OddsTypeEnum.None,
+            };
         }
     }
 }
