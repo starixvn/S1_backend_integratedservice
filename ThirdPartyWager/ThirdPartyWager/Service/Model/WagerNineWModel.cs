@@ -52,6 +52,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public int categoryType { get; set; }
         public string ip { get; set; } = string.Empty;
         public decimal matchOddsReq { get; set; }
+        public int oddsType { get; set; }
         public string userId { get; set; } = string.Empty;
         public string betId { get; set; } = string.Empty;
         public DateTime betPlaced { get; set; } = default;
@@ -103,7 +104,9 @@ namespace ThirdPartyWager.Service.Model.NineW
             matchSettledDate = reSettleBet.resettledDate;
             profitLoss = reSettleBet.profitLoss;
             matchStake = reSettleBet.stakeTotal;
+            oddsType = reSettleBet.oddsType;
             var detail = reSettleBet.transactionData?.First();
+
             if (detail == null)
             {
                 throw new Exception($"NineW ReSettleBet to  SettleBet Exception：transactionData is null.");
@@ -112,6 +115,7 @@ namespace ThirdPartyWager.Service.Model.NineW
             betStatus = detail.betStatus;
             selectionName = detail.selectionName;
             matchType = detail.matchType;
+            matchOddsReq = detail.txOddsMatched;
         }
     }
 
@@ -141,6 +145,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public Transactiondata[] transactionData { get; set; }
         public decimal backSubTotal { get; set; }
         public decimal laySubTotal { get; set; }
+        public int oddsType { get; set; }
     }
 
     public class Transactiondata

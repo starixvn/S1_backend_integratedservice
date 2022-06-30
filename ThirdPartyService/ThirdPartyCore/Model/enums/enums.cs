@@ -213,7 +213,12 @@ namespace ThirdPartyCore.Model.enums
         /// <summary>
         /// 香港盘
         /// </summary>
-        HongKong = 6
+        HongKongOdds = 6,
+
+        /// <summary>
+        /// 印度盤
+        /// </summary>
+        IndianOdds = 7
     }
 
 
