@@ -19,6 +19,7 @@ using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdPartyService.Service.BLL
 {
@@ -1184,17 +1185,21 @@ namespace ThirdPartyService.Service.BLL
 
             var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
+            
             try
             {
                 var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
                 return new ApiResult<TpBetRecordExtend>(result);
             }
+            catch (GetTpBetRecordExtendNotImplementedException ex)
+            {
+                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption,tpCustInfoResult.Data));
-            }
-           
+                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
+            }      
         }
 
         public string GetTpName(int tpId)
