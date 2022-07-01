@@ -439,7 +439,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
                                 if ((wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount) ||
-                                    (wager.GameId == "NiuNiu" && unsettled.RealBetAmount == wager.Stake))
+                                    (wager.GameId == "NiuNiu" && unsettled.RealBetAmount == wager.Stake && wager.WinLostAmount == unsettled.WinLostAmount))
                                 {
                                     BetRecordInfo betRecordInfo = new BetRecordInfo
                                     {
