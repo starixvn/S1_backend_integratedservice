@@ -2041,14 +2041,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 category = bettingDataLC_WM.category,
                 requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                 TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
+                SettleFlag = 2,
+                bettingDataLC_WM.RealBetAmount,
             });
 
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransLC_WM_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_WM_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -2172,11 +2173,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                     TicketType = bettingDataLC_WM.category == "1" ? (int)BettransType.Bet : (int)BettransType.Tip,
                     TicketStatus = TicketStatus.Refund,
-                    SettleFlag = SettleFlag.Settled
+                    SettleFlag = SettleFlag.Settled,
+                    bettingDataLC_WM.RealBetAmount,
                 });
 
                 p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                conn.Execute("Service_BettransLC_WM_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                conn.Execute("Service_BettransLC_WM_CancelBet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var refBettransLC = p.Get<int>("out_result");
 
                 if (refBettransLC == 2)
@@ -2218,13 +2220,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 code = bettingDataLC_WM.code,
                 category = bettingDataLC_WM.category,
                 requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                bettingDataLC_WM.RealBetAmount,
             });
 
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransLC_WM_Resettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransLC_WM_Resettle_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0)
                 {
@@ -2269,10 +2272,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_WM()
+        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_WM_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)

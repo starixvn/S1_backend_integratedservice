@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,15 +20,27 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime requestDate { get; set; }
         public string cmd { get; set; }
         public string signature { get; set; }
+
+        public decimal RealBetAmount { get; set; }
+        public decimal DetailSumAmount
+        {
+            get
+            {
+                try
+                {
+                    var dic = JsonConvert.DeserializeObject<Dictionary<string, decimal>>(betdetail);
+                    return dic.Sum(i => i.Value);
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
+            }
+        }
     }
 
-    public class SettleData_WM
+    public class SettleData_WM : SettleData
     {
-        public string TransId { get; set; }
-        public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
-        public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
-        public long SettleTime { get; set; }
+        public decimal RealBetAmount { get; set; }
     }
 }
