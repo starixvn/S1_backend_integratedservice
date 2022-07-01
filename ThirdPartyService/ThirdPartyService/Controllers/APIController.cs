@@ -341,22 +341,6 @@ namespace ThirdPartyService.Controllers
             {
                 return thirdPartyBLL.GetTpBetRecordExtend(request);
             }
-            catch (TpBetRecordExtendNotFoundException ex)
-            {
-                return new ApiResult<TpBetRecordExtend>()
-                {
-                    ErrorCode = ErrorCode.TpBetRecordExtendNotFound,
-                    RawMessage = ex.Message,
-                };
-            }
-            catch (GetTpBetRecordExtendNotImplementedException ex)
-            {
-                return new ApiResult<TpBetRecordExtend>()
-                {
-                    ErrorCode = ErrorCode.GetTpBetRecordExtendNotImplemented,
-                    RawMessage = ex.Message,
-                };
-            }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
