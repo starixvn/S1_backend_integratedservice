@@ -469,14 +469,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 category = bettingDataLC_WM.category,
                 requestUnix = new DateTimeOffset(bettingDataLC_WM.requestDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
                 TicketType = bettingDataLC_WM.category == "1" ? (int)BettransType.Bet : (int)BettransType.Tip,
-                SettleFlag = 2
+                SettleFlag = 2,
+                bettingDataLC_WM.RealBetAmount,
             });
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            result = conn.Execute("Service_BettransLC_WM_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = conn.Execute("Service_BettransLC_WM_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             if (result > 0)
             {
