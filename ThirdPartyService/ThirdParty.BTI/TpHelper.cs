@@ -244,7 +244,7 @@ namespace ThirdParty.BTI
             return oddsType switch
             {
                 "Malay" => OddsTypeEnum.MalayOdds,
-                "Hongkong" => OddsTypeEnum.HongKong,
+                "Hongkong" => OddsTypeEnum.HongKongOdds,
                 "Decimal" => OddsTypeEnum.DecimalOdds,
                 "Indo" => OddsTypeEnum.IndoOdds,
                 _ => OddsTypeEnum.None,
