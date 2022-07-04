@@ -97,10 +97,10 @@ namespace ThirdPartyBetHistory.Service.Model
             GameID = "231";
             Game = tpGameType.TypeName;
             RefNo = betDetail.trans_id.ToString();
-            Title = betDetail.BetchoiceList?.FirstOrDefault().Title ?? string.Empty;
+            Title = betDetail.BetchoiceList?.FirstOrDefault()?.Title ?? string.Empty;
             MatchID = string.Empty;
-            BetType = betDetail.BetchoiceList?.FirstOrDefault().BetType ?? string.Empty;
-            BetChoice = betDetail.BetchoiceList?.FirstOrDefault().BetChoice ?? string.Empty;
+            BetType = betDetail.BetchoiceList?.FirstOrDefault()?.BetType ?? string.Empty;
+            BetChoice = betDetail.BetchoiceList?.FirstOrDefault()?.BetChoice ?? string.Empty;
             Result = betDetail.ticket_status;
             DeviceType = DeviceType.None;
             IP = string.Empty;
