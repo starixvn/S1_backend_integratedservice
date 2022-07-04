@@ -16,14 +16,12 @@ namespace ThirdPartyBetHistory.Service.BLL
     public class TpBetRecordExtendBLL
     {
         private readonly ILogger<TpBetRecordExtendBLL> _logger;
-        private readonly HttpHelper _httpHelper;
         private readonly MySqlClient _mainDbClient;
         private readonly string _apiUrl;
 
         public TpBetRecordExtendBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
-            _httpHelper = provider.GetRequiredService<HttpHelper>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend";
         }
