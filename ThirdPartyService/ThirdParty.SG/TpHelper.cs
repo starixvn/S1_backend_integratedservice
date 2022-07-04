@@ -8,6 +8,8 @@ using System.Web;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using System.Linq;
 using Newtonsoft.Json;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.SG
 {
@@ -126,6 +128,56 @@ namespace ThirdParty.SG
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var spName = tpGameType.Type == 15 ? "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
+            var detail = TpBetRecordProvider.WagerDbQueryFirst(spName, new { betRecordInfo.TransId });
+            var gameCode = detail.GetStringValue("gameCode");
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detail.GetStringValue("referenceId"),
+                    Title = tpGameType.TypeName,
+                    MatchID = string.Empty,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = GetDeviceType(detail.GetStringValue("channel")),
+                    IP = detail.GetStringValue("betIp"),
+                },
+                TpCategory.Fishing => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetFishGameName(gameCode),
+                    RefNo = detail.GetStringValue("referenceId"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detail.GetStringValue("roundId"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = detail.GetStringValue("result"),
+                    DeviceType = GetDeviceType(detail.GetStringValue("channel")),
+                    IP = detail.GetStringValue("betIp"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "Web" => DeviceType.Desktop,
+                "PC" => DeviceType.Desktop,
+                "Mobile" => DeviceType.Mobile,
+                "APP-i" => DeviceType.iOS,
+                "APP-A" => DeviceType.Android,
+                _ => DeviceType.None,
+            };
+        }
+
         private string GetGameName(string gameCode)
         {
             if (!GameNameList.TryGetValue(gameCode, out var name))
@@ -135,6 +187,19 @@ namespace ThirdParty.SG
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
             return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
+
+        private string GetFishGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "F-SF01" => "Fishing God",
+                "F-SF02" => "Fishing War",
+                _ => gameCode,
+            };
+        }
+         
+ 
+
 
     }
 }

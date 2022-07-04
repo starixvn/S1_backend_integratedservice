@@ -195,7 +195,7 @@ namespace ThirdParty.Allbet
             return device switch
             {
                 "6" => DeviceType.Desktop,
-                "3 " => DeviceType.Mobile,
+                "3" => DeviceType.Mobile,
                 _ => DeviceType.None,
             };
         }

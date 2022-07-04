@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.GPI
 {
@@ -164,6 +166,30 @@ namespace ThirdParty.GPI
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_GPI_Detail_Get", new { betRecordInfo.TransId });
+            var gameCode = detailList.GetFirstStringValue("game_id");
+            
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detailList.GetFirstStringValue("round_id"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detailList.GetFirstStringValue("round_id"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = GetDeviceType(detailList.GetFirstStringValue("platform")),
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };         
+        }
+
         private string GetGameName(string gameCode)
         {
             return gameCode switch
@@ -281,6 +307,25 @@ namespace ThirdParty.GPI
                 "2000137" => "Sweet Baker",
                 _ => string.Empty,
             };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "1":
+                case "2":
+                case "3":
+                    return DeviceType.Desktop;
+                case "4":
+                    return DeviceType.Mobile;
+                case "5":
+                    return DeviceType.Android;
+                case "6":
+                    return DeviceType.iOS;
+                default:
+                    return DeviceType.None;
+            }
         }
     }
 }

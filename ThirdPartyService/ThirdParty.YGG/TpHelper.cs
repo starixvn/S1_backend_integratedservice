@@ -5,9 +5,11 @@ using System.Text;
 using System.Web;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.YGG
 {
@@ -104,6 +106,43 @@ namespace ThirdParty.YGG
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_YGG_Detail_Get", new { betRecordInfo.TransId });
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detailList.GetFirstStringValue("cat3"),
+                    Game = detailList.GetFirstStringValue("cat4"),
+                    RefNo = detailList.GetFirstStringValue("reference"),
+                    Title = detailList.GetFirstStringValue("tag1"),
+                    MatchID = detailList.GetFirstStringValue("reference"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = GetDeviceType(detailList.GetFirstStringValue("tag3")),
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            if (device.Equals("Channel.PC", StringComparison.OrdinalIgnoreCase))
+            {
+                return DeviceType.Desktop;
+            }
+
+            if (device.Equals("Channel.Mobile", StringComparison.OrdinalIgnoreCase))
+            {
+                return DeviceType.Mobile;
+            }
+
+            return DeviceType.None;
+        }
         #region 不實作
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
