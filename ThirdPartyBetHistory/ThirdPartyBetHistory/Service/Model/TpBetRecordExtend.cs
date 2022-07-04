@@ -17,11 +17,11 @@ namespace ThirdPartyBetHistory.Service.Model
             Currency = betDetail.currency.ToString();
 
             GameID = betDetail.sport_type.ToString();
-            Game = betDetail.sportname?.First(i => i.lang == "en")?.name ?? string.Empty;
+            Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty;
             RefNo = betDetail.parlay_ref_no.ToString();
-            Title = betDetail.leaguename?.First(i => i.lang == "en")?.name ?? string.Empty;
+            Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty;
             MatchID = betDetail.match_id.ToString();
-            BetType = betDetail.bettypename?.First(i => i.lang == "en")?.name ?? string.Empty;
+            BetType = betDetail.bettypename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty;
             BetChoice = betDetail.betchoice;
             Result = betDetail.ticket_status;
             DeviceType = GetDeviceType(betDetail.betfrom);
@@ -97,10 +97,10 @@ namespace ThirdPartyBetHistory.Service.Model
             GameID = "231";
             Game = tpGameType.TypeName;
             RefNo = betDetail.trans_id.ToString();
-            Title = betDetail.BetchoiceList?.First().Title ?? string.Empty;
+            Title = betDetail.BetchoiceList?.FirstOrDefault().Title ?? string.Empty;
             MatchID = string.Empty;
-            BetType = betDetail.BetchoiceList?.First().BetType ?? string.Empty;
-            BetChoice = betDetail.BetchoiceList?.First().BetChoice ?? string.Empty;
+            BetType = betDetail.BetchoiceList?.FirstOrDefault().BetType ?? string.Empty;
+            BetChoice = betDetail.BetchoiceList?.FirstOrDefault().BetChoice ?? string.Empty;
             Result = betDetail.ticket_status;
             DeviceType = DeviceType.None;
             IP = string.Empty;
