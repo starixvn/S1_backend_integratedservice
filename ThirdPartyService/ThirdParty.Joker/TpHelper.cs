@@ -191,10 +191,10 @@ namespace ThirdParty.Joker
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var settledTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime;
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
             var detail = tpGameType.Type == 13 ?
                     TpBetRecordProvider.ReportDbQuery("Service_Bettrans_Joker_Detail_Get", new { betRecordInfo.TransId }) :
-                    TpBetRecordProvider.ReportDbQuery("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = settledTime.GetPartitionKey(), betRecordInfo.TransId });
+                    TpBetRecordProvider.ReportDbQuery("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM, betRecordInfo.TransId });
 
             var gameCode = detail.GetFirstStringValue("gamecode");
 

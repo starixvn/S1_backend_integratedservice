@@ -10,6 +10,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.AMB
 {
@@ -174,6 +175,44 @@ namespace ThirdParty.AMB
                     },
                 };
             }
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.ReportDbQuery("Service_Bettrans_AMB_Detail_Get", 
+                new { betRecordInfo.TransId, GameType = tpGameType.Type, YYYYMM });
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Poker => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detailList.GetFirstStringValue("gameId"),
+                    Game = detailList.GetFirstStringValue("game"),
+                    RefNo = detailList.GetFirstStringValue("transactionId"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detailList.GetFirstStringValue("roundId"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = DeviceType.None,
+                    IP = string.Empty,
+                },
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detailList.GetFirstStringValue("gameId"),
+                    Game = detailList.GetFirstStringValue("game"),
+                    RefNo = detailList.GetFirstStringValue("TransId"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detailList.GetFirstStringValue("roundId"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = DeviceType.None,
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
         }
 
         private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
