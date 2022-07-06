@@ -109,8 +109,8 @@ namespace ThirdParty.One789
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_One789_Detail_Get", 
-                new { getBetDetail.TransId , GameType = getBetDetail.TpGameTypeOption.Type });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", 
+                new { getBetDetail.TransId , GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             
             return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -152,7 +152,7 @@ namespace ThirdParty.One789
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_One789_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);
             
             return tpGameType.CategoryId switch
             {

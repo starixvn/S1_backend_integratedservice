@@ -284,7 +284,7 @@ namespace ThirdPartyService.Controllers
                     RawMessage = ex.Message,
                 };
             }
-            catch (GetBetDetailNotImplementedException ex)
+            catch (NotImplementedException ex)
             {
                 return new ApiResult<object>()
                 {

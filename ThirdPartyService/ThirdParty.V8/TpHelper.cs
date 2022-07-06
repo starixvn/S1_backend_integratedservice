@@ -6,6 +6,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.V8
 {
@@ -373,7 +374,7 @@ namespace ThirdParty.V8
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_V8_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_V8_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -399,5 +400,9 @@ namespace ThirdParty.V8
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

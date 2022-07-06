@@ -301,7 +301,7 @@ namespace ThirdParty.Sexy
         }
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_BettransLC_AWC_Sexy_Detail_Get", new { betRecordInfo.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_AWC_Sexy_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
             var bet = JsonConvert.DeserializeObject<DetailSexy>(detail.GetStringValue("gameInfo"));
             return tpGameType.CategoryId switch
             {

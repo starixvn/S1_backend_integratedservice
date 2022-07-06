@@ -15,6 +15,7 @@ namespace ThirdPartyService.Service.DAL
     {
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
+        private readonly MySqlClient _mainDbClient;
         private readonly IReadOnlyDictionary<int, List<GameCasinoOption>> _GameCasinoList;
         private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
 
@@ -22,6 +23,7 @@ namespace ThirdPartyService.Service.DAL
         {
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _GameCasinoList = provider.GetRequiredService<IEnumerable<GameCasinoOption>>().GroupBy(i => i.TpId)
                 .ToDictionary(d => d.Key, d => d.ToList());
             _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
@@ -35,7 +37,6 @@ namespace ThirdPartyService.Service.DAL
         {
             return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
-
 
         public TpBetRecordDetailModel GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
         {
@@ -57,11 +58,16 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IReadOnlyDictionary<string, object> WagerDbQueryFirst(string spName, object parameters = null)
+        public IReadOnlyDictionary<string, object> DbQueryFirst(string spName, object parameters, DataBase dataBase)
         {
             try
             {
-                return (IReadOnlyDictionary<string, object>)_wagerDbClient.QueryFirst(spName, parameters);
+                return dataBase switch
+                {
+                    DataBase.Wager => (IReadOnlyDictionary<string, object>)_wagerDbClient.QueryFirst(spName, parameters),
+                    DataBase.Report => (IReadOnlyDictionary<string, object>)_reportDbClient.QueryFirst(spName, parameters),
+                    DataBase.Main => (IReadOnlyDictionary<string, object>)_mainDbClient.QueryFirst(spName, parameters),
+                };            
             }
             catch (Exception)
             {
@@ -69,35 +75,16 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IReadOnlyDictionary<string, object> ReportDbQueryFirst(string spName, object parameters = null)
+        public IEnumerable<IReadOnlyDictionary<string, object>> DbQuery(string spName, object parameters, DataBase dataBase)
         {
             try
             {
-                return (IReadOnlyDictionary<string, object>)_reportDbClient.QueryFirst(spName, parameters);
-            }
-            catch (Exception)
-            {
-                return default;
-            }
-        }
-
-        public IEnumerable<IReadOnlyDictionary<string, object>> WagerDbQuery(string spName, object parameters = null)
-        {
-            try
-            {
-                return (IEnumerable<IReadOnlyDictionary<string, object>>)_wagerDbClient.Query(spName, parameters);
-            }
-            catch (Exception)
-            {
-                return default;
-            }
-        }
-
-        public IEnumerable<IReadOnlyDictionary<string, object>> ReportDbQuery(string spName, object parameters = null)
-        {
-            try
-            {
-                return (IEnumerable<IReadOnlyDictionary<string, object>>)_reportDbClient.Query(spName, parameters);
+                return dataBase switch
+                {
+                    DataBase.Wager => (IEnumerable<IReadOnlyDictionary<string, object>>)_wagerDbClient.Query(spName, parameters),
+                    DataBase.Report => (IEnumerable<IReadOnlyDictionary<string, object>>)_reportDbClient.Query(spName, parameters),
+                    DataBase.Main => (IEnumerable<IReadOnlyDictionary<string, object>>)_mainDbClient.Query(spName, parameters),
+                };
             }
             catch (Exception)
             {

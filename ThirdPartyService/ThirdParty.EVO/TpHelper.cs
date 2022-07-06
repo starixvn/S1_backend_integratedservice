@@ -159,7 +159,7 @@ namespace ThirdParty.EVO
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId },DataBase.Wager);
             if (wagerDetail != null)
             {
                 //general data
@@ -191,7 +191,7 @@ namespace ThirdParty.EVO
             else
             {
                 //promo_payout data
-                wagerDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId });
+                wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId }, DataBase.Report);
 
                 var detail = ToJson(wagerDetail);
                 return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -224,7 +224,7 @@ namespace ThirdParty.EVO
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
             if (detail != null)
             {
                 return tpGameType.CategoryId switch
@@ -248,7 +248,7 @@ namespace ThirdParty.EVO
             else
             {
                 //promo_payout data
-                detail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId });
+                detail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId }, DataBase.Report);
                 return tpGameType.CategoryId switch
                 {
                     TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

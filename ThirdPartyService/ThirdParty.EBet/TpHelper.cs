@@ -124,7 +124,7 @@ namespace ThirdParty.EBet
             var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
             var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
 
-            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
             var roundCode = detail.GetValueOrDefault("roundCode").ToString();
             var username = detail.GetValueOrDefault("username").ToString();
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
@@ -166,7 +166,7 @@ namespace ThirdParty.EBet
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { betRecordInfo.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
             var ebet = JsonConvert.DeserializeObject<DetailEbet>(detail.GetStringValue("detail"));
             return tpGameType.CategoryId switch
             {

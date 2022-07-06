@@ -198,7 +198,7 @@ namespace ThirdParty.CQ9
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_Bettrans_CQ9_Detail_Get", new { betRecordInfo.TransId });
+            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_CQ9_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
             var gameCode = detailList.GetFirstStringValue("gamecode");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

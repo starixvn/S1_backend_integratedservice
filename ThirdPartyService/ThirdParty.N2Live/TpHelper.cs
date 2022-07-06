@@ -122,7 +122,7 @@ namespace ThirdParty.N2Live
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             var gameCode = wagerDetail.GetStringValue("gamecode");
 
@@ -153,7 +153,7 @@ namespace ThirdParty.N2Live
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { betRecordInfo.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             var gameCode = detail.GetStringValue("gamecode");
 
             return tpGameType.CategoryId switch

@@ -7,6 +7,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.JILI
 {
@@ -125,6 +126,11 @@ namespace ThirdParty.JILI
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 },
             };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
 
         public class DetailResult

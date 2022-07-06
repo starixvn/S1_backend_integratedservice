@@ -84,7 +84,7 @@ namespace ThirdParty.BTI
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var sportsDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { getBetDetail.TransId });
+            var sportsDetail = TpBetRecordProvider.DbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
             var xd = XDocument.Parse(sportsDetail.GetValueOrDefault("BodyData")?.ToString());
             var selection = xd.Descendants("Selection").FirstOrDefault();
             var detail = ToJson(sportsDetail);
@@ -128,7 +128,7 @@ namespace ThirdParty.BTI
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { betRecordInfo.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
             var xd = XDocument.Parse(detail.GetValueOrDefault("BodyData")?.ToString());
             var selection = xd.Descendants("Selection").FirstOrDefault();
             var bet = xd.Descendants("Bet").FirstOrDefault();

@@ -76,7 +76,7 @@ namespace ThirdParty.YGG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_YGG_Detail_Get", new { getBetDetail.TransId })
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_YGG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report)
                 .Where(i => (sbyte)i.GetValueOrDefault("type") != 2);
             var detail = ToJson(detailList);
 
@@ -108,7 +108,7 @@ namespace ThirdParty.YGG
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_YGG_Detail_Get", new { betRecordInfo.TransId });
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_YGG_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
 
             return tpGameType.CategoryId switch
             {

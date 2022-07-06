@@ -216,11 +216,11 @@ namespace ThirdParty.AG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var billNoList = TpBetRecordProvider.ReportDbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId })
+            var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId }, DataBase.Report)
                 .Select(item => item.GetValueOrDefault("billNo")?.ToString());
 
-            var wagerDetailList = TpBetRecordProvider.WagerDbQuery("Service_TpWager_AG_Detail_Get", 
-                new { billNoList = JsonConvert.SerializeObject(billNoList) });
+            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get", 
+                new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
 
             var detail = ToJson(wagerDetailList);
             var gameCode = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
@@ -251,9 +251,9 @@ namespace ThirdParty.AG
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var billNoList = TpBetRecordProvider.ReportDbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = betRecordInfo.TransId })
+            var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = betRecordInfo.TransId }, DataBase.Main)
             .Select(item => item.GetValueOrDefault("billNo")?.ToString());
-            var detail = TpBetRecordProvider.WagerDbQuery("Service_TpWager_AG_Detail_Get",new { billNoList = JsonConvert.SerializeObject(billNoList) });
+            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get",new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
             var gameCode = detail.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
 
             return tpGameType.CategoryId switch

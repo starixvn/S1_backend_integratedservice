@@ -147,8 +147,8 @@ namespace ThirdParty.Joker
                     secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                 }
                 var data = getBetDetail.TpGameTypeOption.Type == 13 ?
-                    TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }) :
-                    TpBetRecordProvider.ReportDbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
+                    TpBetRecordProvider.DbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }, DataBase.Report) :
+                    TpBetRecordProvider.DbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
 
                 var url = $"{apiUrl}/game-history-url";
                 var parameters = new Dictionary<string, string>()
@@ -193,8 +193,8 @@ namespace ThirdParty.Joker
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
             var detail = tpGameType.Type == 13 ?
-                    TpBetRecordProvider.ReportDbQuery("Service_Bettrans_Joker_Detail_Get", new { betRecordInfo.TransId }) :
-                    TpBetRecordProvider.ReportDbQuery("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM, betRecordInfo.TransId });
+                    TpBetRecordProvider.DbQuery("Service_Bettrans_Joker_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main) :
+                    TpBetRecordProvider.DbQuery("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
 
             var gameCode = detail.GetFirstStringValue("gamecode");
 

@@ -1191,7 +1191,7 @@ namespace ThirdPartyService.Service.BLL
                 var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
                 return new ApiResult<TpBetRecordExtend>(result);
             }
-            catch (GetTpBetRecordExtendNotImplementedException ex)
+            catch (NotImplementedException)
             {
                 return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
             }
