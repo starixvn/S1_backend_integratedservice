@@ -66,16 +66,6 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Bwing = 3
     }
 
-    public enum OddsType
-    {
-        [Description("不属于任何一种市场盘口(仅出现于 sport_type=245，165，200，168，bet_type=468，469)")] SpecialOdds = 0,
-        [Description("马来盘")] MalayOdds = 1,
-        [Description("中国盘")] ChinaOdds = 2,
-        [Description("欧洲盘")] DecimalOdds = 3,
-        [Description("印度尼西亚盘")] IndoOdds = 4,
-        [Description("美国盘")] AmericanOdds = 5
-    }
-
     public enum BetType
     {
         [Description("串关(其他)")] Parlay = 29,
@@ -95,5 +85,44 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         LGVirtualSportsWager = 2,
         ByTransIdUnSettleWager = 3,
         ByTransIdSettleWager = 4
+    }
+
+    public enum TpCategory
+    {
+        Sports = 1,
+        Casino = 2,
+        LiveCasino = 3,
+        Fishing = 4,
+        Cockfighting = 5,
+        Lottery = 6,
+        VirtualSports = 7,
+        Poker = 8,
+    }
+
+    public enum DeviceType
+    {
+        None,
+        Desktop,
+        Mobile,
+        iOS,
+        Android
+    }
+
+    public enum OddsTypeEnum
+    {
+        [Description("不属于任何一种市场盘口(仅出现于 sport_type=245，165，200，168，bet_type=468，469)")]
+        None = 0,
+        [Description("马来盘")]
+        MalayOdds = 1,
+        [Description("中国盘")]
+        ChinaOdds = 2,
+        [Description("欧洲盘")]
+        DecimalOdds = 3,
+        [Description("印度尼西亚盘")]
+        IndoOdds = 4,
+        [Description("美国盘")]
+        AmericanOdds = 5,
+        [Description("香港盘")]
+        HongKong = 6
     }
 }

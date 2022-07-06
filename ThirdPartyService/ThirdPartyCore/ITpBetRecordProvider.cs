@@ -1,20 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore
 {
     public interface ITpBetRecordProvider
     {
-        TpBetRecordDetailModel GetTpBetRecordDetail(GetBetDetail getBetDetail);
+        TpBetRecordDetailModel GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime);
 
         List<GameCasinoOption> GetGameCasinoList(int tpId);
 
-        IReadOnlyDictionary<string, object> WagerDbQueryFirst(string spName, object parameters = null);
+        string GetTpName(int tpId);
 
-        IReadOnlyDictionary<string, object> ReportDbQueryFirst(string spName, object parameters = null);
+        IReadOnlyDictionary<string, object> DbQueryFirst(string spName, object parameters, DataBase dataBase);
 
-        IEnumerable<IReadOnlyDictionary<string, object>> WagerDbQuery(string spName, object parameters = null);
-
-        IEnumerable<IReadOnlyDictionary<string, object>> ReportDbQuery(string spName, object parameters = null);
+        IEnumerable<IReadOnlyDictionary<string, object>> DbQuery(string spName, object parameters, DataBase dataBase);
     }
 }

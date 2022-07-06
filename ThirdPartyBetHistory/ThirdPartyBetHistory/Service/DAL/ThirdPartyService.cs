@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
@@ -26,6 +28,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly ILogger<ThirdPartyService> _logger;
         private readonly MySqlClient _mainDbClient;
         private readonly string _connectionString;
+        private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
         public ThirdPartyService(IServiceProvider serviceProvider)
         {
@@ -36,6 +39,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _connectionString = configuration.GetConnectionString("ConnectionString");
             _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _tpBetRecordExtendBLL = serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()
@@ -48,10 +52,11 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
         }
 
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos, WorkerType workerType)
+        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
         {
-            foreach (var betRecord in betRecordInfos.OrderBy(x => x.TicketKey))
+            foreach (var settleData in settleDataList.OrderBy(x => x.BetRecordInfo.TicketKey))
             {
+                var betRecord = settleData.BetRecordInfo;
                 var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
 
                 if (tpCustInfo == null/* || betRecord.TicketStatus == TicketStatus.UnSettled*/)
@@ -252,6 +257,12 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
 
                     SetSiteTicketKey(tpCustInfo.SiteId, betRecord.TpId, workerType, betRecord.TicketKey);
+
+                    Task.Run(() =>
+                    {
+                        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
+                    });
+
                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
                 }
                 catch (Exception ex)

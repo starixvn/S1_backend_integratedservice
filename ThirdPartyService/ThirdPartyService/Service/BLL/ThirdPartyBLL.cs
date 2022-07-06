@@ -12,12 +12,14 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
+using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdPartyService.Service.BLL
 {
@@ -39,6 +41,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
+        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
 
         private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
@@ -85,6 +88,8 @@ namespace ThirdPartyService.Service.BLL
 
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>();
             tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
+
+            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
         }
 
         #endregion
@@ -1119,6 +1124,7 @@ namespace ThirdPartyService.Service.BLL
                     RawMessage = "GameType not found."
                 };
             }
+            gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, gameTypeOption.TpId);
             if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
@@ -1151,6 +1157,54 @@ namespace ThirdPartyService.Service.BLL
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
             var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpMerchantInfo, inputs);
             return merchantBalanceResponse;
+        }
+		
+		public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+        {
+            var tpId = request.BetRecordInfo.TpId;
+
+            if (!tpGameTypeConfig.TryGetValue(request.BetRecordInfo.GameType, out var gameTypeOption))
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = ErrorCode.InvalidParameter,
+                    RawMessage = "GameType not found."
+                };
+            }
+            gameTypeOption.TpName = GetTpName(tpId);
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, tpId);
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = tpCustInfoResult.ErrorCode,
+                    RawMessage = tpCustInfoResult.RawMessage
+                };
+            }
+
+            var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
+            
+            try
+            {
+                var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
+                return new ApiResult<TpBetRecordExtend>(result);
+            }
+            catch (NotImplementedException)
+            {
+                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
+            }      
+        }
+
+        public string GetTpName(int tpId)
+        {
+            return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
         #region Private Methods

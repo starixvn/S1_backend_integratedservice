@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.EVO
 {
@@ -157,7 +159,7 @@ namespace ThirdParty.EVO
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId },DataBase.Wager);
             if (wagerDetail != null)
             {
                 //general data
@@ -189,7 +191,7 @@ namespace ThirdParty.EVO
             else
             {
                 //promo_payout data
-                wagerDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId });
+                wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId }, DataBase.Report);
 
                 var detail = ToJson(wagerDetail);
                 return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -217,6 +219,64 @@ namespace ThirdParty.EVO
                 };
             }
 
+        }
+
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            if (detail != null)
+            {
+                return tpGameType.CategoryId switch
+                {
+                    TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    {
+                        GameID = detail.GetStringValue("gameType"),
+                        Game = detail.GetStringValue("gameType"),
+                        RefNo = detail.GetStringValue("transactionId"),
+                        Title = detail.GetStringValue("description"),
+                        MatchID = detail.GetStringValue("RoundId"),
+                        BetType = string.Empty,
+                        BetChoice = string.Empty,
+                        Result = detail.GetStringValue("result"),
+                        DeviceType = GetDeviceType( detail.GetStringValue("channel")),                
+                        IP = string.Empty,
+                    },
+                    _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                };
+            }
+            else
+            {
+                //promo_payout data
+                detail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId }, DataBase.Report);
+                return tpGameType.CategoryId switch
+                {
+                    TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    {
+                        GameID = detail.GetStringValue("gameId"),
+                        Game = detail.GetStringValue("gameType"),
+                        RefNo = detail.GetStringValue("PromoTransactionRewardId"),
+                        Title = detail.GetStringValue("PromoTransactionType"),
+                        MatchID = detail.GetStringValue("TableId"),
+                        BetType = string.Empty,
+                        BetChoice = string.Empty,
+                        Result = detail.GetStringValue("game"),
+                        DeviceType = DeviceType.None,
+                        IP = string.Empty,
+                    },
+                    _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                };
+            }
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "desktop" => DeviceType.Desktop,
+                "mobile " => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
         }
     }
 }

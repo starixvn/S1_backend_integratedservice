@@ -1,12 +1,16 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.EBet
 {
@@ -120,7 +124,7 @@ namespace ThirdParty.EBet
             var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
             var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
 
-            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
             var roundCode = detail.GetValueOrDefault("roundCode").ToString();
             var username = detail.GetValueOrDefault("username").ToString();
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
@@ -157,6 +161,58 @@ namespace ThirdParty.EBet
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 },
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var ebet = JsonConvert.DeserializeObject<DetailEbet>(detail.GetStringValue("detail"));
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = ebet.tableType.ToString(),
+                    Game = GetGameName(ebet.tableType.ToString()),
+                    RefNo = detail.GetStringValue("seqNo"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detail.GetStringValue("roundCode"),
+                    BetType = ebet.betList?.First()?.betType.ToString() ?? string.Empty,
+                    BetChoice = string.Empty,
+                    Result = detail.GetStringValue("results"),
+                    DeviceType = GetDeviceType(detail.GetStringValue("platform")),
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "3" => DeviceType.Desktop,
+                "1" => DeviceType.iOS,
+                "0" => DeviceType.Android,
+                "2" => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "1" => "Baccarat",
+                "2" => "Dragon Tiger",
+                "3" => "Roulette",
+                "4" => "Sic Bo(Dice)",
+                "5" => "Slot",
+                "8" => "BullBull",
+                "23" => "Fortune Wheel",
+                "24" => "Black Jack",
+                "25" => "Live Black Jack",
+                _ => gameCode,
             };
         }
 
@@ -204,5 +260,18 @@ namespace ThirdParty.EBet
 
         #endregion
 
+
+        public class DetailEbet
+        {
+            public string tableCode { get; set; }
+            public int tableType { get; set; }
+            public string roundCode { get; set; }   
+            public IList<BetListEbet> betList { get; set; }           
+        }
+
+        public class BetListEbet
+        {
+            public long betType { get; set; }
+        }
     }
 }

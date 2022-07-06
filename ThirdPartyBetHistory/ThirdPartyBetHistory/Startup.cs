@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,9 +8,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ThirdPartyBetHistory.Extensions;
-using ThirdPartyBetHistory.Service;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
+using ThirdPartyBetHistory.Service.Library;
+using ThirdPartyBetHistory.Service.Model;
 
 namespace ThirdPartyBetHistory
 {
@@ -31,12 +31,17 @@ namespace ThirdPartyBetHistory
             /*DAL*/
             services.AddSingleton<SettledService>();
             services.AddSingleton<ThirdPartyService>();
+            services.AddSingleton<ConfigService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
+            services.AddSingleton<TpBetRecordExtendBLL>();
 
             services.RegisterSabaSiteHelper();
+
+            services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
+            services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

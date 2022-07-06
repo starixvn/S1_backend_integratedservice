@@ -5,19 +5,23 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.CQ9
 {
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly List<long> _testHierarchyCustId;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
         public TpHelper()
         {
             _testHierarchyCustId = IsDevelopment ? new List<long> { 1481 } : new List<long> { 90, 31909 };
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(9).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public class LoginReq
@@ -192,7 +196,37 @@ namespace ThirdParty.CQ9
             };
         }
 
-        public class DetailResult
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_CQ9_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var gameCode = detailList.GetFirstStringValue("gamecode");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detailList.GetFirstStringValue("roundid"),
+                Title = tpGameType.TypeName,
+                MatchID = detailList.GetFirstStringValue("roundid"),
+                BetType = detailList.GetFirstStringValue("gametype"),
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+        }
+
+        private class DetailResult
         {
             public string data { get; set; }
             public Status status { get; set; }

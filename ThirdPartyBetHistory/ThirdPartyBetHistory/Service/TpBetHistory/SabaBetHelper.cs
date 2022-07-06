@@ -17,11 +17,21 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
+        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
+
         public SabaBetHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<ThirdPartyBetHelperBase>>();
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>(); 
+            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
+            foreach (var tpGameType in tpGameTypeOptions)
+            {
+                tpGameType.TpName =  _TpList.TryGetValue(tpGameType.TpId, out var result) ? result.TpName : string.Empty;
+            }
+            _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
         }
 
         public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour)
@@ -79,8 +89,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                         if (!DataNotExists(getBetDetail))
                         {
-                            var betRecordInfos = ProcessData(getBetDetail);
-                            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfos, workerType);
+                            var settleDataList = ProcessData(getBetDetail);
+                            _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
                         }
                     }
                     catch (Exception e)
@@ -119,21 +129,21 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return getBetDetail.Data.last_version_key;
             }
 
-            var betRecordInfoList = ProcessData(getBetDetail);
+            var settleDataList = ProcessData(getBetDetail);
 
-            if (betRecordInfoList.Count == 0)
+            if (settleDataList.Count == 0)
             {
                 return getBetDetail.Data.last_version_key;
             }
 
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList, workerType);
+            _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
             return getBetDetail.Data.last_version_key;
         }
 
         public async override Task<long> GetVS3rdBetDetail(WorkerType workerType, long siteTicketKey)
         {
             var gameType = GameType.Saba_LGVirtualSports;
-
+            
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetVS3rdBetDetail";
             var parameters = new Dictionary<string, string>
@@ -156,7 +166,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return getBetDetail.Data.last_version_key;
             }
 
-            var betRecordInfoList = new List<BetRecordInfo>();
+            var settleDataList = new List<SabaSettleData>();
 
             foreach (var betDetial in getBetDetail.Data?.VS3rdBetDetails)
             {
@@ -175,19 +185,20 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     tokenmoney = betDetial.tokenmoney
                 };
                 CalculateAvailableBet(betDetial, betRecordInfo);
-                betRecordInfoList.Add(betRecordInfo);
+                var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
+                settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
 
                 var currencyId = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp, betDetial.vendor_member_id).CurrencyId;
                 var detail = new TpBetRecordDetail((int)Tp, gameType, currencyId, betDetial);
                 _thirdPartyBLL.AddTpBetRecordDetail(detail);
             }
 
-            if (!betRecordInfoList.Any())
+            if (!settleDataList.Any())
             {
                 return getBetDetail.Data.last_version_key;
             }
 
-            _thirdPartyBLL.ToDoAddBetRecord(betRecordInfoList, workerType);
+            _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
             
             return getBetDetail.Data.last_version_key;
         }
@@ -200,18 +211,19 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                    && getBetDetail.Data?.BetCasinoDetails == null;
         }
 
-        private List<BetRecordInfo> ProcessData(GetBetDetail getBetDetail)
+        private List<SabaSettleData> ProcessData(GetBetDetail getBetDetail)
         {
-            var betRecordInfoList = new List<BetRecordInfo>();
+            var settleDataList = new List<SabaSettleData>();
 
             if (getBetDetail.Data?.BetDetails != null)
             {
                 foreach (var betDetial in getBetDetail.Data?.BetDetails)
                 {
+                    var gameType = GetBetDetailGameType(betDetial.sport_type);
                     var betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp,
-                        GameType = GetBetDetailGameType(betDetial.sport_type),
+                        GameType = gameType,
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
                         OriginalState = betDetial.ticket_status,
@@ -235,24 +247,26 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
 
                     CalculateAvailableBet(betDetial, betRecordInfo);
-                    betRecordInfoList.Add(betRecordInfo);
+                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
+                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
 
                     // 處理CashOut的注單
                     if (TryGetCashOut(betDetial, out var cashout))
                     {
-                        betRecordInfoList.AddRange(cashout);
+                        settleDataList.AddRange(cashout);
                     }
                 }
             }
 
             if (getBetDetail.Data?.BetNumberDetails != null)
             {
+                var gameType = GameType.Saba_NumberGame;
                 foreach (var betDetial in getBetDetail.Data?.BetNumberDetails)
                 {
                     var betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp,
-                        GameType = GameType.Saba_NumberGame,
+                        GameType = gameType,
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
                         SettledTime = ConvertLocTime(betDetial.transaction_time),
@@ -264,7 +278,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     };
 
                     CalculateAvailableBet(betDetial, betRecordInfo);
-                    betRecordInfoList.Add(betRecordInfo);
+                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
+                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
                 }
             }
 
@@ -301,18 +316,12 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
 
                     CalculateAvailableBet(betDetial, betRecordInfo);
-                    betRecordInfoList.Add(betRecordInfo);
+                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)betRecordInfo.GameType], betDetial);
+                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
                 }
             }
 
-            if (getBetDetail.Data?.BetCasinoDetails != null)
-            {
-                foreach (var betDetial in getBetDetail.Data?.BetCasinoDetails)
-                {
-                }
-            }
-
-            return betRecordInfoList;
+            return settleDataList;
         }
 
         void CalculateAvailableBet(ISabaBet betDetial, BetRecordInfo betRecordInfo)
@@ -364,7 +373,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     {
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                     }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.MalayOdds)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.MalayOdds)
                     {
                         if (betDetial.odds < 0 && isEBV)
                         {
@@ -380,7 +389,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.ChinaOdds)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.ChinaOdds)
                     {
                         if (betDetial.odds < 0.7m)
                         {
@@ -391,7 +400,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.DecimalOdds)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.DecimalOdds)
                     {
                         if (betDetial.odds < 1.7m)
                         {
@@ -402,7 +411,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.IndoOdds)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.IndoOdds)
                     {
                         if (betDetial.odds < 0 && isEBV)
                         {
@@ -418,7 +427,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         }
                     }
-                    else if ((betDetial.odds_type ?? 0) == (int)OddsType.AmericanOdds)
+                    else if ((betDetial.odds_type ?? 0) == (int)OddsTypeEnum.AmericanOdds)
                     {
                         if (betDetial.odds < 0)
                         {
@@ -491,17 +500,18 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             return syncParams;
         }
 
-        private bool TryGetCashOut(BetDetail betDetial, out List<BetRecordInfo> cashOuts)
+        private bool TryGetCashOut(BetDetail betDetial, out List<SabaSettleData> settleDataList)
         {
-            cashOuts = default;
+            settleDataList = default;
             if (betDetial.CashOutData == null || !betDetial.CashOutData.Any())
             {
                 return false;
             }
 
-            cashOuts = new List<BetRecordInfo>();
+            settleDataList = new List<SabaSettleData>();
             foreach (var cashOut in betDetial.CashOutData)
             {
+                var gameType = GetBetDetailGameType(betDetial.sport_type);
                 var betRecordInfo = new BetRecordInfo
                 {
                     TpId = (int)Tp,
@@ -514,7 +524,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     TpUserName = betDetial.vendor_member_id,
                     TicketKey = betDetial.version_key,
                     tokenmoney = betDetial.tokenmoney,
-                    GameType = GetBetDetailGameType(betDetial.sport_type),
+                    GameType = gameType,
                 };
 
                 // 使用cashOut的ticket_status狀態跑下面的流程
@@ -523,7 +533,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 // 計算 CashOut的 ValidBet 與設定 SettlementType
                 CalculateAvailableBet(betDetial, betRecordInfo);
 
-                cashOuts.Add(betRecordInfo);
+                var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
+                settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
             }
             return true;
         }

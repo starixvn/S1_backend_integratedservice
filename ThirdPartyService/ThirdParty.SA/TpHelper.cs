@@ -7,9 +7,11 @@ using System.Text;
 using System.Web;
 using System.Xml.Serialization;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SA
 {
@@ -239,9 +241,9 @@ namespace ThirdParty.SA
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var transIdList = getBetDetail.TransId.Split("_");
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
-
+            var gameCode = wagerDetail.GetStringValue("GameType");
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
@@ -255,8 +257,8 @@ namespace ThirdParty.SA
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("PayoutTime", DateTime.MinValue),
                     Stake = (decimal)wagerDetail.GetValueOrDefault("BetAmount") * tpCurrency.ExchangeRate,
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("ResultAmount") * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("GameType")?.ToString(),
-                    GameName = string.Empty,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -264,6 +266,75 @@ namespace ThirdParty.SA
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var transIdList = betRecordInfo.TransId.Split("_");
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_SA_Detail_Get", new { GameID = transIdList[0], Username = transIdList[1] }, DataBase.Wager);
+            var gameCode = detail.GetStringValue("GameType");
+            
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detail.GetStringValue("GameID"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detail.GetStringValue("Round"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = detail.GetStringValue("GameResult"),
+                    DeviceType = GetDeviceType(detail.GetStringValue("BetSource")),
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };               
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "2":
+                case "2114":
+                case "2640":
+                case "3":
+                case "2115":
+                case "2641":
+                    return DeviceType.Desktop;
+                case "16":
+                case "600":
+                case "8792":
+                case "8793":
+                    return DeviceType.Mobile;
+                case "1160":
+                case "1161":
+                case "5248":
+                case "5249":
+                    return DeviceType.iOS;
+                case "1288":
+                case "1289":
+                case "5376":
+                case "5377":
+                    return DeviceType.Android;
+                default:
+                    return DeviceType.None;
+            }
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "bac" => "Baccarat",
+                "dtx" => "Dragon Tiger",
+                "sicbo" => "Sic Bo",
+                "rot" => "Roulette",
+                "pokdeng" => "Pok Deng",
+                _ => gameCode,
             };
         }
     }
