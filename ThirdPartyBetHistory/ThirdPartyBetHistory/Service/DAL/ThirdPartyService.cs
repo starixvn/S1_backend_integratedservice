@@ -260,10 +260,10 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                     try
                     {
-                        Task.Run(() =>
-                        {
-                            _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
-                        }).ConfigureAwait(false);
+                        _ = Task.Run(() =>
+                          {
+                            _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
+                          }).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
