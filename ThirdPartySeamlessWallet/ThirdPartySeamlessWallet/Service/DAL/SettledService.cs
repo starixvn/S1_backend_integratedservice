@@ -305,7 +305,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public async int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, bool doPayout = true)
+        public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, bool doPayout = true)
         {
             int result = 0;
             afterAmount = 0;
