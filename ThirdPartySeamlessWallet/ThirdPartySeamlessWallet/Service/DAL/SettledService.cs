@@ -305,7 +305,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, bool doPayout = true)
+        public async int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, decimal backAmount, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, bool doPayout = true)
         {
             int result = 0;
             afterAmount = 0;
@@ -572,19 +572,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = SetTpBetRecord(betRecord, tpCustInfo, conn, trans);
                 }
-                
-                //try
-                //{
-                //    Task.Run(() =>
-                //    {
-                //        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
-                //    });                  
-                //}
-                //catch (Exception ex)
-                //{
-                //    logger.LogError(ex, ex.Message);
-                //}
-                
+
+                try
+                {
+                    _ = Task.Run(() =>
+                      {
+                          _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
+                      }).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+
             }
             catch (Exception ex)
             {
