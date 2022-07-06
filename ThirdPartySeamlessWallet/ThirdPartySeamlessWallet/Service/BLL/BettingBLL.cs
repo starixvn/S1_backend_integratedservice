@@ -409,6 +409,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = bettingService.PlaceBetLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
