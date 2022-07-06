@@ -39,8 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 });
                 var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
 
-                var response = _httpHelper.GetClientWithHandler(new HttpClientHandler())
-                    .PostAsync(_apiUrl, httpContent).Result;
+                var response = _httpHelper.GetWithoutProxyClient().PostAsync(_apiUrl, httpContent).Result;
                 var responseBody = response.Content.ReadAsStringAsync().Result;
                 var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
                 if (result.ErrorCode == 0)
