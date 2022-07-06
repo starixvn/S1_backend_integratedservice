@@ -116,12 +116,12 @@ namespace ThirdParty.AMB
             switch (tpGameType)
             {
                 case TpGameType.AMB_Poker:
-                    roundId = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransPK_AMB_Detail_Get", new {getBetDetail.TransId}).GetValueOrDefault("roundId").ToString();
+                    roundId = TpBetRecordProvider.DbQueryFirst("Service_BettransPK_AMB_Detail_Get", new {getBetDetail.TransId}, DataBase.Report).GetValueOrDefault("roundId").ToString();
                     break;
                 case TpGameType.AMB_RNG:
                 {
-                    var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_AMB_Detail_Get",
-                        new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
+                    var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_AMB_Detail_Get",
+                        new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId}, DataBase.Report);
                     roundId = getBetDetail.TransId;
                     gameId = detailList?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
                     break;
@@ -139,8 +139,8 @@ namespace ThirdParty.AMB
 
             if (string.IsNullOrEmpty(gameReport.data.url))
             {
-                var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_AMB_Detail_Get",
-                    new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId});
+                var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_AMB_Detail_Get",
+                    new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId}, DataBase.Report);
                 var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
@@ -180,8 +180,8 @@ namespace ThirdParty.AMB
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_Bettrans_AMB_Detail_Get", 
-                new { betRecordInfo.TransId, GameType = tpGameType.Type, YYYYMM });
+            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_AMB_Detail_Get", 
+                new { betRecordInfo.TransId, GameType = tpGameType.Type, YYYYMM }, DataBase.Main);
 
             return tpGameType.CategoryId switch
             {

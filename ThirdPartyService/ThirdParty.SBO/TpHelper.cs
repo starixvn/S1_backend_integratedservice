@@ -104,7 +104,7 @@ namespace ThirdParty.SBO
         {
             if (tpGameType.CategoryId == TpCategory.Sports || tpGameType.CategoryId == TpCategory.VirtualSports)
             {
-                var detail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWagerSBO_Get", new { betRecordInfo.TransId });
+                var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerSBO_Get", new { betRecordInfo.TransId }, DataBase.Wager);
                 var betList = JsonConvert.DeserializeObject<IEnumerable<subBet>>(detail.GetStringValue("subBet"));
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
@@ -311,7 +311,7 @@ namespace ThirdParty.SBO
         private SportsDetail GetVirtualSportsDetail(GetBetDetail getBetDetail, TpCurrency tpCurrency)
         {
             const string spName = "Service_TpWagerSBO_Get";
-            var wager = TpBetRecordProvider.WagerDbQueryFirst(spName, new { getBetDetail.TransId });
+            var wager = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, DataBase.Wager);
             var result = new SportsDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,

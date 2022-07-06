@@ -135,7 +135,7 @@ namespace ThirdParty.GPI
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_GPI_Detail_Get", new { getBetDetail.TransId })
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_GPI_Detail_Get", new { getBetDetail.TransId }, DataBase.Report)
                 .Where(i => (sbyte)i.GetValueOrDefault("type") != 2);
             var detail = ToJson(detailList);
 
@@ -168,7 +168,7 @@ namespace ThirdParty.GPI
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_GPI_Detail_Get", new { betRecordInfo.TransId });
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_GPI_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
             var gameCode = detailList.GetFirstStringValue("game_id");
             
             return tpGameType.CategoryId switch

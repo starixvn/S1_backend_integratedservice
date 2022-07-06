@@ -169,8 +169,8 @@ namespace ThirdParty.PP
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} is PromoWin, No bet detail.");
             }
 
-            var gameId = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_PP_GameId_Get",
-                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }).GetValueOrDefault("gameId")?.ToString();
+            var gameId = TpBetRecordProvider.DbQueryFirst("Service_Bettrans_PP_GameId_Get",
+                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Report).GetValueOrDefault("gameId")?.ToString();
 
             var url = $"{apiUrl}/v3/http/HistoryAPI/OpenHistoryExtended/";
             var parameters = new Dictionary<string, string>()
@@ -202,7 +202,7 @@ namespace ThirdParty.PP
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var isPromoWin = Regex.IsMatch(betRecordInfo.TransId, @"[a-z]");
-            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_PP_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type, isPromoWin });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_Bettrans_PP_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type, isPromoWin }, DataBase.Main);
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {

@@ -407,8 +407,8 @@ namespace ThirdParty.PT
                 var header = GetHeader(entityKey);
                 var certificate = GetCertificate(currency, pass);
 
-                var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_PT_Detail_Get",
-                   new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type });
+                var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_PT_Detail_Get",
+                   new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
                 var sParam = new Dictionary<string, string>
                 {
                     { "playername", wagerDetail.GetValueOrDefault("PLAYERNAME").ToString()},
@@ -451,8 +451,8 @@ namespace ThirdParty.PT
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_PT_Detail_Get",
-                new { betRecordInfo.TransId, GameType = tpGameType.Type });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_PT_Detail_Get",
+                new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);
             return tpGameType.CategoryId switch
             {
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

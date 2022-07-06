@@ -8,6 +8,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Netent
 {
@@ -177,7 +178,7 @@ namespace ThirdParty.Netent
             string[] cutHost = ApiUrl.Split(word);
             string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
 
-            var slotData = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId });
+            var slotData = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }, DataBase.Report);
 
             if (slotData != null)
             {
@@ -235,7 +236,7 @@ namespace ThirdParty.Netent
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 };
 
-                var wagerDetail = TpBetRecordProvider.ReportDbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId });
+                var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = getBetDetail.TransId }, DataBase.Report);
 
                 var detail = ToJson(wagerDetail);
                 return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -263,6 +264,11 @@ namespace ThirdParty.Netent
                 };
             }
 
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
     }
 }

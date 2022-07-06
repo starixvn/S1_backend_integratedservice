@@ -144,7 +144,7 @@ namespace ThirdParty.Allbet
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
             return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -174,7 +174,7 @@ namespace ThirdParty.Allbet
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {             

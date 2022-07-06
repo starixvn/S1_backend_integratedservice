@@ -106,7 +106,7 @@ namespace ThirdParty.PG
             string secret_key = inputs.ContainsKey("secret_key") && !string.IsNullOrEmpty(inputs["secret_key"]) ? inputs["secret_key"] : throw new Exception("secret_key");
             string Uri = $"/Login/v1/LoginProxy";
 
-            var detail = TpBetRecordProvider.ReportDbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId });
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
 
             string TraceId = detail.GetValueOrDefault("TraceId")?.ToString();
             string ParentBetId = detail.GetValueOrDefault("ParentBetId").ToString();
@@ -156,7 +156,7 @@ namespace ThirdParty.PG
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_PG_Detail_GetAll", new { betRecordInfo.TransId });
+            var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_PG_Detail_GetAll", new { betRecordInfo.TransId }, DataBase.Main);
             var gameCode = detail.GetFirstStringValue("gamecode");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore
 {
@@ -12,12 +13,8 @@ namespace ThirdPartyCore
 
         string GetTpName(int tpId);
 
-        IReadOnlyDictionary<string, object> WagerDbQueryFirst(string spName, object parameters = null);
+        IReadOnlyDictionary<string, object> DbQueryFirst(string spName, object parameters, DataBase dataBase);
 
-        IReadOnlyDictionary<string, object> ReportDbQueryFirst(string spName, object parameters = null);
-
-        IEnumerable<IReadOnlyDictionary<string, object>> WagerDbQuery(string spName, object parameters = null);
-
-        IEnumerable<IReadOnlyDictionary<string, object>> ReportDbQuery(string spName, object parameters = null);
+        IEnumerable<IReadOnlyDictionary<string, object>> DbQuery(string spName, object parameters, DataBase dataBase);
     }
 }

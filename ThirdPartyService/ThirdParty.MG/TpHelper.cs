@@ -182,8 +182,8 @@ namespace ThirdParty.MG
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detail = TpBetRecordProvider.ReportDbQuery("Service_Bettrans_MG_Detail_Get", 
-                new { betRecordInfo.TransId, GameType = tpGameType.Type , YYYYMM });
+            var detail = TpBetRecordProvider.DbQuery("Service_Bettrans_MG_Detail_Get", 
+                new { betRecordInfo.TransId, GameType = tpGameType.Type , YYYYMM }, DataBase.Main);
 
             return tpGameType.CategoryId switch
             {
