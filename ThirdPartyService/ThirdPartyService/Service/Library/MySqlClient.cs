@@ -277,7 +277,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.QueryFirst(name, parameters, commandType: CommandType.StoredProcedure);
+                result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
             {
