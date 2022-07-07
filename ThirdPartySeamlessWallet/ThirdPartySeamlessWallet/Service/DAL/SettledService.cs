@@ -582,7 +582,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, ex.Message);
+                    logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecord)}");
                 }
 
             }

@@ -75,7 +75,7 @@ namespace ThirdPartyBetHistory.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
         }
     }

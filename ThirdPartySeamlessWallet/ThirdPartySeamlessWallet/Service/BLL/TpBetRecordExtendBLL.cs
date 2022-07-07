@@ -80,11 +80,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     msg.Append(innerException.Message);
                 }
-                _logger.LogError(ex, msg.ToString());
+                _logger.LogError(ex, $"{msg} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
         }
     }
