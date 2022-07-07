@@ -249,6 +249,10 @@ namespace ThirdParty.EVO
             {
                 //promo_payout data
                 detail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId }, DataBase.Report);
+                if (detail == null)
+                {
+                    return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+                }
                 return tpGameType.CategoryId switch
                 {
                     TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
