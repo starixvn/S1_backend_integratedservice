@@ -1197,7 +1197,7 @@ namespace ThirdPartyService.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"{ex.Message} ||  {JsonConvert.SerializeObject(request.BetRecordInfo)}");
                 return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
             }      
         }
