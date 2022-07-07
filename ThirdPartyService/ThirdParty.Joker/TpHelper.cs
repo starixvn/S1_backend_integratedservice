@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,11 +9,19 @@ using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Joker
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(9).ToDictionary(d => d.AppId, d => d.Name);
+        }
+
         #region Model
 
         public class UsrReq
@@ -138,8 +147,8 @@ namespace ThirdParty.Joker
                     secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
                 }
                 var data = getBetDetail.TpGameTypeOption.Type == 13 ?
-                    TpBetRecordProvider.ReportDbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }) :
-                    TpBetRecordProvider.ReportDbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId });
+                    TpBetRecordProvider.DbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }, DataBase.Report) :
+                    TpBetRecordProvider.DbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
 
                 var url = $"{apiUrl}/game-history-url";
                 var parameters = new Dictionary<string, string>()
@@ -178,6 +187,40 @@ namespace ThirdParty.Joker
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
             }
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detail = tpGameType.Type == 13 ?
+                    TpBetRecordProvider.DbQuery("Service_Bettrans_Joker_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main) :
+                    TpBetRecordProvider.DbQuery("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
+
+            var gameCode = detail.GetFirstStringValue("gamecode");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detail.GetFirstStringValue("roundid"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetFirstStringValue("roundid"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
 
     }

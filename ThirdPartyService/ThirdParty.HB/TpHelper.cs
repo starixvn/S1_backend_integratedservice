@@ -1,18 +1,12 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Threading.Tasks;
-using ThirdPartyCore.Extensions;
-using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.HB
 {
@@ -125,6 +119,11 @@ namespace ThirdParty.HB
             var source = Encoding.UTF8.GetBytes(message);
             var crypto = sha256.ComputeHash(source);
             return BitConverter.ToString(crypto).Replace("-", "");
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
     }
 }

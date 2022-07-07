@@ -9,6 +9,8 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.NineW
 {
@@ -222,7 +224,7 @@ namespace ThirdParty.NineW
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_9W_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_9W_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -249,6 +251,32 @@ namespace ThirdParty.NineW
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_9W_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Sports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("eventType"),
+                    Game = detail.GetStringValue("eventTypeName"),
+                    RefNo = detail.GetStringValue("betId"),
+                    Title = detail.GetStringValue("eventName"),
+                    MatchID = detail.GetStringValue("eventId"),
+                    BetType = detail.GetStringValue("matchType"),
+                    BetChoice = detail.GetStringValue("selectionName"),
+                    Result = detail.GetStringValue("betStatus"),
+                    Odds = decimal.TryParse(detail.GetStringValue("matchOddsReq"), out var odds) ? odds : 0,
+                    OddsTypeEnum = GetOddsType(detail.GetStringValue("oddsType")),
+                    DeviceType = DeviceType.None,
+                    Live = string.Empty,
+                    IP = detail.GetStringValue("ip"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
         }
 
@@ -375,6 +403,16 @@ namespace ThirdParty.NineW
             public string userId { get; set; }
             public decimal balance { get; set; }
             public string createdate { get; set; }
+        }
+
+        private OddsTypeEnum GetOddsType(string oddsType)
+        {
+            return oddsType switch
+            {
+                "0" => OddsTypeEnum.DecimalOdds,
+                "1" => OddsTypeEnum.IndianOdds,
+                _ => OddsTypeEnum.None,
+            };
         }
 
     }

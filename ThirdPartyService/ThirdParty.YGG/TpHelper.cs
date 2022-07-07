@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.YGG
 {
@@ -80,7 +82,7 @@ namespace ThirdParty.YGG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var detailList = TpBetRecordProvider.ReportDbQuery("Service_BettransRng_YGG_Detail_Get", new { getBetDetail.TransId })
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_YGG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report)
                 .Where(i => (sbyte)i.GetValueOrDefault("type") != 2);
             var detail = ToJson(detailList);
 
@@ -96,7 +98,7 @@ namespace ThirdParty.YGG
                     UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
                     UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
                     Stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("type") == 1)
-                        .Sum(i => Math.Abs( (decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
                     WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
                     GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("cat3")?.ToString(),
                     GameName = detailList.FirstOrDefault()?.GetValueOrDefault("cat4")?.ToString(),
@@ -108,6 +110,44 @@ namespace ThirdParty.YGG
                     TpCurrency = tpCurrency,
                 }
             };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_YGG_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detailList.GetFirstStringValue("cat3"),
+                    Game = detailList.GetFirstStringValue("cat4"),
+                    RefNo = detailList.GetFirstStringValue("reference"),
+                    Title = detailList.GetFirstStringValue("tag1"),
+                    MatchID = detailList.GetFirstStringValue("reference"),
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = GetDeviceType(detailList.GetFirstStringValue("tag3")),
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            if (device.Equals("Channel.PC", StringComparison.OrdinalIgnoreCase))
+            {
+                return DeviceType.Desktop;
+            }
+
+            if (device.Equals("Channel.Mobile", StringComparison.OrdinalIgnoreCase))
+            {
+                return DeviceType.Mobile;
+            }
+
+            return DeviceType.None;
         }
     }
 }

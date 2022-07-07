@@ -1,0 +1,81 @@
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using ThirdPartyBetHistory.Service.Library;
+using ThirdPartyBetHistory.Service.Model;
+using ThirdPartyBetHistory.Service.Model.enums;
+
+namespace ThirdPartyBetHistory.Service.BLL
+{
+    public class TpBetRecordExtendBLL
+    {
+        private readonly ILogger<TpBetRecordExtendBLL> _logger;
+        private readonly MySqlClient _mainDbClient;
+
+        public TpBetRecordExtendBLL(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+        }
+
+        public void AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, TpBetRecordExtend tpBetRecordExtend)
+        {
+            try
+            {
+                var parameters = new DynamicParameters(new
+                {
+                    betRecordInfo.TpId,
+                    betRecordInfo.TransId,
+                    GameType = (int)betRecordInfo.GameType,
+                    tpCustInfo.CustId,
+                    tpCustInfo.UserName,
+                    tpCustInfo.CurrencyId,
+                    tpCustInfo.SiteId,
+                    betRecordInfo.TpUserName,
+                    betRecordInfo.SettledTime,
+                    betRecordInfo.TransTime,
+                    betRecordInfo.Stake,
+                    betRecordInfo.ValidBet,
+                    Revenue = 0,
+                    ProgressiveBet = 0,
+                    ProgressiveWin = 0,
+                    betRecordInfo.WinlostAmount,
+                    SettlementType = (int)betRecordInfo.SettlementType,
+                    TicketStatus = (int)betRecordInfo.TicketStatus,
+                    betRecordInfo.BonusId,
+                    OriginalState = betRecordInfo.OriginalState ?? string.Empty,
+                    betRecordInfo.TicketKey,
+                    tpBetRecordExtend.ProviderID,
+                    tpBetRecordExtend.Currency,
+                    tpBetRecordExtend.RefNo,
+                    tpBetRecordExtend.GameID,
+                    tpBetRecordExtend.Provider,
+                    tpBetRecordExtend.Product,
+                    tpBetRecordExtend.Category,
+                    tpBetRecordExtend.Game,
+                    tpBetRecordExtend.Title,
+                    tpBetRecordExtend.MatchID,
+                    tpBetRecordExtend.BetType,
+                    tpBetRecordExtend.BetChoice,
+                    tpBetRecordExtend.Result,
+                    tpBetRecordExtend.Odds,
+                    tpBetRecordExtend.OddsType,
+                    tpBetRecordExtend.Platform,
+                    tpBetRecordExtend.Live,
+                    tpBetRecordExtend.IP,
+                });
+                _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+    }
+}

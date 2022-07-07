@@ -5,6 +5,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Linq;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.YL
 {
@@ -205,6 +206,11 @@ namespace ThirdParty.YL
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
             }
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
 
         public class DetailResult

@@ -10,6 +10,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Threading.Tasks;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Iconic
 {
@@ -251,6 +252,12 @@ namespace ThirdParty.Iconic
 
             return result;
         }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
         public class JwtToken
         {
             public int status { get; set; }

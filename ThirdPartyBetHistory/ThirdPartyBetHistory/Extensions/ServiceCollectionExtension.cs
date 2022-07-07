@@ -2,9 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ThirdPartyBetHistory.Service;
 using ThirdPartyBetHistory.Service.BLL;
+using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model.enums;
 using ThirdPartyBetHistory.Service.Worker;
@@ -43,6 +45,15 @@ namespace ThirdPartyBetHistory.Extensions
                 });
             }
 
+            return services;
+        }
+
+        public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)
+        {
+            var provider = services.BuildServiceProvider();
+            var configService = provider.GetRequiredService<ConfigService>();
+            var option = configService.Query<T>(sql, parameters);
+            services.AddSingleton(typeof(IEnumerable<T>), p => option);
             return services;
         }
     }

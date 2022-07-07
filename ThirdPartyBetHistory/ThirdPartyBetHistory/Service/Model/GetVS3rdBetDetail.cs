@@ -20,7 +20,7 @@ namespace ThirdPartyBetHistory.Service.Model
 
     public class Vs3rdbetdetails : ISabaBet
     {
-        public int trans_id { get; set; }
+        public long trans_id { get; set; }
         public string vendor_member_id { get; set; }
         public DateTime transaction_time { get; set; }
         public decimal stake { get; set; }
@@ -37,7 +37,7 @@ namespace ThirdPartyBetHistory.Service.Model
         {
             get
             {
-                return decimal.Parse(BetchoiceList.First().o);
+                return decimal.Parse(BetchoiceList.First().Odds);
             }
             set => odds = value;
         }
@@ -69,31 +69,31 @@ namespace ThirdPartyBetHistory.Service.Model
             foreach (var item in betchoice.Split(";"))
             {
                 if (item.StartsWith("m="))
-                    m = item.Replace("m=", "");
+                    Title = item.Replace("m=", "");
                 if (item.StartsWith("s="))
-                    s = item.Replace("s=", "");
+                    BetType = item.Replace("s=", "");
                 if (item.StartsWith("b="))
-                    b = item.Replace("b=", "");
+                    BetChoice = item.Replace("b=", "");
                 if (item.StartsWith("o="))
-                    o = item.Replace("o=", "");
+                    Odds = item.Replace("o=", "");
             }
         }
         /// <summary>
         /// 球赛队伍
         /// </summary>
-        public string m { get; set; }
+        public string Title { get; set; }
         /// <summary>
         /// 投注类型
         /// </summary>
-        public string s { get; set; }
+        public string BetType { get; set; }
         /// <summary>
         /// 投注选项
         /// </summary>
-        public string b { get; set; }
+        public string BetChoice { get; set; }
         /// <summary>
         /// 赔率
         /// </summary>
-        public string o { get; set; }
+        public string Odds { get; set; }
     }
 
 }

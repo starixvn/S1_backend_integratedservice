@@ -9,6 +9,7 @@ using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Extensions;
 using System.IO;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.TCG
 {
@@ -141,7 +142,7 @@ namespace ThirdParty.TCG
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var gameType = (GameType)getBetDetail.TpGameTypeOption.Type;
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId , GameType =(int)gameType });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId , GameType =(int)gameType }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -338,6 +339,11 @@ namespace ThirdParty.TCG
         private DateTime ToUTC(DateTime time)
         {
             return new DateTimeOffset(time, new TimeSpan(8, 0, 0)).UtcDateTime;
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
         }
     }
 }

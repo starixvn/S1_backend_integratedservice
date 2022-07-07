@@ -4,9 +4,11 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Allbet
 {
@@ -142,7 +144,7 @@ namespace ThirdParty.Allbet
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
             return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -170,21 +172,50 @@ namespace ThirdParty.Allbet
             };  
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {             
+                GameID = gameCode,                       
+                Game = GetGameName(gameCode),
+                RefNo = wagerDetail.GetStringValue("betNum"),
+                Title = wagerDetail.GetStringValue("tableName"),
+                MatchID = wagerDetail.GetStringValue("gameRoundId"),
+                BetType = wagerDetail.GetStringValue("betType"), 
+                BetChoice = string.Empty,
+                Result = wagerDetail.GetStringValue("gameResult"),
+                DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
+                IP = string.Empty,
+            };
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "6" => DeviceType.Desktop,
+                "3" => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
+        }
+
         private string GetGameName(string gameCode)
         {
             return gameCode switch
             {
-                "101" => "普通百家乐",
-                "102" => "VIP百家乐",
-                "103" => "快速百家乐",
-                "104" => "咪牌百家乐",
-                "201" => "骰宝(HiLo)",
-                "301" => "龙虎",
-                "401" => "轮盘",
-                "501" => "博丁",
-                "801" => "牛牛",
-                "901" => "炸金花/三公",
-                _ => string.Empty,
+                "101" => "Normal Baccarat",
+                "102" => "VIP Baccarat",
+                "103" => "Quick Baccarat",
+                "104" => "See Card Baccarat",
+                "201" => "Sicbo(HiLo)",
+                "301" => "Dragon Tiger",
+                "401" => "Roulette",
+                "501" => "Pok Deng",
+                "601" => "Rock Paper Scissors",
+                "801" => "Bull Bull",
+                "901" => "Win Three Cards / Three Pictures",
+                _ => gameCode,
             };
         }
         

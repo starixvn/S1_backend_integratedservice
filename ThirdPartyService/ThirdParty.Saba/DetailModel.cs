@@ -50,6 +50,8 @@ namespace ThirdParty.Saba
         public Leaguename[] leaguename { get; set; }
         public double percentage { get; set; }
         public string sport_type { get; set; }
+        public Sportname[] sportname { get; set; }
+        public Bettypename[] bettypename { get; set; }
         public string tokenmoney { get; set; }
         public Cashoutdata[] CashOutData { get; set; }
         public string customInfo1 { get; set; }
@@ -265,5 +267,20 @@ namespace ThirdParty.Saba
         public DateTime? match_datetime { get; set; }
         public DateTime? winlost_datetime { get; set; }
     }
+
+
+
+    public class Sportname
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
+    }
+
+    public class Bettypename
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
+    }
+
 
 }

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Web;
 using Newtonsoft.Json;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.Sexy
 {
@@ -297,13 +299,47 @@ namespace ThirdParty.Sexy
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
             }
         }
-
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_AWC_Sexy_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var bet = JsonConvert.DeserializeObject<DetailSexy>(detail.GetStringValue("gameInfo"));
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("gameCode"),
+                    Game = detail.GetStringValue("gameName"),
+                    RefNo = detail.GetStringValue("refPlatformTxId"),
+                    Title = detail.GetStringValue("gameType"),
+                    MatchID = detail.GetStringValue("roundId"),
+                    BetType = detail.GetStringValue("betType"),
+                    BetChoice = string.Empty,
+                    Result = JsonConvert.SerializeObject(bet.result),
+                    Odds = decimal.TryParse(bet.odds, out var odds) ? odds : 0,
+                    DeviceType = DeviceType.None,
+                    IP = bet.ip ?? string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
         public class DetailResult
         {
             public string url { get; set; }
             public string txnUrl { get; set; }
             public string roundUrl { get; set; }
             public string status { get; set; }
+        }
+
+        public class DetailSexy
+        {
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public dynamic? result { get; set; }
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string? ip { get; set; }
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string? odds { get; set; }
         }
 
     }

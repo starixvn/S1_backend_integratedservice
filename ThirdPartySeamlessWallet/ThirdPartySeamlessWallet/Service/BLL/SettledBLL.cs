@@ -1427,6 +1427,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = settledService.PayoutLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
@@ -1447,6 +1448,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = settledService.CancelBetLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
@@ -1465,6 +1467,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = settledService.ResettleLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
@@ -1475,7 +1478,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_WM()
+        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
         {
             return settledService.GetUnsettledList_WM();
         }
