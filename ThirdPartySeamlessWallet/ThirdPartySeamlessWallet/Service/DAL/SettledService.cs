@@ -572,19 +572,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = SetTpBetRecord(betRecord, tpCustInfo, conn, trans);
                 }
-                
-                //try
-                //{
-                //    Task.Run(() =>
-                //    {
-                //        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
-                //    });                  
-                //}
-                //catch (Exception ex)
-                //{
-                //    logger.LogError(ex, ex.Message);
-                //}
-                
+
+                try
+                {
+                    _ = Task.Run(() =>
+                      {
+                          _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
+                      }).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecord)}");
+                }
+
             }
             catch (Exception ex)
             {

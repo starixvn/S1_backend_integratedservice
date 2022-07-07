@@ -203,6 +203,10 @@ namespace ThirdParty.PP
         {
             var isPromoWin = Regex.IsMatch(betRecordInfo.TransId, @"[a-z]");
             var detail = TpBetRecordProvider.DbQueryFirst("Service_Bettrans_PP_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type, isPromoWin }, DataBase.Main);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {

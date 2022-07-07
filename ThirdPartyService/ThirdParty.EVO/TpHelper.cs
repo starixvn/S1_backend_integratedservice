@@ -224,7 +224,7 @@ namespace ThirdParty.EVO
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             if (detail != null)
             {
                 return tpGameType.CategoryId switch
@@ -249,6 +249,10 @@ namespace ThirdParty.EVO
             {
                 //promo_payout data
                 detail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId }, DataBase.Report);
+                if (detail == null)
+                {
+                    return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+                }
                 return tpGameType.CategoryId switch
                 {
                     TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

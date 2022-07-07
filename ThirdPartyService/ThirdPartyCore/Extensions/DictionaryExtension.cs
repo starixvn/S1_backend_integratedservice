@@ -12,7 +12,7 @@ namespace ThirdPartyCore.Extensions
 
         public static string GetStringValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key)
         {
-            return dictionary.GetValueOrDefault(key)?.ToString() ?? string.Empty;
+            return dictionary.GetValueOrDefault(key, default)?.ToString() ?? string.Empty;
         }
 
         public static string GetFirstStringValue<TKey, TValue>(this IEnumerable<IReadOnlyDictionary<TKey, TValue>> list, TKey key)

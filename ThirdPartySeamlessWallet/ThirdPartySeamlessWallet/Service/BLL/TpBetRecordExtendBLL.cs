@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -28,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend";
         }
 
-        public void AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo)
+        public async Task AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo)
         {
             try
             {
@@ -39,8 +40,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 });
                 var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
 
-                var response = _httpHelper.GetWithoutProxyClient().PostAsync(_apiUrl, httpContent).Result;
-                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var response = await _httpHelper.GetWithoutProxyClient().PostAsync(_apiUrl, httpContent);
+                var responseBody = await response.Content.ReadAsStringAsync();
                 var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
                 if (result.ErrorCode == 0)
                 {
@@ -79,11 +80,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     msg.Append(innerException.Message);
                 }
-                _logger.LogError(ex, msg.ToString());
+                _logger.LogError(ex, $"{msg} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
         }
     }
