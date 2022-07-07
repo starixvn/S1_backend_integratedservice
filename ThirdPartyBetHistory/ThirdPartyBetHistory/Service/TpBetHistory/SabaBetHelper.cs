@@ -290,6 +290,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     var betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp,
+                        GameType = GameType.Saba_VirtualSport,
                         OriginalState = betDetial.ticket_status,
                         WinlostAmount = betDetial.winlost_amount,
                         Stake = betDetial.stake,

@@ -258,11 +258,18 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                     SetSiteTicketKey(tpCustInfo.SiteId, betRecord.TpId, workerType, betRecord.TicketKey);
 
-                    Task.Run(() =>
-                    {
-                        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
-                    });
-
+                    //try
+                    //{
+                    //    Task.Run(() =>
+                    //    {
+                    //        _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
+                    //    });
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    _logger.LogError(ex, ex.Message);
+                    //}
+                    
                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
                 }
                 catch (Exception ex)

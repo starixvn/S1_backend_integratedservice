@@ -38,7 +38,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     BetRecordInfo = betRecordInfo,
                 });
                 var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
-                var response = _httpHelper.GetClient().PostAsync(_apiUrl, httpContent).Result;
+
+                var response = _httpHelper.GetWithoutProxyClient().PostAsync(_apiUrl, httpContent).Result;
                 var responseBody = response.Content.ReadAsStringAsync().Result;
                 var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
                 if (result.ErrorCode == 0)
@@ -70,6 +71,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     parameters.AddDynamicParams(result.Data);
                     _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
                 }
+            }
+            catch (AggregateException ex)
+            {
+                var msg = new StringBuilder(ex.Message);
+                foreach (var innerException in ex.InnerExceptions)
+                {
+                    msg.Append(innerException.Message);
+                }
+                _logger.LogError(ex, msg.ToString());
             }
             catch (Exception ex)
             {
