@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
 using System;
 using System.Linq;
@@ -25,6 +24,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<YGGWorker> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly string _tpName;
 
 
@@ -33,6 +33,7 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<YGGWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -78,7 +79,14 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
+                        var wager = _settledBLL.GetSettle_TpWager_YGG(settleData.TransId);
+
+                        if (wager == null) continue; // wager 沒注單，無法比對(投注額、輸贏值)，故不結算
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+
+                        if (!CanSettle(wager, settleData, tpCurrency)) continue;
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -137,6 +145,17 @@ namespace ThirdPartySettleWorker.Workers
 
                 timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private static bool CanSettle(SettleData_YGG wager, SettleData settleData, TpCurrency tpCurrency)
+        {
+            if (tpCurrency.ExchangeRate <= 0) return false;
+
+            // 加入幣別匯率轉換，tpWager 是原始資料
+            decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
+            decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
+
+            return wagerStake == settleData.Stake && wagerWinLostAmount == settleData.WinLostAmount;
         }
     }
 }
