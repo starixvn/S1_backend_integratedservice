@@ -98,8 +98,8 @@ namespace ThirdPartySettleWorker.Workers
                         var  chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
                            new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
                         if (chcekData == null 
-                            || unsettled.Stake != Math.Round(chcekData.Stake/ tpCurrency.ExchangeRate, 2)
-                            || unsettled.WinLostAmount != Math.Round((chcekData.Payout - chcekData.Stake) / tpCurrency.ExchangeRate,2))
+                            || unsettled.Stake != Math.Round(chcekData.Stake/ tpCurrency.ExchangeRate, 2,MidpointRounding.AwayFromZero)
+                            || unsettled.WinLostAmount != Math.Round((chcekData.Payout - chcekData.Stake) / tpCurrency.ExchangeRate,2, MidpointRounding.AwayFromZero))
                         {
                             continue;
                         }
