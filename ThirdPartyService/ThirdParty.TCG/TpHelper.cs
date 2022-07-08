@@ -175,6 +175,29 @@ namespace ThirdParty.TCG
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_TCG_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);          
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gameCode"),
+                Game = detail.GetStringValue("remark"),
+                RefNo = detail.GetStringValue("orderNum"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("numero"),
+                BetType = detail.GetStringValue("playName"),
+                BetChoice = detail.GetStringValue("bettingContent"),
+                Result = detail.GetStringValue("winningNumber"),
+                DeviceType = DeviceType.None,
+                IP = detail.GetStringValue("clientIp"),
+            };
+        }
+
         public class TCGConfig
         {
             public string GameUrl { get; set; }
@@ -339,11 +362,6 @@ namespace ThirdParty.TCG
         private DateTime ToUTC(DateTime time)
         {
             return new DateTimeOffset(time, new TimeSpan(8, 0, 0)).UtcDateTime;
-        }
-
-        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
+        } 
     }
 }
