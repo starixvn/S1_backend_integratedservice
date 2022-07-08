@@ -93,21 +93,22 @@ namespace ThirdPartySettleWorker.Workers
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        
+                        //settle amount check
+                        var  chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
+                           new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
+                        if (chcekData == null 
+                            || unsettled.Stake != Math.Round(chcekData.Stake/ tpCurrency.ExchangeRate, 2)
+                            || unsettled.WinLostAmount != Math.Round((chcekData.Payout - chcekData.Stake) / tpCurrency.ExchangeRate,2))
+                        {
+                            continue;
+                        }
+
                         if (tpCurrency.ExchangeRate > 0)
                         {
                             unsettled.Stake *= tpCurrency.ExchangeRate;
                             unsettled.ValidBet *= tpCurrency.ExchangeRate;
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
-                        }
-
-                        //settle amount check
-                        var  chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
-                           new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
-                        if (chcekData == null 
-                            || chcekData.Stake != unsettled.Stake 
-                            || unsettled.WinLostAmount != (chcekData.Payout - chcekData.Stake))
-                        {
-                            continue;
                         }
 
                         var betRecordInfo = new BetRecordInfo
