@@ -275,13 +275,13 @@ namespace ThirdParty.Netent
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Netent_Detail_GetAll", new { betRecordInfo.TransId }, DataBase.Wager);
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Netent_Detail_GetAll", new { betRecordInfo.TransId }, DataBase.Main);
             if (detailList.Any())
             {
                 var gameCode = detailList.GetFirstStringValue("GameDetailsId");
                 return tpGameType.CategoryId switch
                 {
-                    TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
                         GameID = gameCode,
                         Game = GetGameName(gameCode),
@@ -307,7 +307,7 @@ namespace ThirdParty.Netent
                 }
                 return tpGameType.CategoryId switch
                 {
-                    TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                     {
                         GameID = detail.GetStringValue("gameId"),
                         Game = detail.GetStringValue("gameType"),
