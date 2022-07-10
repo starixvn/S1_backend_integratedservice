@@ -71,7 +71,8 @@
         SettledForValid = 1,
         SettledForInvalid = 2,
         SettledForValidNotRollover = 3,
-        Cheating = 4
+        Cheating = 4,
+        YGG_RNG = 14
     }
     
     public enum TicketStatus
