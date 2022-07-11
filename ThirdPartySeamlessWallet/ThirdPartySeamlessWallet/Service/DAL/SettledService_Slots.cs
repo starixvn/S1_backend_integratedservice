@@ -4021,5 +4021,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
         #endregion
+
+        #region YGG
+
+        public SettleData_YGG GetSettle_TpWager_YGG(string transId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData_YGG>("Service_TpWager_YGG_Settle_Get", new { TransId = transId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }

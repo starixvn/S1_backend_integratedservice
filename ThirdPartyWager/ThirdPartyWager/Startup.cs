@@ -10,11 +10,13 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.SBO;
+using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.YGG;
 
 namespace ThirdPartyWager
 {
@@ -172,6 +174,8 @@ namespace ThirdPartyWager
             //EVO
             services.AddSingleton<WagerEVOBLL>();
             services.AddSingleton<ApiEVOBLL>();
+            //YGG
+            services.AddSingleton<WagerYGGBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -219,6 +223,7 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportMega>();
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
+            services.AddHostedService<WagerYGG>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
