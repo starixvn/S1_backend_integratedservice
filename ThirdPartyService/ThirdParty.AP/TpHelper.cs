@@ -136,21 +136,22 @@ namespace ThirdParty.AP
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_AP_Unsettle_Get",
+            var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_AP_Unsettle_Get",
                 new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
-            var gameCode = detail.GetStringValue("gamecode");
+            var gameCode = detail.GetFirstStringValue("gamecode");
+            var roundId = detail.GetFirstStringValue("gameroundid");
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = gameCode,
                 Game = GetGameName(gameCode),
-                RefNo = detail.GetStringValue("gameroundid"),
+                RefNo = roundId,
                 Title = tpGameType.TypeName,
-                MatchID = detail.GetStringValue("gameroundid"),
+                MatchID = roundId,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
-                IP = detail.GetStringValue("ip")
+                IP = detail.GetFirstStringValue("ip")
             };
         }
 
