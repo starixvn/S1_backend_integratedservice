@@ -129,6 +129,141 @@ namespace ThirdParty.YGG
             };
         }
 
+        #region 不實作
+
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region config & privateMethod
+
+        private class YggConfig
+        {
+            /// <summary>
+            /// login Api Url
+            /// </summary>
+            public string GameUrl { get; }
+
+            /// <summary>
+            /// 試玩Url
+            /// </summary>
+            public string FunGameUrl { get; }
+
+            /// <summary>
+            /// 品牌Id
+            /// </summary>
+            public string Org { get; }
+
+            /// <summary>
+            /// 試玩 0 否 1是
+            /// </summary>
+            public string Fun { get; }
+
+            /// <summary>
+            /// 子遊戲Id
+            /// </summary>
+            public string GameId { get; }
+
+            /// <summary>
+            /// 我方首頁Url
+            /// </summary>
+            public string HomeUrl { get; }
+
+            public string ContentType => "application/x-www-form-urlencoded";
+
+            public YggConfig(Dictionary<string, string> inputs)
+            {
+                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"])
+                    ? inputs["GameUrl"]
+                    : throw new Exception();
+
+                FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"])
+                    ? inputs["FunGameUrl"]
+                    : throw new Exception();
+
+                Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"])
+                    ? inputs["org"]
+                    : string.Empty;
+
+                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"])
+                    ? inputs["gameId"]
+                    : string.Empty;
+
+                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"])
+                    ? inputs["homeUrl"]
+                    : string.Empty;
+
+                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"])
+                    ? inputs["fun"]
+                    : "0";
+            }
+        }
+
+        /// <summary>
+        /// 取得 SessionKey
+        /// </summary>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        private string GetSessionKey(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var key = ApplyToken(tpCustInfo);
+            inputs.TryGetValue("Token", out var token);
+            var sessionKeyArr = new string[] { key, token };
+            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            var sessionKey = Convert.ToBase64String(bytes);
+            return sessionKey;
+        }
+
+        /// <summary>
+        /// 取得 YGG 試玩遊戲登入url
+        /// </summary>
+        /// <param name="TpLangId"></param>
+        /// <param name="config"></param>
+        /// <param name="channel"></param>
+        /// <returns></returns>
+        private static ApiResult GetPlayForFunLaunchUrl(string TpLangId, YggConfig config, string channel)
+        {
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+                Message =
+                    $"{config.FunGameUrl}?lang={TpLangId}&gameid={config.GameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(config.HomeUrl)}&fullscreen=yes"
+            };
+        }
+
+        public class LoginData
+        {
+            [JsonProperty("launchurl")]
+            public string LaunchUrl { get; set; }
+        }
+
+        public class LoginResponse
+        {
+            [JsonProperty("code")]
+            public int Code { get; set; }
+
+            [JsonProperty("msg")]
+            public string ErrorMsg { get; set; }
+
+            [JsonProperty("data")]
+            public LoginData Data { get; set; }
+        }
+
+        #endregion
+
         private DeviceType GetDeviceType(string device)
         {
             if (device.Equals("Channel.PC", StringComparison.OrdinalIgnoreCase))

@@ -11,6 +11,7 @@ using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.BLL.SBO;
+using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;

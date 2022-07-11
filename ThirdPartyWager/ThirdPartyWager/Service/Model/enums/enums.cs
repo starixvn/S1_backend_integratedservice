@@ -63,6 +63,7 @@
         YGG_RNG = 14,
  		PT_RNG = 46,
         PT_LiveCasino = 48,
+        YGG_RNG = 14
     }
 
 	 public enum SettlementType
@@ -72,6 +73,7 @@
         SettledForInvalid = 2,
         SettledForValidNotRollover = 3,
         Cheating = 4
+   
     }
     
     public enum TicketStatus
