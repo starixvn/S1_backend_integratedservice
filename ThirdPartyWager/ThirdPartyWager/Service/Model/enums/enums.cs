@@ -62,8 +62,7 @@
         SBO_VirtualSports = 81,
         YGG_RNG = 14,
  		PT_RNG = 46,
-        PT_LiveCasino = 48,
-        YGG_RNG = 14
+        PT_LiveCasino = 48        
     }
 
 	 public enum SettlementType
