@@ -73,6 +73,15 @@ namespace ThirdPartyBetHistory.Service.BLL
                 });
                 _mainDbClient.Execute("Service_TpBetRecordExtend_Ins", parameters: parameters);
             }
+            catch (AggregateException ex)
+            {
+                var msg = new StringBuilder(ex.Message);
+                foreach (var innerException in ex.InnerExceptions)
+                {
+                    msg.Append(innerException.Message);
+                }
+                _logger.LogError(ex, $"{msg} || { JsonConvert.SerializeObject(betRecordInfo)}");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
