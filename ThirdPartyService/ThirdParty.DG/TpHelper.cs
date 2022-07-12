@@ -72,7 +72,7 @@ namespace ThirdParty.DG
         {
             {"MYR","A"},
             {"CNY","A"},
-            {"THB","O"},
+            {"THB","A"},
             {"USD","A"},
             {"IDR2","A"},
             {"VND2","J"},
