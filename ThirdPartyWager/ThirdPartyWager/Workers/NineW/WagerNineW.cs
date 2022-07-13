@@ -49,7 +49,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var timerType = 1;
+            var timerType = (int)WagerTimerType.Wager;
             var dataRangeMins = 15;
             var intervalMins = 3;
             var nextTimeSpan = TimeSpan.FromDays(intervalMins);
@@ -88,7 +88,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var timerType = 2;
+            var timerType = (int)WagerTimerType.RedoWager;
             var dataRangeMins = 1441;
             var intervalDays = 1;
             var nextTimeSpan = TimeSpan.FromDays(intervalDays);
@@ -129,7 +129,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var timerType = 3;
+            var timerType = 3;//(int)WagerTimerType.ReSettle
             var dataRangeMins = 180;
             var intervalHours = 1;
             var nextTimeSpan = TimeSpan.FromDays(intervalHours);
@@ -172,7 +172,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);         
             var timerType = (int)WagerTimerType.Finance;
             var intervalDays = 1;
-            var nextTimeSpan = TimeSpan.FromHours(8);
+            var nextTimeSpan = TimeSpan.FromHours(4);
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
