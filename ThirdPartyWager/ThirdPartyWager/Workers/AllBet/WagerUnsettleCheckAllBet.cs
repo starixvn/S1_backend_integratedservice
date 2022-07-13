@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.Allbet.ToString();
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly int tpId = (int)Tp.Allbet;
-        private readonly int timerType = 4;
+        private readonly int timerType = 4;//(int)WagerTimerType.CheckSettle
 
         public WagerUnsettleCheckAllBet(IServiceProvider provider)
         {

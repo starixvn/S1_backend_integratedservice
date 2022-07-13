@@ -196,7 +196,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoWM>();
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<JwtIconic>();
-            //services.AddHostedService<WagerIconic>();
             services.AddHostedService<WagerAT>();
             services.AddHostedService<WagerRedoAT>();
             services.AddHostedService<FinanceAT>();
