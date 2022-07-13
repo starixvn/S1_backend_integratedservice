@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
@@ -402,7 +403,48 @@ namespace ThirdParty.V8
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_V8_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var gameCode = detail.GetStringValue("KindID");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detail.GetStringValue("GameID"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("TableID"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "8310" => "Fan Tan",
+                "8290" => "Fish-Shrimp-Crab",
+                "8200" => "Hundred Sic Bo",
+                "890" => "Four Cards Bull",
+                "910" => "Baccarat",
+                "860" => "Three Toy",
+                "600" => "Black Jack",
+                "220" => "Three Cards",
+                "830" => "Bull-Bull",
+                "620" => "Texas Hold'em Poker",
+                "8540" => "colored disc",
+                "630" => "Thirteen Cards",
+                "8700" => "Tien Len",
+                "950" => "Red-Black War",
+                "610" => "Fight the Landlord",
+                "8600" => "Cat Te",
+                "930" => "Hundreds People Of Bull",
+                "8100" => "See Cards Bull",
+                _ => string.Empty,
+            };
         }
     }
 }

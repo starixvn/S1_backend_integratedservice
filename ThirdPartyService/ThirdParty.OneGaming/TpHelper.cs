@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -229,7 +230,22 @@ namespace ThirdParty.OneGaming
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_OneGaming_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var game = detail.GetStringValue("game");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = game,
+                Game = game,
+                RefNo = detail.GetStringValue("ticket"),
+                Title = detail.GetStringValue("table"),            
+                MatchID = detail.GetStringValue("period"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = detail.GetStringValue("card"),
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
 
         public class DetailResult
