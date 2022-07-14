@@ -185,7 +185,6 @@ namespace ThirdParty.SA
             var config = new SaConfig(inputs);
             if (string.IsNullOrEmpty(config.Url)) throw new Exception("url Error");
 
-            //QueryBetLimit(config);
             SetBetLimit(config, tpCustInfo, inputs);
 
             var time = Time;
