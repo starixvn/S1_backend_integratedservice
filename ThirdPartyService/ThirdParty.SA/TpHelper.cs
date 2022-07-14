@@ -113,7 +113,7 @@ namespace ThirdParty.SA
         public class SetBetLimitReq : BaseRequest { }
 
         #endregion
-
+         
         private string Time
         {
             get
