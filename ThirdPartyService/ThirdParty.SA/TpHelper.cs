@@ -536,8 +536,7 @@ namespace ThirdParty.SA
             var postData = "q=" + q + "&s=" + s;
 
             var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
-
-
+            throw new Exception(result);
         }
 
         #endregion
