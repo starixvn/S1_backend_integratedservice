@@ -25,11 +25,11 @@ namespace ThirdPartyWager.Workers
         private Timer timerUSD;
         private Timer timerINR;
         private Timer timerCNY;
-        private int intervalMins = 30;
-        private int tpId = (int)Tp.PT;
+        private readonly int intervalMins = 30;
+        private readonly int tpId = (int)Tp.PT;
         private readonly string _tpName = Tp.PT.ToString();
-        private int tpType = 2;
-        private int beyond = 90;
+        private readonly int tpType = (int)WagerTimerType.RedoWager;
+        private readonly int beyond = 90;
 
         public WagerRedoPT(
             ILogger<WagerRedoPT> logger,

@@ -22,7 +22,7 @@ namespace ThirdPartyWager.Workers
 
         private const int TpId = (int)Tp.KM;
         private readonly string _tpName = Tp.KM.ToString();
-        private const int TpType = 52;
+        private const int TpType = 52; // (int)WagerTimerType.Wager
         private const int TimeZone = 8;
 
         public WagerKM(IServiceProvider provider)
