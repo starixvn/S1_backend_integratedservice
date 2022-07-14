@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
@@ -137,7 +138,31 @@ namespace ThirdParty.KM
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gameid"),
+                Game = detail.GetStringValue("gamename"),
+                RefNo = detail.GetStringValue("txid"),
+                Title = detail.GetStringValue("gameprovider"),
+                MatchID = detail.GetStringValue("roundid"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = GetDeviceType(detail.GetStringValue("platformtype")),
+                IP = detail.GetStringValue("ipaddress")
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "Desktop" => DeviceType.Desktop,
+                "Mobile" => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
         }
     }
 }

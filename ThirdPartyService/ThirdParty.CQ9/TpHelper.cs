@@ -21,7 +21,7 @@ namespace ThirdParty.CQ9
         public TpHelper()
         {
             _testHierarchyCustId = IsDevelopment ? new List<long> { 1481 } : new List<long> { 90, 31909 };
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(9).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(16).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public class LoginReq

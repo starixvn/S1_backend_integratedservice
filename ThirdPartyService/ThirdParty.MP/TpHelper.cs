@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -493,7 +494,51 @@ namespace ThirdParty.MP
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerPK_MP_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var gameCode = detail.GetStringValue("KindID");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detail.GetStringValue("GameID"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("TableID"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "900" => "Dragon Tiger",
+                "910" => "Baccarat",
+                "960" => "Hoo Hey How",
+                "502" => "Hilo",
+                "180" => "Pok Deng",
+                "600" => "Blackjack",
+                "220" => "Golden Flower",
+                "620" => "Texas Hold'em",
+                "830" => "Banker Niu-Niu",
+                "501" => "Gao Gae",
+                "504" => "Paikang",
+                "503" => "Dummy",
+                "505" => "Domino",
+                "506" => "Domino Qiu Qiu",
+                "509" => "Thai Hold'em",
+                "508" => "Crazy Paikang",
+                "510" => "Cockfighting",
+                "512" => "Teen Patti",
+                "1000" => "Lucky Wheel",
+                "514" => "Xoc Dia",
+                "516" => "Killer13",
+                _ => string.Empty,
+            };
         }
     }
 }
