@@ -72,7 +72,8 @@
         SettledForValid = 1,
         SettledForInvalid = 2,
         SettledForValidNotRollover = 3,
-        Cheating = 4      
+        Cheating = 4
+   
     }
     
     public enum TicketStatus

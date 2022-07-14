@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -14,6 +15,12 @@ namespace ThirdParty.Netent
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(37).ToDictionary(d => d.AppId, d => d.Name);
+        }
 
         public class LoginResponse
         {
@@ -178,7 +185,7 @@ namespace ThirdParty.Netent
             string[] cutHost = ApiUrl.Split(word);
             string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
 
-            var slotData = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }, DataBase.Report);
+            var slotData = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_Netent_Detail_Get", new { TransId = getBetDetail.TransId }, DataBase.Report);
 
             if (slotData != null)
             {
@@ -268,7 +275,64 @@ namespace ThirdParty.Netent
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Netent_Detail_GetAll", new { betRecordInfo.TransId }, DataBase.Main);
+            if (detailList.Any())
+            {
+                var gameCode = detailList.GetFirstStringValue("GameDetailsId");
+                return tpGameType.CategoryId switch
+                {
+                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    {
+                        GameID = gameCode,
+                        Game = GetGameName(gameCode),
+                        RefNo = detailList.GetFirstStringValue("TransactionId"),
+                        Title = tpGameType.TpName,
+                        MatchID = detailList.GetFirstStringValue("GameId"),
+                        BetType = string.Empty,
+                        BetChoice = string.Empty,
+                        Result = string.Empty,
+                        DeviceType = DeviceType.None,
+                        IP = string.Empty,
+                    },
+                    _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                };
+            }
+            else
+            {
+                //promo_payout data
+                var detail = TpBetRecordProvider.DbQueryFirst("Service_Reward_EVO_Detail_Get", new { _PromoTransactionId = betRecordInfo.TransId }, DataBase.Report);
+                if (detail == null)
+                {
+                    return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+                }
+                return tpGameType.CategoryId switch
+                {
+                    TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                    {
+                        GameID = detail.GetStringValue("gameId"),
+                        Game = detail.GetStringValue("gameType"),
+                        RefNo = detail.GetStringValue("PromoTransactionRewardId"),
+                        Title = detail.GetStringValue("PromoTransactionType"),
+                        MatchID = detail.GetStringValue("TableId"),
+                        BetType = string.Empty,
+                        BetChoice = string.Empty,
+                        Result = detail.GetStringValue("game"),
+                        DeviceType = DeviceType.None,
+                        IP = string.Empty,
+                    },
+                    _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                };
+            }
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
     }
 }

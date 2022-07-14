@@ -47,7 +47,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             return Task.CompletedTask;
         }
 
-        private void DoTask(object state)
+        private async void DoTask(object state)
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
             LogContext.PushProperty("RequestId", Guid.NewGuid());
@@ -59,7 +59,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
             try
             {          
-                var nextTicketKey = tpBetHelp.GetVS3rdBetDetail(workerType,lastTicketKey).Result;
+                var nextTicketKey = await tpBetHelp.GetVS3rdBetDetail(workerType,lastTicketKey);
                 _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
                 _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
                 

@@ -25,7 +25,7 @@ namespace ThirdPartyBetHistory.Service.Model
         public DateTime transaction_time { get; set; }
         public decimal stake { get; set; }
         public decimal bet_amount { get; set; }
-        public string ticket_status { get; set; }
+        public string ticket_status { get; set; } = string.Empty;
         public decimal winlost_amount { get; set; }
         public int? bet_type { get; set; }
         public int currency { get; set; }
@@ -37,7 +37,16 @@ namespace ThirdPartyBetHistory.Service.Model
         {
             get
             {
-                return decimal.Parse(BetchoiceList.First().Odds);
+                try
+                {
+                    return decimal.Parse(BetchoiceList.FirstOrDefault()?.Odds ?? "0");
+                }
+                catch (Exception)
+                {
+
+                    return 0;
+                }
+                
             }
             set => odds = value;
         }
@@ -81,19 +90,19 @@ namespace ThirdPartyBetHistory.Service.Model
         /// <summary>
         /// 球赛队伍
         /// </summary>
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         /// <summary>
         /// 投注类型
         /// </summary>
-        public string BetType { get; set; }
+        public string BetType { get; set; } = string.Empty;
         /// <summary>
         /// 投注选项
         /// </summary>
-        public string BetChoice { get; set; }
+        public string BetChoice { get; set; } = string.Empty;
         /// <summary>
         /// 赔率
         /// </summary>
-        public string Odds { get; set; }
+        public string Odds { get; set; } = string.Empty;
     }
 
 }

@@ -105,7 +105,7 @@ namespace ThirdPartyBetHistory.Service.Model
             DeviceType = DeviceType.None;
             IP = string.Empty;
             Odds = betDetail.odds;
-            OddsTypeEnum = GetOddsType(betDetail.odds_type.Value);
+            OddsTypeEnum = GetOddsType(betDetail.odds_type ?? 0);
             Live = string.Empty;
         }
 
