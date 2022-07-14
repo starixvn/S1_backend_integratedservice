@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Workers
         private readonly WagerEVOBLL _wagerEVOBLL;
 
         private Timer timer;
-        private readonly int tpType = 2;
+        private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes 
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 2; // in hours

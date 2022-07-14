@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Workers
         private Timer timerLC;
         private readonly int tpId = (int)Tp.One789;
         private readonly string _tpName = Tp.One789.ToString();
-        private readonly int tpType = 1;
+        private readonly int tpType = (int)WagerTimerType.Wager;
         private readonly int intervalMins = 3;
         private readonly int overlap = 5;
         private readonly int iRangMins = 20;
