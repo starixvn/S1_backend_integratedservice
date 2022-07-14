@@ -14,6 +14,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet.In
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySettleWorker", "ThirdPartySettleWorker\ThirdPartySettleWorker.csproj", "{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartySeamlessWallet.Core", "ThirdPartySeamlessWallet.Core\ThirdPartySeamlessWallet.Core.csproj", "{0575E56D-B4B7-457E-9755-B0C4919AA28E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0575E56D-B4B7-457E-9755-B0C4919AA28E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0575E56D-B4B7-457E-9755-B0C4919AA28E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0575E56D-B4B7-457E-9755-B0C4919AA28E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0575E56D-B4B7-457E-9755-B0C4919AA28E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

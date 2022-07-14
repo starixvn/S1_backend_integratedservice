@@ -1,106 +1,54 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Builder;
 using Serilog;
 using Serilog.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
 using ThirdPartySeamlessWallet;
+using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.Workers;
 using ThirdPartySettleWorker.Workers;
 
-namespace ThirdPartySettleWorker
+var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
+var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+builder.Host.UseSerilog((context, Configuration) =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    Configuration
+        .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.FromLogContext()
+        .Filter.ByExcluding(c =>
+            c.Properties.Any(p =>
+                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
+                || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
+        .Enrich.WithExceptionDetails();
+});
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-           Host.CreateDefaultBuilder(args)
-               .ConfigureWebHostDefaults(webBuilder =>
-               {
-                   webBuilder
-                       .ConfigureAppConfiguration((hostContext, builder) =>
-                       {
-                           builder
-                               .SetBasePath(AppContext.BaseDirectory)
-                               .AddEnvironmentVariables()
-                               .AddJsonFile($"appsettings.json", false, true)
-                               .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", false, true);
-                           hostContext.Configuration = builder.Build();
-                           builder.AddJsonStream(GetRemoteConfig(hostContext.Configuration.GetSection("ConfigService").Get<string[]>()));
-                       })
-                       .UseSerilog((hostContext, loggerConfiguration) =>
-                       {
-                           var excludesMessage = hostContext.Configuration.GetSection("ExcludesMessage").Get<string[]>();
-                           var excludesApiEndpoints = hostContext.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
-                           
-                           loggerConfiguration
-                               .ReadFrom.Configuration(hostContext.Configuration)
-                               .Enrich.FromLogContext()
-                               .Filter.ByExcluding(c =>
-                                   c.Properties.Any(p =>
-                                       excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
-                                       || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
-                               .Enrich.WithExceptionDetails();
-                       })
-                       .UseStartup<Startup>();
-               })
-               .ConfigureServices((hostContext, services) =>
-               {
-                   services.AddHostedService<BonusWorker>();
-                   services.AddHostedService<SettleWorker>();
-                   services.AddHostedService<TpReRequestWorker>();
-                   services.AddHostedService<JokerWorker>();
-                   services.AddHostedService<MGWorker>();
-                   services.AddHostedService<APWorker>();
-                   services.AddHostedService<PPWorker>();
-                   services.AddHostedService<PGWorker>();
-                   services.AddHostedService<YGGWorker>();
-                   services.AddHostedService<TCGWorker>();
-                   services.AddHostedService<HBWorker>();
-                   services.AddHostedService<MegaWorker>();
-                   services.AddHostedService<AMBWorker>();
-                   services.AddHostedService<SAWorker>();
-                   services.AddHostedService<SGWorker>();
-                   services.AddHostedService<AllbetWorker>();
-                   services.AddHostedService<PTWorker>();
-                   services.AddHostedService<JILIWorker>();
-                   services.AddHostedService<SBOWorker>();
-                   services.AddHostedService<ATWorker>();
-                   services.AddHostedService<KMWoker>();
-               });     
-        
-        private static MemoryStream GetRemoteConfig(IEnumerable<string> remoteUrls)
-        {
-            using var client = new HttpClient();
-            Stream result = null;
-            foreach (var url in remoteUrls)
-            {
-                if (string.IsNullOrEmpty(url))
-                {
-                    continue;
-                }
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
 
-                try
-                {
-                    result = client.GetAsync(url).Result.Content.ReadAsStreamAsync().Result;
-                    
-                    break;
-                }
-                catch { }
-            }
+builder.Services.AddHostedService<BonusWorker>();
+builder.Services.AddHostedService<SettleWorker>();
+builder.Services.AddHostedService<TpReRequestWorker>();
+builder.Services.AddHostedService<JokerWorker>();
+builder.Services.AddHostedService<MGWorker>();
+builder.Services.AddHostedService<APWorker>();
+builder.Services.AddHostedService<PPWorker>();
+builder.Services.AddHostedService<PGWorker>();
+builder.Services.AddHostedService<YGGWorker>();
+builder.Services.AddHostedService<TCGWorker>();
+builder.Services.AddHostedService<HBWorker>();
+builder.Services.AddHostedService<MegaWorker>();
+builder.Services.AddHostedService<AMBWorker>();
+builder.Services.AddHostedService<SAWorker>();
+builder.Services.AddHostedService<SGWorker>();
+builder.Services.AddHostedService<AllbetWorker>();
+builder.Services.AddHostedService<PTWorker>();
+builder.Services.AddHostedService<SBOWorker>();
+builder.Services.AddHostedService<JILIWorker>();
+builder.Services.AddHostedService<ATWorker>();
+builder.Services.AddHostedService<KMWoker>();
 
-            using var streamReader = new StreamReader(result);
-            return new MemoryStream(Encoding.UTF8.GetBytes(streamReader.ReadToEnd()));
-        }
-    }
-}
+var app = builder.Build();
+startup.Configure(app, builder.Environment);
+
+app.Run();
