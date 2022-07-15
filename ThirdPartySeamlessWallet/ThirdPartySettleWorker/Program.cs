@@ -26,27 +26,28 @@ builder.Host.UseSerilog((context, Configuration) =>
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
-builder.Services.AddHostedService<BonusWorker>();
-builder.Services.AddHostedService<SettleWorker>();
-builder.Services.AddHostedService<TpReRequestWorker>();
-builder.Services.AddHostedService<JokerWorker>();
-builder.Services.AddHostedService<MGWorker>();
-builder.Services.AddHostedService<APWorker>();
-builder.Services.AddHostedService<PPWorker>();
-builder.Services.AddHostedService<PGWorker>();
-builder.Services.AddHostedService<YGGWorker>();
-builder.Services.AddHostedService<TCGWorker>();
-builder.Services.AddHostedService<HBWorker>();
-builder.Services.AddHostedService<MegaWorker>();
-builder.Services.AddHostedService<AMBWorker>();
-builder.Services.AddHostedService<SAWorker>();
-builder.Services.AddHostedService<SGWorker>();
-builder.Services.AddHostedService<AllbetWorker>();
-builder.Services.AddHostedService<PTWorker>();
-builder.Services.AddHostedService<SBOWorker>();
-builder.Services.AddHostedService<JILIWorker>();
-builder.Services.AddHostedService<ATWorker>();
-builder.Services.AddHostedService<KMWoker>();
+builder.Services
+    .AddHostedService<BonusWorker>()
+    .AddHostedService<SettleWorker>()
+    .AddHostedService<TpReRequestWorker>()
+    .AddHostedService<JokerWorker>()
+    .AddHostedService<MGWorker>()
+    .AddHostedService<APWorker>()
+    .AddHostedService<PPWorker>()
+    .AddHostedService<PGWorker>()
+    .AddHostedService<YGGWorker>()
+    .AddHostedService<TCGWorker>()
+    .AddHostedService<HBWorker>()
+    .AddHostedService<MegaWorker>()
+    .AddHostedService<AMBWorker>()
+    .AddHostedService<SAWorker>()
+    .AddHostedService<SGWorker>()
+    .AddHostedService<AllbetWorker>()
+    .AddHostedService<PTWorker>()
+    .AddHostedService<SBOWorker>()
+    .AddHostedService<JILIWorker>()
+    .AddHostedService<ATWorker>()
+    .AddHostedService<KMWoker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
