@@ -407,7 +407,7 @@ namespace ThirdParty.SA
             var time = this.Time;
             var saCurrency = new List<string>()
             {
-                "MYR", "THB", "IDR", "VND", "USD", "INR", "BDT"
+                "MYR", "THB", "IDR",  "VND", "USD", "INR", "BDT"
             };
 
             foreach (var currency in saCurrency)
@@ -460,10 +460,7 @@ namespace ThirdParty.SA
                         secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "INR":
-
-                        var g = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000)
-                            .ToList();
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
+                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 100000).Select(r => r.RuleID).FirstOrDefault();
                         secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 700 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
                         threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 2500 && r.Max == 750000).Select(r => r.RuleID).FirstOrDefault();
                         break;
@@ -531,6 +528,7 @@ namespace ThirdParty.SA
                     Currency = tpCustInfo.TpCurrencyId
                 };
 
+
                 var queryString =
                     $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,others";
                 var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
@@ -541,7 +539,7 @@ namespace ThirdParty.SA
             }
             catch (Exception ex)
             {
-                // 暫不處理，BetLimit 設定失敗不要影響正常登入
+                //Exception 暫不處理，設定 BetLimit 失敗不該影響玩家正常進入遊戲
             }
         }
 
