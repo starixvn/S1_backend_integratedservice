@@ -112,6 +112,10 @@
     {
         Wager = 1,//正常抄單
         RedoWager = 2,//重作抄單
+        CheckReward = 3,//活動檢查
         Finance = 4,//廠商報表
+        CheckSettle = 5,//結帳檢查
+        ReSettle = 6,//重新結帳
+
     }
 }

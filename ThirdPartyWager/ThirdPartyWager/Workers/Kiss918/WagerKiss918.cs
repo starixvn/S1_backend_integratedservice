@@ -19,11 +19,11 @@ namespace ThirdPartyWager.Workers
         private Timer timerTHB;
         private Timer timerMYR;
         private Timer timerIDR;
-        private int intervalMins = 3;
-        private int iRangMins = 20;
-        private int tpId = (int)Tp.Kiss918;
+        private readonly int intervalMins = 3;
+        private readonly int iRangMins = 20;
+        private readonly int tpId = (int)Tp.Kiss918;
         private readonly string _tpName = Tp.Kiss918.ToString();
-        private int tpType = 1;
+        private readonly int tpType = (int)WagerTimerType.Wager;
         private int quickTHB = 0;
         private int quickMYR = 0;
         private int quickIDR = 0;
