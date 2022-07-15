@@ -135,12 +135,17 @@ namespace ThirdParty.HB
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
             var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_HB_Detail_Get",
                 new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
+            if (!detail.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
             var gameCode = detail.GetStringValue("keyname");
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = gameCode,
                 Game = GetGameName(gameCode),
-                RefNo = detail.GetStringValue("friendlygameinstanceid"),
+                RefNo = detail.GetStringValue("gameinstanceid"),
                 Title = tpGameType.TypeName,
                 MatchID = detail.GetStringValue("initialdebittransferid"),
                 BetType = string.Empty,
