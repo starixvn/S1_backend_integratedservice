@@ -513,28 +513,34 @@ namespace ThirdParty.SA
         /// <param name="inputs"></param>
         private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-
-            var betLimitQueryString = GetBetLimitQueryString(tpCustInfo.TpCurrencyId, inputs);
-            if (string.IsNullOrEmpty(betLimitQueryString)) return;
-
-            var time = this.Time;
-            var input = new SetBetLimitReq()
+            try
             {
-                Method = "SetBetLimit",
-                Key = config.SecretKey,
-                Time = time,
-                UserName = tpCustInfo.TpUserName,
-                Currency = tpCustInfo.TpCurrencyId
-            };
+                var betLimitQueryString = GetBetLimitQueryString(tpCustInfo.TpCurrencyId, inputs);
+                if (string.IsNullOrEmpty(betLimitQueryString)) return;
+
+                var time = this.Time;
+                var input = new SetBetLimitReq()
+                {
+                    Method = "SetBetLimit",
+                    Key = config.SecretKey,
+                    Time = time,
+                    UserName = tpCustInfo.TpUserName,
+                    Currency = tpCustInfo.TpCurrencyId
+                };
 
 
-            var queryString =
-                $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,others";
-            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
-            var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
-            var postData = "q=" + q + "&s=" + s;
+                var queryString =
+                    $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,others";
+                var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
+                var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
+                var postData = "q=" + q + "&s=" + s;
 
-            var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
+                var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
+            }
+            catch (Exception ex)
+            {
+                //Exception 暫不處理，設定 BetLimit 失敗不該影響玩家正常進入遊戲
+            }
         }
 
         #endregion
