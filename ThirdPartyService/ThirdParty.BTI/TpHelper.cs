@@ -54,7 +54,6 @@ namespace ThirdParty.BTI
                 };
             }
 
-            
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
@@ -64,15 +63,7 @@ namespace ThirdParty.BTI
                ? inputs[$"Host"] : throw new Exception($"host is empty");
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
                ? inputs[$"homeUrl"] : "";
-            if (EnvironmentName == "Development")
-            {
-                return new ApiResult()
-                {
-                    ErrorCode = ErrorCode.Success,
-                    Message = $"{GameUrl}/{TpLangId}/?operatorToken={sessionKey}&home_url={homeUrl}",
-                    RawMessage = sessionKey
-                };
-            }
+
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
             return new ApiResult()
             {
