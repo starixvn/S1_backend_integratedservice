@@ -211,7 +211,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Finance;
             var intervalDays = 1;
-            var nextTimeSpan = TimeSpan.FromHours(4);
+            var nextTimeSpan = TimeSpan.FromDays(1);
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
@@ -223,13 +223,13 @@ namespace ThirdPartyWager.Workers
                     if (await countSummary)
                     {
                         _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} TpDailySummary");
-                        _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddHours(4)).ToUnixTimeSeconds(), tpType);
+                        _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddDays(1)).ToUnixTimeSeconds(), tpType);
                     }
                 }
 
                 if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
                 {
-                    nextTimeSpan = TimeSpan.FromSeconds(1);
+                    nextTimeSpan = TimeSpan.FromSeconds(3);
                 }
             }
             catch (Exception ex)
