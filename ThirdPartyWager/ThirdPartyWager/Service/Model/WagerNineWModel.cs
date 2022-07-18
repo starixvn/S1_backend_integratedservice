@@ -48,14 +48,43 @@ namespace ThirdPartyWager.Service.Model.NineW
         public string agentId { get; set; } = string.Empty;
         public int currencyType { get; set; }
         public int eventType { get; set; }
-        public string selectionId { get; set; }
+        public string selectionId { get; set; } = string.Empty;
         public int categoryType { get; set; }
         public string ip { get; set; } = string.Empty;
         public decimal matchOddsReq { get; set; }
         public int oddsType { get; set; }
         public string userId { get; set; } = string.Empty;
         public string betId { get; set; } = string.Empty;
-        public DateTime betPlaced { get; set; } = default;
+
+        public DateTime? startTime { get; set; }
+        public DateTime betPlaced 
+        {
+            get
+            {
+                if (_betPlaced == null && startTime == null)
+                {
+                    return default;
+                }
+
+                if (startTime != null)
+                {
+                    return startTime.Value;
+                }
+
+                if (_betPlaced != null)
+                {
+                    return _betPlaced.Value;
+                }
+
+                return default;
+            }
+            set 
+            {
+                _betPlaced = value;
+            }
+        }
+        private  DateTime? _betPlaced { get; set; }
+
         public DateTime matchSettledDate { get; set; } = default;
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
@@ -99,12 +128,13 @@ namespace ThirdPartyWager.Service.Model.NineW
             eventId = reSettleBet.eventId;
             marketName = reSettleBet.marketName;
             marketId = reSettleBet.marketId;
-
+            
             //將ReSettleBet欄位對應至SettleBet
             matchSettledDate = reSettleBet.resettledDate;
             profitLoss = reSettleBet.profitLoss;
             matchStake = reSettleBet.stakeTotal;
             oddsType = reSettleBet.oddsType;
+            betPlaced = reSettleBet.startTime;
             var detail = reSettleBet.transactionData?.First();
 
             if (detail == null)
@@ -132,8 +162,8 @@ namespace ThirdPartyWager.Service.Model.NineW
         public int eventId { get; set; }
         public string marketName { get; set; }
         public string marketId { get; set; }
-        public string startTime { get; set; }
-        public string settledDate { get; set; }
+        public DateTime startTime { get; set; }
+        public DateTime settledDate { get; set; }
         public DateTime resettledDate { get; set; } = default;
         public decimal profitLoss { get; set; }
         public decimal marketTotal { get; set; }
