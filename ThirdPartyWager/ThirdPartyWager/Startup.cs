@@ -180,6 +180,9 @@ namespace ThirdPartyWager
             //Ebet
             services.AddSingleton<ApiEbetBLL>();
             services.AddSingleton<FinanceEbetBLL>();
+            //JILI
+            services.AddSingleton<ApiJILIBLL>();
+            services.AddSingleton<FinanceJILIBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -228,6 +231,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceMG>();
             services.AddHostedService<WagerYGG>();
             services.AddHostedService<FinanceEbet>();
+            services.AddHostedService<FinanceJILI>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
