@@ -52,13 +52,12 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Wager;
-            var dataRangeMins = 15;
-            var intervalMins = 3;
-            var nextTimeSpan = TimeSpan.FromDays(intervalMins);
+            var dataRangeMins = 20;
+            var nextTimeSpan = TimeSpan.FromMinutes(1);
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
-                var thisTime = lastTime?.StartTime.AddMinutes((dataRangeMins - intervalMins) * -1) ?? DateTime.Now.AddDays(-1);
+                var thisTime = lastTime?.StartTime.AddMinutes(-10) ?? DateTime.Now.AddDays(-1);
                 if (thisTime < DateTime.Now)
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
@@ -72,7 +71,7 @@ namespace ThirdPartyWager.Workers
 
                 if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > dataRangeMins)
                 {
-                    nextTimeSpan = TimeSpan.FromSeconds(10);
+                    nextTimeSpan = TimeSpan.FromSeconds(5);
                 }
             }
             catch (Exception ex)
