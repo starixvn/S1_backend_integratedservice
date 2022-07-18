@@ -56,8 +56,35 @@ namespace ThirdPartyWager.Service.Model.NineW
         public string userId { get; set; } = string.Empty;
         public string betId { get; set; } = string.Empty;
 
-        [JsonProperty("startTime")]
-        public DateTime betPlaced { get; set; } = default;
+        public DateTime? startTime { get; set; }
+        public DateTime betPlaced 
+        {
+            get
+            {
+                if (_betPlaced == null && startTime == null)
+                {
+                    return default;
+                }
+
+                if (startTime != null)
+                {
+                    return startTime.Value;
+                }
+
+                if (_betPlaced != null)
+                {
+                    return _betPlaced.Value;
+                }
+
+                return default;
+            }
+            set 
+            {
+                _betPlaced = value;
+            }
+        }
+        private  DateTime? _betPlaced { get; set; }
+
         public DateTime matchSettledDate { get; set; } = default;
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
