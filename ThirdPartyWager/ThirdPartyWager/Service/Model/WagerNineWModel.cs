@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public string agentId { get; set; } = string.Empty;
         public int currencyType { get; set; }
         public int eventType { get; set; }
-        public string selectionId { get; set; }
+        public string selectionId { get; set; } = string.Empty;
         public int categoryType { get; set; }
         public string ip { get; set; } = string.Empty;
         public decimal matchOddsReq { get; set; }
