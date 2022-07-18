@@ -17,13 +17,13 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private Timer timer;
-        private int intervalMins = 2;
-        private int iRangMins = 20;
-        private int tpId = (int)Tp.N2Live;
+        private readonly int intervalMins = 2;
+        private readonly int iRangMins = 20;
+        private readonly int tpId = (int)Tp.N2Live;
         private readonly string _tpName = Tp.N2Live.ToString();
-        private int tpType = 1;
+        private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
-        private int beyond = 6;
+        private readonly int beyond = 6;
         private readonly int timeZone = 0;
 
         public WagerN2Live(

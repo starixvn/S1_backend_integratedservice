@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Finance;
             var intervalDays = 1;
-            var nextTimeSpan = TimeSpan.FromHours(8);
+            var nextTimeSpan = TimeSpan.FromHours(4);
 
             try
             {
