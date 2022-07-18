@@ -116,6 +116,6 @@
         Finance = 4,//廠商報表
         CheckSettle = 5,//結帳檢查
         ReSettle = 6,//重新結帳
-
+        UserReport = 7,//用戶報表
     }
 }

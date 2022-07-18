@@ -22,6 +22,7 @@ namespace ThirdPartyWager.Workers
         private Timer _settleTimerByDate;
         private Timer _reSttleTimer;
         private Timer _reportTimer;
+        private Timer _financeTimer;
 
         private readonly int tpId = (int)Tp.NineW;
         private readonly string _tpName = Tp.NineW.ToString();
@@ -41,6 +42,7 @@ namespace ThirdPartyWager.Workers
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
             _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromSeconds(5), TimeSpan.Zero);
             _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
+            _financeTimer = new Timer(DoTpDailySummary, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -63,7 +65,7 @@ namespace ThirdPartyWager.Workers
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"9W Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"NineW Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, timeCast.endUnix, tpType);
                     }
                 }
@@ -104,7 +106,7 @@ namespace ThirdPartyWager.Workers
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"9W Get Wagers byDate: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"NineW Get Wagers byDate: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, timeCast.endUnix, tpType);
                     }
                 }
@@ -129,7 +131,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var timerType = 3;//(int)WagerTimerType.ReSettle
+            var timerType = (int)WagerTimerType.ReSettle;
             var dataRangeMins = 180;
             var intervalHours = 1;
             var nextTimeSpan = TimeSpan.FromDays(intervalHours);
@@ -145,7 +147,7 @@ namespace ThirdPartyWager.Workers
                     var isSuccess = await _nineWService.GetReSettleWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"9W Get ReSettle Wagers : {timeCast.startTime} ~ {timeCast.endTime}");
+                        _logger.LogInformation($"NineW Get ReSettle Wagers : {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, timeCast.endUnix, tpType);
                     }
                 }
@@ -170,7 +172,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);         
-            var timerType = (int)WagerTimerType.Finance;
+            var timerType = (int)WagerTimerType.UserReport;
             var intervalDays = 1;
             var nextTimeSpan = TimeSpan.FromHours(4);
             try
@@ -180,11 +182,10 @@ namespace ThirdPartyWager.Workers
                 var endTime = date.AddDays(1).AddMilliseconds(-1);
                 if (endTime < DateTime.UtcNow)
                 {         
-                    var countSummary =  _nineWService.GetCountSummaryTransactionReportAsync(date);//countSummaryTransaction
                     var summaryTransaction =  _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
-                    if (await countSummary && await summaryTransaction)
+                    if (await summaryTransaction)
                     {
-                        _logger.LogInformation($"9W Get {date:yyyy-MM-dd} Report");
+                        _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} Report");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddHours(4)).ToUnixTimeSeconds(), tpType);
                     }
                 }
@@ -205,12 +206,51 @@ namespace ThirdPartyWager.Workers
             }
         }
 
+        private async void DoTpDailySummary(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var timerType = (int)WagerTimerType.Finance;
+            var intervalDays = 1;
+            var nextTimeSpan = TimeSpan.FromHours(4);
+            try
+            {
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
+                var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
+                var endTime = date.AddDays(1).AddMilliseconds(-1);
+                if (endTime < DateTime.UtcNow)
+                {
+                    var countSummary = _nineWService.GetCountSummaryTransactionReportAsync(date);//countSummaryTransaction                   
+                    if (await countSummary)
+                    {
+                        _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} TpDailySummary");
+                        _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddHours(4)).ToUnixTimeSeconds(), tpType);
+                    }
+                }
+
+                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
+                {
+                    nextTimeSpan = TimeSpan.FromSeconds(1);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WagerNineW.DoTpDailySummary.Exception");
+                nextTimeSpan = TimeSpan.FromHours(1);
+            }
+            finally
+            {
+                _financeTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _settleTimer?.Change(Timeout.Infinite, 0);
             _settleTimerByDate?.Change(Timeout.Infinite, 0);
             _reSttleTimer?.Change(Timeout.Infinite, 0);
             _reportTimer?.Change(Timeout.Infinite, 0);
+            _financeTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
