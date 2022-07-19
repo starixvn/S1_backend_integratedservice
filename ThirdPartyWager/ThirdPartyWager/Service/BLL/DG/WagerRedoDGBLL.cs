@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -61,11 +62,24 @@ namespace ThirdPartyWager.Service.BLL
                         return true;
                     }
                     // db wager count equals api bet count do nothing
+                    var apiTotal = new WagerDGTotal
+                    {
+                        wagerCount = totalNum,
+                        Stake = dataWager.data.records.Sum(x => x.betPoints),
+                        ValidBet = dataWager.data.records.Sum(x => x.availableBet),
+                        WinLostAmount = dataWager.data.records.Sum(x => x.winOrLoss - x.betPoints)
+                    };
+
                     if (totalNum == wagerCount)
                     {
                         msg = "MATCH";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogInformation($"{msg}\r\nApi Summary={JsonConvert.SerializeObject(apiTotal)}\r\nWager Summary={JsonConvert.SerializeObject(getWagerCount)}");
                         return true;
+                    }
+                    else
+                    {
+                        msg = "NOT_MATCH";
+                        _logger.LogError($"{msg}\r\nApi Summary={JsonConvert.SerializeObject(apiTotal)}\r\nWager Summary={JsonConvert.SerializeObject(getWagerCount)}\r\nApi Data={JsonConvert.SerializeObject(dataWager)}");
                     }
 
                     // insert wager to db
@@ -90,7 +104,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 msg = "FINISH";
                 _logger.LogInformation($"RedoWagersAsync {msg}\r\n{startTime} ~ {endTime}");
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
