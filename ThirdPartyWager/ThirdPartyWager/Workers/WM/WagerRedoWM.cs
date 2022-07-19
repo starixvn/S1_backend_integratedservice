@@ -93,7 +93,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    var dueTimeSpan = TimeSpan.FromMinutes(28);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
