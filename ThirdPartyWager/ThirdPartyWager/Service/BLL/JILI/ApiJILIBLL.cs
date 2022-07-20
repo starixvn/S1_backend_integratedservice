@@ -1,12 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using System.Data;
@@ -49,6 +41,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 StartTime = encryptParam.StartTime,
                 EndTime = encryptParam.EndTime,
+                FilterAgent = true,
                 AgentId = agentId,
                 Key = DoEncrypt(setting, encryptParam)
             };

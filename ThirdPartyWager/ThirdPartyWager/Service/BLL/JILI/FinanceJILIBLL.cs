@@ -1,10 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -14,14 +8,17 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceJILIBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceJILIBLL> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly ApiJILIBLL _apiJILIBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = -4;
+        private readonly List<int> _siteList = new() { 1, 2, 3 };
 
         public FinanceJILIBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceJILIBLL>>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiJILIBLL = provider.GetRequiredService<ApiJILIBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
@@ -36,9 +33,17 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId.Substring(i.TpCurrencyId.Length - 3), i => i.CurrencyId);
+            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
-            foreach (var item in reportData[0].Data)
+            var getReportData = JsonConvert.DeserializeObject<List<CurrencyStatsData_JILI>>(JsonConvert.SerializeObject(reportData));
+            var data = getReportData.GroupBy(i => i.Currency).Select(g => new
+            {
+                Currency = g.Key,
+                BetAmount = g.Sum(s => s.BetAmount),
+                PayoffAmount = g.Sum(s => s.PayoffAmount),
+            });
+
+            foreach (var item in data)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {
@@ -52,30 +57,39 @@ namespace ThirdPartyWager.Service.BLL
                     WinlostAmount = item.BetAmount + item.PayoffAmount
                 });
             }
+
             return dailyData;
         }
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-
-            var getWagerSummary = await _apiJILIBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
-            if (getWagerSummary.ErrorCode == 101)
+            foreach (var siteId in _siteList)
             {
-                var msg = "NO_DATA";
-                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                return reportData;
-            }
+                // 分Site取得TpList
+                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
 
-            if (getWagerSummary.ErrorCode != 0)
-            {
-                var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                throw systemException;
-            }
+                var getWagerSummary = await _apiJILIBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+                if (getWagerSummary.ErrorCode == 101)
+                {
+                    var msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    continue;
+                }
 
-            reportData.Add(getWagerSummary);
+                if (getWagerSummary.ErrorCode != 0)
+                {
+                    var msg = "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                    throw systemException;
+                }
+
+                foreach (var item in getWagerSummary.Data)
+                {
+                    reportData.Add(item);
+                }
+            }
             return reportData;
         }
 
