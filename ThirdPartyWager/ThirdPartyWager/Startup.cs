@@ -177,6 +177,12 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiEVOBLL>();
             //YGG
             services.AddSingleton<WagerYGGBLL>();
+            //Ebet
+            services.AddSingleton<ApiEbetBLL>();
+            services.AddSingleton<FinanceEbetBLL>();
+            //JILI
+            services.AddSingleton<ApiJILIBLL>();
+            services.AddSingleton<FinanceJILIBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -224,6 +230,8 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
             services.AddHostedService<WagerYGG>();
+            services.AddHostedService<FinanceEbet>();
+            services.AddHostedService<FinanceJILI>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
