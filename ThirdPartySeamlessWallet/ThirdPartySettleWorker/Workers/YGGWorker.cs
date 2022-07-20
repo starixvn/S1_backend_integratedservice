@@ -155,16 +155,7 @@ namespace ThirdPartySettleWorker.Workers
             decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
             decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
 
-            // 比對一般注單
-            if (wagerStake == settleData.Stake && wagerWinLostAmount == settleData.WinLostAmount)
-            {
-                return true;
-            }
-
-            // 檢查是否是 Jackpot 獎金池類型的注單，如果是先略過
-            var spName = "Service_BettransRng_YGG_DescriptionJackpotCount_Get";
-            var countResult = _settledBLL.GetYggDescriptionJackpotCount(settleData.TransId, spName);
-            return countResult.DescriptionJackPotCounts > 0;
+            return wagerStake == settleData.Stake && wagerWinLostAmount == settleData.WinLostAmount;
         }
     }
 }
