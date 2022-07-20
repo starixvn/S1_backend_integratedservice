@@ -4029,7 +4029,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public SettleData_YGG GetSettle_TpWager_YGG(string transId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData_YGG>("Service_TpWager_YGG_Settle_GetV2", new { TransId = transId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<SettleData_YGG>("Service_TpWager_YGG_Settle_Get_V2", new { TransId = transId }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
