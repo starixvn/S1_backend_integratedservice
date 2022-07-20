@@ -35,7 +35,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 var content = JsonConvert.SerializeObject(new
                 {
-                    CustId = tpCustInfo.CustId,
+                    tpCustInfo.CustId,
+                    tpCustInfo.CurrencyId,
                     BetRecordInfo = betRecordInfo,
                 });
                 var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
