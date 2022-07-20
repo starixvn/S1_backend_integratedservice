@@ -2169,11 +2169,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWager_YGG(transId);
         }
 
-        public BettransRngYggDescriptionJackpotCount GetYggDescriptionJackpotCount(string transId,string spName)
-        {
-            return settledService.GetYggDescriptionJackpotCount(transId, spName);
-        }
-
         #endregion
     }
 }
