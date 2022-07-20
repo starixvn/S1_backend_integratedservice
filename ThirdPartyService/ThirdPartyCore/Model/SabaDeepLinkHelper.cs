@@ -93,12 +93,6 @@ namespace ThirdPartyCore.Model
             var loginUrl = inputs.GetValueOrDefault("LoginUrl");
             resultUrl.Append($"&homeUrl={homeUrl}&signupUrl={signupUrl}&LoginUrl={loginUrl}");
 
-            if (_sportType == "2001" || _sportType == "2002" || _sportType == "2003")
-            {
-                _sportType = "1";
-                _menuType = menuTypeDic[_sportType];
-            }
-
             // 檢查sportType判斷走新的獨立Func或原本共用的Method
             var deeplink = _sportTypeHandler.ContainsKey(_sportType) ? _sportTypeHandler[_sportType].Invoke() :
                 _appType switch
@@ -131,6 +125,13 @@ namespace ThirdPartyCore.Model
         private string GetDesktopDeeplink()
         {
             var act = _sportType != null ? sportTypeDic.GetValueOrDefault(_sportType) : null;
+
+            if (_sportType == "2001" || _sportType == "2002" || _sportType == "2003")
+            {
+                _menuType = menuTypeDic[_sportType];
+                act = "1";
+            }
+
             if (CheckSportType())
             {
                 if (!string.IsNullOrEmpty(_betType))
@@ -164,6 +165,11 @@ namespace ThirdPartyCore.Model
 
         private string GetMobileDeeplink()
         {
+            if (_sportType == "2001" || _sportType == "2002" || _sportType == "2003")
+            {
+                _menuType = menuTypeDic[_sportType];
+                _sportType = "1";
+            }
             var types = CheckSportType() ? sportTypeDic.GetValueOrDefault(_sportType) : $"{_sportType},{_menuType},l";
             if (_sportType == "202")
             {
