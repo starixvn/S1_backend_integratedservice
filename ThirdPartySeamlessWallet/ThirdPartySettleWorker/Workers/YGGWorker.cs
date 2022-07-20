@@ -64,7 +64,7 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"SettleYGG";
             var getSP = $"Service_BettransRng_YGG_Unsettle_Get_V3";
             var setSP = $"Service_BettransRng_YGG_Settle_Set_V3";
-
+            
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
@@ -147,7 +147,7 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private static bool CanSettle(SettleData_YGG wager, SettleData settleData, TpCurrency tpCurrency)
+        private bool CanSettle(SettleData_YGG wager, SettleData settleData, TpCurrency tpCurrency)
         {
             if (tpCurrency.ExchangeRate <= 0) return false;
 
@@ -155,7 +155,16 @@ namespace ThirdPartySettleWorker.Workers
             decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
             decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
 
-            return wagerStake == settleData.Stake && wagerWinLostAmount == settleData.WinLostAmount;
+            // 比對一般注單
+            if (wagerStake == settleData.Stake && wagerWinLostAmount == settleData.WinLostAmount)
+            {
+                return true;
+            }
+
+            // 檢查是否是 Jackpot 獎金池類型的注單，如果是先略過
+            var spName = "Service_BettransRng_YGG_DescriptionJackpotCount_Get";
+            var countResult = _settledBLL.GetYggDescriptionJackpotCount(settleData.TransId, spName);
+            return countResult.DescriptionJackPotCounts > 0;
         }
     }
 }

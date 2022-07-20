@@ -4030,6 +4030,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.QueryFirstOrDefault<SettleData_YGG>("Service_TpWager_YGG_Settle_Get", new { TransId = transId }, commandType: CommandType.StoredProcedure);
         }
 
+        public BettransRngYggDescriptionJackpotCount GetYggDescriptionJackpotCount(string transId,string spName)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<BettransRngYggDescriptionJackpotCount>(spName, new { TransId = transId }, commandType: CommandType.StoredProcedure);
+        }
+
         #endregion
     }
 }
