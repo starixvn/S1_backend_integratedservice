@@ -48,9 +48,4 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// </summary>
         public decimal? WinLostAmount { get; set; }
     }
-
-    public class BettransRngYggDescriptionJackpotCount
-    {
-        public int DescriptionJackPotCounts { get; set; }
-    }
 }
