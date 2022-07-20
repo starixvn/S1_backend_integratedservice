@@ -3,6 +3,13 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using System.Data;
 using ThirdPartyWager.Service.Model;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ThirdPartyWager.Service.BLL
 {
