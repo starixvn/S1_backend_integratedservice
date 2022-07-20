@@ -83,14 +83,23 @@ namespace ThirdPartyWager.Service.BLL.YGG
             if (betRecordResponse.Code == SuccessCode && betRecordResponse.Data.Count > 0)
             {
                 var insertData = betRecordResponse.Data.Where(r => r.Type == "wager").ToList(); // wager 投注
-                var updateData = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
+                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
+                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager").ToList(); // 獎金池
 
                 var tasks = new List<Task<int>>();
                 if (insertData.Count > 0) tasks.AddRange(insertData.Select(item => Task.Run(() => InsertWager(item))).ToList());
-                if (updateData.Count > 0) tasks.AddRange(updateData.Select(item => Task.Run(() => UpdateWager(item))).ToList());
+                if (tasks.Count > 0) 
+                    await Task.WhenAll(tasks); // 寫入Wager資料
 
+                tasks.Clear();
+                if (updateWinLoseAmount.Count > 0) tasks.AddRange(updateWinLoseAmount.Select(item => Task.Run(() => UpdateWinLoseAmount(item))).ToList());
                 if (tasks.Count > 0)
-                    await Task.WhenAll(tasks);
+                    await Task.WhenAll(tasks); // 更新輸贏值
+
+                tasks.Clear();
+                if (updateJackpotAmount.Count > 0) tasks.AddRange(updateJackpotAmount.Select(item => Task.Run(() => UpdateJockPotAmount(item))).ToList());
+                if (tasks.Count > 0)
+                    await Task.WhenAll(tasks);// 更新獎金池
             }
         }
 
@@ -110,9 +119,18 @@ namespace ThirdPartyWager.Service.BLL.YGG
             });
         }
 
-        private Task<int> UpdateWager(WagerYGGModel betData)
+        private Task<int> UpdateWinLoseAmount(WagerYGGModel betData)
         {
             return _wagerDbClient.ExecuteAsync("Service_TpWagerYGG_Set", new
+            {
+                Amount = betData.Amount.Value,
+                _Reference = betData.Reference
+            });
+        }
+
+        private Task<int> UpdateJockPotAmount(WagerYGGModel betData)
+        {
+            return _wagerDbClient.ExecuteAsync("Service_TpWagerYGGJackPotAmount_Set", new
             {
                 Amount = betData.Amount.Value,
                 _Reference = betData.Reference
