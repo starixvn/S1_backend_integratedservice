@@ -1,4 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -13,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiJILIBLL _apiJILIBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = -4;
-        private readonly List<int> _siteList = new() { 1, 2, 3 };
+        private readonly List<int> _siteList = new List<int>() { 2, 3 };
 
         public FinanceJILIBLL(IServiceProvider provider)
         {
