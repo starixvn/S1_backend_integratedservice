@@ -95,13 +95,14 @@ namespace ThirdPartyService.Service.BLL.Tests
             return actual.ErrorCode;
         }
 
-        //[Ignore("dev")]
-        [TestCase(250385, "4095829", 77, 42, ExpectedResult = ErrorCode.Success)]
-        public ErrorCode GetTpBetRecordExtendTest(int custId, string transId, int gameType, int tpId)
+        [Ignore("dev")]
+        [TestCase(226500, "5WG09igtsu5CEV", 67, 39,51, ExpectedResult = ErrorCode.Success)]
+        public ErrorCode GetTpBetRecordExtendTest(int custId, string transId, int gameType, int tpId, int currencyId)
         {
             var actual = _thirdPartyBLL.GetTpBetRecordExtend(new GetTpBetRecordExtendRequest
             {
                 CustId = custId,
+                CurrencyId = currencyId,
                 BetRecordInfo = new BetRecordInfo()
                 {
                     TransId = transId,

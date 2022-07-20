@@ -22,7 +22,7 @@ namespace ThirdPartyCore.Model.TpBetRecordExtend
             Product = tpGameType.TypeName;
             Category = tpGameType.CategoryId.ToString();
 
-            Currency = tpCustInfo.TpCurrencyId;
+            Currency = tpCustInfo.IsoCode;
         }
 
         #region private Set

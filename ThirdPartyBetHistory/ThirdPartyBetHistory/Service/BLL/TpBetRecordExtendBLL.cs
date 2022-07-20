@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -18,17 +19,20 @@ namespace ThirdPartyBetHistory.Service.BLL
     {
         private readonly ILogger<TpBetRecordExtendBLL> _logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
 
         public TpBetRecordExtendBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
         }
 
         public async Task AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, TpBetRecordExtend tpBetRecordExtend)
         {
             try
             {
+                tpBetRecordExtend.Currency = GetCurrencyIsoCode(tpCustInfo.CurrencyId);
                 var parameters = new DynamicParameters(new
                 {
                     betRecordInfo.TpId,
@@ -86,6 +90,11 @@ namespace ThirdPartyBetHistory.Service.BLL
             {
                 _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
+        }
+
+        private string GetCurrencyIsoCode(int currencyId)
+        {
+            return _currencyList.GetValueOrDefault(currencyId).IsoCode;
         }
     }
 }

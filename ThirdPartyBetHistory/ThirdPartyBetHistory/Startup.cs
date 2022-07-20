@@ -42,6 +42,7 @@ namespace ThirdPartyBetHistory
 
             services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
             services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
+            services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

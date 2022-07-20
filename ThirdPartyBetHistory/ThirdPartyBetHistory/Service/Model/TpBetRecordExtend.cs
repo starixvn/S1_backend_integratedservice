@@ -14,7 +14,6 @@ namespace ThirdPartyBetHistory.Service.Model
             Provider = tpGameType.TpName;
             Product = tpGameType.TypeName;
             Category = tpGameType.CategoryId.ToString();
-            Currency = betDetail.currency.ToString();
 
             GameID = betDetail.sport_type.ToString();
             Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty;
@@ -40,7 +39,6 @@ namespace ThirdPartyBetHistory.Service.Model
             Provider = tpGameType.TpName;
             Product = tpGameType.TypeName;
             Category = tpGameType.CategoryId.ToString();
-            Currency = betDetail.currency.ToString();
 
             GameID = betDetail.sport_type.ToString();
             Game = tpGameType.TypeName;
@@ -66,7 +64,6 @@ namespace ThirdPartyBetHistory.Service.Model
             Provider = tpGameType.TpName;
             Product = tpGameType.TypeName;
             Category = tpGameType.CategoryId.ToString();
-            Currency = betDetail.currency.ToString();
 
             GameID = betDetail.sport_type.ToString();
             Game = tpGameType.TypeName;
@@ -92,7 +89,6 @@ namespace ThirdPartyBetHistory.Service.Model
             Provider = tpGameType.TpName;
             Product = tpGameType.TypeName;
             Category = tpGameType.CategoryId.ToString();
-            Currency = betDetail.currency.ToString();
 
             GameID = "231";
             Game = tpGameType.TypeName;
@@ -162,7 +158,7 @@ namespace ThirdPartyBetHistory.Service.Model
         /// <summary>
         /// 第三方幣別代碼 = TpCurrencyId
         /// </summary>
-        public string Currency { get; private set; }
+        public string Currency { get; set; }
 
         /// <summary>
         /// 我方TpName
