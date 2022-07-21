@@ -141,7 +141,7 @@ namespace ThirdParty.PG
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_PG_Detail_GetAll", new { betRecordInfo.TransId }, DataBase.Main);
-            var gameCode = detail.GetFirstStringValue("gamecode");
+            var gameCode = detail.GetFirstStringValue("GameId");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
