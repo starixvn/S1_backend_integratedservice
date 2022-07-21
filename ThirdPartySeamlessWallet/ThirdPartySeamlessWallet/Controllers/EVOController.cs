@@ -704,7 +704,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/promo_payout_2")]
+        [Route("[controller]/promo_payout")]
         public async Task<dynamic> promoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
