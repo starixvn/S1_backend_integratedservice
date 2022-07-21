@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiJILIBLL _apiJILIBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = -4;
-        private readonly List<int> _siteList = new List<int>() { 2, 3 };
+        private readonly List<int> _siteList = new List<int>() {1, 2, 3 };
 
         public FinanceJILIBLL(IServiceProvider provider)
         {
