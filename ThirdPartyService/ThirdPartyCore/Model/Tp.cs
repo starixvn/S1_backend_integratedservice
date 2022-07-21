@@ -74,6 +74,7 @@ namespace ThirdPartyCore.Model
         public int ActStatus { get; set; }
         public int Status { get; set; }
         public int CStatus { get; set; }
+        public string IsoCode { get; set; }
     }
 
     public class TpMerchantInfo

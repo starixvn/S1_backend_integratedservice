@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -13,13 +12,11 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
-using ThirdPartyCore.Model.Exceptions;
 
 namespace ThirdPartyService.Service.BLL
 {
@@ -42,8 +39,9 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
         private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
+        private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
+        private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
 
-        private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
         /// <summary>
         /// PT異常客戶清單(測試機)，共13筆
@@ -87,9 +85,9 @@ namespace ThirdPartyService.Service.BLL
             ThirdPartyHelperBase.BetLimitProvider = provider.GetRequiredService<BetLimitService>();
 
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>();
-            tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
-
+            _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
             _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
+            _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
         }
 
         #endregion
@@ -1116,7 +1114,7 @@ namespace ThirdPartyService.Service.BLL
 
         public ApiResult<object> GetBetDetail(GetBetDetailRequest request)
         {
-            if (!tpGameTypeConfig.TryGetValue(request.GameType, out var gameTypeOption))
+            if (!_tpGameTypeConfig.TryGetValue(request.GameType, out var gameTypeOption))
             {
                 return new ApiResult<object>()
                 {
@@ -1163,7 +1161,7 @@ namespace ThirdPartyService.Service.BLL
         {
             var tpId = request.BetRecordInfo.TpId;
 
-            if (!tpGameTypeConfig.TryGetValue(request.BetRecordInfo.GameType, out var gameTypeOption))
+            if (!_tpGameTypeConfig.TryGetValue(request.BetRecordInfo.GameType, out var gameTypeOption))
             {
                 return new ApiResult<TpBetRecordExtend>()
                 {
@@ -1182,6 +1180,8 @@ namespace ThirdPartyService.Service.BLL
                     RawMessage = tpCustInfoResult.RawMessage
                 };
             }
+            tpCustInfoResult.Data.IsoCode = GetCurrencyIsoCode(request.CurrencyId);
+
 
             var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
@@ -1483,6 +1483,11 @@ namespace ThirdPartyService.Service.BLL
             }
 
             return amount;
+        }
+
+        private string GetCurrencyIsoCode(int currencyId)
+        {
+            return _currencyList.GetValueOrDefault(currencyId).IsoCode;
         }
 
         #endregion
