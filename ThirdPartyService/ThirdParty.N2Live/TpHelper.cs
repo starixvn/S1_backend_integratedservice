@@ -200,7 +200,9 @@ namespace ThirdParty.N2Live
             return gameCode switch
             {
                 "50002" => "Roulette",
+                "50003" => "Lucky Boost Roulette",
                 "51002" => "RNG Roulette",
+                "51003" => "RNG Lucky Boost Roulette",
                 "52002" => "RNG Roulette PT *",
                 "60001" => "Sicbo",
                 "61001" => "RNG Sicbo",
@@ -209,12 +211,16 @@ namespace ThirdParty.N2Live
                 "90092" => "Baccarat Non-Commission",
                 "91091" => "RNG Baccarat Commission",
                 "91092" => "RNG Baccarat Non-Commission",
+                "100004" => "Ultimate Blackjack",
                 "110001" => "RNG Traditional Blackjack PT*",
                 "110002" => "RNG Free Bet Blackjack PT*",
                 "110003" => "RNG Blackjack Switch PT*",
                 "210001" => "RNG Casino Hold’em",
                 "300001" => "Bull Bull",
                 "310001" => "RNG Bull Bull",
+                "400002" => "Free Pick San Gong Non-Commission",
+                "400004" => "Fortune Koi Non-Commission",
+                "500002" => "Andar Bahar Non-Commission",
                 "990000" => "Slot Game",
                 _ => gameCode,
             };
