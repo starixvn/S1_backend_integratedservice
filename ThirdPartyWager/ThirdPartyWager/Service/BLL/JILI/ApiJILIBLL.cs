@@ -79,6 +79,8 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<string> DoHttpClientAsync(string url, string param, HttpMethod method)
         {
+            _log2File.InsertRequestLog(_tpName, url, param, "1");
+
             HttpRequestMessage request;
             url = $"{url}?{param}";
             request = new HttpRequestMessage(method, url);
