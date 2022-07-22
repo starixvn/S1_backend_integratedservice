@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Service.BLL
             var encryptParam = new
             {
                 StartTime = DateTime.Parse(startTime).ToString("yyyy-MM-dd'T'HH:mm:ss"),
-                EndTime = DateTime.Parse(endTime).ToString("yyyy-MM-dd'T'HH:mm:ss"),
+                EndTime = DateTime.Parse(endTime).AddSeconds(1).ToString("yyyy-MM-dd'T'HH:mm:ss"),
                 AgentId = agentId,
             };
 
