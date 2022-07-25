@@ -23,6 +23,7 @@ namespace CommonService.Extensions.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
+            context.Request.EnableBuffering();
             var url = context.Request.GetDisplayUrl();
             if (context.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
             {

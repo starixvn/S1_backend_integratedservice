@@ -1,90 +1,38 @@
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
-using Serilog.Events;
 using Serilog.Exceptions;
-using Serilog.Formatting.Json;
 using ThirdPartyBetHistory.Service.Worker;
+using ThirdPartyBetHistory;
+using ThirdPartyBetHistory.Extensions;
 
-namespace ThirdPartyBetHistory
+var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
+var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+builder.Host.UseSerilog((context, Configuration) =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    Configuration
+        .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.FromLogContext()
+        .Filter.ByExcluding(c =>
+            c.Properties.Any(p =>
+                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
+                || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
+        .Enrich.WithExceptionDetails();
+});
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .ConfigureAppConfiguration((hostContext, builder) =>
-                        {
-                            builder
-                                .SetBasePath(Directory.GetCurrentDirectory())
-                                .AddEnvironmentVariables()
-                                .AddJsonFile($"appsettings.json", false, true)
-                                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", false, true);
-                            hostContext.Configuration = builder.Build();
-                            builder.AddJsonStream(GetRemoteConfig(hostContext.Configuration.GetSection("ConfigService").Get<string[]>()));
-                        })
-                        .UseSerilog((hostContext, loggerConfiguration) =>
-                        {
-                            var excludesMessage = hostContext.Configuration.GetSection("ExcludesMessage").Get<string[]>();
-                            var excludesApiEndpoints = hostContext.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
-                            
-                            loggerConfiguration
-                                .ReadFrom.Configuration(hostContext.Configuration)
-                                .Enrich.FromLogContext()
-                                .Filter.ByExcluding(c =>
-                                    c.Properties.Any(p =>
-                                        excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
-                                        || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
-                                .Enrich.WithExceptionDetails();
-                        })
-                        .UseStartup<Startup>();
-                }).ConfigureServices((hostContext, services) =>
-                {
-                    services.AddHostedService<WorkerService>();
-                    services.AddHostedService<BonusWorker>();
-                    services.AddHostedService<SabaLGWorkerService>();
-                    services.AddHostedService<SabaByTransIdUnSettleWorkerService>();
-                    services.AddHostedService<SabaByTransIdSettleWorkerService>();
-                });
-        
-        private static MemoryStream GetRemoteConfig(IEnumerable<string> remoteUrls)
-        {
-            using var client = new HttpClient();
-            Stream result = null;
-            foreach (var url in remoteUrls)
-            {
-                if (string.IsNullOrEmpty(url))
-                {
-                    continue;
-                }
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
 
-                try
-                {
-                    result = client.GetAsync(url).Result.Content.ReadAsStreamAsync().Result;
-                    break;
-                }
-                catch { }
-            }
+builder.Services
+    .AddHostedService<WorkerService>()
+    .AddHostedService<BonusWorker>()
+    .AddHostedService<SabaLGWorkerService>()
+    .AddHostedService<SabaByTransIdUnSettleWorkerService>()
+    .AddHostedService<SabaByTransIdSettleWorkerService>();
 
-            using var streamReader = new StreamReader(result);
-            return new MemoryStream(Encoding.UTF8.GetBytes(streamReader.ReadToEnd()));
-        }
-    }
-}
+var app = builder.Build();
+startup.Configure(app, builder.Environment);
+
+app.Run();
+
