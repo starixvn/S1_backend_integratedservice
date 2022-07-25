@@ -29,6 +29,7 @@ namespace ThirdPartyCore.Model
         public string Operator { set; get; }
         public string Remarks { set; get; }
         public int Category { set; get; }
+        public int DepositId { set; get; }
     }
 
     public class TransferResult
@@ -41,6 +42,19 @@ namespace ThirdPartyCore.Model
         public string ThirdId { get; set; }
         public decimal Difference { get; set; }
     }
+    public class AdjustWalletResult: TransferResult
+    {
+        public AdjustWalletResult(){}
+        public AdjustWalletResult(TransferResult result, string transId)
+        {
+            base.Status = result.Status;
+            base.ThirdId = result.ThirdId;
+            base.Difference = result.Difference;
+            TransId = transId;
+        }
+        public string TransId { get; set; }
+    }
+    
     public class AutoTransferResult
     {
         public string Guid { get; set; }
