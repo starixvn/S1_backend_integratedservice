@@ -1,12 +1,14 @@
 ﻿using System;
 using System.IO;
 using FluentAssertions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
@@ -23,11 +25,14 @@ namespace ThirdPartyWager.IntegrationTest.Unittest
         public void SetUp()
         {
             var serviceCollection = new ServiceCollection();
-            var configBuilder = new ConfigurationBuilder();
-            configBuilder.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false);
-            _configuration = configBuilder.Build();
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            serviceCollection.AddSingleton(_configuration);
+            _configuration = app.Configuration;
             serviceCollection.AddSingleton(_configuration);
             
             serviceCollection.AddTransient(p => Substitute.For<IApiMGBLL>());
