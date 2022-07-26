@@ -285,11 +285,11 @@ namespace ThirdPartyService.Service.DAL
             props = new DynamicParameters();
             props.Add("_TransId", transId);
             props.Add("_DepositId", depositId);
-            props.Add("_AdjustType", (int) AdjustWalletTypeEnum.Main);
+            props.Add("_AdjustType", (int) AdjustWalletTypeEnum.ThirdParty);
             props.Add("_BeforeAmount", beforeAmount);
             props.Add("_AfterAmount", afterAmount);
             
-            if (conn.Execute("Admin_AdjustmentDeposit_Ins", props, trans, commandType: CommandType.StoredProcedure) < 1)
+            if (conn.Execute("Admin_AdjustmentDepositLog_Ins", props, trans, commandType: CommandType.StoredProcedure) < 1)
             {
                 trans.Rollback();
                 return resultCode;
