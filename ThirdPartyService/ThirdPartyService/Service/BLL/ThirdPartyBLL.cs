@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -788,7 +780,9 @@ namespace ThirdPartyService.Service.BLL
             if (adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
             {
                 var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
-                tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
+                var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
+                _logger.LogError(
+                    $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
             }
 
             apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
