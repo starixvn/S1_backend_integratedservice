@@ -218,12 +218,9 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public int InsAdjustWalletLog(TpCustInfo tpCustInfo, AdminTpTransfer adminTpTransfer, out string transId)
+        public void InsAdjustWalletLog(TpCustInfo tpCustInfo, AdminTpTransfer adminTpTransfer, out string transId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            
             var p = new DynamicParameters(new
             {
                 Prefix = $"T{common.GetEnv()}",
@@ -239,50 +236,6 @@ namespace ThirdPartyService.Service.DAL
             });
             
             transId = conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Ins_V2", p, commandType: CommandType.StoredProcedure);
-            if (string.IsNullOrEmpty(transId))
-            {
-                trans.Rollback();
-                return -8;
-            }
-
-            // 調帳類型為 Deposit 時變更存款單實際存款金額
-            if (adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
-            {
-                var props = new DynamicParameters();
-                props.Add("_DepositId", adminTpTransfer.DepositId);
-                props.Add("_AdjustAmount", adminTpTransfer.Amount);
-                props.Add("_BeforeAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                props.Add("_AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                props.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-
-                _ = conn.Execute("Admin_AdjustmentActualDeposit_Set", props, trans, commandType: CommandType.StoredProcedure);
-            
-                var beforeAmount = props.Get<decimal>("_BeforeAmount");
-                var afterAmount = props.Get<decimal>("_AfterAmount");
-                var resultCode = props.Get<int>("_Result");
-
-                if (resultCode != 0)
-                {
-                    trans.Rollback();
-                    return resultCode;
-                }
-            
-                props = new DynamicParameters();
-                props.Add("_TransId", transId);
-                props.Add("_DepositId", adminTpTransfer.DepositId);
-                props.Add("_AdjustType", (int) AdjustWalletTypeEnum.Main);
-                props.Add("_BeforeAmount", beforeAmount);
-                props.Add("_AfterAmount", afterAmount);
-            
-                if (conn.Execute("Admin_AdjustmentDeposit_Ins", props, trans, commandType: CommandType.StoredProcedure) < 1)
-                {
-                    trans.Rollback();
-                    return resultCode;
-                }
-            }
-
-            trans.Commit();
-            return 0;
         }
         
         public void SetAdjustWalletLog(ApiResult<TransferResult> transferResult, string transId)
@@ -302,6 +255,48 @@ namespace ThirdPartyService.Service.DAL
                 var p = new DynamicParameters(new { TransId = transId, transferResult.Data.ThirdId, Memo, transferResult.Data.Status });
                 conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Set", p, commandType: CommandType.StoredProcedure);
             }
+        }
+        
+        public int SetAdjustmentActualDeposit(string transId, int depositId, decimal adjustAmount)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            var props = new DynamicParameters();
+            props.Add("_DepositId", depositId);
+            props.Add("_AdjustAmount", adjustAmount);
+            props.Add("_BeforeAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            props.Add("_AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            props.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+            _ = conn.Execute("Admin_AdjustmentActualDeposit_Set", props, trans, commandType: CommandType.StoredProcedure);
+            
+            var beforeAmount = props.Get<decimal>("_BeforeAmount");
+            var afterAmount = props.Get<decimal>("_AfterAmount");
+            var resultCode = props.Get<int>("_Result");
+
+            if (resultCode != 0)
+            {
+                trans.Rollback();
+                return resultCode;
+            }
+            
+            props = new DynamicParameters();
+            props.Add("_TransId", transId);
+            props.Add("_DepositId", depositId);
+            props.Add("_AdjustType", (int) AdjustWalletTypeEnum.Main);
+            props.Add("_BeforeAmount", beforeAmount);
+            props.Add("_AfterAmount", afterAmount);
+            
+            if (conn.Execute("Admin_AdjustmentDeposit_Ins", props, trans, commandType: CommandType.StoredProcedure) < 1)
+            {
+                trans.Rollback();
+                return resultCode;
+            }
+
+            trans.Commit();
+            return 0;
         }
     }
 }

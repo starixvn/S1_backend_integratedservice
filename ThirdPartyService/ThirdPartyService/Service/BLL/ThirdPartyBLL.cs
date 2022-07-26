@@ -770,11 +770,11 @@ namespace ThirdPartyService.Service.BLL
                 amount = adminTpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
             }
             
-            var resultCode = tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
+            tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
 
-            if (resultCode != 0)
+            if (string.IsNullOrEmpty(transId))
             {
-                _logger.LogError($"InsAdjustWalletLog failed, resultCode: {resultCode}");
+                _logger.LogError($"InsAdjustWalletLog failed.");
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
                 apiResult.Message = "AdjustWallet Failed.";
                 
@@ -783,8 +783,14 @@ namespace ThirdPartyService.Service.BLL
             
             var transferResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
                 thirdId);
-            tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
             
+            tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
+            if (adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+            {
+                var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
+                tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
+            }
+
             apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
             return apiResult;
         }
