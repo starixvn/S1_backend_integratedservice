@@ -270,7 +270,7 @@ namespace ThirdPartyService.Service.DAL
                 props = new DynamicParameters();
                 props.Add("_TransId", transId);
                 props.Add("_DepositId", adminTpTransfer.DepositId);
-                props.Add("_AdjustAmount", adminTpTransfer.Amount);
+                props.Add("_AdjustType", (int) AdjustWalletTypeEnum.Main);
                 props.Add("_BeforeAmount", beforeAmount);
                 props.Add("_AfterAmount", afterAmount);
             
