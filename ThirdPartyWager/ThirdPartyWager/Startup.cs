@@ -182,6 +182,9 @@ namespace ThirdPartyWager
             //JILI
             services.AddSingleton<ApiJILIBLL>();
             services.AddSingleton<FinanceJILIBLL>();
+            //AP
+            services.AddSingleton<ApiAPBLL>();
+            services.AddSingleton<FinanceAPBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -231,6 +234,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerYGG>();
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
+            services.AddHostedService<FinanceAP>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
