@@ -175,6 +175,7 @@ namespace ThirdPartyWager
             //EVO
             services.AddSingleton<WagerEVOBLL>();
             services.AddSingleton<ApiEVOBLL>();
+            services.AddSingleton<FinanceEVOBLL>();
             //YGG
             services.AddSingleton<WagerYGGBLL>();
             //Ebet
@@ -228,6 +229,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoMP>();
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
+            services.AddHostedService<FinanceEVO>();
             services.AddHostedService<TpRefundWorker>();
             services.AddHostedService<ReportMega>();
             services.AddHostedService<ReportRedoMega>();
