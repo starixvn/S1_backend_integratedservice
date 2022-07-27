@@ -2950,7 +2950,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 // 玩家或金額不符
                 var bet = bettrans.FirstOrDefault();
-                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || bettrans.Any(a => a.TxnId == cancelDataRng_MG.txnId && Math.Abs(bet.Amount) != cancelDataRng_MG.amount)))
+                var betAmount = bettrans.FirstOrDefault(a => a.TxnId == cancelDataRng_MG.txnId).Amount;
+                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(betAmount) != cancelDataRng_MG.amount))
                 {
                     logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
