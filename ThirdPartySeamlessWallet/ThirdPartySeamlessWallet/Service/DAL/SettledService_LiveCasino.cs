@@ -2968,7 +2968,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { cancelDataRng_MG.betId }, trans);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, trans);
 
                 if (result > 0 && cancelDataRng_MG.amount != 0)
                 {
