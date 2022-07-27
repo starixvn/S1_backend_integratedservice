@@ -1580,6 +1580,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
+            var settleFlag = (int)SettleFlag.EndGame;
+            if (bettingData_EBet.detail.totalBet == 0 && bettingData_EBet.detail.validBet == 0 && bettingData_EBet.detail.payout == 0 && bettingData_EBet.money == 0)
+            {
+                settleFlag = (int)SettleFlag.Settled;
+                ticketStatus = (int)TicketStatus.Refund;
+            }
+            
             var p = new DynamicParameters(new
             {
                 TransId = mixUniqueId,
@@ -1605,8 +1612,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 results = JsonConvert.SerializeObject(bettingData_EBet.detail.results),
                 TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
+                SettleFlag = settleFlag
             });
+
 
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -1999,7 +2007,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V3", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_EBet(string TransId)
