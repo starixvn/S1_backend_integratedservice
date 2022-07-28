@@ -102,6 +102,7 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiAllBetBLL>();
             services.AddSingleton<WagerRedoAllBetBLL>();
             services.AddSingleton<RewardAllBetBLL>();
+            services.AddSingleton<FinanceAllBetBLL>();
             // SA
             services.AddSingleton<WagerSABLL>();
             services.AddSingleton<ApiSABLL>();
@@ -193,6 +194,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoDG>();
             services.AddHostedService<WagerAllBet>();
             services.AddHostedService<WagerRedoAllBet>();
+            services.AddHostedService<FinanceAllBet>();
             services.AddHostedService<CheckRewardAllBet>();
             services.AddHostedService<WagerUnsettleCheckAllBet>();
             services.AddHostedService<WagerSA>();

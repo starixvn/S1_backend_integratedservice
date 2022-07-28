@@ -147,4 +147,20 @@ namespace ThirdPartyWager.Service.Model
         public string betNum { get; set; }
     }
 
+    public class CurrencyStats_AllBet
+    {
+        public string resultCode { get; set; }
+        public string message { get; set; }
+        public CurrencyStatsData_AllBet data { get; set; }
+    }
+
+    public class CurrencyStatsData_AllBet
+    {
+        public string startDateTime { get; set; }
+        public string endDateTime { get; set; }
+        public int count { get; set; }
+        public decimal totalBetAmount { get; set; }
+        public decimal totalWinOrLoss { get; set; }
+        public int CurrencyId { get; set; }
+    }
 }
