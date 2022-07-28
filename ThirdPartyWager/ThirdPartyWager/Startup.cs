@@ -111,6 +111,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerAGBLL>();
             services.AddSingleton<ApiAGBLL>();
             services.AddSingleton<WagerRedoAGBLL>();
+            services.AddSingleton<FinanceAGBLL>();
             // CF
             //services.AddSingleton<WagerCFBLL>();
             //services.AddSingleton<ApiCFBLL>();
@@ -199,6 +200,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSA>();
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
+            services.AddHostedService<FinanceAG>();
             services.AddHostedService<WagerSG>();
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
