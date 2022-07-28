@@ -43,6 +43,7 @@
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
+        AP = 39,
         SBO = 42
     }
 
