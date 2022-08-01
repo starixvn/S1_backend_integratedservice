@@ -89,7 +89,7 @@ namespace ThirdPartyWager.Service.Library
 
             return timeCast;
         }
-        public TimeCast GetTimeByDay(int period, int utc, string format, DateTime timerTime)
+        public TimeCast GetTimeByDay(int period, int utc, string format, DateTime timerTime, int utcMinute = 0)
         {
             var current = timerTime;
 
@@ -104,8 +104,8 @@ namespace ThirdPartyWager.Service.Library
 
             var beginAt = new DateTimeOffset(timeBase);
             var endAt = new DateTimeOffset(timeBase.AddMinutes(period).AddMilliseconds(-1));
-            var startTime = beginAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
-            var endTime = endAt.ToOffset(new TimeSpan(utc, 0, 0)).ToString(format);
+            var startTime = beginAt.ToOffset(new TimeSpan(utc, utcMinute, 0)).ToString(format);
+            var endTime = endAt.ToOffset(new TimeSpan(utc, utcMinute, 0)).ToString(format);
             var startUnix = beginAt.ToUnixTimeSeconds();
             var endUnix = endAt.ToUnixTimeSeconds();
 

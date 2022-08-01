@@ -153,6 +153,7 @@ namespace ThirdPartyWager
             // PT
             services.AddSingleton<WagerPTBLL>();
             services.AddSingleton<ApiPTBLL>();
+            services.AddSingleton<FinancePTBLL>();
             // LiveStreaming
             services.AddSingleton<LiveStreamingBLL>();
             // LatestHighlightVideo
@@ -220,6 +221,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
+            services.AddHostedService<FinancePT>();
             //services.AddHostedService<WagerReSettlePT>();
             services.AddHostedService<LiveStreaming>();
             // services.AddHostedService<LatestHighlightVideo>();
