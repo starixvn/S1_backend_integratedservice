@@ -267,7 +267,7 @@ namespace ThirdPartyCore
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             InsertLog?.Invoke(url, parameters, "1");
-            WebRequest request = WebRequest.Create($"{url}?{parameters}");
+            WebRequest request = string.IsNullOrWhiteSpace(parameters) ? WebRequest.Create($"{url}") : WebRequest.Create($"{url}?{parameters}");
             if (!string.IsNullOrEmpty(proxyHost))
             {
                 request.Proxy = new WebProxy(proxyHost, proxyPort);

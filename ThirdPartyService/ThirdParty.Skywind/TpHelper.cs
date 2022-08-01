@@ -51,11 +51,23 @@ namespace ThirdParty.Skywind
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
+            string MerchId = inputs.ContainsKey("MerchId") && !string.IsNullOrEmpty(inputs["MerchId"]) ? inputs["MerchId"] : throw new Exception();
+            string MerchPwd = inputs.ContainsKey("MerchPwd") && !string.IsNullOrEmpty(inputs["MerchPwd"]) ? inputs["MerchPwd"] : throw new Exception();
             var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-            var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
+            var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}/ticket/{tpCustInfo.TpUserName}test";
             Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("Authorization", $"Bearer {jwtToken.accessToken}");
-            var json = HttpGet(gameUrl, null, null, header);
+            //header.Add("X-ACCESS-TOKEN", $"Bearer {jwtToken.accessToken}");
+            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+            string json = string.Empty;
+            try
+            {
+                //json = HttpGet(gameUrl, null, "application/json", header);
+                json = HttpGet(gameUrl, null, header);
+            }
+            catch(Exception ex)
+            {
+
+            }
             ApiResult oApiResult = new ApiResult();
             {
                 if (IsJSON(json))
@@ -111,7 +123,6 @@ namespace ThirdParty.Skywind
             var result = JsonConvert.DeserializeObject<JwtToken>(r);
             return result;
         }
-
         public class JwtToken
         {
             public string key { get; set; }
