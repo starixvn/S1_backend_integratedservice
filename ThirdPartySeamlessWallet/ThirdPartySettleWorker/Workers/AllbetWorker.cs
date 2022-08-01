@@ -105,7 +105,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = unsettled.Stake,
-                            ValidBet = unsettled.Stake,
+                            ValidBet = unsettled.ValidBet,
                             WinlostAmount = unsettled.WinLostAmount,
                             TransId = unsettled.TransId,
                             GameType = gameType,
