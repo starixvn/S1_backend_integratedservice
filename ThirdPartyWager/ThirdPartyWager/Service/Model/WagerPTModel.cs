@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -75,5 +76,37 @@ namespace ThirdPartyWager.Service.Model
         public string OriginalState { get; set; }
         public int TicketKey { get; set; }
         public int BonusId { get; set; }
+    }
+
+    public class CurrencyStats_PT
+    {
+        public dynamic error { get; set; }
+        public int errorcode { get; set; }
+        public IList<CurrencyStatsData_PT> result { get; set; }
+        public Pagination pagination { get; set; }
+    }
+
+    public class CurrencyStatsData_PT
+    {
+        public string ENTITY { get; set; }
+        public string PLAYERS { get; set; }
+        public string GAMES { get; set; }
+        public string CURRENCYCODE { get; set; }
+        public decimal BETS { get; set; }
+        public decimal WINS { get; set; }
+        public int FREESPINCOUNT { get; set; }
+        public decimal FREESPINBET { get; set; }
+        public decimal FREESPINWIN { get; set; }
+        public int GOLDENCHIPCOUNT { get; set; }
+        public decimal GOLDENCHIPBET { get; set; }
+        public decimal GOLDENCHIPWIN { get; set; }
+        public string GOLDENCHIPINCOMESHARE { get; set; }
+        public string FREESPININCOMESHARE { get; set; }
+        public decimal INCOME { get; set; }
+        [JsonProperty("JACKPOTBETS#")]
+        public decimal JACKPOTBETS { get; set; }
+        [JsonProperty("JACKPOTWINS#")]
+        public decimal JACKPOTWINS { get; set; }
+
     }
 }
