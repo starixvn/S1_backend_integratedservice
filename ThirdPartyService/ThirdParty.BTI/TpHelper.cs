@@ -63,6 +63,7 @@ namespace ThirdParty.BTI
                ? inputs[$"Host"] : throw new Exception($"host is empty");
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
                ? inputs[$"homeUrl"] : "";
+
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
             return new ApiResult()
             {

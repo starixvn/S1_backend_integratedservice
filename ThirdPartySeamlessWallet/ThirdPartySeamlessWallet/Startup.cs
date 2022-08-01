@@ -95,8 +95,8 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IMGBLL, MGBLL>();
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
-            services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddTransient<IJokerBLL, JokerBLL>();
+            services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();

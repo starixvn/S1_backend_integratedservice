@@ -3885,6 +3885,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+
         public void UpdateTpBonusFlag_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
             GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
@@ -3953,6 +3954,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
+
         #endregion
 
         #region AMB Slot

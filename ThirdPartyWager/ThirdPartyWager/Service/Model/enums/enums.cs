@@ -43,6 +43,7 @@
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
+        AP = 39,
         SBO = 42
     }
 
@@ -62,13 +63,12 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
-        PT_RNG = 46,
-        PT_LiveCasino = 48,
-        YGG_RNG = 14
+        YGG_RNG = 14,
+ 		PT_RNG = 46,
+        PT_LiveCasino = 48        
     }
-    
-    
-    public enum SettlementType
+
+	 public enum SettlementType
     {
         UnSettled = 0,
         SettledForValid = 1,
@@ -88,7 +88,7 @@
         Related = 5,
         FreeBetWin = 6
     }
-
+    
     public enum DataBase
     {
         Main, //ConnectionString
