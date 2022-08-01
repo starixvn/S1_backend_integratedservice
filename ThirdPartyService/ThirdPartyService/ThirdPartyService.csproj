@@ -63,6 +63,7 @@
     <ProjectReference Include="..\ThirdParty.WM\ThirdParty.WM.csproj" />
     <ProjectReference Include="..\ThirdParty.YGG\ThirdParty.YGG.csproj" />
     <ProjectReference Include="..\ThirdParty.YL\ThirdParty.YL.csproj" />
+    <ProjectReference Include="..\ThirdParty.Skywind\ThirdParty.Skywind.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Storage\PT\CNY.p12">

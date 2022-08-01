@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartyService", "ThirdPartyService\ThirdPartyService.csproj", "{61D09DC4-D7F6-4E3F-B36B-F5A61643E3A0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9} = {5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Saba", "ThirdParty.Saba\ThirdParty.Saba.csproj", "{C703CCC4-143D-4387-9784-DE0752186597}"
 EndProject
@@ -91,7 +94,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBSW", "ThirdPar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.HB", "ThirdParty.HB\ThirdParty.HB.csproj", "{02F30FD7-585B-4A93-BAF2-19316555233A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.SBO", "ThirdParty.SBO\ThirdParty.SBO.csproj", "{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBO", "ThirdParty.SBO\ThirdParty.SBO.csproj", "{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Skywind", "ThirdParty.Skywind\ThirdParty.Skywind.csproj", "{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -275,6 +280,10 @@ Global
 		{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -321,6 +330,7 @@ Global
 		{0A43ED88-DCAD-4F6A-8CC1-4333C09F9E5D} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{02F30FD7-585B-4A93-BAF2-19316555233A} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
