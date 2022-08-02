@@ -98,8 +98,8 @@ namespace ThirdParty.Skywind.Tests
                 CustId = 250072,
                 SiteId = 1,
                 UserName = "willie1016",
-                TpUserName = "nova88_willie1016",
-                TpPwd = "!12345678",
+                TpUserName = "DNova88_250072",
+                TpPwd = "QQ77889",
                 TpCurrencyId = "MYR",
                 ExchangeRate = 1.0000m,
                 IsTest = false,
@@ -127,6 +127,7 @@ namespace ThirdParty.Skywind.Tests
                 { "gameId", "sw_2pd" },
                 { "MerchId", "sw_Nova88_merchant_stg" },
                 { "MerchPwd", "tzlbpqhXqgmim8qm" },
+                { "Token", "Xoin7LFGaE2QWSb9U2oijw"}
             };
         }
 
