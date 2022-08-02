@@ -8,6 +8,20 @@ using System.Web;
 using System.Diagnostics;
 using System;
 using ThirdParty.Skywind;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
+using ThirdPartyService.Extensions;
+using ThirdPartyService.IntegrationTest.Models;
+using Microsoft.Extensions.Hosting;
+using ThirdPartyCore;
+using Microsoft.AspNetCore.Hosting;
+using NSubstitute;
+using ThirdPartyService.IntegrationTest.Stubs;
+using Microsoft.Extensions.Logging;
+using ThirdPartyService.Service.Library;
+using Microsoft.Extensions.Configuration;
+using ThirdPartyService.Service.BLL;
+using ThirdPartyService.Service.DAL;
 
 namespace ThirdParty.Skywind.Tests
 {
@@ -17,6 +31,44 @@ namespace ThirdParty.Skywind.Tests
         private TpHelper _tpHelper;
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
+        private IConfiguration _configuration;
+
+        public SkywindTpHelperTests()
+        {
+            var services = new ServiceCollection();
+
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            _configuration = app.Configuration;
+            services.AddSingleton(_configuration);
+
+            var env = new WebHostingEnvironment
+            {
+                EnvironmentName = Environments.Development,
+                ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
+            };
+            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
+          
+
+            services.AddSingleton<IWebHostEnvironment>(env);
+            services.AddSingleton<IHostEnvironment>(env);
+
+            services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
+            services.AddTransient(p => Substitute.For<ILogger<ThirdPartyBLL>>());
+            services.AddTransient(p => Substitute.For<ILogger<ThirdPartyHelper>>());
+            services.AddTransient(p => Substitute.For<ILogger<Log2File>>());
+
+            var startup = new StubStartUp(_configuration);
+
+            startup.ConfigureServices(services);
+            var provider = services.BuildServiceProvider();
+            ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
+        }
+
 
         [SetUp]
         public void Setup()
