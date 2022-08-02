@@ -126,16 +126,46 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             ValidateTicketResp result = new ValidateTicketResp()
             {
-                error_code = 0,
-                cust_session_id = "nova88_willie1016_SessId",
-                cust_id = "nova88_willie1016",
-                currency_code = "GBP",
-                test_cust = true,
-                country = "GB",
-                game_group = "Test Group",
-                rci = "60",
-                rce = "11"
+                error_code = -1
             };
+
+            try
+            {
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(req.ticket));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                string authToken = sessionKeyArr[0];
+                string sessionToken = sessionKeyArr[1];
+                string tpUserName = sessionKeyArr[2];
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
+                if(tpCheck == null || tpCheck.Token != sessionToken)
+                    return result;
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, tpUserName);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+                var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCode((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+                result.error_code = 0;
+                result.cust_session_id = sessionToken;
+                result.cust_id = tpUserName;
+                result.country = tpCountryCode.CountryCode;
+                result.test_cust = true;
+                result.currency_code = tpCurrency.TpCurrencyId;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(req)}\r\n{ex.ToString()}");
+            }
+            //ValidateTicketResp result = new ValidateTicketResp()
+            //{
+            //    error_code = 0,
+            //    cust_session_id = "nova88_willie1016_SessId",
+            //    cust_id = "nova88_willie1016",
+            //    currency_code = "GBP",
+            //    test_cust = true,
+            //    country = "GB",
+            //    game_group = "Test Group",
+            //    rci = "60",
+            //    rce = "11"
+            //};
             return result;
         }
 
@@ -157,6 +187,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         //}
         #endregion
 
+        private bool ValidateToken(string auth_token)
+        {
+            return true;
+        }
         public enum SkywindErrorCode
         {
             NoErrors = 0,
