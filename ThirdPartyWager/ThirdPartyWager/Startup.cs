@@ -190,6 +190,9 @@ namespace ThirdPartyWager
             //AP
             services.AddSingleton<ApiAPBLL>();
             services.AddSingleton<FinanceAPBLL>();
+            //Netent
+            services.AddSingleton<ApiNetentBLL>();
+            services.AddSingleton<FinanceNetentBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -244,6 +247,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
+            services.AddHostedService<FinanceNetent>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
