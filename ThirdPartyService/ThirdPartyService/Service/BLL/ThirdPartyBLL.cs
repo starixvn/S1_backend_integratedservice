@@ -790,11 +790,20 @@ namespace ThirdPartyService.Service.BLL
             {
                 var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
                 var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
-                _logger.LogError(
-                    $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
+
+                if (reslutCode != 0)
+                {
+                    _logger.LogError(
+                        $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId:{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
+                }
             }
 
+            apiResult.ErrorCode = transferResult.ErrorCode;
+            apiResult.Message = transferResult.Message;
+            apiResult.RawErrorCode = transferResult.RawErrorCode;
+            apiResult.RawMessage = transferResult.RawMessage;
             apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
+            
             return apiResult;
         }
 
