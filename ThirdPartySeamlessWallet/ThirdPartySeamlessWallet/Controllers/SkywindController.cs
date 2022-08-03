@@ -169,22 +169,31 @@ namespace ThirdPartySeamlessWallet.Controllers
             return result;
         }
 
-        //[Route("[controller]/api/get_balance")]
-        //[HttpPost]
-        //public GetBalanceResp GetBalance(GetBalanceReq req)
-        //{
-        //    #region InitResult
-        //    GetBalanceResp result = new GetBalanceResp();
-        //    #endregion
+        [Route("[controller]/api/get_balance")]
+        [HttpPost]
+        public GetBalanceResp GetBalance(GetBalanceReq req)
+        {
+            #region InitResult
+            GetBalanceResp result = new GetBalanceResp();
+            #endregion
 
-        //    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, req.cust_id);
-        //    if (tpCheck == null)
-        //    {
-        //        result.error_code = (int)SkywindErrorCode.PlayerNotFound;
-        //        logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{req.cust_id}");
-        //        return result;
-        //    }
-        //}
+            var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
+            if (tpCheck == null || tpCheck.Token != req.cust_session_id)
+            {
+                result.error_code = (int)SkywindErrorCode.PlayerNotFound;
+                logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{req.cust_id}");
+                return result;
+            }
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, (int)GameType.Skywind_RNG);
+
+            result.error_code = (int)SkywindErrorCode.NoErrors;
+            result.balance = tpCustBalance.Balance;
+            result.currency_code = tpCurrency.TpCurrencyId;
+
+            return result;
+        }
         #endregion
 
         private bool ValidateToken(string auth_token)
