@@ -51,8 +51,6 @@ namespace ThirdParty.Skywind
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            string MerchId = inputs.ContainsKey("MerchId") && !string.IsNullOrEmpty(inputs["MerchId"]) ? inputs["MerchId"] : throw new Exception();
-            string MerchPwd = inputs.ContainsKey("MerchPwd") && !string.IsNullOrEmpty(inputs["MerchPwd"]) ? inputs["MerchPwd"] : throw new Exception();
 
             #region token
             var key = ApplyToken(tpCustInfo);
@@ -64,7 +62,7 @@ namespace ThirdParty.Skywind
             #endregion
 
             var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-            var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}/ticket/{tpCustInfo.TpUserName}test";
+            var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
             Dictionary<string, string> header = new Dictionary<string, string>();
             header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
             var sParam = $"ticket={sessionKey}";
