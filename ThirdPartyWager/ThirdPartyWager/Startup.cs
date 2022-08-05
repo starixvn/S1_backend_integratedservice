@@ -154,6 +154,7 @@ namespace ThirdPartyWager
             // PT
             services.AddSingleton<WagerPTBLL>();
             services.AddSingleton<ApiPTBLL>();
+            services.AddSingleton<FinancePTBLL>();
             // LiveStreaming
             services.AddSingleton<LiveStreamingBLL>();
             // LatestHighlightVideo
@@ -189,6 +190,15 @@ namespace ThirdPartyWager
             //AP
             services.AddSingleton<ApiAPBLL>();
             services.AddSingleton<FinanceAPBLL>();
+            //Netent
+            services.AddSingleton<ApiNetentBLL>();
+            services.AddSingleton<FinanceNetentBLL>();
+            //RedTiger
+            services.AddSingleton<ApiRedTigerBLL>();
+            services.AddSingleton<FinanceRedTigerBLL>();
+            //Sexy
+            services.AddSingleton<ApiSexyBLL>();
+            services.AddSingleton<FinanceSexyBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -221,6 +231,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
+            services.AddHostedService<FinancePT>();
             //services.AddHostedService<WagerReSettlePT>();
             services.AddHostedService<LiveStreaming>();
             // services.AddHostedService<LatestHighlightVideo>();
@@ -242,6 +253,9 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
+            services.AddHostedService<FinanceNetent>();
+            services.AddHostedService<FinanceRedTiger>();
+            services.AddHostedService<FinanceSexy>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

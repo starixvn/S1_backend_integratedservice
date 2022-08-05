@@ -1,4 +1,12 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -777,15 +785,25 @@ namespace ThirdPartyService.Service.BLL
                 thirdId);
             
             tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
-            if (adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+            if (transferResult.ErrorCode == ErrorCode.Success
+                && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
             {
                 var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
                 var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
-                _logger.LogError(
-                    $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
+
+                if (reslutCode != 0)
+                {
+                    _logger.LogError(
+                        $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId:{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
+                }
             }
 
+            apiResult.ErrorCode = transferResult.ErrorCode;
+            apiResult.Message = transferResult.Message;
+            apiResult.RawErrorCode = transferResult.RawErrorCode;
+            apiResult.RawMessage = transferResult.RawMessage;
             apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
+            
             return apiResult;
         }
 
