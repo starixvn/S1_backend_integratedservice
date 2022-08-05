@@ -199,6 +199,9 @@ namespace ThirdPartyWager
             //Sexy
             services.AddSingleton<ApiSexyBLL>();
             services.AddSingleton<FinanceSexyBLL>();
+            //CQ9
+            services.AddSingleton<ApiCQ9BLL>();
+            services.AddSingleton<FinanceCQ9BLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -256,6 +259,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceNetent>();
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
+            services.AddHostedService<FinanceCQ9>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
