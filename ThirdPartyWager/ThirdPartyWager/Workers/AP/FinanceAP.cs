@@ -84,7 +84,7 @@ namespace ThirdPartyWager.Workers
                 {
                     TpId = _tpId,
                     Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
+                    StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(-1),
                 };
 
                 // get time 
