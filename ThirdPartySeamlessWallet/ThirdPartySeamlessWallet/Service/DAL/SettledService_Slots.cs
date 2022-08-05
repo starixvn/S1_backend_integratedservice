@@ -4031,5 +4031,72 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region Skywind
+        public int SettledRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var result = 0;
+            afterAmount = 0;
+            try
+            {
+                CultureInfo culture = CultureInfo.InvariantCulture;
+                DateTime partitionTime = DateTime.Parse(bettingDataRNG_Skywind.timestamp.ToString(), culture, DateTimeStyles.None);
+                var query = new
+                {
+                    bettingDataRNG_Skywind.trx_id
+                };
+                var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query);
+                if (check.Any())
+                {
+                    return -1;
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+                bettingDataRNG_Skywind.TicketStatus = bettingDataRNG_Skywind.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                bettingDataRNG_Skywind.TicketType = (int)BettransType.EndRound;
+
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_Ins", bettingDataRNG_Skywind, trans);
+
+                if (result > 0 && bettingDataRNG_Skywind.amount > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataRNG_Skywind.amount,
+                        (int)Tp.Skywind,
+                        bettingDataRNG_Skywind.round_id,
+                        (int)GameType.Skywind_RNG,
+                        TpCategory.Slots,
+                        bettingDataRNG_Skywind.round_id,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans);
+                }
+
+                if (result > 0)
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, GameType.Skywind_RNG, bettingDataRNG_Skywind.round_id, trans, partitionTime);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                throw;
+            }
+
+            return result;
+        }
+        #endregion
     }
 }
