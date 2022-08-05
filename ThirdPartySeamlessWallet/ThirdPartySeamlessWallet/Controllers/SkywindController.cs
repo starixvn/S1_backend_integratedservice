@@ -72,6 +72,20 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string rci { get; set; }
             public string rce { get; set; }
         }
+        public class DebitResp
+        {
+            public int error_code { get; set; }
+            public string error_msg { get; set; }
+            public decimal balance { get; set; }
+            public string trx_id { get; set; }
+        }
+        public class CreditResp
+        {
+            public int error_code { get; set; }
+            public string error_msg { get; set; }
+            public decimal balance { get; set; }
+            public string trx_id { get; set; }
+        }
         #endregion
 
         #region Req
@@ -90,7 +104,54 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string cust_session_id { get; set; }
             public string game_code { get; set; }
         }
-
+        public class DebitReq
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+            public string cust_id { get; set; }
+            public string cust_session_id { get; set; }
+            public string round_id { get; set; }
+            public decimal amount { get; set; }
+            public string currency_code { get; set; }
+            public string game_code { get; set; }
+            public string trx_id { get; set; }
+            public string game_id   { get; set; }
+            public string event_type { get; set; }
+            public int event_id { get; set; }
+            public int timestamp { get; set; }
+            public string geme_type { get; set; }
+            public string platform  { get; set; }
+            public string promo_id { get; set; }
+            public string promo_pid { get; set; }
+            public decimal jp_contribution { get; set; }
+            public int operation_ts { get; set; }
+            public string distribution_type { get; set; }
+        }
+        public class CreditReq
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+            public string cust_id { get; set; }
+            public string cust_session_id { get; set; }
+            public string round_id { get; set; }
+            public decimal amount { get; set; }
+            public string currency_code { get; set; }
+            public string game_code { get; set; }
+            public string trx_id { get; set; }
+            public string game_id { get; set; }
+            public string event_type { get; set; }
+            public bool jp_win { get; set; }
+            public int event_id { get; set; }
+            public int timestamp { get; set; }
+            public string geme_type { get; set; }
+            public string game_status { get; set; }
+            public string platform { get; set; }
+            public int operation_ts { get; set; }
+            public string[] jp_ids { get; set; }
+            public string promo_id { get; set; }
+            public string promo_pid { get; set; }
+            public string distribution_type { get; set; }
+        }
         #endregion
 
         #endregion
@@ -194,12 +255,158 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return result;
         }
+
+        [Route("[controller]/api/debit")]
+        [HttpPost]
+        public DebitResp Debit(DebitReq req)
+        {
+            DebitResp result = new DebitResp();
+
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, req.cust_id);
+            if (tpCheck == null)
+            {
+                result.error_code = (int)SkywindErrorCode.PlayerNotFound;
+                result.error_msg = SkywindErrorCode.PlayerNotFound.ToString();
+                logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}");
+                return result;
+            }
+            else if (tpCheck.Token != req.cust_session_id)
+            {
+                result.error_code = (int)SkywindErrorCode.GameTokenExpired;
+                result.error_msg = SkywindErrorCode.GameTokenExpired.ToString();
+                logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n Token:{tpCheck.Token}");
+                return result;
+            }
+            else if (tpCheck.Locked)
+            {
+                result.error_code = (int)SkywindErrorCode.PlayerNotFound;
+                result.error_msg = SkywindErrorCode.PlayerNotFound.ToString();
+                logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n Locked");
+                return result;
+            }
+            else if (req.amount < 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, (int)GameType.Skywind_RNG);
+                result.balance = tpCustBalance.Balance;
+                result.error_code = (int)SkywindErrorCode.InsufficientBalance;
+                result.error_msg = SkywindErrorCode.InsufficientBalance.ToString();
+                logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n Stake < 0");
+                return result;
+            }
+            else
+            {
+                BettingDataRNG_Skywind betReq = new BettingDataRNG_Skywind()
+                {
+                    merch_id = req.merch_id,
+                    merch_pwd = req.merch_pwd,
+                    cust_id = req.cust_id,
+                    cust_session_id = req.cust_session_id,
+                    round_id = req.round_id,
+                    amount = req.amount,
+                    currency_code = req.currency_code,
+                    game_code = req.game_code,
+                    trx_id = req.trx_id,
+                    game_id = req.game_id,
+                    event_type = req.event_type,
+                    event_id = req.event_id,
+                    timestamp = req.timestamp,
+                    geme_type = req.geme_type,
+                    platform = req.platform,
+                    promo_id = req.promo_id,
+                    jp_contribution = req.jp_contribution,
+                    operation_ts = req.operation_ts,
+                    distribution_type = req.distribution_type,
+                };
+
+                if (bettingBLL.PlaceBetRNG_Skywind(betReq, out decimal tpAffterAmount) > 0)
+                {
+                    result.balance = tpAffterAmount;
+                    result.error_code = (int)SkywindErrorCode.NoErrors;
+                    result.trx_id = req.trx_id;
+                }
+                else
+                {
+                    result.balance = tpAffterAmount;
+                    result.error_code = (int)SkywindErrorCode.MerchantInternalError;
+                    result.trx_id = req.trx_id;
+                }
+            }
+            return result;
+        }
+        [Route("[controller]/api/credit")]
+        [HttpPost]
+        public CreditResp Credit(CreditReq req)
+        {
+            #region InitResult
+            CreditResp result = new CreditResp();
+            #endregion
+
+            try
+            {
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
+                if (tpCheck == null || tpCheck.Token != req.cust_session_id)
+                {
+                    result.error_code = (int)SkywindErrorCode.PlayerNotFound;
+                    logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{req.cust_id}");
+                    return result;
+                }
+
+                BettingDataRNG_Skywind creditReq = new BettingDataRNG_Skywind()
+                {
+                    merch_id = req.merch_id,
+                    merch_pwd = req.merch_pwd,
+                    cust_id = req.cust_id,
+                    cust_session_id = req.cust_session_id,
+                    round_id = req.round_id,
+                    amount = req.amount,
+                    currency_code = req.currency_code,
+                    game_code = req.game_code,
+                    trx_id = req.trx_id,
+                    game_id = req.game_id,
+                    event_type = req.event_type,
+                    event_id = req.event_id,
+                    timestamp = req.timestamp,
+                    geme_type = req.geme_type,
+                    platform = req.platform,
+                    promo_id = req.promo_id,
+                    operation_ts = req.operation_ts,
+                    distribution_type = req.distribution_type,
+                    jp_win = req.jp_win,
+                    game_status = req.game_status,
+                    jp_ids = req.jp_ids
+                };
+
+                int SettleResult = settledBLL.SettledRNG_Skywind(creditReq, req.cust_id, out decimal tpAffterAmount);
+
+                if (SettleResult > 0)
+                {
+                    result.error_code = (int)SkywindErrorCode.NoErrors;
+                    result.balance = tpAffterAmount;
+                    logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
+                }
+                else if (SettleResult == -1)
+                {
+                    result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
+                    result.balance = tpAffterAmount;
+                    logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
+                }
+                else
+                {
+                    result.error_code = (int)SkywindErrorCode.MerchantInternalError;
+                    result.balance = tpAffterAmount;
+                    logger.LogError($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.error_code = (int)SkywindErrorCode.MerchantInternalError;
+                result.balance = 0;
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(result)}");
+            }
+            return result;
+        }
         #endregion
 
-        private bool ValidateToken(string auth_token)
-        {
-            return true;
-        }
         public enum SkywindErrorCode
         {
             NoErrors = 0,

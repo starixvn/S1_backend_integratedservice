@@ -2185,5 +2185,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region Skywind
+        public int SettledRNG_Skywind(BettingDataRNG_Skywind bettingDataRNG_Skywind, string TpUserName, out decimal afterAmount)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, TpUserName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.SettledRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+        #endregion
     }
 }

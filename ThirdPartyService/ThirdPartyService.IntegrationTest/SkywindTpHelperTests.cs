@@ -127,7 +127,7 @@ namespace ThirdParty.Skywind.Tests
                 { "gameId", "sw_2pd" },
                 { "MerchId", "sw_Nova88_merchant_stg" },
                 { "MerchPwd", "tzlbpqhXqgmim8qm" },
-                { "Token", "Xoin7LFGaE2QWSb9U2oijw"}
+                { "Token", "PxB6HJumO0097UarEYW8A"}
             };
         }
 

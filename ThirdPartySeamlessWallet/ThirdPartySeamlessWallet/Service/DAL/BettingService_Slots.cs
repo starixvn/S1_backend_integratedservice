@@ -1161,5 +1161,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region SkyWind
+        public int PlaceBetRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.Skywind_RNG;
+            bettingDataRNG_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingDataRNG_Skywind.TicketType = (int)BettransType.Bet;
+            afterAmount = 0;
+            CultureInfo culture = CultureInfo.InvariantCulture;
+            DateTime partitionTime = DateTime.Parse(bettingDataRNG_Skywind.timestamp.ToString(), culture, DateTimeStyles.None);
+            var query = new
+            {
+                bettingDataRNG_Skywind.trx_id
+            };
+            var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query);
+            if (check.Any())
+            {
+                return 1;
+            }
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+            var result = 0;
+            result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_Ins", bettingDataRNG_Skywind, trans);
+
+            if (result > 0 && bettingDataRNG_Skywind.amount != 0)
+            {
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_Skywind.amount) * -1, (int)Tp.Skywind, bettingDataRNG_Skywind.round_id, gameType, bettingDataRNG_Skywind.round_id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
+        #endregion
+
     }
 }

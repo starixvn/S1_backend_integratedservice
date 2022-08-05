@@ -603,5 +603,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         #endregion
+
+        #region Skywind
+        public int PlaceBetRNG_Skywind(BettingDataRNG_Skywind bettingDataRNG_Skywind, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, bettingDataRNG_Skywind.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBetRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        #endregion
     }
 }
