@@ -1178,7 +1178,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query);
             if (check.Any())
             {
-                return 1;
+                return -1;
             }
 
             using var conn = _mainDbClient.GetMySqlConnection();

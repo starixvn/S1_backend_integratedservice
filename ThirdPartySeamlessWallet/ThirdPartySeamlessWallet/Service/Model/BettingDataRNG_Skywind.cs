@@ -32,5 +32,6 @@
     public class BettransRng_Skywind
     {
         public long SQ { get; set; }
+        public int TicketStatus { get; set; }
     }
 }
