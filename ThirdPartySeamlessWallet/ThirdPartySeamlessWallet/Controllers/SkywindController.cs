@@ -133,24 +133,24 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string merch_pwd { get; set; }
             public string cust_id { get; set; }
             public string cust_session_id { get; set; }
-            public string round_id { get; set; }
+            public string round_id { get; set; } = "";
             public decimal amount { get; set; }
-            public string currency_code { get; set; }
-            public string game_code { get; set; }
-            public string trx_id { get; set; }
+            public string currency_code { get; set; } = "";
+            public string game_code { get; set; } = "";
+            public string trx_id { get; set; } = "";
             public long game_id { get; set; }
-            public string event_type { get; set; }
+            public string event_type { get; set; } = "";
             public bool jp_win { get; set; }
             public int event_id { get; set; }
             public long timestamp { get; set; }
-            public string game_type { get; set; }
-            public string game_status { get; set; }
-            public string platform { get; set; }
+            public string game_type { get; set; } = "";
+            public string game_status { get; set; } = "";
+            public string platform { get; set; } = "";
             public long operation_ts { get; set; }
-            public string[] jp_ids { get; set; }
-            public string promo_id { get; set; }
-            public string promo_pid { get; set; }
-            public string distribution_type { get; set; }
+            public string[] jp_ids { get; set; } = null;
+            public string promo_id { get; set; } = "";
+            public string promo_pid { get; set; } = "";
+            public string distribution_type { get; set; } = "";
         }
         #endregion
 
@@ -355,7 +355,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     distribution_type = req.distribution_type,
                     jp_win = req.jp_win ? 1 : 0,
                     game_status = req.game_status,
-                    jp_ids = req.jp_ids.Length > 0 ? JsonConvert.SerializeObject(req.jp_ids.Length) : null
+                    jp_ids = req.jp_ids == null ? null : JsonConvert.SerializeObject(req.jp_ids)
                 };
 
                 int SettleResult = settledBLL.SettledRNG_Skywind(creditReq, req.cust_id, out decimal tpAffterAmount);
@@ -364,18 +364,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.error_code = (int)SkywindErrorCode.NoErrors;
                     result.balance = tpAffterAmount;
+                    result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else if (SettleResult == -1)
                 {
                     result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
                     result.balance = tpAffterAmount;
+                    result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else
                 {
                     result.error_code = (int)SkywindErrorCode.MerchantInternalError;
                     result.balance = tpAffterAmount;
+                    result.trx_id = req.trx_id;
                     logger.LogError($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
             }
@@ -383,6 +386,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 result.error_code = (int)SkywindErrorCode.MerchantInternalError;
                 result.balance = 0;
+                result.trx_id = req.trx_id;
                 logger.LogError(ex, $"{JsonConvert.SerializeObject(result)}");
             }
             return result;

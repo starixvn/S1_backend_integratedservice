@@ -4102,8 +4102,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             try
             {
-                CultureInfo culture = CultureInfo.InvariantCulture;
-                DateTime partitionTime = DateTime.Parse(bettingDataRNG_Skywind.timestamp.ToString(), culture, DateTimeStyles.None);
+                DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                partitionTime = partitionTime.AddSeconds(bettingDataRNG_Skywind.timestamp);
                 var query = new
                 {
                     bettingDataRNG_Skywind.trx_id
@@ -4111,7 +4111,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query);
                 if (check.Any())
                 {
-                    return -1;
+                    if(check.ToList().Exists(x => x.TicketStatus != (int)TicketStatus.UnSettled))
+                    {
+                        return -1;
+                    }
                 }
 
                 using var conn = _mainDbClient.GetMySqlConnection();
