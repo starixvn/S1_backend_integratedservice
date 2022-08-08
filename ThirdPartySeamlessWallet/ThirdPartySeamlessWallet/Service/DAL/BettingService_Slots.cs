@@ -1169,8 +1169,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
             bettingDataRNG_Skywind.TicketType = (int)BettransType.Bet;
             afterAmount = 0;
-            CultureInfo culture = CultureInfo.InvariantCulture;
-            DateTime partitionTime = DateTime.Parse(bettingDataRNG_Skywind.timestamp.ToString(), culture, DateTimeStyles.None);
+            DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            partitionTime = partitionTime.AddSeconds(bettingDataRNG_Skywind.timestamp);
             var query = new
             {
                 bettingDataRNG_Skywind.trx_id
