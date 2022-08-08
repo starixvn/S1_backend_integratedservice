@@ -96,7 +96,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public TimeCast GetReportTime(DateTime startTime, int day)
         {
-            // 取整點結束時間 外層execTime的StartTime時間需-1秒
+            // 取整點結束時間
             var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd'T'HH:mm:ss.ffffffzzz", startTime, 0, 0);
             var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (reportTime.endUnix > cvTime)
