@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 return dailyData;
             }
-            
+
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
@@ -96,7 +96,8 @@ namespace ThirdPartyWager.Service.BLL
 
         public TimeCast GetReportTime(DateTime startTime, int day)
         {
-            var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd'T'HH:mm:ss.ffffffzzz", startTime);
+            // 取整點結束時間
+            var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd'T'HH:mm:ss.ffffffzzz", startTime, 0, 0);
             var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (reportTime.endUnix > cvTime)
             {
