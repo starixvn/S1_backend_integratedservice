@@ -84,7 +84,7 @@ namespace ThirdPartyWager.Workers
                 {
                     TpId = _tpId,
                     Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
+                    StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-2) : dataTpTimer.StartTime,
                 };
 
                 // get time 
@@ -92,7 +92,7 @@ namespace ThirdPartyWager.Workers
                 TimeCast reportTime = _financeAPBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.startUnix);
                 var reportData = await _financeAPBLL.GetReport(_tpId, setting, reportTime);
                 int result;
                 if (reportData.Count > 0)

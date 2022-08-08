@@ -25,6 +25,7 @@
         OneGaming = 13,
         PG = 14,
         Sexy = 15,
+        CQ9 = 16,
         CF = 17,
         EBet = 18,
         WM = 20,
