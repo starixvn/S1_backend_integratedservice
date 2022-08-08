@@ -112,20 +112,20 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string cust_session_id { get; set; }
             public string round_id { get; set; }
             public decimal amount { get; set; }
-            public string currency_code { get; set; }
-            public string game_code { get; set; }
-            public string trx_id { get; set; }
-            public string game_id   { get; set; }
-            public string event_type { get; set; }
+            public string currency_code { get; set; } = "";
+            public string game_code { get; set; } = "";
+            public string trx_id { get; set; } = "";
+            public long game_id   { get; set; }
+            public string event_type { get; set; } = "";
             public int event_id { get; set; }
-            public int timestamp { get; set; }
-            public string geme_type { get; set; }
-            public string platform  { get; set; }
-            public string promo_id { get; set; }
-            public string promo_pid { get; set; }
+            public long timestamp { get; set; }
+            public string game_type { get; set; } = "";
+            public string platform { get; set; } = "";
+            public string promo_id { get; set; } = "";
+            public string promo_pid { get; set; } = "";
             public decimal jp_contribution { get; set; }
-            public int operation_ts { get; set; }
-            public string distribution_type { get; set; }
+            public long operation_ts { get; set; }
+            public string distribution_type { get; set; } = "";
         }
         public class CreditReq
         {
@@ -138,15 +138,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string currency_code { get; set; }
             public string game_code { get; set; }
             public string trx_id { get; set; }
-            public string game_id { get; set; }
+            public long game_id { get; set; }
             public string event_type { get; set; }
             public bool jp_win { get; set; }
             public int event_id { get; set; }
-            public int timestamp { get; set; }
-            public string geme_type { get; set; }
+            public long timestamp { get; set; }
+            public string game_type { get; set; }
             public string game_status { get; set; }
             public string platform { get; set; }
-            public int operation_ts { get; set; }
+            public long operation_ts { get; set; }
             public string[] jp_ids { get; set; }
             public string promo_id { get; set; }
             public string promo_pid { get; set; }
@@ -157,26 +157,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         #region enum
-        public enum ErrorCode
+        public enum SkywindErrorCode
         {
-            Success = 0,
-            UnspecifiedError = 5000,
-            GameNotFound = 5011,
-            UnderMaintenance = 5050,
-            APIError = 5100,
-            HashInvalid = 5101,
-            MandatoryParamMissing = 5102,
-            ParameterIncorrect = 5103,
-            TokenInvalid = 5112,
-            TokenExpired = 5113,
-            DuplicateRequest = 5121,
-            IpRestricted = 5201,
-            AccountNotExist = 5212,
-            AccountLocked = 5213,
-            AccountIsBlacklisted = 5214,
-            PlayerNoPermitted = 5311,
-            StakeIllegal = 5312,
-            PlayerHasInsufficientFunds = 5321
+            NoErrors = 0,
+            DuplicateTransaction = 1,
+            MerchantInternalError = -1,
+            PlayerNotFound = -2,
+            GameTokenExpired = -3,
+            PlayerIsSuspended = -301,
+            BetLimitWasExceeded = -302,
+            InsufficientBalance = -4,
+            InsufficientFreeBetsBalance = -5,
+            InvalidFreeBet = -6,
+            TransactionNotFound = -7,
         }
         #endregion
 
@@ -215,18 +208,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 logger.LogError($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(req)}\r\n{ex.ToString()}");
             }
-            //ValidateTicketResp result = new ValidateTicketResp()
-            //{
-            //    error_code = 0,
-            //    cust_session_id = "nova88_willie1016_SessId",
-            //    cust_id = "nova88_willie1016",
-            //    currency_code = "GBP",
-            //    test_cust = true,
-            //    country = "GB",
-            //    game_group = "Test Group",
-            //    rci = "60",
-            //    rce = "11"
-            //};
             return result;
         }
 
@@ -310,9 +291,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                     event_type = req.event_type,
                     event_id = req.event_id,
                     timestamp = req.timestamp,
-                    geme_type = req.geme_type,
+                    game_type = req.game_type,
                     platform = req.platform,
                     promo_id = req.promo_id,
+                    promo_pid =req.promo_pid,
                     jp_contribution = req.jp_contribution,
                     operation_ts = req.operation_ts,
                     distribution_type = req.distribution_type,
@@ -366,14 +348,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     event_type = req.event_type,
                     event_id = req.event_id,
                     timestamp = req.timestamp,
-                    geme_type = req.geme_type,
+                    game_type = req.game_type,
                     platform = req.platform,
                     promo_id = req.promo_id,
                     operation_ts = req.operation_ts,
                     distribution_type = req.distribution_type,
-                    jp_win = req.jp_win,
+                    jp_win = req.jp_win ? 1 : 0,
                     game_status = req.game_status,
-                    jp_ids = req.jp_ids
+                    jp_ids = req.jp_ids.Length > 0 ? JsonConvert.SerializeObject(req.jp_ids.Length) : null
                 };
 
                 int SettleResult = settledBLL.SettledRNG_Skywind(creditReq, req.cust_id, out decimal tpAffterAmount);
@@ -407,19 +389,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         #endregion
 
-        public enum SkywindErrorCode
-        {
-            NoErrors = 0,
-            DuplicateTransaction = 1,
-            MerchantInternalError = -1,
-            PlayerNotFound = -2,
-            GameTokenExpired = -3,
-            PlayerIsSuspended = -301,
-            BetLimitWasExceeded = -302,
-            InsufficientBalance = -4,
-            InsufficientFreeBetsBalance = -5,
-            InvalidFreeBet = -6,
-            TransactionNotFound = -7,
-        }
+
     }
 }
