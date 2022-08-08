@@ -2200,6 +2200,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             var result = settledService.SettledRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, out afterAmount);
 
+            if(afterAmount == 0)
+            {
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.YL, TpUserName).Balance;
+            }
+
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
