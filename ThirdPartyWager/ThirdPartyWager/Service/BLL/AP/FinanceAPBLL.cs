@@ -101,7 +101,7 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (reportTime.endUnix > cvTime)
             {
-                reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd'T'HH:mm:ss.ffffffzzz", startTime.AddDays(-1));
+                reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd'T'HH:mm:ss.ffffffzzz", startTime.AddDays(-1), 0, 0);
             }
             return reportTime;
         }
