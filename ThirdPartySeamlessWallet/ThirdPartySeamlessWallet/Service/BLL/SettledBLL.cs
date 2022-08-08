@@ -2205,6 +2205,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
 
+            if (afterAmount == 0)
+            {
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+            }
+
             return result;
         }
         #endregion
