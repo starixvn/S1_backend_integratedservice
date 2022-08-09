@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.DAL
         public int InsertWager(BetWM bet)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerWM_Ins", bet, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Service_TpWagerWM_Ins_V2", bet, commandType: CommandType.StoredProcedure);
         }
 
         public WagerWMTotal GetWagerTotal(long beginTime, long endTime, string currency)
