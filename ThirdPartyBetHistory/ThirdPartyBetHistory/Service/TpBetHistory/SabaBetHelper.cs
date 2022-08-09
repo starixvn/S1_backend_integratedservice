@@ -367,10 +367,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         betRecordInfo.ValidBet = betDetial.discount_stake ?? 0;
                     }
 
+                    /*Cause Hard to Win So Cal to Valid*/
                     if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap ||
                         (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder ||
                         (betDetial.bet_type ?? 0) == (int)BetType.Parlay ||
-                        (betDetial.bet_type ?? 0) == (int)BetType.SingleMatchParlay) /*Cause Hard to Win So Cal to Valid*/
+                        (betDetial.bet_type ?? 0) == (int)BetType.SingleMatchParlay)
                     {
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                     }
