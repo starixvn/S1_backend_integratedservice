@@ -33,5 +33,51 @@
     {
         public long SQ { get; set; }
         public int TicketStatus { get; set; }
+        public Decimal amount { get; set; }
+    }
+
+    public class SettleDataRNG_Skywind
+    {
+        public int SQ { get; set; }
+        public string merchid { get; set; }
+        public string merchpwd { get; set; }
+        public string custid { get; set; }
+        public string custsessionid { get; set; }
+        public string roundid { get; set; }
+        public decimal amount { get; set; }
+        public string currencycode { get; set; }
+        public string gamecode { get; set; }
+        public string trxid { get; set; }
+        public long gameid { get; set; }
+        public string eventtype { get; set; } = "";
+        public int eventid { get; set; }
+        public long timestamp { get; set; }
+        public string gametype { get; set; } = "";
+        public string platform { get; set; } = "";
+        public string promoid { get; set; } = "";
+        public string promopid { get; set; } = "";
+        public decimal jpcontribution { get; set; } = 0;
+        public long operationts { get; set; }
+        public string distributiontype { get; set; } = "";
+        public int TicketStatus { get; set; }
+        public int TicketType { get; set; }
+        public int jpwin { get; set; } = 0;
+        public string gamestatus { get; set; } = "";
+        public string jpids { get; set; } = null;
+    }
+    public class CancelBetDataRNG_Skywind
+    {
+        public string merchid { get; set; }
+        public string merchpwd { get; set; }
+        public string custid { get; set; }
+        public string custsessionid { get; set; }
+        public string roundid { get; set; } = "";
+        public string currencycode { get; set; } = "";
+        public string gamecode { get; set; } = "";
+        public string trxid { get; set; } = "";
+        public long gameid { get; set; }
+        public string eventtype { get; set; } = "";
+        public long timestamp { get; set; }
+        public long operationts { get; set; }
     }
 }

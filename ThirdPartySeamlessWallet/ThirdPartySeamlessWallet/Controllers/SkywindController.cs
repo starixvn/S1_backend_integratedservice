@@ -86,6 +86,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal balance { get; set; }
             public string trx_id { get; set; }
         }
+        public class RollbackResp
+        {
+            public int error_code { get; set; }
+            public decimal balance { get; set; }
+            public string trx_id { get; set; }
+        }
         #endregion
 
         #region Req
@@ -151,6 +157,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string promo_id { get; set; } = "";
             public string promo_pid { get; set; } = "";
             public string distribution_type { get; set; } = "";
+        }
+        public class RollbackReq
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+            public string cust_id { get; set; }
+            public string cust_session_id { get; set; }
+            public string round_id { get; set; } = "";
+            public string currency_code { get; set; } = "";
+            public string game_code { get; set; } = "";
+            public string trx_id { get; set; } = "";
+            public long game_id { get; set; }
+            public string event_type { get; set; } = "";
+            public long timestamp { get; set; }
+            public long operation_ts { get; set; }
         }
         #endregion
 
@@ -381,6 +402,51 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result.trx_id = req.trx_id;
                     logger.LogError($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
+            }
+            catch (Exception ex)
+            {
+                result.error_code = (int)SkywindErrorCode.MerchantInternalError;
+                result.balance = 0;
+                result.trx_id = req.trx_id;
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(result)}");
+            }
+            return result;
+        }
+
+        [Route("[controller]/api/rollback")]
+        [HttpPost]
+        public RollbackResp Rollback(RollbackReq req)
+        {
+            #region InitResult
+            RollbackResp result = new RollbackResp();
+            #endregion
+            try
+            {
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
+                if (tpCheck == null || tpCheck.Token != req.cust_session_id)
+                {
+                    result.error_code = (int)SkywindErrorCode.PlayerNotFound;
+                    logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{req.cust_id}");
+                    return result;
+                }
+
+                CancelBetDataRNG_Skywind cancel = new CancelBetDataRNG_Skywind()
+                {
+                    merchid = req.merch_id,
+                    merchpwd = req.merch_pwd,
+                    custid = req.cust_id,
+                    custsessionid = req.cust_session_id,
+                    roundid = req.round_id,
+                    currencycode = req.currency_code,
+                    gamecode = req.game_code,
+                    trxid = req.trx_id,
+                    gameid = req.game_id,
+                    eventtype = req.event_type,
+                    timestamp = req.timestamp,
+                    operationts = req.operation_ts
+                };
+
+                var cancelresult = settledBLL.CancelBetRNG_Skywind(cancel, out decimal tpAffterAmount);
             }
             catch (Exception ex)
             {

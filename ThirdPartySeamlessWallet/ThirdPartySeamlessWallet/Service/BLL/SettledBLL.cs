@@ -2197,6 +2197,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public int CancelBetRNG_Skywind(CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetDataRNG_Skywind.custid);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+
+            var result = settledService.CancelBetRNG_Skywind(tpCustInfo, cancelBetDataRNG_Skywind, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
         #endregion
     }
 }
