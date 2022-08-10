@@ -41,6 +41,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
         private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
         private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
+        private readonly MySqlClient _mainDbClient;
 
 #if DEBUG
         /// <summary>
@@ -88,6 +89,7 @@ namespace ThirdPartyService.Service.BLL
             _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
             _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
             _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         #endregion
@@ -156,7 +158,11 @@ namespace ThirdPartyService.Service.BLL
                 }
 
                 /*Use Async to Record Log*/
-                Task.Run(() => { tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId); });
+                Task.Run(() => 
+                { 
+                    tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId);
+                    SetRecentlyPlayed(tpInfo);
+                });
             }
             else
             {
@@ -1517,6 +1523,35 @@ namespace ThirdPartyService.Service.BLL
         private string GetCurrencyIsoCode(int currencyId)
         {
             return _currencyList.GetValueOrDefault(currencyId).IsoCode;
+        }
+
+        private void SetRecentlyPlayed(TpInfo tpInfo)
+        {
+            try
+            {        
+                if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
+                { 
+                    _logger.LogError($"SetRecentlyPlayed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                }
+            
+                if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
+                {
+                    _logger.LogError($"SetRecentlyPlayed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                }
+
+                if (gameTypeOption.CategoryId == TpCategory.Casino)
+                {
+                    _mainDbClient.Execute("Member_RecentlyPlayed_Set", new
+                    {
+                        tpInfo.CustId,
+                        GameInfo = $"{tpInfo.TpId}_{tpInfo.inputs.GetValueOrDefault("gameId")}"
+                    });
+                } 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,ex.Message);
+            }
         }
 
         #endregion
