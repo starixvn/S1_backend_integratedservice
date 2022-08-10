@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal turnover { get; set; }
         public bool isHalfWonLose { get; set; }
         public bool isLive { get; set; }
-        public int maxWinWithoutActualStake { get; set; }
+        public decimal maxWinWithoutActualStake { get; set; }
         public string ip { get; set; }
         public bool isSystemTagRisky { get; set; }
         public bool isCustomerTagRisky { get; set; }
