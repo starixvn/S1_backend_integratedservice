@@ -220,6 +220,10 @@ namespace ThirdPartyCore.Model.enums
         /// </summary>
         IndianOdds = 7
     }
-
-
+    
+    public enum AdjustWalletTypeEnum
+    {
+        Main = 1,
+        ThirdParty = 2
+    }
 }

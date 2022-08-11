@@ -217,11 +217,11 @@ namespace ThirdPartyService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ApiResult<TransferResult>> AdjustWallet([FromBody] AdminTpTransfer adminTpTransfer)
+        public ActionResult<ApiResult<AdjustWalletResult>> AdjustWallet([FromBody] AdminTpTransfer adminTpTransfer)
         {
-            var apiResult = new ApiResult<TransferResult>();
+            var apiResult = new ApiResult<AdjustWalletResult>();
             apiResult.ErrorCode = ErrorCode.SystemError;
-            apiResult.Data = new TransferResult();
+            apiResult.Data = new AdjustWalletResult();
 
             try
             {

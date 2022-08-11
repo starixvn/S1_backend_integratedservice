@@ -713,9 +713,9 @@ namespace ThirdPartyService.Service.BLL
             return apiResult;
         }
 
-        public ApiResult<TransferResult> AdjustWallet(AdminTpTransfer adminTpTransfer)
+        public ApiResult<AdjustWalletResult> AdjustWallet(AdminTpTransfer adminTpTransfer)
         {
-            var apiResult = new ApiResult<TransferResult>();
+            var apiResult = new ApiResult<AdjustWalletResult>();
 
             if (adminTpTransfer.direction != Direction.ToMain && adminTpTransfer.direction != Direction.ToTp)
             {
@@ -769,12 +769,41 @@ namespace ThirdPartyService.Service.BLL
             {
                 amount = adminTpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
             }
-
+            
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
-            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
-                thirdId);
-            tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
 
+            if (string.IsNullOrEmpty(transId))
+            {
+                _logger.LogError($"InsAdjustWalletLog failed.");
+                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                apiResult.Message = "AdjustWallet Failed.";
+                
+                return apiResult;
+            }
+            
+            var transferResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
+                thirdId);
+            
+            tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
+            if (transferResult.ErrorCode == ErrorCode.Success
+                && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+            {
+                var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
+                var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
+
+                if (reslutCode != 0)
+                {
+                    _logger.LogError(
+                        $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId:{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
+                }
+            }
+
+            apiResult.ErrorCode = transferResult.ErrorCode;
+            apiResult.Message = transferResult.Message;
+            apiResult.RawErrorCode = transferResult.RawErrorCode;
+            apiResult.RawMessage = transferResult.RawMessage;
+            apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
+            
             return apiResult;
         }
 
