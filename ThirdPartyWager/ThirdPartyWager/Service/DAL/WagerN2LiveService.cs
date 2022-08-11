@@ -20,11 +20,11 @@ namespace ThirdPartyWager.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             if (bet.schemeid != 0)
             {
-                return conn.Execute("Service_TpSmartWagerLC_N2Live_Ins", bet, commandType: CommandType.StoredProcedure);
+                return conn.Execute("Service_TpSmartWagerLC_N2Live_Ins_V2", bet, commandType: CommandType.StoredProcedure);
             }
             else
             {
-                return conn.Execute("Service_TpWagerLC_N2Live_Ins", bet, commandType: CommandType.StoredProcedure);
+                return conn.Execute("Service_TpWagerLC_N2Live_Ins_V2", bet, commandType: CommandType.StoredProcedure);
             }
         }
     }
