@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -51,10 +52,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("{merchant_code}")]
-        public async Task<dynamic> Internal([FromRoute] string merchant_code, [FromBody] TCGRequest request)
+        public async Task<dynamic> Internal([FromRoute] string merchant_code)
         {
             try
             {
+                using var reader = new StreamReader(Request.Body);
+                var bodyText = await reader.ReadToEndAsync();
+                var request = JsonConvert.DeserializeObject<TCGRequest>(bodyText);
                 return await _tcgBLL.SeamlessWallet(merchant_code, request);
             }
             catch (Exception ex)

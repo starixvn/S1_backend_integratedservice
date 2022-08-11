@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS builder
+﻿FROM mcr.microsoft.com/dotnet/sdk:6.0 AS builder
 ARG CONFIGURATION=Release
 COPY ./ThirdPartyService ./ThirdPartyService
 WORKDIR ThirdPartyService
@@ -10,7 +10,7 @@ FROM builder AS publish
 ARG CONFIGURATION=Release
 RUN dotnet publish -c $CONFIGURATION -o /app
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 WORKDIR /app
 COPY --from=publish /app .
 EXPOSE 55996

@@ -197,8 +197,10 @@ namespace ThirdPartySettleWorker.Workers
             {
                 targetWinLost -= targetStake;
             }
-            
-            return bettrans.Stake == targetStake && bettrans.WinLostAmount == targetWinLost;
+
+            var stake = bettrans.Stake;
+            var winLost = Math.Round(bettrans.WinLostAmount, 1);
+            return stake == targetStake && winLost == targetWinLost;
         }
     }
 }

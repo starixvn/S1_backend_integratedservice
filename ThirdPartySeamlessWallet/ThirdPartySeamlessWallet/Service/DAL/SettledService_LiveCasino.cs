@@ -1580,6 +1580,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
+            var settleFlag = (int)SettleFlag.EndGame;
+            if (bettingData_EBet.detail.totalBet == 0 && bettingData_EBet.detail.validBet == 0 && bettingData_EBet.detail.payout == 0 && bettingData_EBet.money == 0)
+            {
+                settleFlag = (int)SettleFlag.Settled;
+                ticketStatus = (int)TicketStatus.Refund;
+            }
+            
             var p = new DynamicParameters(new
             {
                 TransId = mixUniqueId,
@@ -1605,8 +1612,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 results = JsonConvert.SerializeObject(bettingData_EBet.detail.results),
                 TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,
-                SettleFlag = 2
+                SettleFlag = settleFlag
             });
+
 
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -1999,7 +2007,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V3", commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_EBet(string TransId)
@@ -2942,7 +2950,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 // 玩家或金額不符
                 var bet = bettrans.FirstOrDefault();
-                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || bettrans.Any(a => a.TxnId == cancelDataRng_MG.txnId && Math.Abs(bet.Amount) != cancelDataRng_MG.amount)))
+                var betAmount = bettrans.FirstOrDefault(a => a.TxnId == cancelDataRng_MG.txnId).Amount;
+                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(betAmount) != cancelDataRng_MG.amount))
                 {
                     logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
@@ -2960,7 +2969,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { cancelDataRng_MG.betId }, trans);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, trans);
 
                 if (result > 0 && cancelDataRng_MG.amount != 0)
                 {

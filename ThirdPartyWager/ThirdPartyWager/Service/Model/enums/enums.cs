@@ -25,6 +25,7 @@
         OneGaming = 13,
         PG = 14,
         Sexy = 15,
+        CQ9 = 16,
         CF = 17,
         EBet = 18,
         WM = 20,
@@ -43,6 +44,7 @@
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
+        AP = 39,
         SBO = 42
     }
 

@@ -212,6 +212,7 @@ namespace ThirdParty.EBet
                 "23" => "Fortune Wheel",
                 "24" => "Black Jack",
                 "25" => "Live Black Jack",
+                "29" => "Pok Deng",
                 _ => gameCode,
             };
         }

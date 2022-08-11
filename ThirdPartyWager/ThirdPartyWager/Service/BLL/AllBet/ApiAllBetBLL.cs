@@ -145,6 +145,33 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
+        public async Task<CurrencyStats_AllBet> GetBetSummaryByTime(IReadOnlyDictionary<string, string> setting, string agent, string startTime)
+        {
+            // param
+            var apiUrl = setting["ApiUrl"];
+            var path = "QueryOneDaySumHistories";
+            var param = new
+            {
+                agent,
+                date = startTime,
+                status = 111,
+            };
+
+            var parameters = JsonConvert.SerializeObject(param);
+            // log
+            _logger.LogInformation(parameters);
+            var header = GetAuthData(setting, path, parameters, out var contentType);
+            // request
+            var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
+            if (string.IsNullOrEmpty(r))
+            {
+                return null;
+            }
+
+            return JsonConvert.DeserializeObject<CurrencyStats_AllBet>(r);
+        }
+
+
         public async Task<string> CallEventSettleApi(RewardAllBet reward)
         {
             try

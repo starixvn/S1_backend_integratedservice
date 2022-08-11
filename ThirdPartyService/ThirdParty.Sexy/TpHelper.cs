@@ -188,6 +188,8 @@ namespace ThirdParty.Sexy
             string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
             string betLimitId = inputs.ContainsKey($"BetLimitId2{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"]) ? inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] : throw new Exception($"BetLimitId2{tpCustInfo.TpCurrencyId}");
+            var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
+            var gameType = inputs.GetValueOrDefault("GameType") ?? throw new Exception("GameType");
             ApiUrl = $"{ApiUrl}/wallet/doLoginAndLaunchGame";
 
             if (!IsDevelopment && tpCustInfo.CustId == 61920)
@@ -205,9 +207,9 @@ namespace ThirdParty.Sexy
                 userId = tpCustInfo.TpUserName,
                 isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
                 externalURL = lobbyUrl,
-                gameType = "LIVE",
+                gameType = gameType,
                 gameCode = "MX-LIVE-001",
-                platform = "SEXYBCRT",
+                platform = platform,
                 language = TpLangId,
                 hall = "SEXY",
                 betLimit = JsonConvert.SerializeObject(new
@@ -271,9 +273,10 @@ namespace ThirdParty.Sexy
                 var apiUrl = inputs.GetValueOrDefault("ApiUrl2") ?? throw new Exception();
                 var cert = inputs.GetValueOrDefault("cert2") ?? throw new Exception();
                 var agentId = inputs.GetValueOrDefault("AgentId") ?? throw new Exception();
+                var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
 
                 var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
-                var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform=SEXYBCRT";
+                var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform={platform}";
 
                 var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
                 var result = FromJson<DetailResult>(json);
