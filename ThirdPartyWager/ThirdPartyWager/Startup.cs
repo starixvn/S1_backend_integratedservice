@@ -151,6 +151,7 @@ namespace ThirdPartyWager
             // N2Live
             services.AddSingleton<WagerN2LiveBLL>();
             services.AddSingleton<ApiN2LiveBLL>();
+            services.AddSingleton<FinanceN2LiveBLL>();
             // PT
             services.AddSingleton<WagerPTBLL>();
             services.AddSingleton<ApiPTBLL>();
@@ -232,6 +233,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
             services.AddHostedService<WagerRedoN2Live>();
+            services.AddHostedService<FinanceN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<FinancePT>();
