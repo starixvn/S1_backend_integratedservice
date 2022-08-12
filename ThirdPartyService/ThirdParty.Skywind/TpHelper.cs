@@ -101,7 +101,30 @@ namespace ThirdParty.Skywind
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
+            string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
+            string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
+            string roundId = getBetDetail.TransId;
+
+
+            var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+            var detailUrl = $"{ApiUrl}/history/games/{roundId}/image";
+            Dictionary<string, string> header = new Dictionary<string, string>();
+            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);;
+            string json = HttpGet(detailUrl, "", "application/json", header);
+            var result = FromJson<DetailUrl>(json);
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.imageUrl,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -132,6 +155,11 @@ namespace ThirdParty.Skywind
         {
             public string url { get; set; }
             public string token { get; set; }
+        }
+        public class DetailUrl
+        {
+            public string imageUrl { get; set; }
+            public int ttl { get; set; }
         }
     }
 }
