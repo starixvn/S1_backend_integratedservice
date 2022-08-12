@@ -4121,11 +4121,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn.Open();
                 var trans = conn.BeginTransaction();
                 bettingDataRNG_Skywind.TicketStatus = bettingDataRNG_Skywind.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-                bettingDataRNG_Skywind.TicketType = (int)BettransType.EndRound;
 
+                switch (bettingDataRNG_Skywind.game_status)
+                {
+                    case "freegame":
+                        bettingDataRNG_Skywind.TicketType = (int)BettransType.Jackpot;
+                        break;
+                    case "bonusgame":
+                        bettingDataRNG_Skywind.TicketType = (int)BettransType.Bonus;
+                        break;
+                    default:
+                        bettingDataRNG_Skywind.TicketType = (int)BettransType.EndRound;
+                        break;
+                }
+                
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_Ins", bettingDataRNG_Skywind, trans);
 
-                if (result > 0 && bettingDataRNG_Skywind.amount > 0)
+                if (result > 0 && bettingDataRNG_Skywind.amount > 0 && bettingDataRNG_Skywind.TicketType == (int)BettransType.EndRound)
                 {
                     result = PayoutV2(
                         tpCustInfo,
@@ -4158,6 +4170,67 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 logger.LogError(ex, ex.Message);
                 throw;
+            }
+
+            return result;
+        }
+
+        public int CancelBetRNG_Skywind(TpCustInfo tpCustInfo, CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, out decimal afterAmount)
+        {
+            var result = 0;
+            int bonusId = 0;
+            afterAmount = 0;
+
+            DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            partitionTime = partitionTime.AddSeconds(cancelBetDataRNG_Skywind.timestamp);
+            
+            var query = new
+            {
+                trx_id = cancelBetDataRNG_Skywind.trxid
+            };
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query)?.FirstOrDefault(x=> x.TicketStatus == (int)TicketStatus.UnSettled);
+            if (bettransSkywind == null)
+            {
+                return -2;
+            }
+            var para = new DynamicParameters(new
+            {
+                SQ = bettransSkywind.SQ
+            });
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_CancelBet_Set", para, trans);
+
+
+            if (result > 0)
+            {
+                if (bettransSkywind.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(bettransSkywind.amount),
+                        (int)Tp.AP,
+                        cancelBetDataRNG_Skywind.roundid,
+                        (int)GameType.AP_RNG,
+                        TpCategory.Slots,
+                        cancelBetDataRNG_Skywind.roundid,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
             }
 
             return result;
