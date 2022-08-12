@@ -135,6 +135,7 @@ namespace ThirdPartyWager
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
+            services.AddSingleton<FinanceOne789BLL>();
             // Mega
             services.AddSingleton<WagerMegaBLL>();
             services.AddSingleton<ApiMegaBLL>();
@@ -225,6 +226,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
             services.AddHostedService<WagerOne789>();
+            services.AddHostedService<FinanceOne789>();
             services.AddHostedService<JwtIconic>();
             services.AddHostedService<WagerAT>();
             services.AddHostedService<WagerRedoAT>();

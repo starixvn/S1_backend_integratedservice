@@ -10,7 +10,7 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly ILogger<FinanceN2LiveBLL> _logger;
         private readonly CommonBLL _commonBLL;
-        private readonly WagerN2LiveService _wagerN2LiveService;
+        private readonly CommonService _commonService;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
 
@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             _logger = provider.GetRequiredService<ILogger<FinanceN2LiveBLL>>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _wagerN2LiveService = provider.GetRequiredService<WagerN2LiveService>();
+            _commonService = provider.GetRequiredService<CommonService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
@@ -67,8 +67,8 @@ namespace ThirdPartyWager.Service.BLL
 
             var tasks = new List<Task<IEnumerable<FincanceDailySummary>>>
             {
-               _wagerN2LiveService.GetWagerSummary("Finance_TpSmartWagerLC_N2Live_Summary_Get", reportTime.startUnix, reportTime.endUnix),
-               _wagerN2LiveService.GetWagerSummary("Finance_TpWagerLC_N2Live_Summary_Get", reportTime.startUnix, reportTime.endUnix)
+               _commonService.GetWagerSummary("Finance_TpSmartWagerLC_N2Live_Summary_Get", reportTime.startUnix, reportTime.endUnix),
+               _commonService.GetWagerSummary("Finance_TpWagerLC_N2Live_Summary_Get", reportTime.startUnix, reportTime.endUnix)
             };
 
             await Task.WhenAll(tasks);
