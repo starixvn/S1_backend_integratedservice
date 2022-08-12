@@ -109,7 +109,7 @@ namespace ThirdParty.Skywind
 
 
             var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-            var detailUrl = $"{ApiUrl}/history/games/{roundId}/image";
+            var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
             Dictionary<string, string> header = new Dictionary<string, string>();
             header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);;
             string json = HttpGet(detailUrl, "", "application/json", header);
