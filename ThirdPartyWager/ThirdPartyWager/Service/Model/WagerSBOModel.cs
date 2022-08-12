@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Service.Model
         public string betOption { get; set; }
         public string marketType { get; set; }
         public string sportType { get; set; }
-        public decimal hdp { get; set; }
+        public decimal? hdp { get; set; }
         public decimal odds { get; set; }
         public string league { get; set; }
         public string match { get; set; }
