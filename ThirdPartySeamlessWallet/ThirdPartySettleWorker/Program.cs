@@ -47,7 +47,10 @@ builder.Services
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
     .AddHostedService<ATWorker>()
-    .AddHostedService<KMWoker>();
+    .AddHostedService<KMWoker>()
+    .AddHostedService<OneGamingWorker>()
+    .AddHostedService<V8Worker>()
+    .AddHostedService<MPWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
