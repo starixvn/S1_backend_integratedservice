@@ -58,10 +58,10 @@ namespace ThirdParty.Skywind
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            var sessionKey = Convert.ToBase64String(bytes);
+            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             #endregion
 
-            if(gameId == "0")
+            if (gameId == "0")
             {
                 //var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
                 //var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
