@@ -128,7 +128,7 @@ namespace ThirdParty.Skywind.Tests
                 { "gameId", "0" },
                 { "MerchId", "sw_Nova88_merchant_stg" },
                 { "MerchPwd", "tzlbpqhXqgmim8qm" },
-                { "Token", "PxB6HJumO0097UarEYW8A"},
+                { "Token", "A7BhoQqkPka72gkVsnFk3w"},
                 { "LobbyUrl", "https://2bgz0erb-lobby.ss211208.com"}
             };
         }

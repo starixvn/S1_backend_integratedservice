@@ -223,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(req.ticket));
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.ticket)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string authToken = sessionKeyArr[0];
                 string sessionToken = sessionKeyArr[1];
@@ -260,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(req.ticket));
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.ticket)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string authToken = sessionKeyArr[0];
                 string sessionToken = sessionKeyArr[1];
