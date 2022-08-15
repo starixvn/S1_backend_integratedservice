@@ -560,6 +560,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 220 => GameType.Saba_Lottery,
                 222 => GameType.Saba_TableGame,
                 223 => GameType.Saba_Indo4D,
+                237 => GameType.Saba_MaxGame,
                 245 => GameType.Saba_VirtualGames,
                 211 => GameType.Allbet,
                 248 => GameType.PP,
