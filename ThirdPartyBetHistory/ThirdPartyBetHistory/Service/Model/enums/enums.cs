@@ -51,6 +51,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         SBSW_Lottery = 74,
         SBSW_TableGame = 75,
         Saba_LGVirtualSports = 80,
+        Saba_MaxGame = 83,
     }
 
     public enum Tp
