@@ -244,7 +244,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(req)}\r\n{ex.ToString()}");
+                logger.LogError($"ValidateTicket\r\n{JsonConvert.SerializeObject(req)}\r\n{ex.ToString()}");
             }
             return result;
         }
@@ -257,6 +257,33 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 error_code = -1
             };
+
+            try
+            {
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(req.ticket));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                string authToken = sessionKeyArr[0];
+                string sessionToken = sessionKeyArr[1];
+                string tpUserName = sessionKeyArr[2];
+                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
+                if (tpCheck == null || tpCheck.Token != sessionToken)
+                    return result;
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, tpUserName);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+                var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCode((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+                result.error_code = 0;
+                result.cust_session_id = sessionToken;
+                result.cust_id = tpUserName;
+                result.country = tpCountryCode.CountryCode;
+                result.test_cust = true;
+                result.currency_code = tpCurrency.TpCurrencyId;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"ValidateTerminalTicket\r\n{JsonConvert.SerializeObject(req)}\r\n{ex.ToString()}");
+            }
+
             return result;
         }
 
