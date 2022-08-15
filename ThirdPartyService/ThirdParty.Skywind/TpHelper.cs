@@ -51,47 +51,64 @@ namespace ThirdParty.Skywind
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
+            string LobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : throw new Exception();
 
             #region token
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            // sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             var sessionKey = Convert.ToBase64String(bytes);
             #endregion
 
-            var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-            var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-            var sParam = $"ticket={sessionKey}";
-            string json = HttpGet(gameUrl, sParam, "application/json", header);
-            ApiResult oApiResult = new ApiResult();
+            if(gameId == "0")
             {
-                if (IsJSON(json))
+                //var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                //var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
+                //Dictionary<string, string> header = new Dictionary<string, string>();
+                //header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}?language=en";
+                ApiResult oApiResult = new ApiResult();
                 {
-                    var result = FromJson<GameURL>(json);
-                    if (!string.IsNullOrWhiteSpace(result.url))
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = lobbyUrl;
+                }
+                return oApiResult;
+            }
+            else
+            {
+                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                var sParam = $"ticket={sessionKey}";
+                string json = HttpGet(gameUrl, sParam, "application/json", header);
+                ApiResult oApiResult = new ApiResult();
+                {
+                    if (IsJSON(json))
                     {
-                        oApiResult.ErrorCode = ErrorCode.Success;
-                        oApiResult.Message = result.url;
+                        var result = FromJson<GameURL>(json);
+                        if (!string.IsNullOrWhiteSpace(result.url))
+                        {
+                            oApiResult.ErrorCode = ErrorCode.Success;
+                            oApiResult.Message = result.url;
+                        }
+                        else
+                        {
+                            oApiResult.RawMessage = "No Result";
+                            oApiResult.RawErrorCode = "1";
+                            oApiResult.ErrorCode = ErrorCode.Fail;
+                        }
                     }
                     else
                     {
                         oApiResult.RawMessage = "No Result";
                         oApiResult.RawErrorCode = "1";
-                        oApiResult.ErrorCode = ErrorCode.Fail;                 
+                        oApiResult.ErrorCode = ErrorCode.Fail;
                     }
                 }
-                else
-                {
-                    oApiResult.RawMessage = "No Result";
-                    oApiResult.RawErrorCode = "1";
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                }
-            }
-            return oApiResult;
+                return oApiResult;
+            }  
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)

@@ -92,6 +92,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal balance { get; set; }
             public string trx_id { get; set; }
         }
+        public class ValidateTerminalTicketResp
+        {
+            public int error_code { get; set; }
+            public string cust_session_id { get; set; }
+            public string cust_id { get; set; }
+            public string currency_code { get; set; }
+            public bool test_cust { get; set; }
+            public string country { get; set; }
+            public string game_group { get; set; }
+        }
         #endregion
 
         #region Req
@@ -173,6 +183,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             public long timestamp { get; set; }
             public long operation_ts { get; set; }
         }
+        public class ValidateTerminalTicketReq
+        {
+            public string ticket { get; set; }
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+            public string ip { get; set; }
+        }
         #endregion
 
         #endregion
@@ -229,6 +246,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 logger.LogError($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(req)}\r\n{ex.ToString()}");
             }
+            return result;
+        }
+
+        [Route("[controller]/api/validate_terminal_ticket")]
+        [HttpPost]
+        public ValidateTerminalTicketResp ValidateTerminalTicket(ValidateTicketReq req)
+        {
+            ValidateTerminalTicketResp result = new ValidateTerminalTicketResp()
+            {
+                error_code = -1
+            };
             return result;
         }
 
