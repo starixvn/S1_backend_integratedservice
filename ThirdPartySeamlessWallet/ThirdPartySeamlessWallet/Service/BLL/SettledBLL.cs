@@ -2187,10 +2187,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region Skywind
-        public int SettledRNG_Skywind(BettingDataRNG_Skywind bettingDataRNG_Skywind, string TpUserName, out decimal afterAmount)
+        public int SettledRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, string TpUserName, int gameType, out decimal afterAmount)
         {
-
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, TpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -2198,7 +2196,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataRNG_Skywind.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.SettledRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, out afterAmount);
+            var result = settledService.SettledRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, gameType, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -2213,13 +2211,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int CancelBetRNG_Skywind(CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, out decimal afterAmount)
+        public int CancelBetRNG_Skywind(TpCustInfo tpCustInfo, CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetDataRNG_Skywind.custid);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
 
-            var result = settledService.CancelBetRNG_Skywind(tpCustInfo, cancelBetDataRNG_Skywind, out afterAmount);
+            var result = settledService.CancelBetRNG_Skywind(tpCustInfo, cancelBetDataRNG_Skywind, gameType, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {

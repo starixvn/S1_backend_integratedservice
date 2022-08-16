@@ -63,11 +63,7 @@ namespace ThirdParty.Skywind
 
             if (gameId == "0")
             {
-                //var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-                //var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
-                //Dictionary<string, string> header = new Dictionary<string, string>();
-                //header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}?language=en";
+                var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}";
                 ApiResult oApiResult = new ApiResult();
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;

@@ -110,7 +110,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBO_Games = 78,
         SBO_Casino = 79,
         SBO_VirtualSports = 81,
-        Skywind_RNG = 82
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84
     }
     public enum Tp
     {
