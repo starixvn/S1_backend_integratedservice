@@ -1162,10 +1162,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region SkyWind
-        public int PlaceBetRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, out decimal afterAmount)
+        public int PlaceBetRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, int gameType, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.Skywind_RNG;
+            var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
             bettingDataRNG_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
             bettingDataRNG_Skywind.TicketType = (int)BettransType.Bet;
             afterAmount = 0;
@@ -1189,7 +1189,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_Skywind.amount != 0)
             {
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_Skywind.amount) * -1, (int)Tp.Skywind, bettingDataRNG_Skywind.round_id, gameType, bettingDataRNG_Skywind.round_id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_Skywind.amount) * -1, (int)Tp.Skywind, bettingDataRNG_Skywind.round_id, gameType, bettingDataRNG_Skywind.round_id, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)

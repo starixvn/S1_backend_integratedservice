@@ -605,16 +605,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region Skywind
-        public int PlaceBetRNG_Skywind(BettingDataRNG_Skywind bettingDataRNG_Skywind, out decimal afterAmount)
+        public int PlaceBetRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, bettingDataRNG_Skywind.cust_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataRNG_Skywind.amount *= tpCurrency.ExchangeRate;
             }
-            var result = bettingService.PlaceBetRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, out afterAmount);
+            var result = bettingService.PlaceBetRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, gameType, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
