@@ -238,7 +238,7 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
-                timerRNG?.Change(dueTimeSpan, TimeSpan.Zero);
+                timerLiveCasino?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }
