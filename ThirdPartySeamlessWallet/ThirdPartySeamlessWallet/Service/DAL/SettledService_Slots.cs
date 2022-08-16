@@ -4095,13 +4095,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region Skywind
-        public int SettledRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, out decimal afterAmount)
+        public int SettledRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, int gameType, out decimal afterAmount)
         {
             var bonusId = 0;
             var result = 0;
             afterAmount = 0;
             try
             {
+                var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
                 DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
                 partitionTime = partitionTime.AddSeconds(bettingDataRNG_Skywind.timestamp);
                 var query = new
@@ -4144,8 +4145,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         bettingDataRNG_Skywind.amount,
                         (int)Tp.Skywind,
                         bettingDataRNG_Skywind.round_id,
-                        (int)GameType.Skywind_RNG,
-                        TpCategory.Slots,
+                        gameType,
+                        tpCategory,
                         bettingDataRNG_Skywind.round_id,
                         TransType.Payout,
                         null,
@@ -4158,7 +4159,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, GameType.Skywind_RNG, bettingDataRNG_Skywind.round_id, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingDataRNG_Skywind.round_id, trans, partitionTime);
                 }
 
                 if (result > 0)
@@ -4175,12 +4176,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int CancelBetRNG_Skywind(TpCustInfo tpCustInfo, CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, out decimal afterAmount)
+        public int CancelBetRNG_Skywind(TpCustInfo tpCustInfo, CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, int gameType, out decimal afterAmount)
         {
             var result = 0;
             int bonusId = 0;
             afterAmount = 0;
-
+            var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
             DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
             partitionTime = partitionTime.AddSeconds(cancelBetDataRNG_Skywind.timestamp);
             
@@ -4212,10 +4213,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = PayoutV2(
                         tpCustInfo,
                         Math.Abs(bettransSkywind.amount),
-                        (int)Tp.AP,
+                        (int)Tp.Skywind,
                         cancelBetDataRNG_Skywind.roundid,
-                        (int)GameType.AP_RNG,
-                        TpCategory.Slots,
+                        gameType,
+                        tpCategory,
                         cancelBetDataRNG_Skywind.roundid,
                         TransType.Refunds,
                         null,

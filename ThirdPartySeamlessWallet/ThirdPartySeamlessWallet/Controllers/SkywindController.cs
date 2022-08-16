@@ -46,7 +46,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<SkywindController>>();
             thisTp = Tp.Skywind;
-            //gameType = (int)GameType.Skywind_RNG;
             environment = provider.GetRequiredService<IHostEnvironment>();
         }
         #endregion
@@ -235,11 +234,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
                 var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCode((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
+                #region SetCustGotoGameType
+                var gameType = (int)GameType.Skywind_RNG;
+                tpCustInfoBLL.SetCustGotoGame(tpCustInfo.CustId, (int)Tp.Skywind, gameType);
+                #endregion
+
                 result.error_code = 0;
                 result.cust_session_id = sessionToken;
                 result.cust_id = tpUserName;
                 result.country = tpCountryCode.CountryCode;
-                result.test_cust = true;
+                result.test_cust = environment.IsDevelopment();
                 result.currency_code = tpCurrency.TpCurrencyId;
             }
             catch (Exception ex)
@@ -272,11 +276,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
                 var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCode((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
+                #region SetCustGotoGameType
+                var gameType = (int)GameType.Skywind_LiveCasino;
+                tpCustInfoBLL.SetCustGotoGame(tpCustInfo.CustId, (int)Tp.Skywind, gameType);
+                #endregion
+
                 result.error_code = 0;
                 result.cust_session_id = sessionToken;
                 result.cust_id = tpUserName;
                 result.country = tpCountryCode.CountryCode;
-                result.test_cust = true;
+                result.test_cust = environment.IsDevelopment();
                 result.currency_code = tpCurrency.TpCurrencyId;
             }
             catch (Exception ex)
@@ -304,7 +313,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, (int)GameType.Skywind_RNG);
+            var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Skywind);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, gameType);
 
             result.error_code = (int)SkywindErrorCode.NoErrors;
             result.balance = tpCustBalance.Balance;
@@ -318,6 +328,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         public DebitResp Debit(DebitReq req)
         {
             DebitResp result = new DebitResp();
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
+            var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Skywind);
 
             var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, req.cust_id);
             if (tpCheck == null)
@@ -343,7 +355,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (req.amount < 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, (int)GameType.Skywind_RNG);
+                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, gameType);
                 result.balance = tpCustBalance.Balance;
                 result.error_code = (int)SkywindErrorCode.InsufficientBalance;
                 result.error_msg = SkywindErrorCode.InsufficientBalance.ToString();
@@ -376,7 +388,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     distribution_type = req.distribution_type,
                 };
 
-                if (bettingBLL.PlaceBetRNG_Skywind(betReq, out decimal tpAffterAmount) > 0)
+                if (bettingBLL.PlaceBetRNG_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount) > 0)
                 {
                     result.balance = tpAffterAmount;
                     result.error_code = (int)SkywindErrorCode.NoErrors;
@@ -401,6 +413,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
+                var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Skywind);
+
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
                 if (tpCheck == null || tpCheck.Token != req.cust_session_id)
                 {
@@ -434,7 +449,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     jp_ids = req.jp_ids == null ? null : JsonConvert.SerializeObject(req.jp_ids)
                 };
 
-                int SettleResult = settledBLL.SettledRNG_Skywind(creditReq, req.cust_id, out decimal tpAffterAmount);
+                int SettleResult = settledBLL.SettledRNG_Skywind(tpCustInfo, creditReq, req.cust_id, gameType, out decimal tpAffterAmount);
 
                 if (SettleResult > 0)
                 {
@@ -477,6 +492,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             #endregion
             try
             {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
+                var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Skywind);
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
                 if (tpCheck == null || tpCheck.Token != req.cust_session_id)
                 {
@@ -501,7 +518,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     operationts = req.operation_ts
                 };
 
-                var cancelresult = settledBLL.CancelBetRNG_Skywind(cancel, out decimal tpAffterAmount);
+                var cancelresult = settledBLL.CancelBetRNG_Skywind(tpCustInfo, cancel, gameType, out decimal tpAffterAmount);
             }
             catch (Exception ex)
             {
