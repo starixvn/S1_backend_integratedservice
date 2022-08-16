@@ -128,6 +128,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerWMBLL>();
             services.AddSingleton<ApiWMBLL>();
             services.AddSingleton<WagerRedoWMBLL>();
+            services.AddSingleton<FinanceWMBLL>();
             // Kiss918
             services.AddSingleton<WagerKiss918BLL>();
             services.AddSingleton<ApiKiss918BLL>();
@@ -225,6 +226,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
+            services.AddHostedService<FinanceWM>();
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<FinanceOne789>();
             services.AddHostedService<JwtIconic>();
