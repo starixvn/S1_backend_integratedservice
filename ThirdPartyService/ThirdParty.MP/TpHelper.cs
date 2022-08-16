@@ -537,6 +537,11 @@ namespace ThirdParty.MP
                 "1000" => "Lucky Wheel",
                 "514" => "Xoc Dia",
                 "516" => "Killer13",
+                "517" => "Catte",
+                "519" => "Rummy",
+                "515" => "Fan Tan",
+                "181" => "MP Bo Deng",
+                "182" => "MP Pokdeng Card",
                 _ => string.Empty,
             };
         }
