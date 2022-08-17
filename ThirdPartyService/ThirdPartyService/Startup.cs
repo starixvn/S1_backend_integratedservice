@@ -62,7 +62,7 @@ namespace ThirdPartyService
             services.AddControllers();
 
             services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
-            services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get");
+            services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get_V2");
             services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
         }
