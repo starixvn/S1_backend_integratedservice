@@ -972,13 +972,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    sp = "Service_TpWagerOne789_LT_Settle_Get";
+                    sp = "Service_TpWagerOne789_LT_Settle_Get_V2";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    sp = "Service_TpWagerOne789_LT_789_Settle_Get";
+                    sp = "Service_TpWagerOne789_LT_789_Settle_Get_V2";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    sp = "Service_TpWagerOne789_LC_Settle_Get";
+                    sp = "Service_TpWagerOne789_LC_Settle_Get_V2";
                     break;
                 default:
                     break;

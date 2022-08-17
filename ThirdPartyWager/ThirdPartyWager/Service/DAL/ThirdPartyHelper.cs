@@ -73,7 +73,7 @@ namespace ThirdPartyWager.Service.DAL
         
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
-            return _reportDbClient.Query<TpGameCasino>("Service_GameCasino_Get", new { TpId = tpId });
+            return _reportDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId });
         }
     }
 }
