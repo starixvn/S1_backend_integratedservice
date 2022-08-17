@@ -4138,7 +4138,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_Ins", bettingDataRNG_Skywind, trans);
 
-                if (result > 0 && bettingDataRNG_Skywind.amount > 0 && bettingDataRNG_Skywind.TicketType == (int)BettransType.EndRound)
+                if (result > 0 && bettingDataRNG_Skywind.amount > 0)
                 {
                     result = PayoutV2(
                         tpCustInfo,
@@ -4157,7 +4157,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans);
                 }
 
-                if (result > 0)
+                if (result > 0 && bettingDataRNG_Skywind.TicketType == (int)BettransType.EndRound)
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingDataRNG_Skywind.round_id, trans, partitionTime);
                 }
