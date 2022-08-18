@@ -14,7 +14,7 @@ namespace ThirdParty.Kiss918
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private static string token = "RUNnMmx6TnJZNjVoTU5ha1JyMCtENFY4bUFyWDVwYW1JbTRlNVRZUTRFY1NjTk1xSFV1WTI3NkNGWHgzSzJPRDZSN041NkJaUlp1WUIxSUhSUE5lSFA2dGhQK2svU2FGVHVOcHY0VnNWeGk5WE01d2U0cFgwbkFVeG9vSnpoZVNobmJSRCtJVVdzRzZCK3luV29zWGRRPT0=";
+        private static string accessToken = "RUNnMmx6TnJZNjVoTU5ha1JyMCtENFY4bUFyWDVwYW1JbTRlNVRZUTRFY1NjTk1xSFV1WTI3NkNGWHgzSzJPRDZSN041NkJaUlp1WUIxSUhSUE5lSFA2dGhQK2svU2FGVHVOcHY0VnNWeGk5WE01d2U0cFgwbkFVeG9vSnpoZVNobmJSRCtJVVdzRzZCK3luV29zWGRRPT0=";
         private class CreateMemberResponse
         {
             public int playerID { get; set; }
@@ -42,7 +42,7 @@ namespace ThirdParty.Kiss918
                 nickname = tpCustInfo.TpUserName,
                 currency = currency
             });
-            var header = new Dictionary<string, string>() { { "token", $"{token}" } };
+            var header = new Dictionary<string, string>() { { "token", $"{accessToken}" } };
             var result = HttpPostClient(ApiUrl, parameters, "application/json", header);
 
             ApiResult oApiResult = new ApiResult();
@@ -90,7 +90,7 @@ namespace ThirdParty.Kiss918
             string siteName = inputs.ContainsKey($"SiteName_{siteId}") && !string.IsNullOrEmpty(inputs[$"SiteName_{siteId}"]) ? inputs[$"SiteName_{siteId}"] : throw new Exception($"SiteName_{siteId}");
             var gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            
+
             var loginApiUrl = $"{baseApiUrl}/api/Acc/Login";
 
             var currTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
@@ -126,7 +126,7 @@ namespace ThirdParty.Kiss918
             {
                 q = q,
                 s = s,
-                accessToken = token
+                accessToken = accessToken
             });
 
             var result = HttpPostClient(loginApiUrl, request, "application/json");
@@ -151,13 +151,22 @@ namespace ThirdParty.Kiss918
                     RawMessage = json.description
                 };
 
+            #region token
+            var key = ApplyToken(tpCustInfo);
+            inputs.TryGetValue("Token", out string token);
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
+            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
+            #endregion
+
             var joinGameRequest = new
             {
                 tkn = json.actk,
                 language = TpLangId,
                 user = $"{tpCustInfo.TpUserName}@{siteName}",
                 gName = gameCode,
-                returnUrl = homeUrl
+                returnUrl = homeUrl,
+                Token = sessionKey
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(joinGameRequest));
