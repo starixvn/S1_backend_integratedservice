@@ -29,7 +29,6 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync()
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             // get dg api info
             try
             {
@@ -37,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 var wagerIds = new List<long>();
                 // get wagers
-                var dataWager = await _apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], guid);
+                var dataWager = await _apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"]);
 
                 var errorCode = dataWager.codeId;
                 if (errorCode != 0)
@@ -59,7 +58,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        _wagerDGService.InsertWagerDG(bet);
+                        await _wagerDGService.InsertWagerDG(bet);
                         wagerIds.Add(bet.id);
                     }
                     catch (Exception ex)
@@ -70,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL
                     }
                 }
                 // mark wager
-                await _apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds, guid);
+                await _apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
 
                 msg = "FINISH";
                 _logger.LogInformation($"GetWagersAsync {msg}");

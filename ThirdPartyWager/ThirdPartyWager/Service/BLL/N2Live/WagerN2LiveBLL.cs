@@ -82,7 +82,8 @@ namespace ThirdPartyWager.Service.BLL
                                     dealdetail = JsonConvert.SerializeObject(dealItem.dealdetails.dealdetail),
                                     result = (dealItem.results != null) ? JsonConvert.SerializeObject(dealItem.results) : null,
                                 };
-                                _wagerN2LiveService.InsertWager(bet);
+                                var r = _wagerN2LiveService.InsertWager(bet);
+                                _ = r.Result;
                             }
                         }
                         catch (Exception ex)

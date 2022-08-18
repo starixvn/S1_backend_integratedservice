@@ -76,7 +76,7 @@ namespace ThirdPartyWager.Service.BLL
             var param = new
             {
                 startdate = startTime,
-                enddate = DateTime.Parse(endTime).AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss"),
+                enddate = endTime,
                 reportname = "GameStatsSummary",
                 showjackpot = 1
                 //currency = "base",//native / base
