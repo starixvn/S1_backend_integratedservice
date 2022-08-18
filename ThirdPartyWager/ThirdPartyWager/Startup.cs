@@ -97,6 +97,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerDGBLL>();
             services.AddSingleton<ApiDGBLL>();
             services.AddSingleton<WagerRedoDGBLL>();
+            services.AddSingleton<FinanceDGBLL>();
             // AllBet
             services.AddSingleton<WagerAllBetBLL>();
             services.AddSingleton<ApiAllBetBLL>();
@@ -126,6 +127,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerWMBLL>();
             services.AddSingleton<ApiWMBLL>();
             services.AddSingleton<WagerRedoWMBLL>();
+            services.AddSingleton<FinanceWMBLL>();
             // Kiss918
             services.AddSingleton<WagerKiss918BLL>();
             services.AddSingleton<ApiKiss918BLL>();
@@ -133,6 +135,7 @@ namespace ThirdPartyWager
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
+            services.AddSingleton<FinanceOne789BLL>();
             // Mega
             services.AddSingleton<WagerMegaBLL>();
             services.AddSingleton<ApiMegaBLL>();
@@ -150,6 +153,7 @@ namespace ThirdPartyWager
             // N2Live
             services.AddSingleton<WagerN2LiveBLL>();
             services.AddSingleton<ApiN2LiveBLL>();
+            services.AddSingleton<FinanceN2LiveBLL>();
             // PT
             services.AddSingleton<WagerPTBLL>();
             services.AddSingleton<ApiPTBLL>();
@@ -205,6 +209,7 @@ namespace ThirdPartyWager
             //Worker
             services.AddHostedService<WagerDG>();
             services.AddHostedService<WagerRedoDG>();
+            services.AddHostedService<FinanceDG>();
             services.AddHostedService<WagerAllBet>();
             services.AddHostedService<WagerRedoAllBet>();
             services.AddHostedService<FinanceAllBet>();
@@ -220,7 +225,9 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
+            services.AddHostedService<FinanceWM>();
             services.AddHostedService<WagerOne789>();
+            services.AddHostedService<FinanceOne789>();
             services.AddHostedService<JwtIconic>();
             services.AddHostedService<WagerAT>();
             services.AddHostedService<WagerRedoAT>();
@@ -231,6 +238,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<WagerN2Live>();
             services.AddHostedService<WagerRedoN2Live>();
+            services.AddHostedService<FinanceN2Live>();
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<FinancePT>();

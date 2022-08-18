@@ -99,7 +99,7 @@ namespace ThirdPartyWager.Workers
                 TimeCast reportTime = _financePTBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.startUnix);
                 var reportData = await _financePTBLL.GetReport(_tpId, setting, reportTime);
                 int result;
                 if (reportData.Count > 0)

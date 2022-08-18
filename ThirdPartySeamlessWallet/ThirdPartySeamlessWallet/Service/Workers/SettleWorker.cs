@@ -234,8 +234,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             if (wager != null)
                             {
-                                //会员抢红包
-                                if (wager.GameType == 2 && wager.GameId == 2)
+                                //会员发红包、会员抢红包、主播小费、公司发红包、博饼记录、荷官小费
+                                if (wager.GameType == 2)
                                 {
                                     Task.Run(() =>
                                     {
