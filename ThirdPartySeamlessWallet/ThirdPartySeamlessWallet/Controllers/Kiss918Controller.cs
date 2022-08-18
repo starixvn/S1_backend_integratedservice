@@ -147,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// GetBalance 獲取餘額信息
         /// </summary>
         /// <returns></returns>
-        [HttpPost]
+        [HttpGet]
         [Route("[controller]/api/getbalance")]
         public async Task<GetBalanceResponse_Kiss918> GetBalanceAsync()
         {
