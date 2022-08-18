@@ -157,47 +157,103 @@ namespace ThirdPartySeamlessWallet.Controllers
             return await _kiss918BLL.GetBalance(request);
         }
 
-        ///// <summary>
-        ///// Slot下注
-        ///// </summary>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/v2/bet")]
-        //public async Task<AMBSlotBetResponse> SlotBetAsync()
-        //{
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var content = await reader.ReadToEndAsync();
-        //    var request = JsonConvert.DeserializeObject<AMBSlotBetRequest>(content);
-        //    return await _AMBBLL.SlotBet(request);
-        //}
+        /// <summary>
+        /// Bet (BetRequest of Wallet API) 押注
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/bet")]
+        public async Task<GetBalanceResponse_Kiss918> BetAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
 
-        ///// <summary>
-        ///// Slot派發彩金
-        ///// </summary>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/v2/payout")]
-        //public async Task<AMBSlotPayoutResponse> SlotPayoutAsync()
-        //{
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var content = await reader.ReadToEndAsync();
-        //    var request = JsonConvert.DeserializeObject<AMBSlotPayoutRequest>(content);
-        //    return await _AMBBLL.SlotPayout(request);
-        //}
+        /// <summary>
+        /// BetResult 押注结果
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/betresult")]
+        public async Task<GetBalanceResponse_Kiss918> BetResultAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
 
-        ///// <summary>
-        ///// Slot取消下注
-        ///// </summary>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/v2/cancel")]
-        //public async Task<AMBSlotCancelResponse> SlotCancelAsync()
-        //{
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var content = await reader.ReadToEndAsync();
-        //    var request = JsonConvert.DeserializeObject<AMBSlotCancelRequest>(content);
-        //    return await _AMBBLL.SlotCancel(request);
-        //}
+        /// <summary>
+        /// Refund 退款
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/refund")]
+        public async Task<GetBalanceResponse_Kiss918> RefundAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
+
+        /// <summary>
+        /// FundRequest 余额要求
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/fundrequest")]
+        public async Task<GetBalanceResponse_Kiss918> FundRequestAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
+
+        /// <summary>
+        /// FundReturn 余额退还
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/fundreturn")]
+        public async Task<GetBalanceResponse_Kiss918> FundReturnAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
+
+        /// <summary>
+        /// FundBetResult
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/fundbetresult")]
+        public async Task<GetBalanceResponse_Kiss918> FundBetResultAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
+
+        /// <summary>
+        /// JackpotWin
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/api/jackpotwin")]
+        public async Task<GetBalanceResponse_Kiss918> JackpotWinAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
+            return await _kiss918BLL.GetBalance(request);
+        }
 
         #endregion
 
