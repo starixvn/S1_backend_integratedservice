@@ -1,13 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -23,8 +16,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly string _tpName = Tp.DG.ToString();
 
         public ApiDGBLL(
-            IServiceProvider provider,
-            IConfiguration configuration
+            IServiceProvider provider
         )
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
@@ -33,7 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiDGBLL>>();
         }
 
-        public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey, string guid)
+        public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
         {
             // param
             var uri = "/game/getReport/";
@@ -52,7 +44,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds, string guid)
+        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds)
         {
             // param
             var uri = "/game/markReport/";
@@ -77,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL
             return;
         }
 
-        public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow, string guid)
+        public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
         {
             // param
             var uri = "/game/getReport";
