@@ -56,10 +56,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal balance { get; set; }
     }
 
-    public class OResponse_Kiss918 : ResponseModel_Kiss918
+    public class OperationResponse_Kiss918 : ResponseModel_Kiss918
     {
         public string transaction { get; set; }
         public decimal balance { get; set; }
+    }
+
+    public class FundBetResultResponse_Kiss918 : ResponseModel_Kiss918
+    {
+        public string transaction { get; set; }
     }
 
     #endregion
