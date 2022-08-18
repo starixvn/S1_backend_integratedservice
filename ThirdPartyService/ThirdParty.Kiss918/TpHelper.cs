@@ -151,22 +151,13 @@ namespace ThirdParty.Kiss918
                     RawMessage = json.description
                 };
 
-            #region token
-            var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
-            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
-            #endregion
-
             var joinGameRequest = new
             {
                 tkn = json.actk,
                 language = TpLangId,
                 user = $"{tpCustInfo.TpUserName}@{siteName}",
                 gName = gameCode,
-                returnUrl = homeUrl,
-                Token = sessionKey
+                returnUrl = homeUrl
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(joinGameRequest));
