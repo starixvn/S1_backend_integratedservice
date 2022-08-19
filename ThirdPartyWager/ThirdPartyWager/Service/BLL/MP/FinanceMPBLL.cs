@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Service.BLL
                     throw systemException;
                 }
 
-                if (getWagerSummary.d.code == 16)
+                if (getWagerSummary.d.code == 16 || getWagerSummary.d.Transactions[0].betCount == 0)
                 {
                     var msg = "NO_DATA";
                     _logger.LogInformation($"{msg}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
