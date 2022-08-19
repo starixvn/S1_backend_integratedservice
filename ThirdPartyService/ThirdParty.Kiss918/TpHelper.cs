@@ -52,6 +52,7 @@ namespace ThirdParty.Kiss918
                 if (json.error == "0")
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
+                    tpCustInfo.TpCustId = json.playerID.ToString(); //Tp CustID (PK)
                 }
                 else
                 {
