@@ -146,6 +146,7 @@ namespace ThirdPartyWager
             // OneGaming
             services.AddSingleton<WagerOneGamingBLL>();
             services.AddSingleton<ApiOneGamingBLL>();
+            services.AddSingleton<FinanceOneGamingBLL>();
             // V8
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
@@ -236,6 +237,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceAT>();
             services.AddHostedService<WagerOneGaming>();
             services.AddHostedService<WagerRedoOneGaming>();
+            services.AddHostedService<FinanceOneGaming>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<FinanceV8>();
