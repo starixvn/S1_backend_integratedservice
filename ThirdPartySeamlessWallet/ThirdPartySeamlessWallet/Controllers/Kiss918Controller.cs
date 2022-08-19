@@ -163,12 +163,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/bet")]
-        public async Task<GetBalanceResponse_Kiss918> BetAsync()
+        public async Task<OperationResponse_Kiss918> BetAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<BetRequest_Kiss918>(content);
+            return await _kiss918BLL.Bet(request);
         }
 
         /// <summary>
@@ -177,12 +177,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/betresult")]
-        public async Task<GetBalanceResponse_Kiss918> BetResultAsync()
+        public async Task<OperationResponse_Kiss918> BetResultAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<BetResultRequest_Kiss918>(content);
+            return await _kiss918BLL.BetResult(request);
         }
 
         /// <summary>
@@ -191,12 +191,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/refund")]
-        public async Task<GetBalanceResponse_Kiss918> RefundAsync()
+        public async Task<OperationResponse_Kiss918> RefundAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<RefundRequest_Kiss918>(content);
+            return await _kiss918BLL.Refund(request);
         }
 
         /// <summary>
@@ -205,12 +205,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/fundrequest")]
-        public async Task<GetBalanceResponse_Kiss918> FundRequestAsync()
+        public async Task<OperationResponse_Kiss918> FundRequestAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<FundRequestRequest_Kiss918>(content);
+            return await _kiss918BLL.FundRequest(request);
         }
 
         /// <summary>
@@ -219,12 +219,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/fundreturn")]
-        public async Task<GetBalanceResponse_Kiss918> FundReturnAsync()
+        public async Task<OperationResponse_Kiss918> FundReturnAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<FundReturnRequest_Kiss918>(content);
+            return await _kiss918BLL.FundReturn(request);
         }
 
         /// <summary>
@@ -233,12 +233,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/fundbetresult")]
-        public async Task<GetBalanceResponse_Kiss918> FundBetResultAsync()
+        public async Task<FundBetResultResponse_Kiss918> FundBetResultAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<FundBetResultRequest_Kiss918>(content);
+            return await _kiss918BLL.FundBetResult(request);
         }
 
         /// <summary>
@@ -247,12 +247,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("[controller]/api/jackpotwin")]
-        public async Task<GetBalanceResponse_Kiss918> JackpotWinAsync()
+        public async Task<OperationResponse_Kiss918> JackpotWinAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            var request = JsonConvert.DeserializeObject<JackpotWinRequest_Kiss918>(content);
+            return await _kiss918BLL.JackpotWin(request);
         }
 
         #endregion
