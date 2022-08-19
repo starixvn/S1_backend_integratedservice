@@ -15,5 +15,40 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             return new GetBalanceResponse_Kiss918() { balance = 1000, error = "0" };
         }
+
+        public async Task<OperationResponse_Kiss918> Bet(BetRequest_Kiss918 request)
+        {
+            return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
+        }
+
+        public async Task<OperationResponse_Kiss918> BetResult(BetResultRequest_Kiss918 request)
+        {
+            return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
+        }
+
+        public async Task<OperationResponse_Kiss918> Refund(RefundRequest_Kiss918 request)
+        {
+            return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
+        }
+
+        public async Task<OperationResponse_Kiss918> FundRequest(FundRequestRequest_Kiss918 request)
+        {
+            return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
+        }
+
+        public async Task<OperationResponse_Kiss918> FundReturn(FundReturnRequest_Kiss918 request)
+        {
+            return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
+        }
+
+        public async Task<FundBetResultResponse_Kiss918> FundBetResult(FundBetResultRequest_Kiss918 request)
+        {
+            return new FundBetResultResponse_Kiss918() { transaction = "", error = "0" };
+        }
+
+        public async Task<OperationResponse_Kiss918> JackpotWin(JackpotWinRequest_Kiss918 request)
+        {
+            return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
+        }
     }
 }
