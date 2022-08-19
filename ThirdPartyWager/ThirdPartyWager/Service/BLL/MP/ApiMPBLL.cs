@@ -123,7 +123,6 @@ namespace ThirdPartyWager.Service.BLL
                 result = sr.ReadToEnd();
             }
 
-            _log2File.InsertResponseLog(_tpName, url, param, result, false);
             return result;
         }
     }
