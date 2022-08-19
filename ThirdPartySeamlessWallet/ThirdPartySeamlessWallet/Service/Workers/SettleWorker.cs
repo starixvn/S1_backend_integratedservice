@@ -15,12 +15,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleDG;
         private Timer timerSettleEBet;
         private Timer timerSettleWM;
-        private Timer timerSettleCQ9;
+        
         private Timer timerSettleCQ9Fish;
-        private Timer timerSettleGPI;
+      
         private Timer timerSettleAWC;
         private Timer timerSettleYGG;
-        private Timer timerSettleKiss918;
+        
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
         private Timer timerSettleOne789LC;
@@ -34,8 +34,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleSexy;
         private Timer timerSettleEVO;
         private Timer timerSettleRewardEVO;
-        private Timer timerSettleNetent;
-        private Timer timerSettleRedTiger;
+     
+      
 
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
@@ -66,11 +66,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleCQ9 = new Timer(DoSettleCQ9Work, null, TimeSpan.Zero, TimeSpan.Zero);
+            
             timerSettleCQ9Fish = new Timer(DoSettleCQ9FishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleGPI = new Timer(DoSettleGPIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleKiss918 = new Timer(DoSettleKiss918Work, null, TimeSpan.Zero, TimeSpan.Zero);
+           
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -81,8 +80,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleNetent = new Timer(DoSettleNetentWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleRedTiger = new Timer(DoSettleRedTigerWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            
+           
             timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
@@ -990,11 +989,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleDG?.Change(Timeout.Infinite, 0);
             timerSettleEBet?.Change(Timeout.Infinite, 0);
             timerSettleWM?.Change(Timeout.Infinite, 0);
-            timerSettleCQ9?.Change(Timeout.Infinite, 0);
+            
             timerSettleCQ9Fish?.Change(Timeout.Infinite, 0);
-            timerSettleGPI?.Change(Timeout.Infinite, 0);
+            
             timerSettleAWC?.Change(Timeout.Infinite, 0);
-            timerSettleKiss918?.Change(Timeout.Infinite, 0);
+            
             timerSettleOne789LT?.Change(Timeout.Infinite, 0);
             timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
             timerSettleOne789LC?.Change(Timeout.Infinite, 0);
@@ -1009,8 +1008,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSexy?.Change(Timeout.Infinite, 0);
             timerSettleEVO?.Change(Timeout.Infinite, 0);
             timerSettleRewardEVO?.Change(Timeout.Infinite, 0);
-            timerSettleNetent?.Change(Timeout.Infinite, 0);
-            timerSettleRedTiger?.Change(Timeout.Infinite, 0);
+           
+          
 
             return Task.CompletedTask;
         }
