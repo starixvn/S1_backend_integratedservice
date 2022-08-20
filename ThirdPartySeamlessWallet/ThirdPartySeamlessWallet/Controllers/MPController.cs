@@ -1,17 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -96,10 +87,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string roundId { get; set; }
             public string gameNo { get; set; }
             public string playerId { get; set; }
-            public string totalBet { get; set; }
-            public string validBet { get; set; }
-            public string betCount { get; set; }
-            public string totalWithdraw { get; set; }
+            public decimal totalBet { get; set; }
+            public decimal validBet { get; set; }
+            public int betCount { get; set; }
+            public decimal totalWithdraw { get; set; }
+            public decimal revenue { get; set; }
+            public long timestamp { get; set; }
         }
 
         #endregion
@@ -133,17 +126,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return check.Result;
             }
 
-            string account = check.account;
-            string playerId = check.playerId;
+            var balance = JsonConvert.DeserializeObject<BalanceData_MP>(JsonConvert.SerializeObject(check));
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, playerId);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balance.playerId);
             if (tpCustBalance != null)
             {
                 Response.StatusCode = (int)Error.OK;
                 var Param = new
                 {
                     channelId = Agent,
-                    account = account,
+                    account = balance.account,
                     balance = tpCustBalance.Balance
                 };
 
@@ -189,7 +181,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
-
                 var result = _bettingBLL.MoneyOutPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -374,7 +365,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var transfer = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(check));
-
                 var result = _settledBLL.CancelMoneyInPK_MP(transfer, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -427,36 +417,28 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private CheckResp checkAuthorization(string param, string desKey, string agent, bool checkOnline)
         {
-            CheckResp resp = new CheckResp();
-            resp.StatusCode = (int)Error.OK;
-            resp.Result = "";
+            CheckResp resp = new()
+            {
+                StatusCode = (int)Error.OK,
+                Result = ""
+            };
             try
             {
                 var decrypt = _tools.AesDecrypt(HttpUtility.UrlEncode(param), desKey);
                 var jsonParsedArray = JObject.Parse(decrypt);
                 _logger.LogInformation($"Request Decrypt: {JsonConvert.SerializeObject(jsonParsedArray)}");
 
-                var channelId = jsonParsedArray["channelId"]?.ToString();
-                var account = jsonParsedArray["account"]?.ToString();
                 var requestAmount = jsonParsedArray["requestAmount"]?.ToString();
-                var gameId = jsonParsedArray.ContainsKey("gameId") ? jsonParsedArray["gameId"].ToString() : "";
-                var orderId = jsonParsedArray["orderId"]?.ToString();
-                var roundId = jsonParsedArray["roundId"]?.ToString();
-                var gameNo = jsonParsedArray["gameNo"]?.ToString();
-                var playerId = jsonParsedArray["playerId"]?.ToString();
-                var totalBet = jsonParsedArray["totalBet"]?.ToString();
-                var validBet = jsonParsedArray["validBet"]?.ToString();
-                var betCount = jsonParsedArray["betCount"]?.ToString();
-                var totalWithdraw = jsonParsedArray["totalWithdraw"]?.ToString();
+                var decryptRequest = JsonConvert.DeserializeObject<TransferData_MP>(JsonConvert.SerializeObject(jsonParsedArray));
 
-                if (string.IsNullOrEmpty(channelId) || channelId != agent)
+                if (string.IsNullOrEmpty(decryptRequest.channelId) || decryptRequest.channelId != agent)
                 {
                     resp.StatusCode = (int)Error.UAUTHORIZED;
                     _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}");
                     return resp;
                 }
 
-                if (string.IsNullOrEmpty(account) || account.Split('_').Count() != 2)
+                if (string.IsNullOrEmpty(decryptRequest.account))
                 {
                     var Param = new
                     {
@@ -471,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (checkOnline)
                 {
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, playerId);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, decryptRequest.playerId);
                     if (tpCheck == null || tpCheck.Locked)
                     {
                         var Param = new
@@ -488,7 +470,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (!string.IsNullOrEmpty(requestAmount))
                 {
-                    decimal amount = Convert.ToDecimal(requestAmount);
+                    decimal amount = decryptRequest.requestAmount;
                     if (amount < 0)
                     {
                         var Param = new
@@ -498,23 +480,25 @@ namespace ThirdPartySeamlessWallet.Controllers
                         resp.StatusCode = (int)Error.INVALID_DATA;
                         resp.Result = DoEncrypt(Param, desKey);
                         resp.Code = Param.code;
-                        _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}\r\nrequestAmount={requestAmount}");
+                        _logger.LogError($"Request Check: {JsonConvert.SerializeObject(resp)}\r\nrequestAmount={decryptRequest.requestAmount}");
                         return resp;
                     }
                 }
 
-                resp.channelId = channelId;
-                resp.account = account;
+                resp.channelId = decryptRequest.channelId;
+                resp.account = decryptRequest.account;
                 resp.requestAmount = requestAmount;
-                resp.gameId = gameId;
-                resp.roundId = roundId;
-                resp.gameNo = gameNo;
-                resp.orderId = orderId;
-                resp.playerId = playerId;
-                resp.totalBet = totalBet;
-                resp.validBet = validBet;
-                resp.betCount = betCount;
-                resp.totalWithdraw = totalWithdraw;
+                resp.gameId = decryptRequest.gameId;
+                resp.roundId = decryptRequest.roundId;
+                resp.gameNo = decryptRequest.gameNo;
+                resp.orderId = decryptRequest.orderId;
+                resp.playerId = decryptRequest.playerId;
+                resp.totalBet = decryptRequest.totalBet;
+                resp.validBet = decryptRequest.validBet;
+                resp.betCount = decryptRequest.betCount;
+                resp.totalWithdraw = decryptRequest.totalWithdraw;
+                resp.revenue = decryptRequest.revenue;
+                resp.timestamp = decryptRequest.timestamp;
                 _logger.LogInformation($"Request Check: {JsonConvert.SerializeObject(resp)}");
                 return resp;
             }
