@@ -509,6 +509,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
 
                 var cancelresult = settledBLL.CancelBet_Skywind(tpCustInfo, cancel, gameType, out decimal tpAffterAmount);
+
+                if (cancelresult > 0)
+                {
+                    result.error_code = (int)SkywindErrorCode.NoErrors;
+                    result.balance = tpAffterAmount;
+                    result.trx_id = req.trx_id;
+                    logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
+                    return result;
+                }
+                else if (cancelresult == -1)
+                {
+                    result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
+                    result.balance = tpAffterAmount;
+                    result.trx_id = req.trx_id;
+                    logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
+                    return result;
+                }
+                else if (cancelresult == -2)
+                {
+                    result.error_code = (int)SkywindErrorCode.TransactionNotFound;
+                    result.balance = tpAffterAmount;
+                    result.trx_id = req.trx_id;
+                    logger.LogError($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
+                    return result;
+                }
             }
             catch (Exception ex)
             {
