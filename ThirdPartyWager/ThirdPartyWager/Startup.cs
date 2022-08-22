@@ -84,6 +84,7 @@ namespace ThirdPartyWager
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
+            services.AddSingleton<WagerSkywindService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -182,6 +183,9 @@ namespace ThirdPartyWager
             //JILI
             services.AddSingleton<ApiJILIBLL>();
             services.AddSingleton<FinanceJILIBLL>();
+            //Skywind
+            services.AddSingleton<ApiSkywindBLL>();
+            services.AddSingleton<WagerSkywindBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -231,6 +235,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerYGG>();
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
+            services.AddHostedService<WagerSkywind>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

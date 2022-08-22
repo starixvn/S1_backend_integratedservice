@@ -43,7 +43,8 @@
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
-        SBO = 42
+        SBO = 42,
+        Skywind = 43
     }
 
     public enum GameType
@@ -64,7 +65,10 @@
         SBO_VirtualSports = 81,
         PT_RNG = 46,
         PT_LiveCasino = 48,
-        YGG_RNG = 14
+        YGG_RNG = 14,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85
     }
     
     

@@ -4033,7 +4033,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region Skywind
-        public int SettledRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, int gameType, out decimal afterAmount)
+        public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
         {
             var bonusId = 0;
             var result = 0;
@@ -4042,12 +4042,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
                 DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-                partitionTime = partitionTime.AddSeconds(bettingDataRNG_Skywind.timestamp);
+                partitionTime = partitionTime.AddSeconds(bettingData_Skywind.timestamp);
                 var query = new
                 {
-                    bettingDataRNG_Skywind.trx_id
+                    bettingData_Skywind.trx_id
                 };
-                var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query);
+                var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
                 if (check.Any())
                 {
                     if(check.ToList().Exists(x => x.TicketStatus != (int)TicketStatus.UnSettled))
@@ -4059,33 +4059,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 var trans = conn.BeginTransaction();
-                bettingDataRNG_Skywind.TicketStatus = bettingDataRNG_Skywind.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                bettingData_Skywind.TicketStatus = bettingData_Skywind.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
 
-                switch (bettingDataRNG_Skywind.game_status)
+                switch (bettingData_Skywind.game_status)
                 {
                     case "freegame":
-                        bettingDataRNG_Skywind.TicketType = (int)BettransType.Jackpot;
+                        bettingData_Skywind.TicketType = (int)BettransType.Jackpot;
                         break;
                     case "bonusgame":
-                        bettingDataRNG_Skywind.TicketType = (int)BettransType.Bonus;
+                        bettingData_Skywind.TicketType = (int)BettransType.Bonus;
                         break;
                     default:
-                        bettingDataRNG_Skywind.TicketType = (int)BettransType.EndRound;
+                        bettingData_Skywind.TicketType = (int)BettransType.EndRound;
                         break;
                 }
                 
-                result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_Ins", bettingDataRNG_Skywind, trans);
+                result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
 
-                if (result > 0 && bettingDataRNG_Skywind.amount > 0)
+                if (result > 0 && bettingData_Skywind.amount > 0)
                 {
                     result = PayoutV2(
                         tpCustInfo,
-                        bettingDataRNG_Skywind.amount,
+                        bettingData_Skywind.amount,
                         (int)Tp.Skywind,
-                        bettingDataRNG_Skywind.round_id,
+                        bettingData_Skywind.round_id,
                         gameType,
                         tpCategory,
-                        bettingDataRNG_Skywind.round_id,
+                        bettingData_Skywind.round_id,
                         TransType.Payout,
                         null,
                         out afterAmount,
@@ -4095,9 +4095,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans);
                 }
 
-                if (result > 0 && bettingDataRNG_Skywind.TicketType == (int)BettransType.EndRound)
+                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingDataRNG_Skywind.round_id, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingData_Skywind.round_id, trans, partitionTime);
                 }
 
                 if (result > 0)
@@ -4114,20 +4114,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int CancelBetRNG_Skywind(TpCustInfo tpCustInfo, CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, int gameType, out decimal afterAmount)
+        public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
         {
             var result = 0;
             int bonusId = 0;
             afterAmount = 0;
             var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
             DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            partitionTime = partitionTime.AddSeconds(cancelBetDataRNG_Skywind.timestamp);
+            partitionTime = partitionTime.AddSeconds(cancelBetData_Skywind.timestamp);
             
             var query = new
             {
-                trx_id = cancelBetDataRNG_Skywind.trxid
+                trx_id = cancelBetData_Skywind.trxid
             };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query)?.FirstOrDefault(x=> x.TicketStatus == (int)TicketStatus.UnSettled);
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x=> x.TicketStatus == (int)TicketStatus.UnSettled);
             if (bettransSkywind == null)
             {
                 return -2;
@@ -4141,7 +4141,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_CancelBet_Set", para, trans);
+            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_CancelBet_Set", para, trans);
 
 
             if (result > 0)
@@ -4152,10 +4152,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         Math.Abs(bettransSkywind.amount),
                         (int)Tp.Skywind,
-                        cancelBetDataRNG_Skywind.roundid,
+                        cancelBetData_Skywind.roundid,
                         gameType,
                         tpCategory,
-                        cancelBetDataRNG_Skywind.roundid,
+                        cancelBetData_Skywind.roundid,
                         TransType.Refunds,
                         null,
                         out afterAmount,

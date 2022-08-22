@@ -234,11 +234,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
                 var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCode((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
-                #region SetCustGotoGameType
-                var gameType = (int)GameType.Skywind_RNG;
-                tpCustInfoBLL.SetCustGotoGame(tpCustInfo.CustId, (int)Tp.Skywind, gameType);
-                #endregion
-
                 result.error_code = 0;
                 result.cust_session_id = sessionToken;
                 result.cust_id = tpUserName;
@@ -275,11 +270,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, tpUserName);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
                 var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCode((int)Tp.Skywind, tpCustInfo.CurrencyId);
-
-                #region SetCustGotoGameType
-                var gameType = (int)GameType.Skywind_LiveCasino;
-                tpCustInfoBLL.SetCustGotoGame(tpCustInfo.CustId, (int)Tp.Skywind, gameType);
-                #endregion
 
                 result.error_code = 0;
                 result.cust_session_id = sessionToken;
@@ -364,7 +354,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                BettingDataRNG_Skywind betReq = new BettingDataRNG_Skywind()
+                BettingData_Skywind betReq = new BettingData_Skywind()
                 {
                     merch_id = req.merch_id,
                     merch_pwd = req.merch_pwd,
@@ -388,7 +378,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     distribution_type = req.distribution_type,
                 };
 
-                if (bettingBLL.PlaceBetRNG_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount) > 0)
+                if (bettingBLL.PlaceBet_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount) > 0)
                 {
                     result.balance = tpAffterAmount;
                     result.error_code = (int)SkywindErrorCode.NoErrors;
@@ -424,7 +414,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
 
-                BettingDataRNG_Skywind creditReq = new BettingDataRNG_Skywind()
+                BettingData_Skywind creditReq = new BettingData_Skywind()
                 {
                     merch_id = req.merch_id,
                     merch_pwd = req.merch_pwd,
@@ -449,7 +439,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     jp_ids = req.jp_ids == null ? null : JsonConvert.SerializeObject(req.jp_ids)
                 };
 
-                int SettleResult = settledBLL.SettledRNG_Skywind(tpCustInfo, creditReq, req.cust_id, gameType, out decimal tpAffterAmount);
+                int SettleResult = settledBLL.Settled_Skywind(tpCustInfo, creditReq, req.cust_id, gameType, out decimal tpAffterAmount);
 
                 if (SettleResult > 0)
                 {
@@ -502,7 +492,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
 
-                CancelBetDataRNG_Skywind cancel = new CancelBetDataRNG_Skywind()
+                CancelBetData_Skywind cancel = new CancelBetData_Skywind()
                 {
                     merchid = req.merch_id,
                     merchpwd = req.merch_pwd,
@@ -518,7 +508,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     operationts = req.operation_ts
                 };
 
-                var cancelresult = settledBLL.CancelBetRNG_Skywind(tpCustInfo, cancel, gameType, out decimal tpAffterAmount);
+                var cancelresult = settledBLL.CancelBet_Skywind(tpCustInfo, cancel, gameType, out decimal tpAffterAmount);
             }
             catch (Exception ex)
             {
