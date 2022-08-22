@@ -1162,20 +1162,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region SkyWind
-        public int PlaceBetRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, int gameType, out decimal afterAmount)
+        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
         {
             int bonusId = 0;
             var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
-            bettingDataRNG_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
-            bettingDataRNG_Skywind.TicketType = (int)BettransType.Bet;
+            bettingData_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingData_Skywind.TicketType = (int)BettransType.Bet;
             afterAmount = 0;
             DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            partitionTime = partitionTime.AddSeconds(bettingDataRNG_Skywind.timestamp);
+            partitionTime = partitionTime.AddSeconds(bettingData_Skywind.timestamp);
             var query = new
             {
-                bettingDataRNG_Skywind.trx_id
+                bettingData_Skywind.trx_id
             };
-            var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_BettransRng_Skywind_Check", query);
+            var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
             if (check.Any())
             {
                 return -1;
@@ -1185,11 +1185,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             var trans = conn.BeginTransaction();
             var result = 0;
-            result = _partitionService.Execute(partitionTime, "Service_BettransRng_Skywind_Ins", bettingDataRNG_Skywind, trans);
+            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
 
-            if (result > 0 && bettingDataRNG_Skywind.amount != 0)
+            if (result > 0 && bettingData_Skywind.amount != 0)
             {
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_Skywind.amount) * -1, (int)Tp.Skywind, bettingDataRNG_Skywind.round_id, gameType, bettingDataRNG_Skywind.round_id, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, bettingData_Skywind.round_id, gameType, bettingData_Skywind.round_id, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)

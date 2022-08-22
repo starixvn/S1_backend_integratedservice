@@ -45,7 +45,8 @@
         Netent = 37,
         RedTiger = 38,
         AP = 39,
-        SBO = 42
+        SBO = 42,
+        Skywind = 43
     }
 
     public enum GameType
@@ -66,7 +67,10 @@
         SBO_VirtualSports = 81,
         YGG_RNG = 14,
  		PT_RNG = 46,
-        PT_LiveCasino = 48        
+        PT_LiveCasino = 48,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85
     }
 
 	 public enum SettlementType
