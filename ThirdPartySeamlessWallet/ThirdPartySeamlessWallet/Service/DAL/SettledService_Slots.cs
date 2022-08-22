@@ -4194,6 +4194,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 return -2;
             }
+            else if (bettransSkywind.TicketStatus != 0)
+            {
+                return -1;
+            }
             var para = new DynamicParameters(new
             {
                 SQ = bettransSkywind.SQ
