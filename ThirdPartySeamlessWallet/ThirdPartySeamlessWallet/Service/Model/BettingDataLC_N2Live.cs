@@ -93,7 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string resultstatus { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public decimal? winningodds { get; set; }
+        public dynamic? winningodds { get; set; }
         public Hand_N2Live? hand { get; set; }
     }
 
