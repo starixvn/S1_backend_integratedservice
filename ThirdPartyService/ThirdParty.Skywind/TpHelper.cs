@@ -61,7 +61,20 @@ namespace ThirdParty.Skywind
             var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             #endregion
 
-            if (gameId == "0")
+            #region SetCustGotoGame
+            var tpGameType = (int)TpGameType.Skywind_RNG;
+            if(gameId == "0")
+            {
+                tpGameType = (int)TpGameType.Skywind_LiveCasino;
+            }
+            else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+            {
+                tpGameType = (int)TpGameType.Skywind_Fish;
+            }
+            TpCustInfoProvider.SetCustGotoGame(tpCustInfo.CustId, tpCustInfo.TpId, tpGameType);
+            #endregion
+
+            if (tpGameType == (int)TpGameType.Skywind_LiveCasino)
             {
                 var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}";
                 ApiResult oApiResult = new ApiResult();
@@ -124,7 +137,7 @@ namespace ThirdParty.Skywind
             var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
             var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
             Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);;
+            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
             string json = HttpGet(detailUrl, "", "application/json", header);
             var result = FromJson<DetailUrl>(json);
 

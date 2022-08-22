@@ -1,6 +1,6 @@
 ﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
-    public class BettingDataRNG_Skywind
+    public class BettingData_Skywind
     {
         public string merch_id { get; set; }
         public string merch_pwd { get; set; }
@@ -65,7 +65,7 @@
         public string gamestatus { get; set; } = "";
         public string jpids { get; set; } = null;
     }
-    public class CancelBetDataRNG_Skywind
+    public class CancelBetData_Skywind
     {
         public string merchid { get; set; }
         public string merchpwd { get; set; }

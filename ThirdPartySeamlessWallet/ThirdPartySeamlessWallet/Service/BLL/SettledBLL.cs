@@ -2187,16 +2187,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region Skywind
-        public int SettledRNG_Skywind(TpCustInfo tpCustInfo, BettingDataRNG_Skywind bettingDataRNG_Skywind, string TpUserName, int gameType, out decimal afterAmount)
+        public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, string TpUserName, int gameType, out decimal afterAmount)
         {
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                bettingDataRNG_Skywind.amount *= tpCurrency.ExchangeRate;
+                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.SettledRNG_Skywind(tpCustInfo, bettingDataRNG_Skywind, gameType, out afterAmount);
+            var result = settledService.Settled_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -2211,12 +2211,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int CancelBetRNG_Skywind(TpCustInfo tpCustInfo, CancelBetDataRNG_Skywind cancelBetDataRNG_Skywind, int gameType, out decimal afterAmount)
+        public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
         {
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
 
 
-            var result = settledService.CancelBetRNG_Skywind(tpCustInfo, cancelBetDataRNG_Skywind, gameType, out afterAmount);
+            var result = settledService.CancelBet_Skywind(tpCustInfo, cancelBetData_Skywind, gameType, out afterAmount);
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
