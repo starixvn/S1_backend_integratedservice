@@ -172,6 +172,9 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiKMBLL>();
             services.AddSingleton<KMBLL>();
             services.AddSingleton<FinanceKMBLL>();
+            //AMB
+            services.AddSingleton<ApiAMBBLL>();
+            services.AddSingleton<FinanceAMBBLL>();
             //MP
             services.AddSingleton<WagerMPBLL>();
             services.AddSingleton<ApiMPBLL>();
@@ -254,6 +257,7 @@ namespace ThirdPartyWager
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
             services.AddHostedService<FinanceKM>();
+            services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerMG>();
             services.AddHostedService<WagerNineW>();
             services.AddHostedService<WagerTCG>();
