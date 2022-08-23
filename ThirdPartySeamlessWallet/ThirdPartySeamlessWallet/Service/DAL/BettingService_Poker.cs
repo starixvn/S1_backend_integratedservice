@@ -359,6 +359,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 orderId = transferData_MP.orderId,
                 roundId = transferData_MP.roundId,
                 gameNo = transferData_MP.gameNo,
+                playerId = transferData_MP.playerId,
+                totalBet = transferData_MP.totalBet,
+                validBet = transferData_MP.validBet,
+                totalWithdraw = transferData_MP.totalWithdraw,
+                revenue = transferData_MP.revenue,
+                betCount = transferData_MP.betCount,
+                timestamp = transferData_MP.timestamp,
                 TicketType = (int)BettransType.Bet,
                 TicketStatus = (int)TicketStatus.UnSettled,
                 SettleFlag = (int)SettleFlag.Running
@@ -369,7 +376,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_MP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransPK_MP_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && amount != 0)
                 {
