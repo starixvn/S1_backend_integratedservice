@@ -4157,7 +4157,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans);
                 }
 
-                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound)
+                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound && bettingData_Skywind.event_type != "transfer-out")
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingData_Skywind.round_id, trans, partitionTime);
                 }
@@ -4239,6 +4239,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+
+        public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId }, commandType: CommandType.StoredProcedure);
         }
         #endregion
     }

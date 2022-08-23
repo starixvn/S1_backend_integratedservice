@@ -80,4 +80,10 @@
         public long timestamp { get; set; }
         public long operationts { get; set; }
     }
+    public class SettleData_Skywind : SettleData
+    {
+        public decimal debit { get; set; }
+        public decimal credit { get; set; }
+        public string playerCode { get; set; }
+    }
 }

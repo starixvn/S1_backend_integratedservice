@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -21,6 +22,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiSkywindBLL> _logger;
         private readonly string _tpName = Tp.Skywind.ToString();
+        private readonly WagerSkywindService _wagerSkywindService;
 
         public ApiSkywindBLL(IServiceProvider provider)
         {
@@ -28,6 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiSkywindBLL>>();
+            _wagerSkywindService = provider.GetRequiredService<WagerSkywindService>();
         }
 
         public class JwtToken
@@ -40,7 +43,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<WagerSkywindModel>> GetBetListByTime(string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
         {
             var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
-            string url = $"{apiUrl}/history/game?firstTs={startTime}&ts={endTime}";
+            string url = $"{apiUrl}/history/game?ts__gte={startTime}&ts__lte={endTime}&finished='true'";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
             var response = await _httpHelper.GetClient().SendAsync(request);
@@ -49,8 +52,15 @@ namespace ThirdPartyWager.Service.BLL
             {
                 r = sr.ReadToEnd();
             }
+
             var result = JsonConvert.DeserializeObject<List<WagerSkywindModel>>(r);
+
             return result;
+        }
+
+        public int InsertWager(BetSkywind bet)
+        {
+            return _wagerSkywindService.InsertWager(bet);
         }
 
         private async Task<JwtToken> GetJwtTokenAsync(string apiUrl, string username, string password, string secretKey)
