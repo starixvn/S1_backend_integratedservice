@@ -119,7 +119,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId);
+                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
                         }                      
@@ -220,7 +220,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId);
+                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
                         }
@@ -321,7 +321,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId);
+                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
                         }
