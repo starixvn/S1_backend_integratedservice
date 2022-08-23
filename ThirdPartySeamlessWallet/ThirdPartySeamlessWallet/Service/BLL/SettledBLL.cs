@@ -2210,6 +2210,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
+
+        public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
+        {
+            return settledService.GetSettle_TpWager_Skywind(transId);
+        }
         #endregion
     }
 }

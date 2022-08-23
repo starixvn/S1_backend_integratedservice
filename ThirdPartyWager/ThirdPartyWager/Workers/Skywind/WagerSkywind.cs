@@ -41,7 +41,7 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Workers
                     }
                     if (timerTime < DateTime.Now)
                     {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ssZ", timerTime);
+                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
                         var result = await wagerSkywindBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], time.startTime, time.endTime);
                     }
                 }                
