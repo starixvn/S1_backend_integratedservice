@@ -33,4 +33,17 @@ namespace ThirdPartyWager.Service.Model
         public decimal turnover { get; set; }
         public decimal validbet { get; set; }
     }
+
+    public class CurrencyStats_KM
+    {
+        public int numberofbets { get; set; }
+        public decimal riskamt { get; set; }
+        public decimal winamt { get; set; }
+        public decimal turnover { get; set; }
+        public decimal validbet { get; set; }
+        public decimal winloss { get; set; }
+        public string cur { get; set; }
+        public int playertype { get; set; }
+        public decimal jackpotwinamt { get; set; }
+    }
 }
