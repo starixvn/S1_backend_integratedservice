@@ -92,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
 
-                        if(betData.Sum(x => x.amount) == wager.debit)
+                        if(betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var tpUserName = settleData.FirstOrDefault().custid;
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
@@ -193,7 +193,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
 
-                        if (betData.Sum(x => x.amount) == wager.debit)
+                        if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var tpUserName = settleData.FirstOrDefault().custid;
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
@@ -294,7 +294,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
 
-                        if (betData.Sum(x => x.amount) == wager.debit)
+                        if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var tpUserName = settleData.FirstOrDefault().custid;
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
