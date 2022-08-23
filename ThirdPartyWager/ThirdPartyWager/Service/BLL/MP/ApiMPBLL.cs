@@ -32,8 +32,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<WagerMPModel> GetBetListByTime(string wagerUrl, string agent, string deskey, string md5key, long startUnix, long endUnix, string guid)
         {
-            var current = new DateTimeOffset(DateTime.UtcNow);
-            var timestamp = current.ToUnixTimeMilliseconds();
+            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             // param
             var url = wagerUrl;
             var param = new
@@ -64,6 +63,45 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<CurrencyStats_MP> GetBetSummaryByTime(dynamic setting, string currency, string startTime, string endTime)
+        {
+            var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+            var wagerUrl = setting["WagerUrl"];
+            var deskey = setting["Deskey"];
+            var agent = setting["Agent"];
+            var md5key = setting["Md5key"];
+
+            // param
+            var url = wagerUrl;
+            var param = new
+            {
+                s = 61,
+                startTime = startTime,
+                endTime = endTime,
+                currency = currency
+            };
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // log
+            _logger.LogInformation(JsonConvert.SerializeObject(param));
+
+            var report = new
+            {
+                agent = agent,
+                timestamp = timestamp,
+                param = _common.AesEncrypt(sParam, deskey),
+                key = _common.ToMD5($"{agent}{timestamp}{md5key}").ToLower()
+            };
+            dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(report));
+            sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request
+            var r = await DoHttpClientAsync(url, sParam);
+            var result = JsonConvert.DeserializeObject<CurrencyStats_MP>(r);
+            return result;
+        }
+
         private async Task<string> DoHttpClientAsync(string url, string param)
         {
             _log2File.InsertRequestLog(_tpName, url, param, "1");
@@ -84,6 +122,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 result = sr.ReadToEnd();
             }
+
             return result;
         }
     }
