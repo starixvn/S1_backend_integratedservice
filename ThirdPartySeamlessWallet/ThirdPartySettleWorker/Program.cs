@@ -50,7 +50,11 @@ builder.Services
     .AddHostedService<KMWoker>()
     .AddHostedService<OneGamingWorker>()
     .AddHostedService<V8Worker>()
-    .AddHostedService<MPWorker>();
+    .AddHostedService<MPWorker>()
+    .AddHostedService<CQ9Worker>()
+    .AddHostedService<GPIWorker>()
+    .AddHostedService<NetentWorker>()
+    .AddHostedService<RedTigerWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
