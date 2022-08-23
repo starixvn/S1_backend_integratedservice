@@ -73,8 +73,8 @@ namespace ThirdPartyWager.Service.Model
         public int finished { get; set; }
         public decimal revenue { get; set; }
         public string currency { get; set; }
-        public decimal? debit { get; set; }
-        public decimal? credit { get; set; }
+        public decimal debit { get; set; }
+        public decimal credit { get; set; }
         public string roundId { get; set; }
         public string brandId { get; set; }
         public string playerCode { get; set; }
