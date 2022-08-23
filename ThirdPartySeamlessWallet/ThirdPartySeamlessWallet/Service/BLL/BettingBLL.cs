@@ -626,5 +626,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region SimplePlay
+
+        public int PlaceBetRNG_SimplePlay(BettingData_SimplePlay bettingData_SimplePlay, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.SimplePlay;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_SimplePlay.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_SimplePlay.amount *= tpCurrency.ExchangeRate;
+                bettingData_SimplePlay.JackpotContribution *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_SimplePlay(tpCustInfo, bettingData_SimplePlay, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
     }
 }
