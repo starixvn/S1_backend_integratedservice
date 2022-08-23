@@ -58,7 +58,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int sequence { get; set; }
     }
 
-    public class SettleData_SG : SettleData
+    public class SettleData_SG : SettleData 
     {
         public string transferIdList { get; set; }
         public string referenceId { get; set; }

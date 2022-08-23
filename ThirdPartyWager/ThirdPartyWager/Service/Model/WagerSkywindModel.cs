@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service.Model
     public class WagerSkywindModel
     {
         public bool finished { get; set; }
-        public int revenue { get; set; }
+        public decimal revenue { get; set; }
         public string currency { get; set; }
         public decimal? debit { get; set; }
         public decimal? credit { get; set; }
@@ -63,6 +63,32 @@ namespace ThirdPartyWager.Service.Model
         public string ts { get; set; }
         public bool isTest { get; set; }
         public string insertedAt { get; set; }
+        public string recoveryType { get; set; }
+        public decimal totalJpContribution { get; set; }
+        public decimal totalJpWin { get; set; }
+    }
+
+    public class BetSkywind
+    {
+        public int finished { get; set; }
+        public decimal revenue { get; set; }
+        public string currency { get; set; }
+        public decimal? debit { get; set; }
+        public decimal? credit { get; set; }
+        public string roundId { get; set; }
+        public string brandId { get; set; }
+        public string playerCode { get; set; }
+        public string gameCode { get; set; }
+        public string device { get; set; }
+        public decimal win { get; set; }
+        public decimal bet { get; set; }
+        public decimal balanceBefore { get; set; }
+        public decimal balanceAfter { get; set; }
+        public string totalEvents { get; set; }
+        public DateTime firstTs { get; set; }
+        public DateTime ts { get; set; }
+        public int isTest { get; set; }
+        public DateTime insertedAt { get; set; }
         public string recoveryType { get; set; }
         public decimal totalJpContribution { get; set; }
         public decimal totalJpWin { get; set; }
