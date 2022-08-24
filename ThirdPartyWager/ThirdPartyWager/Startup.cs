@@ -10,7 +10,6 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.SBO;
-using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -191,6 +190,7 @@ namespace ThirdPartyWager
             services.AddSingleton<FinanceEVOBLL>();
             //YGG
             services.AddSingleton<WagerYGGBLL>();
+            services.AddSingleton<FinanceYGGBLL>();
             //Ebet
             services.AddSingleton<ApiEbetBLL>();
             services.AddSingleton<FinanceEbetBLL>();
@@ -272,6 +272,7 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
             services.AddHostedService<WagerYGG>();
+            services.AddHostedService<FinanceYGG>();
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
