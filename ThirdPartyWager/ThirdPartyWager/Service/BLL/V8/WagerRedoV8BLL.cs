@@ -27,7 +27,6 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> RedoWagersAsync(int tpId, long startUnix, long endUnix)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
@@ -38,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
                 var wagerCount = getWagerCount.wagerCount;
 
                 // get wager
-                var dataWager = await _apiV8BLL.GetBetListByTime(setting["WagerUrl"], setting["Agent"], setting["Deskey"], setting["Md5key"], startUnix, endUnix, guid);
+                var dataWager = await _apiV8BLL.GetBetListByTime(setting["WagerUrl"], setting["Agent"], setting["Deskey"], setting["Md5key"], startUnix, endUnix);
 
                 // error condition
                 var errorCode = dataWager.d.code;

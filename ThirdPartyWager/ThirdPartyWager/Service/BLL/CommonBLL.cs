@@ -20,5 +20,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             return commonService.GetTpCurrencyList(tpId);
         }
+
+        public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
+        {
+            return commonService.GetWagerSummary(spName, beginTime, endTime);
+        }
     }
 }
