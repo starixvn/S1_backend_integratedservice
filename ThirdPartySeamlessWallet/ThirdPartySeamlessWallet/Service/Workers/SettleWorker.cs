@@ -15,12 +15,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleDG;
         private Timer timerSettleEBet;
         private Timer timerSettleWM;
-        
+
         private Timer timerSettleCQ9Fish;
-      
+
         private Timer timerSettleAWC;
         private Timer timerSettleYGG;
-        
+
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
         private Timer timerSettleOne789LC;
@@ -34,8 +34,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleSexy;
         private Timer timerSettleEVO;
         private Timer timerSettleRewardEVO;
-     
-      
+
+
 
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
@@ -66,10 +66,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            
+
             timerSettleCQ9Fish = new Timer(DoSettleCQ9FishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-           
+
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -80,8 +80,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            
-           
+
+
             timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
@@ -507,7 +507,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.ValidBet *= tpCurrency.ExchangeRate;
                                     wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
-                                if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
+
+                                bool isRefund = false;
+                                if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund && wager.Status == 0)
+                                {
+                                    isRefund = true;
+                                }
+
+                                if ((wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount) || isRefund)
                                 {
                                     BetRecordInfo betRecordInfo = new BetRecordInfo
                                     {
@@ -523,6 +530,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
+                                    if (isRefund)
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                        betRecordInfo.TicketStatus = TicketStatus.Refund;
+                                    }
+
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                     settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
@@ -534,8 +547,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 LogContext.PushProperty("TP", tpName);
                                 isError = true;
-                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                             }
+                        }
+                        else
+                        {
+                            log2File.Error($"{unsettled.TransId} wager not found", logName);
                         }
                     }
                 }
@@ -989,11 +1006,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleDG?.Change(Timeout.Infinite, 0);
             timerSettleEBet?.Change(Timeout.Infinite, 0);
             timerSettleWM?.Change(Timeout.Infinite, 0);
-            
+
             timerSettleCQ9Fish?.Change(Timeout.Infinite, 0);
-            
+
             timerSettleAWC?.Change(Timeout.Infinite, 0);
-            
+
             timerSettleOne789LT?.Change(Timeout.Infinite, 0);
             timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
             timerSettleOne789LC?.Change(Timeout.Infinite, 0);
@@ -1008,8 +1025,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSexy?.Change(Timeout.Infinite, 0);
             timerSettleEVO?.Change(Timeout.Infinite, 0);
             timerSettleRewardEVO?.Change(Timeout.Infinite, 0);
-           
-          
+
+
 
             return Task.CompletedTask;
         }
