@@ -117,7 +117,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.ValidBet *= tpCurrency.ExchangeRate;
                                     wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
-                                if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
+
+                                bool isRefund = false;
+                                if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund && wager.Status == 0)
+                                {
+                                    isRefund = true;
+                                }
+
+                                if ((wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount) || isRefund)
                                 {
                                     BetRecordInfo betRecordInfo = new BetRecordInfo
                                     {
@@ -133,6 +140,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
+                                    if (isRefund)
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                        betRecordInfo.TicketStatus = TicketStatus.Refund;
+                                    }
+
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Lottery);
 
                                     settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
@@ -144,8 +157,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 LogContext.PushProperty("TP", tpName);
                                 isError = true;
-                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName, ex1);
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                             }
+                        }
+                        else
+                        {
+                            log2File.Error($"{unsettled.TransId} wager not found", logName);
                         }
                     }
                 }
@@ -204,7 +221,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.ValidBet *= tpCurrency.ExchangeRate;
                                     wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
-                                if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
+
+                                bool isRefund = false;
+                                if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund && wager.Status == 0)
+                                {
+                                    isRefund = true;
+                                }
+
+                                if ((wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount) || isRefund)
                                 {
                                     BetRecordInfo betRecordInfo = new BetRecordInfo
                                     {
@@ -220,6 +244,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
+                                    if (isRefund)
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                        betRecordInfo.TicketStatus = TicketStatus.Refund;
+                                    }
+
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Lottery);
 
                                     settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
@@ -231,8 +261,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 LogContext.PushProperty("TP", tpName);
                                 isError = true;
-                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName, ex1);
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                             }
+                        }
+                        else
+                        {
+                            log2File.Error($"{unsettled.TransId} wager not found", logName);
                         }
                     }
                 }
