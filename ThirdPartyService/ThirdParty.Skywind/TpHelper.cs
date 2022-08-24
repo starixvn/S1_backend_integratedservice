@@ -155,7 +155,25 @@ namespace ThirdParty.Skywind
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Skywind_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gameCode"),
+                Game = tpGameType.TypeName,
+                RefNo = detail.GetStringValue("roundId"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("roundId"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
         private JwtToken GetJwtToken(string apiUrl, string username, string password, string secretKey)
         {
