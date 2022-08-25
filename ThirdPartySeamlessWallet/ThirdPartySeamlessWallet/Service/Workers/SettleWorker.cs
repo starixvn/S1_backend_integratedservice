@@ -1,17 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
@@ -24,31 +15,27 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleDG;
         private Timer timerSettleEBet;
         private Timer timerSettleWM;
-        private Timer timerSettleCQ9;
+
         private Timer timerSettleCQ9Fish;
-        private Timer timerSettleGPI;
+
         private Timer timerSettleAWC;
         private Timer timerSettleYGG;
-        private Timer timerSettleKiss918;
+
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
         private Timer timerSettleOne789LC;
-        private Timer timerSettleOneGaming;
-        private Timer timerSettleV8;
         private Timer timerSettleYLFish;
         private Timer timerSettleN2Live;
         private Timer timerSettleN2LiveLC_Smart;
         private Timer timerSettleBTI;
-        private Timer timerSettleAMB;
         private Timer timerSettle9W;
         private Timer timerSettleTCGSEA;
         private Timer timerSettleTCGVN;
-        private Timer timerSettleMP;
         private Timer timerSettleSexy;
         private Timer timerSettleEVO;
         private Timer timerSettleRewardEVO;
-        private Timer timerSettleNetent;
-        private Timer timerSettleRedTiger;
+
+
 
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
@@ -79,27 +66,22 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleCQ9 = new Timer(DoSettleCQ9Work, null, TimeSpan.Zero, TimeSpan.Zero);
+
             timerSettleCQ9Fish = new Timer(DoSettleCQ9FishWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleGPI = new Timer(DoSettleGPIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleKiss918 = new Timer(DoSettleKiss918Work, null, TimeSpan.Zero, TimeSpan.Zero);
+
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleOneGaming = new Timer(DoSettleOneGamingWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleV8 = new Timer(DoSettleV8Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleYLFish = new Timer(DoSettleYLFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettle9W = new Timer(DoSettle9WWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleAMB = new Timer(DoSettleAMBWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleNetent = new Timer(DoSettleNetentWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleRedTiger = new Timer(DoSettleRedTigerWork, null, TimeSpan.Zero, TimeSpan.Zero);
+
+
             timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
@@ -251,8 +233,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                             if (wager != null)
                             {
-                                //会员抢红包
-                                if (wager.GameType == 2 && wager.GameId == 2)
+                                //会员发红包、会员抢红包、主播小费、公司发红包、博饼记录、荷官小费
+                                if (wager.GameType == 2)
                                 {
                                     Task.Run(() =>
                                     {
@@ -525,7 +507,14 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.ValidBet *= tpCurrency.ExchangeRate;
                                     wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
-                                if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
+
+                                bool isRefund = false;
+                                if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund && wager.Status == 0)
+                                {
+                                    isRefund = true;
+                                }
+
+                                if ((wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount) || isRefund)
                                 {
                                     BetRecordInfo betRecordInfo = new BetRecordInfo
                                     {
@@ -541,6 +530,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettlementType = SettlementType.SettledForValid
                                     };
 
+                                    if (isRefund)
+                                    {
+                                        betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                        betRecordInfo.TicketStatus = TicketStatus.Refund;
+                                    }
+
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                                     settledBLL.SetSettleFlag_TpWagerOne789(gameType, unsettled.TransId);
@@ -552,8 +547,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             {
                                 LogContext.PushProperty("TP", tpName);
                                 isError = true;
-                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                                log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
                             }
+                        }
+                        else
+                        {
+                            log2File.Error($"{unsettled.TransId} wager not found", logName);
                         }
                     }
                 }
@@ -1007,31 +1006,27 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleDG?.Change(Timeout.Infinite, 0);
             timerSettleEBet?.Change(Timeout.Infinite, 0);
             timerSettleWM?.Change(Timeout.Infinite, 0);
-            timerSettleCQ9?.Change(Timeout.Infinite, 0);
+
             timerSettleCQ9Fish?.Change(Timeout.Infinite, 0);
-            timerSettleGPI?.Change(Timeout.Infinite, 0);
+
             timerSettleAWC?.Change(Timeout.Infinite, 0);
-            timerSettleKiss918?.Change(Timeout.Infinite, 0);
+
             timerSettleOne789LT?.Change(Timeout.Infinite, 0);
             timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
             timerSettleOne789LC?.Change(Timeout.Infinite, 0);
-            timerSettleOneGaming?.Change(Timeout.Infinite, 0);
-            timerSettleV8?.Change(Timeout.Infinite, 0);
             timerSettleYGG?.Change(Timeout.Infinite, 0);
             timerSettleYLFish?.Change(Timeout.Infinite, 0);
             timerSettleN2Live?.Change(Timeout.Infinite, 0);
             timerSettleN2LiveLC_Smart?.Change(Timeout.Infinite, 0);
             timerSettleBTI?.Change(Timeout.Infinite, 0);
             timerSettle9W?.Change(Timeout.Infinite, 0);
-            timerSettleAMB?.Change(Timeout.Infinite, 0);
             timerSettleTCGSEA?.Change(Timeout.Infinite, 0);
             timerSettleTCGVN?.Change(Timeout.Infinite, 0);
-            timerSettleMP?.Change(Timeout.Infinite, 0);
             timerSettleSexy?.Change(Timeout.Infinite, 0);
             timerSettleEVO?.Change(Timeout.Infinite, 0);
             timerSettleRewardEVO?.Change(Timeout.Infinite, 0);
-            timerSettleNetent?.Change(Timeout.Infinite, 0);
-            timerSettleRedTiger?.Change(Timeout.Infinite, 0);
+
+
 
             return Task.CompletedTask;
         }

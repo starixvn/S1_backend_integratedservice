@@ -367,10 +367,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         betRecordInfo.ValidBet = betDetial.discount_stake ?? 0;
                     }
 
+                    /*Cause Hard to Win So Cal to Valid*/
                     if ((betDetial.bet_type ?? 0) == (int)BetType.FootballScoreHandicap ||
                         (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder ||
                         (betDetial.bet_type ?? 0) == (int)BetType.Parlay ||
-                        (betDetial.bet_type ?? 0) == (int)BetType.FootballScoreOverUnder) /*Cause Hard to Win So Cal to Valid*/
+                        (betDetial.bet_type ?? 0) == (int)BetType.SingleMatchParlay)
                     {
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                     }
@@ -559,6 +560,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 220 => GameType.Saba_Lottery,
                 222 => GameType.Saba_TableGame,
                 223 => GameType.Saba_Indo4D,
+                237 => GameType.Saba_MaxGame,
                 245 => GameType.Saba_VirtualGames,
                 211 => GameType.Allbet,
                 248 => GameType.PP,

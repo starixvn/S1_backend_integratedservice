@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Service.Model
         public string betOption { get; set; }
         public string marketType { get; set; }
         public string sportType { get; set; }
-        public decimal hdp { get; set; }
+        public decimal? hdp { get; set; }
         public decimal odds { get; set; }
         public string league { get; set; }
         public string match { get; set; }
@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal turnover { get; set; }
         public bool isHalfWonLose { get; set; }
         public bool isLive { get; set; }
-        public int maxWinWithoutActualStake { get; set; }
+        public decimal maxWinWithoutActualStake { get; set; }
         public string ip { get; set; }
         public bool isSystemTagRisky { get; set; }
         public bool isCustomerTagRisky { get; set; }

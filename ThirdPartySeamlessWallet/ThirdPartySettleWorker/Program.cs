@@ -48,6 +48,13 @@ builder.Services
     .AddHostedService<JILIWorker>()
     .AddHostedService<ATWorker>()
     .AddHostedService<KMWoker>()
+    .AddHostedService<OneGamingWorker>()
+    .AddHostedService<V8Worker>()
+    .AddHostedService<MPWorker>()
+    .AddHostedService<CQ9Worker>()
+    .AddHostedService<GPIWorker>()
+    .AddHostedService<NetentWorker>()
+    .AddHostedService<RedTigerWorker>();
     .AddHostedService<SkywindWorker>();
 
 var app = builder.Build();
