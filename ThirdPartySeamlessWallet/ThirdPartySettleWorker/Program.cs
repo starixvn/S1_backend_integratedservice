@@ -54,7 +54,7 @@ builder.Services
     .AddHostedService<CQ9Worker>()
     .AddHostedService<GPIWorker>()
     .AddHostedService<NetentWorker>()
-    .AddHostedService<RedTigerWorker>();
+    .AddHostedService<RedTigerWorker>()
     .AddHostedService<SkywindWorker>();
 
 var app = builder.Build();
