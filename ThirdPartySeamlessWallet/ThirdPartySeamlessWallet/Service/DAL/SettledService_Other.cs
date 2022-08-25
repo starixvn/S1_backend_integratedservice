@@ -951,13 +951,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    sp = "Service_BettransLT_One789_Unsettle_Get";
+                    sp = "Service_BettransLT_One789_Unsettle_Get_V2";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    sp = "Service_BettransLT_One789_789_Unsettle_Get";
+                    sp = "Service_BettransLT_One789_789_Unsettle_Get_V2";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    sp = "Service_BettransLC_One789_Unsettle_Get";
+                    sp = "Service_BettransLC_One789_Unsettle_Get_V2";
                     break;
                 default:
                     break;
@@ -966,25 +966,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData>($"{sp}", commandType: CommandType.StoredProcedure);
         }
 
-        public SettleData GetSettle_TpWagerOne789(int gameType, string TransId)
+        public SettleData_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
         {
             string sp = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    sp = "Service_TpWagerOne789_LT_Settle_Get_V2";
+                    sp = "Service_TpWagerOne789_LT_Settle_Get_V3";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    sp = "Service_TpWagerOne789_LT_789_Settle_Get_V2";
+                    sp = "Service_TpWagerOne789_LT_789_Settle_Get_V3";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    sp = "Service_TpWagerOne789_LC_Settle_Get_V2";
+                    sp = "Service_TpWagerOne789_LC_Settle_Get_V3";
                     break;
                 default:
                     break;
             }
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<SettleData_One789>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerOne789(int gameType, string TransId)
