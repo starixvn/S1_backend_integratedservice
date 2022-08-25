@@ -112,7 +112,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = settledTime,
                                 TransTime = betTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                                Revenue = wager.Revenue
                             }, TpCategory.Slots);
 
                             if (result == 1)
@@ -213,7 +214,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = settledTime,
                                 TransTime = betTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                                Revenue = wager.Revenue
                             }, TpCategory.LiveCasino);
 
                             if (result == 1)
@@ -314,7 +316,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = settledTime,
                                 TransTime = betTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                                Revenue = wager.Revenue
                             }, TpCategory.Fish);
 
                             if (result == 1)

@@ -165,9 +165,9 @@ namespace ThirdParty.Skywind
             {
                 GameID = detail.GetStringValue("gameCode"),
                 Game = tpGameType.TypeName,
-                RefNo = detail.GetStringValue("roundId"),
+                RefNo = string.Empty,
                 Title = tpGameType.TypeName,
-                MatchID = detail.GetStringValue("roundId"),
+                MatchID = string.Empty,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
