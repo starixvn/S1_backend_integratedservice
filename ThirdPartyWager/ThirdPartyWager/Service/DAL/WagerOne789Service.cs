@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Service.DAL
                 default:
                     break;
             }
-            var sp = $"Service_TpWagerOne789_{game}_Ins";
+            var sp = $"Service_TpWagerOne789_{game}_Ins_V2";
             return _wagerDbClient.Execute(sp, new DynamicParameters(bet));
         }
 
