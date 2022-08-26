@@ -39,6 +39,8 @@ namespace ThirdPartyWager.Service.BLL
 			var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
 			_config = new SkywindConfig(setting);
 			_tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+			liveaCasino = new Dictionary<string, string>();
+			fishing = new Dictionary<string, string>();
 			liveaCasino.Add("sw_ro_a01bac", "sw_ro_a01bac");
 			liveaCasino.Add("sw_ro_a01bac_nc", "sw_ro_a01bac_nc");
 			liveaCasino.Add("sw_ro_a04bac", "sw_ro_a04bac");
@@ -55,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
 
 		public async Task<bool> GetWagersAsync(int tpId, string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
         {
-			var msg = "FATAL_ERROR";
+            var msg = "FATAL_ERROR";
 			try
             {
 				var dataWager = await _apiSkywindBLL.GetBetListByTime(apiUrl, secretKey, username, password, startTime, endTime);
