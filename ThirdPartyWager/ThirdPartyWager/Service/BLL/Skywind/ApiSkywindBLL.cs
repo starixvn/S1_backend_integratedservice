@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -22,7 +23,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiSkywindBLL> _logger;
         private readonly string _tpName = Tp.Skywind.ToString();
-        private readonly WagerSkywindService _wagerSkywindService;
+        private readonly MySqlClient _wagerDbClient;
 
         public ApiSkywindBLL(IServiceProvider provider)
         {
@@ -30,7 +31,7 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiSkywindBLL>>();
-            _wagerSkywindService = provider.GetRequiredService<WagerSkywindService>();
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public class JwtToken
@@ -60,7 +61,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public int InsertWager(BetSkywind bet)
         {
-            return _wagerSkywindService.InsertWager(bet);
+            return _wagerDbClient.Execute("Service_TpWagerSkywind_Ins", bet);
         }
 
         private async Task<JwtToken> GetJwtTokenAsync(string apiUrl, string username, string password, string secretKey)

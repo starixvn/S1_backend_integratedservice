@@ -25,6 +25,8 @@ namespace ThirdPartyWager.Service.BLL
 		private const int TpId = (int)Tp.Skywind;
 		private const int SuccessCode = 0;
 		private readonly TpUnsettleService _tpUnsettleService;
+		private Dictionary<string, string> liveaCasino;
+		private Dictionary<string, string> fishing;
 
 		public WagerSkywindBLL(IServiceProvider provider)
 		{
@@ -37,6 +39,18 @@ namespace ThirdPartyWager.Service.BLL
 			var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
 			_config = new SkywindConfig(setting);
 			_tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+			liveaCasino.Add("sw_ro_a01bac", "sw_ro_a01bac");
+			liveaCasino.Add("sw_ro_a01bac_nc", "sw_ro_a01bac_nc");
+			liveaCasino.Add("sw_ro_a04bac", "sw_ro_a04bac");
+			liveaCasino.Add("sw_ro_a04bac_nc", "sw_ro_a04bac_nc");
+			liveaCasino.Add("sw_ro_a07bac", "sw_ro_a07bac");
+			liveaCasino.Add("sw_ro_a07bac_nc", "sw_ro_a07bac_nc");
+			liveaCasino.Add("sw_ro_a01ro", "sw_ro_a01ro");
+			liveaCasino.Add("sw_ro_a03ro", "sw_ro_a03ro");
+			liveaCasino.Add("sw_live_erol_atom", "sw_live_erol_atom");
+			fishing.Add("sw_or", "sw_or");
+			fishing.Add("sw_fj", "sw_fj");
+			fishing.Add("sw_cashdaha", "sw_cashdaha");
 		}
 
 		public async Task<bool> GetWagersAsync(int tpId, string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
@@ -81,13 +95,11 @@ namespace ThirdPartyWager.Service.BLL
 						if (result > 0)
 						{
 							var gameType = GameType.Skywind_RNG;
-							if (bet.gameCode == "sw_or" || bet.gameCode == "sw_fj" || bet.gameCode == "sw_cashdaha")
+							if (fishing.ContainsKey(bet.gameCode))
 							{
 								gameType = GameType.Skywind_Fish;
 							}
-							else if (bet.gameCode == "sw_ro_a01bac" || bet.gameCode == "sw_ro_a01bac_nc " || bet.gameCode == "sw_ro_a04bac"
-								|| bet.gameCode == "sw_ro_a04bac_nc" || bet.gameCode == "sw_ro_a07bac " || bet.gameCode == "sw_ro_a07bac_nc"
-								|| bet.gameCode == "sw_ro_a01ro" || bet.gameCode == "sw_ro_a03ro " || bet.gameCode == "sw_live_erol_atom")
+							else if (liveaCasino.ContainsKey(bet.gameCode))
 							{
 								gameType = GameType.Skywind_LiveCasino;
 							}

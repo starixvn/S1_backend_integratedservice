@@ -91,11 +91,18 @@ namespace ThirdPartySettleWorker.Workers
                         var UnsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Skywind>("Service_Bettrans_Skywind_Unsettle_Get", tpUnsettle);
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
+                        var tpUserName = settleData.FirstOrDefault().custid;
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
-                        if(betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
+                        #region 匯率轉換
+                        wager.debit *= tpCurrency.ExchangeRate;
+                        wager.Stake *= tpCurrency.ExchangeRate;
+                        wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                        #endregion
+
+                        if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
-                            var tpUserName = settleData.FirstOrDefault().custid;
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                             var stake = wager.Stake;
                             var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
@@ -193,11 +200,18 @@ namespace ThirdPartySettleWorker.Workers
                         var UnsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Skywind>("Service_Bettrans_Skywind_Unsettle_Get", tpUnsettle);
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
+                        var tpUserName = settleData.FirstOrDefault().custid;
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+
+                        #region 匯率轉換
+                        wager.debit *= tpCurrency.ExchangeRate;
+                        wager.Stake *= tpCurrency.ExchangeRate;
+                        wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                        #endregion
 
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
-                            var tpUserName = settleData.FirstOrDefault().custid;
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                             var stake = wager.Stake;
                             var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
@@ -295,11 +309,18 @@ namespace ThirdPartySettleWorker.Workers
                         var UnsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Skywind>("Service_Bettrans_Skywind_Unsettle_Get", tpUnsettle);
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
+                        var tpUserName = settleData.FirstOrDefault().custid;
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+
+                        #region 匯率轉換
+                        wager.debit *= tpCurrency.ExchangeRate;
+                        wager.Stake *= tpCurrency.ExchangeRate;
+                        wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                        #endregion
 
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
-                            var tpUserName = settleData.FirstOrDefault().custid;
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                             var stake = wager.Stake;
                             var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
