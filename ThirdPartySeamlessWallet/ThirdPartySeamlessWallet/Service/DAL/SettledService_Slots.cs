@@ -4041,19 +4041,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
-                DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-                partitionTime = partitionTime.AddSeconds(bettingData_Skywind.timestamp);
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
                 var query = new
                 {
                     bettingData_Skywind.trx_id
                 };
                 var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
-                if (check.Any())
+                if (check.Any() && check.Any(x => x.TicketStatus != (int)TicketStatus.UnSettled))
                 {
-                    if(check.ToList().Exists(x => x.TicketStatus != (int)TicketStatus.UnSettled))
-                    {
-                        return -1;
-                    }
+                    return -1;
                 }
 
                 using var conn = _mainDbClient.GetMySqlConnection();
@@ -4120,9 +4116,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             afterAmount = 0;
             var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
-            DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            partitionTime = partitionTime.AddSeconds(cancelBetData_Skywind.timestamp);
-            
+            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(cancelBetData_Skywind.timestamp).DateTime;
+
             var query = new
             {
                 trx_id = cancelBetData_Skywind.trxid
@@ -4181,8 +4176,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId });
         }
         #endregion
     }

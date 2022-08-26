@@ -18,7 +18,6 @@ namespace ThirdParty.Skywind
     {
         public TpHelper()
         {
-
         }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -167,11 +166,11 @@ namespace ThirdParty.Skywind
                 Game = tpGameType.TypeName,
                 RefNo = string.Empty,
                 Title = tpGameType.TypeName,
-                MatchID = string.Empty,
+                MatchID = detail.GetStringValue("roundId"),
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
-                DeviceType = DeviceType.None,
+                DeviceType = GetDeviceType(detail.GetStringValue("device")),
                 IP = string.Empty,
             };
         }
@@ -188,6 +187,15 @@ namespace ThirdParty.Skywind
             var r = HttpPost(url, param, "application/json");
             var result = JsonConvert.DeserializeObject<JwtToken>(r);
             return result;
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            if (device == "web")
+                return DeviceType.Desktop;
+            else if(device == "mobile")
+                return DeviceType.Mobile;
+            else
+                return DeviceType.None;
         }
         public class JwtToken
         {

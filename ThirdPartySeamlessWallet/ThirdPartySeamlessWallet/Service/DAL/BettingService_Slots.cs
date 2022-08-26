@@ -1169,8 +1169,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingData_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
             bettingData_Skywind.TicketType = (int)BettransType.Bet;
             afterAmount = 0;
-            DateTime partitionTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            partitionTime = partitionTime.AddSeconds(bettingData_Skywind.timestamp);
+            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
             var query = new
             {
                 bettingData_Skywind.trx_id
