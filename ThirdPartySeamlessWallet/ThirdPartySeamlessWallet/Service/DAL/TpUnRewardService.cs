@@ -35,29 +35,41 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
+        public int SetTpUnRewardDataBySpName(string spName, object parameters, DataBase dataBase)
+        {
+            return dataBase switch
+            {
+                DataBase.Main => _mainDbClient.Execute(spName, parameters: parameters),
+                DataBase.Wager => _wagerDbClient.Execute(spName, parameters: parameters),
+                _ => throw new NotImplementedException(),
+            };
+        }
+
         public IEnumerable<TpUnReward> GetTpUnRewardList(Tp tp, GameType gameType, int LimitCount)
         {
             return _mainDbClient.Query<TpUnReward>("Service_TpUnReward_Get", parameters: new { TpId = (int)tp, GameType = (int)gameType, LimitCount });
         }
 
-        public int SetTpUnReward(Tp tp, GameType gameType, string transId, bool isSuccess)
+        public int SetTpUnReward(Tp tp, GameType gameType, string transId, string tpUserName, bool isSuccess)
         {
             return _mainDbClient.Execute("Service_TpUnReward_Set", parameters: new
             {
                 TpId = (int)tp,
                 GameType = (int)gameType,
                 TransId = transId,
+                TpUserName = tpUserName,
                 IsSuccess = isSuccess
             });
         }
 
-        public int InsertTpUnReward(Tp tp, GameType gameType, string transId, IDbTransaction transaction, DateTime? partitionTime = null)
+        public int InsertTpUnReward(Tp tp, GameType gameType, string transId, string tpUserName, IDbTransaction transaction, DateTime? partitionTime = null)
         {
             return _mainDbClient.Execute("Service_TpUnReward_Ins", transaction: transaction, parameters: new
             {
                 TpId = (int)tp,
                 GameType = (int)gameType,
                 TransId = transId,
+                TpUserName = tpUserName,
                 PartitionTime = partitionTime
             });
         }

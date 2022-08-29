@@ -1,13 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -32,8 +24,7 @@ namespace ThirdPartySettleWorker.Workers
             _logger = provider.GetRequiredService<ILogger<TpRewardWorker>>();
             _taskList = new List<TaskParam>()
             {
-                new TaskParam { Tp = Tp.AP, GameType = GameType.AP_RNG, TpCategory = TpCategory.Slots, SpName = "Service_RewardRNG_AP_Settle_Get" },
-                //new TaskParam { Tp = Tp.MG, GameType = GameType.MG_RNG, TpCategory = TpCategory.Slots, SpName = "Service_Reward_MG_Settle_Get" },
+                new TaskParam { Tp = Tp.AP, GameType = GameType.AP_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_RewardRNG_AP_Settle_Get", SetSpName = "Service_RewardRNG_AP_Settle_Set" },
             };
         }
 
@@ -60,7 +51,8 @@ namespace ThirdPartySettleWorker.Workers
             public Tp Tp { get; set; }
             public GameType GameType { get; set; }
             public TpCategory TpCategory { get; set; }
-            public string SpName { get; set; }
+            public string GetSpName { get; set; }
+            public string SetSpName { get; set; }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -80,9 +72,11 @@ namespace ThirdPartySettleWorker.Workers
             var tpGameType = param.GameType;
             var tpCategory = param.TpCategory;
             var tpName = tp.ToString();
-            var spName = param.SpName;
+            var getSpName = param.GetSpName;
+            var setSpName = param.SetSpName;
             var forContinue = false;
             var isError = false;
+            var database = DataBase.Main;
             LogContext.PushProperty("TP", tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
@@ -100,7 +94,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var data = _tpUnRewardBLL.GetTpUnRewardData<SettleRewardData>(spName, new { TransId = tpUnReward.TransId }, DataBase.Main).First();
+                        var data = _tpUnRewardBLL.GetTpUnRewardData<SettleRewardData>(getSpName, new { TransId = tpUnReward.TransId, TpUserName = tpUnReward.TpUserName }, database).First();
                         if (data == null)
                         {
                             throw new UnRewardNotFoundException($"{tpUnReward.TransId} TransId not found.");
@@ -120,7 +114,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameType = tpGameType,
                             TpUserName = data.Account,
                             SettledTime = data.SettleTime,
-                            TransTime = data.SettleTime,
+                            TransTime = data.TransTime,
                             SettlementType = SettlementType.SettledForValid,
                         };
 
@@ -129,7 +123,8 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
-                                _tpUnRewardBLL.SetTpUnReward(tp, tpGameType, tpUnReward.TransId, isSuccess: true);
+                                _tpUnRewardBLL.SetTpUnReward(tp, tpGameType, tpUnReward.TransId, data.Account, isSuccess: true);
+                                _tpUnRewardBLL.SetTpUnRewardData(setSpName, new { TransId = tpUnReward.TransId, TpUserName = data.Account }, database);
                             });
                         }
                     }
@@ -137,7 +132,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnRewardBLL.SetTpUnReward(tp, tpGameType, tpUnReward.TransId, isSuccess: false);
+                            _tpUnRewardBLL.SetTpUnReward(tp, tpGameType, tpUnReward.TransId, tpUnReward.TpUserName, isSuccess: false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"exMessage:{ex1.Message}");
@@ -155,14 +150,14 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(5);
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
                 else if (isError)
                 {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                    dueTimeSpan = TimeSpan.FromMinutes(5);
                 }
 
                 _timerList[tpGameType]?.Change(dueTimeSpan, TimeSpan.Zero);
