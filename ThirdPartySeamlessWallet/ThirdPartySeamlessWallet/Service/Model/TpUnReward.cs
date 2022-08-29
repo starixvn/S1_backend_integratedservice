@@ -6,6 +6,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string TransId { get; set; }
 
+        public string TpUserName { get; set; }
+
         public int SettleFlag { get; set; }
 
         public DateTime PartitionTime { get; set; }
@@ -17,5 +19,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Amount { get; set; }
         public string Account { get; set; }
         public long SettleTime { get; set; }
+        public long TransTime { get; set; }
     }
 }

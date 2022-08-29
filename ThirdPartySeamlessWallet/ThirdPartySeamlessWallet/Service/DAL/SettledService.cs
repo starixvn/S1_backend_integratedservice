@@ -732,7 +732,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var RefRewardRecord = GetTpRewardRecord(tpRewardRecordInfo.TpId, tpRewardRecordInfo.TransId, (int)tpRewardRecordInfo.GameType, conn, trans);
+                var RefRewardRecord = GetTpRewardRecord(tpRewardRecordInfo.TpId, tpRewardRecordInfo.TransId, (int)tpRewardRecordInfo.GameType, tpCustInfo.CustId, conn, trans);
                 Enum.TryParse(tpRewardRecordInfo.TpId.ToString(), out Tp tp);
 
                 if (tpRewardRecordInfo.Amount > 0)
@@ -766,9 +766,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public TpRewardRecordInfo GetTpRewardRecord(int TpId, string TransId, int GameType, MySqlConnection conn, MySqlTransaction trans)
+        public TpRewardRecordInfo GetTpRewardRecord(int TpId, string TransId, int GameType, int CustId, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.QueryFirstOrDefault<TpRewardRecordInfo>("Service_TpRewardRecord_Get", new { TpId = TpId, TransId = TransId, GameType = GameType }, transaction: trans, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<TpRewardRecordInfo>("Service_TpRewardRecord_Get", new { TpId = TpId, TransId = TransId, GameType = GameType, CustId = CustId }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
 
         public int SetTpRewardRecord(TpRewardRecordInfo tpRewardRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
