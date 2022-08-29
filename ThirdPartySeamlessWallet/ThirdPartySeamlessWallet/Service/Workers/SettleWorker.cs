@@ -16,17 +16,16 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleEBet;
         private Timer timerSettleWM;
 
-        private Timer timerSettleCQ9Fish;
-
         private Timer timerSettleAWC;
         private Timer timerSettleYGG;
 
         private Timer timerSettleOne789LT;
         private Timer timerSettleOne789LT_789;
         private Timer timerSettleOne789LC;
-        private Timer timerSettleYLFish;
+
         private Timer timerSettleN2Live;
         private Timer timerSettleN2LiveLC_Smart;
+
         private Timer timerSettleBTI;
         private Timer timerSettle9W;
         private Timer timerSettleTCGSEA;
@@ -34,8 +33,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer timerSettleSexy;
         private Timer timerSettleEVO;
         private Timer timerSettleRewardEVO;
-
-
 
         private readonly IConfiguration configuration;
         private readonly IHostEnvironment environment;
@@ -67,13 +64,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
-            timerSettleCQ9Fish = new Timer(DoSettleCQ9FishWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            
             //timerSettleAWC = new Timer(DoSettleAWCWork, null, TimeSpan.Zero, TimeSpan.Zero);
 
             timerSettleOne789LT = new Timer(DoSettleOne789LTWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LT_789 = new Timer(DoSettleOne789LT_789Work, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleOne789LC = new Timer(DoSettleOne789LCWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleYLFish = new Timer(DoSettleYLFishWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleBTI = new Timer(DoSettleBTIWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -1007,15 +1003,12 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleEBet?.Change(Timeout.Infinite, 0);
             timerSettleWM?.Change(Timeout.Infinite, 0);
 
-            timerSettleCQ9Fish?.Change(Timeout.Infinite, 0);
-
             timerSettleAWC?.Change(Timeout.Infinite, 0);
 
             timerSettleOne789LT?.Change(Timeout.Infinite, 0);
             timerSettleOne789LT_789?.Change(Timeout.Infinite, 0);
             timerSettleOne789LC?.Change(Timeout.Infinite, 0);
             timerSettleYGG?.Change(Timeout.Infinite, 0);
-            timerSettleYLFish?.Change(Timeout.Infinite, 0);
             timerSettleN2Live?.Change(Timeout.Infinite, 0);
             timerSettleN2LiveLC_Smart?.Change(Timeout.Infinite, 0);
             timerSettleBTI?.Change(Timeout.Infinite, 0);
@@ -1025,8 +1018,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleSexy?.Change(Timeout.Infinite, 0);
             timerSettleEVO?.Change(Timeout.Infinite, 0);
             timerSettleRewardEVO?.Change(Timeout.Infinite, 0);
-
-
 
             return Task.CompletedTask;
         }
