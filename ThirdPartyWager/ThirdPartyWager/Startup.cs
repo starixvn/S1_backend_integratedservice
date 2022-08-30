@@ -9,10 +9,6 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
-<<<<<<< HEAD
-using ThirdPartyWager.Service.BLL.YGG;
-=======
->>>>>>> PRD
 using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
