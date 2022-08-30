@@ -10,13 +10,11 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.SBO;
-using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.YGG;
 
 namespace ThirdPartyWager
 {
@@ -171,6 +169,10 @@ namespace ThirdPartyWager
             //KM
             services.AddSingleton<ApiKMBLL>();
             services.AddSingleton<KMBLL>();
+            services.AddSingleton<FinanceKMBLL>();
+            //AMB
+            services.AddSingleton<ApiAMBBLL>();
+            services.AddSingleton<FinanceAMBBLL>();
             //MP
             services.AddSingleton<WagerMPBLL>();
             services.AddSingleton<ApiMPBLL>();
@@ -187,6 +189,7 @@ namespace ThirdPartyWager
             services.AddSingleton<FinanceEVOBLL>();
             //YGG
             services.AddSingleton<WagerYGGBLL>();
+            services.AddSingleton<FinanceYGGBLL>();
             //Ebet
             services.AddSingleton<ApiEbetBLL>();
             services.AddSingleton<FinanceEbetBLL>();
@@ -252,6 +255,8 @@ namespace ThirdPartyWager
             // services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
+            services.AddHostedService<FinanceKM>();
+            services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerMG>();
             services.AddHostedService<WagerNineW>();
             services.AddHostedService<WagerTCG>();
@@ -266,6 +271,7 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
             services.AddHostedService<WagerYGG>();
+            services.AddHostedService<FinanceYGG>();
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
