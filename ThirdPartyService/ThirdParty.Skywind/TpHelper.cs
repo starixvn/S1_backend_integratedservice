@@ -50,7 +50,7 @@ namespace ThirdParty.Skywind
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            string LobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : throw new Exception();
+            string LobbyUrl = inputs.ContainsKey("StagingLobbies") && !string.IsNullOrEmpty(inputs["StagingLobbies"]) ? inputs["StagingLobbies"] : throw new Exception();
 
             #region token
             var key = ApplyToken(tpCustInfo);
@@ -75,7 +75,7 @@ namespace ThirdParty.Skywind
 
             if (tpGameType == (int)TpGameType.Skywind_LiveCasino)
             {
-                var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}";
+                var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}?language={TpLangId}";
                 ApiResult oApiResult = new ApiResult();
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
@@ -89,7 +89,7 @@ namespace ThirdParty.Skywind
                 var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
                 Dictionary<string, string> header = new Dictionary<string, string>();
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                var sParam = $"ticket={sessionKey}";
+                var sParam = $"ticket={sessionKey}&language={TpLangId}";
                 string json = HttpGet(gameUrl, sParam, "application/json", header);
                 ApiResult oApiResult = new ApiResult();
                 {
