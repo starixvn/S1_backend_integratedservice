@@ -9,14 +9,16 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
+<<<<<<< HEAD
 using ThirdPartyWager.Service.BLL.YGG;
+=======
+>>>>>>> PRD
 using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.YGG;
 
 namespace ThirdPartyWager
 {
