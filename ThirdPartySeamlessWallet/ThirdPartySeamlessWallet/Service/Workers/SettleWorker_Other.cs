@@ -160,10 +160,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
                             }
                         }
-                        else
-                        {
-                            log2File.Error($"{unsettled.TransId} wager not found", logName);
-                        }
                     }
                 }
             }
