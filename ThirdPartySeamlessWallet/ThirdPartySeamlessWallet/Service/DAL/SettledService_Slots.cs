@@ -3844,7 +3844,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     );
                     if (result > 0)
                     {
-                        //result = _tpUnRewardService.InsertTpUnReward(Tp.AP, GameType.AP_RNG, rewardDataRNG_AP.cptransid, trans);
+                        result = _tpUnRewardService.InsertTpUnReward(Tp.AP, GameType.AP_RNG, rewardDataRNG_AP.cptransid, rewardDataRNG_AP.playerid, trans);
                     }
                 }
 
