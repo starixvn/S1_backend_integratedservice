@@ -42,6 +42,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettlementType(gameType, gameId);
         }
 
+        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory)
+        {
+            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory);
+            return result;
+        }
+
         #region SA
 
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
@@ -2158,6 +2164,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
 
+            return result;
+        }
+
+        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                rewardDataRNG_AP.cpwin *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP);
             return result;
         }
         #endregion

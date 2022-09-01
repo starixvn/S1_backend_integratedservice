@@ -30,6 +30,7 @@ builder.Services
     .AddHostedService<BonusWorker>()
     .AddHostedService<SettleWorker>()
     .AddHostedService<TpReRequestWorker>()
+    .AddHostedService<TpRewardWorker>()
     .AddHostedService<JokerWorker>()
     .AddHostedService<MGWorker>()
     .AddHostedService<APWorker>()
