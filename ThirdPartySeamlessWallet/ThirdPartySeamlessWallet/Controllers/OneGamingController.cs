@@ -517,7 +517,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status_code = "1";
             getApiResponse.message = "Error";
             getApiResponse.datetime = getCurrentGameTime();
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, mobileReq.username);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, mobileReq.username, null);
 
             // temporally block inr app login
             if (tpCustInfo.CurrencyId == 61)

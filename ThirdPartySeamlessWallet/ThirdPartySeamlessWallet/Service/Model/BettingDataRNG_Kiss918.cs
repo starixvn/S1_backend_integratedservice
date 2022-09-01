@@ -8,6 +8,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_Kiss918
     {
+        public int CustId { get; set; }
+        public int playerID { get; set; }
+        public string gameID { get; set; } = "";
+        public string playSessionID { get; set; } = "";
+        public string referenceID { get; set; } = "";
+        public decimal amount { get; set; } = 0;
+        public int jackpotModule { get; set; } = 0;
+        public decimal jackpotContributionAmt { get; set; } = 0;
+        public string resultUrl { get; set; } = "";
+        public string roundDetails { get; set; } = "";
+        public string platform { get; set; } = "";
+        public int type { get; set; } = 0;
+        public BettransRng_Kiss918TypeEnum FromAPIType { get; set; }
+        public BettransType TicketType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
     }
 
     public class SettleData_Kiss918
@@ -24,57 +39,62 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class AuthenticateRequest_Kiss918
     {
-        public string token { get; set; }
         public string userName { get; set; }
         public string password { get; set; }
     }
 
-    public class GetBalanceRequest_Kiss918
-    {
-        public string token { get; set; }
-        public int playerID { get; set; }
-    }
-
     public class BetRequest_Kiss918
     {
-        public string token { get; set; }
         public int playerID { get; set; }
+        public string gameID { get; set; }
+        public string playSessionID { get; set; }
+        public string referenceID { get; set; }
+        public decimal betAmount { get; set; }
+        public string roundDetails { get; set; }
+        public string platform { get; set; }
     }
 
     public class BetResultRequest_Kiss918
     {
-        public string token { get; set; }
         public int playerID { get; set; }
+        public string gameID { get; set; }
+        public string playSessionID { get; set; }
+        public string referenceID { get; set; }
+        public decimal winAmount { get; set; }
+        public int jackpotModule { get; set; }
+        public decimal jackpotContributionAmt { get; set; }
+        public string resultUrl { get; set; }
+        public string roundDetails { get; set; }
+        public string platform { get; set; }
     }
 
     public class RefundRequest_Kiss918
     {
-        public string token { get; set; }
         public int playerID { get; set; }
+        public string gameID { get; set; }
+        public string playSessionID { get; set; }
+        public string referenceID { get; set; }
+        public decimal betAmount { get; set; }
+        public string platform { get; set; }
     }
 
     public class FundRequestRequest_Kiss918
     {
-        public string token { get; set; }
         public int playerID { get; set; }
     }
 
     public class FundReturnRequest_Kiss918
     {
-        public string token { get; set; }
         public int playerID { get; set; }
     }
 
     public class FundBetResultRequest_Kiss918
     {
-        public string token { get; set; }
         public int playerID { get; set; }
     }
 
-    public class JackpotWinRequest_Kiss918
+    public class JackpotWinRequest_Kiss918 : BetResultRequest_Kiss918
     {
-        public string token { get; set; }
-        public int playerID { get; set; }
     }
 
     #endregion
@@ -97,6 +117,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public int playerID { get; set; }
         public decimal balance { get; set; }
+
+        public AuthenticateResponse_Kiss918(Kiss918ErrorCode errorCode, string message = "", int playerID = 0, decimal balance = 0)
+        {
+            this.playerID = playerID;
+            this.balance = balance;
+            this.error = ((int)errorCode).ToString();
+            this.description = message;
+        }
     }
 
     /// <summary>
@@ -105,6 +133,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class GetBalanceResponse_Kiss918 : ResponseModel_Kiss918
     {
         public decimal balance { get; set; }
+        public GetBalanceResponse_Kiss918(Kiss918ErrorCode errorCode, string message = "", decimal balance = 0)
+        {
+            this.balance = balance;
+            this.error = ((int)errorCode).ToString();
+            this.description = message;
+        }
     }
 
     /// <summary>
@@ -122,6 +156,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string transaction { get; set; }
         public decimal balance { get; set; }
+
+        public OperationResponse_Kiss918(Kiss918ErrorCode errorCode, string message = "", string transaction = "", decimal balance = 0)
+        {
+            this.transaction = transaction;
+            this.balance = balance;
+            this.error = ((int)errorCode).ToString();
+            this.description = message;
+        }
     }
 
     /// <summary>

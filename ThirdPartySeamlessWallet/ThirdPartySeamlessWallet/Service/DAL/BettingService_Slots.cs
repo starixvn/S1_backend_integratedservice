@@ -1199,6 +1199,55 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
+        #region Kiss918
+
+        public IEnumerable<BettingDataRNG_Kiss918> IsExist_Kiss918(bool isCancel, DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        {
+            if (isCancel)
+            {
+                var query = new { referenceID = data.referenceID };
+                return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Check", query);
+            }
+            else
+            {
+                var query = new { referenceID = data.referenceID };
+                return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Check", query);
+            }
+        }
+
+        public bool PlaceBet_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.AMB,
+                                data.referenceID,  //TpTransId
+                                (int)GameType.Kiss918_RNG,
+                                data.referenceID,  //RefId
+                                null,
+                                TpCategory.Slots,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans);
+
+            if (result <= 0)
+                return false;
+
+            return true;
+        }
+
+        #endregion
 
     }
 }
