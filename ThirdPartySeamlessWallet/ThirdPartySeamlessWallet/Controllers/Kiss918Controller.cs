@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Text;
+using System.Web;
+using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -14,8 +17,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private readonly Tp thisTp;
 
-        //private readonly ThirdPartyBLL _thirdPartyBLL;
-        //private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
         //private readonly BettingBLL _bettingBLL;
         //private readonly SettledBLL _settledBLL;
         //private readonly Log2File _log2File;
@@ -29,8 +32,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             thisTp = Tp.Kiss918;
 
-            //_thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
-            //_tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
             //_bettingBLL = provider.GetService<BettingBLL>();
             //_settledBLL = provider.GetService<SettledBLL>();
             //_log2File = provider.GetService<Log2File>();
@@ -137,10 +140,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/api/authenticate")]
         public async Task<AuthenticateResponse_Kiss918> AuthenticateAsync()
         {
+            if (!CheckToken(out string message))
+                return new AuthenticateResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                var content = await reader.ReadToEndAsync();
-                var request = JsonConvert.DeserializeObject<AuthenticateRequest_Kiss918>(content);
-                return await _kiss918BLL.Authenticate(request);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<AuthenticateRequest_Kiss918>(content);
+            return await _kiss918BLL.Authenticate(request);
         }
 
         /// <summary>
@@ -149,12 +155,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("[controller]/api/getbalance")]
-        public async Task<GetBalanceResponse_Kiss918> GetBalanceAsync()
+        public async Task<GetBalanceResponse_Kiss918> GetBalanceAsync(int playerID)
         {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest_Kiss918>(content);
-            return await _kiss918BLL.GetBalance(request);
+            if (!CheckToken(out string message))
+                return new GetBalanceResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
+
+            return await _kiss918BLL.GetBalance(playerID);
         }
 
         /// <summary>
@@ -165,6 +171,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/api/bet")]
         public async Task<OperationResponse_Kiss918> BetAsync()
         {
+            if (!CheckToken(out string message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<BetRequest_Kiss918>(content);
@@ -179,6 +188,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/api/betresult")]
         public async Task<OperationResponse_Kiss918> BetResultAsync()
         {
+            if (!CheckToken(out string message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<BetResultRequest_Kiss918>(content);
@@ -193,53 +205,65 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/api/refund")]
         public async Task<OperationResponse_Kiss918> RefundAsync()
         {
+            if (!CheckToken(out string message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<RefundRequest_Kiss918>(content);
             return await _kiss918BLL.Refund(request);
         }
 
-        /// <summary>
-        /// FundRequest 余额要求
-        /// </summary>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("[controller]/api/fundrequest")]
-        public async Task<OperationResponse_Kiss918> FundRequestAsync()
-        {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<FundRequestRequest_Kiss918>(content);
-            return await _kiss918BLL.FundRequest(request);
-        }
+        ///// <summary>
+        ///// FundRequest 余额要求
+        ///// </summary>
+        ///// <returns></returns>
+        //[HttpPost]
+        //[Route("[controller]/api/fundrequest")]
+        //public async Task<OperationResponse_Kiss918> FundRequestAsync()
+        //{
+        //    if (!CheckToken(out string message))
+        //        return new OperationResponse_Kiss918() { error = "100", description = message };
 
-        /// <summary>
-        /// FundReturn 余额退还
-        /// </summary>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("[controller]/api/fundreturn")]
-        public async Task<OperationResponse_Kiss918> FundReturnAsync()
-        {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<FundReturnRequest_Kiss918>(content);
-            return await _kiss918BLL.FundReturn(request);
-        }
+        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        //    var content = await reader.ReadToEndAsync();
+        //    var request = JsonConvert.DeserializeObject<FundRequestRequest_Kiss918>(content);
+        //    return await _kiss918BLL.FundRequest(request);
+        //}
 
-        /// <summary>
-        /// FundBetResult
-        /// </summary>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("[controller]/api/fundbetresult")]
-        public async Task<FundBetResultResponse_Kiss918> FundBetResultAsync()
-        {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var content = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<FundBetResultRequest_Kiss918>(content);
-            return await _kiss918BLL.FundBetResult(request);
-        }
+        ///// <summary>
+        ///// FundReturn 余额退还
+        ///// </summary>
+        ///// <returns></returns>
+        //[HttpPost]
+        //[Route("[controller]/api/fundreturn")]
+        //public async Task<OperationResponse_Kiss918> FundReturnAsync()
+        //{
+        //    if (!CheckToken(out string message))
+        //        return new OperationResponse_Kiss918() { error = "100", description = message };
+
+        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        //    var content = await reader.ReadToEndAsync();
+        //    var request = JsonConvert.DeserializeObject<FundReturnRequest_Kiss918>(content);
+        //    return await _kiss918BLL.FundReturn(request);
+        //}
+
+        ///// <summary>
+        ///// FundBetResult
+        ///// </summary>
+        ///// <returns></returns>
+        //[HttpPost]
+        //[Route("[controller]/api/fundbetresult")]
+        //public async Task<FundBetResultResponse_Kiss918> FundBetResultAsync()
+        //{
+        //    if (!CheckToken(out string message))
+        //        return new FundBetResultResponse_Kiss918() { error = "100", description = message };
+
+        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        //    var content = await reader.ReadToEndAsync();
+        //    var request = JsonConvert.DeserializeObject<FundBetResultRequest_Kiss918>(content);
+        //    return await _kiss918BLL.FundBetResult(request);
+        //}
 
         /// <summary>
         /// JackpotWin
@@ -249,6 +273,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/api/jackpotwin")]
         public async Task<OperationResponse_Kiss918> JackpotWinAsync()
         {
+            if (!CheckToken(out string message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
+
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<JackpotWinRequest_Kiss918>(content);
@@ -257,10 +284,56 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
+        #region Private Methods
+
+
+        //private bool CheckPlayerByUserName(out int playerId, string userName = null)
+        //{
+        //    playerId = 0;
+        //    if (string.IsNullOrWhiteSpace(userName))
+        //        return false;
+
+        //    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, userName);
+        //    if (string.IsNullOrWhiteSpace(tpCustInfo.TpCustId))
+        //        return false;
+
+        //    if (!int.TryParse(tpCustInfo.TpCustId, out int number))
+        //        return false;
+
+        //    playerId = number;
+        //    return true;
+        //}
+
+        private bool CheckToken(out string message)
+        {
+            message = string.Empty;
+
+            Request.Headers.TryGetValue("Token", out var sv);
+            string token = sv.ToString();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                message = "Token is missing.";
+                return false;
+            }
+
+            var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartySetting((int)thisTp).Setting);
+            string apiToken = setting.ContainsKey("ApiToken") && !string.IsNullOrEmpty(setting["ApiToken"])
+                ? setting["ApiToken"]
+                : throw new Kiss918Exception(Kiss918ErrorCode.ServiceNotAvailable, "ApiToken is Invaild.");
+            if (apiToken != token)
+            {
+                message = "Token invaild.";
+                return false;
+            }
+            return true;
+        }
+
         private string getCurrentGameTime()
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");
         }
+
+        #endregion
     }
 }
