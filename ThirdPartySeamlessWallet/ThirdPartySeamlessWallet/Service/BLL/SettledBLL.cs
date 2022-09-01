@@ -1333,7 +1333,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int RollinFish_CQ9(RollinDataFish_CQ9 rollinDataFish_CQ9, int gameType, out decimal afterAmount)
         {
             afterAmount = 0;
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataFish_CQ9.account);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataFish_CQ9.account,null);
             if (tpCustInfo == null)
             {
                 afterAmount = 0;

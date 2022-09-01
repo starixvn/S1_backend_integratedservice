@@ -2525,7 +2525,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (bettrans.Any(a => a.Completed))
                 {
                     logger.LogError($"{bettingDataRNG_MG.betId} is completed");
-                    
+
                     var refSettleFlag = bettrans.FirstOrDefault(b => b.Completed).SettleFlag;
                     // refSettleFlag -2 為已Settle注單手動調整 將執行此段重新結算 (避免會員重新進入遊戲對方會再重送資料)
                     if (bettingDataRNG_MG.completed && refSettleFlag == -2)
@@ -2551,7 +2551,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (bettrans.Any(a => a.TxnId == bettingDataRNG_MG.txnId))
                 {
                     logger.LogError($"{bettingDataRNG_MG.txnId} exist");
-                    
+
                     return new MGPayoutResult()
                     {
                         Result = 1,
@@ -2559,7 +2559,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == bettingDataRNG_MG.txnId).ExtTxnId
                     };
                 }
-                
+
                 var result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
@@ -4028,6 +4028,70 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.QueryFirstOrDefault<SettleData_YGG>("Service_TpWager_YGG_Settle_Get_V2", new { TransId = transId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
+
+        #region Kiss918
+
+        public bool Payout_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool Refund_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+
+        public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, TransType transType, string memo,
+                                       out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.Kiss918,
+                data.playSessionID,
+                (int)GameType.Kiss918_RNG,
+                TpCategory.Slots,
+                data.referenceID,
+                transType,
+                null,
+                out afterAmount,
+                memo,
+                out bonusId,
+                conn,
+                trans
+            );
+
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool InsertUnsettle_Kiss918(DateTime partitionTime, string playSessionID, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.Kiss918, GameType.Kiss918_RNG, playSessionID, trans, partitionTime);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         #endregion

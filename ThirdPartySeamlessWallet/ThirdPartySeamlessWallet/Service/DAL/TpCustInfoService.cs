@@ -22,10 +22,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
             _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
         }
-        public TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
+        public TpCustInfo GetTpCustInfo(int TpId, string TpUserName,string tpCustId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCustInfo>("Common_TpCustInfoByTpUserName_Get", new { TpId = TpId, TpUserName = TpUserName }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V2", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId= tpCustId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetCustGotoGame(int custId, int tpId, int gameType)
