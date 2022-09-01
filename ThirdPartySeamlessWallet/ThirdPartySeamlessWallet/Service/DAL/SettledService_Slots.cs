@@ -2525,7 +2525,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (bettrans.Any(a => a.Completed))
                 {
                     logger.LogError($"{bettingDataRNG_MG.betId} is completed");
-                    
+
                     var refSettleFlag = bettrans.FirstOrDefault(b => b.Completed).SettleFlag;
                     // refSettleFlag -2 為已Settle注單手動調整 將執行此段重新結算 (避免會員重新進入遊戲對方會再重送資料)
                     if (bettingDataRNG_MG.completed && refSettleFlag == -2)
@@ -2551,7 +2551,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (bettrans.Any(a => a.TxnId == bettingDataRNG_MG.txnId))
                 {
                     logger.LogError($"{bettingDataRNG_MG.txnId} exist");
-                    
+
                     return new MGPayoutResult()
                     {
                         Result = 1,
@@ -2559,7 +2559,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == bettingDataRNG_MG.txnId).ExtTxnId
                     };
                 }
-                
+
                 var result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
@@ -3810,6 +3810,66 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int RewardRNG_AP(TpCustInfo tpCustInfo, CPSettleDataRNG_AP rewardDataRNG_AP)
+        {
+            var bonusId = 0;
+            var result = 0;
+            try
+            {
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(rewardDataRNG_AP);
+                result = conn.Execute("Service_RewardRNG_AP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && rewardDataRNG_AP.cpwin > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        rewardDataRNG_AP.cpwin,
+                        (int)Tp.AP,
+                        rewardDataRNG_AP.cptransid,
+                        (int)GameType.AP_RNG,
+                        TpCategory.Slots,
+                        rewardDataRNG_AP.seq,
+                        TransType.Prize,
+                        null,
+                        out _,
+                        $"{rewardDataRNG_AP.cpid} Prize",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                    if (result > 0)
+                    {
+                        //result = _tpUnRewardService.InsertTpUnReward(Tp.AP, GameType.AP_RNG, rewardDataRNG_AP.cptransid, trans);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, mySqlEx.Message);
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region HB
