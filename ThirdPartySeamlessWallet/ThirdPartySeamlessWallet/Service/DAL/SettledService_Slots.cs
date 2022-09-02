@@ -4265,7 +4265,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-
         public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, TransType transType, string memo,
                                        out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -4274,7 +4273,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 tpCustInfo,
                 data.amount,
                 (int)Tp.Kiss918,
-                data.playSessionID,
+                data.NewRoundId ,
                 (int)GameType.Kiss918_RNG,
                 TpCategory.Slots,
                 data.referenceID,
@@ -4287,7 +4286,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 trans
             );
 
-
             if (result == 0)
                 return false;
 
@@ -4299,9 +4297,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = _tpUnsettleService.InsertTpUnsettle(Tp.Kiss918, GameType.Kiss918_RNG, playSessionID, trans, partitionTime);
 
             if (result == 0)
-            {
                 return false;
-            }
+
             return true;
         }
 

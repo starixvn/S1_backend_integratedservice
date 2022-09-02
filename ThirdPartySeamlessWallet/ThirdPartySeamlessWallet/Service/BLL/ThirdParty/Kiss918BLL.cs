@@ -19,6 +19,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly TpRoundGenService _tpRoundGenService;
 
         private readonly MySqlClient _mainDbClient;
 
@@ -33,6 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _tpRoundGenService = provider.GetRequiredService<TpRoundGenService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
@@ -119,7 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
-            if (!IsExistData(false, partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -135,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
 
-            if (!PlaceData(false, partitionTime, data, out message, conn, trans))
+            if (!PlaceData(partitionTime, data, out message, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -143,6 +145,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
+                string newRoundId = string.Empty;
+                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+                if (string.IsNullOrWhiteSpace(newRoundId))
+                {
+                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                    {
+                        trans.Rollback();
+                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                    }
+                }
+
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -163,6 +178,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<OperationResponse_Kiss918> BetResult(BetResultRequest_Kiss918 request)
         {
             var message = string.Empty;
+            string newRoundId = string.Empty;
             decimal balance = 0;
 
             if (!CheckRequestForBetResult(request, out message))
@@ -203,7 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
 
-            if (!IsExistData(false, partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -215,8 +231,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
             }
 
-
-            if (!PlaceData(false, partitionTime, data, out message, conn, trans))
+            if (!PlaceData(partitionTime, data, out message, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -224,6 +239,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
+                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+                if (string.IsNullOrWhiteSpace(newRoundId))
+                {
+                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                    {
+                        trans.Rollback();
+                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                    }
+                }
+
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -238,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
 
-            if (!InsertUnsettleData(partitionTime, data.playSessionID, out message, trans))
+            if (!InsertUnsettleData(partitionTime, newRoundId, out message, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -281,7 +308,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
-            if (!IsExistData(false, partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -297,7 +324,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
 
-            if (!PlaceData(false, partitionTime, data, out message, conn, trans))
+            if (!PlaceData(partitionTime, data, out message, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -305,6 +332,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
+                string newRoundId = string.Empty;
+                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+                if (string.IsNullOrWhiteSpace(newRoundId))
+                {
+                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                    {
+                        trans.Rollback();
+                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                    }
+                }
+
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -325,6 +365,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<OperationResponse_Kiss918> JackpotWin(JackpotWinRequest_Kiss918 request)
         {
             var message = string.Empty;
+            string newRoundId = string.Empty;
             decimal balance = 0;
 
             if (!CheckRequestForBetResult(request, out message))
@@ -365,7 +406,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
 
-            if (!IsExistData(false, partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -378,7 +419,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
 
-            if (!PlaceData(false, partitionTime, data, out message, conn, trans))
+            if (!PlaceData(partitionTime, data, out message, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -386,6 +427,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (data.amount != 0)
             {
+                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+                if (string.IsNullOrWhiteSpace(newRoundId))
+                {
+                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                    {
+                        trans.Rollback();
+                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                    }
+                }
+
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -400,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
 
-            if (!InsertUnsettleData(partitionTime, data.playSessionID, out message, trans))
+            if (!InsertUnsettleData(partitionTime, newRoundId, out message, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -411,26 +464,141 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
         }
 
-        #region Temp
-
-        //public async Task<OperationResponse_Kiss918> FundRequest(FundRequestRequest_Kiss918 request)
-        //{
-        //    return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
-        //}
-
-        //public async Task<OperationResponse_Kiss918> FundReturn(FundReturnRequest_Kiss918 request)
-        //{
-        //    return new OperationResponse_Kiss918() { transaction = "", balance = 1000, error = "0" };
-        //}
-
-        //public async Task<FundBetResultResponse_Kiss918> FundBetResult(FundBetResultRequest_Kiss918 request)
-        //{
-        //    return new FundBetResultResponse_Kiss918() { transaction = "", error = "0" };
-        //}
-
-        #endregion
-
         #region Private Methods
+
+        private bool CheckRequestForBet(BetRequest_Kiss918 request, out string message)
+        {
+            message = string.Empty;
+
+            if (request == null)
+            {
+                message = "request is null.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (request.playerID == 0)
+            {
+                message = "request.appid is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.gameID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.playSessionID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.referenceID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckRequestForBetResult(BetResultRequest_Kiss918 request, out string message)
+        {
+            message = string.Empty;
+
+            if (request == null)
+            {
+                message = "request is null.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (request.playerID == 0)
+            {
+                message = "request.appid is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.gameID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.playSessionID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.referenceID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.resultUrl))
+            {
+                message = "request.resultUrl is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckRequestForRefund(RefundRequest_Kiss918 request, out string message)
+        {
+            message = string.Empty;
+
+            if (request == null)
+            {
+                message = "request is null.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (request.playerID == 0)
+            {
+                message = "request.appid is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.gameID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.playSessionID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.referenceID))
+            {
+                message = "request.hash is Invalid.";
+                _logger.LogError($"CheckRequest Fail:{message}");
+                return false;
+            }
+
+
+            return true;
+        }
 
         private bool CheckPlayerByUserName(AuthenticateRequest_Kiss918 request, out int playerId, out Kiss918ErrorCode errorCode, out string message)
         {
@@ -535,48 +703,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckRequestForBet(BetRequest_Kiss918 request, out string message)
-        {
-            message = string.Empty;
-
-            if (request == null)
-            {
-                message = "request is null.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (request.playerID == 0)
-            {
-                message = "request.appid is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.gameID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.playSessionID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.referenceID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            return true;
-        }
-
         private bool GetTpCurrency(int currencyId, out TpCurrency tpCurrency, out string message)
         {
             message = string.Empty;
@@ -625,13 +751,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool IsExistData(bool isCancel, DateTime partitionTime, BettingDataRNG_Kiss918 data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out string message)
+        private bool IsExistData(DateTime partitionTime, BettingDataRNG_Kiss918 data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out string message)
         {
             message = string.Empty;
             existDatas = null;
             try
             {
-                existDatas = _bettingService.IsExist_Kiss918(false, partitionTime, data);
+                existDatas = _bettingService.IsExist_Kiss918(partitionTime, data);
 
                 if (existDatas.Any())
                 {
@@ -651,7 +777,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool PlaceData(bool isCancel, DateTime partitionTime, BettingDataRNG_Kiss918 data, out string message, MySqlConnection conn, MySqlTransaction trans)
+        private bool PlaceData(DateTime partitionTime, BettingDataRNG_Kiss918 data, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
             var result = false;
@@ -736,56 +862,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-
-        private bool CheckRequestForBetResult(BetResultRequest_Kiss918 request, out string message)
-        {
-            message = string.Empty;
-
-            if (request == null)
-            {
-                message = "request is null.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (request.playerID == 0)
-            {
-                message = "request.appid is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.gameID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.playSessionID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.referenceID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.resultUrl))
-            {
-                message = "request.resultUrl is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            return true;
-        }
-
         private bool InsertUnsettleData(DateTime partitionTime, string playSessionID, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
@@ -809,47 +885,57 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool CheckRequestForRefund(RefundRequest_Kiss918 request, out string message)
+        private bool IsExistNewRoundId(string playSessionID, out string newRoundId, out string message)
         {
             message = string.Empty;
-
-            if (request == null)
+            newRoundId = string.Empty;
+            try
             {
-                message = "request is null.";
-                _logger.LogError($"CheckRequest Fail:{message}");
+                var existDatas = _tpRoundGenService.GetExistRoundId(ThirdParty, GameType.Kiss918_RNG, playSessionID);
+
+                if (existDatas.Any())
+                    newRoundId = existDatas.First().SQ.ToString();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"CheckBet Exception:{ex.ToString()}");
                 return false;
             }
+        }
 
-            if (request.playerID == 0)
+        private bool GenNewRoundId(string playSessionID, out string newRoundId, out string message, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            newRoundId = string.Empty;
+            try
             {
-                message = "request.appid is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
+                var newRoundData = new TpRoundIdGen
+                {
+                    TpId = ThirdParty,
+                    GameType = GameType.Kiss918_RNG,
+                    TpRoundId = playSessionID
+                };
+
+                var result = _tpRoundGenService.GenNewRoundId(newRoundData, trans);
+
+                if (result == 0)
+                {
+                    message = "place payout fail.";
+                    _logger.LogError($"PlacePayout Fail:{message}");
+                    return false;
+                }
+                newRoundId = result.ToString();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"PlaceReward Exception:{ex.Message}");
                 return false;
             }
-
-            if (string.IsNullOrWhiteSpace(request.gameID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.playSessionID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(request.referenceID))
-            {
-                message = "request.hash is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
-
-            return true;
         }
 
         #endregion

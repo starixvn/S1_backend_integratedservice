@@ -23,6 +23,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public BettransRng_Kiss918TypeEnum FromAPIType { get; set; }
         public BettransType TicketType { get; set; }
         public TicketStatus TicketStatus { get; set; }
+        public string NewRoundId { get; set; } = "";
     }
 
     public class SettleData_Kiss918
