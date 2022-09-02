@@ -84,6 +84,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<TpRequestFailService>();
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<TpRoundGenService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
