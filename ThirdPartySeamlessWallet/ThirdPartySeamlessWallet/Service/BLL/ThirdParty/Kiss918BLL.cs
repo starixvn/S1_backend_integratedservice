@@ -239,22 +239,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
+            if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+            if (string.IsNullOrWhiteSpace(newRoundId))
+            {
+                if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                {
+                    trans.Rollback();
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                }
+            }
+
+            data.NewRoundId = newRoundId;
+
             if (data.amount != 0)
             {
-                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
-                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-
-                if (string.IsNullOrWhiteSpace(newRoundId))
-                {
-                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
-                    {
-                        trans.Rollback();
-                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-                    }
-                }
-
-                data.NewRoundId = newRoundId;
-
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -283,6 +283,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<OperationResponse_Kiss918> Refund(RefundRequest_Kiss918 request)
         {
             var message = string.Empty;
+            var newRoundId = string.Empty;
             decimal balance = 0;
 
             if (!CheckRequestForRefund(request, out message))
@@ -334,23 +335,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
+            if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+            if (string.IsNullOrWhiteSpace(newRoundId))
+            {
+                if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                {
+                    trans.Rollback();
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                }
+            }
+
+            data.NewRoundId = newRoundId;
+
             if (data.amount != 0)
             {
-                string newRoundId = string.Empty;
-                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
-                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-
-                if (string.IsNullOrWhiteSpace(newRoundId))
-                {
-                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
-                    {
-                        trans.Rollback();
-                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-                    }
-                }
-
-                data.NewRoundId = newRoundId;
-
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -361,6 +361,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+            }
+
+            if (!InsertUnsettleData(partitionTime, newRoundId, out message, trans))
+            {
+                trans.Rollback();
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             trans.Commit();
@@ -430,22 +436,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
+            if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+
+            if (string.IsNullOrWhiteSpace(newRoundId))
+            {
+                if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                {
+                    trans.Rollback();
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                }
+            }
+
+            data.NewRoundId = newRoundId;
+
             if (data.amount != 0)
             {
-                if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
-                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-
-                if (string.IsNullOrWhiteSpace(newRoundId))
-                {
-                    if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
-                    {
-                        trans.Rollback();
-                        return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-                    }
-                }
-
-                data.NewRoundId = newRoundId;
-
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -458,7 +464,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
-
 
             if (!InsertUnsettleData(partitionTime, newRoundId, out message, trans))
             {
