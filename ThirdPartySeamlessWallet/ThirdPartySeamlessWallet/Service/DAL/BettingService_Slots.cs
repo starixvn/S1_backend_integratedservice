@@ -1184,7 +1184,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var result = PlaceBetV2(tpCustInfo,
                                 data.amount,
-                                (int)Tp.AMB,
+                                (int)Tp.Kiss918,
                                 data.referenceID,  //TpTransId
                                 (int)GameType.Kiss918_RNG,
                                 data.NewRoundId,  //RefId
