@@ -24,7 +24,7 @@ namespace CommonService.Service.Model
     {
 
         public int accountCode { get; set; }
-        public Dictionary<string, dynamic> details { get; set; }
+        public dynamic details { get; set; }
         public string id { get; set; }
         public string reason { get; set; }
         public string result { get; set; }
@@ -36,5 +36,14 @@ namespace CommonService.Service.Model
         public string type { get; set; }
         public int code { get; set; }
         public string message { get; set; }
+    }
+
+    public class IovationCheckResult
+    {
+        public string Result { get; set; }
+        public string Reason { get; set; }
+        public string DeviceId { get; set; }
+        public string DeviceType { get; set; }
+        public int Score { get; set; }
     }
 }

@@ -18,13 +18,9 @@ namespace CommonService.Controllers
             this.custInfoBLL = custInfoBLL;
         }
         [HttpPost]
-        public async Task<ApiResult> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
+        public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
-            ApiResult apiResult = new ApiResult();
-            var resultResp = await iovationBLL.IovationChecksAsync(iovationChecksRequest);
-            apiResult.ErrorCode = resultResp.ErrorCode;
-            apiResult.Message = resultResp.Message;
-            return apiResult;
+            return await iovationBLL.IovationChecksAsync(iovationChecksRequest);
         }
     }
 }

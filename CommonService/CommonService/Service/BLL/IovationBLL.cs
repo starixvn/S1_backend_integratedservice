@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
@@ -22,9 +23,9 @@ namespace CommonService.Service.BLL
             this.iovationService = iovationService;
             this.httpHelper = httpHelper;
         }
-        public async Task<ApiResult> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
+        public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
-            var apiResult = new ApiResult();
+            var apiResult = new ApiResult<IovationCheckResult>();
 
             Dictionary<string, dynamic> sendIovationChecks = new Dictionary<string, dynamic>
             {
@@ -47,14 +48,25 @@ namespace CommonService.Service.BLL
 
             var parameters = JsonConvert.SerializeObject(sendIovationChecks);
             using var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
-            var resultResp = JsonConvert.DeserializeObject<IovationResult>(result.Content.ReadAsStringAsync().Result);
+            var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
             var resultIns = iovationService.IovationResultIns(resultResp);
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0)
-                //if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
+                var deviceId= resultResp.details.device.alias.ToString();
+                var deviceType = resultResp.details.device.type.ToString();
+                var score = (int)resultResp.details.ruleResults.score;
+
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.result;
+                apiResult.Data = new IovationCheckResult()
+                {
+                    Result = resultResp.result,
+                    Reason = resultResp.reason,
+                    DeviceId = deviceId,
+                    DeviceType = deviceType,
+                    Score = score
+                };
             }
             else
             {
@@ -63,6 +75,14 @@ namespace CommonService.Service.BLL
             }
 
             return apiResult;
+        }
+        
+        private static bool IsPropertyExist(dynamic settings, string name)
+        {
+            if (settings is ExpandoObject)
+                return ((IDictionary<string, object>)settings).ContainsKey(name);
+
+            return settings.GetType().GetProperty(name) != null;
         }
     }
 }
