@@ -173,9 +173,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             trans.Commit();
-            Thread.Sleep(60 * 1000); //sleep 60 sec for test refund
             //return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
-            return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
+            return new OperationResponse_Kiss918(Kiss918ErrorCode.BalanceInsufficient, "", request.referenceID, 0);
         }
 
         public async Task<OperationResponse_Kiss918> BetResult(BetResultRequest_Kiss918 request)
