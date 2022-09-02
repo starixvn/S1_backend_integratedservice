@@ -417,7 +417,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Wallet_Set", p, conn, trans);
+            _ = _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 1 : 0;
