@@ -38,7 +38,7 @@ namespace ThirdPartyService.Service.DAL
             });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            _mainDbClient.Execute("Wallet_Set", p, conn, trans);
+            _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 0 : -1;
         }
