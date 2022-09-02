@@ -214,57 +214,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             return await _kiss918BLL.Refund(request);
         }
 
-        ///// <summary>
-        ///// FundRequest 余额要求
-        ///// </summary>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/api/fundrequest")]
-        //public async Task<OperationResponse_Kiss918> FundRequestAsync()
-        //{
-        //    if (!CheckToken(out string message))
-        //        return new OperationResponse_Kiss918() { error = "100", description = message };
-
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var content = await reader.ReadToEndAsync();
-        //    var request = JsonConvert.DeserializeObject<FundRequestRequest_Kiss918>(content);
-        //    return await _kiss918BLL.FundRequest(request);
-        //}
-
-        ///// <summary>
-        ///// FundReturn 余额退还
-        ///// </summary>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/api/fundreturn")]
-        //public async Task<OperationResponse_Kiss918> FundReturnAsync()
-        //{
-        //    if (!CheckToken(out string message))
-        //        return new OperationResponse_Kiss918() { error = "100", description = message };
-
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var content = await reader.ReadToEndAsync();
-        //    var request = JsonConvert.DeserializeObject<FundReturnRequest_Kiss918>(content);
-        //    return await _kiss918BLL.FundReturn(request);
-        //}
-
-        ///// <summary>
-        ///// FundBetResult
-        ///// </summary>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[Route("[controller]/api/fundbetresult")]
-        //public async Task<FundBetResultResponse_Kiss918> FundBetResultAsync()
-        //{
-        //    if (!CheckToken(out string message))
-        //        return new FundBetResultResponse_Kiss918() { error = "100", description = message };
-
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var content = await reader.ReadToEndAsync();
-        //    var request = JsonConvert.DeserializeObject<FundBetResultRequest_Kiss918>(content);
-        //    return await _kiss918BLL.FundBetResult(request);
-        //}
-
         /// <summary>
         /// JackpotWin
         /// </summary>
