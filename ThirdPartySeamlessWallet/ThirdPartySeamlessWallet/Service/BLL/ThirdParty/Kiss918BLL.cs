@@ -158,6 +158,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
+                data.NewRoundId = newRoundId;
+
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -250,6 +252,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                     }
                 }
+
+                data.NewRoundId = newRoundId;
 
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
@@ -345,6 +349,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
+                data.NewRoundId = newRoundId;
+
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     trans.Rollback();
@@ -418,7 +424,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
             }
 
-
             if (!PlaceData(partitionTime, data, out message, trans))
             {
                 trans.Rollback();
@@ -438,6 +443,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                     }
                 }
+
+                data.NewRoundId = newRoundId;
 
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
