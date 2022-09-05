@@ -9,7 +9,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.YGG
+namespace ThirdPartyWager.Service.BLL
 {
     public class WagerYGGBLL
     {

@@ -3810,6 +3810,66 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int RewardRNG_AP(TpCustInfo tpCustInfo, CPSettleDataRNG_AP rewardDataRNG_AP)
+        {
+            var bonusId = 0;
+            var result = 0;
+            try
+            {
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                var p = new DynamicParameters(rewardDataRNG_AP);
+                result = conn.Execute("Service_RewardRNG_AP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && rewardDataRNG_AP.cpwin > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        rewardDataRNG_AP.cpwin,
+                        (int)Tp.AP,
+                        rewardDataRNG_AP.cptransid,
+                        (int)GameType.AP_RNG,
+                        TpCategory.Slots,
+                        rewardDataRNG_AP.seq,
+                        TransType.Prize,
+                        null,
+                        out _,
+                        $"{rewardDataRNG_AP.cpid} Prize",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                    if (result > 0)
+                    {
+                        result = _tpUnRewardService.InsertTpUnReward(Tp.AP, GameType.AP_RNG, rewardDataRNG_AP.cptransid, rewardDataRNG_AP.playerid, trans);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    logger.LogError(mySqlEx, mySqlEx.Message);
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region HB

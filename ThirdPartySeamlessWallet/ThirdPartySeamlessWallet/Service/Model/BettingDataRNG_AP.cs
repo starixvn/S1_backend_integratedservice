@@ -60,5 +60,23 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public int TicketType { get; set; }
     }
+    public class CPSettleDataRNG_AP
+    {
+        public string seq { get; set; }
+        public string sitecode { get; set; }
+        public string playerid { get; set; }
+        public string cpid { get; set; }
+        public string cptransid { get; set; }
+        public DateTime timestamp { get; set; }
+        public decimal cpwin { get; set; }
+        public long timeunix
+        {
+            get
+            {
+                return new DateTimeOffset(timestamp).ToUnixTimeSeconds();
+            }
+        }
+
+    }
 
 }

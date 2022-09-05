@@ -10,13 +10,11 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.SBO;
-using ThirdPartyWager.Service.BLL.YGG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.YGG;
 
 namespace ThirdPartyWager
 {
@@ -146,10 +144,12 @@ namespace ThirdPartyWager
             // OneGaming
             services.AddSingleton<WagerOneGamingBLL>();
             services.AddSingleton<ApiOneGamingBLL>();
+            services.AddSingleton<FinanceOneGamingBLL>();
             // V8
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
             services.AddSingleton<WagerRedoV8BLL>();
+            services.AddSingleton<FinanceV8BLL>();
             // N2Live
             services.AddSingleton<WagerN2LiveBLL>();
             services.AddSingleton<ApiN2LiveBLL>();
@@ -169,9 +169,14 @@ namespace ThirdPartyWager
             //KM
             services.AddSingleton<ApiKMBLL>();
             services.AddSingleton<KMBLL>();
+            services.AddSingleton<FinanceKMBLL>();
+            //AMB
+            services.AddSingleton<ApiAMBBLL>();
+            services.AddSingleton<FinanceAMBBLL>();
             //MP
             services.AddSingleton<WagerMPBLL>();
             services.AddSingleton<ApiMPBLL>();
+            services.AddSingleton<FinanceMPBLL>();
             //MG
             services.AddTransient<IApiMGBLL, ApiMGBLL>();
             services.AddTransient<IApiSWBLL, ApiSWBLL>();
@@ -184,6 +189,7 @@ namespace ThirdPartyWager
             services.AddSingleton<FinanceEVOBLL>();
             //YGG
             services.AddSingleton<WagerYGGBLL>();
+            services.AddSingleton<FinanceYGGBLL>();
             //Ebet
             services.AddSingleton<ApiEbetBLL>();
             services.AddSingleton<FinanceEbetBLL>();
@@ -234,8 +240,10 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceAT>();
             services.AddHostedService<WagerOneGaming>();
             services.AddHostedService<WagerRedoOneGaming>();
+            services.AddHostedService<FinanceOneGaming>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
+            services.AddHostedService<FinanceV8>();
             services.AddHostedService<WagerN2Live>();
             services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<FinanceN2Live>();
@@ -247,11 +255,14 @@ namespace ThirdPartyWager
             // services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
+            services.AddHostedService<FinanceKM>();
+            services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerMG>();
             services.AddHostedService<WagerNineW>();
             services.AddHostedService<WagerTCG>();
             services.AddHostedService<WagerMP>();
             services.AddHostedService<WagerRedoMP>();
+            services.AddHostedService<FinanceMP>();
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<FinanceEVO>();
@@ -260,6 +271,7 @@ namespace ThirdPartyWager
             services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
             services.AddHostedService<WagerYGG>();
+            services.AddHostedService<FinanceYGG>();
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();

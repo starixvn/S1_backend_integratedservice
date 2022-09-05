@@ -42,5 +42,31 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ProgressiveWin { get; set; }
         public string GameId { get; set; }
         public int TicketStatus { get; set; }
+        public int TicketType { get; set; }
+    }
+
+    public class TpRewardRecordInfo
+    {
+        public int TpId { get; set; }
+        public string TransId { get; set; }
+        public GameType GameType { get; set; }
+        public string TpUserName { get; set; }
+        public long SettledTime { get; set; }
+        public long TransTime { get; set; }
+        public decimal Amount { get; set; }
+        public SettlementType SettlementType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public int BonusId { get; set; }
+    }
+
+    public class RewardData
+    {
+        public string TransId { get; set; }
+        public decimal Amount { get; set; }
+        public string Account { get; set; }
+        public long SettledTime { get; set; }
+        public long TransTime { get; set; }
+        public string GameId { get; set; }
+        public int TicketStatus { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiV8BLL>>();
         }
 
-        public async Task<WagerV8Model> GetBetListByTime(string wagerUrl, string agent, string deskey, string md5key, long startUnix, long endUnix, string guid)
+        public async Task<WagerV8Model> GetBetListByTime(string wagerUrl, string agent, string deskey, string md5key, long startUnix, long endUnix)
         {
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
