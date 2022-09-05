@@ -1193,7 +1193,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 out afterAmount,
                                 ref bonusId,
                                 conn,
-                                trans);
+                                trans,
+                                memo: $"{data.referenceID} ");
 
             if (result <= 0)
                 return false;
