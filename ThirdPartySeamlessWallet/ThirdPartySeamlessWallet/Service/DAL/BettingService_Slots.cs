@@ -1194,7 +1194,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 ref bonusId,
                                 conn,
                                 trans,
-                                memo: $"{data.referenceID} ");
+                                memo: $" - {data.referenceID} ");
 
             if (result <= 0)
                 return false;
