@@ -537,21 +537,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (!isJackpot)
-                if (string.IsNullOrWhiteSpace(request.gameID))
-                {
-                    message = "request.gameID is Invalid.";
-                    _logger.LogError($"CheckRequest Fail:{message}");
-                    return false;
-                }
-
-            if (string.IsNullOrWhiteSpace(request.playSessionID))
-            {
-                message = "request.playSessionID is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
-
             if (string.IsNullOrWhiteSpace(request.referenceID))
             {
                 message = "request.referenceID is Invalid.";
@@ -559,11 +544,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.resultUrl))
+            if (!isJackpot)
             {
-                message = "request.resultUrl is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
+                if (string.IsNullOrWhiteSpace(request.gameID))
+                {
+                    message = "request.gameID is Invalid.";
+                    _logger.LogError($"CheckRequest Fail:{message}");
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(request.playSessionID))
+                {
+                    message = "request.playSessionID is Invalid.";
+                    _logger.LogError($"CheckRequest Fail:{message}");
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(request.resultUrl))
+                {
+                    message = "request.resultUrl is Invalid.";
+                    _logger.LogError($"CheckRequest Fail:{message}");
+                    return false;
+                }
             }
 
             return true;
