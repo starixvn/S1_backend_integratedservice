@@ -79,20 +79,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string platform { get; set; }
     }
 
-    public class FundRequestRequest_Kiss918
-    {
-        public int playerID { get; set; }
-    }
-
-    public class FundReturnRequest_Kiss918
-    {
-        public int playerID { get; set; }
-    }
-
-    public class FundBetResultRequest_Kiss918
-    {
-        public int playerID { get; set; }
-    }
 
     public class JackpotWinRequest_Kiss918 : BetResultRequest_Kiss918
     {

@@ -25,9 +25,7 @@ public enum Kiss918ErrorCode
 public enum BettransRng_Kiss918TypeEnum
 {
     FromBet = 1,
-    FromFundRequest = 2,
     FromRefund = 3,
     FromBetResult = 4,
-    FromFundReturn = 5,
     FromJackpotWin = 8
 }
