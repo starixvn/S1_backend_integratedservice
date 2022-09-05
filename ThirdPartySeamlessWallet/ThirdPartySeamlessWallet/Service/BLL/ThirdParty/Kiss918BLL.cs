@@ -182,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             string newRoundId = string.Empty;
             decimal balance = 0;
 
-            if (!CheckRequestForBetResultAndJackpotWin(request, out message))
+            if (!CheckRequestForBetResultAndJackpotWin(false, request, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
 
             if (!GetTpInfoByPlayerID(request.playerID, out TpCustInfo tpCustInfo, out message))
@@ -379,7 +379,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             string newRoundId = string.Empty;
             decimal balance = 0;
 
-            if (!CheckRequestForBetResultAndJackpotWin(request, out message))
+            if (!CheckRequestForBetResultAndJackpotWin(true, request, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildPlayerAuth, message);
 
             if (!GetTpInfoByPlayerID(request.playerID, out TpCustInfo tpCustInfo, out message))
@@ -519,7 +519,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return true;
         }
 
-        private bool CheckRequestForBetResultAndJackpotWin(BetResultRequest_Kiss918 request, out string message)
+        private bool CheckRequestForBetResultAndJackpotWin(bool isJackpot, BetResultRequest_Kiss918 request, out string message)
         {
             message = string.Empty;
 
@@ -537,12 +537,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(request.gameID))
-            {
-                message = "request.gameID is Invalid.";
-                _logger.LogError($"CheckRequest Fail:{message}");
-                return false;
-            }
+            if (!isJackpot)
+                if (string.IsNullOrWhiteSpace(request.gameID))
+                {
+                    message = "request.gameID is Invalid.";
+                    _logger.LogError($"CheckRequest Fail:{message}");
+                    return false;
+                }
 
             if (string.IsNullOrWhiteSpace(request.playSessionID))
             {
