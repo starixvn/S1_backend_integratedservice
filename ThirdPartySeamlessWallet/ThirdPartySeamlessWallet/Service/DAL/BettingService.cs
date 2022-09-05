@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (bHasBonusWallet)
                 {
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {memo}{Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
                     if (bonusId > 0)
                     {
                         if (tpTransId != null)
@@ -71,7 +71,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         if (afterAmount < 0)
                         {
                             amount = afterAmount;
-                            result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {memo}{Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                            result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                         }
                         else
                         {
@@ -80,12 +80,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     else if (bonusId == 0)
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {memo}{Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                     }
                 }
                 else
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake: {memo}{Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
                 }
             }
             catch (Exception ex)
