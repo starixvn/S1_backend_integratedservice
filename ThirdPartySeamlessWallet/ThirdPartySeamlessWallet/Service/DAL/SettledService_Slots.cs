@@ -4280,7 +4280,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 transType,
                 null,
                 out afterAmount,
-                memo,
+                $"{memo} - {data.referenceID}",
                 out bonusId,
                 conn,
                 trans
