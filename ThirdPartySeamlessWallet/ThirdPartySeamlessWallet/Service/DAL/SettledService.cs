@@ -276,6 +276,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // for n2 temporary fix noraml bet
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
             }
+            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.Kiss918 && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
+            {
+                // kiss918因回合過長，故用自產單號當作回合單號
+                GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
+            }
 
             betRecordInfo.BonusId = bonusId;
 
