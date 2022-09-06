@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using System.ComponentModel;
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BalanceData_SimplePlay
     {
@@ -44,5 +46,11 @@
     public class CancelBetData_SimplePlay : CommonData_SimplePlay
     {
         public string txn_reverse_id { get; set; }
+    }
+
+    public class SettleData_SimplePlay : SettleData
+    {
+        [Description("游戏代码")]
+        public string GameCode { get; set; }
     }
 }
