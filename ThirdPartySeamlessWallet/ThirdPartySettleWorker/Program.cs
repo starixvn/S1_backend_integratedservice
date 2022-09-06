@@ -42,6 +42,7 @@ builder.Services
     .AddHostedService<MegaWorker>()
     .AddHostedService<AMBWorker>()
     .AddHostedService<SAWorker>()
+    .AddHostedService<SimplePlayWorker>()
     .AddHostedService<SGWorker>()
     .AddHostedService<AllbetWorker>()
     .AddHostedService<PTWorker>()
