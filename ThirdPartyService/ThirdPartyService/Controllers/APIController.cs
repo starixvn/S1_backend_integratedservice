@@ -74,6 +74,15 @@ namespace ThirdPartyService.Controllers
                 }
 
             }
+            catch (AggregateException ae)
+            {
+                foreach (var ex in ae.InnerExceptions)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ae.Message;
+            }
             catch (Exception ex)
             {
                 logger.LogError(ex, ex.Message);
