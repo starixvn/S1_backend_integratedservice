@@ -329,6 +329,38 @@ namespace ThirdPartyCore
             }
         }
 
+        protected string HttpGetForTest(string url, string parameters, Dictionary<string, string> headers = null)
+        {
+            InsertLog?.Invoke(url, parameters, "1");
+            using var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            using var client = new HttpClient(handler);
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
+                }
+                var httpResponse = client.GetAsync($"{url}?{parameters}").Result;
+                InsertLog?.Invoke(url, $"{url}?{parameters}", JsonConvert.SerializeObject(httpResponse));
+                var response = httpResponse.Content.ReadAsStringAsync().Result;
+              
+                return response;
+            }
+            catch (Exception e)
+            {
+                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
+                return e.Message;
+            }
+        }
+
         protected string ToMD5(string encodeStr)
         {
             using var cryptoMD5 = MD5.Create();
