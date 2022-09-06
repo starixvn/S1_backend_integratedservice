@@ -74,6 +74,10 @@ namespace ThirdPartyService.Controllers
                 }
 
             }
+            catch (HttpRequestException e)
+            {
+                logger.LogError(e, e.Message);
+            }
             catch (AggregateException ae)
             {
                 foreach (var ex in ae.InnerExceptions)

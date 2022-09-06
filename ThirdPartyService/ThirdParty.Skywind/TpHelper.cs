@@ -98,9 +98,13 @@ namespace ThirdParty.Skywind
                 {
                     using var client = new HttpClient();
                     client.DefaultRequestHeaders.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                    var stream = client.GetStreamAsync($"{gameUrl}?{sParam}").Result;
-                    using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
-                    json = myStreamReader.ReadToEnd();
+                    var responseMessage = client.GetAsync($"{gameUrl}?{sParam}").Result;
+                    
+                    json = responseMessage.Content.ReadAsStringAsync().Result;
+                }
+                catch (HttpRequestException e)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
