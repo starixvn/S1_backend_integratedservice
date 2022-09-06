@@ -91,25 +91,7 @@ namespace ThirdParty.Skywind
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 var sParam = $"ticket={sessionKey}&language={TpLangId}";
                 //string json = HttpGet(gameUrl, sParam, "application/json", header);
-                //string json = HttpGet(gameUrl, sParam, header);
-
-                var json = string.Empty;
-                try
-                {
-                    using var client = new HttpClient();
-                    client.DefaultRequestHeaders.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                    var responseMessage = client.GetAsync($"{gameUrl}?{sParam}").Result;
-                    
-                    json = responseMessage.Content.ReadAsStringAsync().Result;
-                }
-                catch (HttpRequestException e)
-                {
-                    throw;
-                }
-                catch (Exception e)
-                {
-                    throw;
-                }
+                string json = HttpGetForTest(gameUrl, sParam, header);
 
                 ApiResult oApiResult = new ApiResult();
                 {
