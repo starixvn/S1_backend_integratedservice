@@ -53,9 +53,9 @@ namespace CommonService.Service.BLL
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0)
             {
-                var deviceId= resultResp.details.device.alias.ToString();
-                var deviceType = resultResp.details.device.type.ToString();
-                var score = (int)resultResp.details.ruleResults.score;
+                var deviceId = resultResp?.details?.device?.alias;
+                var deviceType = resultResp?.details?.device?.type;
+                var score = resultResp?.details?.ruleResults?.score;
 
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.result;
@@ -63,9 +63,9 @@ namespace CommonService.Service.BLL
                 {
                     Result = resultResp.result,
                     Reason = resultResp.reason,
-                    DeviceId = deviceId,
-                    DeviceType = deviceType,
-                    Score = score
+                    DeviceId = string.IsNullOrEmpty(deviceId) ? "" : deviceId,
+                    DeviceType = string.IsNullOrEmpty(deviceType) ? "" : deviceType ,
+                    Score = score ?? 0
                 };
             }
             else
@@ -75,14 +75,6 @@ namespace CommonService.Service.BLL
             }
 
             return apiResult;
-        }
-        
-        private static bool IsPropertyExist(dynamic settings, string name)
-        {
-            if (settings is ExpandoObject)
-                return ((IDictionary<string, object>)settings).ContainsKey(name);
-
-            return settings.GetType().GetProperty(name) != null;
         }
     }
 }
