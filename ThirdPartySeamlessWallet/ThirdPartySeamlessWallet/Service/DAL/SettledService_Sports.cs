@@ -208,6 +208,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {
+                    if (bonusId > 0)
+                    {
+                        _bettingService.AddTpBonus((int)Tp.BTI, credit.BetID, (int)GameType.BTI_Sports, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, credit.amount, bonusId, TpCategory.Sports, conn, trans);
+                    }
                     trans.Commit();
                 }
                 return btiResult;
