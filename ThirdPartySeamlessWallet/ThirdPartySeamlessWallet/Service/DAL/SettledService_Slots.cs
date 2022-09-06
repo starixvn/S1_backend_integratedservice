@@ -4122,7 +4122,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 tpCustInfo,
                 data.amount,
                 (int)Tp.Kiss918,
-                data.referenceID,
+                data.NewRoundId,
                 (int)GameType.Kiss918_RNG,
                 TpCategory.Slots,
                 data.NewRoundId,
