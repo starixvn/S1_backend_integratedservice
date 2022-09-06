@@ -26,6 +26,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<Kiss918Worker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
+        private readonly TpRoundGenService _tpRoundGenService;
 
         public Kiss918Worker(IServiceProvider provider)
         {
@@ -35,6 +36,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<Kiss918Worker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
+            _tpRoundGenService = provider.GetRequiredService<TpRoundGenService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
         }
 
@@ -99,6 +101,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TicketStatus = SetTicketStatus(unsettleData.WinLostAmount)
                             };
 
+                            betRecordInfo.ReferenceNo = GetRoundId(unsettleData.TransId);
+
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                             if (result == 1)
                             {
@@ -152,6 +156,16 @@ namespace ThirdPartySettleWorker.Workers
             if (winLostAmount > 0) return TicketStatus.Win;
 
             return TicketStatus.Lost;
+        }
+
+        private string GetRoundId(string playSessionID)
+        {
+            var existDatas = _tpRoundGenService.GetExistRoundId(Tp, GameType.Kiss918_RNG, playSessionID);
+
+            if (existDatas.Any())
+                return existDatas.First().SQ.ToString();
+            else
+                throw new Exception("roundId not found.");
         }
 
     }
