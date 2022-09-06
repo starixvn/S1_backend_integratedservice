@@ -91,7 +91,22 @@ namespace ThirdParty.Skywind
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 var sParam = $"ticket={sessionKey}&language={TpLangId}";
                 //string json = HttpGet(gameUrl, sParam, "application/json", header);
-                string json = HttpGet(gameUrl, sParam, header);
+                //string json = HttpGet(gameUrl, sParam, header);
+
+                var json = string.Empty;
+                try
+                {
+                    using var client = new HttpClient();
+                    client.DefaultRequestHeaders.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                    var stream = client.GetStreamAsync($"{gameUrl}?{sParam}").Result;
+                    using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
+                    json = myStreamReader.ReadToEnd();
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+
                 ApiResult oApiResult = new ApiResult();
                 {
                     if (IsJSON(json))
