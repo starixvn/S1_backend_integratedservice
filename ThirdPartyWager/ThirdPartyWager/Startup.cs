@@ -230,8 +230,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoSA>();
             services.AddHostedService<FinanceSA>();
             services.AddHostedService<WagerSimplePlay>();
-            //services.AddHostedService<FinanceSimplePlay>();
             services.AddHostedService<WagerRedoSimplePlay>();
+            services.AddHostedService<FinanceSimplePlay>();
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<FinanceAG>();

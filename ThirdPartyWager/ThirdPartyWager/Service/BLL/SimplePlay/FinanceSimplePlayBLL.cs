@@ -10,16 +10,15 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<FinanceSimplePlayBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
-        private readonly ApiSimplePlayBLL _apiSimplePlayBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly int _timeZone = 8;
+        private readonly int _timeZone = 0;
+
 
         public FinanceSimplePlayBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSimplePlayBLL>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _apiSimplePlayBLL = provider.GetRequiredService<ApiSimplePlayBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
@@ -31,10 +30,9 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+            var getReportData = JsonConvert.DeserializeObject<List<FincanceDailySummary>>(JsonConvert.SerializeObject(reportData));
 
-            foreach (var item in reportData)
+            foreach (var item in getReportData)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {
@@ -42,10 +40,11 @@ namespace ThirdPartyWager.Service.BLL
                     SummaryDate = reportDate,
                     TpId = tpId,
                     CurrencyId = item.CurrencyId,
-                    Stake = item.TotalBet,
-                    ValidBet = item.TotalBet,
-                    Payout = item.TotalBet + item.Winlose,
-                    WinlostAmount = item.Winlose
+                    Stake = item.Stake,
+                    ValidBet = item.ValidBet,
+                    Payout = item.Payout,
+                    WinlostAmount = item.WinlostAmount,
+                    ProgressiveBet = item.ProgressiveBet
                 });
             }
             return dailyData;
@@ -54,25 +53,8 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            CurrencyStats_SimplePlay getWagerSummary = await _apiSimplePlayBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
-
-            // error condition
-            var errorCode = getWagerSummary.GetTransactionDetailsResponse?.ErrorMsgId ?? getWagerSummary.APIResponse.ErrorMsgId;
-            if (errorCode != 0)
-            {
-                var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                throw systemException;
-            }
-            if (errorCode == 0 && getWagerSummary.GetTransactionDetailsResponse.Count == 0)
-            {
-                var msg = "NO_DATA";
-                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                return reportData;
-            }
-
-            reportData.Add(getWagerSummary.GetTransactionDetailsResponse);
+            var bettrans = await _commonBLL.GetWagerSummary("Finance_TpWagerRng_SimplePlay_Summary_Get", reportTime.startUnix, reportTime.endUnix);
+            reportData.AddRange(bettrans);
             return reportData;
         }
 

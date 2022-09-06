@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    var dueTimeSpan = TimeSpan.FromHours(1);
+                    var dueTimeSpan = TimeSpan.FromMinutes(10);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
