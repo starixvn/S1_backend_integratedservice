@@ -58,7 +58,9 @@ builder.Services
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
     .AddHostedService<YLWorker>()
-    .AddHostedService<Kiss918Worker>();
+    .AddHostedService<Kiss918Worker>()
+    .AddHostedService<BTIWorker>()
+    .AddHostedService<NineWWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
