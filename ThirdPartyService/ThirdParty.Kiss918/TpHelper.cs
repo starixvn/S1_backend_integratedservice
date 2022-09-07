@@ -6,8 +6,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Kiss918
@@ -100,7 +103,7 @@ namespace ThirdParty.Kiss918
 
             //var gapiUrl = $"{baseApiUrl}/api/Game/GameList";
 
-            //var QS = $"key={secretKey}{delimiter}time={currTime}{delimiter}gameType=6";   //1,2,3,4,5,7,8,9
+            //var QS = $"key={secretKey}{delimiter}time={currTime}{delimiter}gameType=1,2,3,4,5,7,8,9";   //1,2,3,4,5,7,8,9
             //var gq = HttpUtility.UrlEncode(DESEncrypt(QS, encryptKey));
             //var gs = BuildMD5(QS + md5EncryptKey + currTime + secretKey);
 
@@ -108,7 +111,7 @@ namespace ThirdParty.Kiss918
             //{
             //    q = gq,
             //    s = gs,
-            //    accessToken = token
+            //    accessToken = accessToken
             //});
 
             #endregion
@@ -326,7 +329,52 @@ namespace ThirdParty.Kiss918
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var roundId = string.Empty;
+            var gameId = string.Empty;
+            var url = string.Empty;
+
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Kiss918_Detail_Get",
+                new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
+            roundId = getBetDetail.TransId;
+            url = detailList?.FirstOrDefault().GetValueOrDefault("resultUrl")?.ToString();
+
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                var gameName = string.IsNullOrWhiteSpace(detailList.FirstOrDefault()?.GetValueOrDefault("gameID")?.ToString()) ? "Lobby Jacpot"
+                    : detailList.FirstOrDefault()?.GetValueOrDefault("gameID")?.ToString();
+                
+                var tpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                };
+                return new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = ToJson(detailList),
+                    TpCurrency = tpCurrency,
+                    RefTransId = string.Empty,
+                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("playerID")?.ToString(),
+                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
+                    Stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 1)
+                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                    GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameID")?.ToString(),
+                    GameName = gameName,
+                };
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = url,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
