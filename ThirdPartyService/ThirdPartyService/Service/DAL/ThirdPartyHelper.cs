@@ -1,36 +1,27 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
+﻿using MySql.Data.MySqlClient;
 using System.Collections.Concurrent;
-using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyService.Service.Model;
 using Dapper;
 using System.Reflection;
 using System.Data;
-using Microsoft.Extensions.Logging;
-using ThirdPartyService.Service.Library;
-using System.Collections.Generic;
 using Serilog.Context;
 
 namespace ThirdPartyService.Service.DAL
 {
     public class ThirdPartyHelper
     {
-        private static ConcurrentDictionary<int, IThirdPartyHelper> ThirdPartyHelperContainer = new ConcurrentDictionary<int, IThirdPartyHelper>();
-        private static ConcurrentDictionary<string, ThirdPartyModel> ThirdPartyModelContainer = new ConcurrentDictionary<string, ThirdPartyModel>();
-        private readonly IWebHostEnvironment environment;
+        private static ConcurrentDictionary<int, IThirdPartyHelper> ThirdPartyHelperContainer = new();
+        private static ConcurrentDictionary<string, ThirdPartyModel> ThirdPartyModelContainer = new();
         private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyHelper> logger;
-        private readonly Log2File _log2File;
+        private readonly IServiceProvider _provider;
 
-        public ThirdPartyHelper(ILogger<ThirdPartyHelper> logger, IWebHostEnvironment environment, IConfiguration configuration, Log2File log2File)
+        public ThirdPartyHelper(IServiceProvider provider)
         {
-            this.environment = environment;
-            this.configuration = configuration;
-            this.logger = logger;
-            _log2File = log2File;
+            _provider = provider;
+            configuration = provider.GetRequiredService<IConfiguration>();
+            logger = provider.GetRequiredService<ILogger<ThirdPartyHelper>>();
         }
 
         public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
@@ -61,11 +52,8 @@ namespace ThirdPartyService.Service.DAL
                 LogContext.PushProperty("TP", oThirdPartyModel.TpName);
                 var assembly = Assembly.Load($"ThirdParty.{oThirdPartyModel.TpName}");
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
-                //var oThirdPartyHelper = new Lazy<IThirdPartyHelper>(() => (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
-                //if (oThirdPartyHelper.IsValueCreated)
-                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType));
+                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType, new object[] { _provider }));
                 ThirdPartyHelperContainer[tpId].InsertLog += InsertLog;
-                //oThirdPartyModel.ApiName
             }
             return ThirdPartyHelperContainer[tpId];
         }
