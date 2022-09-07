@@ -75,6 +75,7 @@ namespace ThirdPartySettleWorker.Workers
                         var stake = unsettledList.Sum(i => i.DebitAmount);
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
+                        
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -88,7 +89,6 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = unsettledList.Min(i => i.TransTime),
                             SettlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled,
                         };
-
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
                         if (result == 1)
                         {
@@ -101,7 +101,6 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, true);
                             });
                         }
-
                     }
                     catch (Exception ex)
                     {
