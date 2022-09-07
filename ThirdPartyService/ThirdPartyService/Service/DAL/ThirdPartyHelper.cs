@@ -54,7 +54,7 @@ namespace ThirdPartyService.Service.DAL
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
                 var instance = CheckConstructor(assemblyType) ?
                     (IThirdPartyHelper)Activator.CreateInstance(assemblyType, new object[] { _provider }) :
-                    (IThirdPartyHelper)Activator.CreateInstance(assemblyType); 
+                    (IThirdPartyHelper)Activator.CreateInstance(assemblyType);
                 ThirdPartyHelperContainer.TryAdd(tpId, instance);
                 ThirdPartyHelperContainer[tpId].InsertLog += InsertLog;
             }
@@ -109,7 +109,7 @@ namespace ThirdPartyService.Service.DAL
             {
                 foreach (var parameter in constructor.GetParameters())
                 {
-                    if (parameter.ParameterType  == typeof(IServiceProvider))
+                    if (parameter.ParameterType == typeof(IServiceProvider))
                     {
                         return true;
                     }
