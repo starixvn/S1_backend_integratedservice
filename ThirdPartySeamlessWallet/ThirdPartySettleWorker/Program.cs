@@ -56,7 +56,9 @@ builder.Services
     .AddHostedService<GPIWorker>()
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
-    .AddHostedService<YLWorker>();
+    .AddHostedService<YLWorker>()
+    .AddHostedService<BTIWorker>()
+    .AddHostedService<NineWWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
