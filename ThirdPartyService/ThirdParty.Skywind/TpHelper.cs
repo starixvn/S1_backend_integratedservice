@@ -90,8 +90,7 @@ namespace ThirdParty.Skywind
                 Dictionary<string, string> header = new Dictionary<string, string>();
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 var sParam = $"ticket={sessionKey}&language={TpLangId}";
-                //string json = HttpGet(gameUrl, sParam, "application/json", header);
-                string json = HttpGetForTest(gameUrl, sParam, header);
+                string json = HttpGet(gameUrl, sParam, "application/json", header);
 
                 ApiResult oApiResult = new ApiResult();
                 {
