@@ -52,7 +52,10 @@ namespace ThirdPartyService.Service.DAL
                 LogContext.PushProperty("TP", oThirdPartyModel.TpName);
                 var assembly = Assembly.Load($"ThirdParty.{oThirdPartyModel.TpName}");
                 var assemblyType = assembly.GetType($"ThirdParty.{oThirdPartyModel.TpName}.TpHelper");
-                ThirdPartyHelperContainer.TryAdd(tpId, (IThirdPartyHelper)Activator.CreateInstance(assemblyType, new object[] { _provider }));
+                var instance = CheckConstructor(assemblyType) ?
+                    (IThirdPartyHelper)Activator.CreateInstance(assemblyType, new object[] { _provider }) :
+                    (IThirdPartyHelper)Activator.CreateInstance(assemblyType); 
+                ThirdPartyHelperContainer.TryAdd(tpId, instance);
                 ThirdPartyHelperContainer[tpId].InsertLog += InsertLog;
             }
             return ThirdPartyHelperContainer[tpId];
@@ -98,6 +101,21 @@ namespace ThirdPartyService.Service.DAL
         {
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
+        }
+
+        private bool CheckConstructor(Type type)
+        {
+            foreach (var constructor in type.GetConstructors())
+            {
+                foreach (var parameter in constructor.GetParameters())
+                {
+                    if (parameter.ParameterType  == typeof(IServiceProvider))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }
