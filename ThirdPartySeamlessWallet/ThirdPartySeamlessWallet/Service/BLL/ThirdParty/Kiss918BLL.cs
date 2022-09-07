@@ -435,12 +435,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            if (!IsExistNewRoundId(data.playSessionID, out newRoundId, out message))
+            var tpRoundId = data.playSessionID;
+            if (string.IsNullOrWhiteSpace(tpRoundId))
+                tpRoundId = data.referenceID;
+
+            if (!IsExistNewRoundId(tpRoundId, out newRoundId, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (string.IsNullOrWhiteSpace(newRoundId))
             {
-                if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
+                if (!GenNewRoundId(tpRoundId, out newRoundId, out message, trans))
                 {
                     trans.Rollback();
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
