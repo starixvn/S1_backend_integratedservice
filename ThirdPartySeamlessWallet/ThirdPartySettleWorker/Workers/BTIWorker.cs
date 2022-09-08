@@ -73,7 +73,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = stake,
                             ValidBet = stake,
-                            WinlostAmount = payout - stake,
+                            WinlostAmount = isClosed ? payout - stake : 0,
                             TransId = unsettledList.First().BetID,
                             GameType = gameType,
                             TpUserName = tpUserName,
