@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly ApiMPBLL _apiMPBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly int _timeZone = 0;
+        private readonly int _timeZone = 8; // 因為API帶入的時間格式，且對應MP GameEndTime參數(MP 為+8)，故API時區調整為+8
 
         public FinanceMPBLL(IServiceProvider provider)
         {

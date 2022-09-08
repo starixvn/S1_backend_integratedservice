@@ -150,6 +150,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string OPToken { get; set; }
             public string PlayerId { get; set; }
         }
+        public class CPSettleReq : Req
+        {
+            public string PlayerId { get; set; }
+            public string CPId { get; set; }
+            public string CPTransId { get; set; }
+            public decimal CPWin { get; set; }
+        }
         #endregion
 
         #endregion
@@ -753,6 +760,82 @@ namespace ThirdPartySeamlessWallet.Controllers
                 logger.LogError(ex, $"{Content}\r\n{JsonConvert.SerializeObject(result)}");
             }
       
+            return result;
+        }
+
+        [HttpPost]
+        [Route("[controller]/CPSettle")]
+        public async Task<Resp> CPSettleAsync()
+        {
+            #region InitResult
+            Resp result = new Resp();
+            #endregion
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string Content = await reader.ReadToEndAsync();
+
+            try
+            {
+                CPSettleReq getReq = JsonConvert.DeserializeObject<CPSettleReq>(Content);
+                result.Timestamp = DateTimeOffset.Now.ToOffset(new TimeSpan(8, 0, 0)).ToString("o");
+                result.Seq = getReq.Seq;
+
+                #region Check Hash
+                Request.Headers.TryGetValue("ap-hash", out var ApHash);
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
+                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
+
+                if (ApHash != Hash)
+                {
+                    result.ErrorCode = (int)ErrorCode.HashInvalid;
+                    result.ErrorDescription = ErrorCode.HashInvalid.ToString();
+                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
+                    return result;
+                }
+                #endregion
+
+                if (getReq.CPWin < 0)
+                {
+                    result.ErrorCode = (int)ErrorCode.ParameterIncorrect;
+                    result.ErrorDescription = ErrorCode.ParameterIncorrect.ToString();
+                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}");
+                    return result;
+                }
+
+                CPSettleDataRNG_AP settleData = new CPSettleDataRNG_AP()
+                {
+                    timestamp = DateTime.Parse(getReq.Timestamp),
+                    seq = getReq.Seq,
+                    sitecode = getReq.SiteCode,
+                    playerid = getReq.PlayerId,
+                    cpid = getReq.CPId,
+                    cptransid = getReq.CPTransId,
+                    cpwin = getReq.CPWin
+                };
+
+                int SettleResult = settledBLL.RewardRNG_AP(settleData, getReq.PlayerId);
+
+                if (SettleResult > 0 || SettleResult == -1)
+                {
+                    result.ErrorCode = (int)ErrorCode.Success;
+                    result.ErrorDescription = "";
+                    logger.LogInformation($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
+                }
+                else
+                {
+                    result.ErrorCode = (int)ErrorCode.APIError;
+                    result.ErrorDescription = ErrorCode.APIError.ToString();
+                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.ErrorCode = (int)ErrorCode.APIError;
+                result.ErrorDescription = ErrorCode.APIError.ToString();
+                logger.LogError(ex, $"{Content}\r\n{JsonConvert.SerializeObject(result)}");
+            }
+
             return result;
         }
     }

@@ -39,8 +39,8 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var intervalHours = 1;
-            var nextTimeSpan = TimeSpan.FromHours(intervalHours);
+            var intervalMinutes = 15;
+            var nextTimeSpan = TimeSpan.FromMinutes(intervalMinutes);
 
             try
             {
@@ -51,7 +51,7 @@ namespace ThirdPartyWager.Workers
                     var (isSuccess, doQuick) = await _wagerAllBetBLL.UnsettleCheck();
                     if (isSuccess)
                     {
-                        _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(thisTime.AddHours(intervalHours)).ToUnixTimeSeconds());
+                        _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(thisTime.AddMinutes(intervalMinutes)).ToUnixTimeSeconds());
                     }
 
                     if (doQuick)

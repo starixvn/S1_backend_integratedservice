@@ -275,5 +275,4 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         TransferWallet = 0,
         SeamlessWallet = 1
     }
-
 }

@@ -36,11 +36,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (allowNegative == AllowNegative.Allow)
             {
                 p.Add("AllowNegative", (int)allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
-                conn.Execute("Service_SeamlessWallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                conn.Execute("Service_SeamlessWallet_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
             }
             else
             {
-                conn.Execute("Wallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                conn.Execute("Wallet_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
             }
 
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new { gameType = gameType, CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
             p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BonusWallet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = conn.Execute("Service_BonusWallet_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
             bonusId = p.Get<int?>("BonusId") ?? 0;
             afterBonus = p.Get<decimal>("AfterBonus");

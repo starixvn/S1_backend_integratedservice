@@ -10,8 +10,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.KM
+namespace ThirdPartyWager.Service.BLL
 {
     public class ApiKMBLL
     {
@@ -19,12 +20,15 @@ namespace ThirdPartyWager.Service.BLL.KM
         public Dictionary<string, string> KmConfig { get; set; }
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<ApiKMBLL> _logger;
-        
+        private readonly string _tpName = Tp.KM.ToString();
+        private readonly Log2File _log2File;
+
         public ApiKMBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _configuration = configuration;
             _logger = provider.GetRequiredService<ILogger<ApiKMBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _log2File = provider.GetRequiredService<Log2File>();
         }
         public async Task<List<WagerKMModel>> QueryBetHistoryAsync(string startTime, string endTime)
         {
@@ -41,16 +45,16 @@ namespace ThirdPartyWager.Service.BLL.KM
                 var encodingQueryStr = $"startdate={HttpUtility.UrlEncode(startTime)}&" +
                                              $"enddate={HttpUtility.UrlEncode(endTime)}&issettled=true";
                 historyBet = $"{apiUrl}/api/history/bets?{encodingQueryStr}";
-            
+
                 var request = new HttpRequestMessage(HttpMethod.Get, historyBet);
                 request.Headers.Add("X-QM-ClientId", clientId);
                 request.Headers.Add("X-QM-ClientSecret", clientSecret);
                 request.Headers.Add("X-QM-Accept", "json");
                 request.Headers.Add("Accept-Encoding", "gzip");
-                
+
                 var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var response = await client.SendAsync(request);
-            
+
                 var content = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                 {
@@ -62,14 +66,59 @@ namespace ThirdPartyWager.Service.BLL.KM
             }
             catch (Exception e)
             {
-                _logger.LogError(e ,$"{historyBet} query history bets failed:{e.Message}");
+                _logger.LogError(e, $"{historyBet} query history bets failed:{e.Message}");
                 return null;
             }
-            
+
         }
+
+        public async Task<List<CurrencyStats_KM>> GetBetSummaryByTime(string currency, string startTime, string endTime)
+        {
+            try
+            {
+                var apiUrl = GetInputValue(KmConfig, "ApiUrl");
+                var clientId = GetInputValue(KmConfig, "X-QM-ClientId");
+                var clientSecret = GetInputValue(KmConfig, "X-QM-ClientSecret");
+
+                startTime = $"{DateTime.Parse(startTime).ToString("s")}+00:00";
+                endTime = $"{DateTime.Parse(endTime).ToString("s")}+00:00";
+
+                var uri = "/api/history/bets/total?";
+                var param = $"startdate={HttpUtility.UrlEncode(startTime)}&enddate={HttpUtility.UrlEncode(endTime)}&cur={currency}";
+                var url = $"{apiUrl}{uri}{param}";
+
+                _log2File.InsertRequestLog(_tpName, apiUrl + uri, param, "1");
+
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("X-QM-ClientId", clientId);
+                request.Headers.Add("X-QM-ClientSecret", clientSecret);
+                request.Headers.Add("X-QM-Accept", "json");
+                request.Headers.Add("Accept-Encoding", "gzip");
+
+                var client = _httpHelper.GetClientWithHandler(CreateHandler());
+                var response = await client.SendAsync(request);
+
+                var content = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, url, param, content);
+                    return null;
+                }
+
+                var result = JsonConvert.DeserializeObject<List<CurrencyStats_KM>>(content);
+                return result;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"query history bets total failed:{e.Message}");
+                return null;
+            }
+        }
+
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
-            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }

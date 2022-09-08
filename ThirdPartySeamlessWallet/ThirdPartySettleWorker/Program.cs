@@ -30,6 +30,7 @@ builder.Services
     .AddHostedService<BonusWorker>()
     .AddHostedService<SettleWorker>()
     .AddHostedService<TpReRequestWorker>()
+    .AddHostedService<TpRewardWorker>()
     .AddHostedService<JokerWorker>()
     .AddHostedService<MGWorker>()
     .AddHostedService<APWorker>()
@@ -55,6 +56,7 @@ builder.Services
     .AddHostedService<GPIWorker>()
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
+    .AddHostedService<YLWorker>()
     .AddHostedService<SkywindWorker>();
 
 var app = builder.Build();
