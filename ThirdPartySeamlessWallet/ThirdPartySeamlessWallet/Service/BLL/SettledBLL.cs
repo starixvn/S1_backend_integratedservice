@@ -1835,6 +1835,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int PayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.turnover *= tpCurrency.ExchangeRate;
+                bettingData_JILI.preserve *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public IEnumerable<SettleData_JILI> GetUnsettledList_JILI(int category)
         {
             return settledService.GetUnsettledList_JILI(category);
