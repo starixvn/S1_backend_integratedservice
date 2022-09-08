@@ -62,7 +62,7 @@ namespace CommonService.Service.BLL
                 apiResult.Data = new IovationCheckResult()
                 {
                     Result = resultResp.result,
-                    Reason = resultResp.reason,
+                    Reason = string.IsNullOrEmpty(resultResp.reason) ? "" : resultResp.reason,
                     DeviceId = string.IsNullOrEmpty(deviceId) ? "" : deviceId,
                     DeviceType = string.IsNullOrEmpty(deviceType) ? "" : deviceType ,
                     Score = score ?? 0
