@@ -2922,6 +2922,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+                var current = new DateTimeOffset(DateTime.UtcNow);
+                var partitionTime = current.DateTime;
                 // check bet
                 var check = conn.QueryFirstOrDefault<BettransData_JILI>("Service_BettransRng_JILI_Get", new { round = cancelBetData_JILI.round }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (check == null)
@@ -2976,6 +2978,51 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
+                    // cancel insert
+                    if(cancelBetData_JILI.sessionId > 0)
+                    {
+                        /*
+                         說明: 牌局型注單的特性是，必須等前一筆下注成功了才會進行下一筆，下注都成功後會進行結算，或是某一筆下注失敗後中止牌局也進行結算。
+                             取消下注 (type=1): 成功時只會取消單筆下注，同局的其他下注不受影響。正常情況下，只會取消最後一筆下注，而且必須是還未結算的牌局。
+                             接受取消後，這一局就不可再接受任何下注，只會有結算。之後遊戲商對同一局發送的下注無效。
+                             有可能因為網路延遲或其他因素，導致營運商在收到下注前就收到取消，對營運商來說是取消一筆不存在的下注，這時營運商應注記該局為失敗，之後同一局的下注均無效。
+                             正常情況遊戲商不會在結算後發送 type 1 取消。但有可能因為網路延遲或其他因素，導致營運商在結算後才收到 type 1 的取消。若營運商收到此種 type 1 取消，應取消該筆下注，原因是遊戲商是以該筆下注失敗為前提進行結算。
+                             遊戲商不會對結算 (type=2) 發送取消
+                             我司發送的 cancelSessionBet 都是對應牌局的其中一筆下注, 請參考 round 欄位
+                        */
+                        var cancelParam = new DynamicParameters(new
+                        {
+                            reqId = cancelBetData_JILI.reqId,
+                            userId = cancelBetData_JILI.userId,
+                            currency = cancelBetData_JILI.currency,
+                            game = cancelBetData_JILI.game,
+                            round = cancelBetData_JILI.round,
+                            wagersTime = current.ToUnixTimeSeconds(),
+                            betAmount = cancelBetData_JILI,
+                            winloseAmount = cancelBetData_JILI.winloseAmount,
+                            turnover = 0,
+                            preserve = 0,
+                            jpContribute = 0,
+                            jpWin = 0,
+                            isFreeRound = 0,
+                            TransactionID = 0,
+                            sessionId = cancelBetData_JILI.sessionId,
+                            type = cancelBetData_JILI.type,
+                            SiteId = tpCustInfo.SiteId,
+                            CustId = tpCustInfo.CustId,
+                            CurrencyId = tpCustInfo.CurrencyId,
+                            TicketType = (int)BettransType.Payout,
+                            TicketStatus = TicketStatus.Refund,
+                            SettleFlag = SettleFlag.EndGame
+                        });
+
+                        var cancelInsert = _partitionService.Execute(partitionTime, "Service_BettransRng_JILI_Ins_V2", cancelParam, trans);
+                        if (cancelInsert > 0)
+                        {
+                            // insert cancel record
+                            trans.Commit();
+                        }
+                    }
                     result = -1;
                 }
             }
@@ -3185,6 +3232,112 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = -99;
                 throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int PayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, ThirdPartyBLL thirdPartyBLL, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_JILI.wagersTime).DateTime;
+                
+                // check exists
+                var check = _partitionService.Query<BettransData_JILI>(partitionTime,"Service_BettransRng_JILI_Get_V2", new { round = bettingData_JILI.round });
+                if (check.Any())
+                {
+                    return -1;
+                }
+
+                var iTicketStatus = (int)TicketStatus.Win;
+                var winlose = bettingData_JILI.winloseAmount - bettingData_JILI.turnover;
+                if (winlose < 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Lost;
+                }
+                else if (winlose == 0)
+                {
+                    iTicketStatus = (int)TicketStatus.Draw;
+                }
+
+                var p = new DynamicParameters(new
+                {
+                    reqId = bettingData_JILI.reqId,
+                    userId = bettingData_JILI.userId,
+                    currency = bettingData_JILI.currency,
+                    game = bettingData_JILI.game,
+                    round = bettingData_JILI.round,
+                    wagersTime = bettingData_JILI.wagersTime,
+                    betAmount = Math.Abs(bettingData_JILI.betAmount) * -1,
+                    winloseAmount = bettingData_JILI.winloseAmount,
+                    turnover = bettingData_JILI.turnover,
+                    preserve = bettingData_JILI.preserve,
+                    jpContribute = bettingData_JILI.jpContribute,
+                    jpWin = bettingData_JILI.jpWin,
+                    isFreeRound = bettingData_JILI.isFreeRound,
+                    TransactionID = bettingData_JILI.TransactionID,
+                    sessionId = bettingData_JILI.sessionId,
+                    type = bettingData_JILI.type,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Payout,
+                    TicketStatus = iTicketStatus,
+                    SettleFlag = SettleFlag.EndGame
+                });
+
+                var category = TpCategory.Slots;
+                var gameType = (int)GameType.JILI_RNG;
+
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_JILI_Ins_V2", p, trans);
+                if (result > 0)
+                {
+                    if(bettingData_JILI.winloseAmount > 0)
+                    {
+                        int bonusId = 0;
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingData_JILI.winloseAmount,
+                            (int)Tp.JILI,
+                            bettingData_JILI.sessionId.ToString(),
+                            gameType,
+                            category,
+                            bettingData_JILI.sessionId.ToString(),
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
             }
 
             return result;
