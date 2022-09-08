@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Serilog.Context;
+﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -81,7 +73,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = stake,
                             ValidBet = stake,
-                            WinlostAmount = payout - stake,
+                            WinlostAmount = isClosed ? payout - stake : 0,
                             TransId = unsettledList.First().BetID,
                             GameType = gameType,
                             TpUserName = tpUserName,
