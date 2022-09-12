@@ -14,6 +14,7 @@ namespace ThirdPartySettleWorker.Workers
         private Timer _timerSports;
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<NineWWorker> _logger;
         private readonly string _tpName;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
@@ -24,6 +25,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<NineWWorker>>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
@@ -71,6 +73,14 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        if (tpCurrency.ExchangeRate > 0)
+                        {
+                            unsettled.Stake *= tpCurrency.ExchangeRate;
+                            unsettled.ValidBet *= tpCurrency.ExchangeRate;
+                            unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                        }
+
                         var isSettled = unsettled.BetStatus.Equals("Settled", StringComparison.OrdinalIgnoreCase);
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -84,7 +94,6 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = unsettled.SettleTime,
                             TransTime = unsettled.TransTime,
                             SettlementType = isSettled ? SettlementType.SettledForValid : SettlementType.UnSettled,
-                            TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
