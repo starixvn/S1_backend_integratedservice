@@ -60,8 +60,7 @@ builder.Services
     .AddHostedService<YLWorker>()
     .AddHostedService<Kiss918Worker>()
     .AddHostedService<BTIWorker>()
-    .AddHostedService<NineWWorker>()
-    .AddHostedService<SkywindWorker>();
+    .AddHostedService<NineWWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
