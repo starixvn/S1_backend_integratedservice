@@ -354,17 +354,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                #region CancelBet測試用
-                if (environment.IsDevelopment() && req.amount >= 6000)
-                {
-                    System.Threading.Thread.Sleep(60000);
-                    result.error_code = (int)SkywindErrorCode.MerchantInternalError;
-                    result.error_msg = SkywindErrorCode.MerchantInternalError.ToString();
-                    logger.LogError($"CancelBet Test\r\n{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}");
-                    return result;
-                }
-                #endregion
-
                 BettingData_Skywind betReq = new BettingData_Skywind()
                 {
                     merch_id = req.merch_id,
