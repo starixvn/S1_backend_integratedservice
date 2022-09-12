@@ -52,11 +52,11 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<bool> GetUnsettleWagersAsync(long endTime)
+        public async Task<bool> GetUnsettleWagersAsync(long startTime)
         {
             try
             {
-                var result = await QueryUnSettleSummaryTransactionAsync(_config, endTime);
+                var result = await QueryUnSettleSummaryTransactionAsync(_config, startTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -206,7 +206,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private async Task<List<SettleBet>> QueryUnSettleSummaryTransactionAsync(NineWConfig config, long endTime)
+        private async Task<List<SettleBet>> QueryUnSettleSummaryTransactionAsync(NineWConfig config, long startTime)
         {
             var result = new List<SettleBet>();
             var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryCurrentBetsByLastUpdateDate";
@@ -222,7 +222,7 @@ namespace ThirdPartyWager.Service.BLL
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
-                        { "lastUpdateDate", endTime.ToString() },
+                        { "lastUpdateDate", startTime.ToString() },
                         { "timeZone", "1"},
                         { "isTxnDetail", "1"},
                         { "pageNumber", page.ToString() },

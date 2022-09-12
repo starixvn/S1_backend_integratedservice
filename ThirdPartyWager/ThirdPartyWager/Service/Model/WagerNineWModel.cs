@@ -158,11 +158,12 @@ namespace ThirdPartyWager.Service.Model.NineW
             betId = unSettleBet.betId;
             betStatus = unSettleBet.betStatus;
             selectionName = unSettleBet.selectionName;
+            selectionId = unSettleBet.selectionId;
             matchType = unSettleBet.matchType;     
             matchSettledDate = default;
             profitLoss = default;          
             oddsType = unSettleBet.oddsType;
-            betPlaced = unSettleBet.betPlaced;
+            betPlaced = unSettleBet.betPlaced;       
 
             var detail = unSettleBet.transactionData?.First();
             if (detail == null)
@@ -187,6 +188,7 @@ namespace ThirdPartyWager.Service.Model.NineW
             betId = unSettleBet.betId;
             betStatus = unSettleBet.betStatus;
             selectionName = unSettleBet.selectionName;
+            selectionId = unSettleBet.selectionId;
             matchType = unSettleBet.matchType;
             matchSettledDate = default;
             profitLoss = default;
@@ -322,7 +324,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public int site { get; set; }
         public int currencyType { get; set; }
         public int eventType { get; set; }
-        public int selectionId { get; set; }
+        public string selectionId { get; set; }
         public int categoryType { get; set; }
         public string ip { get; set; }
         public decimal matchOddsReq { get; set; }
@@ -372,7 +374,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public int site { get; set; }
         public int currencyType { get; set; }
         public int eventType { get; set; }
-        public int selectionId { get; set; }
+        public string selectionId { get; set; }
         public int categoryType { get; set; }
         public string ip { get; set; }
         public decimal matchOddsReq { get; set; }
