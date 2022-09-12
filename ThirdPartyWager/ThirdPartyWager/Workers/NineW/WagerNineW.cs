@@ -62,6 +62,7 @@ namespace ThirdPartyWager.Workers
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
+                    isSuccess = await _nineWService.GetUnsettleWagersAsync(timeCast.endUnix);
                     if (isSuccess)
                     {
                         _logger.LogInformation($"NineW Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");

@@ -3,6 +3,7 @@ using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
@@ -29,7 +30,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timerSports = new Timer(DoSettle, GameType.BTI_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSports = new Timer(DoSettle, GameType.NineW_Sports, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -46,57 +47,69 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var unsettledList = _tpUnSettledBLL.GetTpUnsettledList<SettleData>("Service_TpWager9W_Unsettle_Get", DataBase.Wager);
-
-                if (unsettledList != null)
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                if (!tpUnsettleList.Any())
                 {
-                    if (unsettledList.Count() == 200)
-                    {
-                        dueTimeSpan = TimeSpan.FromSeconds(1);
-                    }
+                    throw new UnsettleNotFoundException($"{gameType} no unsettle data.");
+                }
 
+                if (tpUnsettleList.Count() == 200)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+
+                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
+                {
                     var spName = "Service_TpWager9W_Settle_Set";
-                    foreach (var unsettled in unsettledList)
+                    var unsettled = _tpUnSettledBLL.GetTpUnsettleData<NineWSettleData>("Service_TpWager9W_Unsettle_Get_V2", new { TransId = transId }, DataBase.Wager).FirstOrDefault();
+
+                    try
                     {
-                        try
+                        if (unsettled == null)
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = (int)Tp,
-                                Stake = unsettled.Stake,
-                                ValidBet = unsettled.ValidBet,
-                                WinlostAmount = unsettled.WinLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = SettlementType.SettledForValid,
-                                TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
-                            };
-
-                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
-                            if (result == 1)
-                            {
-                                Task.Run(() =>
-                                {
-                                    _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, dataBase: DataBase.Wager);
-                                });
-                            }
-
+                            continue;
                         }
-                        catch (Exception ex)
+
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
+                        var isSettled = unsettled.BetStatus.Equals("Settled", StringComparison.OrdinalIgnoreCase);
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = unsettled.Stake,
+                            ValidBet = unsettled.ValidBet,
+                            WinlostAmount = isSettled ? unsettled.WinLostAmount : 0,
+                            TransId = unsettled.TransId,
+                            GameType = gameType,
+                            TpUserName = unsettled.Account,
+                            SettledTime = unsettled.SettleTime,
+                            TransTime = unsettled.TransTime,
+                            SettlementType = isSettled ? SettlementType.SettledForValid : SettlementType.UnSettled,
+                            TicketStatus = unsettled.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                        };
+
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
+                        if (result == 1)
                         {
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
+                                _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, dataBase: DataBase.Wager);
                             });
-                            LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError(ex, $"{JsonConvert.SerializeObject(unsettled)}");
                         }
+                    }             
+                    catch (Exception ex)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, isSuccess: false, DataBase.Wager);
+                        });
+                        LogContext.PushProperty("TP", _tpName);
+                        _logger.LogError(ex, $"{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
             }
             catch (Exception ex)
             {
@@ -108,5 +121,10 @@ namespace ThirdPartySettleWorker.Workers
                 _timerSports.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+    }
+
+    public class NineWSettleData : SettleData
+    {
+        public string BetStatus { get; set; }
     }
 }
