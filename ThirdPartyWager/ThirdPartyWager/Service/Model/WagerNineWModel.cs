@@ -98,6 +98,10 @@ namespace ThirdPartyWager.Service.Model.NineW
         {
             get
             {
+                if (betPlaced == default(DateTime))
+                {
+                    return 0;
+                }
                 return new DateTimeOffset(betPlaced, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
@@ -105,6 +109,10 @@ namespace ThirdPartyWager.Service.Model.NineW
         {
             get
             {
+                if (matchSettledDate == default(DateTime))
+                {
+                    return 0;
+                }
                 return new DateTimeOffset(matchSettledDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
@@ -344,10 +352,10 @@ namespace ThirdPartyWager.Service.Model.NineW
         public int fancyBetMarketType { get; set; }
         public object extension1 { get; set; }
         public UnSettleBetTransactiondata[] transactionData { get; set; }
-        public decimal matchAvgOdds { get; set; }
+        public decimal? matchAvgOdds { get; set; }
         public string betStatus { get; set; }
-        public decimal matchAmount { get; set; }
-        public decimal unMatchAmount { get; set; }
+        public decimal? matchAmount { get; set; }
+        public decimal? unMatchAmount { get; set; }
         public DateTime dateMatched { get; set; }
     }
 
@@ -394,10 +402,10 @@ namespace ThirdPartyWager.Service.Model.NineW
         public int fancyBetMarketType { get; set; }
         public object extension1 { get; set; }
         public object transactionData { get; set; }
-        public decimal matchAvgOdds { get; set; }
+        public decimal? matchAvgOdds { get; set; }
         public string betStatus { get; set; }
-        public decimal matchAmount { get; set; }
-        public decimal unMatchAmount { get; set; }
+        public decimal? matchAmount { get; set; }
+        public decimal? unMatchAmount { get; set; }
     }
 
 }
