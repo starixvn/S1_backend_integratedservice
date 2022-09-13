@@ -4185,12 +4185,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 trx_id = cancelBetData_Skywind.trxid
             };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x=> x.TicketStatus == (int)TicketStatus.UnSettled);
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault();
             if (bettransSkywind == null)
             {
                 return -2;
             }
-            else if (bettransSkywind.TicketStatus != 0)
+            else if (bettransSkywind.TicketStatus != (int)TicketStatus.UnSettled)
             {
                 return -1;
             }
