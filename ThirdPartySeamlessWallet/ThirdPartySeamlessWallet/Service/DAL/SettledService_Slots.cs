@@ -4143,7 +4143,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public bool GetTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, out int bonusId)
         {
-            var result = GetTpBonus((int)Tp.Kiss918, data.referenceID, (int)GameType.Kiss918_RNG, TpCategory.Slots, out int custId, out bonusId);
+            var result = GetTpBonus((int)Tp.Kiss918, data.NewRoundId, (int)GameType.Kiss918_RNG, TpCategory.Slots, out int custId, out bonusId);
             if (result == 0)
                 return false;
 
