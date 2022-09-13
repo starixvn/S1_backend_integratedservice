@@ -95,7 +95,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            _log2File.Info(Content, logName);
 
             AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
             ErrorResp getErrorResponse = new ErrorResp();
@@ -180,7 +179,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            _log2File.Info(Content, logName);
 
             BettingData_JILI getReq = JsonConvert.DeserializeObject<BettingData_JILI>(Content);
             ErrorResp getErrorResponse = new ErrorResp();
@@ -303,20 +301,19 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/cancelBet")]
-        [Route("[controller]/goal123/cancelBet")]
-        [Route("[controller]/bwing/cancelBet")]
         [Route("[controller]/cancelSessionBet")]
+        [Route("[controller]/goal123/cancelBet")]
         [Route("[controller]/goal123/cancelSessionBet")]
         [Route("[controller]/bwing/cancelSessionBet")]
+        [Route("[controller]/bwing/cancelBet")]
         public async Task<dynamic> cancelBetAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{_thisTp}_cancelBet";
-
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            _log2File.Info(Content, logName);
 
             CancelBetData_JILI getReq = JsonConvert.DeserializeObject<CancelBetData_JILI>(Content);
+            string logName = (getReq.sessionId > 0) ? $"{_thisTp}_cancelSessionBet" : $"{_thisTp}_cancelBet";
+
             ErrorResp getErrorResponse = new ErrorResp();
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
@@ -389,7 +386,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            _log2File.Info(Content, logName);
 
             BettingData_JILI getReq = JsonConvert.DeserializeObject<BettingData_JILI>(Content);
             ErrorResp getErrorResponse = new ErrorResp();
@@ -501,90 +497,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
             return getErrorResponse;
         }
-
-        //[HttpPost]
-        //[Route("[controller]/cancelSessionBet")]
-        //[Route("[controller]/goal123/cancelSessionBet")]
-        //[Route("[controller]/bwing/cancelSessionBet")]
-        //public async Task<dynamic> cancelSessionBetAsync([FromQuery] Dictionary<string, string> getQuery)
-        //{
-        //    string logName = $"{_thisTp}_cancelSessionBet";
-
-        //    using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        //    var Content = await reader.ReadToEndAsync();
-        //    _log2File.Info(Content, logName);
-
-        //    CancelBetData_JILI getReq = JsonConvert.DeserializeObject<CancelBetData_JILI>(Content);
-        //    ErrorResp getErrorResponse = new ErrorResp();
-        //    getErrorResponse.errorCode = 5;
-        //    getErrorResponse.message = "Error";
-
-        //    // check authorization
-        //    Request.Headers.TryGetValue("Authorization", out var authorization);
-        //    string sAuthorization = authorization.ToString();
-
-        //    var check = checkAuthorization(sAuthorization);
-        //    if (check.errorCode != 0)
-        //    {
-        //        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
-        //        return check;
-        //    }
-
-        //    var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.game.ToString());
-
-        //    try
-        //    {
-        //        /*
-        //         說明: 牌局型注單的特性是，必須等前一筆下注成功了才會進行下一筆，下注都成功後會進行結算，或是某一筆下注失敗後中止牌局也進行結算。
-        //             取消下注 (type=1): 成功時只會取消單筆下注，同局的其他下注不受影響。正常情況下，只會取消最後一筆下注，而且必須是還未結算的牌局。
-        //             接受取消後，這一局就不可再接受任何下注，只會有結算。之後遊戲商對同一局發送的下注無效。
-        //             有可能因為網路延遲或其他因素，導致營運商在收到下注前就收到取消，對營運商來說是取消一筆不存在的下注，這時營運商應注記該局為失敗，之後同一局的下注均無效。
-        //             正常情況遊戲商不會在結算後發送 type 1 取消。但有可能因為網路延遲或其他因素，導致營運商在結算後才收到 type 1 的取消。若營運商收到此種 type 1 取消，應取消該筆下注，原因是遊戲商是以該筆下注失敗為前提進行結算。
-        //             遊戲商不會對結算 (type=2) 發送取消
-        //             我司發送的 cancelSessionBet 都是對應牌局的其中一筆下注, 請參考 round 欄位
-        //        */
-        //        var result = _settledBLL.CancelBetRNG_JILI(getReq, (int)gameType, out decimal tpAffterAmount);
-
-        //        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.userId, (int)gameType);
-        //        if (result > 0)
-        //        {
-        //            BetResp getApiResponse = new BetResp();
-        //            getApiResponse.errorCode = 0;
-        //            getApiResponse.message = "success";
-        //            getApiResponse.username = getReq.userId;
-        //            getApiResponse.currency = tpCustBalance.TpCurrencyId;
-        //            getApiResponse.balance = tpAffterAmount;
-        //            _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-        //            return getApiResponse;
-        //        }
-        //        else if (result == -1)
-        //        {
-        //            BetResp getApiResponse = new BetResp();
-        //            getApiResponse.errorCode = 1;
-        //            getApiResponse.message = "Already accepted";
-        //            getApiResponse.username = getReq.userId;
-        //            getApiResponse.currency = tpCustBalance.TpCurrencyId;
-        //            getApiResponse.balance = tpCustBalance.Balance;
-        //            _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-        //            return getApiResponse;
-        //        }
-        //        else if (result == -2)
-        //        {
-        //            getErrorResponse.errorCode = 2;
-        //            getErrorResponse.message = "Round not found";
-        //            _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-        //            return getErrorResponse;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
-        //        return getErrorResponse;
-        //    }
-
-        //    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-        //    return getErrorResponse;
-        //}
 
         private ErrorResp checkAuthorization(string authorization = null)
         {

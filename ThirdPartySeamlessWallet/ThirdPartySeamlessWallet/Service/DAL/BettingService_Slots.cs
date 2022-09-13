@@ -1173,7 +1173,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             var trans = conn.BeginTransaction();
 
-            var betAmount = Math.Abs(bettingData_JILI.betAmount) * -1;
+            var debit = (bettingData_JILI.betAmount != 0) ? Math.Abs(bettingData_JILI.betAmount) * -1 : Math.Abs(bettingData_JILI.preserve) * -1;
             var p = new DynamicParameters(new
             {
                 reqId = bettingData_JILI.reqId,
@@ -1182,7 +1182,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 game = bettingData_JILI.game,
                 round = bettingData_JILI.round,
                 wagersTime = bettingData_JILI.wagersTime,
-                betAmount = betAmount,
+                betAmount = Math.Abs(bettingData_JILI.betAmount) * -1,
                 winloseAmount = bettingData_JILI.winloseAmount,
                 turnover = bettingData_JILI.turnover,
                 preserve = bettingData_JILI.preserve,
@@ -1195,7 +1195,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SiteId = tpCustInfo.SiteId,
                 CustId = tpCustInfo.CustId,
                 CurrencyId = tpCustInfo.CurrencyId,
-                TicketType = (int)BettransType.Bet,
+                TicketType = (bettingData_JILI.betAmount != 0) ? (int)BettransType.Bet : (int)BettransType.Reserve,
                 TicketStatus = (int)TicketStatus.UnSettled,
                 SettleFlag = SettleFlag.Running
             });
@@ -1208,11 +1208,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var gameType = (int)GameType.JILI_RNG;
 
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_JILI_Ins_V2", p, trans);
-                if (result > 0 && betAmount != 0)
+                if (result > 0 && debit != 0)
                 {
                     result = PlaceBetV2(
                         tpCustInfo,
-                        betAmount,
+                        debit,
                         (int)Tp.JILI,
                         bettingData_JILI.sessionId.ToString(),
                         gameType,
@@ -1227,7 +1227,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if(bonusId > 0)
                     {
-                        AddTpBonus((int)Tp.JILI, bettingData_JILI.round.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bettingData_JILI.betAmount, bonusId, category, conn, trans);
+                        AddTpBonus((int)Tp.JILI, bettingData_JILI.round.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, debit, bonusId, category, conn, trans);
                     }
                 }
 
