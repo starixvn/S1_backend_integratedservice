@@ -165,6 +165,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     trans.Rollback();
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
+
+                if (!AddTpBonus(tpCustInfo, data, bonusId, out message, conn, trans))
+                {
+                    trans.Rollback();
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                }
             }
             else
             {
@@ -890,6 +896,35 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
+
+        private bool AddTpBonus(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, int bonusId,
+                        out string message, MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            var result = false;
+            try
+            {
+                result = _bettingService.AddTpBonus((int)Tp.Kiss918, data.referenceID, (int)GameType.Kiss918_RNG,
+                         tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount,
+                         bonusId, TpCategory.Slots, conn, trans) > 0;
+
+                if (!result)
+                {
+                    message = "add tp bonus fail.";
+                    _logger.LogError($"AddTpBonus Fail:{message}");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"AddTpBonus Exception:{ex.Message}");
+                return false;
+            }
+        }
+
         private bool InsertUnsettleData(DateTime partitionTime, string referenceID, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
