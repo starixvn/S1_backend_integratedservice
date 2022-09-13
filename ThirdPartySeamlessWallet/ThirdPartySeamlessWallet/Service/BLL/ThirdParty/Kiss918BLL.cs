@@ -165,12 +165,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     trans.Rollback();
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
-
-                if (!AddTpBonus(tpCustInfo, data, bonusId, out message, conn, trans))
-                {
-                    trans.Rollback();
-                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
-                }
             }
             else
             {
@@ -265,6 +259,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     trans.Rollback();
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
+
+                if (!AddTpBonus(tpCustInfo, data, bonusId, out message, conn, trans))
+                {
+                    trans.Rollback();
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                }
             }
             else
             {
@@ -272,7 +272,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
-
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
             {
@@ -462,6 +461,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (data.amount != 0)
             {
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
+                {
+                    trans.Rollback();
+                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+                }
+
+                if (!AddTpBonus(tpCustInfo, data, bonusId, out message, conn, trans))
                 {
                     trans.Rollback();
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
