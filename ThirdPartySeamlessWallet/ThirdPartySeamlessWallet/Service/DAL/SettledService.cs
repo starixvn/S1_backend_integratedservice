@@ -525,7 +525,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     $"UserName:{tpCustInfo.UserName}," +
                                     $"SiteId:{tpCustInfo.SiteId}," +
                                     $"Turnover:{validBet}," +
-                                    $"RefTransId:{betRecord.TransId}"+
+                                    $"RefTransId:{betRecord.TransId},"+
                                     $"conditionResult：{conditionResult}");
                 }
 
