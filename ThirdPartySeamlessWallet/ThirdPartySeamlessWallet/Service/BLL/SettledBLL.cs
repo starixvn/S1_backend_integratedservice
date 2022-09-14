@@ -1865,6 +1865,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_JILI(category, TransId, TicketStatus);
         }
 
+        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, int ticketStatus, long settleTime)
+        {
+            return settledService.SetSettleFlag_BettransRng_JILI(spName, transId, ticketStatus, settleTime);
+        }
         #endregion
 
         #region EVO
