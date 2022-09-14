@@ -511,13 +511,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                 }
 
-                if (!turnOverHasLog && !doPayout) // 該筆注單沒跑到 TurnOver，紀錄當下資料狀況，並且記錄 SettlementType 狀態
+                if (!turnOverHasLog && !doPayout) // 該筆注單沒跑到 TurnOver，紀錄當下資料狀況，並且記錄 SettlementType 條件狀態
                 {
-                    logger.LogError($"Not SetRollOverTurnOver，bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId},UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{validBet},Memo:Re-Settled,RefTransId:{betRecord.TransId}");
-
-                    logger.LogError(RefBetRecord == null
+                    var conditionResult = RefBetRecord == null
                         ? $"Not TpBetRecord And betRecord.SettlementType =={(int)betRecord.SettlementType}"
-                        : $"RefBetRecord.SettlementType == {(int)RefBetRecord.SettlementType} And betRecord.SettlementType == {(int)betRecord.SettlementType}");
+                        : $"RefBetRecord.SettlementType == {(int)RefBetRecord.SettlementType} And betRecord.SettlementType == {(int)betRecord.SettlementType}";
+
+                    logger.LogError($"Not SetRollOverTurnOver，" +
+                                    $"bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId}," +
+                                    $"UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{validBet}," +
+                                    $"Memo:Re-Settled,RefTransId:{betRecord.TransId}"+
+                                    $"conditionResult：{conditionResult}");
                 }
 
                 #endregion
