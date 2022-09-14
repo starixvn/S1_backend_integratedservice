@@ -1339,7 +1339,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int RollinFish_CQ9(RollinDataFish_CQ9 rollinDataFish_CQ9, int gameType, out decimal afterAmount)
         {
             afterAmount = 0;
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataFish_CQ9.account,null);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataFish_CQ9.account, null);
             if (tpCustInfo == null)
             {
                 afterAmount = 0;
@@ -1502,20 +1502,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag_BettransLC_WM(string TransId)
         {
             return settledService.SetSettleFlag_BettransLC_WM(TransId);
-        }
-
-        #endregion
-
-        #region Kiss918
-
-        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
-        {
-            return settledService.GetUnsettledList_Kiss918();
-        }
-
-        public int SetSettleFlag_TpWagerKiss918(string uuid)
-        {
-            return settledService.SetSettleFlag_TpWagerKiss918(uuid);
         }
 
         #endregion
@@ -2188,6 +2174,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public SettleData_YGG GetSettle_TpWager_YGG(string transId)
         {
             return settledService.GetSettle_TpWager_YGG(transId);
+        }
+
+        #endregion
+
+        #region Kiss918
+
+        public SettleData_Kiss918 GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        {
+            return settledService.GetSettle_TpWager_Kiss918(playSessionID, referenceID);
         }
 
         #endregion

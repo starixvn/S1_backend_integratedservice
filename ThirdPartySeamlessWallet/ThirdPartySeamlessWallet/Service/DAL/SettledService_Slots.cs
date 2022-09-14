@@ -1995,22 +1995,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region Kiss918
-
-        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_TpWagerKiss918(string uuid)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerKiss918_Settle_Set", new { uuid = uuid }, commandType: CommandType.StoredProcedure);
-        }
-
-        #endregion
-
         #region Mega
 
         public SettleData GetSettle_TpReportMega(string TransId)
@@ -4158,6 +4142,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return false;
 
             return true;
+        }
+
+        public SettleData_Kiss918 GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
