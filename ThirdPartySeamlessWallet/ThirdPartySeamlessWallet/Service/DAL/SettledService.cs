@@ -511,7 +511,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                 }
 
-                if (!turnOverHasLog && !doPayout) // 該筆注單沒跑到 TurnOver，紀錄當下資料狀況，並且記錄 SettlementType 條件狀態
+                if (!turnOverHasLog && !doPayout && bonusId > 0) // 該筆注單沒跑到Bonus TurnOver，紀錄當下資料狀況，並且記錄 SettlementType 條件狀態
                 {
                     var conditionResult = RefBetRecord == null
                         ? $"Not TpBetRecord And betRecord.SettlementType =={(int)betRecord.SettlementType}"
