@@ -269,7 +269,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            if (!AddTpBonus(tpCustInfo, data, out message, conn, trans))
+            if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -369,7 +369,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            if (!AddTpBonus(tpCustInfo, data, out message, conn, trans))
+            if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -481,7 +481,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            if (!AddTpBonus(tpCustInfo, data, out message, conn, trans))
+            if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
             {
                 trans.Rollback();
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
@@ -910,7 +910,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool AddTpBonus(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
+        private bool ProcessTpBonus(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
                         out string message, MySqlConnection conn, MySqlTransaction trans)
         {
             message = string.Empty;
@@ -928,9 +928,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (bonusId > 0)
                 {
-                    result = _bettingService.AddTpBonus((int)ThirdParty, data.referenceID, (int)GameType,
-                             tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount,
-                             bonusId, TpCategory.Slots, conn, trans) > 0;
+                    result = _bettingService.AddTpBonus_Kiss918(tpCustInfo, data, bonusId, conn, trans);
 
                     if (!result)
                     {
@@ -944,7 +942,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 message = "exception happen.";
-                _logger.LogError(ex, $"AddTpBonus Exception:{ex.Message}");
+                _logger.LogError(ex, $"ProcessTpBonus Exception:{ex.Message}");
                 return false;
             }
         }
