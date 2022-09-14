@@ -2769,7 +2769,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_JILI.wagersTime).DateTime;
 
                 // check exists
-                var check = _partitionService.Query<BettransData_JILI>(partitionTime, "Service_BettransRng_JILI_Get_V2", new { round = bettingData_JILI.round });
+                var check = _partitionService.Query<BettransData_JILI>(partitionTime, "Service_BettransRng_JILI_Round_Get", new { round = bettingData_JILI.round });
                 if (check.Any())
                 {
                     return -1;
@@ -2903,7 +2903,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_JILI.wagersTime).DateTime;
                 // check exists
-                var check = _partitionService.Query<BettransData_JILI>(partitionTime, "Service_BettransRng_JILI_Get_V2", new { round = bettingData_JILI.round });
+                var check = _partitionService.Query<BettransData_JILI>(partitionTime, "Service_BettransRng_JILI_Round_Get", new { round = bettingData_JILI.round });
                 if (check.Any())
                 {
                     return -1;
@@ -3071,7 +3071,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var current = new DateTimeOffset(DateTime.UtcNow);
                 var partitionTime = current.DateTime;
                 // check exists
-                var check = _partitionService.Query<BettransData_JILI>(partitionTime, "Service_BettransRng_JILI_Get_V2", new { round = cancelBetData_JILI.round });
+                var check = _partitionService.Query<BettransData_JILI>(partitionTime, "Service_BettransRng_JILI_Round_Get", new { round = cancelBetData_JILI.round });
                 if (!check.Any())
                 {
                     return -2;
@@ -3084,9 +3084,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     round = cancelBetData_JILI.round,
-                    TicketType = (int)BettransType.Payout,
+                    TicketType = (int)BettransType.CancelBet,
                     TicketStatus = TicketStatus.Refund,
-                    SettleFlag = SettleFlag.Running
+                    SettleFlag = SettleFlag.Settled
                 });
 
                 var category = TpCategory.Slots;
@@ -3169,9 +3169,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             SiteId = tpCustInfo.SiteId,
                             CustId = tpCustInfo.CustId,
                             CurrencyId = tpCustInfo.CurrencyId,
-                            TicketType = (int)BettransType.Payout,
+                            TicketType = (int)BettransType.CancelBet,
                             TicketStatus = TicketStatus.Refund,
-                            SettleFlag = SettleFlag.EndGame
+                            SettleFlag = SettleFlag.Settled
                         });
 
                         var cancelInsert = _partitionService.Execute(partitionTime, "Service_BettransRng_JILI_Ins_V2", cancelParam, trans);
@@ -3407,6 +3407,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { TransId = TransId, TicketStatus = TicketStatus }));
         }
 
+        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, int ticketStatus, long settleTime)
+        {
+            var result = 0;
+            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(settleTime).DateTime;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            result = _partitionService.Execute(partitionTime, spName, new DynamicParameters(new { TransId = transId, TicketStatus = ticketStatus }), trans);
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+            return result;
+        }
         #endregion
 
         #region Netent

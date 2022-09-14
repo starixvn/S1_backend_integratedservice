@@ -44,5 +44,11 @@
     public class SettleData_JILI : SettleData
     {
         public new long TransId { get; set; }
+        public long SessionId { get; set; }
+    }
+
+    public class CheckBettransData_JILI : BettransData_JILI
+    {
+        public int WagerCount { get; set; }
     }
 }
