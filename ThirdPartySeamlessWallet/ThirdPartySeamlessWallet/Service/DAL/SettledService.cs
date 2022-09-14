@@ -518,9 +518,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         : $"RefBetRecord.SettlementType == {(int)RefBetRecord.SettlementType} And betRecord.SettlementType == {(int)betRecord.SettlementType}";
 
                     logger.LogError($"Not SetRollOverTurnOver，" +
-                                    $"bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId}," +
-                                    $"UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{validBet}," +
-                                    $"Memo:Re-Settled,RefTransId:{betRecord.TransId}"+
+                                    $"bonusId:{bonusId}," +
+                                    $"TpId：{betRecord.TpId}," +
+                                    $"GameType：{(int)betRecord.GameType}," +
+                                    $"CustId:{tpCustInfo.CustId}," +
+                                    $"UserName:{tpCustInfo.UserName}," +
+                                    $"SiteId:{tpCustInfo.SiteId}," +
+                                    $"Turnover:{validBet}," +
+                                    $"RefTransId:{betRecord.TransId}"+
                                     $"conditionResult：{conditionResult}");
                 }
 
