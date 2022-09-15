@@ -85,6 +85,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<TpUnRewardService>();
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<TpRoundGenService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
@@ -96,8 +97,9 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IMGBLL, MGBLL>();
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
-            services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddTransient<IJokerBLL, JokerBLL>();
+            services.AddTransient<ISBOBLL, SBOBLL>();
+            services.AddTransient<IKiss918BLL, Kiss918BLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();

@@ -1,13 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
+﻿using System.Web;
 using System.Xml;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
@@ -58,32 +50,32 @@ namespace ThirdPartyWager.Workers
                 //query["key"] = "Gs6Am3Cn0C";
                 //query["format"] = "JSON";
                 builder.Query = query.ToString();
-                var newurl = builder.ToString();
+                var newUrl = builder.ToString();
 
-                var data = new HttpRequestMessage(HttpMethod.Get, newurl);
+                var data = new HttpRequestMessage(HttpMethod.Get, newUrl);
                 var result = await _httpHelper.GetClient().SendAsync(data);
 
                 if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    var Content = result.Content.ReadAsStringAsync().Result;
-                    Content = Content.Replace("<bookie ", "<bookie xmlns:json=\"http://james.newtonking.com/projects/json\" ");
-                    Content = Content.Replace("<odd ", "<odd json:Array=\"true\" ");
+                    var content = result.Content.ReadAsStringAsync().Result;
+                    content = content.Replace("<bookie ", "<bookie xmlns:json=\"http://james.newtonking.com/projects/json\" ");
+                    content = content.Replace("<odd ", "<odd json:Array=\"true\" ");
                     var xmlDoc = new XmlDocument();
-                    xmlDoc.LoadXml(Content);
+                    xmlDoc.LoadXml(content);
                     var sabaOddsJson = JsonConvert.SerializeXmlNode(xmlDoc, Newtonsoft.Json.Formatting.None, true);
                     sabaOddsJson = sabaOddsJson.Replace("@", "");
                     var response = JsonConvert.DeserializeObject<GetSabaOddsJson>(sabaOddsJson);
                     
-                    var updateList = response.Matches.match.Select(match => new UpdateOdd()
+                    var updateList = response.Matches.match.Select(result => new UpdateOdd()
                     {
-                        id = match.id, 
-                        h = match.bookie.odd.FirstOrDefault()?.h,
-                        o = match.bookie.odd.FirstOrDefault()?.o, 
-                        u = match.bookie.odd.FirstOrDefault()?.u
+                        _MatchId = result.id, 
+                        _Handicap = result.bookie.odd.FirstOrDefault()?.h,
+                        _HomeOdds = result.bookie.odd.FirstOrDefault()?.o, 
+                        _AwayOdds = result.bookie.odd.FirstOrDefault()?.u
                     });
                     var listMatchId = _sabaOddsBll.GetSabaOddsMatchId();
                     
-                    var updateOdds = updateList.Where(x => listMatchId.Contains(x.id));
+                    var updateOdds = updateList.Where(x => listMatchId.Contains(x._MatchId));
                     await _sabaOddsBll.SetSabaOdds(updateOdds);
                 }
             }
@@ -107,7 +99,6 @@ namespace ThirdPartyWager.Workers
 
                 _timerSabaOdds.Change(dueTimeSpan, TimeSpan.Zero);
             }
-
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {

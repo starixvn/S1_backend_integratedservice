@@ -246,6 +246,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         return gameType;
                     }
                     break;
+                case (int)Tp.Skywind:
+                    gameType = GameType.Skywind_RNG;
+                    if(gameId == "0")
+                    {
+                        gameType = GameType.Skywind_LiveCasino;
+                    }
+                    else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+                    {
+                        gameType = GameType.Skywind_Fish;
+                    }
+                    break;
                 default:
                     break;
             }

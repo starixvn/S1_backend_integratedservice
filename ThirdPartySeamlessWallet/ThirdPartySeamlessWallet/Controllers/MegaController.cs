@@ -120,7 +120,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
 
-                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId, null);
                 if (tpCustInfo == null)
                 {
                     resp.error = "Invalid user Id";

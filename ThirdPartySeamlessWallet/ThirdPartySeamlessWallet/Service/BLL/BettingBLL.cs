@@ -365,7 +365,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int RolloutFish_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account, null);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -383,7 +383,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int TakeAllFish_CQ9(BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account);
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, bettingDataRNG_CQ9.account, null);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate > 0)
@@ -596,6 +596,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingData_AP.stake *= tpCurrency.ExchangeRate;
             }
             var result = bettingService.PlaceBet_AP(tpCustInfo, bettingData_AP, out afterAmount, out seq);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        #endregion
+
+        #region Skywind
+        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBet_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

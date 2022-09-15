@@ -129,7 +129,6 @@ namespace ThirdPartyWager
             // Kiss918
             services.AddSingleton<WagerKiss918BLL>();
             services.AddSingleton<ApiKiss918BLL>();
-            services.AddSingleton<WagerRedoKiss918BLL>();
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
@@ -211,6 +210,9 @@ namespace ThirdPartyWager
             //CQ9
             services.AddSingleton<ApiCQ9BLL>();
             services.AddSingleton<FinanceCQ9BLL>();
+            //Skywind
+            services.AddSingleton<ApiSkywindBLL>();
+            services.AddSingleton<WagerSkywindBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -279,6 +281,8 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
+            services.AddHostedService<WagerSkywind>();
+            services.AddHostedService<WagerKiss918>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

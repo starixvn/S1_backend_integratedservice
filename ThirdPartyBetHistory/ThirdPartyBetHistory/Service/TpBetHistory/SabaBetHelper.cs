@@ -333,6 +333,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 betRecordInfo.SettlementType = SettlementType.UnSettled;
                 betRecordInfo.ValidBet = 0;
+                betRecordInfo.WinlostAmount = 0;
             }
             else if (betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("draw", StringComparison.OrdinalIgnoreCase))
             {

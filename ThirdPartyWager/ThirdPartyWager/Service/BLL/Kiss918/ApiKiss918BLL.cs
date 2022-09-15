@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +23,8 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiKiss918BLL> _logger;
         private readonly string _tpName = Tp.Kiss918.ToString();
 
+        private readonly string accessToken = "RUNnMmx6TnJZNjVoTU5ha1JyMCtENFY4bUFyWDVwYW1JbTRlNVRZUTRFY1NjTk1xSFV1WTI3NkNGWHgzSzJPRDZSN041NkJaUlp1WUIxSUhSUE5lSFA2dGhQK2svU2FGVHVOcHY0VnNWeGk5WE01d2U0cFgwbkFVeG9vSnpoZVNobmJSRCtJVVdzRzZCK3luV29zWGRRPT0=";
+
         public ApiKiss918BLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
@@ -29,78 +33,127 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiKiss918BLL>>();
         }
 
-
-        public async Task<WagerKiss918Model> GetBetListByTime(string wagerUrl, string authcode, string secretkey, string userName, string player, string startTime, string endTime, int page, int perPage, string guid)
+        public async Task<string> GetTimepoint(string wagerUrl, string dateTime)
         {
             // param
-            var current = _common.GetTimestemp1();
-            var sign = authcode + player + current + secretkey;
+            var url = $"{wagerUrl}/api/gettimepoint";
+            var param = new { dateTime = dateTime };
 
-            var url = $"{wagerUrl}/GameLog.ashx";
-            var param = new
-            {
-                userName = player,
-                sDate = startTime,
-                eDate = endTime,
-                authcode = authcode,
-                pageIndex = page,
-                pageSize = perPage,
-                time = current,
-                sign = _common.ToMD5(sign.ToLower()).ToUpper()
-            };
-
-            // request
-            var r = await DoHttpClientAsync(url, param);
-            var result = JsonConvert.DeserializeObject<WagerKiss918Model>(r);
-            return result;
-
-        }
-
-        public async Task<WagerKiss918ReportPlayer> GetReportPlayerListByTime(string wagerUrl, string authcode, string secretkey, string userName, string startTime, string endTime, string guid)
-        {
-            // param
-            var current = _common.GetTimestemp1();
-            var sign = authcode + userName + current + secretkey;
-
-            var url = $"{wagerUrl}/AgentTotalReport.ashx";
-            var param = new
-            {
-                userName = userName,
-                sDate = startTime,
-                eDate = endTime,
-                authcode = authcode,
-                Type = "ServerTotalReport",
-                time = current,
-                sign = _common.ToMD5(sign.ToLower()).ToUpper()
-            };
-
-            // request
-            var r = await DoHttpClientAsync(url, param);
-            var result = JsonConvert.DeserializeObject<WagerKiss918ReportPlayer>(r);
-            return result;
-
-        }
-
-        private async Task<string> DoHttpClientAsync(string url, object param)
-        {
+            var header = new Dictionary<string, string>() { { "token", $"{accessToken}" } };
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            
-            _log2File.InsertRequestLog(_tpName, url, sParam, "1");
 
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Content = new StringContent(sParam, Encoding.UTF8, "application/x-www-form-urlencoded");
+            // request
+            var response = await HttpGet(url, sParam, header);
+            var dicResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+            return dicResponse["Timepoint"];
+        }
 
-            var response = await _httpHelper.GetClient().SendAsync(request);
-            var result = response.Content.ReadAsStringAsync().Result;
+        public async Task<(bool, List<WagerKiss918Model>)> GetPlaySession(string wagerUrl, string timepoint)
+        {
+            // param
+            var url = $"{wagerUrl}/api/playsessions";
+            var param = new { timepoint = timepoint };
 
-            if (!response.IsSuccessStatusCode)
+            var header = new Dictionary<string, string>() { { "token", $"{accessToken}" } };
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request: 會拿到一串文本，要對文本拆解&加工
+            var response = await HttpGet(url, sParam, "text/plain", header);
+            var convertDatas = ConvertToWagerData(timepoint, response);
+            return (true, convertDatas);
+        }
+
+        private List<WagerKiss918Model> ConvertToWagerData(string timepoint, string plain)
+        {
+            int start = 0;
+            List<WagerKiss918Model> result = new();
+            string[] strings = plain.Split(Environment.NewLine);
+            foreach (var data in strings)
             {
-                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
-                _log2File.InsertResponseLog(_tpName, url, sParam, result);
+                if (string.IsNullOrWhiteSpace(data))
+                    continue;
+                var details = data.Split(",");
+                if (start > 1)
+                    result.Add(new WagerKiss918Model()
+                    {
+                        playerID = Convert.ToInt32(details[0]),
+                        extplayerID = Convert.ToInt32(details[1]),
+                        gameID = details[2].Replace("\"", ""),
+                        methodType = details[3].Replace("\"", ""),
+                        playSessionID = details[4].Replace("\"", ""),
+                        referenceID = details[5].Replace("\"", ""),
+                        status = details[6].Replace("\"", ""),
+                        created = DateTime.ParseExact(details[7].Replace("\"", ""), "yyyy-MM-dd HH:mm:ss.fff", null),
+                        updated = DateTime.ParseExact(details[8].Replace("\"", ""), "yyyy-MM-dd HH:mm:ss.fff", null),
+                        betAmount = Convert.ToDecimal(details[9]),
+                        winAmount = Convert.ToDecimal(details[10]),
+                        jackpotModule = Convert.ToInt32(details[11]),
+                        jackpotContributionAmt = Convert.ToDecimal(details[12]),
+                        currency = details[13].Replace("\"", ""),
+                        resultUrl = details[14].Replace("\"", ""),
+                        roundDetails = details[15].Replace("\"", ""),
+                        platform = details[16].Replace("\"", "")
+                    });
+                start++;
             }
-
             return result;
         }
+
+        protected async Task<string> HttpGet(string url, string parameters, Dictionary<string, string> headers = null)
+        {
+            using var handler = new HttpClientHandler();
+            using var client = new HttpClient(handler);
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
+                }
+                var stream = client.GetStreamAsync($"{url}?{parameters}").Result;
+                using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
+                var response = myStreamReader.ReadToEnd();
+                return response;
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+        }
+
+        protected async Task<string> HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+            //InsertLog?.Invoke(url, parameters, "1");
+            WebRequest request = WebRequest.Create($"{url}?{parameters}");
+
+            request.Method = "GET";
+            request.ContentType = contentType;
+            if (headers != null)
+            {
+                foreach (var item in headers)
+                {
+                    request.Headers.Add(item.Key, item.Value);
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            using (WebResponse response = request.GetResponse())
+            using (Stream dataStream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(dataStream))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    sb.AppendLine(line);
+                }
+            }
+            //InsertLog?.Invoke(url, parameters, sb.ToString());
+            return sb.ToString();
+        }
+
     }
 }

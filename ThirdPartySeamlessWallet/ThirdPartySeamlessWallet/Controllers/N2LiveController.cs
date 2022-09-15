@@ -550,7 +550,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         string token = null;
                         string clientIp = "";
-                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginManualReq.request.userid);
+                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginManualReq.request.userid, null);
                         tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
                         tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "Web", "Web");
                         tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginManualReq.request.userid);

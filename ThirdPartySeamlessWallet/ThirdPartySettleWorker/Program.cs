@@ -48,6 +48,7 @@ builder.Services
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
     .AddHostedService<ATWorker>()
+    .AddHostedService<SkywindWorker>()
     .AddHostedService<KMWoker>()
     .AddHostedService<OneGamingWorker>()
     .AddHostedService<V8Worker>()
@@ -56,7 +57,10 @@ builder.Services
     .AddHostedService<GPIWorker>()
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
-    .AddHostedService<YLWorker>();
+    .AddHostedService<YLWorker>()
+    .AddHostedService<Kiss918Worker>()
+    .AddHostedService<BTIWorker>()
+    .AddHostedService<NineWWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

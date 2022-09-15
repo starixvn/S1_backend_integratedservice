@@ -275,20 +275,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
-        #region BTI
-        
-        public IEnumerable<BTISettleData> GetUnsettledListBTI()
-        {
-            return settledService.GetUnsettledList_BTI();
-        }
-
-        public int SetSettleFlag_BTI(string account, string transId, bool isSuccess = true)
-        {
-            return settledService.SetSettleFlag_BTI(account, transId, isSuccess);
-        }
-        
-        #endregion 
-
         #region KM
 
         public IEnumerable<SettleData> GetUnsettledListPK_KM(string spName)
