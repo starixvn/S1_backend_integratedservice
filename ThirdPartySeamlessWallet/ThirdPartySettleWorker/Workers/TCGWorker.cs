@@ -80,7 +80,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var unsettled = _tpUnSettledBLL.GetTpUnsettleData<TCGSettleData>(getSP, new { TransId = transId }, DataBase.Wager).FirstOrDefault();
                         var isClosed = unsettled.betStatus != 0;
-                        
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -117,7 +117,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = unsettled.Stake,
                             ValidBet = unsettled.ValidBet,
-                            WinlostAmount = unsettled.WinLostAmount,
+                            WinlostAmount = isClosed ? unsettled.WinLostAmount : 0,
                             TransId = unsettled.TransId,
                             GameType = gameType,
                             TpUserName = unsettled.Account,
@@ -127,7 +127,7 @@ namespace ThirdPartySettleWorker.Workers
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
-                        {                
+                        {
                             Task.Run(() =>
                             {
                                 if (isClosed)
@@ -153,14 +153,14 @@ namespace ThirdPartySettleWorker.Workers
                         });
                         _logger.LogError(ex1, $"exMessage:{ex1.Message} || TransId : {transId}");
                     }
-                }                
+                }
             }
             catch (UnsettleNotFoundException ex)
             {
                 _logger.LogInformation(ex, ex.Message);
             }
             catch (Exception ex)
-            {             
+            {
                 _logger.LogError(ex, ex.Message);
             }
             finally
