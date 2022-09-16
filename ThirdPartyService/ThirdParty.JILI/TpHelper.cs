@@ -139,7 +139,8 @@ namespace ThirdParty.JILI
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_JILI_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Main);
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_JILI_Detail_Get_V2", new { YYYYMM, GameType = tpGameType.Type, TransId = betRecordInfo.TransId }, DataBase.Main);
             if (!detailList.Any())
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
@@ -147,6 +148,8 @@ namespace ThirdParty.JILI
 
             var gameCode = detailList.GetFirstStringValue("game");
             var round = detailList.GetFirstStringValue("round");
+            var sessionId = detailList.GetFirstStringValue("sessionId");
+
             return tpGameType.CategoryId switch
             {
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -155,7 +158,7 @@ namespace ThirdParty.JILI
                     Game = GetGameName(gameCode),
                     RefNo = round,
                     Title = tpGameType.TypeName,
-                    MatchID = round,
+                    MatchID = (sessionId != "0") ? sessionId : round,
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = string.Empty,
