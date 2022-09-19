@@ -621,5 +621,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         #endregion
+
+
+        #region JILI
+
+        public int PlaceBetRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.turnover *= tpCurrency.ExchangeRate;
+                bettingData_JILI.preserve *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_JILI(tpCustInfo, bettingData_JILI, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
     }
 }
