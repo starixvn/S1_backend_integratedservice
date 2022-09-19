@@ -125,11 +125,11 @@ namespace ThirdParty.Skywind.Tests
                 { "SecretKey", "375186ce-7110-4370-84ae-0bd6fc833762" },
                 { "Username", "Nova88_merchant_api_stg" },
                 { "Password", "STwgnTj3jNxpTKZH" },
-                { "gameId", "sw_gatc" },
+                { "gameId", "sw_2pd" },
                 //{ "gameId", "0" },
                 { "MerchId", "sw_Nova88_merchant_stg" },
                 { "MerchPwd", "tzlbpqhXqgmim8qm" },
-                { "Token", "lQqFbMJm0UAsVBAWmINsA"},
+                { "Token", "gbLcV7FD7kS9Sg93B5CDQA"},
                 { "StagingLobbies", "https://2bgz0erb-lobby.ss211208.com"}
             };
         }
