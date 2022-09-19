@@ -1240,6 +1240,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
+        public bool AddTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = AddTpBonus((int)Tp.Kiss918, data.referenceID, (int)GameType.Kiss918_RNG,
+                             tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount,
+                             bonusId, TpCategory.Slots, conn, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
         #endregion
 
     }

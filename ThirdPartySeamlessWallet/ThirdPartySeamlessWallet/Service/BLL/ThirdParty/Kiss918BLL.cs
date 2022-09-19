@@ -12,6 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
     {
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
+        public TpCategory TpCategory { get; set; }
 
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -27,6 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             ThirdParty = Tp.Kiss918;
             GameType = GameType.Kiss918_RNG;
+            TpCategory = TpCategory.Slots;
 
             _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
@@ -267,6 +269,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
+            if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
+            {
+                trans.Rollback();
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+            }
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
             {
@@ -360,6 +367,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+            }
+
+            if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
+            {
+                trans.Rollback();
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
@@ -466,6 +479,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 //lost => 沒有派彩，balance取db資料
                 if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
+            }
+
+            if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
+            {
+                trans.Rollback();
+                return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
@@ -890,6 +909,44 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
+
+        private bool ProcessTpBonus(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
+                        out string message, MySqlConnection conn, MySqlTransaction trans)
+        {
+            message = string.Empty;
+            var result = false;
+            try
+            {
+                var getResult = _settledService.GetTpBonus_Kiss918(tpCustInfo, data, out int bonusId);
+
+                if (!getResult)
+                {
+                    message = "get tp bonus fail.";
+                    _logger.LogError($"GetTpBonus Fail:{message}");
+                    return false;
+                }
+
+                if (bonusId > 0)
+                {
+                    result = _bettingService.AddTpBonus_Kiss918(tpCustInfo, data, bonusId, conn, trans);
+
+                    if (!result)
+                    {
+                        message = "add tp bonus fail.";
+                        _logger.LogError($"AddTpBonus Fail:{message}");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"ProcessTpBonus Exception:{ex.Message}");
+                return false;
+            }
+        }
+
         private bool InsertUnsettleData(DateTime partitionTime, string referenceID, out string message, MySqlTransaction trans)
         {
             message = string.Empty;

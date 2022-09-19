@@ -28,11 +28,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class SettleData_Kiss918
     {
-        public string uuid { get; set; }
+        public string Account { get; set; }
+        public string type { get; set; }
         public decimal Stake { get; set; }
         public decimal ValidBet { get; set; }
         public decimal WinLostAmount { get; set; }
-        public string Account { get; set; }
+        public long TransTime { get; set; }
         public long SettleTime { get; set; }
     }
 

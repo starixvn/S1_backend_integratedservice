@@ -84,7 +84,11 @@ namespace ThirdPartySettleWorker.Workers
                                 throw new UnsettleNotFoundException($"{unsettleData.Account} TpCustInfo not found.");
                             }
 
-                            //TODO：等wager做好，要重新比對TransTime和SettleTime，還有檢查是否為refund/jackpot，如果發現該筆帳wager沒有則？？？
+                            var wager = _settledBLL.GetSettle_TpWager_Kiss918(unsettleData.TransId, tpUnsettle.TransId); //playSessionID
+
+                            if (wager == null) continue;
+
+                            if (!CanSettle(unsettleData, wager, tpCustInfo)) continue;
 
                             var betRecordInfo = new BetRecordInfo
                             {
@@ -92,16 +96,14 @@ namespace ThirdPartySettleWorker.Workers
                                 Stake = unsettleData.Stake,
                                 ValidBet = unsettleData.ValidBet,
                                 WinlostAmount = unsettleData.WinLostAmount,
-                                TransId = tpUnsettle.TransId,
+                                TransId = tpUnsettle.TransId, //referenceID
                                 GameType = gametype,
                                 TpUserName = tpCustInfo.TpUserName,
-                                SettledTime = unsettleData.SettleTime,
-                                TransTime = unsettleData.TransTime,
+                                SettledTime = wager.SettleTime,
+                                TransTime = wager.TransTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount)
+                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount,wager.type)
                             };
-
-                            betRecordInfo.ReferenceNo = GetRoundId(unsettleData.TransId);
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                             if (result == 1)
@@ -149,8 +151,10 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private TicketStatus SetTicketStatus(decimal winLostAmount)
+        private TicketStatus SetTicketStatus(decimal winLostAmount,string type)
         {
+            if (type == "RF") return TicketStatus.Refund;
+
             if (winLostAmount == 0) return TicketStatus.Draw;
 
             if (winLostAmount > 0) return TicketStatus.Win;
@@ -158,14 +162,18 @@ namespace ThirdPartySettleWorker.Workers
             return TicketStatus.Lost;
         }
 
-        private string GetRoundId(string playSessionID)
+        private bool CanSettle(SettleData beettrans, SettleData_Kiss918 wager, TpCustInfo tpCustInfo)
         {
-            var existDatas = _tpRoundGenService.GetExistRoundId(Tp, GameType.Kiss918_RNG, playSessionID);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate <= 0) return false;
 
-            if (existDatas.Any())
-                return existDatas.First().SQ.ToString();
-            else
-                throw new Exception("roundId not found.");
+            // 加入幣別匯率轉換，tpWager 是原始資料
+            decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
+            decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
+
+            return wager.Account == beettrans.Account
+                   && wagerStake == beettrans.Stake
+                   && wagerWinLostAmount == beettrans.WinLostAmount;
         }
 
     }
