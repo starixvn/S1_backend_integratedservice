@@ -41,7 +41,7 @@ namespace ThirdPartyWager.Workers
         {
             if (!_environment.IsProduction())
             {
-                //return;
+                return;
             }
 
             var quick = 0;

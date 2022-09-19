@@ -87,4 +87,27 @@ namespace ThirdPartyWager.Service.Model
     {
         public int wagerCount { get; set; }
     }
+
+    public class CurrencyStats_MP
+    {
+        public int s { get; set; }
+        public string m { get; set; }
+        public CurrencyStatsData_MP d { get; set; }
+    }
+
+    public class CurrencyStatsData_MP
+    {
+        public int code { get; set; }
+        public string msg { get; set; }
+        public IList<CurrencyStatsItem_MP> Transactions { get; set; }
+    }
+
+    public class CurrencyStatsItem_MP
+    {
+        public int betCount { get; set; }
+        public decimal totalBetAmount { get; set; }
+        public decimal playerPL { get; set; }
+        public decimal totalWinAmount { get; set; }
+        public string currency { get; set; }
+    }
 }

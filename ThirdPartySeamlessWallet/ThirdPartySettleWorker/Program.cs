@@ -30,6 +30,7 @@ builder.Services
     .AddHostedService<BonusWorker>()
     .AddHostedService<SettleWorker>()
     .AddHostedService<TpReRequestWorker>()
+    .AddHostedService<TpRewardWorker>()
     .AddHostedService<JokerWorker>()
     .AddHostedService<MGWorker>()
     .AddHostedService<APWorker>()
@@ -50,7 +51,12 @@ builder.Services
     .AddHostedService<KMWoker>()
     .AddHostedService<OneGamingWorker>()
     .AddHostedService<V8Worker>()
-    .AddHostedService<MPWorker>();
+    .AddHostedService<MPWorker>()
+    .AddHostedService<CQ9Worker>()
+    .AddHostedService<GPIWorker>()
+    .AddHostedService<NetentWorker>()
+    .AddHostedService<RedTigerWorker>()
+    .AddHostedService<YLWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

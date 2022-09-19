@@ -26,4 +26,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Account { get; set; }
         public long SettleTime { get; set; }
     }
+
+    public class SettleData_One789 : SettleData
+    {
+        public int Status { get; set; }
+    }
 }

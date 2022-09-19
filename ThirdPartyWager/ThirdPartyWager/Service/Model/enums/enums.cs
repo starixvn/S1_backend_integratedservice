@@ -36,6 +36,7 @@
         V8 = 25,
         PT = 27,
         N2Live = 28,
+        AMB = 30,
         NineW = 31,
         JILI = 32,
         TCG = 33,
@@ -58,6 +59,7 @@
         One789_LiveCasino = 37,
         Iconic_RNG = 39,
         Iconic_Fish = 40,
+        AMB_Poker = 50,
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,
@@ -66,7 +68,8 @@
         SBO_VirtualSports = 81,
         PT_RNG = 46,
         PT_LiveCasino = 48,
-        YGG_RNG = 14
+        YGG_RNG = 14,
+        AMB_RNG = 76,
     }
     
     

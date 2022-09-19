@@ -755,6 +755,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 orderId = transferData_MP.orderId,
                 roundId = transferData_MP.roundId,
                 gameNo = transferData_MP.gameNo,
+                playerId = transferData_MP.playerId,
+                totalBet = transferData_MP.totalBet,
+                validBet = transferData_MP.validBet,
+                totalWithdraw = transferData_MP.totalWithdraw,
+                revenue = transferData_MP.revenue,
+                betCount = transferData_MP.betCount,
+                timestamp = transferData_MP.timestamp,
                 TicketType = (int)BettransType.Payout,
                 TicketStatus = (int)TicketStatus.UnSettled,
                 SettleFlag = (int)SettleFlag.Running
@@ -765,7 +772,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_MP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransPK_MP_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && amount != 0)
                 {
@@ -816,6 +823,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 orderId = transferData_MP.orderId,
                 roundId = transferData_MP.roundId,
                 gameNo = transferData_MP.gameNo,
+                playerId = transferData_MP.playerId,
                 TicketType = (int)BettransType.CancelBet,
                 TicketStatus = (int)TicketStatus.Refund,
                 SettleFlag = (int)SettleFlag.Settled
@@ -856,7 +864,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             else
             {
                 p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                conn.Execute("Service_BettransPK_MP_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                conn.Execute("Service_BettransPK_MP_CancelBet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var refBettransLC = p.Get<int>("out_result");
 
                 if (refBettransLC == 2)

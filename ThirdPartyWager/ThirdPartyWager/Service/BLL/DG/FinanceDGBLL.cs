@@ -10,7 +10,6 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly ILogger<FinanceDGBLL> _logger;
         private readonly CommonBLL _commonBLL;
-        private readonly CommonService _commonService;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
 
@@ -18,7 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         {
             _logger = provider.GetRequiredService<ILogger<FinanceDGBLL>>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _commonService = provider.GetRequiredService<CommonService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
@@ -53,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            var bettrans = await _commonService.GetWagerSummary("Finance_TpWagerDG_Summary_Get", reportTime.startUnix, reportTime.endUnix);
+            var bettrans = await _commonBLL.GetWagerSummary("Finance_TpWagerDG_Summary_Get", reportTime.startUnix, reportTime.endUnix);
             reportData.AddRange(bettrans);
             return reportData;
         }
