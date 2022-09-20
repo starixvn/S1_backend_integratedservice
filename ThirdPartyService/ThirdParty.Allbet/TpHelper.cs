@@ -208,6 +208,7 @@ namespace ThirdParty.Allbet
                 "102" => "VIP Baccarat",
                 "103" => "Quick Baccarat",
                 "104" => "See Card Baccarat",
+                "110" => "Insurance Baccarat",
                 "201" => "Sicbo(HiLo)",
                 "301" => "Dragon Tiger",
                 "401" => "Roulette",
