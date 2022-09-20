@@ -4125,13 +4125,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool GetTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, out int bonusId)
+        public int GetTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data)
         {
             var result = GetTpBonus((int)Tp.Kiss918, data.NewRoundId, (int)GameType.Kiss918_RNG, TpCategory.Slots, out int custId, out bonusId);
-            if (result == 0)
-                return false;
-
-            return true;
+            return bonusId;
         }
 
         public bool InsertUnsettle_Kiss918(DateTime partitionTime, string playSessionID, MySqlTransaction trans)
