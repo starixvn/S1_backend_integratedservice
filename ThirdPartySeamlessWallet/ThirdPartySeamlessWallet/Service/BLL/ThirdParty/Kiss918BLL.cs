@@ -917,14 +917,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = false;
             try
             {
-                var getResult = _settledService.GetTpBonus_Kiss918(tpCustInfo, data, out int bonusId);
-
-                if (!getResult)
-                {
-                    message = "get tp bonus fail.";
-                    _logger.LogError($"GetTpBonus Fail:{message}");
-                    return false;
-                }
+                var bonusId = _settledService.GetTpBonus_Kiss918(tpCustInfo, data);
 
                 if (bonusId > 0)
                 {
