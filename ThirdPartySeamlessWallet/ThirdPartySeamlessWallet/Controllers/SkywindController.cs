@@ -227,6 +227,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string authToken = sessionKeyArr[0];
                 string sessionToken = sessionKeyArr[1];
                 string tpUserName = sessionKeyArr[2];
+                if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    return result;
+                }
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
                 if(tpCheck == null || tpCheck.Token != sessionToken)
                     return result;
@@ -238,8 +242,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.cust_session_id = sessionToken;
                 result.cust_id = tpUserName;
                 result.country = tpCountryCode.CountryCode;
-                result.test_cust = environment.IsDevelopment();
                 result.currency_code = tpCurrency.TpCurrencyId;
+                if(environment.IsDevelopment() || tpCustInfoAuth.IsTest)
+                {
+                    result.test_cust = true;
+                }
             }
             catch (Exception ex)
             {
@@ -264,6 +271,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string authToken = sessionKeyArr[0];
                 string sessionToken = sessionKeyArr[1];
                 string tpUserName = sessionKeyArr[2];
+                if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    return result;
+                }
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
                 if (tpCheck == null || tpCheck.Token != sessionToken)
                     return result;
@@ -275,8 +286,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.cust_session_id = sessionToken;
                 result.cust_id = tpUserName;
                 result.country = tpCountryCode.CountryCode;
-                result.test_cust = environment.IsDevelopment();
                 result.currency_code = tpCurrency.TpCurrencyId;
+                if (environment.IsDevelopment() || tpCustInfoAuth.IsTest)
+                {
+                    result.test_cust = true;
+                }
             }
             catch (Exception ex)
             {
