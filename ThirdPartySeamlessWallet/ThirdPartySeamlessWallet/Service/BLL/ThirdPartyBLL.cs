@@ -129,6 +129,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (int.TryParse(gameId, out int tempGameId))
             {
                 gameType = GameType.PP_LiveCasino;
+
+                // Spaceman 
+                if (tempGameId == 1302)
+                {
+                    gameType = GameType.PP_RNG;
+                }
             }
 
             return gameType;
