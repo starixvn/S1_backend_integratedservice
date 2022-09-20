@@ -4078,6 +4078,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Kiss918
 
+        public IEnumerable<BettingDataRNG_Kiss918> IsExistBet_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        {
+            var query = new { playSessionID = data.playSessionID };
+            return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Cancel_Check", query);
+        }
+
         public bool Payout_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
         {
             var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
