@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
@@ -59,7 +60,7 @@ namespace ThirdPartyWager.Service.BLL
 
             // request: 會拿到一串文本，要對文本拆解&加工
             var response = await HttpGet(url, sParam, "text/plain", header);
-            var convertDatas = ConvertToWagerData( response);
+            var convertDatas = ConvertToWagerData(response);
             return (true, convertDatas);
         }
 
@@ -101,18 +102,16 @@ namespace ThirdPartyWager.Service.BLL
 
         protected async Task<string> HttpGet(string url, string parameters, Dictionary<string, string> headers = null)
         {
-            using var handler = new HttpClientHandler();
-            using var client = new HttpClient(handler);
             try
             {
                 if (headers != null)
                 {
                     foreach (var item in headers)
                     {
-                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                        _httpHelper.GetClient().DefaultRequestHeaders.Add(item.Key, item.Value);
                     }
                 }
-                var stream = client.GetStreamAsync($"{url}?{parameters}").Result;
+                var stream = _httpHelper.GetClient().GetStreamAsync($"{url}?{parameters}").Result;
                 using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
                 var response = myStreamReader.ReadToEnd();
                 return response;
@@ -124,6 +123,29 @@ namespace ThirdPartyWager.Service.BLL
         }
 
         protected async Task<string> HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        _httpHelper.GetClient().DefaultRequestHeaders.Add(item.Key, item.Value);
+                    }
+                }
+                _httpHelper.GetClient().DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(contentType));
+                var stream = _httpHelper.GetClient().GetStreamAsync($"{url}?{parameters}").Result;
+                using StreamReader myStreamReader = new StreamReader(stream, Encoding.GetEncoding("UTF-8"));
+                var response = myStreamReader.ReadToEnd();
+                return response;
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+        }
+
+        protected async Task<string> HttpGetBK(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             //InsertLog?.Invoke(url, parameters, "1");
             WebRequest request = WebRequest.Create($"{url}?{parameters}");

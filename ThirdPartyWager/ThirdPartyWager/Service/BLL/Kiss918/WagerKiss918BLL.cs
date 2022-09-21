@@ -34,10 +34,10 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 //convert timepoint
-                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["ApiUrl"], startTime);
+                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["AccessToken"], setting["ApiUrl"], startTime);
 
                 //// get report player
-                var datadetails = await _apiKiss918BLL.GetPlaySession(setting["ApiUrl"], timepoint);
+                var datadetails = await _apiKiss918BLL.GetPlaySession(setting["AccessToken"],setting["ApiUrl"], timepoint);
 
                 //TODO：需要判斷機制，確認取資料是否有問題
                 if (!datadetails.Item1)
