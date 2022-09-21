@@ -269,7 +269,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             SettlementType settlementType = SettlementType.SettledForValid;
             var casino = GetGameCasinoWithCache(tpId);
-            var check = casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
+
+            //Kiss918(21)
+            var check = tpId == 21 ? casino.FirstOrDefault(x => x.AppId == gameId && x.TypeId == 3)
+                : casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
             if (check != null)
             {
                 settlementType = SettlementType.SettledForValidNotRollover;
