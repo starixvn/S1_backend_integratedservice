@@ -150,6 +150,7 @@ namespace ThirdPartySettleWorker.Workers
                                     SettlementType = SettlementType.UnSettled
                                 };
                                 _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                                _settledBLL.SetSettleFlag_Bettrans_One789((int)gameType, unsettled.TransId);
                             }                          
                         }
                     }
