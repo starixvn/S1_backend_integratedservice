@@ -4526,5 +4526,180 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region SimplePlay
+
+        public int PayoutRNG_SimplePlay(TpCustInfo tpCustInfo, PayoutData_SimplePlay payoutData_SimplePlay, out decimal afterAmount)
+        {
+            int gameType = (int)GameType.SimplePlay_RNG;
+            int timezone = 8;
+
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                long timestamp = tools.ConvertLocTime(payoutData_SimplePlay.timestamp, timezone);
+                long payouttime = tools.ConvertLocTime(payoutData_SimplePlay.Payouttime, timezone);
+                var partitionTime = new DateTimeOffset(payoutData_SimplePlay.timestamp, new TimeSpan(timezone, 0, 0)).DateTime;
+                int ticketStatus = payoutData_SimplePlay.PayoutType;
+
+                var p = new DynamicParameters(new
+                {
+                    username = payoutData_SimplePlay.username,
+                    currency = payoutData_SimplePlay.currency,
+                    amount = payoutData_SimplePlay.amount,
+                    txnid = payoutData_SimplePlay.txnid,
+                    timestamp = timestamp,
+                    gametype = payoutData_SimplePlay.gametype,
+                    gamecode = payoutData_SimplePlay.gamecode,
+                    gameid = payoutData_SimplePlay.gameid,
+                    Payouttime = payouttime,
+                    JackpotWin = payoutData_SimplePlay.JackpotWin,
+                    TransId = payoutData_SimplePlay.TransId,
+                    JackpotContribution = 0,
+                    txn_reverse_id = "",
+                    ip = "",
+                    platform = -1,
+                    TicketType = (int)TransferType.Payout,
+                    TicketStatus = ticketStatus,
+                });
+
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_SimplePlay_Ins", p, trans);
+
+                if (result > 0)
+                {
+                    if (payoutData_SimplePlay.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            payoutData_SimplePlay.amount,
+                            (int)Tp.SimplePlay,
+                            payoutData_SimplePlay.TransId,
+                            gameType,
+                            TpCategory.Slots,
+                            payoutData_SimplePlay.TransId,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int CancelBetRNG_SimplePlay(TpCustInfo tpCustInfo, CancelBetData_SimplePlay cancelBetData_SimplePlay, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            int result = 0;
+
+            int gameType = (int)GameType.SimplePlay_RNG;
+            int timezone = 8;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                long timestamp = tools.ConvertLocTime(cancelBetData_SimplePlay.timestamp, timezone);
+                var partitionTime = new DateTimeOffset(cancelBetData_SimplePlay.timestamp, new TimeSpan(timezone, 0, 0)).DateTime;
+
+                var refBettrans = _partitionService.Execute(partitionTime, "Service_BettransRng_SimplePlay_CancelBet_Set", new { txnid = cancelBetData_SimplePlay.txn_reverse_id }, trans);
+                if (refBettrans > 0)
+                {
+                    // cancel update
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(cancelBetData_SimplePlay.amount),
+                        (int)Tp.SimplePlay,
+                        cancelBetData_SimplePlay.txn_reverse_id,
+                        gameType,
+                        TpCategory.Slots,
+                        cancelBetData_SimplePlay.TransId,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "CancelBet",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    // insert cancel
+                    var p = new DynamicParameters(new
+                    {
+                        username = cancelBetData_SimplePlay.username,
+                        currency = cancelBetData_SimplePlay.currency,
+                        amount = cancelBetData_SimplePlay.amount,
+                        txnid = cancelBetData_SimplePlay.txn_reverse_id,// 轉存對應placebet的txnid
+                        timestamp = timestamp,
+                        gametype = cancelBetData_SimplePlay.gametype,
+                        gamecode = cancelBetData_SimplePlay.gamecode,
+                        gameid = cancelBetData_SimplePlay.gameid,
+                        txn_reverse_id = cancelBetData_SimplePlay.txnid,// 轉存cancelbet的txnid
+                        TransId = cancelBetData_SimplePlay.TransId,
+                        Payouttime = 0,
+                        JackpotContribution = 0,
+                        JackpotWin = false,
+                        ip = "",
+                        platform = -1,
+                        TicketType = (int)TransferType.CancelBet,
+                        TicketStatus = (int)TicketStatus.Refund,
+                    });
+
+                    var cancelInsert = _partitionService.Execute(partitionTime, "Service_BettransRng_SimplePlay_CancelBet_Ins", p, trans);
+                    if (cancelInsert > 0)
+                    {
+                        // insert cancel record
+                        trans.Commit();
+                    }
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+            return result;
+        }
+
+
+        #endregion
     }
 }

@@ -42,6 +42,7 @@ builder.Services
     .AddHostedService<MegaWorker>()
     .AddHostedService<AMBWorker>()
     .AddHostedService<SAWorker>()
+    .AddHostedService<SimplePlayWorker>()
     .AddHostedService<SGWorker>()
     .AddHostedService<AllbetWorker>()
     .AddHostedService<PTWorker>()
@@ -60,7 +61,8 @@ builder.Services
     .AddHostedService<YLWorker>()
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
-    .AddHostedService<Kiss918Worker>();
+    .AddHostedService<Kiss918Worker>()
+    .AddHostedService<One789Worker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
