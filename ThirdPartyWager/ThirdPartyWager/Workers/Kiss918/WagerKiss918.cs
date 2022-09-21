@@ -11,6 +11,7 @@ public class WagerKiss918 : BackgroundService
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly WagerKiss918BLL _wagerKiss918BLL;
+    private readonly CommonBLL _commonBLL;
 
     private readonly int tpId = (int)Tp.Kiss918;
     private readonly string _tpName = Tp.Kiss918.ToString();
@@ -26,12 +27,14 @@ public class WagerKiss918 : BackgroundService
     public WagerKiss918(WagerKiss918BLL wagerKiss918Bll,
                             ThirdPartyBLL thirdPartyBll,
                             ILogger<WagerKiss918> logger,
-                            DateTimeHelper dateTimeHelper)
+                            DateTimeHelper dateTimeHelper,
+                            CommonBLL commonBll)
     {
         _wagerKiss918BLL = wagerKiss918Bll;
         _thirdPartyBLL = thirdPartyBll;
         _logger = logger;
         _dateTimeHelper = dateTimeHelper;
+        _commonBLL = commonBll;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,33 +49,39 @@ public class WagerKiss918 : BackgroundService
         LogContext.PushProperty("Tp", Tp.Kiss918.ToString());
         try
         {
-            var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, "MYR");
-            DateTime timerTime;
-            int last;
-            if (dataTpTimer == null)
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Kiss918);
+            foreach (var item in TpCurrencyList)
             {
-                last = iRangMins - 1;
-                timerTime = DateTime.Now.AddMinutes(-1 * last);
-            }
-            else
-            {
-                timerTime = dataTpTimer.StartTime;
-                last = iRangMins - 1;
-            }
-
-            if (timerTime < DateTime.Now)
-            {
-                var time = _dateTimeHelper.GetTimeByMinute(last, TimeZone, "yyyy-MM-dd HH:mm:ss.fff", timerTime);
-                var result = await _wagerKiss918BLL.GetWagersAsync(tpId, time.startTime);
-                if (result.Item1 == true)
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, item.TpCurrencyId);
+                DateTime timerTime;
+                int last;
+                if (dataTpTimer == null)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, "MYR");
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
                 }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime;
+                    last = iRangMins - 1;
+                }
+
+                if (timerTime < DateTime.Now)
+                {
+                    var time = _dateTimeHelper.GetTimeByMinute(last, TimeZone, "yyyy-MM-dd HH:mm:ss.fff", timerTime);
+                    var result = await _wagerKiss918BLL.GetWagersAsync(tpId, time.startTime);
+
+                    if (result)
+                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, item.TpCurrencyId);
+                }
+
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
+                if (diffMin > 5)
+                    isFaster = true;
+                else
+                    isFaster = false;
             }
-            var ts = DateTime.Now - timerTime;
-            var diffMin = (int)ts.TotalMinutes;
-            if (diffMin > 5)
-                isFaster = true;
         }
         catch (Exception ex)
         {
@@ -82,7 +91,7 @@ public class WagerKiss918 : BackgroundService
         {
             if (isFaster)
             {
-                var dueTimeSpan = TimeSpan.FromSeconds(intervalMins / 2);
+                var dueTimeSpan = TimeSpan.FromSeconds(intervalMins);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
             else
