@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 //convert timepoint
-                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["AccessToken"], setting["ApiUrl"], startTime);
+                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["ApiToken"], setting["ApiUrl"], startTime);
 
                 if (string.IsNullOrWhiteSpace(timepoint))
                 {
