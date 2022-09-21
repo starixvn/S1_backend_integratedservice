@@ -129,10 +129,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (balance + data.amount < 0) //餘額不足
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.BalanceInsufficient, "Balance insufficient.", "", balance);
 
-            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
-            if (existDatas.Any()) //已存在指定有效單
+            if (existDatas.Any()) //已存在指定有效投注
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
 
             await using var conn = _mainDbClient.GetMySqlConnection();
@@ -219,11 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
             data.jackpotContributionAmt = (tpCurrency.ExchangeRate > 0) ? data.jackpotContributionAmt * tpCurrency.ExchangeRate : data.jackpotContributionAmt;
 
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-
-            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -234,6 +230,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
             }
+
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
 
             if (!PlaceData(partitionTime, data, out message, trans))
             {
@@ -323,7 +323,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existBetDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.InvaildBet, message);
 
-            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -431,11 +431,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
             data.jackpotContributionAmt = (tpCurrency.ExchangeRate > 0) ? data.jackpotContributionAmt * tpCurrency.ExchangeRate : data.jackpotContributionAmt;
 
-            await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            await using var trans = await conn.BeginTransactionAsync();
-
-            if (!IsExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
+            if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataRNG_Kiss918> existDatas, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (existDatas.Any())
@@ -446,6 +442,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
             }
+
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
 
             if (!PlaceData(partitionTime, data, out message, trans))
             {
@@ -837,7 +837,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool IsExistData(DateTime partitionTime, BettingDataRNG_Kiss918 data,
+        private bool GetExistData(DateTime partitionTime, BettingDataRNG_Kiss918 data,
             out IEnumerable<BettingDataRNG_Kiss918> existDatas, out string message)
         {
             message = string.Empty;
@@ -845,15 +845,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 existDatas = _bettingService.IsExist_Kiss918(partitionTime, data);
-
-                if (existDatas.Any())
-                {
-                    //已存在指定有效投注
-                    message = "already exist valid data by referenceID.";
-                    _logger.LogError($"IsExistData Fail:{message}");
-                    return false;
-                }
-
                 return true;
             }
             catch (Exception ex)
