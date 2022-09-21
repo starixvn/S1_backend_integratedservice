@@ -29,13 +29,13 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiKiss918BLL>>();
         }
 
-        public async Task<string> GetTimepoint(string accessToken, string wagerUrl, string dateTime)
+        public async Task<string> GetTimepoint(string apiToken, string wagerUrl, string dateTime)
         {
             // param
             var url = $"{wagerUrl}/api/gettimepoint";
             var param = new { dateTime = dateTime };
 
-            var header = new Dictionary<string, string>() { { "token", $"{accessToken}" } };
+            var header = new Dictionary<string, string>() { { "Token", $"{apiToken}" } };
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
             var url = $"{wagerUrl}/api/playsessions";
             var param = new { timepoint = timepoint };
 
-            var header = new Dictionary<string, string>() { { "token", $"{accessToken}" } };
+            var header = new Dictionary<string, string>() { { "Token", $"{accessToken}" } };
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
@@ -104,9 +104,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{url}?{parameters}");
 
-                if (string.IsNullOrWhiteSpace(contentType))
+                if (!string.IsNullOrWhiteSpace(contentType))
                     request.Content = new StringContent(parameters, Encoding.UTF8, contentType);
                 if (headers != null)
                 {
