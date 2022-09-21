@@ -17,6 +17,12 @@ namespace ThirdParty.Kiss918
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(21).ToDictionary(d => d.AppId, d => d.Name);
+        }
         private class CreateMemberResponse
         {
             public int playerID { get; set; }
@@ -233,12 +239,36 @@ namespace ThirdParty.Kiss918
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detailList = TpBetRecordProvider.DbQuery("Service_TpWagerKiss918_Detail_Get", new { _referenceID = betRecordInfo.TransId }, DataBase.Wager);
+            if (!detailList.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameCode = detailList.GetFirstStringValue("gameID");
+            var round = detailList.GetFirstStringValue("playSessionID");
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = betRecordInfo.TransId,
+                    Title = tpGameType.TypeName,
+                    MatchID = round,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = DeviceType.Mobile,
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
         }
 
         #region Private Method
 
-        public static string DESEncrypt(string inString, string key)
+        private static string DESEncrypt(string inString, string key)
         {
             byte[] encryptKey = Encoding.ASCII.GetBytes(key);
             MemoryStream ms = new MemoryStream();
@@ -252,7 +282,7 @@ namespace ThirdParty.Kiss918
             return Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
         }
 
-        public static string BuildMD5(string inString)
+        private static string BuildMD5(string inString)
         {
             byte[] hashed = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(inString));
             StringBuilder sb = new StringBuilder(hashed.Length * 2);
@@ -261,6 +291,16 @@ namespace ThirdParty.Kiss918
                 sb.Append(hashed[i].ToString("x2"));
             }
             return sb.ToString();
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
 
         #endregion

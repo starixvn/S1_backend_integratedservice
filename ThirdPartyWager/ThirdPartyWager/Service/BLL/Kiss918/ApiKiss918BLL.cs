@@ -23,8 +23,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiKiss918BLL> _logger;
         private readonly string _tpName = Tp.Kiss918.ToString();
 
-        private readonly string accessToken = "RUNnMmx6TnJZNjVoTU5ha1JyMCtENFY4bUFyWDVwYW1JbTRlNVRZUTRFY1NjTk1xSFV1WTI3NkNGWHgzSzJPRDZSN041NkJaUlp1WUIxSUhSUE5lSFA2dGhQK2svU2FGVHVOcHY0VnNWeGk5WE01d2U0cFgwbkFVeG9vSnpoZVNobmJSRCtJVVdzRzZCK3luV29zWGRRPT0=";
-
         public ApiKiss918BLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
@@ -33,7 +31,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiKiss918BLL>>();
         }
 
-        public async Task<string> GetTimepoint(string wagerUrl, string dateTime)
+        public async Task<string> GetTimepoint(string accessToken, string wagerUrl, string dateTime)
         {
             // param
             var url = $"{wagerUrl}/api/gettimepoint";
@@ -49,7 +47,7 @@ namespace ThirdPartyWager.Service.BLL
             return dicResponse["Timepoint"];
         }
 
-        public async Task<(bool, List<WagerKiss918Model>)> GetPlaySession(string wagerUrl, string timepoint)
+        public async Task<(bool, List<WagerKiss918Model>)> GetPlaySession(string accessToken, string wagerUrl, string timepoint)
         {
             // param
             var url = $"{wagerUrl}/api/playsessions";
@@ -61,16 +59,16 @@ namespace ThirdPartyWager.Service.BLL
 
             // request: 會拿到一串文本，要對文本拆解&加工
             var response = await HttpGet(url, sParam, "text/plain", header);
-            var convertDatas = ConvertToWagerData(timepoint, response);
+            var convertDatas = ConvertToWagerData( response);
             return (true, convertDatas);
         }
 
-        private List<WagerKiss918Model> ConvertToWagerData(string timepoint, string plain)
+        private List<WagerKiss918Model> ConvertToWagerData(string plain)
         {
             int start = 0;
             List<WagerKiss918Model> result = new();
             string[] strings = plain.Split(Environment.NewLine);
-            foreach (var data in strings)
+            foreach (var data in strings.Skip(2))
             {
                 if (string.IsNullOrWhiteSpace(data))
                     continue;
@@ -80,21 +78,21 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         playerID = Convert.ToInt32(details[0]),
                         extplayerID = Convert.ToInt32(details[1]),
-                        gameID = details[2].Replace("\"", ""),
-                        methodType = details[3].Replace("\"", ""),
-                        playSessionID = details[4].Replace("\"", ""),
-                        referenceID = details[5].Replace("\"", ""),
-                        status = details[6].Replace("\"", ""),
-                        created = DateTime.ParseExact(details[7].Replace("\"", ""), "yyyy-MM-dd HH:mm:ss.fff", null),
-                        updated = DateTime.ParseExact(details[8].Replace("\"", ""), "yyyy-MM-dd HH:mm:ss.fff", null),
+                        gameID = details[2].Trim('"'),
+                        methodType = details[3].Trim('"'),
+                        playSessionID = details[4].Trim('"'),
+                        referenceID = details[5].Trim('"'),
+                        status = details[6].Trim('"'),
+                        created = DateTime.ParseExact(details[7].Trim('"'), "yyyy-MM-dd HH:mm:ss.fff", null),
+                        updated = DateTime.ParseExact(details[8].Trim('"'), "yyyy-MM-dd HH:mm:ss.fff", null),
                         betAmount = Convert.ToDecimal(details[9]),
                         winAmount = Convert.ToDecimal(details[10]),
                         jackpotModule = Convert.ToInt32(details[11]),
                         jackpotContributionAmt = Convert.ToDecimal(details[12]),
-                        currency = details[13].Replace("\"", ""),
-                        resultUrl = details[14].Replace("\"", ""),
-                        roundDetails = details[15].Replace("\"", ""),
-                        platform = details[16].Replace("\"", "")
+                        currency = details[13].Trim('"'),
+                        resultUrl = details[14].Trim('"'),
+                        roundDetails = details[15].Trim('"'),
+                        platform = details[16].Trim('"')
                     });
                 start++;
             }
