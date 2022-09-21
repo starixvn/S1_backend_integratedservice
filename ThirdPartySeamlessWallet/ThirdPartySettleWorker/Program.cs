@@ -59,7 +59,7 @@ builder.Services
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
     .AddHostedService<YLWorker>()
-    .AddHostedService<Kiss918Worker>()
+    //.AddHostedService<Kiss918Worker>()
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>();
