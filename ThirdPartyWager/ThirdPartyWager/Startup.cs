@@ -278,7 +278,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
-            //services.AddHostedService<WagerKiss918>();
+            services.AddHostedService<WagerKiss918>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
