@@ -246,7 +246,6 @@ namespace ThirdParty.Kiss918
             }
 
             var gameCode = detailList.GetFirstStringValue("gameID");
-            var round = detailList.GetFirstStringValue("playSessionID");
             return tpGameType.CategoryId switch
             {
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -255,7 +254,7 @@ namespace ThirdParty.Kiss918
                     Game = GetGameName(gameCode),
                     RefNo = betRecordInfo.TransId,
                     Title = tpGameType.TypeName,
-                    MatchID = round,
+                    MatchID = betRecordInfo.TransId,
                     BetType = string.Empty,
                     BetChoice = string.Empty,
                     Result = string.Empty,
