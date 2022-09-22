@@ -2648,9 +2648,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return new MGCancelResult() { Result = 1 };
                 }
 
-                var bet = bettrans.FirstOrDefault();
+                var bet = bettrans.FirstOrDefault(a => a.TxnId == cancelDataRng_MG.txnId);
+                // 注單不存在
+                if (bet == null)
+                {
+                    logger.LogInformation($"no txnId: {cancelDataRng_MG.txnId}");
+                    return new MGCancelResult() { Result = 1 };
+                }
                 // 玩家或金額不符
-                if (bet != null && (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(bet.Amount) != cancelDataRng_MG.amount))
+                if (bet.PlayerId != cancelDataRng_MG.playerId || Math.Abs(bet.Amount) != cancelDataRng_MG.amount)
                 {
                     logger.LogError($"player or amount doesn't match:{JsonConvert.SerializeObject(bet)}");
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
