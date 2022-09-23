@@ -51,7 +51,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timerSettleJILIRng = new Timer(DoSettleJILIRngWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            //timerSettleJILIRng = new Timer(DoSettleJILIRngWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             timerRngByRound = new Timer(DoSettleRngByRoundWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             timerRngBySessionId = new Timer(DoSettleRngBySessionIdWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             timerRngBySessionIdCancel = new Timer(DoSettleRngBySessionIdCancelWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
