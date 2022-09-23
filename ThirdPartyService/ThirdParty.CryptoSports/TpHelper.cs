@@ -36,10 +36,11 @@ namespace ThirdParty.CryptoSports
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var gameUrl = inputs.GetValue("GameUrl");
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = inputs.GetValue("GameUrl")
+                Message = $"{gameUrl}?lang={TpLangId}"
             };
         }
 
