@@ -54,24 +54,22 @@ namespace ThirdPartyWager.Service.BLL
 
                 if (hasData && dataDetails.Count() == 0)
                 {
-                    //msg = "NO_DATA";
-                    //_logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(datadetails)}");
+                    msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
                     return true;
                 }
 
-                foreach (var data in dataDetails)
+                try
                 {
-                    try
-                    {
-                        _wagerKiss918Service.InsertWager(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {data.referenceID} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(data)}\r\n{ex.Message}");
-                        return false;
-                    }
+                    _wagerKiss918Service.InsertWager(dataDetails);
                 }
+                catch (Exception ex)
+                {
+                    msg = $"INSERT_WAGER";
+                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}\r\n{ex.Message}");
+                    return false;
+                }
+                //}
                 msg = "FINISH";
                 _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {dataDetails.MaxBy(x => x.created).created}");
                 return true;
