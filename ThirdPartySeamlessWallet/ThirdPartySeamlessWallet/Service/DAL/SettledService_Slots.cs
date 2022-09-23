@@ -4098,9 +4098,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var bonusId = 0;
             var result = 0;
             afterAmount = 0;
+            var tpCategory = TpCategory.Slots;
             try
             {
-                var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
+                switch (gameType)
+                {
+                    case (int)GameType.Skywind_LiveCasino:
+                        tpCategory = TpCategory.LiveCasino;
+                        break;
+                    case (int)GameType.Skywind_Fish:
+                        tpCategory = TpCategory.Fish;
+                        break;
+                }
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
                 var query = new
                 {
