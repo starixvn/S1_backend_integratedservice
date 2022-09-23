@@ -24,59 +24,61 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerKiss918BLL>>();
         }
 
-        public async Task<(bool, string)> GetWagersAsync(int tpId, string startTime)
+        public async Task<bool> GetWagersAsync(int tpId, string startTime)
         {
             var msg = "FATAL_ERROR";
-            var nextTime = startTime;
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
                 //convert timepoint
-                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["ApiUrl"], startTime);
+                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["ApiToken"], setting["ApiUrl"], startTime);
 
-                //// get report player
-                var datadetails = await _apiKiss918BLL.GetPlaySession(setting["ApiUrl"], timepoint);
+                if (string.IsNullOrWhiteSpace(timepoint))
+                {
+                    msg = "GET_TIMEPOINT_ERROR";
+                    _logger.LogError($"{msg}\r\n{timepoint}");
+                    return false;
+                }
 
-                //TODO：需要判斷機制，確認取資料是否有問題
-                if (!datadetails.Item1)
+                // get history bets
+                var (hasData, dataDetails) = await _apiKiss918BLL.GetPlaySession(setting["AccessToken"], setting["ApiUrl"], timepoint);
+
+                if (!hasData)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(datadetails)}");
-                    return (false, nextTime);
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
+                    return false;
                 }
 
-                if (datadetails.Item1 && datadetails.Item2.Count() == 0)
+                if (hasData && dataDetails.Count() == 0)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(datadetails)}");
-                    return (true, nextTime);
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
+                    return true;
                 }
 
-                foreach (var data in datadetails.Item2)
+                try
                 {
-                    try
-                    {
-                        _wagerKiss918Service.InsertWager(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {data.referenceID} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(data)}\r\n{ex.Message}");
-                        return (false, nextTime);
-                    }
+                    _wagerKiss918Service.InsertWager(dataDetails);
                 }
-                nextTime = datadetails.Item2.MaxBy(x => x.created).created.ToString();
+                catch (Exception ex)
+                {
+                    msg = $"INSERT_WAGER";
+                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}\r\n{ex.Message}");
+                    return false;
+                }
+                //}
                 msg = "FINISH";
-                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {nextTime}");
-                return (true, nextTime);
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {dataDetails.MaxBy(x => x.created).created}");
+                return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
-                return (false, nextTime);
+                return false;
             }
         }
     }

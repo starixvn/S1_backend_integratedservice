@@ -17,7 +17,12 @@ namespace ThirdParty.Kiss918
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private static string accessToken = "RUNnMmx6TnJZNjVoTU5ha1JyMCtENFY4bUFyWDVwYW1JbTRlNVRZUTRFY1NjTk1xSFV1WTI3NkNGWHgzSzJPRDZSN041NkJaUlp1WUIxSUhSUE5lSFA2dGhQK2svU2FGVHVOcHY0VnNWeGk5WE01d2U0cFgwbkFVeG9vSnpoZVNobmJSRCtJVVdzRzZCK3luV29zWGRRPT0=";
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(21).ToDictionary(d => d.AppId, d => d.Name);
+        }
         private class CreateMemberResponse
         {
             public int playerID { get; set; }
@@ -36,6 +41,7 @@ namespace ThirdParty.Kiss918
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
+            string accessToken = inputs.ContainsKey("AccessToken") && !string.IsNullOrEmpty(inputs["AccessToken"]) ? inputs["AccessToken"] : throw new Exception("AccessToken");
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             ApiUrl = $"{ApiUrl}/api/createplayer";
 
@@ -86,6 +92,7 @@ namespace ThirdParty.Kiss918
             string currency = tpCustInfo.TpCurrencyId;
             int siteId = tpCustInfo.SiteId;
 
+            string accessToken = inputs.ContainsKey("AccessToken") && !string.IsNullOrEmpty(inputs["AccessToken"]) ? inputs["AccessToken"] : throw new Exception("AccessToken");
             string baseApiUrl = inputs.ContainsKey("GameApiUrl") && !string.IsNullOrEmpty(inputs["GameApiUrl"]) ? inputs["GameApiUrl"] : throw new Exception("GameApiUrl");
             string secretKey = inputs.ContainsKey($"SecretKey_{currency}") && !string.IsNullOrEmpty(inputs[$"SecretKey_{currency}"]) ? inputs[$"SecretKey_{currency}"] : throw new Exception($"SecretKey_{currency}");
             string md5EncryptKey = inputs.ContainsKey($"Md5EncryptKey_{currency}") && !string.IsNullOrEmpty(inputs[$"Md5EncryptKey_{currency}"]) ? inputs[$"Md5EncryptKey_{currency}"] : throw new Exception($"Md5EncryptKey_{currency}");
@@ -98,23 +105,6 @@ namespace ThirdParty.Kiss918
             var loginApiUrl = $"{baseApiUrl}/api/Acc/Login";
 
             var currTime = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-
-            #region GameList Sample Code
-
-            //var gapiUrl = $"{baseApiUrl}/api/Game/GameList";
-
-            //var QS = $"key={secretKey}{delimiter}time={currTime}{delimiter}gameType=1,2,3,4,5,7,8,9";   //1,2,3,4,5,7,8,9
-            //var gq = HttpUtility.UrlEncode(DESEncrypt(QS, encryptKey));
-            //var gs = BuildMD5(QS + md5EncryptKey + currTime + secretKey);
-
-            //var grequest = ToJson(new
-            //{
-            //    q = gq,
-            //    s = gs,
-            //    accessToken = accessToken
-            //});
-
-            #endregion
 
             //vendor建議用字串組，用其他方法會有偶發問題
             var QS = $"key={secretKey}{delimiter}" +
@@ -155,17 +145,16 @@ namespace ThirdParty.Kiss918
                     RawMessage = json.description
                 };
 
-            var joinGameRequest = new
+            var joinGameRequest = new Dictionary<string, string>()
             {
-                tkn = json.actk,
-                language = TpLangId,
-                user = $"{tpCustInfo.TpUserName}@{siteName}",
-                gName = gameCode,
-                returnUrl = homeUrl
+                { "tkn" , json.actk },
+                { "language" , TpLangId },
+                { "user", $"{tpCustInfo.TpUserName}@{siteName}" },
+                { "gName" , gameCode },
+                { "returnUrl" , homeUrl }
             };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(joinGameRequest));
-            string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
+            string sParam = string.Join("&", joinGameRequest.Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
 
             return new ApiResult()
             {
@@ -178,143 +167,11 @@ namespace ThirdParty.Kiss918
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            //string currency = tpCustInfo.TpCurrencyId;
-            //string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            //string authcode = inputs.ContainsKey($"authcode_{currency}") && !string.IsNullOrEmpty(inputs[$"authcode_{currency}"]) ? inputs[$"authcode_{currency}"] : throw new Exception($"authcode_{currency}");
-            //string userName = inputs.ContainsKey($"userName_{currency}") && !string.IsNullOrEmpty(inputs[$"userName_{currency}"]) ? inputs[$"userName_{currency}"] : throw new Exception($"userName_{currency}");
-            //string secretkey = inputs.ContainsKey($"secretkey_{currency}") && !string.IsNullOrEmpty(inputs[$"secretkey_{currency}"]) ? inputs[$"secretkey_{currency}"] : throw new Exception($"secretkey_{currency}");
-            //ApiUrl = $"{ApiUrl}/setScore.ashx";
-
-            //long current = GetTimestemp1();
-            //string sign = authcode + tpCustInfo.TpUserName + current + secretkey;
-
-            //if (direction == Direction.ToMain)
-            //{
-            //    Amount = Amount * -1;
-            //}
-
-            //var Transfer = new
-            //{
-            //    action = "setServerScore",
-            //    userName = tpCustInfo.TpUserName,
-            //    orderid = TransID,
-            //    scoreNum = Amount,
-            //    ActionUser = userName,
-            //    authcode = authcode,
-            //    time = current,
-            //    sign = ToMD5(sign.ToLower()).ToUpper()
-            //};
-
-            //var dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
-            //var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            //var result = HttpPost(
-            //    ApiUrl,
-            //    sParam,
-            //    "application/x-www-form-urlencoded"
-            //);
-
-            //ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            //if (IsJSON(result))
-            //{
-            //    var json = JsonConvert.DeserializeObject<TransferResponse>(result);
-            //    if (json.code == 0 && json.success == true)
-            //    {
-            //        apiResult.ErrorCode = ErrorCode.Success;
-            //        apiResult.Data.Status = TransferStatus.Success;
-            //        // apiResult.Data.ThirdId = TransID;
-            //    }
-            //    else if (json.code == -1 || json.code == -2 || json.code == -5 || json.code == -7 || json.code == -8 || json.code == -9 || json.code == -99)
-            //    {
-            //        apiResult.RawMessage = json.msg;
-            //        apiResult.RawErrorCode = json.code.ToString();
-            //        apiResult.ErrorCode = ErrorCode.Fail;
-            //        apiResult.Data.Status = TransferStatus.Fail;
-            //    }
-            //    else
-            //    {
-            //        apiResult.RawMessage = json.msg;
-            //        apiResult.RawErrorCode = json.code.ToString();
-            //        apiResult.ErrorCode = ErrorCode.TransferPending;
-            //        apiResult.Data.Status = TransferStatus.Pending;
-            //    }
-            //}
-            //else
-            //{
-            //    apiResult.RawMessage = "No Result";
-            //    apiResult.RawErrorCode = "1";
-            //    apiResult.ErrorCode = ErrorCode.TransferPending;
-            //    apiResult.Data.Status = TransferStatus.Pending;
-            //}
-
-            //return apiResult;
-
             throw new NotImplementedException();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            //string currency = tpCustInfo.TpCurrencyId;
-            //string WagerUrl = inputs.ContainsKey("WagerUrl") && !string.IsNullOrEmpty(inputs["WagerUrl"]) ? inputs["WagerUrl"] : throw new Exception("WagerUrl");
-            //string authcode = inputs.ContainsKey($"authcode_{currency}") && !string.IsNullOrEmpty(inputs[$"authcode_{currency}"]) ? inputs[$"authcode_{currency}"] : throw new Exception($"authcode_{currency}");
-            //string secretkey = inputs.ContainsKey($"secretkey_{currency}") && !string.IsNullOrEmpty(inputs[$"secretkey_{currency}"]) ? inputs[$"secretkey_{currency}"] : throw new Exception($"secretkey_{currency}");
-            //WagerUrl = $"{WagerUrl}/getOrder.ashx";
-
-            //long current = GetTimestemp1();
-            //string sign = authcode + TransID + current + secretkey;
-
-            //var CheckTransfer = new
-            //{
-            //    orderid = TransID,
-            //    authcode = authcode,
-            //    time = current,
-            //    sign = ToMD5(sign.ToLower()).ToUpper()
-            //};
-
-            //var dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
-            //var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            //var result = HttpPost(
-            //    WagerUrl,
-            //    sParam,
-            //    "application/x-www-form-urlencoded"
-            //);
-
-            //ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            //if (IsJSON(result))
-            //{
-            //    var json = JsonConvert.DeserializeObject<CheckTransferResponse>(result);
-            //    if (json.code == 1 && json.success == true)
-            //    {
-            //        apiResult.ErrorCode = ErrorCode.Success;
-            //        apiResult.Data.Status = TransferStatus.Success;
-            //        //apiResult.Data.ThirdId = TransID;
-            //    }
-            //    else if (json.code == -1)
-            //    {
-            //        apiResult.RawMessage = json.msg ?? "";
-            //        apiResult.RawErrorCode = json.code.ToString();
-            //        apiResult.ErrorCode = ErrorCode.Fail;
-            //        apiResult.Data.Status = TransferStatus.Fail;
-            //    }
-            //    else
-            //    {
-            //        apiResult.RawMessage = json.msg;
-            //        apiResult.RawErrorCode = json.code.ToString();
-            //        apiResult.ErrorCode = ErrorCode.TransferPending;
-            //        apiResult.Data.Status = TransferStatus.Pending;
-            //    }
-            //}
-            //else
-            //{
-            //    apiResult.RawMessage = "No Result";
-            //    apiResult.RawErrorCode = "1";
-            //    apiResult.ErrorCode = ErrorCode.TransferPending;
-            //    apiResult.Data.Status = TransferStatus.Pending;
-            //}
-
-            //return apiResult;
-
             throw new NotImplementedException();
         }
 
@@ -334,15 +191,19 @@ namespace ThirdParty.Kiss918
             var url = string.Empty;
 
             var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_Kiss918_Detail_Get",
-                new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
+                new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report)?.FirstOrDefault();
             roundId = getBetDetail.TransId;
-            url = detailList?.FirstOrDefault().GetValueOrDefault("resultUrl")?.ToString();
+
+            if (detailList == null)
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
+
+            url = detailList?.GetValueOrDefault("resultUrl")?.ToString();
 
             if (string.IsNullOrWhiteSpace(url))
             {
-                var gameName = string.IsNullOrWhiteSpace(detailList.FirstOrDefault()?.GetValueOrDefault("gameID")?.ToString()) ? "Lobby Jacpot"
-                    : detailList.FirstOrDefault()?.GetValueOrDefault("gameID")?.ToString();
-                
+                var gameName = string.IsNullOrWhiteSpace(detailList?.GetValueOrDefault("gameID").ToString()) ? "Lobby Jacpot"
+                    : detailList?.GetValueOrDefault("gameID").ToString();
+
                 var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
@@ -354,13 +215,12 @@ namespace ThirdParty.Kiss918
                     Detail = ToJson(detailList),
                     TpCurrency = tpCurrency,
                     RefTransId = string.Empty,
-                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("playerID")?.ToString(),
-                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
-                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("CreateTime", DateTime.MinValue)),
-                    Stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 1)
-                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
-                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
-                    GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameID")?.ToString(),
+                    TpUserName = detailList?.GetValueOrDefault("playerID").ToString(),
+                    UTCBetTime = (DateTime)detailList?.GetValueOrDefault("TransTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)detailList?.GetValueOrDefault("SettleTime", DateTime.MinValue),
+                    Stake = (decimal)detailList?.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)detailList?.GetValueOrDefault("winLossAmount") * tpCurrency.ExchangeRate,
+                    GameCode = detailList?.GetValueOrDefault("gameID").ToString(),
                     GameName = gameName,
                 };
             }
@@ -379,12 +239,35 @@ namespace ThirdParty.Kiss918
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detailList = TpBetRecordProvider.DbQuery("Service_TpWagerKiss918_Detail_Get", new { _referenceID = betRecordInfo.TransId }, DataBase.Wager);
+            if (!detailList.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameCode = detailList.GetFirstStringValue("gameID");
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = betRecordInfo.TransId,
+                    Title = tpGameType.TypeName,
+                    MatchID = betRecordInfo.TransId,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = DeviceType.Mobile,
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
         }
 
         #region Private Method
 
-        public static string DESEncrypt(string inString, string key)
+        private static string DESEncrypt(string inString, string key)
         {
             byte[] encryptKey = Encoding.ASCII.GetBytes(key);
             MemoryStream ms = new MemoryStream();
@@ -398,7 +281,7 @@ namespace ThirdParty.Kiss918
             return Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
         }
 
-        public static string BuildMD5(string inString)
+        private static string BuildMD5(string inString)
         {
             byte[] hashed = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(inString));
             StringBuilder sb = new StringBuilder(hashed.Length * 2);
@@ -407,6 +290,16 @@ namespace ThirdParty.Kiss918
                 sb.Append(hashed[i].ToString("x2"));
             }
             return sb.ToString();
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
 
         #endregion

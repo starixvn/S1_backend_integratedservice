@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Text;
-using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -18,10 +17,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
 
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly TpCustInfoBLL _tpCustInfoBLL;
-        //private readonly BettingBLL _bettingBLL;
-        //private readonly SettledBLL _settledBLL;
-        //private readonly Log2File _log2File;
         private readonly IKiss918BLL _kiss918BLL;
 
         #endregion
@@ -33,91 +28,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             thisTp = Tp.Kiss918;
 
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
-            _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
-            //_bettingBLL = provider.GetService<BettingBLL>();
-            //_settledBLL = provider.GetService<SettledBLL>();
-            //_log2File = provider.GetService<Log2File>();
-
             _kiss918BLL = provider.GetService<IKiss918BLL>();
-        }
-
-        #endregion
-
-        #region Request
-
-        public class BalanceReq
-        {
-            public string username { get; set; }
-            public string agent { get; set; }
-
-        }
-
-        #endregion
-
-        #region Response
-
-        public class BalanceResp
-        {
-            public BalanceResp()
-            {
-                status = new Status();
-                data = new BalanceData();
-            }
-
-            public Status status { get; set; }
-            public BalanceData data { get; set; }
-        }
-
-        public class Status
-        {
-            public int code { get; set; }
-            public string message { get; set; }
-
-        }
-
-        public class BalanceData
-        {
-            public decimal balance { get; set; }
-        }
-
-        public class BetResp
-        {
-            public BetResp()
-            {
-                status = new Status();
-                data = new BetData();
-            }
-
-            public Status status { get; set; }
-            public BetData data { get; set; }
-
-        }
-
-        public class BetData
-        {
-            public BetData()
-            {
-                wallet = new Wallet();
-                balance = new Balance();
-            }
-            public string username { get; set; }
-            public Wallet wallet { get; set; }
-            public Balance balance { get; set; }
-            public string refId { get; set; }
-
-        }
-
-        public class Wallet
-        {
-            public decimal balance { get; set; }
-            public string lastUpdate { get; set; }
-        }
-
-        public class Balance
-        {
-            public decimal before { get; set; }
-            public decimal after { get; set; }
-
         }
 
         #endregion
@@ -235,24 +146,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #region Private Methods
 
-
-        //private bool CheckPlayerByUserName(out int playerId, string userName = null)
-        //{
-        //    playerId = 0;
-        //    if (string.IsNullOrWhiteSpace(userName))
-        //        return false;
-
-        //    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, userName);
-        //    if (string.IsNullOrWhiteSpace(tpCustInfo.TpCustId))
-        //        return false;
-
-        //    if (!int.TryParse(tpCustInfo.TpCustId, out int number))
-        //        return false;
-
-        //    playerId = number;
-        //    return true;
-        //}
-
         private bool CheckToken(out string message)
         {
             message = string.Empty;
@@ -275,12 +168,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return false;
             }
             return true;
-        }
-
-        private string getCurrentGameTime()
-        {
-            var currentAt = new DateTimeOffset(DateTime.Now);
-            return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");
         }
 
         #endregion

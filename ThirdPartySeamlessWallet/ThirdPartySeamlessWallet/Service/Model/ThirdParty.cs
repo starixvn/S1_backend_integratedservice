@@ -39,6 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int CategoryId { set; get; }
         public int TypeId { set; get; }
         public string GameId { set; get; }
+        public string AppId { set; get; }
     }
     public class TpBetFailureRecord
     {
