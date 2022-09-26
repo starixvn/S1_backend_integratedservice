@@ -1240,7 +1240,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (mySqlEx.Number == 1062)
                 {
-                    /*Duplicate for key 'PRIMARY'*/
+                    /*Duplicate for key 'PRIMARY'、'UNIQUE'*/
                     result = -1;
                 }
                 else
