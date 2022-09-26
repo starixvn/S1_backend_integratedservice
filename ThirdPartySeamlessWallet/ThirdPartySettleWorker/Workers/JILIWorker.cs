@@ -76,8 +76,8 @@ namespace ThirdPartySettleWorker.Workers
 
             bool forContinue = false;
             bool isError = false;
-            int thisTp = (int)Tp.JILI;
-            var gameType = GameType.JILI_RNG;
+            int thisTp = (int)Tp;
+            var gameType = (GameType)state;
             var category = TpCategory.Slots;
             var bettransGet = "Service_BettransRng_JILI_Settle_Round_Get";
             var bettransSet = "Service_BettransRng_JILI_Settle_Round_Set";
@@ -187,8 +187,8 @@ namespace ThirdPartySettleWorker.Workers
 
             bool forContinue = false;
             bool isError = false;
-            int thisTp = (int)Tp.JILI;
-            var gameType = GameType.JILI_RNG;
+            int thisTp = (int)Tp;
+            var gameType = (GameType)state;
             var category = TpCategory.Slots;
             var bettransGet = "Service_BettransRng_JILI_Settle_SessionId_Get";
             var bettransSet = "Service_BettransRng_JILI_Settle_SessionId_Set";
@@ -289,7 +289,7 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
-            var gameType = GameType.JILI_RNG;
+            var gameType = (GameType)state;
             var bettransGet = "Service_BettransRng_JILI_SessionId_Get";
             string logName = "Settle_BettransRng_JILI_SessionId_Cancel";
 
