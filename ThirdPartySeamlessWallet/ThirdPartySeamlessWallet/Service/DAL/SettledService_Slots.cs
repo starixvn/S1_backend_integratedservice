@@ -4714,7 +4714,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-
         #endregion
     }
 }
