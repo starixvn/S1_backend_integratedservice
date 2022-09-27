@@ -34,6 +34,7 @@ namespace CommonService
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
             services.Configure<Dictionary<string, FireBaseConfig>>(Configuration.GetSection("FireBaseConfig"));
             services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
+            services.Configure<Dictionary<string, IhuyiSMSServiceTypeConfig>>(Configuration.GetSection("IhuyiSMSServiceConfig"));
             services.Configure<Dictionary<string, NxcloudSMSServiceTypeConfig>>(Configuration.GetSection("NxCloudSMSServiceConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));

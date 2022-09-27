@@ -37,13 +37,12 @@ namespace CommonService.Controllers
         }
         private string GetSupportOTP(CustInfoProfile custInfo) //"SkyLine","NxCloud"
         {
-            var supportOtp = "SkyLine"; // Default
             var otpConfig = supportOTPConfig.Value[custInfo.SiteName];
-            supportOtp = otpConfig["Default"];
-            if (perCurrency.TryGetValue(custInfo.CurrencyId, out var Currency))
+            var supportOtp = otpConfig["Default"]; // Default
+            if (perCurrency.TryGetValue(custInfo.CurrencyId, out var currency))
             {
-                if(otpConfig.ContainsKey(Currency))
-                    otpConfig.TryGetValue(Currency, out supportOtp);
+                if(otpConfig.ContainsKey(currency))
+                    otpConfig.TryGetValue(currency, out supportOtp);
             }
             return supportOtp;
         }
@@ -71,6 +70,9 @@ namespace CommonService.Controllers
                     if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                    } else if (supportOTP.Equals("Ihuyi", StringComparison.OrdinalIgnoreCase))
+                    {
+                        apiResult = await sOTPSMSBLL.SendIhuyiOTPSMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang);
                     }
                     else //default SkyLine
                     {
@@ -174,7 +176,7 @@ namespace CommonService.Controllers
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areacode}{phoneNo}";
-                apiResult = await sOTPSMSBLL.SendSMSAsync(phone, custInfo, custInfo.UserLang);
+                apiResult = await sOTPSMSBLL.SendSkyLineSMSAsync(phone, custInfo, custInfo.UserLang);
             }
             else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
             {
