@@ -1805,6 +1805,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region JILI
 
+        public int PayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.turnover *= tpCurrency.ExchangeRate;
+                bettingData_JILI.preserve *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public int BetAndPayoutRNG_JILI(BettingData_JILI bettingData_JILI, int gameType, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.JILI, bettingData_JILI.userId);
@@ -1836,6 +1855,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 cancelBetData_JILI.betAmount *= tpCurrency.ExchangeRate;
                 cancelBetData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                cancelBetData_JILI.preserve *= tpCurrency.ExchangeRate;
             }
 
             var result = (gameType == (int)GameType.JILI_RNG) ? settledService.CancelBetRNG_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount) : settledService.CancelBetFish_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
@@ -1859,6 +1879,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_JILI(category, TransId, TicketStatus);
         }
 
+        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, int ticketStatus, long settleTime)
+        {
+            return settledService.SetSettleFlag_BettransRng_JILI(spName, transId, ticketStatus, settleTime);
+        }
         #endregion
 
         #region EVO
