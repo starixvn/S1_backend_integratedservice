@@ -46,13 +46,8 @@
         Netent = 37,
         RedTiger = 38,
         AP = 39,
-<<<<<<< HEAD
-        SBO = 42
-=======
         SBO = 42,
-        Skywind = 43,
         SimplePlay = 44
->>>>>>> 24e30aa8... [SimplePlay] wager
     }
 
     public enum GameType
