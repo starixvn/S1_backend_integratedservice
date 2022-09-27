@@ -15,7 +15,6 @@ namespace CommonService.Controllers
     public class OTPSMSController
     {
         private readonly OTPSMSBLL sOTPSMSBLL;
-        private readonly MoviderSMSBLL moviderSMSBLL;
         private readonly NxCloudSMSBLL nxCloudSMSBLL;
         private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
@@ -23,12 +22,10 @@ namespace CommonService.Controllers
         private readonly Dictionary<int, string> perCurrency;
         private readonly IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig;
 
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, MoviderSMSBLL moviderSMSBLL, Log2File log2File, SelLangBLL selLangBLL, NxCloudSMSBLL nxCloudSMSBLL, IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig)
+        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, Log2File log2File, SelLangBLL selLangBLL, NxCloudSMSBLL nxCloudSMSBLL, IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig)
         {
             this.sOTPSMSBLL = sOTPSMSBLL;
-            this.moviderSMSBLL = moviderSMSBLL;
             this.nxCloudSMSBLL = nxCloudSMSBLL;
-
             this.custInfoBLL = custInfoBLL;
             this.log2File = log2File;
             this.selLangBLL = selLangBLL;
@@ -38,17 +35,16 @@ namespace CommonService.Controllers
               {2,"MYR" },{4,"THB" },{13,"CNY" },{15,"IDR" },{61,"INR" },{51,"VND" },{96,"USDT" }
             };
         }
-        private string GetSupportOTP(CustInfoProfile custInfo) //"Movider","SkyLine","NxCloud"
+        private string GetSupportOTP(CustInfoProfile custInfo) //"SkyLine","NxCloud"
         {
-            string SupportOTP = "SkyLine"; // Default
-            var OTPConfig = supportOTPConfig.Value[custInfo.SiteName];
-            SupportOTP = OTPConfig["Default"];
-            if (perCurrency.TryGetValue(custInfo.CurrencyId, out var Currency))
+            var otpConfig = supportOTPConfig.Value[custInfo.SiteName];
+            var supportOtp = otpConfig["Default"]; // Default
+            if (perCurrency.TryGetValue(custInfo.CurrencyId, out var currency))
             {
-                if(OTPConfig.ContainsKey(Currency))
-                    OTPConfig.TryGetValue(Currency, out SupportOTP);
+                if(otpConfig.ContainsKey(currency))
+                    otpConfig.TryGetValue(currency, out supportOtp);
             }
-            return SupportOTP;
+            return supportOtp;
         }
         public class Req
         {
@@ -64,8 +60,8 @@ namespace CommonService.Controllers
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
             {
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
-                var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
-                var phone = $"{areacode}{phoneNo}";
+                var areaCode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
+                var phone = $"{areaCode}{phoneNo}";
                 apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
                 if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
                 {
@@ -74,15 +70,10 @@ namespace CommonService.Controllers
                     if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                    } else if (supportOTP.Equals("Ihuyi", StringComparison.OrdinalIgnoreCase))
+                    {
+                        apiResult = await sOTPSMSBLL.SendIhuyiOTPSMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang);
                     }
-                    //else if(supportOTP.Equals("Movider", StringComparison.OrdinalIgnoreCase)) //not support Movider now
-                    //{
-                    //    var resultResp = await moviderSMSBLL.SendMoviderVerifySMSAsync(custInfo, phone, req.CustId);
-                    //    apiResult.ErrorCode = resultResp.ErrorCode;
-                    //    apiResult.Data = resultResp.Data;
-                    //    apiResult.Message = resultResp.Message;
-                    //    apiResult.RawMessage = resultResp.RawMessage;
-                    //}
                     else //default SkyLine
                     {
                         apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
@@ -122,21 +113,11 @@ namespace CommonService.Controllers
 
                 if (GetOTPVerifyResult.ErrorCode == 0)
                 {
-
                     var supportOTP = GetSupportOTP(custInfo);
-
-                   if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
+                    if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = nxCloudSMSBLL.VerifyOPT(verifyOTPReq);
-                    }
-                    //else if (supportOTP.Equals("Movider", StringComparison.OrdinalIgnoreCase))
-                    //{
-                    //    var resultResp = await moviderSMSBLL.AcknowledgeVerifySMSAsync(custInfo.SiteName, GetOTPVerifyResult.Data.Request_id, verifyOTPReq.InputOTP);
-                    //    apiResult.ErrorCode = resultResp.ErrorCode;
-                    //    apiResult.Message = resultResp.Message;
-                    //    apiResult.RawMessage = resultResp.RawMessage;
-                    //}
-                    else//default SkyLine
+                    }else//default SkyLine
                     {
                         apiResult = sOTPSMSBLL.VerifyOPT(verifyOTPReq);
                     }
@@ -145,7 +126,6 @@ namespace CommonService.Controllers
                 {
                     apiResult.ErrorCode = GetOTPVerifyResult.ErrorCode;
                 }
-                
             }
             catch (Exception ex)
             {
@@ -196,7 +176,7 @@ namespace CommonService.Controllers
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areacode}{phoneNo}";
-                apiResult = await sOTPSMSBLL.SendSMSAsync(phone, custInfo, custInfo.UserLang);
+                apiResult = await sOTPSMSBLL.SendSkyLineSMSAsync(phone, custInfo, custInfo.UserLang);
             }
             else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
             {
