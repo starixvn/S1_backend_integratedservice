@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using CommonService.Service.BLL;
+﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +16,6 @@ namespace CommonService.Controllers
         private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
         private readonly SelLangBLL selLangBLL;
-        private readonly Dictionary<int, string> perCurrency;
         private readonly IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig;
 
         public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, Log2File log2File, SelLangBLL selLangBLL, NxCloudSMSBLL nxCloudSMSBLL, IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig)
@@ -30,20 +26,13 @@ namespace CommonService.Controllers
             this.log2File = log2File;
             this.selLangBLL = selLangBLL;
             this.supportOTPConfig = supportOTPConfig;
-            perCurrency = new Dictionary<int, string>()
-            {
-              {2,"MYR" },{4,"THB" },{13,"CNY" },{15,"IDR" },{61,"INR" },{51,"VND" },{96,"USDT" }
-            };
         }
-        private string GetSupportOTP(CustInfoProfile custInfo) //"SkyLine","NxCloud"
+        private string GetSupportOTP(CustInfoProfile custInfo)
         {
             var otpConfig = supportOTPConfig.Value[custInfo.SiteName];
-            var supportOtp = otpConfig["Default"]; // Default
-            if (perCurrency.TryGetValue(custInfo.CurrencyId, out var currency))
-            {
-                if(otpConfig.ContainsKey(currency))
-                    otpConfig.TryGetValue(currency, out supportOtp);
-            }
+            var supportOtp = otpConfig["Default"]; 
+            if(otpConfig.ContainsKey(custInfo.AreaCode))
+                otpConfig.TryGetValue(custInfo.AreaCode, out supportOtp);
             return supportOtp;
         }
         public class Req
@@ -67,16 +56,16 @@ namespace CommonService.Controllers
                 {
                     var supportOTP = GetSupportOTP(custInfo);
                     apiResult.Message = supportOTP;
-                    if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
+                    if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
                     {
-                        apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                        apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
                     } else if (supportOTP.Equals("Ihuyi", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendIhuyiOTPSMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang);
                     }
-                    else //default SkyLine
+                    else //default NxCloud
                     {
-                        apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                        apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
                     }
                 }
             }
@@ -117,7 +106,7 @@ namespace CommonService.Controllers
                     if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = nxCloudSMSBLL.VerifyOPT(verifyOTPReq);
-                    }else//default SkyLine
+                    }else
                     {
                         apiResult = sOTPSMSBLL.VerifyOPT(verifyOTPReq);
                     }
