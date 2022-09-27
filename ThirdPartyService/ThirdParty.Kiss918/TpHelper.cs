@@ -19,6 +19,11 @@ namespace ThirdParty.Kiss918
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
+        private readonly new Dictionary<string, int> _langList = new()
+        {
+            {"en",1 },{ "cs",2 },{ "th",3 },{ "id",5 },{ "vn",7 },
+        };
+
         public TpHelper()
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList(21).ToDictionary(d => d.AppId, d => d.Name);
@@ -145,13 +150,14 @@ namespace ThirdParty.Kiss918
                     RawMessage = json.description
                 };
 
+            var lang = 1; //default en
+            if (_langList.ContainsKey(TpLangId))
+                lang = _langList[TpLangId];
+
             var joinGameRequest = new Dictionary<string, string>()
             {
                 { "tkn" , json.actk },
-                { "language" , TpLangId },
-                { "user", $"{tpCustInfo.TpUserName}@{siteName}" },
-                { "gName" , gameCode },
-                { "returnUrl" , homeUrl }
+                { "language" , lang.ToString() }
             };
 
             string sParam = string.Join("&", joinGameRequest.Select(kp => $"{kp.Key}={HttpUtility.UrlEncode(kp.Value)}").ToArray());
@@ -160,6 +166,9 @@ namespace ThirdParty.Kiss918
             {
                 ErrorCode = ErrorCode.Success,
                 Message = $"{baseApiUrl}/CallGame?{sParam}"
+                + $"&user={tpCustInfo.TpUserName}@{siteName}"
+                + $"&gName={gameCode}"
+                + $"&lobbyUrl={homeUrl}"
             };
         }
 
