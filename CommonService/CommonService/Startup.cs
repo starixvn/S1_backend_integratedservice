@@ -29,8 +29,6 @@ namespace CommonService
         {
             services.Configure<SendXConfig>(Configuration.GetSection("SendXConfig"));
             services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
-            services.Configure<Dictionary<string, MoviderVerifySMSConfig>>(Configuration.GetSection("MoviderVerifySMSConfig"));
-            services.Configure<Dictionary<string, TwilioVerifySMSServices>>(Configuration.GetSection("TwilioVerifySMSServices"));
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
             services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
@@ -58,8 +56,6 @@ namespace CommonService
             services.AddSingleton<SendXBLL>();
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
-            services.AddSingleton<MoviderSMSBLL>();
-            services.AddSingleton<TwilioSMSBLL>();
             services.AddSingleton<IovationBLL>();
             services.AddSingleton<OTPSMSBLL>();
             services.AddSingleton<NxCloudSMSBLL>();
