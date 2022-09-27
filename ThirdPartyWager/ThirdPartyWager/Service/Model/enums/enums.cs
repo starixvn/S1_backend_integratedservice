@@ -47,6 +47,7 @@
         RedTiger = 38,
         AP = 39,
         SBO = 42,
+        Skywind = 43,
         SimplePlay = 44
     }
 
