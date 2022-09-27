@@ -31,7 +31,7 @@ namespace ThirdPartyService.Service.DAL
 
         public List<GameCasinoOption> GetGameCasinoList(int tpId)
         {
-            return _GameCasinoList.TryGetValue(tpId, out var result) ? result : default;
+            return _GameCasinoList.TryGetValue(tpId, out var result) ? result : new List<GameCasinoOption>();
         }
 
         public string GetTpName(int tpId)
