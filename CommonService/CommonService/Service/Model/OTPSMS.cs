@@ -15,6 +15,19 @@ namespace CommonService.Service.Model
         public string Account { get; set; }
         public string Password { get; set; }
     }
+    
+    public class IhuyiSMSServiceTypeConfig
+    {
+        public IhuyiSMSServiceConfig Otp { get; set; }
+        public IhuyiSMSServiceConfig Sms { get; set; }
+    }
+
+    public class IhuyiSMSServiceConfig
+    {
+        public string ResourceUrl { get; set; }
+        public string Account { get; set; }
+        public string Password { get; set; }
+    }
     public class SendOTPSMSResult
     {
         public int Status { get; set; }
@@ -34,6 +47,13 @@ namespace CommonService.Service.Model
         public string fail { get; set; }
         //public string array { get; set; }
         public string reason { get; set; }
+    }
+    
+    public class IhuyiSMSResult
+    {
+        public int code { get; set; }
+        public string smsid { get; set; }
+        public string msg { get; set; }
     }
 
     public class NxcloudSMSServiceTypeConfig
