@@ -206,30 +206,34 @@ namespace ThirdParty.Kiss918
             if (detailList == null)
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail is null.");
 
-            url = detailList?.GetValueOrDefault("resultUrl")?.ToString();
+            url = detailList.GetValueOrDefault("resultUrl")?.ToString();
 
             if (string.IsNullOrWhiteSpace(url))
             {
-                var gameName = string.IsNullOrWhiteSpace(detailList?.GetValueOrDefault("gameID").ToString()) ? "Lobby Jacpot"
-                    : detailList?.GetValueOrDefault("gameID").ToString();
+                var gameName = string.IsNullOrWhiteSpace(detailList.GetValueOrDefault("gameID").ToString()) ? "Lobby Jacpot"
+                    : GetGameName(detailList.GetValueOrDefault("gameID").ToString());
 
                 var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
                     TpCurrencyId = tpCustInfo.TpCurrencyId,
                 };
+
+                var transTime = detailList.GetValueOrDefault("TransTime");
+                var settleTime = detailList.GetValueOrDefault("SettleTime");
+
                 return new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = ToJson(detailList),
                     TpCurrency = tpCurrency,
                     RefTransId = string.Empty,
-                    TpUserName = detailList?.GetValueOrDefault("playerID").ToString(),
-                    UTCBetTime = (DateTime)detailList?.GetValueOrDefault("TransTime", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)detailList?.GetValueOrDefault("SettleTime", DateTime.MinValue),
-                    Stake = (decimal)detailList?.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
-                    WinlostAmount = (decimal)detailList?.GetValueOrDefault("winLossAmount") * tpCurrency.ExchangeRate,
-                    GameCode = detailList?.GetValueOrDefault("gameID").ToString(),
+                    TpUserName = detailList.GetValueOrDefault("playerID").ToString(),
+                    UTCBetTime = transTime != null ? Convert.ToDateTime(transTime) : DateTime.MinValue,
+                    UTCSettledTime = settleTime != null ? Convert.ToDateTime(settleTime) : DateTime.MinValue,
+                    Stake = (decimal)detailList.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)detailList.GetValueOrDefault("winLossAmount") * tpCurrency.ExchangeRate,
+                    GameCode = detailList.GetValueOrDefault("gameID").ToString(),
                     GameName = gameName,
                 };
             }
