@@ -4534,10 +4534,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public SettleData_Kiss918 GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
+            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
