@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using CommonService.Service.DAL;
+﻿using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using PaymentService.Service.Library;
@@ -14,62 +10,158 @@ namespace CommonService.Service.BLL
 {
     public class OTPSMSBLL
     {
-        private readonly HttpHelper httpHelper;
-        private readonly OTPSMSService sOTPSMSService;
-        private readonly IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> SkyLineSMSServiceTypeConfig;
-        private readonly Tools tools;
-        private readonly SelLangBLL selLangBLL;
-        private readonly ILogger<OTPSMSService> logger;
-        private readonly Log2File log2File;
+        private readonly HttpHelper _httpHelper;
+        private readonly OTPSMSService _sOtpSmsService;
+        private readonly IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> _skyLineSmsServiceTypeConfig;
+        private readonly IOptions<Dictionary<string, IhuyiSMSServiceTypeConfig>> _ihuyiSmsServiceTypeConfig;
+        private readonly Tools _tools;
+        private readonly SelLangBLL _selLangBll;
+        private readonly ILogger<OTPSMSService> _logger;
+        private readonly Log2File _log2File;
 
-        public OTPSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> SkyLineSMSServiceTypeConfig, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
+        public OTPSMSBLL(
+            HttpHelper httpHelper, 
+            OTPSMSService sOtpSmsService, 
+            IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> skyLineSmsServiceTypeConfig, 
+            IOptions<Dictionary<string, IhuyiSMSServiceTypeConfig>> ihuyiSmsServiceTypeConfig, 
+            Tools tools, 
+            SelLangBLL selLangBll, 
+            ILogger<OTPSMSService> logger, 
+            Log2File log2File
+            )
         {
-            this.httpHelper = httpHelper;
-            this.sOTPSMSService = sOTPSMSService;
-            this.SkyLineSMSServiceTypeConfig = SkyLineSMSServiceTypeConfig;
-            this.tools = tools;
-            this.selLangBLL = selLangBLL;
-            this.logger = logger;
-            this.log2File = log2File;
+            _httpHelper = httpHelper;
+            _sOtpSmsService = sOtpSmsService;
+            _skyLineSmsServiceTypeConfig = skyLineSmsServiceTypeConfig;
+            _ihuyiSmsServiceTypeConfig = ihuyiSmsServiceTypeConfig;
+            _tools = tools;
+            _selLangBll = selLangBll;
+            _logger = logger;
+            _log2File = log2File;
         }
+
+        #region Common
+
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            SendOTPSMSResult result = sOTPSMSService.GetOTPVerifyinfo(custId);
+            var result = _sOtpSmsService.GetOTPVerifyinfo(custId);
             apiResult.ErrorCode = (ErrorCode)(result.Status == 1 ? 0 : 1000);
             apiResult.Data = result;
 
             return apiResult;
         }
-        public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
+
+        private ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            SendOTPSMSResult result = sOTPSMSService.OTPVerifyinfoIns(custId, sOTPNum);
+            var result = _sOtpSmsService.OTPVerifyinfoIns(custId, sOTPNum);
             apiResult.ErrorCode = (ErrorCode)result.Status;
             apiResult.Data = result;
 
             return apiResult;
         }
-
-        public ApiResult VerifyOPT(VerifyOTPReq verifyOTPReq)
+        
+        public ApiResult VerifyOPT(VerifyOTPReq verifyOtpReq)
         {
             var apiResult = new ApiResult();
-            int result = sOTPSMSService.VerifyOPT(verifyOTPReq);
+            var result = _sOtpSmsService.VerifyOPT(verifyOtpReq);
 
             apiResult.ErrorCode = (ErrorCode)(result);
             return apiResult;
         }
-        public string MakeSignString(string account, string pwd, string datatime)
+        
+        private string MakeSignString(string account, string pwd, string dataTime)
         {
-            string tmpstr = $"{account}{pwd}{datatime}";
-            return tools.ToMD5(tmpstr);
-
+            var tmpStr = $"{account}{pwd}{dataTime}";
+            return _tools.ToMD5(tmpStr);
         }
+        
+        #endregion
+
+        #region Ihuyi
+
+        public async Task<ApiResult<SendOTPSMSResult>> SendIhuyiOTPSMSAsync(string phoneNo, CustInfoProfile custInfo, int custId, string userLang)
+        {
+            var otpNum = _tools.GetRandomNumString(6);
+            var apiResult = new ApiResult<SendOTPSMSResult>();
+            var apiResult1 = await SendIhuyiOTPSMSAsync(phoneNo, otpNum, custInfo, userLang);
+            
+            //if send SMS Success
+            if (apiResult1.ErrorCode == ErrorCode.Success)
+            {
+                apiResult = OTPVerifyinfoInsAsync(custId, otpNum);
+            }
+            else
+            {
+                apiResult.ErrorCode = apiResult1.ErrorCode;
+                apiResult.Message = apiResult1.Message;
+            }
+            return apiResult;
+        }
+
+        private async Task<ApiResult> SendIhuyiOTPSMSAsync(string phoneNo, string otpNum, CustInfoProfile custInfo, string userLang)
+        {
+            var apiResult = new ApiResult();
+            var config = _ihuyiSmsServiceTypeConfig.Value[custInfo.SiteName].Otp;
+            
+            var siteName = custInfo.SiteName;
+            var smsMessage = $"您的验证码是：{otpNum}。请不要把验证码泄露给其他人。";
+            
+            var data = new Dictionary<string, string>()
+            {
+                {"method", "Submit"},
+                {"account", config.Account},
+                {"password", config.Password},
+                {"mobile", phoneNo},
+                {"content", smsMessage},
+                {"format", "json"},
+            };
+                
+            using var result = await _httpHelper.HttpFromPostAsync(config.ResourceUrl, null, data, "application/x-www-form-urlencoded");
+            
+            _log2File.Info($"Ihuyi - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var resultResp = JsonConvert.DeserializeObject<IhuyiSMSResult>(result.Content.ReadAsStringAsync().Result);
+                
+                if (resultResp.code == 2)
+                {
+                    _log2File.Info($"Ihuyi - {phoneNo},{custInfo.UserName},{otpNum},code:{resultResp.code},reason:{resultResp.msg}", $"{siteName}_OTP");
+                    apiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    _log2File.Error($"Ihuyi - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.code},reason:{resultResp.msg}", $"{siteName}_OTP");
+                    if (resultResp.code is 4030 or 406 )//號碼錯誤傳5002給前端
+                    {
+                        apiResult.ErrorCode = ErrorCode.PhoneError;
+                    }
+                    else
+                    {
+                        _logger.LogError($"Ihuyi - Error HttpStatus = {result.StatusCode}\r\nRespStatus ={resultResp.code}\r\nRespMsg = {resultResp.msg}");
+                        apiResult.ErrorCode = ErrorCode.Fail;
+                    }
+                }
+            }
+            else
+            {
+                _log2File.Error($"Ihuyi - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+            }
+
+            return apiResult;
+        }
+
+        #endregion
+        
+        #region SkyLine
+
         public async Task<ApiResult<SendOTPSMSResult>> SendSkyLineOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId, string userLang)
         {
-            string OTPNum = tools.GetRandomNumString(6);
+            var OTPNum = _tools.GetRandomNumString(6);
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo, userLang);
+            var apiResult1 = await SendSkyLineOTPSMSAsync(PhoneNo, OTPNum, custInfo, userLang);
             var apiResultSendOTP = apiResult1;
             //if send SMS Success
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
@@ -83,17 +175,18 @@ namespace CommonService.Service.BLL
             }
             return apiResult;
         }
-        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang)
+
+        private async Task<ApiResult> SendSkyLineOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang)
         {
             var apiResult = new ApiResult();
             string areaCode = custInfo.AreaCode;
             string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = SkyLineSMSServiceTypeConfig.Value[custInfo.SiteName].OTP;
+            var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
             string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            string smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
             {
@@ -101,7 +194,7 @@ namespace CommonService.Service.BLL
             }
             else if (userLang.Equals("id", StringComparison.OrdinalIgnoreCase) || PhoneNo.StartsWith("+62"))
             {
-                smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", "id"), OTPNum);
+                smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", "id"), OTPNum);
             }
             else if (areaCode.StartsWith("+91") || PhoneNo.StartsWith("91"))//skyline指定
             {
@@ -109,11 +202,8 @@ namespace CommonService.Service.BLL
             }
             else if (userLang.Equals("hi", StringComparison.OrdinalIgnoreCase))
             {
-                smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", userLang), siteName, OTPNum);
+                smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), siteName, OTPNum);
             }
-
-            //String smsMessage = $"{HttpUtility.UrlEncode(selLangBLL.GetResourceValue("lbl_OTP", langId))}{OTPNum}";
-            // String smsMessage = $"Ung dung xin thong bao ma OTP cua ban la {OTPNum}";
 
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
@@ -123,8 +213,8 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
-            using var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
-            log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+            using var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
+            _log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -133,19 +223,19 @@ namespace CommonService.Service.BLL
 
                 if (resultResp.status == 0)
                 {
-                    log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    _log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
                     apiResult.ErrorCode = ErrorCode.Success;
                 }
                 else
                 {
-                    log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    _log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
                     if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                     }
                     else
                     {
-                        logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        _logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                         apiResult.ErrorCode = ErrorCode.Fail;
                         //apiResult.Message = $"StatusCode = {resultResp.status} Message = {resultResp.reason}";
                     }
@@ -153,21 +243,22 @@ namespace CommonService.Service.BLL
             }
             else
             {
-                log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+                _log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
             }
 
             return apiResult;
         }
-        public async Task<ApiResult> SendSMSAsync(string PhoneNo, CustInfoProfile custInfo, string userLang)
+       
+        public async Task<ApiResult> SendSkyLineSMSAsync(string PhoneNo, CustInfoProfile custInfo, string userLang)
         {
             var apiResult = new ApiResult();
             string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = SkyLineSMSServiceTypeConfig.Value[custInfo.SiteName].SMS;
+            var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].SMS;
             string sign = MakeSignString(Config.Account, Config.Password, dateTime);
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
             string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{selLangBLL.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
+            string smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
             
             Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
             {
@@ -177,8 +268,8 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
-            var result = await httpHelper.HttpPost1Async(url, null, parameters, "application/json");
-            log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+            var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
+            _log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
 
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -186,28 +277,30 @@ namespace CommonService.Service.BLL
 
                 if (resultResp.status == 0)
                 {
-                    log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    _log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
                     apiResult.ErrorCode = ErrorCode.Success;
                 }
                 else
                 {
-                    log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    _log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
                     if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                     }
                     else
                     {
-                        logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        _logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                         apiResult.ErrorCode = ErrorCode.Fail;
                     }
                 }
             }
             else
             {
-                log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+                _log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
             }
             return apiResult;
         }
+        
+        #endregion
     }
 }
