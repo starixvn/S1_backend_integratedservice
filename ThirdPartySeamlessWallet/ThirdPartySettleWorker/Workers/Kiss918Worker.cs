@@ -99,10 +99,10 @@ namespace ThirdPartySettleWorker.Workers
                                 TransId = tpUnsettle.TransId, //referenceID
                                 GameType = gametype,
                                 TpUserName = tpCustInfo.TpUserName,
-                                SettledTime = wager.SettleTime,
-                                TransTime = wager.TransTime,
+                                SettledTime = wager.Select(x => x.SettleTime).Max(),
+                                TransTime = wager.Select(x => x.TransTime).Min(),
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount,wager.type)
+                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount, wager.Select(x => x.type))
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -151,9 +151,9 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private TicketStatus SetTicketStatus(decimal winLostAmount,string type)
+        private TicketStatus SetTicketStatus(decimal winLostAmount, IEnumerable<string> typeList)
         {
-            if (type == "RF") return TicketStatus.Refund;
+            if (typeList.Contains("RF")) return TicketStatus.Refund;
 
             if (winLostAmount == 0) return TicketStatus.Draw;
 
@@ -162,16 +162,18 @@ namespace ThirdPartySettleWorker.Workers
             return TicketStatus.Lost;
         }
 
-        private bool CanSettle(SettleData beettrans, SettleData_Kiss918 wager, TpCustInfo tpCustInfo)
+        private bool CanSettle(SettleData beettrans, IEnumerable<SettleData_Kiss918> wager, TpCustInfo tpCustInfo)
         {
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
             if (tpCurrency.ExchangeRate <= 0) return false;
 
+            var stake = wager.Select(x => x.Stake).Sum();
+            var winlostAmount = wager.Select(x => x.WinLostAmount).Sum();
             // 加入幣別匯率轉換，tpWager 是原始資料
-            decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
-            decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
+            decimal wagerStake = stake * tpCurrency.ExchangeRate;
+            decimal? wagerWinLostAmount = winlostAmount * tpCurrency.ExchangeRate;
 
-            return wager.Account == beettrans.Account
+            return wager.First().Account == beettrans.Account
                    && wagerStake == beettrans.Stake
                    && wagerWinLostAmount == beettrans.WinLostAmount;
         }
