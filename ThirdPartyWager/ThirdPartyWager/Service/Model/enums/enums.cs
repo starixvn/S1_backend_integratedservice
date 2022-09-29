@@ -47,6 +47,7 @@
         RedTiger = 38,
         AP = 39,
         SBO = 42,
+        Skywind = 43,
         SimplePlay = 44
     }
 
@@ -71,6 +72,9 @@
         PT_LiveCasino = 48,
         YGG_RNG = 14,
         AMB_RNG = 76,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85,
         SimplePlay_RNG = 86,
     }
     

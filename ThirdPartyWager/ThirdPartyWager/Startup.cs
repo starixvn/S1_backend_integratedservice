@@ -216,6 +216,9 @@ namespace ThirdPartyWager
             //CQ9
             services.AddSingleton<ApiCQ9BLL>();
             services.AddSingleton<FinanceCQ9BLL>();
+            //Skywind
+            services.AddSingleton<ApiSkywindBLL>();
+            services.AddSingleton<WagerSkywindBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -287,6 +290,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
+            services.AddHostedService<WagerSkywind>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
