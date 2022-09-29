@@ -123,7 +123,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
-            if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
+            if (!GetBalanceByHalfSecCache(tpCustInfo.TpUserName, out balance, out message))
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
             if (balance + data.amount < 0) //餘額不足
@@ -167,11 +167,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     trans.Rollback();
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
-            }
-            else
-            {
-                if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
-                    return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             trans.Commit();
@@ -437,7 +432,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (existDatas.Any())
             {
                 //已存在指定有效投注
-                if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
+                if (!GetBalanceByHalfSecCache(tpCustInfo.TpUserName, out balance, out message))
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
 
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
@@ -778,13 +773,38 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetBalance(string username, out decimal balance, out string message)
+        private bool GetBalanceByHalfSecCache(string username, out decimal balance, out string message)
         {
             message = string.Empty;
             balance = 0;
             try
             {
                 var result = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, username, (int)GameType);
+
+                if (result == null)
+                {
+                    message = "balance not found.";
+                    _logger.LogError($"GetBalance Fail:{message}");
+                    return false;
+                }
+                balance = result.Balance;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                message = "exception happen.";
+                _logger.LogError(ex, $"GetBalance Exception:{ex.Message}");
+                return false;
+            }
+        }
+
+        private bool GetBalance(string username, out decimal balance, out string message)
+        {
+            message = string.Empty;
+            balance = 0;
+            try
+            {
+                var result = _tpCustInfoBLL.GetBalance((int)ThirdParty, username, (int)GameType);
 
                 if (result == null)
                 {
