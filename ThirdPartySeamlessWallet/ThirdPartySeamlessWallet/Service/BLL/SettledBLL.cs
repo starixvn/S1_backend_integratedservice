@@ -2180,7 +2180,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region Kiss918
 
-        public SettleData_Kiss918 GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
         {
             return settledService.GetSettle_TpWager_Kiss918(playSessionID, referenceID);
         }
