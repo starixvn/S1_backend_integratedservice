@@ -2259,5 +2259,51 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region Skywind
+        public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, string TpUserName, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.Settled_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            if (afterAmount == 0)
+            {
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+            }
+
+            return result;
+        }
+
+        public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+
+            var result = settledService.CancelBet_Skywind(tpCustInfo, cancelBetData_Skywind, gameType, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
+        {
+            return settledService.GetSettle_TpWager_Skywind(transId);
+        }
+        #endregion
     }
 }

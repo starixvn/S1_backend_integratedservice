@@ -110,6 +110,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBO_Games = 78,
         SBO_Casino = 79,
         SBO_VirtualSports = 81,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85,
         SimplePlay_RNG = 86,
     }
     public enum Tp
@@ -156,6 +159,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         HB = 40,
         SBSW = 41,
         SBO = 42,
+        Skywind = 43,
         SimplePlay = 44
     }
     public enum TransferType : int

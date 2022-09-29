@@ -108,6 +108,9 @@ namespace ThirdPartyCore.Model.enums
         SBO_Games = 78,
         SBO_Casino = 79,
         SBO_VirtualSports = 81,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85,
         SimplePlay_RNG = 86,
     }
 }
