@@ -87,7 +87,7 @@ namespace ThirdPartyWager.Service.BLL
 							ts = Convert.ToDateTime(bet.ts),
 							isTest = bet.isTest ? 1 : 0,
 							insertedAt = Convert.ToDateTime(bet.insertedAt),
-							recoveryType = bet.recoveryType,
+							recoveryType = string.IsNullOrWhiteSpace(bet.recoveryType) ? String.Empty : bet.recoveryType,
 							totalJpContribution = bet.totalJpContribution,
 							totalJpWin = bet.totalJpWin,
 						};
