@@ -1,4 +1,5 @@
-﻿using CommonService.Service.DAL;
+﻿using System.Net;
+using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
@@ -13,7 +14,7 @@ namespace CommonService.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly OTPSMSService _sOtpSmsService;
         private readonly IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> _skyLineSmsServiceTypeConfig;
-        private readonly IOptions<Dictionary<string, IhuyiSMSServiceTypeConfig>> _ihuyiSmsServiceTypeConfig;
+        private readonly IOptions<Dictionary<string, YcSmsServiceTypeConfig>> _YcSmsServiceTypeConfig;
         private readonly Tools _tools;
         private readonly SelLangBLL _selLangBll;
         private readonly ILogger<OTPSMSService> _logger;
@@ -22,8 +23,8 @@ namespace CommonService.Service.BLL
         public OTPSMSBLL(
             HttpHelper httpHelper, 
             OTPSMSService sOtpSmsService, 
-            IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> skyLineSmsServiceTypeConfig, 
-            IOptions<Dictionary<string, IhuyiSMSServiceTypeConfig>> ihuyiSmsServiceTypeConfig, 
+            IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> skyLineSmsServiceTypeConfig,
+            IOptions<Dictionary<string, YcSmsServiceTypeConfig>> ycSmsServiceTypeConfig, 
             Tools tools, 
             SelLangBLL selLangBll, 
             ILogger<OTPSMSService> logger, 
@@ -33,7 +34,7 @@ namespace CommonService.Service.BLL
             _httpHelper = httpHelper;
             _sOtpSmsService = sOtpSmsService;
             _skyLineSmsServiceTypeConfig = skyLineSmsServiceTypeConfig;
-            _ihuyiSmsServiceTypeConfig = ihuyiSmsServiceTypeConfig;
+            _YcSmsServiceTypeConfig = ycSmsServiceTypeConfig;
             _tools = tools;
             _selLangBll = selLangBll;
             _logger = logger;
@@ -79,82 +80,6 @@ namespace CommonService.Service.BLL
         
         #endregion
 
-        #region Ihuyi
-
-        public async Task<ApiResult<SendOTPSMSResult>> SendIhuyiOTPSMSAsync(string phoneNo, CustInfoProfile custInfo, int custId, string userLang)
-        {
-            var otpNum = _tools.GetRandomNumString(6);
-            var apiResult = new ApiResult<SendOTPSMSResult>();
-            var apiResult1 = await SendIhuyiOTPSMSAsync(phoneNo, otpNum, custInfo, userLang);
-            
-            //if send SMS Success
-            if (apiResult1.ErrorCode == ErrorCode.Success)
-            {
-                apiResult = OTPVerifyinfoInsAsync(custId, otpNum);
-            }
-            else
-            {
-                apiResult.ErrorCode = apiResult1.ErrorCode;
-                apiResult.Message = apiResult1.Message;
-            }
-            return apiResult;
-        }
-
-        private async Task<ApiResult> SendIhuyiOTPSMSAsync(string phoneNo, string otpNum, CustInfoProfile custInfo, string userLang)
-        {
-            var apiResult = new ApiResult();
-            var config = _ihuyiSmsServiceTypeConfig.Value[custInfo.SiteName].Otp;
-            
-            var siteName = custInfo.SiteName;
-            var smsMessage = $"您的验证码是：{otpNum}。请不要把验证码泄露给其他人。";
-            
-            var data = new Dictionary<string, string>()
-            {
-                {"method", "Submit"},
-                {"account", config.Account},
-                {"password", config.Password},
-                {"mobile", phoneNo},
-                {"content", smsMessage},
-                {"format", "json"},
-            };
-                
-            using var result = await _httpHelper.HttpFromPostAsync(config.ResourceUrl, null, data, "application/x-www-form-urlencoded");
-            
-            _log2File.Info($"Ihuyi - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
-
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var resultResp = JsonConvert.DeserializeObject<IhuyiSMSResult>(result.Content.ReadAsStringAsync().Result);
-                
-                if (resultResp.code == 2)
-                {
-                    _log2File.Info($"Ihuyi - {phoneNo},{custInfo.UserName},{otpNum},code:{resultResp.code},reason:{resultResp.msg}", $"{siteName}_OTP");
-                    apiResult.ErrorCode = ErrorCode.Success;
-                }
-                else
-                {
-                    _log2File.Error($"Ihuyi - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.code},reason:{resultResp.msg}", $"{siteName}_OTP");
-                    if (resultResp.code is 4030 or 406 )//號碼錯誤傳5002給前端
-                    {
-                        apiResult.ErrorCode = ErrorCode.PhoneError;
-                    }
-                    else
-                    {
-                        _logger.LogError($"Ihuyi - Error HttpStatus = {result.StatusCode}\r\nRespStatus ={resultResp.code}\r\nRespMsg = {resultResp.msg}");
-                        apiResult.ErrorCode = ErrorCode.Fail;
-                    }
-                }
-            }
-            else
-            {
-                _log2File.Error($"Ihuyi - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
-            }
-
-            return apiResult;
-        }
-
-        #endregion
-        
         #region SkyLine
 
         public async Task<ApiResult<SendOTPSMSResult>> SendSkyLineOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId, string userLang)
@@ -300,7 +225,71 @@ namespace CommonService.Service.BLL
             }
             return apiResult;
         }
-        
+
+        #endregion
+
+        #region YC元澄 SMS 平台
+
+        public async Task<ApiResult<SendOTPSMSResult>> SendYcOTPMSAsync(string phoneNo, CustInfoProfile custInfo, int custId, string userLang)
+        {
+            var otpNum = _tools.GetRandomNumString(6);
+            var apiResult = new ApiResult<SendOTPSMSResult>();
+            var responseResult = await SendToYcOTPSMSAsync(phoneNo, otpNum, custInfo, userLang);
+
+            //if send SMS Success
+            if (responseResult.ErrorCode == ErrorCode.Success)
+            {
+                apiResult = OTPVerifyinfoInsAsync(custId, otpNum);
+            }
+            else
+            {
+                apiResult.ErrorCode = responseResult.ErrorCode;
+                apiResult.Message = responseResult.Message;
+            }
+            return apiResult;
+        }
+
+        private async Task<ApiResult> SendToYcOTPSMSAsync(string phoneNo, string otpNum, CustInfoProfile custInfo, string userLang = "")
+        {
+            var apiResult = new ApiResult();
+            var config = _YcSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
+            var siteName = custInfo.SiteName;
+
+            var postData = new Dictionary<string, string>()
+            {
+                {"merchant", config.Merchant},
+                {"token", config.Token},
+                {"phone", phoneNo},
+                {"content", otpNum},
+            };
+
+            using var responseResult = await _httpHelper.HttpFromPostAsync(config.ApiPath, null, postData, "application/x-www-form-urlencoded");
+            var responseBody = await responseResult.Content.ReadAsStringAsync();
+
+            if (responseResult.StatusCode == HttpStatusCode.OK)
+            {
+                var response = JsonConvert.DeserializeObject<YcSmsSendOtpResult>(responseBody);
+                
+                if (response?.status == "success")
+                {
+                    _logger.LogInformation($"YCOTP Success - {phoneNo},{custInfo.UserName},{otpNum}, responseBody：{responseBody}, {siteName}_OTP");
+                    apiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    _logger.LogError($"YCOTP Fail - {phoneNo},{custInfo.UserName},{otpNum}, responseBody：{responseBody}, {siteName}_OTP");
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
+            else
+            {
+                apiResult.ErrorCode = ErrorCode.Fail;
+                _logger.LogError($"YCOTP HttpRequest Fail -{phoneNo},{custInfo.UserName},{otpNum}, HttpStatusCode：{responseResult.StatusCode} , responseBody：{responseBody}, {siteName}_OTP");
+            }
+
+            return apiResult;
+        }
+
         #endregion
     }
 }
