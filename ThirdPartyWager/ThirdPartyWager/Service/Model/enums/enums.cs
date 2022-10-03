@@ -68,18 +68,17 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
-        PT_RNG = 46,
-        PT_LiveCasino = 48,
         YGG_RNG = 14,
+ 		PT_RNG = 46,
+        PT_LiveCasino = 48,
         AMB_RNG = 76,
         Skywind_RNG = 82,
         Skywind_LiveCasino = 84,
         Skywind_Fish = 85,
         SimplePlay_RNG = 86,
     }
-    
-    
-    public enum SettlementType
+
+	 public enum SettlementType
     {
         UnSettled = 0,
         SettledForValid = 1,
@@ -99,7 +98,7 @@
         Related = 5,
         FreeBetWin = 6
     }
-
+    
     public enum DataBase
     {
         Main, //ConnectionString
@@ -130,5 +129,6 @@
         CheckSettle = 5,//結帳檢查
         ReSettle = 6,//重新結帳
         UserReport = 7,//用戶報表
+        UnSettle = 8,//未結算注單
     }
 }

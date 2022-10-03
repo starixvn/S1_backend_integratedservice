@@ -52,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<TpGameCasino>("Service_GameCasino_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+            return conn.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
         }
         public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
         {
