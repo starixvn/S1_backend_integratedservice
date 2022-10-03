@@ -43,7 +43,6 @@ namespace CommonService.Controllers
         public async Task<ApiResult<SendOTPSMSResult>> SendOTPSMSAsync(Req req)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-
             var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
 
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
@@ -59,9 +58,9 @@ namespace CommonService.Controllers
                     if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
-                    } else if (supportOTP.Equals("Ihuyi", StringComparison.OrdinalIgnoreCase))
+                    } else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
                     {
-                        apiResult = await sOTPSMSBLL.SendIhuyiOTPSMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang);
+                        apiResult = await sOTPSMSBLL.SendYcOTPMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang); // CNY OTP
                     }
                     else //default NxCloud
                     {
