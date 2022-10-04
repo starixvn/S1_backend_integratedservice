@@ -1995,22 +1995,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region Kiss918
-
-        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_TpWagerKiss918(string uuid)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerKiss918_Settle_Set", new { uuid = uuid }, commandType: CommandType.StoredProcedure);
-        }
-
-        #endregion
-
         #region Mega
 
         public SettleData GetSettle_TpReportMega(string TransId)
@@ -4172,6 +4156,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+
         public void UpdateTpBonusFlag_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
             GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
@@ -4240,6 +4225,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
+
         #endregion
 
         #region AMB Slot
@@ -4315,6 +4301,243 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.QueryFirstOrDefault<SettleData_YGG>("Service_TpWager_YGG_Settle_Get_V2", new { TransId = transId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
+
+
+        #region Skywind
+        public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var result = 0;
+            afterAmount = 0;
+            var tpCategory = TpCategory.Slots;
+            try
+            {
+                switch (gameType)
+                {
+                    case (int)GameType.Skywind_LiveCasino:
+                        tpCategory = TpCategory.LiveCasino;
+                        break;
+                    case (int)GameType.Skywind_Fish:
+                        tpCategory = TpCategory.Fish;
+                        break;
+                }
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
+                var query = new
+                {
+                    bettingData_Skywind.trx_id
+                };
+                var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
+                if (check.Any() && check.Any(x => x.TicketStatus != (int)TicketStatus.UnSettled))
+                {
+                    return -1;
+                }
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+                bettingData_Skywind.TicketStatus = bettingData_Skywind.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+
+                switch (bettingData_Skywind.game_status)
+                {
+                    case "freegame":
+                        bettingData_Skywind.TicketType = (int)BettransType.Jackpot;
+                        break;
+                    case "bonusgame":
+                        bettingData_Skywind.TicketType = (int)BettransType.Bonus;
+                        break;
+                    default:
+                        bettingData_Skywind.TicketType = (int)BettransType.EndRound;
+                        break;
+                }
+                
+                result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
+
+                if (result > 0 && bettingData_Skywind.amount > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData_Skywind.amount,
+                        (int)Tp.Skywind,
+                        bettingData_Skywind.round_id,
+                        gameType,
+                        tpCategory,
+                        bettingData_Skywind.round_id,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans);
+                }
+
+                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound && bettingData_Skywind.event_type != "transfer-out")
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingData_Skywind.round_id, trans, partitionTime);
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                throw;
+            }
+
+            return result;
+        }
+
+        public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var result = 0;
+            int bonusId = 0;
+            afterAmount = 0;
+            var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
+            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(cancelBetData_Skywind.timestamp).DateTime;
+
+            var query = new
+            {
+                trx_id = cancelBetData_Skywind.trxid
+            };
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault();
+            if (bettransSkywind == null)
+            {
+                return -2;
+            }
+            else if (bettransSkywind.TicketStatus != (int)TicketStatus.UnSettled)
+            {
+                return -1;
+            }
+            var para = new DynamicParameters(new
+            {
+                SQ = bettransSkywind.SQ
+            });
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_CancelBet_Set", para, trans);
+
+
+            if (result > 0)
+            {
+                if (bettransSkywind.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(bettransSkywind.amount),
+                        (int)Tp.Skywind,
+                        cancelBetData_Skywind.roundid,
+                        gameType,
+                        tpCategory,
+                        cancelBetData_Skywind.roundid,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+
+            return result;
+        }
+
+        public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
+        {
+            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId });
+        }
+        #endregion
+
+        #region Kiss918
+
+        public IEnumerable<BettingDataRNG_Kiss918> IsExistBet_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        {
+            var query = new { playSessionID = data.playSessionID };
+            return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Cancel_Check", query);
+        }
+
+        public bool Payout_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool Refund_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, TransType transType, string memo,
+                                       out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.Kiss918,
+                data.NewRoundId,
+                (int)GameType.Kiss918_RNG,
+                TpCategory.Slots,
+                data.NewRoundId,
+                transType,
+                null,
+                out afterAmount,
+                $"{memo} - {data.referenceID} ",
+                out bonusId,
+                conn,
+                trans
+            );
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public int GetTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data)
+        {
+            var result = GetTpBonus((int)Tp.Kiss918, data.NewRoundId, (int)GameType.Kiss918_RNG, TpCategory.Slots, out int custId, out int bonusId);
+            return bonusId;
+        }
+
+        public bool InsertUnsettle_Kiss918(DateTime partitionTime, string playSessionID, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.Kiss918, GameType.Kiss918_RNG, playSessionID, trans, partitionTime);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion
@@ -4491,163 +4714,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
-
-        #region Skywind
-        public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
-        {
-            var bonusId = 0;
-            var result = 0;
-            afterAmount = 0;
-            var tpCategory = TpCategory.Slots;
-            try
-            {
-                switch (gameType)
-                {
-                    case (int)GameType.Skywind_LiveCasino:
-                        tpCategory = TpCategory.LiveCasino;
-                        break;
-                    case (int)GameType.Skywind_Fish:
-                        tpCategory = TpCategory.Fish;
-                        break;
-                }
-                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
-                var query = new
-                {
-                    bettingData_Skywind.trx_id
-                };
-                var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
-                if (check.Any() && check.Any(x => x.TicketStatus != (int)TicketStatus.UnSettled))
-                {
-                    return -1;
-                }
-
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                var trans = conn.BeginTransaction();
-                bettingData_Skywind.TicketStatus = bettingData_Skywind.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-
-                switch (bettingData_Skywind.game_status)
-                {
-                    case "freegame":
-                        bettingData_Skywind.TicketType = (int)BettransType.Jackpot;
-                        break;
-                    case "bonusgame":
-                        bettingData_Skywind.TicketType = (int)BettransType.Bonus;
-                        break;
-                    default:
-                        bettingData_Skywind.TicketType = (int)BettransType.EndRound;
-                        break;
-                }
-                
-                result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
-
-                if (result > 0 && bettingData_Skywind.amount > 0)
-                {
-                    result = PayoutV2(
-                        tpCustInfo,
-                        bettingData_Skywind.amount,
-                        (int)Tp.Skywind,
-                        bettingData_Skywind.round_id,
-                        gameType,
-                        tpCategory,
-                        bettingData_Skywind.round_id,
-                        TransType.Payout,
-                        null,
-                        out afterAmount,
-                        $"Payout",
-                        out bonusId,
-                        conn,
-                        trans);
-                }
-
-                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound && bettingData_Skywind.event_type != "transfer-out")
-                {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingData_Skywind.round_id, trans, partitionTime);
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-                throw;
-            }
-
-            return result;
-        }
-
-        public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
-        {
-            var result = 0;
-            int bonusId = 0;
-            afterAmount = 0;
-            var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
-            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(cancelBetData_Skywind.timestamp).DateTime;
-
-            var query = new
-            {
-                trx_id = cancelBetData_Skywind.trxid
-            };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault();
-            if (bettransSkywind == null)
-            {
-                return -2;
-            }
-            else if (bettransSkywind.TicketStatus != (int)TicketStatus.UnSettled)
-            {
-                return -1;
-            }
-            var para = new DynamicParameters(new
-            {
-                SQ = bettransSkywind.SQ
-            });
-
-            using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-
-            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_CancelBet_Set", para, trans);
-
-
-            if (result > 0)
-            {
-                if (bettransSkywind.amount != 0)
-                {
-                    result = PayoutV2(
-                        tpCustInfo,
-                        Math.Abs(bettransSkywind.amount),
-                        (int)Tp.Skywind,
-                        cancelBetData_Skywind.roundid,
-                        gameType,
-                        tpCategory,
-                        cancelBetData_Skywind.roundid,
-                        TransType.Refunds,
-                        null,
-                        out afterAmount,
-                        "Refund",
-                        out bonusId,
-                        conn,
-                        trans
-                    );
-                }
-
-                if (result > 0)
-                {
-                    trans.Commit();
-                }
-            }
-
-            return result;
-        }
-
-        public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
-        {
-            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId });
-        }
         #endregion
     }
 }

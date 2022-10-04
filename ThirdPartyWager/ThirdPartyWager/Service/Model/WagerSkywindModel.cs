@@ -56,8 +56,8 @@ namespace ThirdPartyWager.Service.Model
         public string device { get; set; }
         public decimal win { get; set; }
         public decimal bet { get; set; }
-        public decimal? balanceBefore { get; set; }
-        public decimal? balanceAfter { get; set; }
+        public decimal balanceBefore { get; set; }
+        public decimal balanceAfter { get; set; }
         public string totalEvents { get; set; }
         public string firstTs { get; set; }
         public string ts { get; set; }

@@ -166,6 +166,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class BTISettleData : SettleData
     {
         public string BetID { get; set; }
+
+        public decimal DebitAmount { get; set; }
+
+        public decimal CreditAmount { get; set; }
+        
+        public string CurrentStatus { get; set; }
     }
 
 }
