@@ -44,7 +44,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<WagerSkywindModel>> GetBetListByTime(string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
         {
             var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
-            string url = $"{apiUrl}/history/game?ts__gte={startTime}&ts__lte={endTime}&finished='true'";
+            string url = $"{apiUrl}/history/game?ts__gte={startTime}&ts__lte={endTime}&finished='true'&limit=100";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
             var response = await _httpHelper.GetClient().SendAsync(request);
