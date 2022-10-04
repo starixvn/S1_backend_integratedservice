@@ -466,15 +466,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 #region Set TurnOver of RollOver
 
-                var turnOverHasLog = false;
+               
                 if (RefBetRecord == null)
                 {
                     if (betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         //SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
-                        logger.LogError($"flag1，bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId},UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{validBet},Memo:Settled,RefTransId:{betRecord.TransId}");
-                        turnOverHasLog = true;
                     }
                 }
                 else
@@ -485,48 +483,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         //SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
-                        logger.LogError($"flag2，bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId},UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{validBet},Memo:Settled,RefTransId:{betRecord.TransId}");
-                        turnOverHasLog = true;
                     }
                     else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.UnSettled)
                     {
                         //SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, $"UnSettled", RefBetRecord.TransId, conn, trans);
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, $"UnSettled", betRecord.TransId, conn, trans);
-                        logger.LogError($"flag3，bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId},UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{refValidBet * -1},Memo:UnSettled,RefTransId:{betRecord.TransId}");
-                        turnOverHasLog = true;
                     }
                     else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType != SettlementType.SettledForValid)
                     {
                         //SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, $"Re-Settled", RefBetRecord.TransId, conn, trans);
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, "Re-Settled", RefBetRecord.TransId, conn, trans);
-                        logger.LogError($"flag4，bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId},UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{refValidBet * -1},Memo:Re-Settled,RefTransId:{RefBetRecord.TransId}");
-                        turnOverHasLog = true;
                     }
                     else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && refValidBet != validBet)
                     {
                         //SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet - refValidBet, "Re-Settled", betRecord.TransId, conn, trans);
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet - refValidBet, "Re-Settled", betRecord.TransId, conn, trans);
-                        logger.LogError($"flag5，bonusId:{bonusId},TpId：{betRecord.TpId},GameType：{(int)betRecord.GameType},CustId:{tpCustInfo.CustId},UserName:{tpCustInfo.UserName},SiteId:{tpCustInfo.SiteId},Turnover:{validBet - refValidBet},Memo:Re-Settled,RefTransId:{betRecord.TransId}");
-                        turnOverHasLog = true;
                     }
-                }
-
-                if (!turnOverHasLog && !doPayout && bonusId > 0) // 該筆注單沒跑到Bonus TurnOver，紀錄當下資料狀況，並且記錄 SettlementType 條件狀態
-                {
-                    var conditionResult = RefBetRecord == null
-                        ? $"Not TpBetRecord And betRecord.SettlementType =={(int)betRecord.SettlementType}"
-                        : $"RefBetRecord.SettlementType == {(int)RefBetRecord.SettlementType} And betRecord.SettlementType == {(int)betRecord.SettlementType}";
-
-                    logger.LogError($"Not SetRollOverTurnOver，" +
-                                    $"bonusId:{bonusId}," +
-                                    $"TpId：{betRecord.TpId}," +
-                                    $"GameType：{(int)betRecord.GameType}," +
-                                    $"CustId:{tpCustInfo.CustId}," +
-                                    $"UserName:{tpCustInfo.UserName}," +
-                                    $"SiteId:{tpCustInfo.SiteId}," +
-                                    $"Turnover:{validBet}," +
-                                    $"RefTransId:{betRecord.TransId},"+
-                                    $"conditionResult：{conditionResult}");
                 }
 
                 #endregion
