@@ -77,19 +77,6 @@ namespace ThirdPartyWager.Workers
                     
                     var updateOdds = updateList.Where(x => listMatchId.Contains(x._MatchId));
                     await _sabaOddsBll.SetSabaOdds(updateOdds);
-
-                    // 舊沙巴，之後可以砍掉
-                    var updateListOld = response.Matches.match.Select(result => new UpdateOdd_Old()
-                    {
-                        id = result.id,
-                        h = result.bookie.odd.FirstOrDefault()?.h,
-                        o = result.bookie.odd.FirstOrDefault()?.o,
-                        u = result.bookie.odd.FirstOrDefault()?.u
-                    });
-
-                    var listMatchIdOld = _sabaOddsBll.GetSabaOddsMatchId_Old();
-                    var updateOddsOld = updateListOld.Where(x => listMatchIdOld.Contains(x.id));
-                    await _sabaOddsBll.SetSabaOdds_Old(updateOddsOld);
                 }
             }
             catch (Exception ex)
