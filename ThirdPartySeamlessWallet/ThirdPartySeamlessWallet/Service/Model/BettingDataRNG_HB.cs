@@ -254,6 +254,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public dynamic fundtransferresponse { get; set; }
     }
+
     public class TokenInfo
     {
         public string shortTimeToken { get; set; }

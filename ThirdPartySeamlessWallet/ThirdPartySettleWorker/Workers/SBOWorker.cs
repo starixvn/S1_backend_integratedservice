@@ -93,19 +93,18 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
-                        var settlementType = SetSettlementType((TicketStatus)settleData.TicketStatus);// 判斷 TicketStatus，因為可能重新結算
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
                             Stake = settleData.Stake,
                             ValidBet = settleData.ValidBet,
-                            WinlostAmount = settlementType == SettlementType.UnSettled ? 0 : tpWagerData.WinLostAmount,
+                            WinlostAmount = tpWagerData.WinLostAmount,
                             TransId = settleData.TransId,
                             GameType = gameType,
                             TpUserName = settleData.Account,
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
-                            SettlementType = settlementType, 
+                            SettlementType = SetSettlementType((TicketStatus)settleData.TicketStatus), // 判斷 TicketStatus，因為可能重新結算
                             TicketStatus = (TicketStatus)settleData.TicketStatus,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);

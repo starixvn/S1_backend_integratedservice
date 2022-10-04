@@ -259,7 +259,7 @@ namespace CommonService.Service.BLL
             {
                 {"merchant", config.Merchant},
                 {"token", config.Token},
-                {"phone", $"86{phoneNo}"},
+                {"phone", phoneNo},
                 {"content", otpNum},
             };
 

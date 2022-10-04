@@ -1506,6 +1506,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region Kiss918
+
+        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
+        {
+            return settledService.GetUnsettledList_Kiss918();
+        }
+
+        public int SetSettleFlag_TpWagerKiss918(string uuid)
+        {
+            return settledService.SetSettleFlag_TpWagerKiss918(uuid);
+        }
+
+        #endregion
+
         #region Mega
 
         public SettleData GetSettle_TpReportMega(string TransId)
@@ -2202,6 +2216,50 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region SimplePlay
+
+        public int PayoutRNG_SimplePlay(PayoutData_SimplePlay payoutData_SimplePlay, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.SimplePlay;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, payoutData_SimplePlay.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoutData_SimplePlay.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_SimplePlay(tpCustInfo, payoutData_SimplePlay, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int CancelBetRNG_SimplePlay(CancelBetData_SimplePlay cancelBetData_SimplePlay, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.SimplePlay;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, cancelBetData_SimplePlay.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                cancelBetData_SimplePlay.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetRNG_SimplePlay(tpCustInfo, cancelBetData_SimplePlay, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
         #region Skywind
         public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, string TpUserName, int gameType, out decimal afterAmount)
         {
@@ -2246,60 +2304,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetSettle_TpWager_Skywind(transId);
         }
-
-        #endregion
-
-        #region Kiss918
-
-        public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
-        {
-            return settledService.GetSettle_TpWager_Kiss918(playSessionID, referenceID);
-        }
-
-        #endregion
-
-        #region SimplePlay
-
-        public int PayoutRNG_SimplePlay(PayoutData_SimplePlay payoutData_SimplePlay, int gameType, out decimal afterAmount)
-        {
-            var tpId = (int)Tp.SimplePlay;
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, payoutData_SimplePlay.username);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                payoutData_SimplePlay.amount *= tpCurrency.ExchangeRate;
-            }
-
-            var result = settledService.PayoutRNG_SimplePlay(tpCustInfo, payoutData_SimplePlay, out afterAmount);
-
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-
-            return result;
-        }
-
-        public int CancelBetRNG_SimplePlay(CancelBetData_SimplePlay cancelBetData_SimplePlay, int gameType, out decimal afterAmount)
-        {
-            var tpId = (int)Tp.SimplePlay;
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, cancelBetData_SimplePlay.username);
-            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
-
-            if (tpCurrency.ExchangeRate > 0)
-            {
-                cancelBetData_SimplePlay.amount *= tpCurrency.ExchangeRate;
-            }
-
-            var result = settledService.CancelBetRNG_SimplePlay(tpCustInfo, cancelBetData_SimplePlay, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
-            {
-                afterAmount /= tpCurrency.ExchangeRate;
-            }
-            return result;
-        }
-
         #endregion
     }
 }

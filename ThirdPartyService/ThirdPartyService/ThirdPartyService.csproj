@@ -31,7 +31,6 @@
     <ProjectReference Include="..\ThirdParty.BTI\ThirdParty.BTI.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />
     <ProjectReference Include="..\ThirdParty.CQ9\ThirdParty.CQ9.csproj" />
-    <ProjectReference Include="..\ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj" />
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
     <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
     <ProjectReference Include="..\ThirdParty.EVO\ThirdParty.EVO.csproj" />

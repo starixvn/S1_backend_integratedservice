@@ -27,11 +27,5 @@ namespace ThirdPartyWager.Extensions
             var baseDate = new DateTimeOffset(date).ToOffset(new TimeSpan(timeZone, 0, 0));
             return (baseDate, baseDate.AddDays(1).AddMilliseconds(-1));
         }
-
-        public static bool Is15Minute(this DateTimeOffset time)
-        {
-            var minute = time.Minute;
-            return minute == 0 || minute == 15 || minute == 30 || minute == 45;
-        }
     }
 }

@@ -278,6 +278,5 @@ namespace ThirdParty.YGG
 
             return DeviceType.None;
         }
-              
     }
 }

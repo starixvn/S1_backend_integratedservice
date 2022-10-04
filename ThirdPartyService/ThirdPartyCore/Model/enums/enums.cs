@@ -149,8 +149,7 @@ namespace ThirdPartyCore.Model.enums
         Cockfighting = 5,
         Lottery = 6,
         VirtualSports = 7,
-        P2P = 8,
-        Games = 10
+        Poker = 8,
     }
 
     public enum FinancialType

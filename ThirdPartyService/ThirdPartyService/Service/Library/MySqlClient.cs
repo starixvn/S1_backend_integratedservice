@@ -1,6 +1,10 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Serilog.Context;
 using ThirdPartyCore.Model.enums;
@@ -167,7 +171,7 @@ namespace ThirdPartyService.Service.Library
             return result;
         }
 
-        public bool Execute(string name, object parameters)
+        public bool Execute(string name, SqlMapper.IDynamicParameters parameters)
         {
             var sw = Stopwatch.StartNew();
             try

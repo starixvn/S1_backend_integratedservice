@@ -16,12 +16,10 @@ namespace CommonService.Service.DAL
         }
         public int IovationResultIns(IovationResult iovationResult)
         {
-            var deviceId = iovationResult?.details?.device?.alias;
             using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
             var p = new
             {
                 AccountCode = iovationResult.accountCode,
-                DeviceId = string.IsNullOrEmpty(deviceId) ? "" : deviceId,
                 Details = JsonConvert.SerializeObject(iovationResult.details),
                 UUId = iovationResult.id,
                 Reason = iovationResult.reason,
@@ -29,7 +27,7 @@ namespace CommonService.Service.DAL
                 StatedIp = iovationResult.statedIp,
                 TrackingNumber = iovationResult.trackingNumber
             };
-            return conn.Execute("Common_IovationLog_Ins_V2", p, commandType: CommandType.StoredProcedure);
+            return conn.Execute("Common_IovationLog_Ins", p, commandType: CommandType.StoredProcedure);
         }
     }
 }

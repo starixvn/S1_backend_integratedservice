@@ -1,4 +1,13 @@
-﻿using ThirdPartyWager.Extensions;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -20,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IEnumerable<TpCurrency> _currencyList;
         private readonly Dictionary<string, string> _setting;
         private readonly int TimeZone = 8;
-        private readonly List<int> _reportType = new() { 0, 2, 3, 7 };
+        private readonly List<int> _reportType = new List<int>() { 0, 2, 3, 7 };
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -50,22 +59,7 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, "NineW GetWagersAsync Exception.");
                 return false;
             }
-        }
 
-        public async Task<bool> GetUnsettleWagersAsync(long startTime)
-        {
-            try
-            {
-                var result = await QueryUnSettleSummaryTransactionAsync(_config, startTime);
-                var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
-                await Task.WhenAll(tasks);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "NineW GetWagersAsync Exception.");
-                return false;
-            }
         }
 
         public async Task<bool> GetReSettleWagersAsync(string startTime, string endTime)
@@ -75,6 +69,7 @@ namespace ThirdPartyWager.Service.BLL
                 var result = await QueryReSettleSummaryTransactionAsync(_config, startTime, endTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
+
                 return true;
             }
             catch (Exception ex)
@@ -82,6 +77,7 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, "NineW GetWagersAsync Exception.");
                 return false;
             }
+
         }
 
         public async Task<bool> GetCountSummaryTransactionReportAsync(DateTime date)
@@ -93,6 +89,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     return true;
                 }
+
                 var result = _fincanceService.SetFinanceTpDailySummary(dailySummary);
                 return result == dailySummary.Count;
             }
@@ -101,6 +98,7 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, "NineW GetReportAsync Exception.");
                 return false;
             }
+
         }
 
         public async Task<bool> GetSummaryTransactionReportAsync(DateTime date)
@@ -199,55 +197,6 @@ namespace ThirdPartyWager.Service.BLL
 
                     var betlist = queryReuslt.BetList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));
                     result.AddRange(betlist);
-                    page++;
-                    totalPage = queryReuslt.totalPage;
-                }
-            }
-            return result;
-        }
-
-        private async Task<List<SettleBet>> QueryUnSettleSummaryTransactionAsync(NineWConfig config, long startTime)
-        {
-            var result = new List<SettleBet>();
-            var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryCurrentBetsByLastUpdateDate";
-            var agents = getAgents();
-            
-            foreach (var type in _reportType)
-            {
-                var page = 1;
-                var totalPage = 1;
-                while (page <= totalPage)
-                {
-                    await Task.Delay(1500);
-                    var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
-                    {
-                        { "cert", config.Cert },
-                        { "lastUpdateDate", startTime.ToString() },
-                        { "timeZone", "1"},
-                        { "isTxnDetail", "1"},
-                        { "pageNumber", page.ToString() },
-                        { "reportType", type.ToString() }
-                    });
-                    var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
-                    }
-
-                    var json = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation(json);
-                    var queryReuslt = _common.FromJson<UnSettleBet>(json);
-                    if (queryReuslt.status != "1")
-                    {
-                        throw new Exception($"NineW queryCurrentBetsByLastUpdateDate fail. status is {queryReuslt.status}.");
-                    }
-
-                    var matchedList = queryReuslt.matched.resultList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));
-                    result.AddRange(matchedList);
-                    
-                    var unmatchedList = queryReuslt.unmatched.resultList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));                  
-                    result.AddRange(unmatchedList);
-
                     page++;
                     totalPage = queryReuslt.totalPage;
                 }
