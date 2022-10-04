@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private Timer timer;
-        private readonly int intervalMins = 3;
+        private readonly int intervalMins = 2;
         private readonly int iRangMins = 20;
         private readonly int tpId = (int)Tp.Skywind;
         private readonly string _tpName = Tp.Skywind.ToString();
@@ -52,28 +52,44 @@ namespace ThirdPartyWager.Workers
             try
             {
                 List<int> siteIdList = new List<int> { 1, 2, 3 };
-                foreach (var siteId in siteIdList)
+                var SetTimer = true;
+
+                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
+                DateTime timerTime;
+                int last;
+                if (dataTpTimer == null)
                 {
-                    var setting = thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, siteId);
-                    DateTime timerTime;
-                    int last;
-                    if (dataTpTimer == null)
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
+                }
+                else
+                {
+                    timerTime = dataTpTimer.StartTime.AddSeconds(-1);
+                    last = iRangMins - 1;
+                }
+                if (timerTime < DateTime.Now)
+                {
+                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
+                    foreach (var siteId in siteIdList)
                     {
-                        last = iRangMins - 1;
-                        timerTime = DateTime.Now.AddMinutes(-1 * last);
-                    }
-                    else
-                    {
-                        timerTime = dataTpTimer.StartTime.AddSeconds(-1);
-                        last = iRangMins - 1;
-                    }
-                    if (timerTime < DateTime.Now)
-                    {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
+                        var setting = thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
                         var result = await wagerSkywindBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], time.startTime, time.endTime);
+                        if (!result)
+                        {
+                            SetTimer = false;
+                        }
                     }
-                }                
+                    if (SetTimer)
+                    {
+                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                    }
+                }
+                var ts = DateTime.Now - timerTime;
+                var diffMin = (int)ts.TotalMinutes;
+                if (diffMin >= 120)
+                {
+                    quick = 1;
+                }
             }
             catch (Exception ex)
             {
