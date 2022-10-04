@@ -66,33 +66,33 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-						var betSkywind = new BetSkywind()
-						{
-							finished = bet.finished ? 1 : 0,
-							revenue = bet.revenue,
-							currency = bet.currency,
-							debit = bet.debit.HasValue ? bet.debit.Value : 0,
-							credit = bet.credit.HasValue ? bet.credit.Value : 0,
-							roundId = bet.roundId,
-							brandId = bet.brandId,
-							playerCode = bet.playerCode,
-							gameCode = bet.gameCode,
-							device = bet.device,
-							win = bet.win,
-							bet = bet.bet,
-							balanceAfter = bet.balanceAfter,
-							balanceBefore = bet.balanceBefore,
-							totalEvents = bet.totalEvents,
-							firstTs = Convert.ToDateTime(bet.firstTs),
-							ts = Convert.ToDateTime(bet.ts),
-							isTest = bet.isTest ? 1 : 0,
-							insertedAt = Convert.ToDateTime(bet.insertedAt),
-							recoveryType = bet.recoveryType,
-							totalJpContribution = bet.totalJpContribution,
-							totalJpWin = bet.totalJpWin,
-						};
+                        var betSkywind = new BetSkywind()
+                        {
+                            finished = bet.finished ? 1 : 0,
+                            revenue = bet.revenue,
+                            currency = bet.currency,
+                            debit = bet.debit.HasValue ? bet.debit.Value : 0,
+                            credit = bet.credit.HasValue ? bet.credit.Value : 0,
+                            roundId = bet.roundId,
+                            brandId = bet.brandId,
+                            playerCode = bet.playerCode,
+                            gameCode = bet.gameCode,
+                            device = bet.device,
+                            win = bet.win,
+                            bet = bet.bet,
+                            balanceAfter = bet.balanceAfter.HasValue ? bet.balanceAfter.Value : 0,
+                            balanceBefore = bet.balanceBefore.HasValue ? bet.balanceBefore.Value : 0,
+                            totalEvents = bet.totalEvents,
+                            firstTs = Convert.ToDateTime(bet.firstTs),
+                            ts = Convert.ToDateTime(bet.ts),
+                            isTest = bet.isTest ? 1 : 0,
+                            insertedAt = Convert.ToDateTime(bet.insertedAt),
+                            recoveryType = string.IsNullOrWhiteSpace(bet.recoveryType) ? String.Empty : bet.recoveryType,
+                            totalJpContribution = bet.totalJpContribution,
+                            totalJpWin = bet.totalJpWin,
+                        };
 
-						var result = _apiSkywindBLL.InsertWager(betSkywind);
+                        var result = _apiSkywindBLL.InsertWager(betSkywind);
 
 						if (result > 0)
 						{
