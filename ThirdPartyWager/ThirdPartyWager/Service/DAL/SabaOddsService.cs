@@ -22,24 +22,5 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _mySqlClient.Query<int>("Service_SabaOddsMatchId_Get_V2");
         }
-
-        /// <summary>
-        /// 舊的沙巴賠率取得
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<int> GetSabaOddsMatchId_Old()
-        {
-            return _mySqlClient.Query<int>("Service_SabaOddsMatchId_Get");
-        }
-
-        /// <summary>
-        /// 舊的沙巴賠率更新
-        /// </summary>
-        /// <param name="sabaOdds"></param>
-        /// <returns></returns>
-        public async Task<int> SetSabaOdds_Old(IEnumerable<UpdateOdd_Old> sabaOdds)
-        {
-            return await _mySqlClient.ExecuteAsync("Service_SabaOdds_Set_V2", sabaOdds);
-        }
     }
 }
