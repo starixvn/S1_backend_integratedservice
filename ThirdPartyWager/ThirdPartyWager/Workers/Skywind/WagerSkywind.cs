@@ -86,7 +86,7 @@ namespace ThirdPartyWager.Workers
                 }
                 var ts = DateTime.Now - timerTime;
                 var diffMin = (int)ts.TotalMinutes;
-                if (diffMin >= 120)
+                if (diffMin >= 10)
                 {
                     quick = 1;
                 }
