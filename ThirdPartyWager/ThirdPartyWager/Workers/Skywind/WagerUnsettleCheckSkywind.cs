@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var intervalMinutes = 15;
+            var intervalMinutes = 5;
             var nextTimeSpan = TimeSpan.FromMinutes(intervalMinutes);
 
             try
