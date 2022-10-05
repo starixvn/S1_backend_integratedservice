@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiSkywindBLL> _logger;
         private readonly string _tpName = Tp.Skywind.ToString();
         private readonly MySqlClient _wagerDbClient;
+        private readonly MySqlClient _mainDbClient;
 
         public ApiSkywindBLL(IServiceProvider provider)
         {
@@ -32,6 +33,7 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiSkywindBLL>>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public class JwtToken
@@ -59,9 +61,31 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<WagerSkywindModel> GetBetByTransId(string apiUrl, string secretKey, string username, string password, string transId)
+        {
+            var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
+            string url = $"{apiUrl}/history/game?roundId={transId}&finished='true'&limit=100";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            string r = null;
+            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
+            {
+                r = sr.ReadToEnd();
+            }
+
+            var result = JsonConvert.DeserializeObject<List<WagerSkywindModel>>(r).FirstOrDefault();
+
+            return result;
+        }
+
         public int InsertWager(BetSkywind bet)
         {
             return _wagerDbClient.Execute("Service_TpWagerSkywind_Ins", bet);
+        }
+        public Task<IEnumerable<SkywindUnsettleCheck>> GetUnsettleCheckList()
+        {
+            return _mainDbClient.QueryAsync<SkywindUnsettleCheck>("Service_Skywind_Unsettle_Check", null);
         }
 
         private async Task<JwtToken> GetJwtTokenAsync(string apiUrl, string username, string password, string secretKey)

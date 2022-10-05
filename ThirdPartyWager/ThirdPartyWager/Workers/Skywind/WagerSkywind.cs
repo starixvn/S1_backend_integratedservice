@@ -18,8 +18,8 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private Timer timer;
-        private readonly int intervalMins = 2;
-        private readonly int iRangMins = 20;
+        private readonly int intervalMins = 1;
+        private readonly int iRangMins = 10;
         private readonly int tpId = (int)Tp.Skywind;
         private readonly string _tpName = Tp.Skywind.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
