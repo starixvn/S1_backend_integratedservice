@@ -291,6 +291,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
             services.AddHostedService<WagerSkywind>();
+            services.AddHostedService<WagerUnsettleCheckSkywind>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

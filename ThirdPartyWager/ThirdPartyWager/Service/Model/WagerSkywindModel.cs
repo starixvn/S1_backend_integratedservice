@@ -93,5 +93,9 @@ namespace ThirdPartyWager.Service.Model
         public decimal totalJpContribution { get; set; }
         public decimal totalJpWin { get; set; }
     }
+    public class SkywindUnsettleCheck
+    {
+        public string TransId { get; set; }
+    }
 }
 
