@@ -1,0 +1,99 @@
+﻿using Newtonsoft.Json;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Service.BLL
+{
+    public class FinanceSGBLL : ITpReportBLL
+    {
+        private readonly ILogger<FinanceSGBLL> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly CommonBLL _commonBLL;
+        private readonly ApiSGBLL _apiSGBLL;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly int _timeZone = 8;
+
+
+        public FinanceSGBLL(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<FinanceSGBLL>>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _apiSGBLL = provider.GetRequiredService<ApiSGBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+        }
+
+        public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
+        {
+            var dailyData = new List<FincanceDailySummary>();
+            if (!reportData.Any())
+            {
+                return dailyData;
+            }
+
+            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+
+            var getReportData = JsonConvert.DeserializeObject<List<CurrencyStatsData_SG>>(JsonConvert.SerializeObject(reportData));
+
+            foreach (var item in getReportData)
+            {
+                dailyData.Add(new FincanceDailySummary()
+                {
+                    SummaryType = SummaryType.TpBetRecord,
+                    SummaryDate = reportDate,
+                    TpId = tpId,
+                    CurrencyId = _currencyId[item.currency],
+                    Stake = item.betAmt,
+                    ValidBet = item.betAmt,
+                    Payout = item.betAmt + item.winLoss,
+                    WinlostAmount = item.winLoss,
+                    ProgressiveBet = item.jackpotAmount,
+                    ProgressiveWin = item.jpWin
+                });
+            }
+            return dailyData;
+        }
+
+        public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
+        {
+            var reportData = new List<dynamic>();
+            CurrencyStats_SG getWagerSummary = await _apiSGBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+
+            // error condition
+            var errorCode = getWagerSummary.code;
+            if (errorCode != 0)
+            {
+                var msg = "THIRD_PARTY_ERROR";
+                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                throw systemException;
+            }
+            if (errorCode == 0 && getWagerSummary.resultCount == 0)
+            {
+                var msg = "NO_DATA";
+                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                return reportData;
+            }
+
+            foreach (var item in getWagerSummary.list)
+            {
+                reportData.Add(item);
+            }
+
+            return reportData;
+        }
+
+        public TimeCast GetReportTime(DateTime startTime, int day)
+        {
+            var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyyMMdd'T'HHmmss", startTime);
+            var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            if (reportTime.endUnix > cvTime)
+            {
+                reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyyMMdd'T'HHmmss", startTime.AddDays(-1));
+            }
+            return reportTime;
+        }
+    }
+}
