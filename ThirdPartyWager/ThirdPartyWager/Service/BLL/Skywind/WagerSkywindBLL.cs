@@ -93,20 +93,6 @@ namespace ThirdPartyWager.Service.BLL
 						};
 
 						var result = _apiSkywindBLL.InsertWager(betSkywind);
-
-						if (result > 0)
-						{
-							var gameType = GameType.Skywind_RNG;
-							if (fishing.ContainsKey(bet.gameCode))
-							{
-								gameType = GameType.Skywind_Fish;
-							}
-							else if (liveaCasino.ContainsKey(bet.gameCode))
-							{
-								gameType = GameType.Skywind_LiveCasino;
-							}
-							_tpUnsettleService.InsertTpUnsettle(Tp.Skywind, gameType, bet.roundId);
-						}
 					}
 					catch (Exception ex)
                     {
