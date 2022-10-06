@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace ThirdPartyWager.Service.Model
 {
@@ -44,5 +42,26 @@ namespace ThirdPartyWager.Service.Model
                 return new DateTimeOffset(oDate).ToUnixTimeSeconds();
             }
         }
+    }
+
+    public class CurrencyStats_SG
+    {
+        public string serialNo { get; set; }
+        public int code { get; set; }
+        public string msg { get; set; }
+        public string merchantCode { get; set; }
+        public int resultCount { get; set; }
+        public IList<CurrencyStatsData_SG> list { get; set; }
+    }
+
+    public class CurrencyStatsData_SG
+    {
+        public int bets { get; set; }
+        public decimal betAmt { get; set; }
+        public decimal winLoss { get; set; }
+        public decimal jpWin { get; set; }
+        public decimal jackpotAmount { get; set; }
+        public decimal bonusAmt { get; set; }
+        public string currency { get; set; }
     }
 }
