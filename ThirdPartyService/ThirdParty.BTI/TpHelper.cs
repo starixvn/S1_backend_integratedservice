@@ -63,6 +63,7 @@ namespace ThirdParty.BTI
                ? inputs[$"Host"] : throw new Exception($"host is empty");
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
                ? inputs[$"homeUrl"] : "";
+
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
             return new ApiResult()
             {
@@ -85,6 +86,15 @@ namespace ThirdParty.BTI
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var sportsDetail = TpBetRecordProvider.DbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
+            if (sportsDetail == null)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,
+                };
+            }
+
             var xd = XDocument.Parse(sportsDetail.GetValueOrDefault("BodyData")?.ToString());
             var selection = xd.Descendants("Selection").FirstOrDefault();
             var detail = ToJson(sportsDetail);
@@ -129,6 +139,11 @@ namespace ThirdParty.BTI
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
             var xd = XDocument.Parse(detail.GetValueOrDefault("BodyData")?.ToString());
             var selection = xd.Descendants("Selection").FirstOrDefault();
             var bet = xd.Descendants("Bet").FirstOrDefault();

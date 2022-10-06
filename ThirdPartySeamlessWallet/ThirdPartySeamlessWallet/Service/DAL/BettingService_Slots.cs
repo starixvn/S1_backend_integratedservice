@@ -1161,6 +1161,99 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region SkyWind
+        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
+            bettingData_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
+            bettingData_Skywind.TicketType = (int)BettransType.Bet;
+            afterAmount = 0;
+            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
+            var query = new
+            {
+                bettingData_Skywind.trx_id
+            };
+            var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
+            if (check.Any())
+            {
+                return -1;
+            }
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+            var result = 0;
+            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
+
+            if (result > 0 && bettingData_Skywind.amount != 0)
+            {
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, bettingData_Skywind.round_id, gameType, bettingData_Skywind.round_id, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
+            }
+
+            if (result > 0)
+            {
+                trans.Commit();
+            }
+
+            return result;
+        }
+        #endregion
+        #region Kiss918
+
+        public IEnumerable<BettingDataRNG_Kiss918> IsExist_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        {
+            var query = new { referenceID = data.referenceID };
+            return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Check", query);
+        }
+
+        public bool PlaceBet_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.Kiss918,
+                                data.NewRoundId,  //TpTransId
+                                (int)GameType.Kiss918_RNG,
+                                data.NewRoundId,  //RefId
+                                null,
+                                TpCategory.Slots,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans,
+                                memo: $" - {data.referenceID} ");
+
+            if (result <= 0)
+                return false;
+
+            return true;
+        }
+
+        public bool AddTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = AddTpBonus((int)Tp.Kiss918, data.referenceID, (int)GameType.Kiss918_RNG,
+                             tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount,
+                             bonusId, TpCategory.Slots, conn, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        #endregion
+
         #region JILI
 
         public int PlaceBetRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
@@ -1337,45 +1430,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        #endregion
-
-        #region SkyWind
-        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
-        {
-            int bonusId = 0;
-            var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
-            bettingData_Skywind.TicketStatus = (int)TicketStatus.UnSettled;
-            bettingData_Skywind.TicketType = (int)BettransType.Bet;
-            afterAmount = 0;
-            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_Skywind.timestamp).DateTime;
-            var query = new
-            {
-                bettingData_Skywind.trx_id
-            };
-            var check = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query);
-            if (check.Any())
-            {
-                return -1;
-            }
-
-            using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            var trans = conn.BeginTransaction();
-            var result = 0;
-            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
-
-            if (result > 0 && bettingData_Skywind.amount != 0)
-            {
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, bettingData_Skywind.round_id, gameType, bettingData_Skywind.round_id, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
-            }
-
-            if (result > 0)
-            {
-                trans.Commit();
-            }
-
-            return result;
-        }
         #endregion
 
     }

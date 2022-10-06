@@ -470,7 +470,20 @@ namespace ThirdParty.MP
 
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.P2P => new PokerDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("TableID")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("Accounts")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GameStartTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GameEndTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("AllBet") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("Profit") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("KindID")?.ToString(),
+                },
+                TpCategory.Games => new PokerDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
