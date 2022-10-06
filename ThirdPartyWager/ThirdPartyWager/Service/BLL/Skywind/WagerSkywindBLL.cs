@@ -17,28 +17,16 @@ namespace ThirdPartyWager.Service.BLL
 	{
 		private readonly ThirdPartyBLL _thirdPartyBLL;
 		private readonly ILogger<WagerSkywindBLL> _logger;
-		private readonly HttpHelper _httpHelper;
-		private readonly Common _common;
-		private readonly MySqlClient _wagerDbClient;
-		private readonly SkywindConfig _config;
 		private readonly ApiSkywindBLL _apiSkywindBLL;
 		private const int TpId = (int)Tp.Skywind;
-		private const int SuccessCode = 0;
-		private readonly TpUnsettleService _tpUnsettleService;
 		private Dictionary<string, string> liveaCasino;
 		private Dictionary<string, string> fishing;
 
 		public WagerSkywindBLL(IServiceProvider provider)
 		{
 			_logger = provider.GetRequiredService<ILogger<WagerSkywindBLL>>();
-			_httpHelper = provider.GetRequiredService<HttpHelper>();
-			_common = provider.GetRequiredService<Common>();
-			_wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
 			_thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
 			_apiSkywindBLL = provider.GetRequiredService<ApiSkywindBLL>();
-			var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
-			_config = new SkywindConfig(setting);
-			_tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
 			liveaCasino = new Dictionary<string, string>();
 			fishing = new Dictionary<string, string>();
 			liveaCasino.Add("sw_ro_a01bac", "sw_ro_a01bac");
@@ -93,20 +81,6 @@ namespace ThirdPartyWager.Service.BLL
 						};
 
 						var result = _apiSkywindBLL.InsertWager(betSkywind);
-
-						if (result > 0)
-						{
-							var gameType = GameType.Skywind_RNG;
-							if (fishing.ContainsKey(bet.gameCode))
-							{
-								gameType = GameType.Skywind_Fish;
-							}
-							else if (liveaCasino.ContainsKey(bet.gameCode))
-							{
-								gameType = GameType.Skywind_LiveCasino;
-							}
-							_tpUnsettleService.InsertTpUnsettle(Tp.Skywind, gameType, bet.roundId);
-						}
 					}
 					catch (Exception ex)
                     {
@@ -126,6 +100,68 @@ namespace ThirdPartyWager.Service.BLL
 				return false;
 			}
         }
-	}
+
+        public async Task<(bool Success, bool DoQuick)> UnsettleCheck(int siteId)
+        {
+            try
+            {
+                // get api info
+                var setting = _thirdPartyBLL.GetThirdPartyBySite(TpId, siteId);
+
+                var checkList = await _apiSkywindBLL.GetUnsettleCheckList();
+                var doQuick = checkList.Count() == 1000;
+                foreach (var chcek in checkList)
+                {
+                    try
+                    {
+                        var bet = await _apiSkywindBLL.GetBetByTransId(setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], chcek.TransId);
+						if(bet != null)
+						{
+                            var betSkywind = new BetSkywind()
+                            {
+                                finished = bet.finished ? 1 : 0,
+                                revenue = bet.revenue,
+                                currency = bet.currency,
+                                debit = bet.debit.HasValue ? bet.debit.Value : 0,
+                                credit = bet.credit.HasValue ? bet.credit.Value : 0,
+                                roundId = bet.roundId,
+                                brandId = bet.brandId,
+                                playerCode = bet.playerCode,
+                                gameCode = bet.gameCode,
+                                device = bet.device,
+                                win = bet.win,
+                                bet = bet.bet,
+                                balanceAfter = bet.balanceAfter.HasValue ? bet.balanceAfter.Value : 0,
+                                balanceBefore = bet.balanceBefore.HasValue ? bet.balanceBefore.Value : 0,
+                                totalEvents = bet.totalEvents,
+                                firstTs = Convert.ToDateTime(bet.firstTs),
+                                ts = Convert.ToDateTime(bet.ts),
+                                isTest = bet.isTest ? 1 : 0,
+                                insertedAt = Convert.ToDateTime(bet.insertedAt),
+                                recoveryType = string.IsNullOrWhiteSpace(bet.recoveryType) ? String.Empty : bet.recoveryType,
+                                totalJpContribution = bet.totalJpContribution,
+                                totalJpWin = bet.totalJpWin,
+                            };
+                            _apiSkywindBLL.InsertWager(betSkywind);
+                        }
+                                              
+                    }
+                    catch (Exception ex)
+                    {
+                        var msg = $"INSERT_WAGER(WAGERID: {chcek.TransId} )";
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(chcek)}\r\n{ex.Message}");
+                    }
+                }
+
+                _logger.LogInformation($"Skywind Settle Check Success.");
+                return (true, doQuick);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Skywind Settle Check FATAL_ERROR.\r\n{ex.Message}");
+                return (false, true);
+            }
+        }
+    }
 }
 
