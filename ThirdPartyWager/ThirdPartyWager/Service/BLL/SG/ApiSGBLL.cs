@@ -1,10 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Net.Http;
+﻿using Newtonsoft.Json;
 using System.Text;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -47,15 +42,38 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<CurrencyStats_SG> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
+        {
+            var apiUrl = setting["ApiUrl"];
+            var merchantCode = setting["merchantCode"];
+
+            // param
+            var uri = "getTotalPL";
+            var url = $"{apiUrl}";
+            var param = new
+            {
+                beginDate = startTime,
+                endDate = endTime,
+                merchantCode = merchantCode,
+                serialNo = Guid.NewGuid().ToString(),
+            };
+
+            // request
+            var r = await DoHttpClientAsync(url, uri, param);
+            var result = JsonConvert.DeserializeObject<CurrencyStats_SG>(r);
+            return result;
+        }
+
         private async Task<string> DoHttpClientAsync(string url, string uri, object param)
         {
             var json = JsonConvert.SerializeObject(param);
-            _log2File.InsertRequestLog(_tpName, url, json, "1");
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Add("API", uri);
             request.Headers.Add("DataType", "JSON");
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            _log2File.InsertRequestLog(_tpName, url, $"{json}\r\n{JsonConvert.SerializeObject(request.Headers)}", "1");
+
             var response = await _httpHelper.GetClient().SendAsync(request);
             try
             {
