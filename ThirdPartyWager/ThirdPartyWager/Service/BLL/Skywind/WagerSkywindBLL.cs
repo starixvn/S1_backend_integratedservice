@@ -17,28 +17,16 @@ namespace ThirdPartyWager.Service.BLL
 	{
 		private readonly ThirdPartyBLL _thirdPartyBLL;
 		private readonly ILogger<WagerSkywindBLL> _logger;
-		private readonly HttpHelper _httpHelper;
-		private readonly Common _common;
-		private readonly MySqlClient _wagerDbClient;
-		private readonly SkywindConfig _config;
 		private readonly ApiSkywindBLL _apiSkywindBLL;
 		private const int TpId = (int)Tp.Skywind;
-		private const int SuccessCode = 0;
-		private readonly TpUnsettleService _tpUnsettleService;
 		private Dictionary<string, string> liveaCasino;
 		private Dictionary<string, string> fishing;
 
 		public WagerSkywindBLL(IServiceProvider provider)
 		{
 			_logger = provider.GetRequiredService<ILogger<WagerSkywindBLL>>();
-			_httpHelper = provider.GetRequiredService<HttpHelper>();
-			_common = provider.GetRequiredService<Common>();
-			_wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
 			_thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
 			_apiSkywindBLL = provider.GetRequiredService<ApiSkywindBLL>();
-			var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
-			_config = new SkywindConfig(setting);
-			_tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
 			liveaCasino = new Dictionary<string, string>();
 			fishing = new Dictionary<string, string>();
 			liveaCasino.Add("sw_ro_a01bac", "sw_ro_a01bac");
@@ -113,12 +101,12 @@ namespace ThirdPartyWager.Service.BLL
 			}
         }
 
-        public async Task<(bool Success, bool DoQuick)> UnsettleCheck()
+        public async Task<(bool Success, bool DoQuick)> UnsettleCheck(int siteId)
         {
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
+                var setting = _thirdPartyBLL.GetThirdPartyBySite(TpId, siteId);
 
                 var checkList = await _apiSkywindBLL.GetUnsettleCheckList();
                 var doQuick = checkList.Count() == 1000;
