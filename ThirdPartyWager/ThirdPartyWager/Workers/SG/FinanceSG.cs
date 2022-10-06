@@ -10,7 +10,7 @@ namespace ThirdPartyWager.Workers
     public class FinanceSG : BackgroundService
     {
         private readonly ILogger<FinanceSG> _logger;
-        private readonly FinanceSGBLL _financeSimplePlayBLL;
+        private readonly FinanceSGBLL _financeSGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
         private readonly int _tpId = (int)Tp.SG;
@@ -24,7 +24,7 @@ namespace ThirdPartyWager.Workers
         )
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSG>>();
-            _financeSimplePlayBLL = provider.GetRequiredService<FinanceSGBLL>();
+            _financeSGBLL = provider.GetRequiredService<FinanceSGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
         }
@@ -90,16 +90,16 @@ namespace ThirdPartyWager.Workers
 
                 // get time 
                 var day = 0;
-                TimeCast reportTime = _financeSimplePlayBLL.GetReportTime(execTime.StartTime, day);
+                TimeCast reportTime = _financeSGBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeSimplePlayBLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financeSGBLL.GetReport(_tpId, setting, reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {
                     // process
-                    var dailyData = _financeSimplePlayBLL.DealReport(_tpId, reportDate, reportData);
+                    var dailyData = _financeSGBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
                     result = _fincanceService.SetFinanceTpDailySummary(dailyData);
