@@ -87,6 +87,7 @@ namespace ThirdPartyWager
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
+            services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -124,6 +125,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerSGBLL>();
             services.AddSingleton<ApiSGBLL>();
             services.AddSingleton<FinanceSGBLL>();
+            // YL
+            services.AddSingleton<ApiYLBLL>();
+            services.AddSingleton<FinanceYLBLL>();
             //SBO
             services.AddSingleton<ISBOBLL, SBOBLL>();
             services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
@@ -241,6 +245,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceAG>();
             services.AddHostedService<WagerSG>();
             services.AddHostedService<FinanceSG>();
+            services.AddHostedService<FinanceYL>();
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
