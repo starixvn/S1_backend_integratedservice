@@ -4563,7 +4563,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound && bettingData_Skywind.event_type != "transfer-out")
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingData_Skywind.round_id, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}", trans, partitionTime);
                 }
 
                 if (result > 0)
