@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_MP> GetBetSummaryByTime(dynamic setting, string currency, string startTime, string endTime)
+        public async Task<CurrencyStats_MP> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
         {
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             var wagerUrl = setting["WagerUrl"];
@@ -78,7 +78,6 @@ namespace ThirdPartyWager.Service.BLL
                 s = 61,
                 startTime = startTime,
                 endTime = endTime,
-                currency = currency
             };
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
