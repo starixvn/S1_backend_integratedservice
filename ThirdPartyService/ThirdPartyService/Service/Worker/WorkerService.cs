@@ -1,10 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
@@ -43,6 +37,7 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTask(object state)
         {
+            _logger.LogInformation($"TpTransfer check worker Start");
             try
             {
                 var tpTransferList = _tpTransferInfo.TpTransferPendingGet();
@@ -61,6 +56,7 @@ namespace ThirdPartyService.Service.Worker
                         }
                     }
                 }
+                _logger.LogInformation($"TpTransfer check worker End");
             }
             catch (Exception ex)
             {
@@ -79,6 +75,7 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTaskForBonusTransfer(object state)
         {
+            _logger.LogInformation($"pending bonus transfer check worker start");
             try
             {
                 var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet();
@@ -104,6 +101,7 @@ namespace ThirdPartyService.Service.Worker
                         }
                     }
                 }
+                _logger.LogInformation($"pending bonus transfer check worker end");
             }
             catch (Exception ex)
             {
@@ -122,6 +120,7 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTaskRemainingBonusAmountTransfer(object state)
         {
+            _logger.LogInformation($"Remaining bonus transfer worker start");
             try
             {
                 var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet();
@@ -144,6 +143,7 @@ namespace ThirdPartyService.Service.Worker
                         _thirdPartyBll.BonusCancelTransfer(tpBonusCancelTransfer);
                     });
                 }
+                _logger.LogInformation($"Remaining bonus transfer worker end");
             }catch (Exception ex)
             {
                 _logger.LogError(ex, MethodExtension.GetCurrentMethod());
