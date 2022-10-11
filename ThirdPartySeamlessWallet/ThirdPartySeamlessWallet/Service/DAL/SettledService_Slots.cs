@@ -4530,7 +4530,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 switch (bettingData_Skywind.game_status)
                 {
                     case "freegame":
-                        bettingData_Skywind.TicketType = (int)BettransType.Jackpot;
+                        bettingData_Skywind.TicketType = (int)BettransType.Bonus;
                         break;
                     case "bonusgame":
                         bettingData_Skywind.TicketType = (int)BettransType.Bonus;
@@ -4592,14 +4592,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 trx_id = cancelBetData_Skywind.trxid
             };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault();
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x=>x.TicketStatus == (int)TicketStatus.UnSettled);
             if (bettransSkywind == null)
             {
                 return -2;
-            }
-            else if (bettransSkywind.TicketStatus != (int)TicketStatus.UnSettled)
-            {
-                return -1;
             }
             var para = new DynamicParameters(new
             {
