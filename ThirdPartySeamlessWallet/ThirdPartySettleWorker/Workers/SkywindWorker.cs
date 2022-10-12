@@ -118,7 +118,7 @@ namespace ThirdPartySettleWorker.Workers
                                 Stake = stake,
                                 ValidBet = stake,
                                 WinlostAmount = winLostAmount,
-                                TransId = tpUnsettle.TransId,
+                                TransId = gameId.ToString(),
                                 GameType = gametype,
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
