@@ -3963,7 +3963,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 long unixsettletime = string.IsNullOrWhiteSpace(bettingDataRNG_AP.settletime) ? 0 : ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.settletime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
                 long unixjpsettletime = string.IsNullOrWhiteSpace(bettingDataRNG_AP.jpsettletime) ? 0 : ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.jpsettletime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
                 long unixtimestamp = ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.timestamp, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
-                var check = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid });
+                var check = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get_V2", new { bettingDataRNG_AP.gameroundid, bettingDataRNG_AP.TicketType });
                 if (check.Any())
                 {
                     return -1;//Duplicated
@@ -3974,7 +3974,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var trans = conn.BeginTransaction();
                 var win = bettingDataRNG_AP.jpwin > 0 ? bettingDataRNG_AP.jpwin : bettingDataRNG_AP.totalwin;
                 bettingDataRNG_AP.TicketStatus = win > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-                bettingDataRNG_AP.TicketType = (int)BettransType.EndRound;
 
                 var p = new DynamicParameters(new
                 {
