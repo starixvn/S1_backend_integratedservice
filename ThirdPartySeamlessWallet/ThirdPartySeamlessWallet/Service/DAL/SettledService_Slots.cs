@@ -4254,6 +4254,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return true;
         }
+        
+        public bool BetAndPayout_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_InsV2", data, trans);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
 
         public bool Cancel_AMB(DateTime partitionTime, int sq, MySqlTransaction trans)
         {
@@ -4278,11 +4289,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
-            TransType transType, string memo,
+        public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data, TransType transType, string memo, 
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-
             var result = PayoutV2(
                 tpCustInfo,
                 data.amount,
@@ -4299,13 +4308,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 conn,
                 trans
             );
-
-
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
+            return result != 0;
         }
         #endregion
 
